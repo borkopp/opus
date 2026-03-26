@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-mono);
+  --font-display: var(--font-syne);
+  --font-outfit: var(--font-outfit);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+/* ─── OPUS Design System — Light Mode ─── */
+:root {
+  --radius: 1rem;
+
+  --background: hsl(0, 0%, 95%);
+  --foreground: hsl(0, 0%, 5%);
+
+  --card: hsl(0, 0%, 98%);
+  --card-foreground: hsl(0, 0%, 5%);
+
+  --popover: hsl(0, 0%, 95%);
+  --popover-foreground: hsl(0, 0%, 5%);
+
+  --primary: oklch(12% 0.004 60);
+  --primary-foreground: oklch(100% 0 0);
+
+  --secondary: oklch(95% 0.005 75);
+  --secondary-foreground: oklch(12% 0.004 60);
+
+  --muted: oklch(95% 0.005 75);
+  --muted-foreground: oklch(50% 0.005 60);
+
+  --accent: oklch(65.142% 0.16304 33.262);
+  --accent-foreground: oklch(100% 0 0);
+
+  --destructive: oklch(52% 0.22 27);
+
+  --border: oklch(90% 0.004 75);
+  --input: hsl(0, 0%, 95%);
+  --ring: oklch(57% 0.21 27);
+
+  --chart-1: oklch(57% 0.21 27);
+  --chart-2: oklch(12% 0.004 60);
+  --chart-3: oklch(80% 0.015 75);
+  --chart-4: oklch(60% 0.12 145);
+  --chart-5: oklch(75% 0.1 27);
+}
+
+/* ─── OPUS Design System — Dark Mode ─── */
+.dark {
+  --background: hsl(0, 0%, 0%);
+  --foreground: hsl(0, 0%, 95%);
+
+  --card: hsl(0, 0%, 5%);
+  --card-foreground: oklch(98% 0.005 75);
+
+  --popover: hsl(0, 0%, 9%);
+  --popover-foreground: oklch(98% 0.005 75);
+
+  --primary: oklch(98% 0.005 75);
+  --primary-foreground: oklch(12% 0.004 60);
+
+  --secondary: oklch(19% 0.004 60);
+  --secondary-foreground: oklch(98% 0.005 75);
+
+  --muted: hsl(0, 0%, 70%);
+  --muted-foreground: hsl(0, 0%, 30%);
+
+  --accent: oklch(57% 0.21 27);
+  --accent-foreground: oklch(100% 0 0);
+
+  --destructive: oklch(62% 0.22 27);
+
+  --border: hsl(0, 0%, 10%);
+  --input: hsl(0, 0%, 30%);
+  --ring: oklch(57% 0.21 27);
+
+  --chart-1: oklch(57% 0.21 27);
+  --chart-2: oklch(92% 0.005 75);
+  --chart-3: oklch(38% 0.004 60);
+  --chart-4: oklch(65% 0.14 145);
+  --chart-5: oklch(72% 0.12 27);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), sans-serif;
+    font-feature-settings: "ss01", "cv01";
+  }
+
+  .font-display,
+  [data-display] {
+    font-family: var(--font-syne), sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}

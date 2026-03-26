@@ -57,17 +57,35 @@ export const createPublicBooking = mutation({
             throw new ConvexError("This staff member cannot perform this service.");
         }
 
-        // ── Validate time ──
-        if (args.startAt <= Date.now()) {
-            throw new ConvexError("Booking time must be in the future.");
-        }
-
         // ── Org settings ──
         const orgSettings = await ctx.db
             .query("org_settings")
             .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
             .first();
         if (!orgSettings) throw new ConvexError("Organization settings not found.");
+
+        const parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: orgSettings.timezone || "Europe/Belgrade",
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+            hourCycle: "h23"
+        }).formatToParts(new Date());
+
+        let year, month, day, hour, minute, second;
+        for (const p of parts) {
+            if (p.type === 'year') year = p.value;
+            if (p.type === 'month') month = p.value;
+            if (p.type === 'day') day = p.value;
+            if (p.type === 'hour') hour = p.value;
+            if (p.type === 'minute') minute = p.value;
+            if (p.type === 'second') second = p.value;
+        }
+        const pseudoUtcNow = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`).getTime();
+
+        // ── Validate time ──
+        if (args.startAt <= pseudoUtcNow) {
+            throw new ConvexError("Booking time must be in the future.");
+        }
 
         // ── Conflict check ──
         const endAt = args.startAt + service.durationMins * 60 * 1000;

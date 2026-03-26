@@ -135,9 +135,33 @@ export async function computeSlotsForDate(
             return !isConflict;
         });
 
+        // Calculate pseudo-UTC "now" to compare against pseudo-UTC `slotTimestamp`
+        const parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: orgSettings.timezone || "Europe/Belgrade",
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+            hourCycle: "h23"
+        }).formatToParts(new Date());
+
+        let year, month, day, hour, minute, second;
+        for (const p of parts) {
+            if (p.type === 'year') year = p.value;
+            if (p.type === 'month') month = p.value;
+            if (p.type === 'day') day = p.value;
+            if (p.type === 'hour') hour = p.value;
+            if (p.type === 'minute') minute = p.value;
+            if (p.type === 'second') second = p.value;
+        }
+        const pseudoUtcNow = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`).getTime();
+
         for (const slot of validSlots) {
             const slotTimestamp = midnightMs + (slot.start * 60 * 1000);
             const endTimestamp = midnightMs + (slot.end * 60 * 1000);
+
+            // Hide timeslots that are in the past or within the next 15 minutes.
+            if (slotTimestamp <= pseudoUtcNow + 15 * 60 * 1000) {
+                continue;
+            }
 
             let priceMinorUnits = service.priceMinorUnits;
             let surgePriceApplied = false;

@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Price } from "@/components/ui/price";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { IconUpload } from "@tabler/icons-react";
 
 export function ServiceList({
     orgId,
@@ -92,6 +94,12 @@ export function ServiceList({
         await reorderServices({ orgId, serviceIds });
     };
 
+    const getImageUrl = (urlOrId: string) => {
+        if (!urlOrId) return undefined;
+        if (urlOrId.startsWith("http")) return urlOrId;
+        return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split('//')[1]}/api/storage/${urlOrId}`;
+    };
+
     const renderServiceRows = (srvs: typeof allServices, catId?: Id<"service_categories">) => {
         if (srvs.length === 0) {
             return (
@@ -130,6 +138,14 @@ export function ServiceList({
                                     <IconArrowDown size={14} />
                                 </button>
                             </div>
+
+                            {/* Service Image */}
+                            <Avatar className="h-10 w-14 rounded-lg border bg-muted shrink-0 overflow-hidden">
+                                <AvatarImage src={getImageUrl(service.photoUrl || "")} alt={service.name} className="object-cover" />
+                                <AvatarFallback className="rounded-none bg-muted/50 flex items-center justify-center">
+                                    <IconUpload size={14} className="text-muted-foreground/30" />
+                                </AvatarFallback>
+                            </Avatar>
 
                             <div className="flex-1 flex flex-col justify-center min-w-0 py-0.5">
                                 <div className="flex items-center gap-2">

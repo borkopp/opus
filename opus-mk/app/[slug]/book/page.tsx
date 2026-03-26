@@ -37,6 +37,12 @@ export default function BookingPage() {
   const profile = useQuery(api.public.getPublicProfile, { slug });
   const createBooking = useMutation(api.publicBooking.createPublicBooking);
 
+  const getImageUrl = (urlOrId?: string) => {
+    if (!urlOrId) return undefined;
+    if (urlOrId.startsWith("http")) return urlOrId;
+    return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split("//")[1]}/api/storage/${urlOrId}`;
+  };
+
   // ── State ──
   const preselectedServiceId = searchParams.get("service");
   const [step, setStep] = useState<BookingStep>(preselectedServiceId ? "datetime" : "service");
@@ -221,13 +227,24 @@ export default function BookingPage() {
                       : "border-border/40 bg-card hover:border-border"
                   }`}
                 >
-                  <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-sm font-medium">{service.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <IconClock size={12} />
-                        {service.durationMins} min
-                      </span>
+                  <div className="flex items-center gap-3 flex-1 min-w-0 mr-3">
+                    {service.photoUrl && (
+                      <div className="w-12 h-12 rounded-lg bg-secondary shrink-0 overflow-hidden">
+                        <img
+                          src={getImageUrl(service.photoUrl)}
+                          alt={service.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{service.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <IconClock size={12} />
+                          {service.durationMins} min
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span className="text-sm font-semibold shrink-0">

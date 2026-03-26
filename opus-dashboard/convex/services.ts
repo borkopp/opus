@@ -59,6 +59,7 @@ export const createService = mutation({
         staffIds: v.array(v.id("staff_members")),
         sortOrder: v.number(),
         isOpusVisible: v.optional(v.boolean()),
+        storageId: v.optional(v.id("_storage")),
     },
     handler: async (ctx, args) => {
         const { staffMember: caller } = await requireRole(ctx, args.orgId, "manager");
@@ -90,13 +91,18 @@ export const createService = mutation({
             }
         }
 
+        let finalPhotoUrl = args.photoUrl;
+        if (args.storageId) {
+            finalPhotoUrl = (await ctx.storage.getUrl(args.storageId)) ?? undefined;
+        }
+
         const serviceId = await ctx.db.insert("services", {
             orgId: args.orgId,
             name: args.name,
             description: args.description,
             consumerDescription: args.consumerDescription,
             highlights: args.highlights,
-            photoUrl: args.photoUrl,
+            photoUrl: finalPhotoUrl,
             durationMins: args.durationMins,
             priceMinorUnits: args.priceMinorUnits,
             currency: args.currency,
@@ -150,6 +156,7 @@ export const updateService = mutation({
         isActive: v.optional(v.boolean()),
         isOpusVisible: v.optional(v.boolean()),
         sortOrder: v.optional(v.number()),
+        storageId: v.optional(v.id("_storage")),
     },
     handler: async (ctx, args) => {
         const { staffMember: caller } = await requireRole(ctx, args.orgId, "manager");
@@ -202,7 +209,13 @@ export const updateService = mutation({
         if (args.description !== undefined) updates.description = args.description;
         if (args.consumerDescription !== undefined) updates.consumerDescription = args.consumerDescription;
         if (args.highlights !== undefined) updates.highlights = args.highlights;
-        if (args.photoUrl !== undefined) updates.photoUrl = args.photoUrl;
+        
+        if (args.storageId !== undefined) {
+            updates.photoUrl = (await ctx.storage.getUrl(args.storageId)) ?? undefined;
+        } else if (args.photoUrl !== undefined) {
+            updates.photoUrl = args.photoUrl;
+        }
+        
         if (args.currency !== undefined) updates.currency = args.currency;
         if (args.isActive !== undefined) updates.isActive = args.isActive;
         if (args.isOpusVisible !== undefined) updates.isOpusVisible = args.isOpusVisible;

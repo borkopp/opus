@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { IconLoader2 } from "@tabler/icons-react";
+import { IconLoader2, IconUpload, IconX } from "@tabler/icons-react";
 import {
     Dialog,
     DialogContent,
@@ -19,6 +19,8 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRef } from "react";
 
 export function ServiceFormDialog({
     orgId,
@@ -45,6 +47,7 @@ export function ServiceFormDialog({
 
     const createService = useMutation(api.services.createService);
     const updateService = useMutation(api.services.updateService);
+    const generateUploadUrl = useMutation(api.files.generateUploadUrl);
     const allServices = useQuery(api.services.listServices, { orgId });
 
     const [name, setName] = useState("");
@@ -53,10 +56,13 @@ export function ServiceFormDialog({
     const [priceMinorUnits, setPriceMinorUnits] = useState(""); // Represented in string in form but converted
     const [categoryId, setCategoryId] = useState<string>("uncategorized");
     const [staffIds, setStaffIds] = useState<string[]>([]);
+    const [photoUrl, setPhotoUrl] = useState("");
     const [isActive, setIsActive] = useState(true);
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [error, setError] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!isEdit && initialCategoryId) {
@@ -72,6 +78,7 @@ export function ServiceFormDialog({
             setPriceMinorUnits((existingService.priceMinorUnits / 100).toFixed(2));
             setCategoryId(existingService.categoryId || "uncategorized");
             setStaffIds(existingService.staffIds);
+            setPhotoUrl(existingService.photoUrl || "");
             setIsActive(existingService.isActive ?? true);
         } else if (!isEdit) {
             // defaults
@@ -86,6 +93,38 @@ export function ServiceFormDialog({
     const toggleStaffId = (id: string, checked: boolean) => {
         if (checked) setStaffIds(prev => [...prev, id]);
         else setStaffIds(prev => prev.filter(s => s !== id));
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        setError("");
+
+        try {
+            const postUrl = await generateUploadUrl({ orgId });
+            const result = await fetch(postUrl, {
+                method: "POST",
+                headers: { "Content-Type": file.type },
+                body: file,
+            });
+
+            if (!result.ok) throw new Error("Upload failed");
+
+            const { storageId } = await result.json();
+            setPhotoUrl(storageId);
+        } catch (err: any) {
+            setError(err.message || "Failed to upload image");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const getImageUrl = (urlOrId: string) => {
+        if (!urlOrId) return undefined;
+        if (urlOrId.startsWith("http")) return urlOrId;
+        return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split('//')[1]}/api/storage/${urlOrId}`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -103,11 +142,12 @@ export function ServiceFormDialog({
 
         try {
             const catId = categoryId === "uncategorized" ? undefined : (categoryId as Id<"service_categories">);
+            const isStorageId = photoUrl && !photoUrl.startsWith("http");
 
             if (isEdit && serviceId) {
                 await updateService({
                     orgId,
-                    serviceId,
+                    serviceId: serviceId as Id<"services">,
                     name: name.trim(),
                     description: description.trim() || undefined,
                     durationMins: parseInt(durationMins),
@@ -115,6 +155,8 @@ export function ServiceFormDialog({
                     currency: orgSettings?.currency || "USD",
                     categoryId: catId || null,
                     staffIds: staffIds as Id<"staff_members">[],
+                    storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
+                    photoUrl: !isStorageId ? photoUrl : undefined,
                     isActive,
                 });
             } else {
@@ -131,6 +173,8 @@ export function ServiceFormDialog({
                     currency: orgSettings?.currency || "USD",
                     categoryId: catId,
                     staffIds: staffIds as Id<"staff_members">[],
+                    storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
+                    photoUrl: !isStorageId ? photoUrl : undefined,
                     sortOrder: maxOrder + 1,
                 });
             }
@@ -165,6 +209,57 @@ export function ServiceFormDialog({
                 </DialogHeader>
 
                 <form id="service-form" onSubmit={handleSubmit} className="flex flex-col gap-6 py-4">
+
+                    {/* Image Upload */}
+                    <div className="flex flex-col gap-3 p-4 rounded-xl border bg-muted/20">
+                        <Label>Service Photo (Optional)</Label>
+                        <div className="flex items-center gap-4">
+                            <div className="relative group">
+                                <Avatar className="h-20 w-32 rounded-lg border bg-background shadow-sm overflow-hidden">
+                                    <AvatarImage src={getImageUrl(photoUrl)} alt="Service Photo" className="object-cover" />
+                                    <AvatarFallback className="rounded-none bg-muted flex items-center justify-center">
+                                        <IconUpload size={24} className="text-muted-foreground/40" />
+                                    </AvatarFallback>
+                                </Avatar>
+                                {photoUrl && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setPhotoUrl("")}
+                                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <IconX size={12} />
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleUpload}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-lg"
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                >
+                                    {isUploading ? (
+                                        <IconLoader2 className="animate-spin w-4 h-4 mr-2" />
+                                    ) : (
+                                        <IconUpload size={16} className="mr-2" />
+                                    )}
+                                    {photoUrl ? "Change Image" : "Upload Photo"}
+                                </Button>
+                                <p className="text-[10px] text-muted-foreground">
+                                    Recommended: 800x500px, max 2MB
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Basic Details */}
                     <div className="flex flex-col gap-4 p-4 rounded-xl border bg-muted/20">
@@ -274,7 +369,7 @@ export function ServiceFormDialog({
 
                 <DialogFooter className="mt-4 border-t pt-4">
                     <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
-                    <Button type="submit" form="service-form" disabled={isSaving}>
+                    <Button type="submit" form="service-form" disabled={isSaving || isUploading}>
                         {isSaving && <IconLoader2 className="animate-spin w-4 h-4 mr-2" />}
                         {isEdit ? "Save Changes" : "Create Service"}
                     </Button>

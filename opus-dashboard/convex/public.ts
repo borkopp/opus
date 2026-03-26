@@ -8,7 +8,7 @@ import { query } from "./_generated/server";
 // These queries require NO auth — they are called by the separate opus.mk
 // Next.js project (and eventually the OPUS mobile app).
 //
-// All business data returned here is limited to published orgs (isPublished: true)
+// All business data returned here is limited to published orgs (listingStatus: "published")
 // and publicly-visible fields only. Internal ops data (payout splits, audit
 // logs, noShowRiskScore etc.) is NEVER returned from these queries.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export const listPublished = query({
         // Base query: published + not deleted
         let orgsQuery = ctx.db
             .query("orgs")
-            .withIndex("by_published", (q) => q.eq("isPublished", true))
+            .withIndex("by_listing_status", (q) => q.eq("listingStatus", "published"))
             .filter((q) => q.eq(q.field("isDeleted"), false));
 
         const allOrgs = await orgsQuery.collect();
@@ -115,7 +115,7 @@ export const getPublicProfile = query({
             .withIndex("by_slug", (q) => q.eq("slug", args.slug))
             .first();
 
-        if (!org || org.isDeleted || !org.isPublished) return null;
+        if (!org || org.isDeleted || org.listingStatus !== "published") return null;
 
         // Fetch media
         const media = await ctx.db
@@ -233,7 +233,7 @@ export const getPublicAvailability = query({
     handler: async (ctx, args) => {
         // Verify org is published
         const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted || !org.isPublished) return [];
+        if (!org || org.isDeleted || org.listingStatus !== "published") return [];
 
         // Verify service is publicly visible
         const service = await ctx.db.get(args.serviceId);
@@ -259,7 +259,7 @@ export const searchPublished = query({
         const results = await ctx.db
             .query("orgs")
             .withSearchIndex("search_by_name", (q) => {
-                let search = q.search("name", args.query).eq("isPublished", true).eq("isDeleted", false);
+                let search = q.search("name", args.query).eq("listingStatus", "published").eq("isDeleted", false);
                 return search;
             })
             .take(20);

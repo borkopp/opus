@@ -2,7 +2,8 @@
 
 import { cn } from "@/lib/utils";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -45,10 +46,36 @@ import {
   IconPhone,
   IconWorld,
 } from "@tabler/icons-react";
+import { ListedBadge } from "@/components/dashboard/ListingBanner";
+
+const VALID_TABS = ["general", "booking", "deposits", "surge", "notifications", "ai", "branding", "domain"] as const;
+type SettingsTab = typeof VALID_TABS[number];
 
 export default function SettingsPage() {
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // ── URL-driven tab state ──
+  const tabFromUrl = searchParams.get("tab") as SettingsTab | null;
+  const initialTab = tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "general";
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+
+  // Sync tab state when URL changes (e.g. browser back/forward)
+  useEffect(() => {
+    const t = searchParams.get("tab") as SettingsTab | null;
+    if (t && VALID_TABS.includes(t) && t !== activeTab) {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = useCallback((value: string) => {
+    const tab = value as SettingsTab;
+    setActiveTab(tab);
+    const url = tab === "general" ? "/settings" : `/settings?tab=${tab}`;
+    router.replace(url, { scroll: false });
+  }, [router]);
 
   const data = useQuery(
     api.orgSettings.getOrgSettings,
@@ -67,6 +94,7 @@ export default function SettingsPage() {
   );
   const updateAiSettings = useMutation(api.orgSettings.updateAiSettings);
   const updateOrgBranding = useMutation(api.orgSettings.updateOrgBranding);
+  const updateLogo = useMutation(api.orgSettings.updateLogo);
   const connectCustomDomain = useMutation(api.orgSettings.connectCustomDomain);
   const generateUploadUrl = useMutation(api.orgMedia.generateUploadUrl);
   const addMedia = useMutation(api.orgMedia.addMedia);
@@ -375,9 +403,12 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-8 w-full max-w-[1700px] max-h-screen mx-auto pb-10">
       <div className="flex flex-col gap-4 border-b border-border/40 pb-6">
-        <h1 className="text-3xl font-semibold font-display tracking-tight text-foreground">
-          Organization Settings
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-semibold font-display tracking-tight text-foreground">
+            Organization Settings
+          </h1>
+          {orgId && <ListedBadge orgId={orgId} />}
+        </div>
         <p className="text-muted-foreground mt-1 text-sm max-w-2xl">
           Manage global preferences, automation engines, and branding
           configurations for your Omni-Service deployment.
@@ -385,7 +416,8 @@ export default function SettingsPage() {
       </div>
 
       <Tabs
-        defaultValue="general"
+        value={activeTab}
+        onValueChange={handleTabChange}
         orientation="vertical"
         className="flex flex-col md:flex-row gap-8 lg:gap-12 w-full mt-2 items-start"
       >
@@ -1061,12 +1093,9 @@ export default function SettingsPage() {
                                 body: file,
                               });
                               const { storageId } = await res.json();
-                              const convexUrl = postUrl.split("/upload")[0];
-                              const fileUrl = `${convexUrl}/api/storage/${storageId}`;
-                              setBranding((b) => ({ ...b, logoUrl: fileUrl }));
-                              toast.success(
-                                "Logo uploaded — save branding to apply",
-                              );
+                              const newLogoUrl = await updateLogo({ orgId, storageId });
+                              setBranding((b) => ({ ...b, logoUrl: newLogoUrl }));
+                              toast.success("Logo updated successfully");
                             } catch (e: any) {
                               toast.error(e.message || "Logo upload failed");
                             }

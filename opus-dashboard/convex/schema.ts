@@ -32,7 +32,7 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   // ORGS
   // One row per business. Root of all multi-tenancy.
-  // Also drives the public opus.mk listing when isPublished = true.
+  // Also drives the public opus.mk listing via listingStatus.
   // ─────────────────────────────────────────────────────
   orgs: defineTable({
     // ── Core identity ──
@@ -104,8 +104,14 @@ export default defineSchema({
     )),
 
     // ── opus.mk marketplace visibility ──
-    isPublished: v.boolean(),                // owner explicitly opts in — default false
-    publishedAt: v.optional(v.number()),
+    // NOTE: optional during migration — make required after running migrateListingStatus
+    listingStatus: v.optional(v.union(
+      v.literal("unpublished"),              // default — owner has not attempted to publish
+      v.literal("ready"),                    // all blocking conditions met, owner can publish
+      v.literal("published"),               // live on opus.mk
+      v.literal("suspended"),               // was published but a blocking condition broke
+    )),
+    publishedAt: v.optional(v.number()),     // timestamp of first publish
     featuredUntil: v.optional(v.number()),   // paid featured placement
 
     // ── Review aggregate (updated by scheduled action after review writes) ──
@@ -143,11 +149,11 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_custom_domain", ["customDomain"])
     .index("by_stripe_account", ["stripeAccountId"])
-    .index("by_published", ["isPublished"])
-    .index("by_city_published", ["city", "isPublished"])
+    .index("by_listing_status", ["listingStatus"])
+    .index("by_city_listing", ["city", "listingStatus"])
     .searchIndex("search_by_name", {
       searchField: "name",
-      filterFields: ["isPublished", "isDeleted", "city", "industry"],
+      filterFields: ["listingStatus", "isDeleted", "city", "industry"],
     }),
 
 

@@ -246,3 +246,28 @@ export const clearMockData = mutation({
     };
   }
 });
+
+// ─────────────────────────────────────────────────────
+// ONE-TIME MIGRATION: isPublished → listingStatus
+// Run once via dashboard or dev console, then remove.
+// ─────────────────────────────────────────────────────
+export const migrateListingStatus = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allOrgs = await ctx.db.query("orgs").collect();
+    let migrated = 0;
+
+    for (const org of allOrgs) {
+      // Skip orgs that already have listingStatus set
+      if ((org as any).listingStatus) continue;
+
+      const wasPublished = (org as any).isPublished === true;
+      await ctx.db.patch(org._id, {
+        listingStatus: wasPublished ? "published" : "unpublished",
+      } as any);
+      migrated++;
+    }
+
+    return { migrated, total: allOrgs.length };
+  },
+});

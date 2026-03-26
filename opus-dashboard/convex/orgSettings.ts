@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 export const getOrgSettings = query({
     args: { orgId: v.id("orgs") },
@@ -215,7 +216,35 @@ export const updateOrgBranding = mutation({
             updatedAt: Date.now()
         });
 
+        // Recompute listing status — name, logo, or location may have changed
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+
         return true;
+    }
+});
+
+export const updateLogo = mutation({
+    args: {
+        orgId: v.id("orgs"),
+        storageId: v.id("_storage"),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, args.orgId, "owner");
+
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new Error("Org not found");
+
+        const logoUrl = await ctx.storage.getUrl(args.storageId);
+        if (!logoUrl) throw new Error("Logo file not found in storage");
+
+        await ctx.db.patch(args.orgId, {
+            logoUrl,
+            updatedAt: Date.now()
+        });
+
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+
+        return logoUrl;
     }
 });
 

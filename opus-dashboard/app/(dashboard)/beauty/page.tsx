@@ -22,6 +22,7 @@ import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationW
 import { CustomerInsightsWidget } from "@/components/dashboard/CustomerInsightsWidget";
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
 import { GreetingHeader } from "@/components/dashboard/GreetingHeader";
+import { ListingBanner } from "@/components/dashboard/ListingBanner";
 
 export default function DashboardHome() {
   const today = useMemo(() => new Date(), []);
@@ -40,6 +41,15 @@ export default function DashboardHome() {
 
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
+
+  // Listing readiness — drives whether to show dashboard or onboarding banner
+  const listingReadiness = useQuery(
+    api.listing.getListingReadiness,
+    orgId ? { orgId } : "skip"
+  );
+
+  // True when listing is published (dashboard should show)
+  const isPublished = listingReadiness?.listingStatus === "published";
 
   // Mutations
   const checkIn = useMutation(api.bookings.checkInBooking);
@@ -127,6 +137,16 @@ export default function DashboardHome() {
 
   if (!orgId) return null;
 
+  // ── If listing is NOT published, show ONLY the ListingBanner ──
+  if (!isPublished) {
+    return (
+      <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto">
+        <ListingBanner orgId={orgId} />
+      </div>
+    );
+  }
+
+  // ── Dashboard loading state (only reached when published) ──
   if (
     dashboardMetrics === undefined ||
     upcomingBookings === undefined ||
@@ -183,7 +203,7 @@ export default function DashboardHome() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto overflow-visible h-[calc(100vh-150px)]">
-      <GreetingHeader profile={profile} />
+      {/* <GreetingHeader profile={profile} /> */}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 overflow-visible min-h-0">
         {/* First Row: Schedule, Next In, and Staff */}

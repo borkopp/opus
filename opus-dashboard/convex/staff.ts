@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 export const listStaffMembers = query({
     args: {
@@ -147,6 +148,11 @@ export const updateStaffMember = mutation({
             createdAt: Date.now(),
         });
 
+        // Recompute listing status if isActive changed
+        if (args.isActive !== undefined) {
+            await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+        }
+
         return null;
     },
 });
@@ -189,6 +195,9 @@ export const deactivateStaffMember = mutation({
             after: { ...existingStaff, ...updates },
             createdAt: Date.now(),
         });
+
+        // Recompute listing status — a staff member was deactivated
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
 
         return null;
     }

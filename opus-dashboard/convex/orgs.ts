@@ -1,6 +1,7 @@
 import { query, mutation, internalQuery } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 export const getById = internalQuery({
     args: { orgId: v.id("orgs") },
@@ -84,7 +85,7 @@ export const createOrg = mutation({
             plan: "starter",
             planStatus: "trialing",
             // Marketplace defaults
-            isPublished: false,
+            listingStatus: "unpublished",
             reviewCount: 0,
             averageRating: 0,
             // Onboarding
@@ -254,11 +255,20 @@ export const updateProfile = mutation({
             after: { ...org, ...updates },
             createdAt: Date.now(),
         });
+
+        // Recompute listing status — name, logo, city, or address may have changed
+        const listingRelevantFields = ["name", "logoUrl", "city", "address"] as const;
+        const hasListingChange = listingRelevantFields.some((k) => fields[k] !== undefined);
+        if (hasListingChange) {
+            await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId });
+        }
     },
 });
 
 // ─────────────────────────────────────────────────────
 // Publish / unpublish to opus.mk
+// DEPRECATED — use listing.publishOrg / listing.unpublishOrg instead.
+// Kept for backwards compatibility but delegates to new listingStatus field.
 // ─────────────────────────────────────────────────────
 export const updatePublishStatus = mutation({
     args: {
@@ -271,15 +281,10 @@ export const updatePublishStatus = mutation({
         const org = await ctx.db.get(args.orgId);
         if (!org || org.isDeleted) throw new ConvexError("Org not found.");
 
-        // Require onboarding to be complete before publishing
-        if (args.isPublished && !org.isOnboardingComplete) {
-            throw new ConvexError("Complete onboarding before publishing to opus.mk.");
-        }
-
         const now = Date.now();
         await ctx.db.patch(args.orgId, {
-            isPublished: args.isPublished,
-            publishedAt: args.isPublished ? (org.publishedAt ?? now) : undefined,
+            listingStatus: args.isPublished ? "published" : "unpublished",
+            publishedAt: args.isPublished ? (org.publishedAt ?? now) : org.publishedAt,
             updatedAt: now,
         });
 
@@ -289,8 +294,8 @@ export const updatePublishStatus = mutation({
             action: args.isPublished ? "org.published" : "org.unpublished",
             resourceType: "orgs",
             resourceId: args.orgId,
-            before: { isPublished: org.isPublished },
-            after: { isPublished: args.isPublished },
+            before: { listingStatus: org.listingStatus },
+            after: { listingStatus: args.isPublished ? "published" : "unpublished" },
             createdAt: now,
         });
     },

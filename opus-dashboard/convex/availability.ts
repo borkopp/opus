@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 export const setAvailabilityRule = mutation({
     args: {
@@ -83,6 +84,9 @@ export const setAvailabilityRule = mutation({
             });
         }
 
+        // Recompute listing status — availability rules changed
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+
         return ruleId;
     },
 });
@@ -116,6 +120,9 @@ export const deleteAvailabilityRule = mutation({
             after: { ...existingRule, isActive: false },
             createdAt: Date.now(),
         });
+
+        // Recompute listing status — availability rule deleted
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
 
         return null;
     }

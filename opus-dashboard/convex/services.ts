@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 export const listServices = query({
     args: {
@@ -221,6 +222,11 @@ export const updateService = mutation({
             createdAt: Date.now(),
         });
 
+        // Recompute listing status if isActive changed
+        if (args.isActive !== undefined) {
+            await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+        }
+
         return args.serviceId;
     }
 });
@@ -258,6 +264,9 @@ export const deactivateService = mutation({
             after: { ...service, ...updates },
             createdAt: Date.now(),
         });
+
+        // Recompute listing status — a service was deactivated
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
 
         return null;
     }

@@ -1,0 +1,55 @@
+import type { Metadata } from "next";
+// import { Geist_Mono, Figtree } from "next/font/google";
+import "./globals.css";
+import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "sonner";
+import { Syne, DM_Sans, DM_Mono, Outfit } from 'next/font/google'
+
+const syne = Syne({ subsets: ['latin'], weight: ['500', '600'], variable: '--font-syne' })
+const dmSans = DM_Sans({ subsets: ['latin'], weight: ['300', '400', '500'], variable: '--font-dm-sans' })
+const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400'], variable: '--font-dm-mono' })
+const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'], variable: '--font-outfit' })
+
+
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
+
+// const figtree = Figtree({
+//   variable: "--font-figtree",
+//   subsets: ["latin"],
+// });
+
+export const metadata: Metadata = {
+  title: "OPUS",
+  description: "Omni-Service OS",
+  icons: {
+    icon: "/convex.svg",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${outfit.variable} font-sans antialiased`}
+      >
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ClerkProvider dynamic>
+            <ConvexClientProvider>
+              {children}
+              <Toaster richColors position="bottom-right" />
+            </ConvexClientProvider>
+          </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

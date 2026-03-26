@@ -1,0 +1,278 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-mono);
+  --font-display: var(--font-syne);
+  --font-outfit: var(--font-outfit);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --shadow-s: var(--shadow-s);
+  --shadow-m: var(--shadow-m);
+  --shadow-l: var(--shadow-l);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FINANCIAL DASHBOARD DESIGN SYSTEM — Light Mode
+   Palette:
+     Obsidian     #1A1A18  → primary / foreground
+     Terracotta   #E8472A  → accent / CTA / charts
+     Warm white   #FAF9F7  → page background
+     White        #FFFFFF  → card background
+     Parchment    #F5F3F0  → secondary / muted surfaces
+   Fonts:
+     Syne (600/500)  → display headings, large numbers  [--font-display]
+     DM Sans (400/500) → all UI copy                    [--font-sans]
+     DM Mono (400)   → labels, metadata, code           [--font-mono]
+
+   NOTE: Register these fonts in your Next.js layout.tsx:
+     import { Syne, DM_Sans, DM_Mono } from 'next/font/google'
+     const syne    = Syne({ subsets: ['latin'], variable: '--font-syne' })
+     const dmSans  = DM_Sans({ subsets: ['latin'], variable: '--font-dm-sans' })
+     const dmMono  = DM_Mono({ subsets: ['latin'], variable: '--font-dm-mono' })
+   Then apply all three variables to <body>.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Base radius — 16px cards. Pill buttons (100px) applied at component level. */
+  --radius: 1rem;
+
+  /* Page & surface */
+  --background: hsl(0, 0%, 95%);
+  /* #FAF9F7 warm white */
+  --foreground: hsl(0, 0%, 5%);
+  /* #1A1A18 obsidian */
+
+  /* Cards — pure white, contrasts against warm-white page */
+  --card: hsl(0, 0%, 98%);
+  /* #FFFFFF */
+  --card-foreground: hsl(0, 0%, 5%);
+  /* obsidian */
+
+  /* Popovers — white, same as card */
+  --popover: hsl(0, 0%, 95%);
+  --popover-foreground: hsl(0, 0%, 5%);
+
+  /* Primary — Obsidian (dark buttons, active states) */
+  --primary: oklch(12% 0.004 60);
+  /* #1A1A18 */
+  --primary-foreground: oklch(100% 0 0);
+  /* white on obsidian */
+
+  /* Secondary — parchment surface */
+  --secondary: oklch(95% 0.005 75);
+  /* #F5F3F0 */
+  --secondary-foreground: oklch(12% 0.004 60);
+  /* obsidian text */
+
+  /* Muted — same parchment */
+  --muted: oklch(95% 0.005 75);
+  /* #F5F3F0 */
+  --muted-foreground: oklch(50% 0.005 60);
+  /* #6B6660 warm mid-gray */
+
+  /* Accent — Terracotta (CTA buttons, active nav pill, chart fills, badges) */
+  --accent: oklch(65.142% 0.16304 33.262);
+  /* #E16349 */
+  --accent-foreground: oklch(100% 0 0);
+  /* white on terracotta */
+
+  /* Destructive — slightly deeper terracotta for errors */
+  --destructive: oklch(52% 0.22 27);
+  /* #B83220 */
+
+  /* Borders & inputs — barely-there warm line */
+  --border: oklch(90% 0.004 75);
+  /* #E2DED8 warm neutral-200 */
+  --input: hsl(0, 0%, 95%);
+  --ring: oklch(57% 0.21 27);
+  /* terracotta focus ring */
+
+  /* Chart palette — terracotta-led with warm neutrals */
+  --chart-1: oklch(57% 0.21 27);
+  /* Terracotta  #E8472A */
+  --chart-2: oklch(12% 0.004 60);
+  /* Obsidian    #1A1A18 */
+  --chart-3: oklch(80% 0.015 75);
+  /* Neutral-300 #E2DED8 */
+  --chart-4: oklch(60% 0.12 145);
+  /* Soft green  (success) */
+  --chart-5: oklch(75% 0.1 27);
+  /* Terracotta-100 tint  */
+
+  /* Sidebar — warm white, same tone as page so it reads as a flush panel */
+  --sidebar: oklch(98% 0.005 75);
+  /* #FAF9F7 */
+  --sidebar-foreground: oklch(12% 0.004 60);
+  --sidebar-primary: oklch(12% 0.004 60);
+  /* obsidian active item */
+  --sidebar-primary-foreground: oklch(100% 0 0);
+  --sidebar-accent: oklch(57% 0.21 27);
+  /* terracotta hover pill */
+  --sidebar-accent-foreground: oklch(100% 0 0);
+  --sidebar-border: oklch(90% 0.004 75);
+  --sidebar-ring: oklch(57% 0.21 27);
+
+  /* Shadows */
+  --shadow-s: inset 0 1px 2px #ffffff30, 0 1px 2px #00000030, 0 2px 4px #00000015;
+  --shadow-m: inset 0 1px 2px #ffffff50, 0 2px 4px #00000030, 0 4px 8px #00000015;
+  --shadow-l: inset 0 1px 2px #ffffff70, 0 4px 6px #00000030, 0 6px 10px #00000015;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   FINANCIAL DASHBOARD DESIGN SYSTEM — Dark Mode
+   Palette:
+     Background   #141412   deepest warm black
+     Card         #1E1E1C   lifted surface (+1 step)
+     Popover      #262624   floating surface (+2 steps)
+     Foreground   #FAF9F7   warm white text (not pure white)
+     Terracotta   #E8472A   accent unchanged — bright enough on dark
+     Border       rgba(255,255,255,0.08)
+   ───────────────────────────────────────────────────────────────────────────── */
+.dark {
+  /* Page */
+  --background: hsl(0, 0%, 0%);
+  /* #141412 */
+  --foreground: hsl(0, 0%, 95%);
+  /* #FAF9F7 warm white */
+
+  /* Cards — one step above background */
+  --card: hsl(0, 0%, 5%);
+  /* #1E1E1C */
+  --card-foreground: oklch(98% 0.005 75);
+
+  /* Popovers — second step above background */
+  --popover: hsl(0, 0%, 9%);
+  /* #262624 */
+  --popover-foreground: oklch(98% 0.005 75);
+
+  /* Primary — warm white (inverted: light buttons on dark bg) */
+  --primary: oklch(98% 0.005 75);
+  /* #FAF9F7 */
+  --primary-foreground: oklch(12% 0.004 60);
+  /* obsidian on light btn */
+
+  /* Secondary — subtle lifted surface for ghost elements */
+  --secondary: oklch(19% 0.004 60);
+  /* #2A2A28 */
+  --secondary-foreground: oklch(98% 0.005 75);
+
+  /* Muted */
+  --muted: hsl(0, 0%, 70%);
+  --muted-foreground: hsl(0, 0%, 30%);
+
+  /* Accent — Terracotta unchanged, still high-contrast on dark */
+  --accent: oklch(57% 0.21 27);
+  /* #E8472A */
+  --accent-foreground: oklch(100% 0 0);
+  /* white on terracotta */
+
+  /* Destructive — slightly lighter for dark context */
+  --destructive: oklch(62% 0.22 27);
+
+  /* Borders — white at low alpha for warm dark feel */
+  --border: hsl(0, 0%, 10%);
+  --input: hsl(0, 0%, 30%);
+  --ring: oklch(57% 0.21 27);
+  /* terracotta focus ring */
+
+  /* Charts — same order, adjusted for dark legibility */
+  --chart-1: oklch(57% 0.21 27);
+  /* Terracotta */
+  --chart-2: oklch(92% 0.005 75);
+  /* Warm white */
+  --chart-3: oklch(38% 0.004 60);
+  /* Dark neutral */
+  --chart-4: oklch(65% 0.14 145);
+  /* Soft green */
+  --chart-5: oklch(72% 0.12 27);
+  /* Terracotta tint */
+
+  /* Sidebar — one shade lighter than bg so it reads as a distinct panel */
+  --sidebar: oklch(13% 0.004 60);
+  /* #1A1A18 */
+  --sidebar-foreground: oklch(98% 0.005 75);
+  --sidebar-primary: oklch(57% 0.21 27);
+  /* terracotta active item in dark */
+  --sidebar-primary-foreground: oklch(100% 0 0);
+  --sidebar-accent: oklch(19% 0.004 60);
+  /* lifted surface on hover */
+  --sidebar-accent-foreground: oklch(98% 0.005 75);
+  --sidebar-border: oklch(100% 0 0 / 8%);
+  --sidebar-ring: oklch(57% 0.21 27);
+
+  /* Shadows — using same definitions as root as they are semi-transparent and work well on dark */
+  --shadow-s: inset 0 1px 2px #ffffff15, 0 1px 2px #00000050, 0 2px 4px #00000030;
+  --shadow-m: inset 0 1px 2px #ffffff20, 0 2px 4px #00000050, 0 4px 8px #00000030;
+  --shadow-l: inset 0 1px 2px #ffffff30, 0 4px 6px #00000050, 0 6px 10px #00000030;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), sans-serif;
+    font-feature-settings: "ss01", "cv01";
+  }
+
+  /* Financial figures, counts, and anything numeric — using Outfit */
+  .font-outfit,
+  [data-outfit] {
+    font-family: var(--font-outfit), sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Financial figures — always tabular, always Syne (unless explicitly Outfit) */
+  .font-display,
+  [data-display] {
+    font-family: var(--font-syne), sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* All monetary values get tabular nums automatically */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-dm-mono), monospace;
+  }
+}

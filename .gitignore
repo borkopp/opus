@@ -1,0 +1,5 @@
+.env
+.env.*
+!.env.example
+!.vps-env-templates/**
+.cursor/settings.json

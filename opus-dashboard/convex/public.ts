@@ -23,6 +23,19 @@ export const listPublished = query({
             v.literal("beauty_wellness"),
             v.literal("hospitality"),
         )),
+        beautyCategory: v.optional(v.union(
+            v.literal("barbershop"),
+            v.literal("hair_salon"),
+            v.literal("nail_salon"),
+            v.literal("spa"),
+            v.literal("beauty_salon"),
+            v.literal("lash_studio"),
+            v.literal("brow_bar"),
+            v.literal("tattoo_studio"),
+            v.literal("massage_therapy"),
+            v.literal("wellness_center"),
+            v.literal("personal_trainer"),
+        )),
         priceRange: v.optional(v.union(
             v.literal("budget"),
             v.literal("mid"),
@@ -55,6 +68,10 @@ export const listPublished = query({
 
         if (args.industry) {
             filtered = filtered.filter((o) => o.industry === args.industry);
+        }
+
+        if (args.beautyCategory) {
+            filtered = filtered.filter((o) => o.beautyCategory === args.beautyCategory);
         }
 
         if (args.priceRange) {
@@ -97,6 +114,7 @@ export const listPublished = query({
                 averageRating: o.averageRating,
                 reviewCount: o.reviewCount,
                 isFeatured: !!(o.featuredUntil && o.featuredUntil > now),
+                beautyCategory: o.beautyCategory,
                 cuisine: o.cuisine,
                 venueType: o.venueType,
             })),
@@ -177,6 +195,7 @@ export const getPublicProfile = query({
             // Discovery
             tags: org.tags,
             priceRange: org.priceRange,
+            beautyCategory: org.beautyCategory,
             cuisine: org.cuisine,
             venueType: org.venueType,
 
@@ -280,6 +299,7 @@ export const searchPublished = query({
             averageRating: o.averageRating,
             reviewCount: o.reviewCount,
             priceRange: o.priceRange,
+            beautyCategory: o.beautyCategory,
         }));
     },
 });

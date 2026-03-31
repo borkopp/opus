@@ -129,7 +129,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
   const [isPublishing, setIsPublishing] = useState(false);
 
   if (readiness === undefined) return null; // Loading
-  if (readiness === null) return null;       // Org not found
+  if (readiness === null) return null; // Org not found
 
   // If published → don't show the banner
   if (readiness.listingStatus === "published") return null;
@@ -149,10 +149,10 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
 
   // ── Determine incomplete blocking items ──
   const incompleteBlocking = BLOCKING_ITEMS.filter(
-    (item) => !(readiness.blocking as Record<string, boolean>)[item.key]
+    (item) => !(readiness.blocking as Record<string, boolean>)[item.key],
   );
   const completeBlocking = BLOCKING_ITEMS.filter(
-    (item) => (readiness.blocking as Record<string, boolean>)[item.key]
+    (item) => (readiness.blocking as Record<string, boolean>)[item.key],
   );
 
   return (
@@ -163,7 +163,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
           ? "border-amber-500/40 bg-gradient-to-br from-amber-500/5 via-background to-amber-500/5"
           : readiness.allBlockingMet
             ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/5 via-background to-emerald-500/5"
-            : "border-border/60 bg-gradient-to-br from-primary/3 via-background to-primary/3"
+            : "border-border/60 bg-gradient-to-br from-primary/3 via-background to-primary/3",
       )}
     >
       {/* Decorative gradient orb */}
@@ -174,11 +174,11 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
             ? "bg-amber-500"
             : readiness.allBlockingMet
               ? "bg-emerald-500"
-              : "bg-primary"
+              : "bg-primary",
         )}
       />
 
-      <div className="relative z-10 p-6 lg:p-8">
+      <div className="relative z-10 p-7 lg:p-10">
         {/* ── Header ── */}
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
@@ -189,7 +189,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
                   ? "bg-amber-500/15 text-amber-500"
                   : readiness.allBlockingMet
                     ? "bg-emerald-500/15 text-emerald-500"
-                    : "bg-primary/10 text-primary"
+                    : "bg-primary/10 text-primary",
               )}
             >
               {isSuspended ? (
@@ -240,8 +240,14 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {BLOCKING_ITEMS.map((item) => {
-                  const done = (readiness.blocking as Record<string, boolean>)[item.key];
-                  const href = item.href || (item.settingsTab ? `/settings?tab=${item.settingsTab}` : undefined);
+                  const done = (readiness.blocking as Record<string, boolean>)[
+                    item.key
+                  ];
+                  const href =
+                    item.href ||
+                    (item.settingsTab
+                      ? `/settings?tab=${item.settingsTab}`
+                      : undefined);
                   return (
                     <a
                       key={item.key}
@@ -250,7 +256,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
                         "flex items-center gap-3 px-4 py-3 rounded-xl border transition-all group",
                         done
                           ? "border-emerald-500/20 bg-emerald-500/5"
-                          : "border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
+                          : "border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 cursor-pointer",
                       )}
                     >
                       {done ? (
@@ -267,16 +273,24 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
                         />
                       )}
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={cn(
-                          "opacity-60 shrink-0",
-                          done ? "text-emerald-500" : "text-muted-foreground group-hover:text-primary"
-                        )}>
+                        <span
+                          className={cn(
+                            "opacity-60 shrink-0",
+                            done
+                              ? "text-emerald-500"
+                              : "text-muted-foreground group-hover:text-primary",
+                          )}
+                        >
                           {item.icon}
                         </span>
-                        <span className={cn(
-                          "text-sm font-medium truncate",
-                          done ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm font-medium truncate",
+                            done
+                              ? "text-emerald-700 dark:text-emerald-400"
+                              : "text-foreground",
+                          )}
+                        >
                           {item.label}
                         </span>
                       </div>
@@ -290,12 +304,19 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
             {!isSuspended && (
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  Recommended ({readiness.recommendedCount}/{readiness.recommendedTotal})
+                  Recommended ({readiness.recommendedCount}/
+                  {readiness.recommendedTotal})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {RECOMMENDED_ITEMS.map((item) => {
-                    const done = (readiness.recommended as Record<string, boolean>)[item.key];
-                    const href = item.href || (item.settingsTab ? `/settings?tab=${item.settingsTab}` : undefined);
+                    const done = (
+                      readiness.recommended as Record<string, boolean>
+                    )[item.key];
+                    const href =
+                      item.href ||
+                      (item.settingsTab
+                        ? `/settings?tab=${item.settingsTab}`
+                        : undefined);
                     return (
                       <a
                         key={item.key}
@@ -304,7 +325,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
                           "flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all group",
                           done
                             ? "border-emerald-500/10 bg-emerald-500/3"
-                            : "border-border/40 bg-card/50 hover:border-primary/30 cursor-pointer"
+                            : "border-border/40 bg-card/50 hover:border-primary/30 cursor-pointer",
                         )}
                       >
                         {done ? (
@@ -320,10 +341,14 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
                             className="text-muted-foreground/30 shrink-0"
                           />
                         )}
-                        <span className={cn(
-                          "text-sm truncate",
-                          done ? "text-emerald-600/70 dark:text-emerald-400/70" : "text-muted-foreground"
-                        )}>
+                        <span
+                          className={cn(
+                            "text-sm truncate",
+                            done
+                              ? "text-emerald-600/70 dark:text-emerald-400/70"
+                              : "text-muted-foreground",
+                          )}
+                        >
                           {item.label}
                         </span>
                       </a>

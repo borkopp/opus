@@ -15,6 +15,7 @@ import {
     IconFilter
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { BookingsTimeline } from "./BookingsTimeline";
 import { BookingSidebar } from "./BookingSidebar";
 import { BookingsList } from "./BookingsList";
@@ -28,7 +29,12 @@ export function BookingsSplitView({ bookings, staffMembers, orgId }: { bookings:
     const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
     const [statusFilter, setStatusFilter] = useState<"all" | "upcoming" | "completed" | "unpaid" | "no-show">("all");
 
-    const todayBookings = bookings.filter(b => isSameDay(new Date(b.startAt), currentDate));
+    // Exclude bookings that were cancelled as part of a reschedule — they are history
+    // artifacts (the new booking is shown instead) and should not appear on the calendar.
+    const todayBookings = bookings.filter(b =>
+        isSameDay(new Date(b.startAt), currentDate) &&
+        !(b.status === "cancelled" && b.cancellationReason === "Rescheduled")
+    );
 
     // Day Summary Calculations
     const totalBookingsCount = todayBookings.length;
@@ -75,8 +81,7 @@ export function BookingsSplitView({ bookings, staffMembers, orgId }: { bookings:
             setSelectedBookingId(null);
         } catch (err: any) {
             console.error("Reschedule failed:", err);
-            // In a real app, this would show a toast notification
-            alert(err?.data ?? err?.message ?? "Failed to reschedule booking. The slot may conflict with another booking.");
+            toast.error(err?.data ?? err?.message ?? "Failed to reschedule. The slot may conflict with another booking.");
         }
     }, [rescheduleBooking, orgId]);
 

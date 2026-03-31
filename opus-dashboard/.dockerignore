@@ -1,0 +1,12 @@
+node_modules
+.next
+.env*
+!.env.example
+Dockerfile
+.dockerignore
+README.md
+*.md
+.git
+.gitignore
+.turbo
+convex/_generated

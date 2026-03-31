@@ -140,8 +140,10 @@ export default function DashboardHome() {
   // ── If listing is NOT published, show ONLY the ListingBanner ──
   if (!isPublished) {
     return (
-      <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto">
-        <ListingBanner orgId={orgId} />
+      <div className="flex items-start justify-center min-h-full w-full pt-8 pb-12">
+        <div className="w-full max-w-4xl">
+          <ListingBanner orgId={orgId} />
+        </div>
       </div>
     );
   }

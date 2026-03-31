@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { format, formatDistanceToNow, setHours, setMinutes, startOfDay, addDays, isBefore } from "date-fns";
 import {
     IconX,
@@ -16,7 +16,6 @@ import {
     IconCalendarStar,
     IconAlertCircle,
     IconMessageCircle,
-    IconCircleCheck,
     IconTrendingUp,
     IconSparkles,
     IconCalendarTime,
@@ -40,14 +39,11 @@ export function BookingSidebar({
     const [showReschedule, setShowReschedule] = useState(false);
     const [rescheduleDate, setRescheduleDate] = useState<Date | null>(null);
 
-    // Reset reschedule UI when booking changes
-    const currentBookingId = booking?._id;
-    const [prevBookingId, setPrevBookingId] = useState<string | null>(null);
-    if (currentBookingId !== prevBookingId) {
-        setPrevBookingId(currentBookingId);
+    // Reset reschedule panel when the selected booking changes
+    useEffect(() => {
         setShowReschedule(false);
         setRescheduleDate(null);
-    }
+    }, [booking?._id]);
 
     if (!booking) {
         return (
@@ -286,40 +282,26 @@ export function BookingSidebar({
 
             {/* Sticky Actions Footer */}
             <div className="p-4 border-t border-border bg-card/90 backdrop-blur-md shadow-[0_-4px_10px_rgba(0,0,0,0.02)] shrink-0 gap-2 flex flex-col pt-3 z-20 rounded-xl">
-                <div className="grid grid-cols-2 gap-2 w-full">
-                    <Button
-                        variant="default"
-                        size="sm"
-                        className={cn("w-full h-9", status === "checked_in" ? "bg-emerald-600 hover:bg-emerald-700" : "")}
-                    >
-                        {status === "checked_in" ? (
-                            <><IconCircleCheck className="mr-1.5 h-4 w-4" /> Checked In</>
-                        ) : (
-                            "Check In"
-                        )}
-                    </Button>
-                    <Button
-                        variant={showReschedule ? "secondary" : "outline"}
-                        size="sm"
-                        className={cn(
-                            "w-full h-9 bg-background gap-1.5",
-                            showReschedule && "ring-1 ring-primary/30 bg-primary/5",
-                            ["completed", "cancelled", "no_show"].includes(status) && "opacity-50 pointer-events-none"
-                        )}
-                        onClick={() => setShowReschedule(!showReschedule)}
-                        disabled={["completed", "cancelled", "no_show"].includes(status)}
-                    >
-                        <IconCalendarTime className="h-3.5 w-3.5" />
-                        {showReschedule ? "Cancel" : "Reschedule"}
-                    </Button>
-                </div>
+                <Button
+                    variant={showReschedule ? "secondary" : "terracotta"}
+                    size="sm"
+                    className={cn(
+                        "w-full h-9 gap-1.5",
+                        showReschedule && "ring-1 ring-primary/30 bg-primary/5",
+                    )}
+                    onClick={() => setShowReschedule(!showReschedule)}
+                    disabled={["completed", "cancelled", "no_show"].includes(status)}
+                >
+                    <IconCalendarTime className="h-3.5 w-3.5" />
+                    {showReschedule ? "Cancel Reschedule" : "Reschedule"}
+                </Button>
 
                 <div className="grid grid-cols-2 gap-2 w-full">
-                    <Button variant="outline" size="sm" className="w-full h-9 text-xs gap-1.5 text-zinc-600 dark:text-zinc-300">
+                    <Button variant="outline" size="sm" disabled className="w-full h-9 text-xs gap-1.5 text-muted-foreground">
                         <IconCurrencyPound className="h-3.5 w-3.5" />
                         Send Payment
                     </Button>
-                    <Button variant="outline" size="sm" className="w-full h-9 text-xs gap-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 border-red-200 dark:border-red-900/50">
+                    <Button variant="outline" size="sm" disabled className="w-full h-9 text-xs gap-1.5 text-muted-foreground">
                         <IconCalendarOff className="h-3.5 w-3.5" />
                         No-Show Charge
                     </Button>

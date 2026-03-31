@@ -6,7 +6,8 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Logo } from "@/components/sidebar";
-import { IconBell, IconSun, IconMoon } from "@tabler/icons-react";
+import { IconSun, IconMoon } from "@tabler/icons-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -118,9 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {mounted && (theme === "dark" ? <IconSun className="h-5 w-5" /> : <IconMoon className="h-5 w-5" />)}
                             {!mounted && <div className="h-5 w-5" />}
                         </button>
-                        <button className="flex items-center justify-center h-10 w-10 rounded-full bg-secondary text-primary hover:bg-secondary/80 transition-colors border border-border/40">
-                            <IconBell className="h-5 w-5" />
-                        </button>
+                        {profile?.orgId && <NotificationBell orgId={profile.orgId} />}
                         <img
                             src={profile?.user?.avatarUrl || "https://ui-avatars.com/api/?name=User"}
                             className="h-10 w-10 flex-shrink-0 rounded-full border border-border/60 shadow-sm"

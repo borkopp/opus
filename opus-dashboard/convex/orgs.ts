@@ -202,6 +202,21 @@ export const updateProfile = mutation({
             isClosed: v.boolean(),
         }))),
 
+        // Beauty & Wellness category
+        beautyCategory: v.optional(v.union(
+            v.literal("barbershop"),
+            v.literal("hair_salon"),
+            v.literal("nail_salon"),
+            v.literal("spa"),
+            v.literal("beauty_salon"),
+            v.literal("lash_studio"),
+            v.literal("brow_bar"),
+            v.literal("tattoo_studio"),
+            v.literal("massage_therapy"),
+            v.literal("wellness_center"),
+            v.literal("personal_trainer"),
+        )),
+
         // Hospitality-specific
         cuisine: v.optional(v.array(v.string())),
         venueType: v.optional(v.union(
@@ -211,6 +226,9 @@ export const updateProfile = mutation({
             v.literal("club"),
             v.literal("hotel"),
         )),
+
+        // Industry (can change during onboarding before completion)
+        industry: v.optional(v.union(v.literal("beauty_wellness"), v.literal("hospitality"))),
 
         // Onboarding step progress
         onboardingStep: v.optional(v.number()),
@@ -233,7 +251,9 @@ export const updateProfile = mutation({
             "tags", "priceRange",
             "phone", "instagramHandle", "websiteUrl",
             "openingHours",
+            "beautyCategory",
             "cuisine", "venueType",
+            "industry",
             "onboardingStep", "isOnboardingComplete",
         ] as const;
 

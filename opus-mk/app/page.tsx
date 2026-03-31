@@ -5,39 +5,70 @@ import { api } from "@/convex/_generated/api";
 import { Logo } from "@/components/Logo";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import {
   IconSearch,
   IconMapPin,
-  IconStar,
   IconStarFilled,
   IconSparkles,
+  IconScissors,
+  IconFlame,
+  IconLeaf,
+  IconUser,
+  IconHeart,
+  IconEye,
+  IconMassage,
+  IconYoga,
+  IconRun,
+  IconBrush,
+  IconHandSanitizer,
 } from "@tabler/icons-react";
+
+// ─── Beauty category config ──────────────────────────
+type BeautyCategory =
+  | "barbershop" | "hair_salon" | "nail_salon" | "spa" | "beauty_salon"
+  | "lash_studio" | "brow_bar" | "tattoo_studio" | "massage_therapy"
+  | "wellness_center" | "personal_trainer";
+
+const CATEGORIES: { id: BeautyCategory; label: string; icon: React.ReactNode }[] = [
+  { id: "barbershop",       label: "Barbershop",       icon: <IconScissors size={20} /> },
+  { id: "hair_salon",       label: "Hair Salon",       icon: <IconBrush size={20} /> },
+  { id: "nail_salon",       label: "Nail Salon",       icon: <IconHandSanitizer size={20} /> },
+  { id: "spa",              label: "Spa",              icon: <IconLeaf size={20} /> },
+  { id: "beauty_salon",     label: "Beauty Salon",     icon: <IconHeart size={20} /> },
+  { id: "lash_studio",      label: "Lash Studio",      icon: <IconEye size={20} /> },
+  { id: "brow_bar",         label: "Brow Bar",         icon: <IconUser size={20} /> },
+  { id: "tattoo_studio",    label: "Tattoo Studio",    icon: <IconFlame size={20} /> },
+  { id: "massage_therapy",  label: "Massage Therapy",  icon: <IconMassage size={20} /> },
+  { id: "wellness_center",  label: "Wellness Center",  icon: <IconYoga size={20} /> },
+  { id: "personal_trainer", label: "Personal Trainer", icon: <IconRun size={20} /> },
+];
 
 export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCity, setSelectedCity] = useState<string | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<BeautyCategory | undefined>();
 
-  // Use search when query is present, otherwise list all published
   const listings = useQuery(api.public.listPublished, {
-    city: selectedCity,
+    industry: "beauty_wellness",
+    beautyCategory: selectedCategory,
   });
 
   const searchResults = useQuery(
     api.public.searchPublished,
-    searchQuery.length >= 2 ? { query: searchQuery, city: selectedCity } : "skip"
+    searchQuery.length >= 2 ? { query: searchQuery } : "skip"
   );
 
   const displayItems = searchQuery.length >= 2 ? searchResults : listings?.items;
   const isLoading = displayItems === undefined;
 
+  const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory);
+
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Logo className="text-xl" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <IconMapPin size={14} />
@@ -46,15 +77,15 @@ export default function DiscoverPage() {
         </div>
       </header>
 
-      {/* ── Search ── */}
-      <div className="max-w-3xl mx-auto px-4 pt-6 pb-4">
+      {/* ── Hero search ── */}
+      <div className="max-w-6xl mx-auto px-4 pt-6 pb-4">
         <div className="relative">
           <IconSearch
             size={18}
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50"
           />
           <Input
-            placeholder="Search businesses..."
+            placeholder="Search salons, barbers, spas…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12 rounded-2xl bg-card border-border/60 text-base placeholder:text-muted-foreground/40"
@@ -62,23 +93,93 @@ export default function DiscoverPage() {
         </div>
       </div>
 
-      {/* ── Listings Grid ── */}
-      <main className="max-w-3xl mx-auto px-4 pb-12">
+      {/* ── Category row: carousel on mobile, pill grid on desktop ── */}
+      {!searchQuery && (
+        <div className="max-w-6xl mx-auto px-4 pb-6">
+          {/* Mobile: horizontal scroll */}
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none md:hidden">
+            <button
+              onClick={() => setSelectedCategory(undefined)}
+              className={`flex-none flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap ${
+                !selectedCategory
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border/50 text-muted-foreground hover:border-border"
+              }`}
+            >
+              All
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  setSelectedCategory(selectedCategory === cat.id ? undefined : cat.id)
+                }
+                className={`flex-none flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap ${
+                  selectedCategory === cat.id
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-card border-border/50 text-muted-foreground hover:border-border"
+                }`}
+              >
+                {cat.icon}
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop: grid of category tiles */}
+          <div className="hidden md:grid grid-cols-6 lg:grid-cols-11 gap-2">
+            <button
+              onClick={() => setSelectedCategory(undefined)}
+              className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl border text-center transition-all ${
+                !selectedCategory
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border/50 text-muted-foreground hover:border-border hover:bg-card/80"
+              }`}
+            >
+              <span className="text-lg">✦</span>
+              <span className="text-xs font-medium">All</span>
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() =>
+                  setSelectedCategory(selectedCategory === cat.id ? undefined : cat.id)
+                }
+                className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-2xl border text-center transition-all ${
+                  selectedCategory === cat.id
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-card border-border/50 text-muted-foreground hover:border-border hover:bg-card/80"
+                }`}
+              >
+                {cat.icon}
+                <span className="text-xs font-medium leading-tight">{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Section heading ── */}
+      <main className="max-w-6xl mx-auto px-4 pb-12">
+        {!searchQuery && (
+          <h2 className="text-lg font-semibold mb-4">
+            {activeCategory ? activeCategory.label : "All Beauty & Wellness"}
+          </h2>
+        )}
+
         {isLoading ? (
-          <div className="space-y-4">
-            {[...Array(4)].map((_, i) => (
+          /* Loading skeletons — list on mobile, grid on desktop */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[...Array(6)].map((_, i) => (
               <Skeleton key={i} className="h-28 rounded-2xl" />
             ))}
           </div>
         ) : displayItems && displayItems.length > 0 ? (
-          <div className="space-y-3">
+          /* Results — list on mobile, grid on desktop */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {displayItems.map((org) => (
-              <Link
-                key={org._id}
-                href={`/${org.slug}`}
-                className="group block"
-              >
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/40 transition-all hover:border-border hover:shadow-sm active:scale-[0.98]">
+              <Link key={org._id} href={`/${org.slug}`} className="group block">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/40 transition-all hover:border-border hover:shadow-sm active:scale-[0.98] h-full">
                   {/* Logo */}
                   <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center shrink-0 overflow-hidden">
                     {org.logoUrl ? (
@@ -97,10 +198,8 @@ export default function DiscoverPage() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold truncate">
-                        {org.name}
-                      </h3>
-                      {("isFeatured" in org) && (org as any).isFeatured && (
+                      <h3 className="text-base font-semibold truncate">{org.name}</h3>
+                      {("isFeatured" in org) && (org as { isFeatured?: boolean }).isFeatured && (
                         <IconSparkles size={14} className="text-amber-500 shrink-0" />
                       )}
                     </div>
@@ -127,9 +226,15 @@ export default function DiscoverPage() {
                   </div>
 
                   {/* Arrow */}
-                  <div className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors">
+                  <div className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors shrink-0">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                      <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M7.5 5L12.5 10L7.5 15"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -143,7 +248,11 @@ export default function DiscoverPage() {
             </div>
             <p className="text-muted-foreground font-medium">No businesses found</p>
             <p className="text-sm text-muted-foreground/60 mt-1">
-              {searchQuery ? "Try a different search term" : "Check back later"}
+              {searchQuery
+                ? "Try a different search term"
+                : selectedCategory
+                ? "No listings in this category yet"
+                : "Check back later"}
             </p>
           </div>
         )}

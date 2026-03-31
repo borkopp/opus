@@ -8,16 +8,22 @@ import { useUser } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import {
     Scissors, UtensilsCrossed, Check, ArrowRight, ArrowLeft,
-    MapPin, Clock, Sparkles, User, Building2, Globe,
+    MapPin, Sparkles, User, Building2, Globe,
     Upload, X, ImageIcon
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 // ─────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────
 type Industry = "beauty_wellness" | "hospitality";
 type VenueType = "restaurant" | "cafe" | "bar" | "club" | "hotel";
+type BeautyCategory =
+    | "barbershop" | "hair_salon" | "nail_salon" | "spa" | "beauty_salon"
+    | "lash_studio" | "brow_bar" | "tattoo_studio" | "massage_therapy"
+    | "wellness_center" | "personal_trainer";
 
 interface FormState {
     // Step 0
@@ -25,6 +31,7 @@ interface FormState {
     // Step 1
     name: string;
     logoUrl: string;
+    beautyCategory: BeautyCategory | null;
     // Step 2 — shared
     address: string;
     city: string;
@@ -58,6 +65,20 @@ const CUISINE_TAGS = [
     "Vegan-friendly", "Vegetarian", "Seafood", "Asian", "Cafe", "Brunch",
 ];
 
+const BEAUTY_CATEGORIES: { id: BeautyCategory; label: string }[] = [
+    { id: "barbershop",        label: "Barbershop" },
+    { id: "hair_salon",        label: "Hair Salon" },
+    { id: "nail_salon",        label: "Nail Salon" },
+    { id: "spa",               label: "Spa" },
+    { id: "beauty_salon",      label: "Beauty Salon" },
+    { id: "lash_studio",       label: "Lash Studio" },
+    { id: "brow_bar",          label: "Brow Bar" },
+    { id: "tattoo_studio",     label: "Tattoo Studio" },
+    { id: "massage_therapy",   label: "Massage Therapy" },
+    { id: "wellness_center",   label: "Wellness Center" },
+    { id: "personal_trainer",  label: "Personal Trainer" },
+];
+
 const BEAUTY_STEPS = ["Industry", "Business", "Location", "Hours", "Profile"];
 const HOSP_STEPS = ["Industry", "Venue", "Location", "Hours", "Setup"];
 
@@ -65,7 +86,7 @@ const HOSP_STEPS = ["Industry", "Venue", "Location", "Hours", "Setup"];
 // Shared UI primitives
 // ─────────────────────────────────────────────────────
 function FieldLabel({ children }: { children: React.ReactNode }) {
-    return <label className="block text-sm font-medium text-neutral-300 mb-1.5">{children}</label>;
+    return <label className="block text-sm font-medium text-foreground mb-1.5">{children}</label>;
 }
 
 function TextInput({ className, ...props }: React.ComponentProps<"input">) {
@@ -73,8 +94,8 @@ function TextInput({ className, ...props }: React.ComponentProps<"input">) {
         <input
             {...props}
             className={cn(
-                "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500/60 transition",
+                "w-full rounded-xl border border-border/40 bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition",
                 className
             )}
         />
@@ -86,24 +107,24 @@ function TextArea({ className, ...props }: React.ComponentProps<"textarea">) {
         <textarea
             {...props}
             className={cn(
-                "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-neutral-500",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500/60 transition resize-y min-h-[100px]",
+                "w-full rounded-xl border border-border/40 bg-background px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition resize-y min-h-[100px]",
                 className
             )}
         />
     );
 }
 
-function ImageUploader({ 
-    label, 
-    multiple, 
-    files, 
-    onChange 
-}: { 
-    label: React.ReactNode, 
-    multiple?: boolean, 
-    files: { storageId: string, name: string }[], 
-    onChange: (f: { storageId: string, name: string }[]) => void 
+function ImageUploader({
+    label,
+    multiple,
+    files,
+    onChange
+}: {
+    label: React.ReactNode,
+    multiple?: boolean,
+    files: { storageId: string, name: string }[],
+    onChange: (f: { storageId: string, name: string }[]) => void
 }) {
     const generateUploadUrl = useMutation(api.orgMedia.generateUploadUrl);
     const [uploading, setUploading] = useState(false);
@@ -121,10 +142,7 @@ function ImageUploader({
                     body: file,
                 });
                 const { storageId } = await res.json();
-                newFiles.push({
-                    storageId,
-                    name: file.name
-                });
+                newFiles.push({ storageId, name: file.name });
             }
             if (multiple) {
                 onChange([...files, ...newFiles]);
@@ -143,17 +161,17 @@ function ImageUploader({
             {files.length > 0 && (
                 <div className="flex flex-col gap-2 mb-3">
                     {files.map((f, i) => (
-                        <div key={i} className="flex items-center justify-between gap-3 bg-white/5 border border-white/10 p-2 rounded-xl group transition hover:bg-white/10">
+                        <div key={i} className="flex items-center justify-between gap-3 bg-secondary border border-border/40 p-2 rounded-xl group transition hover:bg-secondary/80">
                             <div className="flex items-center gap-3 overflow-hidden ml-1">
-                                <div className="h-8 w-8 rounded-md bg-indigo-500/20 flex items-center justify-center shrink-0">
-                                    <ImageIcon size={14} className="text-indigo-400" />
+                                <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                                    <ImageIcon size={14} className="text-primary" />
                                 </div>
-                                <span className="text-sm text-neutral-300 truncate font-medium">{f.name}</span>
+                                <span className="text-sm text-foreground truncate font-medium">{f.name}</span>
                             </div>
-                            <button 
+                            <button
                                 type="button"
                                 onClick={() => onChange(files.filter((_, idx) => idx !== i))}
-                                className="p-1.5 rounded-md hover:bg-neutral-800 text-neutral-500 hover:text-red-400 transition"
+                                className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition"
                             >
                                 <X size={14} />
                             </button>
@@ -161,13 +179,15 @@ function ImageUploader({
                     ))}
                 </div>
             )}
-            
+
             {(!files.length || multiple) && (
-                <label className="flex items-center justify-center w-full h-16 border-2 border-dashed border-white/10 hover:border-indigo-500/50 hover:bg-white/5 transition rounded-xl cursor-pointer">
+                <label className="flex items-center justify-center w-full h-16 border-2 border-dashed border-border/40 hover:border-primary/40 hover:bg-primary/5 transition rounded-xl cursor-pointer">
                     <input type="file" className="hidden" multiple={multiple} accept="image/*" onChange={handleFile} disabled={uploading} />
-                    <span className="text-sm font-medium text-neutral-400 flex items-center gap-2">
-                        {uploading ? <div className="h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"/> : <Upload size={16} />}
-                        {uploading ? "Uploading safely to database..." : "Click to attach photo"}
+                    <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        {uploading
+                            ? <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                            : <Upload size={16} />}
+                        {uploading ? "Uploading…" : "Click to attach photo"}
                     </span>
                 </label>
             )}
@@ -180,45 +200,13 @@ function SelectInput({ className, children, ...props }: React.ComponentProps<"se
         <select
             {...props}
             className={cn(
-                "w-full rounded-xl border border-white/10 bg-neutral-900 px-4 py-2.5 text-sm text-white",
-                "focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500/60 transition",
+                "w-full rounded-xl border border-border/40 bg-background px-4 py-2.5 text-sm text-foreground",
+                "focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition",
                 className
             )}
         >
             {children}
         </select>
-    );
-}
-
-function PrimaryBtn({ children, disabled, onClick, type = "button", className }: {
-    children: React.ReactNode; disabled?: boolean; onClick?: () => void;
-    type?: "button" | "submit"; className?: string;
-}) {
-    return (
-        <button
-            type={type}
-            disabled={disabled}
-            onClick={onClick}
-            className={cn(
-                "flex items-center justify-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition active:scale-[0.98]",
-                "bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:cursor-not-allowed",
-                className
-            )}
-        >
-            {children}
-        </button>
-    );
-}
-
-function GhostBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-200 transition"
-        >
-            {children}
-        </button>
     );
 }
 
@@ -233,18 +221,24 @@ function StepBar({ step, labels }: { step: number; labels: string[] }) {
                     <div className={cn(
                         "flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold border transition-all",
                         i < step
-                            ? "bg-indigo-600 border-indigo-600 text-white"
+                            ? "bg-primary border-primary text-primary-foreground"
                             : i === step
-                                ? "border-indigo-500 text-indigo-400 bg-indigo-500/10"
-                                : "border-white/10 text-neutral-600 bg-transparent"
+                                ? "border-primary/50 text-primary bg-primary/10"
+                                : "border-border/40 text-muted-foreground bg-transparent"
                     )}>
                         {i < step ? <Check size={12} /> : i + 1}
                     </div>
-                    <span className={cn("text-xs hidden sm:block", i === step ? "text-white" : "text-neutral-600")}>
+                    <span className={cn(
+                        "text-xs font-medium hidden sm:block",
+                        i === step ? "text-foreground" : "text-muted-foreground"
+                    )}>
                         {label}
                     </span>
                     {i < labels.length - 1 && (
-                        <div className={cn("h-px w-6 mx-1 hidden sm:block", i < step ? "bg-indigo-600" : "bg-white/10")} />
+                        <div className={cn(
+                            "h-px w-6 mx-1 hidden sm:block",
+                            i < step ? "bg-primary" : "bg-border/40"
+                        )} />
                     )}
                 </div>
             ))}
@@ -279,8 +273,8 @@ function StepIndustry({ value, onChange }: {
     return (
         <div className="space-y-4">
             <div>
-                <h2 className="text-2xl font-bold text-white">Choose your industry</h2>
-                <p className="mt-1 text-sm text-neutral-400">This determines which features and onboarding flow you'll get.</p>
+                <h2 className="text-2xl font-bold font-display text-primary">Choose your industry</h2>
+                <p className="mt-1 text-sm text-muted-foreground">This determines which features and onboarding flow you'll get.</p>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mt-6">
                 {options.map((opt) => (
@@ -289,26 +283,26 @@ function StepIndustry({ value, onChange }: {
                         type="button"
                         onClick={() => onChange(opt.id)}
                         className={cn(
-                            "relative text-left rounded-2xl border p-5 transition-all hover:border-indigo-500/60",
+                            "relative text-left rounded-[20px] border p-5 transition-all",
                             value === opt.id
-                                ? "border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/50"
-                                : "border-white/10 bg-white/5"
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                : "border-border/40 bg-card hover:border-primary/30 hover:bg-secondary/50"
                         )}
                     >
                         {value === opt.id && (
-                            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center">
-                                <Check size={11} className="text-white" />
+                            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <Check size={11} className="text-primary-foreground" />
                             </div>
                         )}
-                        <div className={cn("mb-3 text-neutral-400", value === opt.id && "text-indigo-400")}>
+                        <div className={cn("mb-3 text-muted-foreground", value === opt.id && "text-primary")}>
                             {opt.icon}
                         </div>
-                        <h3 className="font-semibold text-white text-base">{opt.title}</h3>
-                        <p className="mt-1 text-xs text-neutral-400 leading-relaxed">{opt.desc}</p>
+                        <h3 className="font-semibold font-display text-primary text-base">{opt.title}</h3>
+                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{opt.desc}</p>
                         <ul className="mt-3 space-y-1">
                             {opt.features.map((f) => (
-                                <li key={f} className="flex items-center gap-1.5 text-xs text-neutral-500">
-                                    <Check size={10} className="text-indigo-500 flex-shrink-0" />
+                                <li key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                    <Check size={10} className="text-accent flex-shrink-0" />
                                     {f}
                                 </li>
                             ))}
@@ -327,10 +321,10 @@ function StepIdentity({ form, set }: { form: FormState; set: (k: keyof FormState
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold font-display text-primary">
                     {form.industry === "hospitality" ? "Your venue" : "Your business"}
                 </h2>
-                <p className="mt-1 text-sm text-neutral-400">This is how you'll appear on opus.mk and your booking page.</p>
+                <p className="mt-1 text-sm text-muted-foreground">This is how you'll appear on opus.mk and your booking page.</p>
             </div>
 
             <div>
@@ -343,6 +337,21 @@ function StepIdentity({ form, set }: { form: FormState; set: (k: keyof FormState
                 />
             </div>
 
+            {form.industry === "beauty_wellness" && (
+                <div>
+                    <FieldLabel>Business category</FieldLabel>
+                    <SelectInput
+                        value={form.beautyCategory ?? ""}
+                        onChange={(e) => set("beautyCategory", e.target.value as BeautyCategory || null)}
+                    >
+                        <option value="">Select a category…</option>
+                        {BEAUTY_CATEGORIES.map((c) => (
+                            <option key={c.id} value={c.id}>{c.label}</option>
+                        ))}
+                    </SelectInput>
+                </div>
+            )}
+
             {form.industry === "hospitality" && (
                 <div>
                     <FieldLabel>Venue type</FieldLabel>
@@ -353,10 +362,10 @@ function StepIdentity({ form, set }: { form: FormState; set: (k: keyof FormState
                                 type="button"
                                 onClick={() => set("venueType", vt)}
                                 className={cn(
-                                    "rounded-xl border py-2 px-3 text-sm capitalize transition",
+                                    "rounded-full border py-2 px-3 text-sm capitalize transition font-medium",
                                     form.venueType === vt
-                                        ? "border-indigo-500 bg-indigo-500/10 text-indigo-300"
-                                        : "border-white/10 bg-white/5 text-neutral-400 hover:border-white/25"
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-border/40 bg-card text-muted-foreground hover:border-primary/30 hover:bg-secondary/50"
                                 )}
                             >
                                 {vt}
@@ -382,10 +391,10 @@ function StepIdentity({ form, set }: { form: FormState; set: (k: keyof FormState
                                             : [...form.cuisine, tag])
                                     }
                                     className={cn(
-                                        "rounded-full border px-3 py-1 text-xs transition",
+                                        "rounded-full border px-3 py-1 text-xs font-medium transition",
                                         active
-                                            ? "border-indigo-500 bg-indigo-500/15 text-indigo-300"
-                                            : "border-white/10 bg-white/5 text-neutral-400 hover:border-white/25"
+                                            ? "border-accent bg-accent/10 text-accent"
+                                            : "border-border/40 bg-card text-muted-foreground hover:border-primary/30"
                                     )}
                                 >
                                     {tag}
@@ -406,8 +415,8 @@ function StepLocation({ form, set }: { form: FormState; set: (k: keyof FormState
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-2xl font-bold text-white">Location</h2>
-                <p className="mt-1 text-sm text-neutral-400">
+                <h2 className="text-2xl font-bold font-display text-primary">Location</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                     Customers on opus.mk will use this to find you. A map picker will be available to pin your exact location.
                 </p>
             </div>
@@ -440,12 +449,12 @@ function StepLocation({ form, set }: { form: FormState; set: (k: keyof FormState
             </div>
 
             {/* Mapbox picker placeholder — wire up when Mapbox token is available */}
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/3 p-6 flex flex-col items-center justify-center gap-2 text-center">
-                <MapPin size={24} className="text-neutral-600" />
-                <p className="text-sm text-neutral-500">Interactive map picker</p>
-                <p className="text-xs text-neutral-600">Add your Mapbox token in <code className="bg-white/5 px-1 rounded">.env.local</code> to enable</p>
-                <p className="text-xs text-neutral-600 mt-1">
-                    <code className="bg-white/5 px-1 rounded">NEXT_PUBLIC_MAPBOX_TOKEN</code>
+            <div className="rounded-[20px] border border-dashed border-border/40 bg-secondary/30 p-6 flex flex-col items-center justify-center gap-2 text-center">
+                <MapPin size={24} className="text-muted-foreground/50" />
+                <p className="text-sm font-medium text-muted-foreground">Interactive map picker</p>
+                <p className="text-xs text-muted-foreground/60">Add your Mapbox token in <code className="bg-secondary px-1 rounded">.env.local</code> to enable</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">
+                    <code className="bg-secondary px-1 rounded">NEXT_PUBLIC_MAPBOX_TOKEN</code>
                 </p>
             </div>
         </div>
@@ -466,8 +475,8 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-2xl font-bold text-white">Opening hours</h2>
-                <p className="mt-1 text-sm text-neutral-400">
+                <h2 className="text-2xl font-bold font-display text-primary">Opening hours</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                     Shown on your opus.mk listing. You can always update these in Settings.
                 </p>
             </div>
@@ -475,10 +484,12 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
             <div className="space-y-2">
                 {form.openingHours.map((day, i) => (
                     <div key={i} className={cn(
-                        "flex items-center gap-3 rounded-xl border px-4 py-3 transition",
-                        day.isClosed ? "border-white/5 bg-white/3 opacity-60" : "border-white/10 bg-white/5"
+                        "flex items-center gap-3 rounded-[16px] border px-4 py-3 transition",
+                        day.isClosed
+                            ? "border-border/20 bg-secondary/30 opacity-60"
+                            : "border-border/40 bg-card"
                     )}>
-                        <div className="w-10 text-sm font-medium text-neutral-400 flex-shrink-0">
+                        <div className="w-10 text-sm font-semibold font-outfit text-muted-foreground flex-shrink-0">
                             {DAYS[i]}
                         </div>
                         <button
@@ -486,30 +497,30 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
                             onClick={() => updateDay(i, "isClosed", !day.isClosed)}
                             className={cn(
                                 "relative w-9 h-5 rounded-full transition-colors flex-shrink-0",
-                                !day.isClosed ? "bg-indigo-600" : "bg-neutral-700"
+                                !day.isClosed ? "bg-primary" : "bg-border"
                             )}
                         >
                             <span className={cn(
-                                "absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all",
+                                "absolute top-0.5 w-4 h-4 rounded-full bg-background shadow transition-all",
                                 !day.isClosed ? "left-[18px]" : "left-0.5"
                             )} />
                         </button>
                         {day.isClosed ? (
-                            <span className="text-sm text-neutral-600">Closed</span>
+                            <span className="text-sm text-muted-foreground">Closed</span>
                         ) : (
                             <div className="flex items-center gap-2 flex-1">
                                 <input
                                     type="time"
                                     value={day.open}
                                     onChange={(e) => updateDay(i, "open", e.target.value)}
-                                    className="rounded-lg border border-white/10 bg-neutral-900 px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="rounded-lg border border-border/40 bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
                                 />
-                                <span className="text-neutral-600 text-xs">to</span>
+                                <span className="text-muted-foreground text-xs">to</span>
                                 <input
                                     type="time"
                                     value={day.close}
                                     onChange={(e) => updateDay(i, "close", e.target.value)}
-                                    className="rounded-lg border border-white/10 bg-neutral-900 px-2 py-1 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="rounded-lg border border-border/40 bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
                                 />
                             </div>
                         )}
@@ -527,8 +538,8 @@ function StepBeautyProfile({ form, set }: { form: FormState; set: (k: keyof Form
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-2xl font-bold text-white">Create your profile</h2>
-                <p className="mt-1 text-sm text-neutral-400">
+                <h2 className="text-2xl font-bold font-display text-primary">Create your profile</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                     Introduce your business with a tagline, bio, and some photos.
                 </p>
             </div>
@@ -552,7 +563,7 @@ function StepBeautyProfile({ form, set }: { form: FormState; set: (k: keyof Form
             </div>
 
             <div>
-                <ImageUploader 
+                <ImageUploader
                     label="Cover Photo (Main profile banner)"
                     multiple={false}
                     files={form.coverMedia ? [form.coverMedia] : []}
@@ -561,7 +572,7 @@ function StepBeautyProfile({ form, set }: { form: FormState; set: (k: keyof Form
             </div>
 
             <div>
-                <ImageUploader 
+                <ImageUploader
                     label="Gallery Photos (Showcase your work)"
                     multiple={true}
                     files={form.galleryMedia}
@@ -579,8 +590,8 @@ function StepHospSetup({ form, set }: { form: FormState; set: (k: keyof FormStat
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-2xl font-bold text-white">Reservation settings</h2>
-                <p className="mt-1 text-sm text-neutral-400">
+                <h2 className="text-2xl font-bold font-display text-primary">Reservation settings</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                     Default rules for how bookings work. You can fine-tune everything in Settings.
                 </p>
             </div>
@@ -610,8 +621,8 @@ function StepHospSetup({ form, set }: { form: FormState; set: (k: keyof FormStat
                 </div>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-sm text-neutral-400 flex gap-3">
-                <Building2 size={16} className="text-indigo-400 flex-shrink-0 mt-0.5" />
+            <div className="rounded-[16px] border border-border/40 bg-secondary/40 p-4 text-sm text-muted-foreground flex gap-3">
+                <Building2 size={16} className="text-primary flex-shrink-0 mt-0.5" />
                 <span>After onboarding, you'll design your floor plan and add your tables. The system will auto-assign the best table for each party size.</span>
             </div>
         </div>
@@ -632,30 +643,30 @@ function StepComplete({ industry }: { industry: Industry }) {
     return (
         <div className="space-y-6">
             <div className="text-center py-2">
-                <div className="mx-auto w-14 h-14 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mb-4">
-                    <Check size={24} className="text-indigo-400" />
+                <div className="mx-auto w-14 h-14 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center mb-4">
+                    <Check size={24} className="text-accent" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">You're set up!</h2>
-                <p className="mt-2 text-sm text-neutral-400">
+                <h2 className="text-2xl font-bold font-display text-primary">You're set up!</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
                     Your {industry === "hospitality" ? "venue" : "business"} workspace is ready.
                     Complete the checklist below to go live on opus.mk.
                 </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/3 p-4 space-y-3">
-                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Go Live Checklist</p>
+            <Card className="rounded-[20px] border-border/40 p-4 space-y-3 bg-card shadow-sm">
+                <p className="text-xs font-semibold font-outfit text-muted-foreground uppercase tracking-wider">Go Live Checklist</p>
                 {goLiveItems.map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
-                        <div className="w-6 h-6 rounded-full border border-white/15 bg-white/5 flex items-center justify-center text-neutral-500 flex-shrink-0">
+                        <div className="w-7 h-7 rounded-full border border-border/40 bg-secondary flex items-center justify-center text-muted-foreground flex-shrink-0 shadow-sm">
                             {item.icon}
                         </div>
                         <div>
-                            <p className="text-sm text-neutral-300">{item.label}</p>
-                            <p className="text-xs text-neutral-600">{item.sublabel}</p>
+                            <p className="text-sm font-medium text-foreground">{item.label}</p>
+                            <p className="text-xs text-muted-foreground">{item.sublabel}</p>
                         </div>
                     </div>
                 ))}
-            </div>
+            </Card>
         </div>
     );
 }
@@ -701,6 +712,7 @@ export default function Onboarding() {
         industry: null,
         name: "",
         logoUrl: "",
+        beautyCategory: null,
         address: "",
         city: "",
         neighborhood: "",
@@ -719,11 +731,10 @@ export default function Onboarding() {
     const set = (k: keyof FormState, v: any) => setForm((f) => ({ ...f, [k]: v }));
 
     // ── Resume from localStorage on mount ──────────────
-    // We use the getOnboardingOrg query reactively: first we load saved data from
-    // localStorage, store the orgId in state, and let the query verify it.
+    // savedProgress is computed once at mount to avoid re-reading localStorage on every render.
+    const [savedProgress] = useState(() => loadProgress());
     const profile = useQuery(api.users.getMyProfile);
-    const saved = resumeChecked ? null : loadProgress();
-    const resolvedOrgId = (profile?.orgId || saved?.orgId) as any ?? null;
+    const resolvedOrgId = (profile?.orgId || savedProgress?.orgId) as any ?? null;
 
     // Subscribes to the specific org either from their current profile or their localstorage save
     const existingOrg = useQuery(
@@ -738,30 +749,28 @@ export default function Onboarding() {
         }
     }, [existingOrg, step, router]);
 
-    // Once the query resolves, restore state
-    if (!resumeChecked && isLoaded && profile !== undefined) {
-        if ((saved || profile?.orgId) && existingOrg !== undefined) {
-            // Query resolved (either found or null)
-            setResumeChecked(true);
-            if (existingOrg) {
-                // Org exists — restore progress
-                setOrgId(existingOrg._id);
-                setForm((f) => ({
-                    ...f,
-                    industry: existingOrg.industry as Industry,
-                    name: existingOrg.name === "Untitled" ? "" : existingOrg.name,
-                }));
-                const resumeStep = Math.max(1, Math.min(existingOrg.onboardingStep, 4));
-                setStep(resumeStep);
-            } else {
-                if (saved && !profile?.orgId) {
-                    clearProgress();
-                }
-            }
-        } else if (!saved && !profile?.orgId) {
-            setResumeChecked(true);
+    // Once queries resolve, restore saved progress — runs once (resumeChecked guards re-entry)
+    useEffect(() => {
+        if (resumeChecked) return;
+        if (!isLoaded || profile === undefined) return;
+        // If there's a resolvedOrgId, wait for the org query to settle
+        if (resolvedOrgId && existingOrg === undefined) return;
+
+        setResumeChecked(true);
+
+        if (existingOrg) {
+            setOrgId(existingOrg._id);
+            setForm((f) => ({
+                ...f,
+                industry: existingOrg.industry as Industry,
+                name: existingOrg.name === "Untitled" ? "" : existingOrg.name,
+            }));
+            const resumeStep = Math.max(1, Math.min(existingOrg.onboardingStep, 4));
+            setStep(resumeStep);
+        } else if (savedProgress && !profile?.orgId) {
+            clearProgress();
         }
-    }
+    }, [resumeChecked, isLoaded, profile, existingOrg, resolvedOrgId, savedProgress]);
 
     if (isLoaded && !isSignedIn) {
         router.push("/login");
@@ -795,11 +804,16 @@ export default function Onboarding() {
                     id = await createOrg({ name: form.name.trim(), industry: form.industry! });
                     setOrgId(id);
                 }
-                // Always update profile to persist step 2 + any hospitality fields
+                // Always update profile to persist step 2 + any vertical-specific fields.
+                // Pass industry in case the user went back to step 0 and changed it.
                 await updateProfile({
                     orgId: id as any,
                     name: form.name.trim(),
+                    industry: form.industry!,
                     onboardingStep: 2,
+                    ...(form.industry === "beauty_wellness" && {
+                        beautyCategory: form.beautyCategory ?? undefined,
+                    }),
                     ...(form.industry === "hospitality" && {
                         venueType: form.venueType ?? undefined,
                         cuisine: form.cuisine,
@@ -837,12 +851,12 @@ export default function Onboarding() {
             // Step 4 → Complete
             if (step === 4 && orgId) {
                 if (form.industry === "beauty_wellness") {
+                    // Save copy first, then upload media, then mark complete.
+                    // This ensures isOnboardingComplete is only set after all assets are stored.
                     await updateProfile({
                         orgId: orgId as any,
                         tagline: form.tagline,
                         bio: form.bio,
-                        onboardingStep: 5,
-                        isOnboardingComplete: true,
                     });
 
                     if (form.coverMedia) {
@@ -864,6 +878,13 @@ export default function Onboarding() {
                             });
                         }
                     }
+
+                    // Mark complete only after all uploads succeed
+                    await updateProfile({
+                        orgId: orgId as any,
+                        onboardingStep: 5,
+                        isOnboardingComplete: true,
+                    });
                 } else {
                     // Hospitality — save reservation settings with onboarding values + sensible defaults
                     await saveReservationSettings({
@@ -909,9 +930,9 @@ export default function Onboarding() {
             <OnboardingShell step={5} labels={stepLabels}>
                 <StepComplete industry={form.industry!} />
                 <div className="mt-8">
-                    <PrimaryBtn onClick={handleFinish} className="w-full">
+                    <Button onClick={handleFinish} variant="terracotta" className="w-full rounded-full py-5 font-semibold gap-2">
                         Go to dashboard <ArrowRight size={15} />
-                    </PrimaryBtn>
+                    </Button>
                 </div>
             </OnboardingShell>
         );
@@ -926,21 +947,23 @@ export default function Onboarding() {
             {step === 4 && form.industry === "beauty_wellness" && <StepBeautyProfile form={form} set={set} />}
             {step === 4 && form.industry === "hospitality" && <StepHospSetup form={form} set={set} />}
 
-            {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+            {error && <p className="mt-4 text-sm text-destructive font-medium">{error}</p>}
 
-            <div className="flex items-center justify-between mt-8">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-border/40">
                 {step > 0 ? (
-                    <GhostBtn onClick={() => setStep((s) => s - 1)}>
+                    <Button variant="ghost" size="sm" onClick={() => setStep((s) => s - 1)} className="gap-1.5">
                         <ArrowLeft size={14} /> Back
-                    </GhostBtn>
+                    </Button>
                 ) : <div />}
-                <PrimaryBtn
+                <Button
+                    variant={step === 4 ? "terracotta" : "default"}
                     onClick={handleNext}
                     disabled={isLoading || !canProceed()}
+                    className="rounded-full px-6 gap-2 font-semibold"
                 >
                     {isLoading ? "Saving…" : step === 4 ? "Finish setup" : "Continue"}
                     {!isLoading && <ArrowRight size={15} />}
-                </PrimaryBtn>
+                </Button>
             </div>
         </OnboardingShell>
     );
@@ -948,7 +971,7 @@ export default function Onboarding() {
 
 
 // ─────────────────────────────────────────────────────
-// Layout shell with dark gradient background
+// Layout shell — matches dashboard background & card style
 // ─────────────────────────────────────────────────────
 function OnboardingShell({ children, step, labels }: {
     children: React.ReactNode;
@@ -956,22 +979,19 @@ function OnboardingShell({ children, step, labels }: {
     labels: string[];
 }) {
     return (
-        <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Ambient glow */}
-            <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-indigo-600/10 blur-3xl" />
-
-            <div className="relative z-10 w-full max-w-3xl">
-                {/* Logo */}
-                <div className="flex items-center gap-2 mb-8 text-white font-semibold text-lg">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 md:p-8">
+            <div className="w-full max-w-3xl">
+                {/* Logo / header */}
+                <div className="flex items-center gap-2 mb-8">
                     <Logo className="text-3xl" />
-                    <span className="text-3xl font-display font-bold">Onboarding</span>
+                    <span className="text-2xl font-display font-bold text-primary">Onboarding</span>
                 </div>
 
-                {/* Card */}
-                <div className="rounded-2xl w-full items-center justify-center border border-white/10 bg-neutral-950/80 backdrop-blur-md p-7 shadow-2xl">
+                {/* Card — matches dashboard widget style */}
+                <Card className="w-full rounded-[24px] border border-border/40 bg-card shadow-sm p-7 lg:p-9">
                     {step < 5 && <StepBar step={step} labels={labels} />}
                     {children}
-                </div>
+                </Card>
             </div>
         </div>
     );

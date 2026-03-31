@@ -92,6 +92,22 @@ export default defineSchema({
       isClosed: v.boolean(),
     }))),
 
+    // ── Beauty & Wellness category ──
+    // Only populated when industry = "beauty_wellness"
+    beautyCategory: v.optional(v.union(
+      v.literal("barbershop"),
+      v.literal("hair_salon"),
+      v.literal("nail_salon"),
+      v.literal("spa"),
+      v.literal("beauty_salon"),
+      v.literal("lash_studio"),
+      v.literal("brow_bar"),
+      v.literal("tattoo_studio"),
+      v.literal("massage_therapy"),
+      v.literal("wellness_center"),
+      v.literal("personal_trainer"),
+    )),
+
     // ── Hospitality-specific ──
     // Only populated when industry = "hospitality"
     cuisine: v.optional(v.array(v.string())), // ["Macedonian", "Grill", "Vegan-friendly"]
@@ -153,7 +169,7 @@ export default defineSchema({
     .index("by_city_listing", ["city", "listingStatus"])
     .searchIndex("search_by_name", {
       searchField: "name",
-      filterFields: ["listingStatus", "isDeleted", "city", "industry"],
+      filterFields: ["listingStatus", "isDeleted", "city", "industry", "beautyCategory"],
     }),
 
 
@@ -871,6 +887,29 @@ export default defineSchema({
     .index("by_status_scheduled", ["status", "scheduledFor"])
     .index("by_booking", ["bookingId"]),
 
+
+  // ─────────────────────────────────────────────────────
+  // DASHBOARD NOTIFICATIONS
+  // In-app notifications shown in the navbar bell.
+  // Separate from the `notifications` table (external SMS/Email delivery queue).
+  // ─────────────────────────────────────────────────────
+  dashboard_notifications: defineTable({
+    orgId: v.id("orgs"),
+    type: v.union(
+      v.literal("new_booking"),
+      v.literal("booking_cancelled"),
+      v.literal("no_show"),
+    ),
+    title: v.string(),
+    body: v.string(),
+    bookingId: v.optional(v.id("bookings")),
+    customerId: v.optional(v.id("customers")),
+    isRead: v.boolean(),
+    isDismissed: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_org_created", ["orgId", "createdAt"])
+    .index("by_org_unread", ["orgId", "isRead"]),
 
   // ─────────────────────────────────────────────────────
   // AUDIT LOG

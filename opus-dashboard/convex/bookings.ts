@@ -231,6 +231,18 @@ export const createBooking = mutation({
       });
     }
 
+    // 9. Dashboard notification — shows in navbar bell for the business owner
+    const startDate = new Date(args.startAt);
+    const timeLabel = `${String(startDate.getHours()).padStart(2, "0")}:${String(startDate.getMinutes()).padStart(2, "0")}`;
+    await ctx.runMutation(internal.dashboardNotifications.create, {
+      orgId: args.orgId,
+      type: "new_booking",
+      title: "New Booking",
+      body: `${customer.name} booked ${service.name} with ${staff.displayName} at ${timeLabel}`,
+      bookingId,
+      customerId: args.customerId,
+    });
+
     return bookingId;
   },
 });
@@ -487,6 +499,18 @@ export const cancelBooking = mutation({
           },
         });
       }
+
+      // Dashboard notification
+      const cancelDate = new Date(booking.startAt);
+      const cancelDateLabel = `${cancelDate.toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
+      await ctx.runMutation(internal.dashboardNotifications.create, {
+        orgId: args.orgId,
+        type: "booking_cancelled",
+        title: "Booking Cancelled",
+        body: `${customer.name} cancelled their ${service.name} on ${cancelDateLabel}`,
+        bookingId: booking._id,
+        customerId: customer._id,
+      });
     }
 
     return true;
@@ -565,6 +589,18 @@ export const markNoShow = mutation({
           staffName: staff.displayName,
           startAt: booking.startAt,
         },
+      });
+
+      // Dashboard notification
+      const nsDate = new Date(booking.startAt);
+      const nsTime = `${String(nsDate.getHours()).padStart(2, "0")}:${String(nsDate.getMinutes()).padStart(2, "0")}`;
+      await ctx.runMutation(internal.dashboardNotifications.create, {
+        orgId: args.orgId,
+        type: "no_show",
+        title: "No-Show",
+        body: `${customer.name} didn't show up for ${service.name} at ${nsTime}`,
+        bookingId: booking._id,
+        customerId: customer._id,
       });
     }
 

@@ -208,45 +208,68 @@ export default function BookingPage() {
       <div className="max-w-3xl mx-auto px-4 pt-6">
         {/* ── STEP 1: Service Selection ── */}
         {step === "service" && (
-          <div className="animate-slide-up-fade-in">
-            <h2 className="text-lg font-semibold mb-1">Choose a service</h2>
-            <p className="text-sm text-muted-foreground mb-6">Select the service you'd like to book.</p>
-            <div className="space-y-2">
+          <div className="animate-slide-up-fade-in group/step">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Choose a Service</h2>
+              <p className="text-muted-foreground">Select the service you'd like to book to continue.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {profile.services.map((service) => (
                 <button
                   key={service._id}
                   onClick={() => handleSelectService(service._id)}
-                  className={`w-full text-left flex items-center justify-between p-4 rounded-xl border transition-[border-color,background-color,color,transform] duration-150 active:scale-[0.98] ${
+                  className={`group relative text-left flex flex-col p-5 rounded-3xl transition-all duration-300 outline-none ${
                     selectedServiceId === service._id
-                      ? "border-primary bg-primary/5"
-                      : "border-border/40 bg-card hover:border-border"
+                      ? "bg-primary shadow-lg shadow-primary/20 scale-[0.98] ring-2 ring-primary"
+                      : "bg-card hover:bg-secondary/40 ring-1 ring-border/50 hover:ring-border hover:shadow-sm"
                   }`}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0 mr-3">
-                    {service.photoUrl && (
-                      <div className="w-12 h-12 rounded-lg bg-secondary shrink-0 overflow-hidden relative">
+                  <div className="flex items-start justify-between w-full mb-4">
+                    {service.photoUrl ? (
+                      <div className="w-14 h-14 rounded-2xl bg-muted shrink-0 overflow-hidden relative shadow-sm border border-border/20">
                         <Image
                           src={getImageUrl(service.photoUrl)!}
                           alt={service.name}
                           fill
-                          className="object-cover"
-                          sizes="48px"
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          sizes="56px"
                         />
                       </div>
+                    ) : (
+                      <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm border border-primary/20">
+                        <span className="font-bold text-xl">{service.name.charAt(0)}</span>
+                      </div>
                     )}
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{service.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <IconClock size={12} aria-hidden="true" />
-                          {service.durationMins} min
-                        </span>
+                    
+                    {/* Floating price tag */}
+                    <div className={`px-3 py-1 rounded-full text-sm font-bold tracking-tight shrink-0 transition-colors ${
+                      selectedServiceId === service._id
+                        ? "bg-primary-foreground text-primary" 
+                        : "bg-background shadow-sm border border-border/50 text-foreground group-hover:border-primary/30"
+                    }`}>
+                      {formatPrice(service.priceMinorUnits, service.currency)}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col w-full">
+                    <p className={`text-lg font-semibold leading-tight mb-1.5 transition-colors ${
+                      selectedServiceId === service._id ? "text-primary-foreground" : "text-foreground"
+                    }`}>
+                      {service.name}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-auto">
+                      <div className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${
+                        selectedServiceId === service._id ? "text-primary-foreground/80" : "text-muted-foreground group-hover:text-foreground"
+                      }`}>
+                        <IconClock size={14} className={selectedServiceId === service._id ? "text-primary-foreground/80" : "text-primary/70"} aria-hidden="true" />
+                        {service.durationMins} min
                       </div>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold shrink-0">
-                    {formatPrice(service.priceMinorUnits, service.currency)}
-                  </span>
+
+                  {/* Absolute positioned gradient overlay on hover (subtle gloss) */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none dark:to-white/5" />
                 </button>
               ))}
             </div>
@@ -255,37 +278,48 @@ export default function BookingPage() {
 
         {/* ── STEP 2: Date & Time ── */}
         {step === "datetime" && selectedService && (
-          <div className="animate-slide-up-fade-in">
-            <h2 className="text-lg font-semibold mb-1">Pick a date & time</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {selectedService.name} · {selectedService.durationMins} min · {formatPrice(selectedService.priceMinorUnits, selectedService.currency)}
-            </p>
+          <div className="animate-slide-up-fade-in group/step">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Date & Time</h2>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/40 text-xs font-semibold text-muted-foreground border border-border/40">
+                <span className="flex items-center gap-1.5"><IconClock size={14} className="text-primary" /> {selectedService.durationMins} min</span>
+                <span className="w-1 h-1 rounded-full bg-border/80" />
+                <span className="text-foreground">{formatPrice(selectedService.priceMinorUnits, selectedService.currency)}</span>
+              </div>
+            </div>
 
             {/* Staff selector (optional — "Any" by default) */}
             {profile.staff.length > 1 && (
-              <div className="mb-6">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Staff preference
+              <div className="mb-8 animate-fade-in">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
+                  With whom?
                 </Label>
-                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
+                <div className="flex gap-2.5 overflow-x-auto scrollbar-none pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                   <button
                     onClick={() => { setSelectedStaffId(null); setSelectedSlot(null); }}
                     aria-pressed={!selectedStaffId}
-                    className={`shrink-0 px-4 py-3 rounded-full text-sm font-medium border transition-[border-color,background-color,color] duration-150 ${
-                      !selectedStaffId ? "border-primary bg-primary text-primary-foreground" : "border-border/60 hover:border-border"
+                    className={`relative shrink-0 flex items-center justify-center min-w-[90px] px-4 h-11 rounded-full text-sm font-semibold transition-all duration-300 ${
+                      !selectedStaffId
+                        ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]"
+                        : "bg-secondary/30 text-muted-foreground hover:bg-secondary/60 hover:text-foreground border border-transparent hover:border-border/50"
                     }`}
                   >
-                    Any available
+                    Any Staff
                   </button>
                   {profile.staff.map((member) => (
                     <button
                       key={member._id}
                       onClick={() => { setSelectedStaffId(member._id); setSelectedSlot(null); }}
                       aria-pressed={selectedStaffId === member._id}
-                      className={`shrink-0 px-4 py-3 rounded-full text-sm font-medium border transition-[border-color,background-color,color] duration-150 ${
-                        selectedStaffId === member._id ? "border-primary bg-primary text-primary-foreground" : "border-border/60 hover:border-border"
+                      className={`relative shrink-0 flex gap-2 items-center justify-center min-w-[90px] px-4 h-11 rounded-full text-sm font-semibold transition-all duration-300 ${
+                        selectedStaffId === member._id
+                          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20 scale-[1.02]"
+                          : "bg-secondary/30 text-muted-foreground hover:bg-secondary/60 hover:text-foreground border border-transparent hover:border-border/50"
                       }`}
                     >
+                      <div className="w-5 h-5 rounded-full bg-primary-foreground/20 flex items-center justify-center text-[10px] uppercase font-bold flex-shrink-0">
+                        {member.displayName.charAt(0)}
+                      </div>
                       {member.displayName.split(" ")[0]}
                     </button>
                   ))}
@@ -293,197 +327,271 @@ export default function BookingPage() {
               </div>
             )}
 
-            {/* Date picker — scroll on mobile, 7-column grid on md+ */}
-            <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-              Date
-            </Label>
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-4 mb-4 md:grid md:grid-cols-7 md:overflow-visible md:pb-0">
-              {dateOptions.map((d) => (
-                <button
-                  key={d.value}
-                  onClick={() => { setSelectedDate(d.value); setSelectedSlot(null); }}
-                  aria-pressed={selectedDate === d.value}
-                  className={`shrink-0 flex flex-col items-center px-3 py-3 rounded-xl border text-center transition-[border-color,background-color,color] duration-150 ${
-                    selectedDate === d.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border/60 hover:border-border"
-                  }`}
-                >
-                  <span className="text-xs font-medium">{d.label.split(",")[0]}</span>
-                  {d.label.includes(",") && (
-                    <span className="text-[10px] opacity-70">{d.label.split(",")[1]?.trim()}</span>
-                  )}
-                </button>
-              ))}
+            {/* Date picker */}
+            <div className="mb-8 relative auto-rows-min">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Select Date
+                </Label>
+                {selectedDate && <span className="text-xs font-semibold text-primary/80 bg-primary/5 px-2 py-0.5 rounded-full">{format(new Date(selectedDate), "MMMM yyyy")}</span>}
+              </div>
+              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-4 -mx-4 px-4 md:grid md:grid-cols-7 md:mx-0 md:px-0 md:gap-3 items-stretch relative">
+                {/* Visual fade edges on mobile */}
+                <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent md:hidden z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent md:hidden z-10 pointer-events-none" />
+                
+                {dateOptions.map((d) => {
+                  const isSelected = selectedDate === d.value;
+                  const displayDayStr = d.label === "Today" ? "Today" : d.label === "Tomorrow" ? "Tmrw" : format(d.date, "EEE");
+                  const displayNumStr = format(d.date, "d");
+
+                  return (
+                    <button
+                      key={d.value}
+                      onClick={() => { setSelectedDate(d.value); setSelectedSlot(null); }}
+                      aria-pressed={isSelected}
+                      className={`shrink-0 relative group flex flex-col items-center justify-center w-[4.5rem] md:w-full py-3.5 rounded-2xl transition-all duration-300 outline-none ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-[1.05] z-10"
+                          : "bg-secondary/20 text-muted-foreground hover:bg-secondary/40 hover:text-foreground border border-transparent hover:border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
+                      }`}
+                    >
+                      <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 transition-colors ${isSelected ? "text-primary-foreground/80" : ""}`}>
+                        {displayDayStr}
+                      </span>
+                      <span className={`text-2xl font-bold font-display tracking-tighter ${isSelected ? "text-primary-foreground" : "text-foreground"}`}>
+                        {displayNumStr}
+                      </span>
+                      {isSelected && (
+                         <div className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Time slots */}
-            {selectedDate && (
-              <>
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                  Available times
-                </Label>
-                {slots === undefined ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {[...Array(6)].map((_, i) => (
-                      <Skeleton key={i} className="h-11 rounded-xl" />
-                    ))}
+            <div className="relative min-h-[120px] transition-all">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">
+                {selectedDate ? "Available Times" : "Time"}
+              </Label>
+              
+              {!selectedDate ? (
+                <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-dashed border-border/60 bg-secondary/5">
+                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+                    <IconClock size={20} className="text-muted-foreground/50" />
                   </div>
-                ) : slots.length === 0 ? (
-                  <div className="py-8 text-center">
-                    <p className="text-sm text-muted-foreground">No available times on this date.</p>
-                    <p className="text-xs text-muted-foreground/60 mt-1">Try another date or staff member.</p>
+                  <p className="text-sm text-muted-foreground font-medium">Choose a date to see available times</p>
+                </div>
+              ) : slots === undefined ? (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                  {[...Array(8)].map((_, i) => (
+                    <Skeleton key={i} className="h-12 rounded-2xl" />
+                  ))}
+                </div>
+              ) : slots.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 rounded-2xl border border-border/60 bg-secondary/5">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+                    <IconClock size={20} className="text-muted-foreground" />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {slots.map((slot) => {
-                      const time = new Date(slot.startAt);
-                      const timeStr = `${String(time.getUTCHours()).padStart(2, "0")}:${String(time.getUTCMinutes()).padStart(2, "0")}`;
-                      const isSelected = selectedSlot?.startAt === slot.startAt;
+                  <p className="text-foreground font-semibold">Fully booked</p>
+                  <p className="text-sm text-muted-foreground mt-1 text-center max-w-[250px]">No time slots available on this date. Please select another date.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 animate-slide-up-fade-in">
+                  {slots.map((slot) => {
+                    const time = new Date(slot.startAt);
+                    const timeStr = `${String(time.getUTCHours()).padStart(2, "0")}:${String(time.getUTCMinutes()).padStart(2, "0")}`;
+                    const isSelected = selectedSlot?.startAt === slot.startAt;
 
-                      return (
-                        <button
-                          key={slot.startAt}
-                          onClick={() => handleSelectSlot(slot)}
-                          aria-pressed={isSelected}
-                          className={`py-3 px-3 rounded-xl border text-sm font-medium transition-[border-color,background-color,color,transform] duration-150 active:scale-[0.96] ${
-                            isSelected
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border/60 hover:border-border"
-                          }`}
-                        >
-                          {timeStr}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
+                    return (
+                      <button
+                        key={slot.startAt}
+                        onClick={() => handleSelectSlot(slot)}
+                        aria-pressed={isSelected}
+                        className={`group relative h-12 w-full flex items-center justify-center rounded-2xl text-[15px] font-semibold transition-all duration-300 outline-none ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/30 scale-105 z-10"
+                            : "bg-secondary/30 text-foreground hover:bg-secondary/60 hover:scale-[1.02] active:scale-[0.98] border border-transparent hover:border-border/50"
+                        }`}
+                      >
+                         <span>{timeStr}</span>
+                         <span className="absolute inset-0 rounded-2xl ring-2 ring-primary/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* ── STEP 3: Customer Details ── */}
         {step === "details" && selectedService && selectedSlot && (
           <div className="animate-slide-up-fade-in">
-            <h2 className="text-lg font-semibold mb-1">Your details</h2>
-            <p className="text-sm text-muted-foreground mb-6">Almost done! Fill in your info to confirm.</p>
-
-            {/* Booking summary */}
-            <div className="rounded-xl border border-border/40 bg-card p-4 mb-6">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service</span>
-                  <span className="font-medium">{selectedService.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-medium">
-                    {format(new Date(selectedSlot.startAt), "EEE, MMM d")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-medium">
-                    {`${String(new Date(selectedSlot.startAt).getUTCHours()).padStart(2, "0")}:${String(new Date(selectedSlot.startAt).getUTCMinutes()).padStart(2, "0")}`}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold">
-                    {formatPrice(selectedSlot.priceMinorUnits, selectedService.currency)}
-                  </span>
-                </div>
-              </div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Review & Confirm</h2>
+              <p className="text-muted-foreground">Please provide your details to finalize the appointment.</p>
             </div>
 
-            {/* Form */}
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">
-                  Full name <span className="text-destructive" aria-hidden="true">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  placeholder="Your name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  required
-                  aria-required="true"
-                  autoComplete="name"
-                  className="h-12 rounded-xl"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-sm font-medium mb-1.5 block">
-                  Phone number <span className="text-destructive" aria-hidden="true">*</span>
-                </Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+389 7X XXX XXX"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  required
-                  aria-required="true"
-                  autoComplete="tel"
-                  className="h-12 rounded-xl"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium mb-1.5 block">
-                  Email <span className="text-muted-foreground text-xs">(optional)</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  autoComplete="email"
-                  className="h-12 rounded-xl"
-                />
-              </div>
-
-              {/* Payment method */}
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Payment</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 p-3.5 rounded-xl border border-primary bg-primary/5">
-                    <IconCash size={20} className="text-primary" aria-hidden="true" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Pay in cash</p>
-                      <p className="text-xs text-muted-foreground">Pay at the venue</p>
-                    </div>
-                    <IconCircleCheck size={20} className="text-primary" aria-hidden="true" />
+            <div className="grid gap-6 md:grid-cols-[1fr_320px] lg:grid-cols-[1fr_360px]">
+              {/* Left Column: Form */}
+              <div className="flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="group/input relative">
+                    <Input
+                      id="name"
+                      placeholder=" "
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      required
+                      aria-required="true"
+                      autoComplete="name"
+                      className="peer h-[3.5rem] rounded-xl bg-secondary/30 border-transparent focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all text-base px-4 pt-5 pb-1 placeholder:text-transparent"
+                    />
+                    <Label
+                      htmlFor="name"
+                      className="absolute left-4 top-4 text-muted-foreground text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-primary peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-[11px] font-medium cursor-text"
+                    >
+                      Full Name
+                    </Label>
                   </div>
-                  <div className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 opacity-50 cursor-not-allowed">
-                    <IconCreditCard size={20} className="text-muted-foreground" aria-hidden="true" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground">Pay online</p>
-                      <p className="text-xs text-muted-foreground">Coming soon</p>
-                    </div>
+                  
+                  <div className="group/input relative">
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder=" "
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      required
+                      aria-required="true"
+                      autoComplete="tel"
+                      className="peer h-[3.5rem] rounded-xl bg-secondary/30 border-transparent focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all text-base px-4 pt-5 pb-1 placeholder:text-transparent"
+                    />
+                    <Label
+                      htmlFor="phone"
+                      className="absolute left-4 top-4 text-muted-foreground text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-primary peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-[11px] font-medium cursor-text"
+                    >
+                      Phone Number
+                    </Label>
+                  </div>
+                  
+                  <div className="group/input relative">
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder=" "
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      autoComplete="email"
+                      className="peer h-[3.5rem] rounded-xl bg-secondary/30 border-transparent focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all text-base px-4 pt-5 pb-1 placeholder:text-transparent"
+                    />
+                    <Label
+                      htmlFor="email"
+                      className="absolute left-4 top-4 text-muted-foreground text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-primary peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-[11px] font-medium cursor-text"
+                    >
+                      Email <span className="opacity-60 font-normal">(Optional)</span>
+                    </Label>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Payment</h3>
+                  <div className="grid gap-3">
+                    <label className="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-primary bg-primary/5 p-4 shadow-sm transition-all hover:bg-primary/10">
+                      <div className="flex items-center gap-4">
+                        <div className="rounded-full bg-primary/20 p-2 text-primary">
+                          <IconCash size={20} aria-hidden="true" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground">Pay in cash</p>
+                          <p className="text-xs text-muted-foreground">Pay at the venue</p>
+                        </div>
+                      </div>
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <IconCircleCheck size={14} />
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              {/* Submit */}
-              <Button
-                onClick={handleSubmitBooking}
-                disabled={isSubmitting || !customerName.trim() || !customerPhone.trim()}
-                className="w-full h-12 rounded-2xl text-base font-semibold mt-4 bg-cta text-cta-foreground hover:bg-cta/90 disabled:bg-cta/40 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Booking…
-                  </span>
-                ) : "Confirm Booking"}
-              </Button>
+              {/* Right Column: Order Summary */}
+              <div className="flex flex-col h-full mt-2 md:mt-0">
+                <div className="rounded-2xl border border-border/40 bg-card shadow-sm h-full flex flex-col overflow-hidden">
+                  <div className="bg-secondary/20 p-5 flex flex-col flex-1 relative">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                      <IconCircleCheck size={100} />
+                    </div>
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-4 mb-6">
+                        {selectedService.photoUrl ? (
+                           <div className="h-14 w-14 overflow-hidden rounded-xl bg-muted shrink-0 relative shadow-sm border border-border/20">
+                              <Image src={getImageUrl(selectedService.photoUrl)!} alt={selectedService.name} fill className="object-cover" sizes="56px" />
+                           </div>
+                        ) : (
+                           <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm border border-primary/20">
+                             <span className="font-bold text-lg">{selectedService.name.charAt(0)}</span>
+                           </div>
+                        )}
+                        <div>
+                          <h3 className="font-semibold">{selectedService.name}</h3>
+                          <p className="text-muted-foreground text-xs flex items-center gap-1.5 mt-0.5 font-medium">
+                            <IconClock size={12} /> {selectedService.durationMins} min
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4 text-sm mt-auto border-t border-border/40 pt-4">
+                        <div className="flex justify-between items-center group/item transition-colors">
+                           <span className="text-muted-foreground font-medium">When</span>
+                           <div className="text-right">
+                             <div className="font-semibold text-foreground group-hover/item:text-primary transition-colors">{format(new Date(selectedSlot.startAt), "EEEE, MMM d")}</div>
+                             <div className="text-muted-foreground text-xs font-medium">
+                               {`${String(new Date(selectedSlot.startAt).getUTCHours()).padStart(2, "0")}:${String(new Date(selectedSlot.startAt).getUTCMinutes()).padStart(2, "0")}`}
+                             </div>
+                           </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-end pt-2">
+                          <span className="text-muted-foreground font-medium">Total amount</span>
+                          <span className="text-xl font-bold tracking-tight text-foreground">
+                            {formatPrice(selectedSlot.priceMinorUnits, selectedService.currency)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-secondary/5 border-t border-border/40 mt-auto">
+                    <Button
+                      onClick={handleSubmitBooking}
+                      disabled={isSubmitting || !customerName.trim() || !customerPhone.trim()}
+                      className="w-full h-12 rounded-xl text-sm font-semibold bg-cta text-cta-foreground hover:bg-cta/90 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-cta/20"
+                    >
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                      <span className="relative flex items-center justify-center gap-2">
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Confirming...
+                          </>
+                        ) : (
+                          <>
+                            Confirm Booking
+                            <IconArrowLeft className="rotate-180 transition-transform group-hover:translate-x-0.5" size={16} />
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}

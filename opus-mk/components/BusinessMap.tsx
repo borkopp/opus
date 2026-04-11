@@ -9,8 +9,19 @@ import Map, {
   AttributionControl,
 } from "react-map-gl/mapbox";
 import type { MapRef } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
 import { IconMapPin, IconNavigation, IconWalk, IconCar } from "@tabler/icons-react";
+import "mapbox-gl/dist/mapbox-gl.css";
+
+// CSS to hide Mapbox logo and wordmark
+const MAPBOX_HIDE_LOGO_CSS = `
+  .mapboxgl-ctrl-logo {
+    display: none !important;
+  }
+  .mapboxgl-ctrl-attrib {
+    display: none !important;
+  }
+`;
+
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
@@ -145,7 +156,7 @@ export default function BusinessMap({
           { padding: 52, duration: 900, maxZoom: 16 }
         );
       })
-      .catch(() => {});
+      .catch(() => { });
 
     return () => {
       cancelled = true;
@@ -161,6 +172,7 @@ export default function BusinessMap({
   return (
     <div>
       {/* ── Map canvas ── */}
+      <style dangerouslySetInnerHTML={{ __html: MAPBOX_HIDE_LOGO_CSS }} />
       <div className="relative w-full h-[240px] sm:h-[288px] rounded-2xl overflow-hidden bg-muted ring-1 ring-border/40">
         <Map
           ref={mapRef}
@@ -180,7 +192,7 @@ export default function BusinessMap({
           pitchWithRotate={false}
           style={{ width: "100%", height: "100%" }}
         >
-          <AttributionControl compact position="bottom-left" />
+          {/* <AttributionControl compact position="bottom-left" /> */}
           <NavigationControl showCompass={false} position="top-right" />
 
           {/* Route */}
@@ -258,11 +270,10 @@ export default function BusinessMap({
             <div className="flex rounded-full bg-background/92 p-1 shadow-lg backdrop-blur-md ring-1 ring-black/[0.06]">
               <button
                 onClick={() => setMode("walking")}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 ${
-                  mode === "walking"
-                    ? "bg-cta text-cta-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 ${mode === "walking"
+                  ? "bg-cta text-cta-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
                 aria-label="Walking"
                 aria-pressed={mode === "walking"}
               >
@@ -270,11 +281,10 @@ export default function BusinessMap({
               </button>
               <button
                 onClick={() => setMode("driving")}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 ${
-                  mode === "driving"
-                    ? "bg-cta text-cta-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 ${mode === "driving"
+                  ? "bg-cta text-cta-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
                 aria-label="Driving"
                 aria-pressed={mode === "driving"}
               >

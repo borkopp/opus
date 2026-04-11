@@ -7,6 +7,7 @@ import {
   IconToolsKitchen2,
   IconMap,
   IconClipboardList,
+  IconMessageChatbot,
 } from "@tabler/icons-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,6 +53,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       { label: "Staff",     href: "{base}/staff",      icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
       { label: "Services",  href: "{base}/services",   icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
       { label: "Finances",  href: "{base}/finances",   icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
+      { label: "AI Inbox",  href: "/ai-inbox",         icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",  href: "/settings",         icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },
@@ -65,6 +67,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       { label: "Staff",        href: "{base}/staff",         icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
       { label: "Menu",         href: "{base}/menu",          icon: <IconToolsKitchen2 className="h-5 w-5 flex-shrink-0" /> },
       { label: "Finances",     href: "{base}/finances",      icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
+      { label: "AI Inbox",     href: "/ai-inbox",            icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",     href: "/settings",            icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },

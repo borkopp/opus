@@ -30,6 +30,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-rating: var(--rating);
+  --color-success: var(--success);
+  --color-online: var(--online);
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -37,23 +42,26 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --animate-slide-up-fade-in: slide-up-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in-fade: scale-in-fade 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-dot-pulse: dot-pulse 1.4s ease-in-out infinite;
 }
 
 /* ─── OPUS Design System — Light Mode ─── */
 :root {
   --radius: 1rem;
 
-  --background: hsl(0, 0%, 95%);
-  --foreground: hsl(0, 0%, 5%);
+  --background: oklch(96% 0.004 75);
+  --foreground: oklch(10% 0.003 60);
 
-  --card: hsl(0, 0%, 98%);
-  --card-foreground: hsl(0, 0%, 5%);
+  --card: oklch(99% 0.004 75);
+  --card-foreground: oklch(10% 0.003 60);
 
-  --popover: hsl(0, 0%, 95%);
-  --popover-foreground: hsl(0, 0%, 5%);
+  --popover: oklch(96% 0.004 75);
+  --popover-foreground: oklch(10% 0.003 60);
 
   --primary: oklch(12% 0.004 60);
-  --primary-foreground: oklch(100% 0 0);
+  --primary-foreground: oklch(99% 0.004 75);
 
   --secondary: oklch(95% 0.005 75);
   --secondary-foreground: oklch(12% 0.004 60);
@@ -62,13 +70,23 @@
   --muted-foreground: oklch(50% 0.005 60);
 
   --accent: oklch(65.142% 0.16304 33.262);
-  --accent-foreground: oklch(100% 0 0);
+  --accent-foreground: oklch(99% 0.004 75);
 
   --destructive: oklch(52% 0.22 27);
 
   --border: oklch(90% 0.004 75);
-  --input: hsl(0, 0%, 95%);
+  --input: oklch(96% 0.004 75);
   --ring: oklch(57% 0.21 27);
+
+  /* ── CTA: deep clay — primary booking actions ── */
+  /* oklch(47%) gives ~6:1 contrast against off-white foreground (WCAG AA ✓) */
+  --cta: oklch(47% 0.20 30);
+  --cta-foreground: oklch(99% 0.004 75);
+
+  /* ── Semantic tokens ── */
+  --rating: oklch(78% 0.19 70);     /* warm amber — star ratings, featured marks */
+  --success: oklch(60% 0.16 162);   /* earthy emerald — confirmation, success states */
+  --online: oklch(72% 0.20 142);    /* fresh green — real-time presence indicators */
 
   --chart-1: oklch(57% 0.21 27);
   --chart-2: oklch(12% 0.004 60);
@@ -78,14 +96,15 @@
 }
 
 /* ─── OPUS Design System — Dark Mode ─── */
+/* Applied via .dark class (manual toggle) OR prefers-color-scheme (auto) */
 .dark {
-  --background: hsl(0, 0%, 0%);
-  --foreground: hsl(0, 0%, 95%);
+  --background: oklch(4% 0.003 60);
+  --foreground: oklch(96% 0.004 75);
 
-  --card: hsl(0, 0%, 5%);
+  --card: oklch(8% 0.003 60);
   --card-foreground: oklch(98% 0.005 75);
 
-  --popover: hsl(0, 0%, 9%);
+  --popover: oklch(13% 0.003 60);
   --popover-foreground: oklch(98% 0.005 75);
 
   --primary: oklch(98% 0.005 75);
@@ -94,17 +113,26 @@
   --secondary: oklch(19% 0.004 60);
   --secondary-foreground: oklch(98% 0.005 75);
 
-  --muted: hsl(0, 0%, 70%);
-  --muted-foreground: hsl(0, 0%, 30%);
+  --muted: oklch(25% 0.004 60);
+  --muted-foreground: oklch(60% 0.005 60);
 
   --accent: oklch(57% 0.21 27);
-  --accent-foreground: oklch(100% 0 0);
+  --accent-foreground: oklch(99% 0.004 75);
 
   --destructive: oklch(62% 0.22 27);
 
-  --border: hsl(0, 0%, 10%);
-  --input: hsl(0, 0%, 30%);
+  --border: oklch(15% 0.003 60);
+  --input: oklch(32% 0.004 60);
   --ring: oklch(57% 0.21 27);
+
+  /* ── CTA: slightly brighter clay against dark surfaces ── */
+  --cta: oklch(55% 0.21 30);
+  --cta-foreground: oklch(99% 0.004 75);
+
+  /* ── Semantic tokens (dark) ── */
+  --rating: oklch(80% 0.19 70);
+  --success: oklch(65% 0.16 162);
+  --online: oklch(74% 0.20 142);
 
   --chart-1: oklch(57% 0.21 27);
   --chart-2: oklch(92% 0.005 75);
@@ -113,7 +141,57 @@
   --chart-5: oklch(72% 0.12 27);
 }
 
+/* ─── Dark mode via OS preference ─── */
+/* All colors use CSS variables — no Tailwind dark: classes needed */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: oklch(4% 0.003 60);
+    --foreground: oklch(96% 0.004 75);
+
+    --card: oklch(8% 0.003 60);
+    --card-foreground: oklch(98% 0.005 75);
+
+    --popover: oklch(13% 0.003 60);
+    --popover-foreground: oklch(98% 0.005 75);
+
+    --primary: oklch(98% 0.005 75);
+    --primary-foreground: oklch(12% 0.004 60);
+
+    --secondary: oklch(19% 0.004 60);
+    --secondary-foreground: oklch(98% 0.005 75);
+
+    --muted: oklch(25% 0.004 60);
+    --muted-foreground: oklch(60% 0.005 60);
+
+    --accent: oklch(57% 0.21 27);
+    --accent-foreground: oklch(99% 0.004 75);
+
+    --destructive: oklch(62% 0.22 27);
+
+    --border: oklch(15% 0.003 60);
+    --input: oklch(32% 0.004 60);
+    --ring: oklch(57% 0.21 27);
+
+    --cta: oklch(55% 0.21 30);
+    --cta-foreground: oklch(99% 0.004 75);
+
+    --rating: oklch(80% 0.19 70);
+    --success: oklch(65% 0.16 162);
+    --online: oklch(74% 0.20 142);
+
+    --chart-1: oklch(57% 0.21 27);
+    --chart-2: oklch(92% 0.005 75);
+    --chart-3: oklch(38% 0.004 60);
+    --chart-4: oklch(65% 0.14 145);
+    --chart-5: oklch(72% 0.12 27);
+  }
+}
+
 @layer base {
+  html {
+    color-scheme: light dark;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -130,4 +208,35 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes slide-up-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in-fade {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes dot-pulse {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+@keyframes opus-user-pulse {
+  0%   { opacity: 0.7; transform: scale(0.3); }
+  100% { opacity: 0;   transform: scale(1);   }
 }

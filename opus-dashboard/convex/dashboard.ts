@@ -503,12 +503,19 @@ export const getAIPerformance = query({
         endMs: v.number()
     },
     handler: async (ctx, args) => {
+        const settings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .first();
+
+        const aiEnabled = !!(settings?.aiEnabled);
+
         const conversations = await ctx.db
             .query("ai_conversations")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
             .collect();
 
-        // Filter in memory for time range just based on createdAt 
+        // Filter in memory for time range just based on createdAt
         const recentConvs = conversations.filter(c => c.createdAt >= args.startMs && c.createdAt <= args.endMs);
 
         let total = recentConvs.length;
@@ -521,6 +528,7 @@ export const getAIPerformance = query({
         });
 
         return {
+            aiEnabled,
             totalConversations: total,
             handoffRate: total > 0 ? (handoffCount / total) * 100 : 0,
             bookingRate: total > 0 ? (bookingsCreated / total) * 100 : 0

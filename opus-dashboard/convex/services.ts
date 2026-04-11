@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
 
@@ -327,4 +327,25 @@ export const getOrgSettings = query({
             .first();
         return settings;
     }
+});
+
+// Internal query for the AI action — returns human-readable service list
+export const listServicesForAI = internalQuery({
+    args: { orgId: v.id("orgs") },
+    handler: async (ctx, args) => {
+        const services = await ctx.db
+            .query("services")
+            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .filter(q => q.and(q.eq(q.field("isDeleted"), false), q.eq(q.field("isActive"), true)))
+            .collect();
+
+        return services.map(s => ({
+            serviceId: s._id,   // MUST be passed verbatim to check_availability and create_booking
+            name: s.name,
+            durationMins: s.durationMins,
+            price: (s.priceMinorUnits / 100).toFixed(2),
+            currency: s.currency,
+            staffIds: s.staffIds,
+        }));
+    },
 });

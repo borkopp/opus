@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Is
 
-**OPUS** is a multi-tenant SaaS white-label Business Operating System for service-based businesses (barbers, salons, spas, consultants, trainers). Three revenue layers: monthly subscriptions, payment processing margin via Stripe Connect, and future fintech products.
+**OPUS** is a multi-tenant SaaS white-label Business Operating System for service-based businesses (barbers, salons, spas, consultants, trainers). Three revenue layers: monthly subscriptions, payment processing margin via Braintree, and future fintech products.
 
 Each business gets a branded experience: custom subdomain or domain, their own color scheme, optionally their own mobile app.
 
@@ -18,8 +18,8 @@ Three independent Next.js applications sharing a single Convex backend:
 
 | App | Purpose | Dev port |
 |-----|---------|----------|
-| `opus-dashboard/` | Main SaaS platform — owner/staff dashboard + public booking flow | 3000 (frontend), 3210 (Convex) |
-| `opus-mk/` | Secondary frontend — symlinks to dashboard's Convex | 3001 |
+| `opus-dashboard/` | Business owner dashboard — bookings, staff/service management, analytics | 3000 (frontend), 3210 (Convex) |
+| `opus-mk/` | Public marketplace — users search available businesses/services and book with or without an account; RAG AI powers recommendations with more AI features planned | 3001 |
 | `opus-landing-page/` | Marketing site — no backend, no auth | 3000 |
 
 `opus-mk/convex` is a symlink to `../opus-dashboard/convex`. Both apps share the same Convex deployment.

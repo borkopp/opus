@@ -80,6 +80,7 @@ export default defineSchema({
     // ── Contact & social ──
     phone: v.optional(v.string()),           // "+38972xxxxxxx" E.164
     instagramHandle: v.optional(v.string()), // "kingcuts_sk"
+    instagramPageId: v.optional(v.string()), // numeric Meta PSID e.g. "123456789012345"
     websiteUrl: v.optional(v.string()),
 
     // ── Opening hours (display hours for opus.mk — separate from per-staff availability) ──
@@ -166,6 +167,7 @@ export default defineSchema({
     .index("by_custom_domain", ["customDomain"])
     .index("by_stripe_account", ["stripeAccountId"])
     .index("by_listing_status", ["listingStatus"])
+    .index("by_instagram_page_id", ["instagramPageId"])
     .index("by_city_listing", ["city", "listingStatus"])
     .searchIndex("search_by_name", {
       searchField: "name",
@@ -241,6 +243,36 @@ export default defineSchema({
     aiPersonaName: v.string(),               // "Aria" — shown to customers
     aiConfidenceThreshold: v.number(),       // 0–1; below this → human handoff
     aiHandoffPhoneNumber: v.optional(v.string()),
+
+    // AI channel toggles
+    aiWebchatEnabled: v.optional(v.boolean()),
+    aiInstagramEnabled: v.optional(v.boolean()),
+
+    // AI conversation style
+    aiSystemPrompt: v.optional(v.string()),       // custom instructions for the AI
+    aiGreetingMessage: v.optional(v.string()),    // first message when conversation starts
+    aiTone: v.optional(v.union(
+      v.literal("friendly"),
+      v.literal("professional"),
+      v.literal("casual"),
+      v.literal("formal"),
+    )),
+
+    // AI working hours (uses JS Date convention: 0 = Sun … 6 = Sat, same as availability_rules)
+    aiWorkingHoursEnabled: v.optional(v.boolean()),
+    aiWorkingHours: v.optional(v.array(v.object({
+      dayOfWeek: v.number(),    // 0 = Sun … 6 = Sat
+      startTime: v.string(),    // "09:00"
+      endTime: v.string(),      // "18:00"
+    }))),
+    aiAwayMessage: v.optional(v.string()),        // shown outside working hours
+
+    // AI language
+    aiLanguage: v.optional(v.union(
+      v.literal("auto"),   // detect from customer message (default)
+      v.literal("en"),     // English only
+      v.literal("mk"),     // Macedonian only
+    )),
 
     updatedAt: v.number(),
   })
@@ -529,6 +561,7 @@ export default defineSchema({
       v.literal("opus_app"),     // OPUS mobile app (future)
       v.literal("ai_whatsapp"),
       v.literal("ai_instagram"),
+      v.literal("ai_webchat"),
       v.literal("ai_voice"),
       v.literal("manual"),
     ),

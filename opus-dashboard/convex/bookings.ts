@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth, requireRole } from "./lib/auth";
 
@@ -853,5 +853,153 @@ export const listBookingsByCustomer = query({
       .collect();
 
     return bookings.sort((a, b) => b.startAt - a.startAt).slice(0, 20);
+  },
+});
+
+// Internal variant used by the AI action — no Clerk auth, accepts ai_webchat source
+export const createBookingForAI = internalMutation({
+  args: {
+    orgId: v.id("orgs"),
+    staffId: v.id("staff_members"),
+    serviceId: v.id("services"),
+    customerId: v.id("customers"),
+    startAt: v.number(),
+    conversationId: v.id("ai_conversations"),
+    channel: v.union(v.literal("instagram"), v.literal("webchat")),
+  },
+  handler: async (ctx, args) => {
+    const source = args.channel === "instagram" ? "ai_instagram" : "ai_webchat";
+
+    if (args.startAt <= Date.now()) {
+      throw new ConvexError("Booking start time must be in the future.");
+    }
+
+    const orgSettings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", q => q.eq("orgId", args.orgId))
+      .first();
+    if (!orgSettings) throw new ConvexError("Organization settings not found.");
+
+    const staff = await ctx.db.get(args.staffId);
+    if (!staff || staff.orgId !== args.orgId || staff.isDeleted || !staff.isActive) {
+      throw new ConvexError("Staff member not available.");
+    }
+
+    const service = await ctx.db.get(args.serviceId);
+    if (!service || service.orgId !== args.orgId || service.isDeleted || !service.isActive) {
+      throw new ConvexError("Service not available.");
+    }
+
+    if (!service.staffIds.includes(args.staffId)) {
+      throw new ConvexError("Staff member cannot perform this service.");
+    }
+
+    const customer = await ctx.db.get(args.customerId);
+    if (!customer || customer.orgId !== args.orgId || customer.isDeleted) {
+      throw new ConvexError("Customer not found.");
+    }
+
+    const endAt = args.startAt + service.durationMins * 60 * 1000;
+
+    const midnightMs = new Date(
+      new Date(args.startAt).toISOString().split("T")[0] + "T00:00:00Z"
+    ).getTime();
+    const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
+
+    const existingBookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_staff_start", q =>
+        q.eq("staffId", args.staffId).gte("startAt", midnightMs).lt("startAt", nextMidnightMs)
+      )
+      .filter(q => q.and(q.eq(q.field("isDeleted"), false), q.neq(q.field("status"), "cancelled")))
+      .collect();
+
+    const bufferMs = (orgSettings.bufferTimeMins || 0) * 60 * 1000;
+    const conflict = existingBookings.find(b => b.startAt < endAt && (b.endAt + bufferMs) > args.startAt);
+    if (conflict) throw new ConvexError("This slot is already booked or conflicts with buffer time.");
+
+    const status: "pending_payment" | "confirmed" =
+      orgSettings.depositRequired || customer.requiresFullDeposit ? "pending_payment" : "confirmed";
+
+    const bookingId = await ctx.db.insert("bookings", {
+      orgId: args.orgId,
+      staffId: args.staffId,
+      serviceId: args.serviceId,
+      customerId: args.customerId,
+      startAt: args.startAt,
+      endAt,
+      priceMinorUnits: service.priceMinorUnits,
+      currency: service.currency,
+      surgePriceApplied: false,
+      status,
+      source,
+      aiConversationId: args.conversationId,
+      isDeleted: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.patch(args.customerId, {
+      totalVisits: (customer.totalVisits || 0) + 1,
+      lastVisitAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "ai",
+      actorId: "claude-haiku-4-5-20251001",
+      action: "booking.created",
+      resourceType: "bookings",
+      resourceId: bookingId,
+      after: { staffId: args.staffId, customerId: args.customerId, startAt: args.startAt, status },
+      createdAt: Date.now(),
+    });
+
+    return bookingId;
+  },
+});
+
+// Internal query for AI: look up upcoming bookings by customer phone
+export const getCustomerBookingsForAI = internalQuery({
+  args: {
+    orgId: v.id("orgs"),
+    customerPhone: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const customer = await ctx.db
+      .query("customers")
+      .withIndex("by_org_phone", q => q.eq("orgId", args.orgId).eq("phone", args.customerPhone))
+      .first();
+
+    if (!customer) return [];
+
+    const now = Date.now();
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_customer", q => q.eq("customerId", customer._id))
+      .filter(q =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.neq(q.field("status"), "cancelled"),
+          q.gte(q.field("startAt"), now),
+        )
+      )
+      .take(5);
+
+    return await Promise.all(
+      bookings.map(async b => {
+        const service = await ctx.db.get(b.serviceId);
+        const staff = await ctx.db.get(b.staffId);
+        const d = new Date(b.startAt);
+        return {
+          date: d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Skopje" }),
+          time: d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Skopje" }),
+          service: service?.name ?? "Unknown service",
+          staff: staff?.displayName ?? "Unknown staff",
+          status: b.status,
+        };
+      })
+    );
   },
 });

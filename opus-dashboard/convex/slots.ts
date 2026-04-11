@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { query, QueryCtx } from "./_generated/server";
+import { internalQuery, query, QueryCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 
 // --- Time Utilities ---
@@ -248,4 +248,16 @@ export const getAvailableDates = query({
 
         return results.filter(r => r.hasSlots).map(r => r.date);
     }
+});
+
+// Internal query for the AI action — no auth, returns slots with startAt timestamps
+export const getAvailableSlotsForAI = internalQuery({
+    args: {
+        orgId: v.id("orgs"),
+        serviceId: v.id("services"),
+        date: v.string(), // "YYYY-MM-DD"
+    },
+    handler: async (ctx, args) => {
+        return await computeSlotsForDate(ctx, args.orgId, "any", args.serviceId, args.date);
+    },
 });

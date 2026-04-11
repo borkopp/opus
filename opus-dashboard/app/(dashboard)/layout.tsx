@@ -49,7 +49,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // Allow shared routes (settings, etc.)
-        const sharedPaths = ["/settings"];
+        const sharedPaths = ["/settings", "/ai-inbox"];
         if (sharedPaths.some((p) => pathname.startsWith(p))) return;
 
         // If in the wrong vertical module, redirect

@@ -8,6 +8,10 @@
  * @module
  */
 
+import type * as ai_agent from "../ai/agent.js";
+import type * as ai_conversations from "../ai/conversations.js";
+import type * as ai_messages from "../ai/messages.js";
+import type * as auditLog from "../auditLog.js";
 import type * as availability from "../availability.js";
 import type * as availabilityOverrides from "../availabilityOverrides.js";
 import type * as bookings from "../bookings.js";
@@ -64,6 +68,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "ai/agent": typeof ai_agent;
+  "ai/conversations": typeof ai_conversations;
+  "ai/messages": typeof ai_messages;
+  auditLog: typeof auditLog;
   availability: typeof availability;
   availabilityOverrides: typeof availabilityOverrides;
   bookings: typeof bookings;

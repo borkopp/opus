@@ -349,3 +349,17 @@ export const getByCustomDomain = query({
         return org._id;
     },
 });
+
+// Public query for Instagram webhook — look up org by Meta page ID
+// (instagramPageId is not a secret; it's the public Facebook page ID)
+export const getByInstagramPageId = query({
+    args: { instagramPageId: v.string() },
+    handler: async (ctx, args) => {
+        const org = await ctx.db
+            .query("orgs")
+            .withIndex("by_instagram_page_id", q => q.eq("instagramPageId", args.instagramPageId))
+            .first();
+        if (!org || org.isDeleted) return null;
+        return org._id;
+    },
+});

@@ -166,6 +166,12 @@ export const getPublicProfile = query({
             staffIds.slice(0, 20).map((id) => ctx.db.get(id))
         );
 
+        // Fetch AI settings
+        const orgSettings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", (q) => q.eq("orgId", org._id))
+            .first();
+
         return {
             // Core identity
             _id: org._id,
@@ -222,6 +228,11 @@ export const getPublicProfile = query({
                     currency: s.currency,
                     categoryName: s.categoryId ? categoryMap[s.categoryId] : undefined,
                 })),
+
+            // AI webchat
+            aiWebchatEnabled: !!(orgSettings?.aiEnabled && orgSettings?.aiWebchatEnabled),
+            aiPersonaName: orgSettings?.aiPersonaName ?? "Aria",
+            aiGreetingMessage: orgSettings?.aiGreetingMessage ?? null,
 
             // Public staff profiles
             staff: staff

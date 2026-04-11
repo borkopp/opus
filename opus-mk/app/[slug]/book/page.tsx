@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/lib/format";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -16,10 +17,7 @@ import { format, addDays, startOfDay, isSameDay } from "date-fns";
 import { toast } from "sonner";
 import {
   IconArrowLeft,
-  IconCheck,
   IconClock,
-  IconCalendar,
-  IconUser,
   IconCash,
   IconCreditCard,
   IconCircleCheck,
@@ -171,13 +169,9 @@ export default function BookingPage() {
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
-          {step === "confirmed" ? (
-            <Link href={`/${slug}`} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
-              <IconArrowLeft size={20} />
-            </Link>
-          ) : step === "service" ? (
-            <Link href={`/${slug}`} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
-              <IconArrowLeft size={20} />
+          {step === "confirmed" || step === "service" ? (
+            <Link href={`/${slug}`} className="p-1.5 rounded-lg hover:bg-secondary transition-colors" aria-label={`Back to ${profile.name}`}>
+              <IconArrowLeft size={20} aria-hidden="true" />
             </Link>
           ) : (
             <button
@@ -186,8 +180,9 @@ export default function BookingPage() {
                 if (step === "details") setStep("datetime");
               }}
               className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
+              aria-label="Go back"
             >
-              <IconArrowLeft size={20} />
+              <IconArrowLeft size={20} aria-hidden="true" />
             </button>
           )}
           <span className="text-sm font-medium">Book at {profile.name}</span>
@@ -196,7 +191,7 @@ export default function BookingPage() {
         {/* Step indicator */}
         {step !== "confirmed" && (
           <div className="max-w-3xl mx-auto px-4 pb-3">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" role="progressbar" aria-valuenow={currentStepIndex + 1} aria-valuemin={1} aria-valuemax={steps.length} aria-label={`Step ${currentStepIndex + 1} of ${steps.length}: ${steps[currentStepIndex].label}`}>
               {steps.map((s, i) => (
                 <div
                   key={s.key}
@@ -213,7 +208,7 @@ export default function BookingPage() {
       <div className="max-w-3xl mx-auto px-4 pt-6">
         {/* ── STEP 1: Service Selection ── */}
         {step === "service" && (
-          <div>
+          <div className="animate-slide-up-fade-in">
             <h2 className="text-lg font-semibold mb-1">Choose a service</h2>
             <p className="text-sm text-muted-foreground mb-6">Select the service you'd like to book.</p>
             <div className="space-y-2">
@@ -221,7 +216,7 @@ export default function BookingPage() {
                 <button
                   key={service._id}
                   onClick={() => handleSelectService(service._id)}
-                  className={`w-full text-left flex items-center justify-between p-4 rounded-xl border transition-all active:scale-[0.98] ${
+                  className={`w-full text-left flex items-center justify-between p-4 rounded-xl border transition-[border-color,background-color,color,transform] duration-150 active:scale-[0.98] ${
                     selectedServiceId === service._id
                       ? "border-primary bg-primary/5"
                       : "border-border/40 bg-card hover:border-border"
@@ -229,11 +224,13 @@ export default function BookingPage() {
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0 mr-3">
                     {service.photoUrl && (
-                      <div className="w-12 h-12 rounded-lg bg-secondary shrink-0 overflow-hidden">
-                        <img
-                          src={getImageUrl(service.photoUrl)}
+                      <div className="w-12 h-12 rounded-lg bg-secondary shrink-0 overflow-hidden relative">
+                        <Image
+                          src={getImageUrl(service.photoUrl)!}
                           alt={service.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       </div>
                     )}
@@ -241,7 +238,7 @@ export default function BookingPage() {
                       <p className="text-sm font-medium">{service.name}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <IconClock size={12} />
+                          <IconClock size={12} aria-hidden="true" />
                           {service.durationMins} min
                         </span>
                       </div>
@@ -258,7 +255,7 @@ export default function BookingPage() {
 
         {/* ── STEP 2: Date & Time ── */}
         {step === "datetime" && selectedService && (
-          <div>
+          <div className="animate-slide-up-fade-in">
             <h2 className="text-lg font-semibold mb-1">Pick a date & time</h2>
             <p className="text-sm text-muted-foreground mb-6">
               {selectedService.name} · {selectedService.durationMins} min · {formatPrice(selectedService.priceMinorUnits, selectedService.currency)}
@@ -270,10 +267,11 @@ export default function BookingPage() {
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
                   Staff preference
                 </Label>
-                <div className="flex gap-2 overflow-x-auto pb-2">
+                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-2">
                   <button
                     onClick={() => { setSelectedStaffId(null); setSelectedSlot(null); }}
-                    className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                    aria-pressed={!selectedStaffId}
+                    className={`shrink-0 px-4 py-3 rounded-full text-sm font-medium border transition-[border-color,background-color,color] duration-150 ${
                       !selectedStaffId ? "border-primary bg-primary text-primary-foreground" : "border-border/60 hover:border-border"
                     }`}
                   >
@@ -283,7 +281,8 @@ export default function BookingPage() {
                     <button
                       key={member._id}
                       onClick={() => { setSelectedStaffId(member._id); setSelectedSlot(null); }}
-                      className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                      aria-pressed={selectedStaffId === member._id}
+                      className={`shrink-0 px-4 py-3 rounded-full text-sm font-medium border transition-[border-color,background-color,color] duration-150 ${
                         selectedStaffId === member._id ? "border-primary bg-primary text-primary-foreground" : "border-border/60 hover:border-border"
                       }`}
                     >
@@ -294,16 +293,17 @@ export default function BookingPage() {
               </div>
             )}
 
-            {/* Date picker — horizontal scroll */}
+            {/* Date picker — scroll on mobile, 7-column grid on md+ */}
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
               Date
             </Label>
-            <div className="flex gap-2 overflow-x-auto pb-4 mb-4">
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-4 mb-4 md:grid md:grid-cols-7 md:overflow-visible md:pb-0">
               {dateOptions.map((d) => (
                 <button
                   key={d.value}
                   onClick={() => { setSelectedDate(d.value); setSelectedSlot(null); }}
-                  className={`shrink-0 flex flex-col items-center px-4 py-2.5 rounded-xl border text-center transition-all ${
+                  aria-pressed={selectedDate === d.value}
+                  className={`shrink-0 flex flex-col items-center px-3 py-3 rounded-xl border text-center transition-[border-color,background-color,color] duration-150 ${
                     selectedDate === d.value
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border/60 hover:border-border"
@@ -324,7 +324,7 @@ export default function BookingPage() {
                   Available times
                 </Label>
                 {slots === undefined ? (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                     {[...Array(6)].map((_, i) => (
                       <Skeleton key={i} className="h-11 rounded-xl" />
                     ))}
@@ -335,7 +335,7 @@ export default function BookingPage() {
                     <p className="text-xs text-muted-foreground/60 mt-1">Try another date or staff member.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                     {slots.map((slot) => {
                       const time = new Date(slot.startAt);
                       const timeStr = `${String(time.getUTCHours()).padStart(2, "0")}:${String(time.getUTCMinutes()).padStart(2, "0")}`;
@@ -345,7 +345,8 @@ export default function BookingPage() {
                         <button
                           key={slot.startAt}
                           onClick={() => handleSelectSlot(slot)}
-                          className={`py-2.5 px-3 rounded-xl border text-sm font-medium transition-all active:scale-[0.96] ${
+                          aria-pressed={isSelected}
+                          className={`py-3 px-3 rounded-xl border text-sm font-medium transition-[border-color,background-color,color,transform] duration-150 active:scale-[0.96] ${
                             isSelected
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-border/60 hover:border-border"
@@ -364,7 +365,7 @@ export default function BookingPage() {
 
         {/* ── STEP 3: Customer Details ── */}
         {step === "details" && selectedService && selectedSlot && (
-          <div>
+          <div className="animate-slide-up-fade-in">
             <h2 className="text-lg font-semibold mb-1">Your details</h2>
             <p className="text-sm text-muted-foreground mb-6">Almost done! Fill in your info to confirm.</p>
 
@@ -401,19 +402,22 @@ export default function BookingPage() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name" className="text-sm font-medium mb-1.5 block">
-                  Full name <span className="text-destructive">*</span>
+                  Full name <span className="text-destructive" aria-hidden="true">*</span>
                 </Label>
                 <Input
                   id="name"
                   placeholder="Your name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                  aria-required="true"
+                  autoComplete="name"
                   className="h-12 rounded-xl"
                 />
               </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-medium mb-1.5 block">
-                  Phone number <span className="text-destructive">*</span>
+                  Phone number <span className="text-destructive" aria-hidden="true">*</span>
                 </Label>
                 <Input
                   id="phone"
@@ -421,6 +425,9 @@ export default function BookingPage() {
                   placeholder="+389 7X XXX XXX"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
+                  required
+                  aria-required="true"
+                  autoComplete="tel"
                   className="h-12 rounded-xl"
                 />
               </div>
@@ -434,6 +441,7 @@ export default function BookingPage() {
                   placeholder="you@example.com"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
+                  autoComplete="email"
                   className="h-12 rounded-xl"
                 />
               </div>
@@ -443,15 +451,15 @@ export default function BookingPage() {
                 <Label className="text-sm font-medium mb-2 block">Payment</Label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-3.5 rounded-xl border border-primary bg-primary/5">
-                    <IconCash size={20} className="text-primary" />
+                    <IconCash size={20} className="text-primary" aria-hidden="true" />
                     <div className="flex-1">
                       <p className="text-sm font-medium">Pay in cash</p>
                       <p className="text-xs text-muted-foreground">Pay at the venue</p>
                     </div>
-                    <IconCircleCheck size={20} className="text-primary" />
+                    <IconCircleCheck size={20} className="text-primary" aria-hidden="true" />
                   </div>
                   <div className="flex items-center gap-3 p-3.5 rounded-xl border border-border/40 opacity-50 cursor-not-allowed">
-                    <IconCreditCard size={20} className="text-muted-foreground" />
+                    <IconCreditCard size={20} className="text-muted-foreground" aria-hidden="true" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-muted-foreground">Pay online</p>
                       <p className="text-xs text-muted-foreground">Coming soon</p>
@@ -464,9 +472,17 @@ export default function BookingPage() {
               <Button
                 onClick={handleSubmitBooking}
                 disabled={isSubmitting || !customerName.trim() || !customerPhone.trim()}
-                className="w-full h-12 rounded-2xl text-base font-semibold mt-4"
+                className="w-full h-12 rounded-2xl text-base font-semibold mt-4 bg-cta text-cta-foreground hover:bg-cta/90 disabled:bg-cta/40 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Booking..." : "Confirm Booking"}
+                {isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Booking…
+                  </span>
+                ) : "Confirm Booking"}
               </Button>
             </div>
           </div>
@@ -474,9 +490,9 @@ export default function BookingPage() {
 
         {/* ── STEP 4: Confirmation ── */}
         {step === "confirmed" && confirmation && (
-          <div className="flex flex-col items-center text-center pt-8">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6">
-              <IconConfetti size={36} className="text-emerald-600" />
+          <div className="flex flex-col items-center text-center pt-8 animate-scale-in-fade">
+            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-6">
+              <IconConfetti size={36} className="text-success" aria-hidden="true" />
             </div>
             <h2 className="text-xl font-semibold mb-2">Booking Confirmed!</h2>
             <p className="text-sm text-muted-foreground max-w-sm">

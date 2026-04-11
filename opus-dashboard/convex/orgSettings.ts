@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query } from "./_generated/server";
 import { requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
 
@@ -159,6 +159,28 @@ export const updateAiSettings = mutation({
         aiPersonaName: v.string(),
         aiConfidenceThreshold: v.number(),
         aiHandoffPhoneNumber: v.optional(v.string()),
+        aiWebchatEnabled: v.optional(v.boolean()),
+        aiInstagramEnabled: v.optional(v.boolean()),
+        aiSystemPrompt: v.optional(v.string()),
+        aiGreetingMessage: v.optional(v.string()),
+        aiTone: v.optional(v.union(
+            v.literal("friendly"),
+            v.literal("professional"),
+            v.literal("casual"),
+            v.literal("formal"),
+        )),
+        aiWorkingHoursEnabled: v.optional(v.boolean()),
+        aiWorkingHours: v.optional(v.array(v.object({
+            dayOfWeek: v.number(),
+            startTime: v.string(),
+            endTime: v.string(),
+        }))),
+        aiAwayMessage: v.optional(v.string()),
+        aiLanguage: v.optional(v.union(
+            v.literal("auto"),
+            v.literal("en"),
+            v.literal("mk"),
+        )),
     },
     handler: async (ctx, args) => {
         await requireRole(ctx, args.orgId, "owner");
@@ -175,11 +197,30 @@ export const updateAiSettings = mutation({
             aiPersonaName: args.aiPersonaName,
             aiConfidenceThreshold: args.aiConfidenceThreshold,
             aiHandoffPhoneNumber: args.aiHandoffPhoneNumber,
+            aiWebchatEnabled: args.aiWebchatEnabled,
+            aiInstagramEnabled: args.aiInstagramEnabled,
+            aiSystemPrompt: args.aiSystemPrompt,
+            aiGreetingMessage: args.aiGreetingMessage,
+            aiTone: args.aiTone,
+            aiWorkingHoursEnabled: args.aiWorkingHoursEnabled,
+            aiWorkingHours: args.aiWorkingHours,
+            aiAwayMessage: args.aiAwayMessage,
+            aiLanguage: args.aiLanguage,
             updatedAt: Date.now(),
         });
 
         return true;
     }
+});
+
+export const getOrgSettingsInternal = internalQuery({
+    args: { orgId: v.id("orgs") },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .first();
+    },
 });
 
 export const updateOrgBranding = mutation({
@@ -191,6 +232,7 @@ export const updateOrgBranding = mutation({
         bio: v.optional(v.string()),
         phone: v.optional(v.string()),
         instagramHandle: v.optional(v.string()),
+        instagramPageId: v.optional(v.string()),
         websiteUrl: v.optional(v.string()),
         brandColors: v.optional(v.object({
             primary: v.string(),
@@ -211,6 +253,7 @@ export const updateOrgBranding = mutation({
             bio: args.bio,
             phone: args.phone,
             instagramHandle: args.instagramHandle,
+            instagramPageId: args.instagramPageId,
             websiteUrl: args.websiteUrl,
             brandColors: args.brandColors,
             updatedAt: Date.now()
@@ -245,6 +288,41 @@ export const updateLogo = mutation({
         await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
 
         return logoUrl;
+    }
+});
+
+export const updateLocation = mutation({
+    args: {
+        orgId: v.id("orgs"),
+        address: v.optional(v.string()),
+        city: v.optional(v.string()),
+        neighborhood: v.optional(v.string()),
+        postalCode: v.optional(v.string()),
+        country: v.optional(v.string()),
+        coordinates: v.optional(v.object({
+            lat: v.number(),
+            lng: v.number(),
+        })),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, args.orgId, "owner");
+
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new Error("Org not found");
+
+        await ctx.db.patch(args.orgId, {
+            address: args.address,
+            city: args.city,
+            neighborhood: args.neighborhood,
+            postalCode: args.postalCode,
+            country: args.country,
+            coordinates: args.coordinates,
+            updatedAt: Date.now(),
+        });
+
+        await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+
+        return true;
     }
 });
 

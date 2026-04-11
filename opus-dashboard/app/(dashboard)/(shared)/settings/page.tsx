@@ -45,10 +45,22 @@ import {
   IconBrandInstagram,
   IconPhone,
   IconWorld,
+  IconMapPin,
 } from "@tabler/icons-react";
+import dynamic from "next/dynamic";
+
+const LocationMapPicker = dynamic(
+  () => import("@/components/dashboard/LocationMapPicker"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[320px] rounded-xl bg-muted animate-pulse border border-border/60" />
+    ),
+  }
+);
 import { ListedBadge } from "@/components/dashboard/ListingBanner";
 
-const VALID_TABS = ["general", "booking", "deposits", "surge", "notifications", "ai", "branding", "domain"] as const;
+const VALID_TABS = ["general", "booking", "deposits", "surge", "notifications", "ai", "branding", "location", "domain"] as const;
 type SettingsTab = typeof VALID_TABS[number];
 
 export default function SettingsPage() {
@@ -96,6 +108,7 @@ export default function SettingsPage() {
   const updateOrgBranding = useMutation(api.orgSettings.updateOrgBranding);
   const updateLogo = useMutation(api.orgSettings.updateLogo);
   const connectCustomDomain = useMutation(api.orgSettings.connectCustomDomain);
+  const updateLocation = useMutation(api.orgSettings.updateLocation);
   const generateUploadUrl = useMutation(api.orgMedia.generateUploadUrl);
   const addMedia = useMutation(api.orgMedia.addMedia);
   const removeMedia = useMutation(api.orgMedia.removeMedia);
@@ -134,6 +147,24 @@ export default function SettingsPage() {
     aiPersonaName: "Aria",
     aiConfidenceThreshold: 0.8,
     aiHandoffPhoneNumber: "",
+    aiWebchatEnabled: false,
+    aiInstagramEnabled: false,
+    aiSystemPrompt: "",
+    aiGreetingMessage: "",
+    aiTone: "friendly" as "friendly" | "professional" | "casual" | "formal",
+    aiLanguage: "auto" as "auto" | "en" | "mk",
+    aiWorkingHoursEnabled: false,
+    aiWorkingHours: [
+      { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
+      { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
+      { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
+      { dayOfWeek: 4, startTime: "09:00", endTime: "18:00" },
+      { dayOfWeek: 5, startTime: "09:00", endTime: "18:00" },
+      { dayOfWeek: 6, startTime: "10:00", endTime: "16:00" },
+      { dayOfWeek: 0, startTime: "10:00", endTime: "16:00" },
+    ] as Array<{ dayOfWeek: number; startTime: string; endTime: string }>,
+    aiWorkingHoursEnabled_days: [true, true, true, true, true, false, false] as boolean[],
+    aiAwayMessage: "",
   });
   const [branding, setBranding] = useState({
     name: "",
@@ -142,6 +173,7 @@ export default function SettingsPage() {
     bio: "",
     phone: "",
     instagramHandle: "",
+    instagramPageId: "",
     websiteUrl: "",
     primary: "#000000",
     secondary: "#ffffff",
@@ -149,6 +181,14 @@ export default function SettingsPage() {
   });
   const [uploadingMedia, setUploadingMedia] = useState<string | null>(null);
   const [domain, setDomain] = useState({ customDomain: "" });
+  const [location, setLocation] = useState({
+    address: "",
+    city: "",
+    neighborhood: "",
+    postalCode: "",
+    country: "",
+    coordinates: null as { lat: number; lng: number } | null,
+  });
 
   useEffect(() => {
     if (data && data.settings && data.org) {
@@ -181,12 +221,23 @@ export default function SettingsPage() {
         whatsappEnabled: data.settings.whatsappEnabled,
         reminderHoursStr: data.settings.reminderHoursBefore.join(","),
       });
-      setAi({
-        aiEnabled: data.settings.aiEnabled,
-        aiPersonaName: data.settings.aiPersonaName,
-        aiConfidenceThreshold: data.settings.aiConfidenceThreshold,
-        aiHandoffPhoneNumber: data.settings.aiHandoffPhoneNumber || "",
-      });
+      const s = data.settings;
+      setAi(prev => ({
+        ...prev,
+        aiEnabled: s.aiEnabled,
+        aiPersonaName: s.aiPersonaName,
+        aiConfidenceThreshold: s.aiConfidenceThreshold,
+        aiHandoffPhoneNumber: s.aiHandoffPhoneNumber || "",
+        aiWebchatEnabled: s.aiWebchatEnabled ?? false,
+        aiInstagramEnabled: s.aiInstagramEnabled ?? false,
+        aiSystemPrompt: s.aiSystemPrompt ?? "",
+        aiGreetingMessage: s.aiGreetingMessage ?? "",
+        aiTone: (s.aiTone as any) ?? "friendly",
+        aiLanguage: (s.aiLanguage as any) ?? "auto",
+        aiWorkingHoursEnabled: s.aiWorkingHoursEnabled ?? false,
+        aiWorkingHours: s.aiWorkingHours ?? prev.aiWorkingHours,
+        aiAwayMessage: s.aiAwayMessage ?? "",
+      }));
       setBranding({
         name: data.org.name,
         logoUrl: data.org.logoUrl || "",
@@ -194,12 +245,21 @@ export default function SettingsPage() {
         bio: data.org.bio || "",
         phone: data.org.phone || "",
         instagramHandle: data.org.instagramHandle || "",
+        instagramPageId: data.org.instagramPageId || "",
         websiteUrl: data.org.websiteUrl || "",
         primary: data.org.brandColors?.primary || "#000000",
         secondary: data.org.brandColors?.secondary || "#ffffff",
         accent: data.org.brandColors?.accent || "#3b82f6",
       });
       setDomain({ customDomain: data.org.customDomain || "" });
+      setLocation({
+        address: data.org.address || "",
+        city: data.org.city || "",
+        neighborhood: data.org.neighborhood || "",
+        postalCode: data.org.postalCode || "",
+        country: data.org.country || "",
+        coordinates: data.org.coordinates ?? null,
+      });
     }
   }, [data]);
 
@@ -303,7 +363,26 @@ export default function SettingsPage() {
   const handleSaveAi = async () => {
     setIsSaving(true);
     try {
-      await updateAiSettings({ orgId, ...ai });
+      // Build aiWorkingHours from the active days
+      const activeHours = ai.aiWorkingHours.filter(
+        (h, i) => ai.aiWorkingHoursEnabled_days[i] !== false
+      );
+      await updateAiSettings({
+        orgId,
+        aiEnabled: ai.aiEnabled,
+        aiPersonaName: ai.aiPersonaName,
+        aiConfidenceThreshold: ai.aiConfidenceThreshold,
+        aiHandoffPhoneNumber: ai.aiHandoffPhoneNumber || undefined,
+        aiWebchatEnabled: ai.aiWebchatEnabled,
+        aiInstagramEnabled: ai.aiInstagramEnabled,
+        aiSystemPrompt: ai.aiSystemPrompt || undefined,
+        aiGreetingMessage: ai.aiGreetingMessage || undefined,
+        aiTone: ai.aiTone,
+        aiLanguage: ai.aiLanguage,
+        aiWorkingHoursEnabled: ai.aiWorkingHoursEnabled,
+        aiWorkingHours: activeHours,
+        aiAwayMessage: ai.aiAwayMessage || undefined,
+      });
       toast.success("AI settings saved");
     } catch (e: any) {
       toast.error(e.message);
@@ -322,6 +401,7 @@ export default function SettingsPage() {
         bio: branding.bio || undefined,
         phone: branding.phone || undefined,
         instagramHandle: branding.instagramHandle || undefined,
+        instagramPageId: branding.instagramPageId || undefined,
         websiteUrl: branding.websiteUrl || undefined,
         brandColors: {
           primary: branding.primary,
@@ -400,6 +480,25 @@ export default function SettingsPage() {
     setIsSaving(false);
   };
 
+  const handleSaveLocation = async () => {
+    setIsSaving(true);
+    try {
+      await updateLocation({
+        orgId,
+        address: location.address || undefined,
+        city: location.city || undefined,
+        neighborhood: location.neighborhood || undefined,
+        postalCode: location.postalCode || undefined,
+        country: location.country || undefined,
+        coordinates: location.coordinates ?? undefined,
+      });
+      toast.success("Location saved");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+    setIsSaving(false);
+  };
+
   return (
     <div className="flex flex-col gap-8 w-full max-w-[1700px] max-h-screen mx-auto pb-10">
       <div className="flex flex-col gap-4 border-b border-border/40 pb-6">
@@ -472,7 +571,7 @@ export default function SettingsPage() {
                 stroke={1.5}
                 className="opacity-70 text-blue-500"
               />{" "}
-              AI Rules
+              AI Agent
             </TabsTrigger>
             <TabsTrigger
               value="branding"
@@ -484,6 +583,13 @@ export default function SettingsPage() {
                 className="opacity-70 text-purple-500"
               />{" "}
               Branding
+            </TabsTrigger>
+            <TabsTrigger
+              value="location"
+              className="w-full justify-start gap-3 px-3 py-2.5 data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none hover:bg-muted/40 rounded-xl font-medium transition-all"
+            >
+              <IconMapPin size={18} stroke={1.5} className="opacity-70" />{" "}
+              Location
             </TabsTrigger>
             <TabsTrigger
               value="domain"
@@ -933,46 +1039,224 @@ export default function SettingsPage() {
                   </Label>
                 </div>
                 {ai.aiEnabled && (
-                  <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-sm mt-4">
-                    <div className="grid gap-2 max-w-xl">
-                      <Label>Persona Name</Label>
-                      <Input
-                        value={ai.aiPersonaName}
-                        className="bg-background"
-                        onChange={(e) =>
-                          setAi({ ...ai, aiPersonaName: e.target.value })
-                        }
-                      />
+                  <div className="space-y-6 mt-4">
+                    {/* ── Core Settings ── */}
+                    <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-sm">
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Persona Name</Label>
+                        <Input
+                          value={ai.aiPersonaName}
+                          className="bg-background"
+                          onChange={(e) => setAi({ ...ai, aiPersonaName: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">The name shown to customers (e.g. "Aria").</p>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>
+                          Confidence Threshold
+                          <span className="text-muted-foreground font-normal ml-1">(0 to 1)</span>
+                        </Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="1"
+                          value={ai.aiConfidenceThreshold}
+                          className="bg-background"
+                          onChange={(e) => setAi({ ...ai, aiConfidenceThreshold: parseFloat(e.target.value) })}
+                        />
+                        <p className="text-xs text-muted-foreground">Below this score the conversation is handed off to a human.</p>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Human Handoff Phone Number</Label>
+                        <Input
+                          value={ai.aiHandoffPhoneNumber}
+                          className="bg-background"
+                          placeholder="+38971234567"
+                          onChange={(e) => setAi({ ...ai, aiHandoffPhoneNumber: e.target.value })}
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-2 max-w-xl">
-                      <Label>
-                        Confidence Threshold{" "}
-                        <span className="text-muted-foreground font-normal ml-1">
-                          (0 to 1 scale)
-                        </span>
-                      </Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={ai.aiConfidenceThreshold}
-                        className="bg-background"
-                        onChange={(e) =>
-                          setAi({
-                            ...ai,
-                            aiConfidenceThreshold: parseFloat(e.target.value),
-                          })
-                        }
-                      />
+
+                    {/* ── Channels ── */}
+                    <div className="p-6 border border-border/60 rounded-xl bg-background shadow-sm space-y-4">
+                      <div>
+                        <h3 className="font-medium text-sm mb-0.5">Active Channels</h3>
+                        <p className="text-xs text-muted-foreground">Choose which channels the AI will handle.</p>
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between max-w-xl">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Webchat Widget</span>
+                            <span className="text-xs text-muted-foreground">— embedded chat on your booking page</span>
+                          </div>
+                          <Switch
+                            checked={ai.aiWebchatEnabled}
+                            onCheckedChange={(c) => setAi({ ...ai, aiWebchatEnabled: c })}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between max-w-xl">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">Instagram DM</span>
+                            <span className="text-xs text-muted-foreground">— replies to customer DMs automatically</span>
+                          </div>
+                          <Switch
+                            checked={ai.aiInstagramEnabled}
+                            onCheckedChange={(c) => setAi({ ...ai, aiInstagramEnabled: c })}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="grid gap-2 max-w-xl">
-                      <Label>Human Handoff Fallback Number</Label>
-                      <Input
-                        value={ai.aiHandoffPhoneNumber}
-                        className="bg-background"
-                        onChange={(e) =>
-                          setAi({ ...ai, aiHandoffPhoneNumber: e.target.value })
-                        }
-                      />
+
+                    {/* ── Conversation Style ── */}
+                    <div className="p-6 border border-border/60 rounded-xl bg-background shadow-sm space-y-5">
+                      <div>
+                        <h3 className="font-medium text-sm mb-0.5">Conversation Style</h3>
+                        <p className="text-xs text-muted-foreground">Shape how the AI communicates with your customers.</p>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Tone</Label>
+                        <div className="flex gap-2 flex-wrap">
+                          {(["friendly", "professional", "casual", "formal"] as const).map(tone => (
+                            <button
+                              key={tone}
+                              type="button"
+                              onClick={() => setAi({ ...ai, aiTone: tone })}
+                              className={cn(
+                                "px-4 py-1.5 rounded-lg text-sm border transition-all capitalize",
+                                ai.aiTone === tone
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background border-border/60 text-muted-foreground hover:border-primary/60"
+                              )}
+                            >
+                              {tone}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Language</Label>
+                        <div className="flex gap-2 flex-wrap">
+                          {([
+                            { value: "auto", label: "Auto-detect" },
+                            { value: "en", label: "English" },
+                            { value: "mk", label: "Македонски" },
+                          ] as const).map(({ value, label }) => (
+                            <button
+                              key={value}
+                              type="button"
+                              onClick={() => setAi({ ...ai, aiLanguage: value })}
+                              className={cn(
+                                "px-4 py-1.5 rounded-lg text-sm border transition-all",
+                                ai.aiLanguage === value
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-background border-border/60 text-muted-foreground hover:border-primary/60"
+                              )}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Auto-detect replies in the same language the customer writes in (English or Macedonian).
+                        </p>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Greeting Message</Label>
+                        <Input
+                          value={ai.aiGreetingMessage}
+                          className="bg-background"
+                          placeholder="Hi! I'm Aria, your booking assistant. How can I help you today?"
+                          onChange={(e) => setAi({ ...ai, aiGreetingMessage: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">Sent automatically when a new conversation starts.</p>
+                      </div>
+                      <div className="grid gap-2 max-w-xl">
+                        <Label>Custom Instructions</Label>
+                        <textarea
+                          value={ai.aiSystemPrompt}
+                          onChange={(e) => setAi({ ...ai, aiSystemPrompt: e.target.value })}
+                          placeholder="Always greet customers by name. Never discuss competitor pricing. Only offer services from our menu..."
+                          rows={4}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring/50 placeholder:text-muted-foreground"
+                        />
+                        <p className="text-xs text-muted-foreground">Extra rules and context for the AI. Appended to the base system prompt.</p>
+                      </div>
+                    </div>
+
+                    {/* ── Working Hours ── */}
+                    <div className="p-6 border border-border/60 rounded-xl bg-background shadow-sm space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-medium text-sm mb-0.5">Working Hours</h3>
+                          <p className="text-xs text-muted-foreground">Restrict the AI to specific hours. Outside these, it sends the away message.</p>
+                        </div>
+                        <Switch
+                          checked={ai.aiWorkingHoursEnabled}
+                          onCheckedChange={(c) => setAi({ ...ai, aiWorkingHoursEnabled: c })}
+                        />
+                      </div>
+                      {ai.aiWorkingHoursEnabled && (
+                        <div className="space-y-3">
+                          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => {
+                            const dayIndex = i; // 0=Sun…6=Sat (JS convention)
+                            const hoursEntry = ai.aiWorkingHours.find(h => h.dayOfWeek === dayIndex);
+                            const isEnabled = ai.aiWorkingHoursEnabled_days[i] ?? false;
+                            return (
+                              <div key={day} className="flex items-center gap-3 max-w-xl">
+                                <div className="w-12 flex items-center gap-1.5">
+                                  <input
+                                    type="checkbox"
+                                    checked={isEnabled}
+                                    onChange={(e) => {
+                                      const updated = [...ai.aiWorkingHoursEnabled_days];
+                                      updated[i] = e.target.checked;
+                                      setAi({ ...ai, aiWorkingHoursEnabled_days: updated });
+                                    }}
+                                    className="rounded"
+                                  />
+                                  <span className="text-sm text-muted-foreground">{day}</span>
+                                </div>
+                                <Input
+                                  type="time"
+                                  disabled={!isEnabled}
+                                  value={hoursEntry?.startTime ?? "09:00"}
+                                  className="bg-background w-28 text-sm"
+                                  onChange={(e) => {
+                                    const updated = ai.aiWorkingHours.map(h =>
+                                      h.dayOfWeek === dayIndex ? { ...h, startTime: e.target.value } : h
+                                    );
+                                    setAi({ ...ai, aiWorkingHours: updated });
+                                  }}
+                                />
+                                <span className="text-muted-foreground text-sm">to</span>
+                                <Input
+                                  type="time"
+                                  disabled={!isEnabled}
+                                  value={hoursEntry?.endTime ?? "18:00"}
+                                  className="bg-background w-28 text-sm"
+                                  onChange={(e) => {
+                                    const updated = ai.aiWorkingHours.map(h =>
+                                      h.dayOfWeek === dayIndex ? { ...h, endTime: e.target.value } : h
+                                    );
+                                    setAi({ ...ai, aiWorkingHours: updated });
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                          <div className="grid gap-2 max-w-xl pt-2">
+                            <Label>Away Message</Label>
+                            <textarea
+                              value={ai.aiAwayMessage}
+                              onChange={(e) => setAi({ ...ai, aiAwayMessage: e.target.value })}
+                              placeholder="We're currently outside business hours. Please reach out again during our working hours!"
+                              rows={3}
+                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring/50 placeholder:text-muted-foreground"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1309,6 +1593,22 @@ export default function SettingsPage() {
                   </div>
                   <div className="grid gap-1.5 max-w-xl">
                     <Label className="flex items-center gap-1.5">
+                      <IconBrandInstagram size={14} className="text-muted-foreground" />{" "}
+                      Instagram Page ID
+                      <span className="text-xs text-muted-foreground font-normal ml-1">(for AI DM integration)</span>
+                    </Label>
+                    <Input
+                      value={branding.instagramPageId}
+                      className="bg-background"
+                      placeholder="123456789012345"
+                      onChange={(e) =>
+                        setBranding({ ...branding, instagramPageId: e.target.value })
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">The numeric Meta Page ID — required to receive Instagram DMs via the AI front-desk.</p>
+                  </div>
+                  <div className="grid gap-1.5 max-w-xl">
+                    <Label className="flex items-center gap-1.5">
                       <IconWorld size={14} className="text-muted-foreground" />{" "}
                       Website URL
                     </Label>
@@ -1403,6 +1703,96 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent
+            value="location"
+            className="m-0 focus-visible:outline-none focus-visible:ring-0"
+          >
+            <Card className="rounded-2xl overflow-hidden">
+              <CardHeader className="border-b border-border/40 bg-muted/10 pb-6 pt-6 px-7">
+                <CardTitle className="text-xl">Business Location</CardTitle>
+                <CardDescription className="text-sm">
+                  Set your address and pin your location on the map so customers can find you.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-7 px-7">
+                {/* Address fields */}
+                <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+                  <div className="sm:col-span-2 grid gap-2">
+                    <Label>Street address</Label>
+                    <Input
+                      placeholder="Ul. Makedonija 12"
+                      value={location.address}
+                      onChange={(e) => setLocation({ ...location, address: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>City</Label>
+                    <Input
+                      placeholder="Skopje"
+                      value={location.city}
+                      onChange={(e) => setLocation({ ...location, city: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Neighborhood</Label>
+                    <Input
+                      placeholder="Centar"
+                      value={location.neighborhood}
+                      onChange={(e) => setLocation({ ...location, neighborhood: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Postal code</Label>
+                    <Input
+                      placeholder="1000"
+                      value={location.postalCode}
+                      onChange={(e) => setLocation({ ...location, postalCode: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Country</Label>
+                    <Input
+                      placeholder="MK"
+                      value={location.country}
+                      onChange={(e) => setLocation({ ...location, country: e.target.value })}
+                      className="bg-background"
+                    />
+                  </div>
+                </div>
+
+                {/* Map pin */}
+                <div className="grid gap-2 max-w-2xl">
+                  <Label>
+                    Map pin{" "}
+                    <span className="text-muted-foreground font-normal ml-1">
+                      Click the map or drag the pin to set your exact location. Use &ldquo;Find on map&rdquo; to geocode the address above.
+                    </span>
+                  </Label>
+                  <LocationMapPicker
+                    coords={location.coordinates}
+                    geocodeQuery={[location.address, location.city, location.country]
+                      .filter(Boolean)
+                      .join(", ")}
+                    onChange={(coords) => setLocation({ ...location, coordinates: coords })}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="border-t border-border/40 px-7 py-5 bg-muted/10">
+                <Button
+                  onClick={handleSaveLocation}
+                  disabled={isSaving}
+                  className="gap-2"
+                >
+                  <IconDeviceFloppy size={18} /> Save Location
+                </Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
 
           <TabsContent

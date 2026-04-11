@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
 
 export const findOrCreateCustomer = mutation({
@@ -60,6 +60,52 @@ export const findOrCreateCustomer = mutation({
         });
 
         return customerId;
+    },
+});
+
+// Internal variant used by the AI action (no Clerk auth required)
+export const findOrCreateCustomerForAI = internalMutation({
+    args: {
+        orgId: v.id("orgs"),
+        name: v.string(),
+        phone: v.string(), // E.164 — required for AI bookings
+    },
+    handler: async (ctx, args) => {
+        const existing = await ctx.db
+            .query("customers")
+            .withIndex("by_org_phone", q => q.eq("orgId", args.orgId).eq("phone", args.phone))
+            .first();
+
+        if (existing) return existing._id;
+
+        return await ctx.db.insert("customers", {
+            orgId: args.orgId,
+            name: args.name,
+            phone: args.phone,
+            totalVisits: 0,
+            totalSpendMinorUnits: 0,
+            noShowCount: 0,
+            noShowRiskScore: 0,
+            requiresFullDeposit: false,
+            whatsappOptIn: false,
+            marketingOptIn: false,
+            isDeleted: false,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+        });
+    },
+});
+
+export const getCustomerByPhoneForAI = internalQuery({
+    args: {
+        orgId: v.id("orgs"),
+        phone: v.string(),
+    },
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("customers")
+            .withIndex("by_org_phone", q => q.eq("orgId", args.orgId).eq("phone", args.phone))
+            .first();
     },
 });
 

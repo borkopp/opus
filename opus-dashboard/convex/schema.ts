@@ -238,6 +238,11 @@ export default defineSchema({
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
 
+    // Dashboard in-app notification preferences
+    dashboardNotificationsEnabled: v.optional(v.boolean()),  // master toggle for bell icon
+    dashboardSoundEnabled: v.optional(v.boolean()),          // chime sound on new notification
+    dashboardToastEnabled: v.optional(v.boolean()),          // inline toast popup on new notification
+
     // AI front desk
     aiEnabled: v.boolean(),
     aiPersonaName: v.string(),               // "Aria" — shown to customers

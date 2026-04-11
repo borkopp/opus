@@ -212,6 +212,18 @@ export const createPublicBooking = mutation({
             createdAt: Date.now(),
         });
 
+        // ── Dashboard notification — shows in navbar bell for the business owner ──
+        const startDate = new Date(args.startAt);
+        const timeLabel = `${String(startDate.getUTCHours()).padStart(2, "0")}:${String(startDate.getUTCMinutes()).padStart(2, "0")}`;
+        await ctx.runMutation(internal.dashboardNotifications.create, {
+            orgId: args.orgId,
+            type: "new_booking",
+            title: "New Booking",
+            body: `${args.customerName} booked ${service.name} with ${staff.displayName} at ${timeLabel}`,
+            bookingId,
+            customerId,
+        });
+
         return {
             bookingId,
             serviceName: service.name,

@@ -104,6 +104,9 @@ export default function SettingsPage() {
   const updateNotificationSettings = useMutation(
     api.orgSettings.updateNotificationSettings,
   );
+  const updateDashboardNotificationSettings = useMutation(
+    api.orgSettings.updateDashboardNotificationSettings,
+  );
   const updateAiSettings = useMutation(api.orgSettings.updateAiSettings);
   const updateOrgBranding = useMutation(api.orgSettings.updateOrgBranding);
   const updateLogo = useMutation(api.orgSettings.updateLogo);
@@ -141,6 +144,11 @@ export default function SettingsPage() {
     emailEnabled: false,
     whatsappEnabled: false,
     reminderHoursStr: "24,2",
+  });
+  const [dashboardNotifs, setDashboardNotifs] = useState({
+    dashboardNotificationsEnabled: true,
+    dashboardSoundEnabled: true,
+    dashboardToastEnabled: true,
   });
   const [ai, setAi] = useState({
     aiEnabled: false,
@@ -220,6 +228,11 @@ export default function SettingsPage() {
         emailEnabled: data.settings.emailEnabled,
         whatsappEnabled: data.settings.whatsappEnabled,
         reminderHoursStr: data.settings.reminderHoursBefore.join(","),
+      });
+      setDashboardNotifs({
+        dashboardNotificationsEnabled: data.settings.dashboardNotificationsEnabled ?? true,
+        dashboardSoundEnabled: data.settings.dashboardSoundEnabled ?? true,
+        dashboardToastEnabled: data.settings.dashboardToastEnabled ?? true,
       });
       const s = data.settings;
       setAi(prev => ({
@@ -352,6 +365,12 @@ export default function SettingsPage() {
         emailEnabled: notifications.emailEnabled,
         whatsappEnabled: notifications.whatsappEnabled,
         reminderHoursBefore: arr,
+      });
+      await updateDashboardNotificationSettings({
+        orgId,
+        dashboardNotificationsEnabled: dashboardNotifs.dashboardNotificationsEnabled,
+        dashboardSoundEnabled: dashboardNotifs.dashboardSoundEnabled,
+        dashboardToastEnabled: dashboardNotifs.dashboardToastEnabled,
       });
       toast.success("Notification settings saved");
     } catch (e: any) {
@@ -1002,6 +1021,69 @@ export default function SettingsPage() {
                     className="bg-background"
                   />
                 </div>
+              </CardContent>
+              <CardFooter className="border-t border-border/40 px-7 py-5 bg-muted/10">
+                <Button
+                  onClick={handleSaveNotifications}
+                  disabled={isSaving}
+                  className="gap-2"
+                >
+                  <IconDeviceFloppy size={18} /> Save Routing
+                </Button>
+              </CardFooter>
+            </Card>
+
+            {/* ── Dashboard Alerts ── */}
+            <Card className="rounded-2xl overflow-hidden mt-6">
+              <CardHeader className="border-b border-border/40 bg-muted/10 pb-6 pt-6 px-7">
+                <CardTitle className="text-xl">Dashboard Alerts</CardTitle>
+                <CardDescription className="text-sm">
+                  Control in-app notifications shown in your dashboard navbar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-7 px-7">
+                {/* Master toggle */}
+                <div className="flex items-center justify-between bg-muted/20 p-5 rounded-xl border border-border/60 shadow-inner">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Dashboard Notifications</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Show real-time alerts in the notification bell when new bookings, cancellations, or no-shows occur.</p>
+                  </div>
+                  <Switch
+                    checked={dashboardNotifs.dashboardNotificationsEnabled}
+                    onCheckedChange={(c) =>
+                      setDashboardNotifs({ ...dashboardNotifs, dashboardNotificationsEnabled: c })
+                    }
+                  />
+                </div>
+
+                {dashboardNotifs.dashboardNotificationsEnabled && (
+                  <div className="flex flex-col gap-0 border border-border/60 rounded-xl overflow-hidden shadow-inner">
+                    <div className="flex items-center justify-between bg-muted/10 p-5 border-b border-border/60 transition-colors">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Sound</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Play a chime when a new notification arrives.</p>
+                      </div>
+                      <Switch
+                        checked={dashboardNotifs.dashboardSoundEnabled}
+                        onCheckedChange={(c) =>
+                          setDashboardNotifs({ ...dashboardNotifs, dashboardSoundEnabled: c })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between bg-muted/10 p-5 transition-colors">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Toast Popup</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Show a brief popup card beneath the bell with notification details.</p>
+                      </div>
+                      <Switch
+                        checked={dashboardNotifs.dashboardToastEnabled}
+                        onCheckedChange={(c) =>
+                          setDashboardNotifs({ ...dashboardNotifs, dashboardToastEnabled: c })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="border-t border-border/40 px-7 py-5 bg-muted/10">
                 <Button

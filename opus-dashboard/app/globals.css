@@ -276,3 +276,16 @@
     font-family: var(--font-dm-mono), monospace;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Notification toast animations
+   ───────────────────────────────────────────────────────────────────────────── */
+@keyframes notif-toast-in {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes notif-toast-progress {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}

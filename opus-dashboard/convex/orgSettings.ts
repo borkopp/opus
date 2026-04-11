@@ -152,6 +152,34 @@ export const updateNotificationSettings = mutation({
     }
 });
 
+export const updateDashboardNotificationSettings = mutation({
+    args: {
+        orgId: v.id("orgs"),
+        dashboardNotificationsEnabled: v.boolean(),
+        dashboardSoundEnabled: v.boolean(),
+        dashboardToastEnabled: v.boolean(),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, args.orgId, "owner");
+
+        const settings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .first();
+
+        if (!settings) throw new Error("Settings not found");
+
+        await ctx.db.patch(settings._id, {
+            dashboardNotificationsEnabled: args.dashboardNotificationsEnabled,
+            dashboardSoundEnabled: args.dashboardSoundEnabled,
+            dashboardToastEnabled: args.dashboardToastEnabled,
+            updatedAt: Date.now(),
+        });
+
+        return true;
+    }
+});
+
 export const updateAiSettings = mutation({
     args: {
         orgId: v.id("orgs"),

@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -140,38 +140,142 @@ function NotificationItem({
 }
 
 // ─────────────────────────────────────────────────────
+// Inline notification toast
+// ─────────────────────────────────────────────────────
+const TOAST_DURATION_MS = 5000;
+
+function NotificationToast({
+    notification,
+    onDismiss,
+    onClick,
+}: {
+    notification: any;
+    onDismiss: () => void;
+    onClick: () => void;
+}) {
+    const { icon, iconBg } = getTypeConfig(notification.type);
+    const [exiting, setExiting] = useState(false);
+
+    const handleDismiss = useCallback(() => {
+        setExiting(true);
+        setTimeout(onDismiss, 250);
+    }, [onDismiss]);
+
+    // Auto-dismiss timer
+    useEffect(() => {
+        const timer = setTimeout(handleDismiss, TOAST_DURATION_MS);
+        return () => clearTimeout(timer);
+    }, [handleDismiss]);
+
+    return (
+        <div
+            className={cn(
+                "absolute right-0 top-12 z-[60] w-[340px] rounded-2xl border border-border/50 bg-card shadow-xl overflow-hidden cursor-pointer",
+                "transition-all duration-250 ease-out",
+                exiting
+                    ? "opacity-0 translate-y-[-8px] scale-95"
+                    : "animate-[notif-toast-in_0.3s_ease-out_forwards]",
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+                handleDismiss();
+            }}
+        >
+            <div className="flex items-start gap-3 p-3.5">
+                {/* Icon */}
+                <div className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full", iconBg)}>
+                    {icon}
+                </div>
+
+                {/* Body */}
+                <div className="flex-1 min-w-0 pr-5">
+                    <p className="text-[13px] font-semibold text-foreground leading-snug">
+                        {notification.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
+                        {notification.body}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-medium">
+                        Just now
+                    </p>
+                </div>
+
+                {/* Close */}
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDismiss();
+                    }}
+                    className="absolute right-2.5 top-2.5 p-1 rounded-lg hover:bg-secondary text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                >
+                    <IconX size={14} />
+                </button>
+            </div>
+
+            {/* Progress bar */}
+            <div className="h-[2px] w-full bg-border/20">
+                <div
+                    className="h-full bg-accent/60 rounded-full"
+                    style={{
+                        animation: `notif-toast-progress ${TOAST_DURATION_MS}ms linear forwards`,
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────
 // Bell + dropdown
 // ─────────────────────────────────────────────────────
 export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
     const notifications = useQuery(api.dashboardNotifications.list, { orgId });
     const unreadCount = useQuery(api.dashboardNotifications.getUnreadCount, { orgId });
+    const orgSettings = useQuery(api.orgSettings.getOrgSettings, { orgId });
     const markRead = useMutation(api.dashboardNotifications.markRead);
     const markAllRead = useMutation(api.dashboardNotifications.markAllRead);
     const dismiss = useMutation(api.dashboardNotifications.dismiss);
 
+    // Dashboard notification preferences (default to true if never set)
+    const dashEnabled = orgSettings?.settings?.dashboardNotificationsEnabled ?? true;
+    const soundEnabled = orgSettings?.settings?.dashboardSoundEnabled ?? true;
+    const toastEnabled = orgSettings?.settings?.dashboardToastEnabled ?? true;
+
     const [open, setOpen] = useState(false);
     const [pulse, setPulse] = useState(false);
+    const [toastNotification, setToastNotification] = useState<any>(null);
     const prevCountRef = useRef<number | null>(null);
+    const prevNotificationsRef = useRef<any[] | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
-    // Sound + pulse on new notification
+    // Sound + pulse + toast on new notification
     useEffect(() => {
-        if (unreadCount === undefined) return;
+        if (unreadCount === undefined || !notifications) return;
         if (prevCountRef.current === null) {
             prevCountRef.current = unreadCount;
+            prevNotificationsRef.current = notifications;
             return;
         }
-        if (unreadCount > prevCountRef.current) {
-            if (document.visibilityState === "visible") {
+        if (unreadCount > prevCountRef.current && dashEnabled) {
+            if (soundEnabled && document.visibilityState === "visible") {
                 playChime();
             }
             setPulse(true);
             setTimeout(() => setPulse(false), 3000);
+
+            // Show toast with the newest notification (only when dropdown is closed)
+            if (toastEnabled && !open && notifications.length > 0) {
+                setToastNotification(notifications[0]);
+            }
         }
         prevCountRef.current = unreadCount;
-    }, [unreadCount]);
+        prevNotificationsRef.current = notifications;
+    }, [unreadCount, notifications, open, dashEnabled, soundEnabled, toastEnabled]);
 
-    // Close on outside click
+    // Close dropdown on outside click
     useEffect(() => {
         if (!open) return;
         const handler = (e: MouseEvent) => {
@@ -183,7 +287,12 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
         return () => document.removeEventListener("mousedown", handler);
     }, [open]);
 
-    const hasUnread = (unreadCount ?? 0) > 0;
+    // Dismiss toast when dropdown opens
+    useEffect(() => {
+        if (open) setToastNotification(null);
+    }, [open]);
+
+    const hasUnread = dashEnabled && (unreadCount ?? 0) > 0;
 
     return (
         <div ref={containerRef} className="relative">
@@ -213,6 +322,21 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
                     </span>
                 )}
             </button>
+
+            {/* Inline toast — shows below bell when a new notification arrives */}
+            {toastNotification && !open && (
+                <NotificationToast
+                    notification={toastNotification}
+                    onDismiss={() => setToastNotification(null)}
+                    onClick={() => {
+                        if (toastNotification.bookingId) {
+                            router.push("/beauty/bookings");
+                        } else {
+                            setOpen(true);
+                        }
+                    }}
+                />
+            )}
 
             {/* Dropdown */}
             {open && (

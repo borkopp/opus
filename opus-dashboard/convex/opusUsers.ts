@@ -97,3 +97,58 @@ export const updatePreferences = mutation({
         await ctx.db.patch(args.opusUserId, patch);
     },
 });
+
+// ─── Get my bookings (for opus.mk "My Bookings" page) ──
+export const getMyBookings = query({
+    args: {
+        clerkId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // Look up the opus_users record
+        const opusUser = await ctx.db
+            .query("opus_users")
+            .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
+            .first();
+
+        if (!opusUser || opusUser.isDeleted) return [];
+
+        // Get all bookings for this opus user
+        const bookings = await ctx.db
+            .query("bookings")
+            .withIndex("by_opus_user", (q) => q.eq("opusUserId", opusUser._id))
+            .filter((q) => q.eq(q.field("isDeleted"), false))
+            .collect();
+
+        // Sort by startAt descending (most recent first)
+        bookings.sort((a, b) => b.startAt - a.startAt);
+
+        // Populate org, service, and staff names
+        const populated = await Promise.all(
+            bookings.map(async (booking) => {
+                const [org, service, staff] = await Promise.all([
+                    ctx.db.get(booking.orgId),
+                    ctx.db.get(booking.serviceId),
+                    ctx.db.get(booking.staffId),
+                ]);
+
+                return {
+                    _id: booking._id,
+                    startAt: booking.startAt,
+                    endAt: booking.endAt,
+                    status: booking.status,
+                    priceMinorUnits: booking.priceMinorUnits,
+                    currency: booking.currency,
+                    createdAt: booking.createdAt,
+                    orgName: org?.name ?? "Unknown Business",
+                    orgSlug: org?.slug ?? "",
+                    orgLogoUrl: org?.logoUrl,
+                    serviceName: service?.name ?? "Unknown Service",
+                    serviceDurationMins: service?.durationMins ?? 0,
+                    staffName: staff?.displayName ?? "Unknown",
+                };
+            })
+        );
+
+        return populated;
+    },
+});

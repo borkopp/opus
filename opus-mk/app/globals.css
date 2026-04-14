@@ -84,9 +84,12 @@
   --cta-foreground: oklch(99% 0.004 75);
 
   /* ── Semantic tokens ── */
-  --rating: oklch(78% 0.19 70);     /* warm amber — star ratings, featured marks */
-  --success: oklch(60% 0.16 162);   /* earthy emerald — confirmation, success states */
-  --online: oklch(72% 0.20 142);    /* fresh green — real-time presence indicators */
+  --rating: oklch(78% 0.19 70);
+  /* warm amber — star ratings, featured marks */
+  --success: oklch(60% 0.16 162);
+  /* earthy emerald — confirmation, success states */
+  --online: oklch(72% 0.20 142);
+  /* fresh green — real-time presence indicators */
 
   --chart-1: oklch(57% 0.21 27);
   --chart-2: oklch(12% 0.004 60);
@@ -98,31 +101,31 @@
 /* ─── OPUS Design System — Dark Mode ─── */
 /* Applied via .dark class (manual toggle) OR prefers-color-scheme (auto) */
 .dark {
-  --background: oklch(4% 0.003 60);
-  --foreground: oklch(96% 0.004 75);
+  --background: oklch(14% 0.005 256);
+  --foreground: oklch(96% 0.004 256);
 
-  --card: oklch(8% 0.003 60);
-  --card-foreground: oklch(98% 0.005 75);
+  --card: oklch(18% 0.005 256);
+  --card-foreground: oklch(98% 0.004 256);
 
-  --popover: oklch(13% 0.003 60);
-  --popover-foreground: oklch(98% 0.005 75);
+  --popover: oklch(21% 0.005 256);
+  --popover-foreground: oklch(98% 0.004 256);
 
-  --primary: oklch(98% 0.005 75);
-  --primary-foreground: oklch(12% 0.004 60);
+  --primary: oklch(98% 0.004 256);
+  --primary-foreground: oklch(14% 0.005 256);
 
-  --secondary: oklch(19% 0.004 60);
-  --secondary-foreground: oklch(98% 0.005 75);
+  --secondary: oklch(24% 0.005 256);
+  --secondary-foreground: oklch(98% 0.004 256);
 
-  --muted: oklch(25% 0.004 60);
-  --muted-foreground: oklch(60% 0.005 60);
+  --muted: oklch(28% 0.005 256);
+  --muted-foreground: oklch(65% 0.005 256);
 
   --accent: oklch(57% 0.21 27);
   --accent-foreground: oklch(99% 0.004 75);
 
   --destructive: oklch(62% 0.22 27);
 
-  --border: oklch(15% 0.003 60);
-  --input: oklch(32% 0.004 60);
+  --border: oklch(23% 0.005 256);
+  --input: oklch(35% 0.005 256);
   --ring: oklch(57% 0.21 27);
 
   /* ── CTA: slightly brighter clay against dark surfaces ── */
@@ -145,31 +148,31 @@
 /* All colors use CSS variables — no Tailwind dark: classes needed */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: oklch(4% 0.003 60);
-    --foreground: oklch(96% 0.004 75);
+    --background: oklch(14% 0.005 256);
+    --foreground: oklch(96% 0.004 256);
 
-    --card: oklch(8% 0.003 60);
-    --card-foreground: oklch(98% 0.005 75);
+    --card: oklch(18% 0.005 256);
+    --card-foreground: oklch(98% 0.004 256);
 
-    --popover: oklch(13% 0.003 60);
-    --popover-foreground: oklch(98% 0.005 75);
+    --popover: oklch(21% 0.005 256);
+    --popover-foreground: oklch(98% 0.004 256);
 
-    --primary: oklch(98% 0.005 75);
-    --primary-foreground: oklch(12% 0.004 60);
+    --primary: oklch(98% 0.004 256);
+    --primary-foreground: oklch(14% 0.005 256);
 
-    --secondary: oklch(19% 0.004 60);
-    --secondary-foreground: oklch(98% 0.005 75);
+    --secondary: oklch(24% 0.005 256);
+    --secondary-foreground: oklch(98% 0.004 256);
 
-    --muted: oklch(25% 0.004 60);
-    --muted-foreground: oklch(60% 0.005 60);
+    --muted: oklch(28% 0.005 256);
+    --muted-foreground: oklch(65% 0.005 256);
 
     --accent: oklch(57% 0.21 27);
     --accent-foreground: oklch(99% 0.004 75);
 
     --destructive: oklch(62% 0.22 27);
 
-    --border: oklch(15% 0.003 60);
-    --input: oklch(32% 0.004 60);
+    --border: oklch(23% 0.005 256);
+    --input: oklch(35% 0.005 256);
     --ring: oklch(57% 0.21 27);
 
     --cta: oklch(55% 0.21 30);
@@ -211,6 +214,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -222,21 +226,52 @@
 }
 
 @keyframes slide-up-fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scale-in-fade {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @keyframes dot-pulse {
-  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-  30% { opacity: 1; transform: translateY(-4px); }
+
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
 }
 
 @keyframes opus-user-pulse {
-  0%   { opacity: 0.7; transform: scale(0.3); }
-  100% { opacity: 0;   transform: scale(1);   }
+  0% {
+    opacity: 0.7;
+    transform: scale(0.3);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
 }

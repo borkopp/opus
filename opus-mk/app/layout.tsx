@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { Toaster } from "sonner";
 import { Syne, DM_Sans, DM_Mono, Audiowide } from "next/font/google";
@@ -33,10 +34,12 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${audiowide.variable} font-sans antialiased`}
       >
-        <ConvexClientProvider>
-          {children}
-          <Toaster richColors position="top-center" />
-        </ConvexClientProvider>
+        <ClerkProvider>
+          <ConvexClientProvider>
+            {children}
+            <Toaster richColors position="top-center" />
+          </ConvexClientProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

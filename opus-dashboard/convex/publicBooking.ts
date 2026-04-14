@@ -28,6 +28,7 @@ export const createPublicBooking = mutation({
             v.literal("cash"),
             v.literal("online"),     // Coming soon; rejected for now
         ),
+        opusUserId: v.optional(v.id("opus_users")),
     },
     handler: async (ctx, args) => {
         // ── Validate org is published ──
@@ -139,6 +140,7 @@ export const createPublicBooking = mutation({
                 name: args.customerName,
                 phone: normalizedPhone,
                 email: args.customerEmail,
+                opusUserId: args.opusUserId,
                 totalVisits: 0,
                 totalSpendMinorUnits: 0,
                 noShowCount: 0,
@@ -150,6 +152,11 @@ export const createPublicBooking = mutation({
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             });
+        }
+
+        // If opusUserId is provided, also link it to existing customer
+        if (args.opusUserId && customer && !customer.opusUserId) {
+            await ctx.db.patch(customerId, { opusUserId: args.opusUserId, updatedAt: Date.now() });
         }
 
         // ── Surge pricing snapshot ──
@@ -179,6 +186,7 @@ export const createPublicBooking = mutation({
             staffId: args.staffId,
             serviceId: args.serviceId,
             customerId,
+            opusUserId: args.opusUserId,
             startAt: args.startAt,
             endAt,
             priceMinorUnits,
@@ -186,7 +194,7 @@ export const createPublicBooking = mutation({
             surgePriceApplied,
             surgeMultiplierPct,
             status: "confirmed",  // Cash payment = instant confirmation
-            source: "web",
+            source: args.opusUserId ? "opus_web" : "web",
             isDeleted: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),

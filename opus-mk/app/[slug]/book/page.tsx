@@ -12,9 +12,10 @@ import { formatPrice } from "@/lib/format";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useState, useMemo } from "react";
-import { format, addDays, startOfDay, isSameDay } from "date-fns";
+import { useState, useMemo, useEffect } from "react";
+import { format, addDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
+import { useOpusUser } from "@/components/OpusUserContext";
 import {
   IconArrowLeft,
   IconClock,
@@ -23,9 +24,49 @@ import {
   IconCircleCheck,
   IconConfetti,
 } from "@tabler/icons-react";
+import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 
 // ── Step definitions ──
 type BookingStep = "service" | "datetime" | "details" | "confirmed";
+
+function ConfettiTrigger() {
+  useEffect(() => {
+    const end = Date.now() + 2 * 1000;
+    const colors = ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'];
+
+    (function frame() {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
+    
+    setTimeout(() => {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: colors
+      });
+    }, 200);
+  }, []);
+  return null;
+}
 
 export default function BookingPage() {
   const params = useParams();
@@ -53,6 +94,19 @@ export default function BookingPage() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<any | null>(null);
+
+  // ── Opus user context (pre-fill when signed in) ──
+  const { isAuthenticated, opusUserId, opusUser } = useOpusUser();
+  const [hasPreFilled, setHasPreFilled] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && opusUser && !hasPreFilled) {
+      if (!customerName) setCustomerName(opusUser.name);
+      if (!customerEmail) setCustomerEmail(opusUser.email);
+      if (!customerPhone && opusUser.phone) setCustomerPhone(opusUser.phone);
+      setHasPreFilled(true);
+    }
+  }, [isAuthenticated, opusUser, hasPreFilled, customerName, customerEmail, customerPhone]);
 
   // ── Derived data ──
   const selectedService = profile?.services.find((s) => s._id === selectedServiceId);
@@ -146,6 +200,7 @@ export default function BookingPage() {
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || undefined,
         paymentMethod: "cash",
+        ...(opusUserId ? { opusUserId } : {}),
       });
 
       setConfirmation(result);
@@ -598,64 +653,113 @@ export default function BookingPage() {
 
         {/* ── STEP 4: Confirmation ── */}
         {step === "confirmed" && confirmation && (
-          <div className="flex flex-col items-center text-center pt-8 animate-scale-in-fade">
-            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-6">
-              <IconConfetti size={36} className="text-success" aria-hidden="true" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Booking Confirmed!</h2>
-            <p className="text-sm text-muted-foreground max-w-sm">
-              You're all set. See you at <strong>{profile.name}</strong>.
-            </p>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center text-center pt-10 pb-8"
+          >
+            <ConfettiTrigger />
 
-            <div className="w-full mt-8 rounded-xl border border-border/40 bg-card p-5">
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service</span>
-                  <span className="font-medium">{confirmation.serviceName}</span>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.1 }}
+              className="w-24 h-24 rounded-full bg-success flex items-center justify-center mb-8 relative shadow-xl shadow-success/20 text-success-foreground"
+            >
+              <IconConfetti size={44} aria-hidden="true" />
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0.5 }}
+                animate={{ scale: 1.5, opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full border-[3px] border-success/40"
+              />
+            </motion.div>
+            
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, type: "spring", damping: 15 }}
+              className="text-4xl font-black tracking-tight mb-3 font-display"
+            >
+              Booking Confirmed!
+            </motion.h2>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, type: "spring", damping: 15 }}
+              className="text-muted-foreground text-lg mb-10 max-w-sm"
+            >
+              You're all set! We look forward to seeing you at <strong>{profile.name}</strong>.
+            </motion.p>
+
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, type: "spring", damping: 20 }}
+              className="w-full max-w-sm rounded-[2rem] bg-card border border-border/40 shadow-sm overflow-hidden"
+            >
+              {/* Receipt Header Style */}
+              <div className="bg-secondary/20 p-6 flex items-center gap-4 border-b border-dashed border-border/60 relative">
+                <div className="absolute left-0 bottom-0 w-6 h-6 -translate-x-1/2 translate-y-1/2 rounded-full bg-background border-r border-border/40 z-10" />
+                <div className="absolute right-0 bottom-0 w-6 h-6 translate-x-1/2 translate-y-1/2 rounded-full bg-background border-l border-border/40 z-10" />
+
+                {selectedService?.photoUrl ? (
+                  <div className="h-16 w-16 overflow-hidden rounded-[1.25rem] bg-muted shrink-0 relative shadow-sm border border-border/20">
+                    <Image src={getImageUrl(selectedService.photoUrl)!} alt={confirmation.serviceName} fill className="object-cover transition-transform duration-700 hover:scale-110" sizes="64px" />
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-[1.25rem] bg-primary/10 flex items-center justify-center text-primary shrink-0 shadow-sm border border-primary/20">
+                    <span className="font-bold text-2xl">{confirmation.serviceName.charAt(0)}</span>
+                  </div>
+                )}
+                
+                <div className="text-left flex-1 min-w-0">
+                  <h3 className="font-bold text-[17px] leading-tight mb-1 truncate">{confirmation.serviceName}</h3>
+                  <p className="text-muted-foreground text-sm font-medium">
+                    with {confirmation.staffName.split(" ")[0]}
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Staff</span>
-                  <span className="font-medium">{confirmation.staffName}</span>
+              </div>
+              
+              <div className="p-7 bg-card space-y-5 text-[15px] relative">
+                <div className="flex justify-between items-center group/item hover:bg-secondary/40 -mx-3 px-3 py-1.5 rounded-lg transition-colors">
+                  <span className="text-muted-foreground font-medium flex items-center gap-2"><IconClock size={16} /> Date & Time</span>
+                  <div className="text-right">
+                    <div className="font-bold text-foreground">{format(new Date(confirmation.startAt), "MMM d, yyyy")}</div>
+                    <div className="text-muted-foreground font-semibold text-sm mt-0.5">{`${String(new Date(confirmation.startAt).getUTCHours()).padStart(2, "0")}:${String(new Date(confirmation.startAt).getUTCMinutes()).padStart(2, "0")}`}</div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-medium">
-                    {format(new Date(confirmation.startAt), "EEEE, MMMM d")}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-medium">
-                    {`${String(new Date(confirmation.startAt).getUTCHours()).padStart(2, "0")}:${String(new Date(confirmation.startAt).getUTCMinutes()).padStart(2, "0")}`}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total</span>
-                  <span className="font-semibold">
+                
+                <Separator className="border-dashed my-2" />
+                
+                <div className="flex justify-between items-center -mx-3 px-3 py-1.5 rounded-lg">
+                  <span className="text-muted-foreground font-medium">Total Price</span>
+                  <span className="font-black text-xl text-foreground tracking-tight">
                     {formatPrice(confirmation.priceMinorUnits, confirmation.currency)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment</span>
-                  <span className="font-medium">Cash at venue</span>
-                </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="flex gap-3 w-full mt-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, type: "spring", damping: 15 }}
+              className="flex gap-4 w-full max-w-sm mt-10"
+            >
               <Link href={`/${slug}`} className="flex-1">
-                <Button variant="outline" className="w-full h-11 rounded-xl">
-                  Back to {profile.name}
+                <Button variant="outline" className="w-full h-14 rounded-2xl font-bold bg-background hover:bg-secondary/50 border-border/60 hover:border-border transition-all">
+                  Back to Hub
                 </Button>
               </Link>
               <Link href="/" className="flex-1">
-                <Button variant="outline" className="w-full h-11 rounded-xl">
-                  Explore more
+                <Button className="w-full h-14 rounded-2xl font-bold tracking-wide shadow-sm hover:shadow-md transition-all">
+                  Done
                 </Button>
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
       </div>
     </div>

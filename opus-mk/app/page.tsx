@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Logo } from "@/components/Logo";
+import { HeaderAuth } from "@/components/HeaderAuth";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,9 +72,12 @@ export default function DiscoverPage() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Logo className="text-xl" />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <IconMapPin size={14} aria-hidden="true" />
-            <span>Skopje</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <IconMapPin size={14} aria-hidden="true" />
+              <span>Skopje</span>
+            </div>
+            <HeaderAuth />
           </div>
         </div>
       </header>

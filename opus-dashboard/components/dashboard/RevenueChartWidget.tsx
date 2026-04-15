@@ -3,9 +3,43 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Bar, BarChart, XAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { motion } from "framer-motion";
 
-export function RevenueChartWidget({ revenueData, formatMoney }: any) {
+interface RevenueDataItem {
+  day: string;
+  currentWeek: number;
+  dayFull?: string;
+}
+
+interface RevenueChartProps {
+  revenueData: RevenueDataItem[];
+  formatMoney: (val: number) => string;
+}
+
+export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartProps) {
   const [activeBar, setActiveBar] = useState<number | null>(null);
+
+  const containerVars = {
+    hidden: { opacity: 0, y: 15 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.22, 1, 0.36, 1],
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVars = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+    }
+  };
 
   // Identify today
   const today = new Date().getDay();
@@ -14,15 +48,25 @@ export function RevenueChartWidget({ revenueData, formatMoney }: any) {
   const todayIndex = revenueData?.findIndex((d: any) => d.day.startsWith(todayName));
 
   return (
-    <Card className="flex flex-col h-full bg-[#111111] dark:bg-card p-6 min-h-[300px] col-span-1 lg:col-span-2 rounded-[32px] transition-all duration-300">
-      <div className="flex justify-between items-center mb-8 w-full px-1">
-        <h2 className="text-xl font-semibold font-display text-white dark:text-primary leading-none">Revenue</h2>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 dark:bg-secondary border border-white/10 dark:border-border/40 text-[11px] font-bold text-white/70 dark:text-primary cursor-pointer hover:bg-white/10 transition-colors">
-          Week <span className="text-[10px] opacity-40 ml-1">▼</span>
-        </div>
-      </div>
+    <motion.div
+      variants={containerVars}
+      initial="hidden"
+      animate="visible"
+      className="h-full col-span-1 lg:col-span-2"
+    >
+      <Card className="flex flex-col h-full bg-[#111111] dark:bg-card p-6 min-h-[300px] rounded-[32px] transition-all duration-300 border-border/10">
+        <motion.div variants={itemVars} className="flex justify-between items-center mb-8 w-full px-1">
+          <h2 className="text-xl font-semibold font-display text-white dark:text-primary leading-none">Revenue</h2>
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 dark:bg-secondary border border-white/10 dark:border-border/40 text-[11px] font-bold text-white/70 dark:text-primary cursor-pointer hover:bg-white/10 transition-colors"
+          >
+            Week <span className="text-[10px] opacity-40 ml-1">▼</span>
+          </motion.div>
+        </motion.div>
 
-      <div className="flex-1 w-full h-[180px] mt-auto relative">
+        <motion.div variants={itemVars} className="flex-1 w-full h-[180px] mt-auto relative">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={revenueData}
@@ -65,7 +109,9 @@ export function RevenueChartWidget({ revenueData, formatMoney }: any) {
               dataKey="currentWeek"
               radius={[12, 12, 12, 12]}
               maxBarSize={45}
-              isAnimationActive={false} // Disable animation to ensure color changes are instant and visible
+              isAnimationActive={true}
+              animationDuration={1500}
+              animationEasing="ease-out"
             >
               {revenueData?.map((entry: any, index: number) => {
                 // Logic: Highlight if hovered, ELSE highlight if it's today AND nothing is hovered.
@@ -84,7 +130,8 @@ export function RevenueChartWidget({ revenueData, formatMoney }: any) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-      </div>
-    </Card>
+        </motion.div>
+      </Card>
+    </motion.div>
   );
 }

@@ -117,6 +117,7 @@ export const listPublished = query({
                 beautyCategory: o.beautyCategory,
                 cuisine: o.cuisine,
                 venueType: o.venueType,
+                coordinates: o.coordinates,
             })),
             nextCursor,
             totalCount: filtered.length,
@@ -311,6 +312,7 @@ export const searchPublished = query({
             reviewCount: o.reviewCount,
             priceRange: o.priceRange,
             beautyCategory: o.beautyCategory,
+            coordinates: o.coordinates,
         }));
     },
 });

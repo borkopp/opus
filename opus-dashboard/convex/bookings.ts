@@ -1,6 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 import { requireAuth, requireRole } from "./lib/auth";
 
 function getPrimaryContact(
@@ -503,13 +503,41 @@ export const cancelBooking = mutation({
       // Dashboard notification
       const cancelDate = new Date(booking.startAt);
       const cancelDateLabel = `${cancelDate.toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
-      await ctx.runMutation(internal.dashboardNotifications.create, {
+        await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "booking_cancelled",
         title: "Booking Cancelled",
         body: `${customer.name} cancelled their ${service.name} on ${cancelDateLabel}`,
         bookingId: booking._id,
         customerId: customer._id,
+      });
+      
+      const orgSettings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", q => q.eq("orgId", args.orgId))
+        .first();
+
+      const timeZone = orgSettings?.timezone || "Europe/Belgrade";
+      const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone,
+          year: "numeric", month: "2-digit", day: "2-digit"
+      }).formatToParts(cancelDate);
+      
+      let year, month, day;
+      for (const p of parts) {
+          if (p.type === 'year') year = p.value;
+          if (p.type === 'month') month = p.value;
+          if (p.type === 'day') day = p.value;
+      }
+      
+      const serviceDate = `${year}-${month}-${day}`;
+
+      await ctx.scheduler.runAfter(0, api.ai.gapOptimizer.scanDayForOrg, {
+        orgId: args.orgId,
+        serviceDate,
+        staffIds: [booking.staffId],
+        detectedBy: "cancellation",
+        triggeredByBookingId: booking._id,
       });
     }
 

@@ -152,6 +152,32 @@ export const updateNotificationSettings = mutation({
     }
 });
 
+export const updateGapOptimizerSettings = mutation({
+    args: {
+        orgId: v.id("orgs"),
+        gapOptimizerEnabled: v.boolean(),
+        gapOptimizerMinGapMins: v.number(),
+    },
+    handler: async (ctx, args) => {
+        await requireRole(ctx, args.orgId, "owner");
+
+        const settings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .first();
+
+        if (!settings) throw new Error("Settings not found");
+
+        await ctx.db.patch(settings._id, {
+            gapOptimizerEnabled: args.gapOptimizerEnabled,
+            gapOptimizerMinGapMins: args.gapOptimizerMinGapMins,
+            updatedAt: Date.now(),
+        });
+
+        return true;
+    }
+});
+
 export const updateDashboardNotificationSettings = mutation({
     args: {
         orgId: v.id("orgs"),

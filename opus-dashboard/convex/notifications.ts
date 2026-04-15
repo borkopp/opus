@@ -122,6 +122,10 @@ export const processIndividualNotification = internalAction({
         console.log(
           `[Email Stub] Sending ${notification.type} to ${notification.recipientAddress}`,
         );
+        if (notification.type === "gap_fill_offer") {
+            const tmpl = notification.templateData;
+            console.log(`[Email Stub template] Hi ${tmpl.customerName}, ${tmpl.draftedMessage} Link: ${tmpl.bookingLinkToken}`);
+        }
         // const res = await fetch("https://api.resend.com/emails", {...})
         success = true;
         externalId = `resend_${Date.now()}`;
@@ -133,6 +137,10 @@ export const processIndividualNotification = internalAction({
         console.log(
           `[Twilio Stub] Sending ${notification.type} via ${notification.channel} to ${notification.recipientAddress}`,
         );
+        if (notification.type === "gap_fill_offer") {
+            const tmpl = notification.templateData;
+            console.log(`[Twilio Stub template] Hi ${tmpl.customerName}, ${tmpl.draftedMessage} Link: ${tmpl.bookingLinkToken}`);
+        }
         // const res = await fetch("https://api.twilio.com/...", {...})
         success = true;
         externalId = `twilio_${Date.now()}`;

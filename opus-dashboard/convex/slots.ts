@@ -261,3 +261,247 @@ export const getAvailableSlotsForAI = internalQuery({
         return await computeSlotsForDate(ctx, args.orgId, "any", args.serviceId, args.date);
     },
 });
+
+// --- AI Gap Optimizer Helpers ---
+
+export type FreeIntervalBoundary = "workingStart" | "workingEnd" | "booking" | "break" | "now";
+export type FreeInterval = {
+    startAt: number;
+    endAt: number;
+    durationMins: number;
+    leftBoundary: FreeIntervalBoundary;
+    rightBoundary: FreeIntervalBoundary;
+};
+
+export const computeFreeIntervalsForDate = internalQuery({
+    args: {
+        orgId: v.id("orgs"),
+        staffId: v.id("staff_members"),
+        date: v.string(), // "YYYY-MM-DD"
+    },
+    handler: async (ctx, args) => {
+        const { orgId, staffId, date } = args;
+
+        const orgSettings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", orgId))
+            .first();
+
+        if (!orgSettings) throw new ConvexError("Organization settings not found.");
+
+        const dateObj = new Date(date + "T00:00:00");
+        const dayOfWeek = dateObj.getDay();
+
+        const midnightMs = new Date(`${date}T00:00:00Z`).getTime();
+        const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
+
+        const emptyResult = {
+            freeIntervals: [] as FreeInterval[],
+            workingWindow: null as { startAt: number; endAt: number } | null,
+            mergedBlocks: [] as { start: number; end: number; source: "booking" | "break" }[],
+            bookingCount: 0,
+            breakCount: 0,
+            reason: "" as "" | "day_off" | "no_rule",
+            pseudoUtcNow: 0,
+            nowIsPastWorkingEnd: false,
+        };
+
+        const override = await ctx.db
+            .query("availability_overrides")
+            .withIndex("by_staff_date", q => q.eq("staffId", staffId).eq("date", date))
+            .first();
+
+        let workingHours: { startTime: string, endTime: string } | null = null;
+        let breaks: { startTime: string, endTime: string }[] = [];
+
+        if (override) {
+            if (override.type === "day_off") {
+                return { ...emptyResult, reason: "day_off" as const };
+            } else if (override.type === "custom_hours" && override.startTime && override.endTime) {
+                workingHours = { startTime: override.startTime, endTime: override.endTime };
+            }
+        } else {
+            const rule = await ctx.db
+                .query("availability_rules")
+                .withIndex("by_staff_day", q => q.eq("staffId", staffId).eq("dayOfWeek", dayOfWeek))
+                .first();
+
+            if (rule && rule.isActive) {
+                workingHours = { startTime: rule.startTime, endTime: rule.endTime };
+                breaks = rule.breaks || [];
+            }
+        }
+
+        if (!workingHours) return { ...emptyResult, reason: "no_rule" as const };
+
+        const startMins = timeToMins(workingHours.startTime);
+        const endMins = timeToMins(workingHours.endTime);
+        const workingWindow = {
+            startAt: midnightMs + startMins * 60 * 1000,
+            endAt: midnightMs + endMins * 60 * 1000,
+        };
+
+        const existingBookings = await ctx.db
+            .query("bookings")
+            .withIndex("by_staff_start", q => q.eq("staffId", staffId).gte("startAt", midnightMs).lt("startAt", nextMidnightMs))
+            .filter(q => q.and(
+                q.eq(q.field("isDeleted"), false),
+                q.neq(q.field("status"), "cancelled")
+            ))
+            .collect();
+
+        // Pseudo-UTC "now" in org timezone, matching how booking timestamps are stored.
+        const parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: orgSettings.timezone || "Europe/Belgrade",
+            year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit", second: "2-digit",
+            hourCycle: "h23"
+        }).formatToParts(new Date());
+
+        let year, month, day, hour, minute, second;
+        for (const p of parts) {
+            if (p.type === 'year') year = p.value;
+            if (p.type === 'month') month = p.value;
+            if (p.type === 'day') day = p.value;
+            if (p.type === 'hour') hour = p.value;
+            if (p.type === 'minute') minute = p.value;
+            if (p.type === 'second') second = p.value;
+        }
+        const pseudoUtcNow = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`).getTime();
+
+        const bufferMs = (orgSettings.bufferTimeMins || 0) * 60 * 1000;
+
+        type Block = { start: number; end: number; source: "booking" | "break" };
+        const rawBlocks: Block[] = existingBookings.map(b => ({
+            start: b.startAt,
+            end: b.endAt + bufferMs,
+            source: "booking" as const,
+        }));
+
+        breaks.forEach(b => {
+            rawBlocks.push({
+                start: midnightMs + timeToMins(b.startTime) * 60 * 1000,
+                end: midnightMs + timeToMins(b.endTime) * 60 * 1000,
+                source: "break" as const,
+            });
+        });
+
+        rawBlocks.sort((a, b) => a.start - b.start);
+
+        const mergedBlocks: Block[] = [];
+        for (const block of rawBlocks) {
+            if (mergedBlocks.length === 0) {
+                mergedBlocks.push({ ...block });
+            } else {
+                const last = mergedBlocks[mergedBlocks.length - 1];
+                if (block.start <= last.end) {
+                    last.end = Math.max(last.end, block.end);
+                    // If the merged block mixes bookings and breaks we still treat it
+                    // as a hard boundary — keep the first source for display.
+                } else {
+                    mergedBlocks.push({ ...block });
+                }
+            }
+        }
+
+        const freeIntervals: FreeInterval[] = [];
+        const nowClipsWindow = pseudoUtcNow > workingWindow.startAt;
+        let currentStart = Math.max(workingWindow.startAt, pseudoUtcNow);
+        let leftSource: FreeIntervalBoundary = nowClipsWindow ? "now" : "workingStart";
+
+        for (const block of mergedBlocks) {
+            if (block.end <= currentStart) continue; // block entirely in the past
+            if (block.start > currentStart) {
+                const startAt = currentStart;
+                const endAt = block.start;
+                freeIntervals.push({
+                    startAt,
+                    endAt,
+                    durationMins: Math.floor((endAt - startAt) / 60000),
+                    leftBoundary: leftSource,
+                    rightBoundary: block.source,
+                });
+            }
+            if (block.end > currentStart) {
+                currentStart = block.end;
+                leftSource = block.source;
+            }
+        }
+
+        if (workingWindow.endAt > currentStart) {
+            const startAt = currentStart;
+            const endAt = workingWindow.endAt;
+            freeIntervals.push({
+                startAt,
+                endAt,
+                durationMins: Math.floor((endAt - startAt) / 60000),
+                leftBoundary: leftSource,
+                rightBoundary: "workingEnd",
+            });
+        }
+
+        return {
+            freeIntervals,
+            workingWindow,
+            mergedBlocks,
+            bookingCount: existingBookings.length,
+            breakCount: breaks.length,
+            reason: "" as const,
+            pseudoUtcNow,
+            nowIsPastWorkingEnd: pseudoUtcNow >= workingWindow.endAt,
+        };
+    }
+});
+
+export type GapClassification =
+    | "interior_gap"
+    | "below_threshold"
+    | "edge_of_day"
+    | "now_bounded"
+    | "past_workday";
+
+export type ClassifiedInterval = FreeInterval & {
+    classification: GapClassification;
+};
+
+/**
+ * Classify every free interval explicitly so the caller can report diagnostics.
+ * A gap is "interior" only when both boundaries come from bookings or breaks.
+ */
+export function classifyFreeIntervals(
+    freeIntervals: FreeInterval[],
+    minGapMins: number,
+    nowIsPastWorkingEnd: boolean
+): ClassifiedInterval[] {
+    const minGapMs = minGapMins * 60 * 1000;
+    return freeIntervals.map(interval => {
+        const durationMs = interval.endAt - interval.startAt;
+        const bothBounded =
+            (interval.leftBoundary === "booking" || interval.leftBoundary === "break") &&
+            (interval.rightBoundary === "booking" || interval.rightBoundary === "break");
+
+        let classification: GapClassification;
+        if (nowIsPastWorkingEnd) {
+            classification = "past_workday";
+        } else if (!bothBounded) {
+            classification = interval.leftBoundary === "now"
+                ? "now_bounded"
+                : "edge_of_day";
+        } else if (durationMs < minGapMs) {
+            classification = "below_threshold";
+        } else {
+            classification = "interior_gap";
+        }
+        return { ...interval, classification };
+    });
+}
+
+export function findInteriorGaps(
+    freeIntervals: FreeInterval[],
+    minGapMins: number,
+    nowIsPastWorkingEnd: boolean
+) {
+    return classifyFreeIntervals(freeIntervals, minGapMins, nowIsPastWorkingEnd)
+        .filter(i => i.classification === "interior_gap")
+        .map(i => ({ startAt: i.startAt, endAt: i.endAt, durationMins: i.durationMins }));
+}

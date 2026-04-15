@@ -8,6 +8,7 @@ import {
   IconMap,
   IconClipboardList,
   IconMessageChatbot,
+  IconSparkles,
 } from "@tabler/icons-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       { label: "Services",  href: "{base}/services",   icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
       { label: "Finances",  href: "{base}/finances",   icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
       { label: "AI Inbox",  href: "/ai-inbox",         icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
+      { label: "Fill Gaps", href: "/gap-optimizer",    icon: <IconSparkles className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",  href: "/settings",         icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },
@@ -68,6 +70,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       { label: "Menu",         href: "{base}/menu",          icon: <IconToolsKitchen2 className="h-5 w-5 flex-shrink-0" /> },
       { label: "Finances",     href: "{base}/finances",      icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
       { label: "AI Inbox",     href: "/ai-inbox",            icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
+      { label: "Fill Gaps",    href: "/gap-optimizer",       icon: <IconSparkles className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",     href: "/settings",            icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },

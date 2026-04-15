@@ -15,6 +15,7 @@ import {
   IconPalette,
   IconMapPin,
   IconWorldWww,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { ListedBadge } from "@/components/dashboard/ListingBanner";
 
@@ -27,6 +28,7 @@ import { AiOperatorTab } from "./_components/tabs/AiOperatorTab";
 import { IdentityProfileTab } from "./_components/tabs/IdentityProfileTab";
 import { LocationTab } from "./_components/tabs/LocationTab";
 import { DomainTab } from "./_components/tabs/DomainTab";
+import { GapOptimizerTab } from "./_components/tabs/GapOptimizerTab";
 
 const VALID_TABS = [
   "general",
@@ -38,6 +40,7 @@ const VALID_TABS = [
   "branding",
   "location",
   "domain",
+  "gaps",
 ] as const;
 type SettingsTab = (typeof VALID_TABS)[number];
 
@@ -131,6 +134,7 @@ export default function SettingsPage() {
               { value: "booking", label: "Booking Rules", icon: <IconCalendarTime size={16} stroke={1.5} /> },
               { value: "deposits", label: "Deposits", icon: <IconCreditCard size={16} stroke={1.5} /> },
               { value: "surge", label: "Surge Pricing", icon: <IconFlame size={16} stroke={1.5} /> },
+              { value: "gaps", label: "Gap Optimizer", icon: <IconSparkles size={16} stroke={1.5} /> },
             ].map(({ value, label, icon }) => (
               <TabsTrigger
                 key={value}
@@ -219,6 +223,13 @@ export default function SettingsPage() {
             initialData={{
               surgePricingEnabled: settings.surgePricingEnabled,
               surgeRules: settings.surgeRules || [],
+            }}
+          />
+          <GapOptimizerTab
+            orgId={orgId}
+            initialData={{
+              gapOptimizerEnabled: settings.gapOptimizerEnabled ?? true,
+              gapOptimizerMinGapMins: settings.gapOptimizerMinGapMins ?? 30,
             }}
           />
           <NotificationsQueueTab

@@ -16,6 +16,7 @@ import { formatPrice } from "@/components/ui/price";
 
 // Widgets
 import { RevenueTargetWidget } from "@/components/dashboard/RevenueTargetWidget";
+import { GapOptimizerWidget } from "@/components/dashboard/GapOptimizerWidget";
 import { LiveScheduleWidget } from "@/components/dashboard/LiveScheduleWidget";
 import { RevenueChartWidget } from "@/components/dashboard/RevenueChartWidget";
 import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationWidget";
@@ -218,10 +219,7 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 h-full min-h-0">
-          <RevenueTargetWidget
-            revenueTodayMinorUnits={dashboardMetrics.revenueToday}
-            formatMoney={formatMoney}
-          />
+          <GapOptimizerWidget orgId={orgId} />
         </div>
         <div className="md:col-span-1 h-full min-h-0">
           <StaffUtilisationWidget

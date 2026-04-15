@@ -279,6 +279,10 @@ export default defineSchema({
       v.literal("mk"),     // Macedonian only
     )),
 
+    // AI Gap Optimizer
+    gapOptimizerEnabled: v.optional(v.boolean()),
+    gapOptimizerMinGapMins: v.optional(v.number()),
+
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"]),
@@ -872,6 +876,7 @@ export default defineSchema({
       v.literal("booking_rescheduled"),
       v.literal("payment_link_sent"),
       v.literal("handoff_triggered"),
+      v.literal("gap_outreach_sent"),
     )),
     actionReferenceId: v.optional(v.string()),
 
@@ -903,6 +908,7 @@ export default defineSchema({
       v.literal("receipt"),
       v.literal("review_request"),
       v.literal("no_show_warning"),
+      v.literal("gap_fill_offer"),
     ),
 
     recipientAddress: v.string(),
@@ -981,6 +987,75 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_action", ["orgId", "action"])
     .index("by_resource", ["resourceType", "resourceId"]),
+
+
+  // ─────────────────────────────────────────────────────
+  // GAP SUGGESTIONS (AI GAP OPTIMIZER)
+  // ─────────────────────────────────────────────────────
+  gap_suggestions: defineTable({
+    orgId: v.id("orgs"),
+    staffId: v.id("staff_members"),
+    serviceDate: v.string(),                 // "YYYY-MM-DD"
+    gapStartAt: v.number(),
+    gapEndAt: v.number(),
+    durationMins: v.number(),
+    estimatedRevenueMinorUnits: v.number(),
+    currency: v.string(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("outreach_sent"),
+      v.literal("filled"),
+      v.literal("expired"),
+      v.literal("dismissed"),
+    ),
+    detectedBy: v.union(
+      v.literal("manual_scan"),
+      v.literal("cancellation"),
+    ),
+    triggeredByBookingId: v.optional(v.id("bookings")),
+    outreachSentAt: v.optional(v.number()),
+    filledByBookingId: v.optional(v.id("bookings")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_status", ["orgId", "status"])
+    .index("by_org_date", ["orgId", "serviceDate"])
+    .index("by_staff_start", ["staffId", "gapStartAt"]),
+
+  // ─────────────────────────────────────────────────────
+  // GAP OUTREACH CANDIDATES (AI GAP OPTIMIZER)
+  // ─────────────────────────────────────────────────────
+  gap_outreach_candidates: defineTable({
+    orgId: v.id("orgs"),
+    gapSuggestionId: v.id("gap_suggestions"),
+    customerId: v.id("customers"),
+    rank: v.number(),
+    score: v.number(),
+    scoreRationale: v.string(),
+    draftedMessage: v.string(),
+    confidenceScore: v.number(),             // 0–1
+    channel: v.union(
+      v.literal("sms"),
+      v.literal("email"),
+      v.literal("whatsapp"),
+    ),
+    status: v.union(
+      v.literal("proposed"),
+      v.literal("approved"),
+      v.literal("sent"),
+      v.literal("skipped"),
+      v.literal("responded_yes"),
+      v.literal("responded_no"),
+    ),
+    sentNotificationId: v.optional(v.id("notifications")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_gap", ["gapSuggestionId"])
+    .index("by_gap_rank", ["gapSuggestionId", "rank"])
+    .index("by_customer", ["customerId"]),
 
 
   // ═══════════════════════════════════════════════════════

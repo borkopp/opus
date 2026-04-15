@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReviewCard } from "@/components/ReviewCard";
 import { formatPrice } from "@/lib/format";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +22,7 @@ import {
   IconClock,
   IconStarFilled,
   IconChevronRight,
+  IconStar,
 } from "@tabler/icons-react";
 import ChatWidget from "@/components/ChatWidget";
 import { HeaderAuth } from "@/components/HeaderAuth";
@@ -38,6 +40,10 @@ export default function BusinessProfilePage() {
   const slug = params.slug as string;
 
   const profile = useQuery(api.public.getPublicProfile, { slug });
+  const reviews = useQuery(
+    api.reviews.listByOrg,
+    profile ? { orgId: profile._id, limit: 20 } : "skip"
+  );
 
   const getImageUrl = (urlOrId?: string) => {
     if (!urlOrId) return undefined;
@@ -305,6 +311,61 @@ export default function BusinessProfilePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* ── Reviews ── */}
+        {reviews && reviews.length > 0 && (
+          <motion.div variants={fadeInUp}>
+            <Separator className="my-2" />
+            <div className="py-4">
+              {/* Summary header */}
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-bold tracking-tight">Reviews</h2>
+                <div className="flex items-center gap-2">
+                  {profile.averageRating > 0 && (
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <IconStarFilled
+                            key={star}
+                            size={14}
+                            className={
+                              star <= Math.round(profile.averageRating)
+                                ? "text-rating"
+                                : "text-border/60"
+                            }
+                            aria-hidden="true"
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm font-bold">
+                        {profile.averageRating.toFixed(1)}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-medium">
+                        ({profile.reviewCount})
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Review cards */}
+              <div className="space-y-3">
+                {reviews.map((review) => (
+                  <ReviewCard
+                    key={review._id}
+                    reviewerName={review.reviewerName}
+                    reviewerAvatarUrl={review.reviewerAvatarUrl}
+                    rating={review.rating}
+                    body={review.body}
+                    createdAt={review.createdAt}
+                    reply={review.reply}
+                    repliedAt={review.repliedAt}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* ── Location map ── */}
         {profile.coordinates && (

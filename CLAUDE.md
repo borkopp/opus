@@ -141,6 +141,34 @@ ctx.db.query("bookings").collect()
 
 ---
 
+## Code Organization & Reuse
+
+### File Layout (follow this strictly)
+
+```
+components/ui/           — Base UI primitives (shadcn + custom atoms like <Price>, <DebouncedInput>)
+components/{domain}/     — Shared domain components used by 2+ routes (e.g. components/bookings/, components/ai-inbox/)
+app/**/_components/      — Route-scoped components used only by that route's page
+hooks/                   — Shared React hooks used by 2+ components (use-*.ts naming)
+lib/                     — Pure functions, configs, type helpers — no React, no hooks
+```
+
+### Rules
+
+**1. Extract when used in two places.** If a component or hook is needed by a second route or feature, move it out of `_components/` into `components/{domain}/` or `hooks/`. Don't copy-paste.
+
+**2. Check before building.** Before writing a new component, scan `components/` for an existing one that covers the pattern. Extend the existing component rather than creating a parallel one.
+
+**3. Pages compose — they don't implement.** Page files (`page.tsx`) should import and arrange components, not contain business UI logic or large JSX trees. If a page file grows past ~100 lines, extract the logical sections into `_components/`.
+
+**4. `lib/` is React-free.** Pure functions, config objects, and type utilities only. React components and hooks go in `components/` or `hooks/` respectively.
+
+**5. Shared hooks in `hooks/`.** Stateful logic reused across 2+ components (e.g. data-fetching wrappers, complex form state) goes in `hooks/use-*.ts`. Don't inline the same `useState`/`useEffect` pattern in multiple components.
+
+**6. `components/ui/` is for primitives only.** Don't put domain-aware components (ones that import Convex queries or know about bookings/staff/etc.) into `components/ui/`. That directory is for generic, data-agnostic UI atoms.
+
+---
+
 ## AI Agent Rules
 
 The AI front-desk uses Claude to handle inbound messages autonomously (WhatsApp, Instagram DM, web chat).

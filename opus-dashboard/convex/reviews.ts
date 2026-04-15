@@ -159,7 +159,19 @@ export const listByOrg = query({
             .order("desc")
             .take(args.limit ?? 50);
 
-        return reviews;
+        // Populate reviewer name + avatar from opus_users
+        const populated = await Promise.all(
+            reviews.map(async (review) => {
+                const opusUser = await ctx.db.get(review.opusUserId);
+                return {
+                    ...review,
+                    reviewerName: opusUser?.name ?? "Anonymous",
+                    reviewerAvatarUrl: opusUser?.avatarUrl,
+                };
+            })
+        );
+
+        return populated;
     },
 });
 

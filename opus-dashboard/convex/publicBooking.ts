@@ -24,6 +24,7 @@ export const createPublicBooking = mutation({
         customerName: v.string(),
         customerPhone: v.string(),  // Required
         customerEmail: v.optional(v.string()),
+        customerNote: v.optional(v.string()),
         paymentMethod: v.union(
             v.literal("cash"),
             v.literal("online"),     // Coming soon; rejected for now
@@ -193,6 +194,7 @@ export const createPublicBooking = mutation({
             currency: service.currency,
             surgePriceApplied,
             surgeMultiplierPct,
+            customerNote: args.customerNote,
             status: "confirmed",  // Cash payment = instant confirmation
             source: args.opusUserId ? "opus_web" : "web",
             isDeleted: false,

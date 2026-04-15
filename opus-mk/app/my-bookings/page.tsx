@@ -3,20 +3,32 @@
 import { useUser, RedirectToSignIn } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { HeaderAuth } from "@/components/HeaderAuth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ReviewForm } from "@/components/ReviewForm";
 import { formatPrice } from "@/lib/format";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
+import { useState } from "react";
 import {
   IconArrowLeft,
   IconCalendarEvent,
   IconClock,
   IconUser,
   IconSparkles,
+  IconStarFilled,
+  IconCircleCheck,
 } from "@tabler/icons-react";
 
 // ── Status badge styling ──
@@ -160,6 +172,9 @@ function BookingCard({
 }: {
   booking: {
     _id: string;
+    orgId: string;
+    customerId: string;
+    opusUserId: string;
     startAt: number;
     endAt: number;
     status: string;
@@ -171,6 +186,7 @@ function BookingCard({
     serviceName: string;
     serviceDurationMins: number;
     staffName: string;
+    hasReview: boolean;
   };
   isUpcoming?: boolean;
 }) {
@@ -178,44 +194,49 @@ function BookingCard({
   const startDate = new Date(booking.startAt);
   const timeStr = `${String(startDate.getUTCHours()).padStart(2, "0")}:${String(startDate.getUTCMinutes()).padStart(2, "0")}`;
 
+  const isCompleted = booking.status === "completed";
+  const canReview = isCompleted && !booking.hasReview;
+
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [justReviewed, setJustReviewed] = useState(false);
+
   return (
-    <Link
-      href={`/${booking.orgSlug}`}
-      className="group block"
-    >
+    <div className="group block">
       <div
         className={`flex gap-4 p-4 rounded-2xl border transition-all duration-200 ${
           isUpcoming
             ? "border-border/60 bg-card hover:border-primary/30 hover:shadow-sm"
-            : "border-border/30 bg-card/60 opacity-75 hover:opacity-100"
+            : "border-border/30 bg-card/60"
         }`}
       >
         {/* Business logo */}
-        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0 overflow-hidden relative">
-          {booking.orgLogoUrl ? (
-            <Image
-              src={booking.orgLogoUrl}
-              alt={booking.orgName}
-              fill
-              className="object-cover"
-              sizes="48px"
-            />
-          ) : (
-            <span className="text-lg font-bold text-muted-foreground">
-              {booking.orgName.charAt(0)}
-            </span>
-          )}
-        </div>
+        <Link href={`/${booking.orgSlug}`} className="shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center shrink-0 overflow-hidden relative">
+            {booking.orgLogoUrl ? (
+              <Image
+                src={booking.orgLogoUrl}
+                alt={booking.orgName}
+                fill
+                className="object-cover"
+                sizes="48px"
+              />
+            ) : (
+              <span className="text-lg font-bold text-muted-foreground">
+                {booking.orgName.charAt(0)}
+              </span>
+            )}
+          </div>
+        </Link>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
+            <Link href={`/${booking.orgSlug}`} className="min-w-0">
               <p className="text-sm font-semibold truncate">{booking.serviceName}</p>
               <p className="text-xs text-muted-foreground truncate mt-0.5">
                 {booking.orgName}
               </p>
-            </div>
+            </Link>
             <Badge
               variant={status.variant}
               className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${status.className}`}
@@ -238,6 +259,44 @@ function BookingCard({
               {booking.staffName}
             </span>
           </div>
+
+          {/* Review action row */}
+          {isCompleted && (
+            <div className="mt-3">
+              {canReview && !justReviewed ? (
+                <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                  <DialogTrigger asChild>
+                    <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-rating/10 text-rating border border-rating/20 hover:bg-rating/20 transition-colors">
+                      <IconStarFilled size={12} aria-hidden="true" />
+                      Leave a Review
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="sr-only">Leave a Review</DialogTitle>
+                    </DialogHeader>
+                    <ReviewForm
+                      orgId={booking.orgId as Id<"orgs">}
+                      opusUserId={booking.opusUserId as Id<"opus_users">}
+                      customerId={booking.customerId as Id<"customers">}
+                      bookingId={booking._id as Id<"bookings">}
+                      businessName={booking.orgName}
+                      serviceName={booking.serviceName}
+                      onSuccess={() => {
+                        setReviewDialogOpen(false);
+                        setJustReviewed(true);
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              ) : (booking.hasReview || justReviewed) ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20">
+                  <IconCircleCheck size={12} aria-hidden="true" />
+                  Reviewed
+                </span>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* Price */}
@@ -245,6 +304,6 @@ function BookingCard({
           {formatPrice(booking.priceMinorUnits, booking.currency)}
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

@@ -122,17 +122,25 @@ export const getMyBookings = query({
         // Sort by startAt descending (most recent first)
         bookings.sort((a, b) => b.startAt - a.startAt);
 
-        // Populate org, service, and staff names
+        // Populate org, service, staff names + review status
         const populated = await Promise.all(
             bookings.map(async (booking) => {
-                const [org, service, staff] = await Promise.all([
+                const [org, service, staff, existingReview] = await Promise.all([
                     ctx.db.get(booking.orgId),
                     ctx.db.get(booking.serviceId),
                     ctx.db.get(booking.staffId),
+                    // Check if a review already exists for this booking
+                    ctx.db
+                        .query("reviews")
+                        .withIndex("by_booking", (q) => q.eq("bookingId", booking._id))
+                        .first(),
                 ]);
 
                 return {
                     _id: booking._id,
+                    orgId: booking.orgId,
+                    customerId: booking.customerId,
+                    opusUserId: opusUser._id,
                     startAt: booking.startAt,
                     endAt: booking.endAt,
                     status: booking.status,
@@ -145,6 +153,7 @@ export const getMyBookings = query({
                     serviceName: service?.name ?? "Unknown Service",
                     serviceDurationMins: service?.durationMins ?? 0,
                     staffName: staff?.displayName ?? "Unknown",
+                    hasReview: !!(existingReview && !existingReview.isDeleted),
                 };
             })
         );

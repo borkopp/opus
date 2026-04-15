@@ -92,6 +92,7 @@ export default function BookingPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [customerNote, setCustomerNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<any | null>(null);
 
@@ -199,6 +200,7 @@ export default function BookingPage() {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || undefined,
+        customerNote: customerNote.trim() || undefined,
         paymentMethod: "cash",
         ...(opusUserId ? { opusUserId } : {}),
       });
@@ -548,6 +550,23 @@ export default function BookingPage() {
                       className="absolute left-4 top-4 text-muted-foreground text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-primary peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-[11px] font-medium cursor-text"
                     >
                       Email <span className="opacity-60 font-normal">(Optional)</span>
+                    </Label>
+                  </div>
+                  
+                  <div className="group/input relative">
+                    <textarea
+                      id="note"
+                      placeholder=" "
+                      value={customerNote}
+                      onChange={(e) => setCustomerNote(e.target.value)}
+                      className="peer min-h-[4rem] w-full resize-none rounded-xl bg-secondary/30 border-transparent focus:border-primary focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all text-base px-4 pt-5 pb-2 placeholder:text-transparent outline-none flex"
+                      rows={2}
+                    />
+                    <Label
+                      htmlFor="note"
+                      className="absolute left-4 top-4 text-muted-foreground text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-1.5 peer-focus:text-[11px] peer-focus:text-primary peer-[&:not(:placeholder-shown)]:top-1.5 peer-[&:not(:placeholder-shown)]:text-[11px] font-medium cursor-text"
+                    >
+                      Note <span className="opacity-60 font-normal">(Optional)</span>
                     </Label>
                   </div>
                 </div>

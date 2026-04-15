@@ -200,6 +200,15 @@ export function BookingSidebar({
                             </div>
                         </div>
                     </div>
+                    
+                    {booking.customerNote && (
+                        <div className="px-4 py-3 bg-zinc-50 dark:bg-zinc-900/40 rounded-xl border border-border dark:border-zinc-800 shadow-sm">
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Customer Note</p>
+                            <p className="font-medium text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                                {booking.customerNote}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* AI Insights & Context */}
@@ -220,7 +229,7 @@ export function BookingSidebar({
                                     {isAiBooked ? "AI Handled Booking via WhatsApp" : "System Note"}
                                 </p>
                                 <p className="text-xs text-violet-700/90 dark:text-violet-300/60 leading-relaxed font-medium">
-                                    {booking.customerNote || "Client mentioned they have a sensitive scalp and prefer a softer blend. Also asked about the beard oil."}
+                                    Client mentioned they have a sensitive scalp and prefer a softer blend. Also asked about the beard oil.
                                 </p>
                             </div>
                         </div>

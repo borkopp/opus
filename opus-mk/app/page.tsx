@@ -4,7 +4,9 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Logo } from "@/components/Logo";
 import { HeaderAuth } from "@/components/HeaderAuth";
-import { useState } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { calcDistanceMeters, formatDistance } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
@@ -50,6 +52,9 @@ const CATEGORIES: { id: BeautyCategory; label: string; icon: React.ReactNode }[]
 export default function DiscoverPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<BeautyCategory | undefined>();
+  const { coords } = useUserLocation();
+  const [gridVisible, setGridVisible] = useState(true);
+  const prevCoordsRef = useRef<typeof coords>(null);
 
   const listings = useQuery(api.public.listPublished, {
     industry: "beauty_wellness",
@@ -61,7 +66,30 @@ export default function DiscoverPage() {
     searchQuery.length >= 2 ? { query: searchQuery } : "skip"
   );
 
-  const displayItems = searchQuery.length >= 2 ? searchResults : listings?.items;
+  useEffect(() => {
+    if (coords && !prevCoordsRef.current) {
+      setGridVisible(false);
+      const t = setTimeout(() => setGridVisible(true), 180);
+      prevCoordsRef.current = coords;
+      return () => clearTimeout(t);
+    }
+    prevCoordsRef.current = coords;
+  }, [coords]);
+
+  const rawItems = searchQuery.length >= 2 ? searchResults : listings?.items;
+
+  const displayItems = useMemo(() => {
+    if (!rawItems || !coords) return rawItems;
+    return [...rawItems].sort((a, b) => {
+      const da = a.coordinates
+        ? calcDistanceMeters(coords.lat, coords.lng, a.coordinates.lat, a.coordinates.lng)
+        : Infinity;
+      const db = b.coordinates
+        ? calcDistanceMeters(coords.lat, coords.lng, b.coordinates.lat, b.coordinates.lng)
+        : Infinity;
+      return da - db;
+    });
+  }, [rawItems, coords]);
   const isLoading = displayItems === undefined;
 
   const activeCategory = CATEGORIES.find((c) => c.id === selectedCategory);
@@ -190,7 +218,10 @@ export default function DiscoverPage() {
           </div>
         ) : displayItems && displayItems.length > 0 ? (
           /* Results — list on mobile, grid on desktop */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-150"
+            style={{ opacity: gridVisible ? 1 : 0 }}
+          >
             {displayItems.map((org) => (
               <Link key={org._id} href={`/${org.slug}`} className="group block">
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/40 transition-[border-color,box-shadow,transform] duration-150 hover:border-border hover:shadow-sm active:scale-[0.98] h-full">
@@ -236,6 +267,19 @@ export default function DiscoverPage() {
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <IconMapPin size={12} aria-hidden="true" />
                           <span>{org.city}</span>
+                        </div>
+                      )}
+                      {coords && org.coordinates && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatDistance(
+                            calcDistanceMeters(
+                              coords.lat,
+                              coords.lng,
+                              org.coordinates.lat,
+                              org.coordinates.lng,
+                            ),
+                          )}{" "}
+                          away
                         </div>
                       )}
                     </div>

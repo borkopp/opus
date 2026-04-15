@@ -11,6 +11,7 @@ import Map, {
 import type { MapRef } from "react-map-gl/mapbox";
 import { IconMapPin, IconNavigation, IconWalk, IconCar } from "@tabler/icons-react";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { formatDistance } from "@/lib/format";
 
 // CSS to hide Mapbox logo and wordmark
 const MAPBOX_HIDE_LOGO_CSS = `
@@ -54,10 +55,6 @@ function fmt_duration(s: number): string {
   const h = Math.floor(m / 60);
   const r = m % 60;
   return r ? `${h}h ${r}m` : `${h}h`;
-}
-
-function fmt_distance(m: number): string {
-  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
 function useDarkMode() {
@@ -262,7 +259,7 @@ export default function BusinessMap({
               </span>
               <span className="h-3.5 w-px shrink-0 bg-border/60" />
               <span className="text-sm text-muted-foreground">
-                {fmt_distance(route.distance)}
+                {formatDistance(route.distance)}
               </span>
             </div>
 

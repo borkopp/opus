@@ -77,7 +77,7 @@ export function FAQs() {
   return (
     <div className="mx-auto max-w-4xl overflow-hidden px-4 py-20 md:px-8 md:py-32">
       <div className="text-center">
-        <Heading as="h2">Најчесто поставувани прашања</Heading>
+        <Heading as="h2">Најчесто <span className="text-brand-primary font-playfair italic">поставувани</span> прашања</Heading>
         <Subheading className="mx-auto mt-4 max-w-2xl">
           Сè што треба да знаете за OPUS и како може да го подобри вашиот бизнис.
         </Subheading>

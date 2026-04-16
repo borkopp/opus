@@ -51,10 +51,10 @@ export function IPhoneSkeleton() {
               className="absolute inset-0"
             >
               <Image
-                src="https://assets.aceternity.com/components/flipping-images-with-bar.webp"
+                src="/hero-dark.png"
                 alt="Screen"
                 fill
-                className="object-cover object-center"
+                className="object-cover object-left"
               />
               <div className="absolute inset-x-0 top-0 z-10">
                 <IPhoneDynamicIsland ref={dynamicIslandRef} />

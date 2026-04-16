@@ -21,14 +21,14 @@ export function VerticalPulseLines({ className }: { className?: string }) {
         <div key={i} className="relative h-full w-px">
           <div className="absolute inset-0 border-l border-dashed border-neutral-300 dark:border-neutral-600" />
           <motion.div
-            className="absolute left-0 h-12 w-px bg-linear-to-b from-transparent via-blue-500 to-transparent"
+            className="absolute left-0 h-12 w-px bg-linear-to-b from-transparent via-brand-primary to-transparent"
             initial={{ y: "-100%", opacity: 0 }}
             animate={
               isInView
                 ? {
-                    y: ["0%", "600%"],
-                    opacity: [0, 1, 1, 0],
-                  }
+                  y: ["0%", "600%"],
+                  opacity: [0, 1, 1, 0],
+                }
                 : {}
             }
             transition={{

@@ -17,10 +17,10 @@ export function FeaturesTwo() {
     <Container className="px-4 py-10 md:py-20 lg:py-32">
       <div className="mx-auto mb-16 max-w-2xl text-center">
         <Heading as="h2" className="mb-4">
-          Управувајте од било кој уред
+          Управувајте од <span className="text-brand-primary font-playfair italic">било кој </span> уред
         </Heading>
         <Subheading className="text-balance">
-          OPUS работи беспрекорно на телефон, таблет и компјутер. Водете го вашиот бизнис од каде било.
+          OPUS работи беспрекорно на телефон, таблет и компјутер. Водете го вашиот бизнис од каде сакате.
         </Subheading>
       </div>
 
@@ -72,7 +72,7 @@ export function FeaturesTwo() {
       </div>
 
       {/* Additional feature blocks */}
-      <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
         <FeatureBlock
           icon={<SecuritySkeleton />}
           title="Безбедност на податоци"
@@ -83,11 +83,11 @@ export function FeaturesTwo() {
           title="Брзо и сигурно"
           description="Платформата е секогаш онлајн, овозможувајќи непречено работење на вашиот бизнис 24 часа."
         />
-        <FeatureBlock
+        {/* <FeatureBlock
           icon={<Compliance />}
           title="Локализирано за вас"
           description="Целосна поддршка за македонски јазик, прилагодено за домашниот пазар."
-        />
+        /> */}
       </div>
     </Container>
   );

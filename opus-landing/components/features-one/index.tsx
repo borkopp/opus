@@ -1,9 +1,9 @@
 "use client";
 import React from "react";
 import { cn } from "@/lib/utils";
-import { WorldMapSkeleton } from "./world-map-skeleton";
-import { KeyboardSkeleton } from "./keyboard-skeleton";
-import { LoginSkeleton } from "./login-skeleton";
+import { FloorPlanSkeleton } from "./world-map-skeleton";
+import { TeamServiceSkeleton } from "./keyboard-skeleton";
+import { CalendarSkeleton } from "./login-skeleton";
 import { ChatConversation } from "./chat";
 import { VerticalPulseLines } from "./vertical-pulse-lines";
 import { FlippingImagesWithBar } from "./flipping-images";
@@ -29,7 +29,7 @@ export function FeaturesOne() {
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 items-center justify-center overflow-hidden pt-4">
-              <LoginSkeleton />
+              <CalendarSkeleton />
             </CardSkeleton>
           </CardContent>
         </Card>
@@ -43,7 +43,7 @@ export function FeaturesOne() {
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 items-center justify-center pt-4">
-              <WorldMapSkeleton />
+              <FloorPlanSkeleton />
             </CardSkeleton>
           </CardContent>
         </Card>
@@ -57,7 +57,7 @@ export function FeaturesOne() {
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 flex-col items-center justify-between gap-2 overflow-hidden pt-4">
-              <ChatConversation className="min-h-0 shrink p-2" />
+              <ChatConversation className="min-h-0 shrink p-2 px-4" />
               <VerticalPulseLines className="h-24 shrink-0" />
               <div className="shrink-0 scale-75">
                 <FlippingImagesWithBar />
@@ -74,8 +74,8 @@ export function FeaturesOne() {
                 Едноставно организирајте ги услугите, цените и распоредот на вашите вработени.
               </CardDescription>
             </CardHeader>
-            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center overflow-hidden mask-r-from-50% pt-4">
-              <KeyboardSkeleton />
+            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center -mt-4">
+              <TeamServiceSkeleton />
             </CardSkeleton>
           </CardContent>
         </Card>

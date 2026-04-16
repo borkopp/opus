@@ -5,6 +5,7 @@ import { Lock } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Scales from "../ui/scales";
+import { Logo } from "../logo";
 
 export function SecuritySkeleton({ className }: { className?: string }) {
   return (
@@ -53,14 +54,8 @@ export function SecuritySkeleton({ className }: { className?: string }) {
 
         {/* Right Avatar - Unblurred */}
         <div className="relative z-10 shrink-0">
-          <div className="size-6 overflow-hidden rounded-full ring-2 ring-white/50 dark:ring-neutral-800/50">
-            <Image
-              width={48}
-              height={48}
-              src="https://assets.aceternity.com/avatars/2.webp"
-              alt="User avatar"
-              className="size-full object-cover"
-            />
+          <div className="size-6 overflow-visible ">
+            <Logo />
           </div>
         </div>
       </div>

@@ -2,47 +2,32 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { ModeToggle } from "./mode-toggle";
+import { Logo } from "./logo";
 
 export function Footer() {
   const pages = [
     {
       title: "Платформа",
-      href: "#",
-    },
-    {
-      title: "Можности",
-      href: "#",
-    },
-    {
-      title: "Интеграции",
-      href: "#",
+      href: "/#product",
     },
     {
       title: "Цени",
-      href: "#",
+      href: "/pricing",
     },
     {
-      title: "Блог",
-      href: "#",
+      title: "Контакт",
+      href: "/contact",
     },
   ];
 
   const socials = [
     {
       title: "Twitter",
-      href: "#",
+      href: "https://twitter.com",
     },
     {
       title: "LinkedIn",
-      href: "#",
-    },
-    {
-      title: "GitHub",
-      href: "#",
-    },
-    {
-      title: "Discord",
-      href: "#",
+      href: "https://linkedin.com",
     },
   ];
   const legals = [
@@ -62,16 +47,12 @@ export function Footer() {
 
   const signups = [
     {
-      title: "Започнете",
-      href: "#",
+      title: "Започнете бесплатно",
+      href: "https://app.opus.mk",
     },
     {
       title: "Најава",
-      href: "#",
-    },
-    {
-      title: "Упатства",
-      href: "#",
+      href: "https://app.opus.mk",
     },
   ];
 
@@ -79,12 +60,12 @@ export function Footer() {
     <div className="relative w-full overflow-hidden border-t border-neutral-100 bg-white px-8 pt-20 dark:border-white/10 dark:bg-neutral-950">
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between text-sm text-neutral-500 sm:flex-row md:px-8">
         <div>
-          <div className="mr-0 mb-4 md:mr-4 md:flex">
-            <Logo />
-          </div>
+          <Link href="/" className="mr-0 mb-4 md:mr-4 md:flex">
+            <Logo className="text-6xl" />
+          </Link>
 
           <div className="mt-4 ml-2 flex items-center gap-4">
-            <Link
+            {/* <Link
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
@@ -101,25 +82,25 @@ export function Footer() {
               aria-label="LinkedIn"
             >
               <LinkedInIcon className="size-5" />
-            </Link>
+            </Link> */}
             <ModeToggle />
           </div>
 
           <div className="mt-4 ml-2 text-neutral-500 dark:text-neutral-400">
-            &copy; copyright OPUS 2026. Сите права задржани.
+            &copy; Copyright OPUS 2026. Сите права задржани.
           </div>
         </div>
         <div className="mt-10 grid grid-cols-2 items-start gap-10 sm:mt-0 md:mt-0 lg:grid-cols-4">
           <div className="flex w-full flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
-              Pages
+            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
+              Страници
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {pages.map((page, idx) => (
                 <li key={"pages" + idx} className="list-none">
                   <Link
                     className="transition-colors hover:text-neutral-800 dark:hover:text-white"
-                    href="#"
+                    href={page.href}
                   >
                     {page.title}
                   </Link>
@@ -128,34 +109,34 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="flex flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
-              Socials
+          {/* <div className="flex flex-col justify-center gap-4">
+            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
+              Социјални мрежи
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {socials.map((social, idx) => (
                 <li key={"social" + idx} className="list-none">
                   <Link
                     className="transition-colors hover:text-neutral-800 dark:hover:text-white"
-                    href="#"
+                    href={social.href}
                   >
                     {social.title}
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           <div className="flex flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
-              Legal
+            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
+              Правно
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {legals.map((legal, idx) => (
                 <li key={"legal" + idx} className="list-none">
                   <Link
                     className="transition-colors hover:text-neutral-800 dark:hover:text-white"
-                    href="#"
+                    href={legal.href}
                   >
                     {legal.title}
                   </Link>
@@ -164,15 +145,15 @@ export function Footer() {
             </ul>
           </div>
           <div className="flex flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
-              Register
+            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
+              Најава
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {signups.map((auth, idx) => (
                 <li key={"auth" + idx} className="list-none">
                   <Link
                     className="transition-colors hover:text-neutral-800 dark:hover:text-white"
-                    href="#"
+                    href={auth.href}
                   >
                     {auth.title}
                   </Link>
@@ -208,22 +189,7 @@ export function Footer() {
   );
 }
 
-const Logo = () => {
-  return (
-    <Link
-      href="/"
-      className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal"
-    >
-      <Image
-        src="https://assets.aceternity.com/logo-dark.png"
-        alt="logo"
-        width={30}
-        height={30}
-      />
-      <span className="font-medium text-black dark:text-white">OPUS</span>
-    </Link>
-  );
-};
+
 
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

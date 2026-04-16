@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { GridLineHorizontal, GridLineVertical } from "../grid-lines";
-import Image from "next/image";
+import { Bell, CalendarCheck } from "lucide-react";
 
 interface Sparkle {
   id: number;
@@ -15,14 +15,12 @@ interface Sparkle {
 }
 
 const SPARKLE_COLORS = [
-  "var(--color-blue-500)",
-  "var(--color-sky-500)",
-  "var(--color-violet-500)",
-  "var(--color-purple-500)",
+  "var(--color-brand-primary)",
+  "var(--color-brand-secondary)",
 ];
 
 function generateSparkles(): Sparkle[] {
-  return Array.from({ length: 8 }, (_, i) => ({
+  return Array.from({ length: 12 }, (_, i) => ({
     id: i,
     x: Math.random() * 10 - 15,
     y: Math.random() * 100,
@@ -32,26 +30,41 @@ function generateSparkles(): Sparkle[] {
   }));
 }
 
-export function FlippingImagesWithBar() {
-  const images = [
-    {
-      title: "Shad",
-      href: "https://assets.aceternity.com/avatars/shadcn.webp",
-    },
-    {
-      title: "Second Person",
-      href: "https://assets.aceternity.com/avatars/2.webp",
-    },
-    {
-      title: "Third Person",
-      href: "https://assets.aceternity.com/avatars/3.webp",
-    },
-  ];
+const items = [
+  {
+    type: "Потсетник",
+    message: "Термин кај Марко за 1 час",
+    time: "14:30",
+    icon: <Bell className="size-8" />,
+    color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-500",
+  },
+  {
+    type: "Резервација",
+    message: "Нов термин од Ана",
+    time: "Закажано: 18:00",
+    icon: <CalendarCheck className="size-8" />,
+    color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-500",
+  },
+];
 
+const NotificationCard = ({ item, isGrayscale }: { item: typeof items[0], isGrayscale?: boolean }) => (
+  <div className={cn("flex h-full w-full flex-col justify-center items-center gap-4 bg-white p-6 dark:bg-neutral-800", isGrayscale ? "grayscale opacity-40 blur-[1px]" : "")}>
+    <div className={cn("flex size-16 items-center justify-center rounded-full", item.color)}>
+      {item.icon}
+    </div>
+    <div className="text-center">
+      <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{item.type}</div>
+      <div className="mt-1 px-2 text-xs text-balance text-neutral-500 dark:text-neutral-400">{item.message}</div>
+    </div>
+    <div className="mt-1 rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
+      {item.time}
+    </div>
+  </div>
+);
+
+export function FlippingImagesWithBar() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<"appear" | "scanning" | "flipping">(
-    "appear",
-  );
+  const [phase, setPhase] = useState<"appear" | "scanning" | "flipping">("appear");
   const [barProgress, setBarProgress] = useState(0);
   const [sparkles, setSparkles] = useState<Sparkle[]>(() => generateSparkles());
   const sparklesRef = useRef<Sparkle[]>(sparkles);
@@ -65,7 +78,6 @@ export function FlippingImagesWithBar() {
 
   useEffect(() => {
     if (phase === "scanning") {
-      // Generate sparkles before starting the animation
       const newSparkles = generateSparkles();
       sparklesRef.current = newSparkles;
 
@@ -77,7 +89,6 @@ export function FlippingImagesWithBar() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // Set sparkles on first frame along with progress
         if (isFirstFrame) {
           setSparkles(sparklesRef.current);
           isFirstFrame = false;
@@ -101,15 +112,15 @@ export function FlippingImagesWithBar() {
   useEffect(() => {
     if (phase === "flipping") {
       const timer = setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
+        setCurrentIndex((prev) => (prev + 1) % items.length);
         setBarProgress(0);
         setPhase("appear");
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [phase, images.length]);
+  }, [phase]);
 
-  const currentImage = images[currentIndex];
+  const currentItem = items[currentIndex];
 
   return (
     <div className="mx-auto max-w-xl">
@@ -134,40 +145,29 @@ export function FlippingImagesWithBar() {
                 ease: "easeInOut",
               }}
             >
-              {/* Grayscale image (base layer) */}
-              <Image
-                width={300}
-                height={300}
-                src={currentImage.href}
-                alt={currentImage.title}
-                className="h-full w-full object-cover grayscale"
-              />
+              {/* Grayscale UI (base layer) */}
+              <div className="absolute inset-0">
+                <NotificationCard item={currentItem} isGrayscale />
+              </div>
 
-              {/* Colored image revealed by bar */}
+              {/* Colored UI revealed by bar */}
               <div
                 className="pointer-events-none absolute inset-0"
                 style={{
                   clipPath: `inset(0 ${100 - barProgress * 100}% 0 0)`,
                 }}
               >
-                <Image
-                  width={300}
-                  height={300}
-                  src={currentImage.href}
-                  alt={currentImage.title}
-                  className="h-full w-full object-cover"
-                />
+                <NotificationCard item={currentItem} />
               </div>
 
               {/* Scanning bar */}
               {phase === "scanning" && (
                 <motion.div
-                  className="absolute top-0 bottom-0 w-px bg-linear-to-b from-transparent via-sky-500 to-transparent"
+                  className="absolute top-0 bottom-0 w-px bg-linear-to-b from-transparent via-brand-primary to-transparent"
                   style={{
                     left: `${barProgress * 100}%`,
-
                     boxShadow:
-                      "0 0 20px rgba(59, 130, 246, 0.9), 0 0 40px rgba(99, 102, 241, 0.7), 0 0 60px rgba(139, 92, 246, 0.5)",
+                      "0 0 20px rgba(206, 93, 69, 0.9), 0 0 40px rgba(206, 93, 69, 0.7), 0 0 60px rgba(206, 93, 69, 0.5)",
                   }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

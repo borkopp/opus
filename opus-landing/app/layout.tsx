@@ -23,9 +23,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "OPUS - Платформа за автоматизација",
+  title: "OPUS - AI Платформа за вашиот бизнис",
   description:
-    "Платформа сè-во-едно за салони за убавина, берберници и ресторани.",
+    "All-in-one AI платформа за салони за убавина, берберници и ресторани.",
 };
 
 export default function RootLayout({
@@ -40,8 +40,7 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
           disableTransitionOnChange
         >
           <Navbar />

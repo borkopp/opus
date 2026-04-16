@@ -57,7 +57,7 @@ export function MacbookSkeleton() {
               className="absolute inset-0"
             >
               <Image
-                src="https://assets.aceternity.com/components/flipping-images-with-bar.webp"
+                src="/hero-dark.png"
                 alt="Screen"
                 fill
                 className="object-cover"

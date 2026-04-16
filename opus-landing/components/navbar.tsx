@@ -8,13 +8,6 @@ import {
   useScroll,
   useTransform,
 } from "motion/react";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "./logo";
@@ -114,7 +107,7 @@ export const Navbar = () => {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <Logo className="text-3xl" />
+          <Logo className="text-xl md:text-3xl" />
         </Link>
 
         {/* Desktop Navigation */}
@@ -133,7 +126,7 @@ export const Navbar = () => {
             Цени
           </Link>
 
-          {/* Resources Navigation Menu - shadcn with built-in hover */}
+          {/* Ресурси Navigation Menu
           <NavigationMenu viewport={false}>
             <NavigationMenuList>
               <NavigationMenuItem>
@@ -157,7 +150,6 @@ export const Navbar = () => {
                     ))}
                   </div>
 
-                  {/* Image/CTA Column */}
                   <div className="hidden w-44 bg-neutral-100/50 p-4 lg:block lg:w-52 dark:bg-neutral-800/50">
                     <div className="flex h-full flex-col justify-between">
                       <div className="mt-2">
@@ -185,9 +177,10 @@ export const Navbar = () => {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
+          */}
 
           <Link
-            href="#"
+            href="/contact"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             Контакт
@@ -196,13 +189,15 @@ export const Navbar = () => {
 
         {/* Desktop Right Side */}
         <div className="hidden items-center gap-3 lg:flex lg:gap-4">
-          <Link
-            href="/login"
+          {/* <Link
+            href="https://app.opus.mk"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             Најава
+          </Link> */}
+          <Link href="https://app.opus.mk">
+            <Button className="px-4 py-2 text-sm">Започнете бесплатно</Button>
           </Link>
-          <Button className="px-4 py-2 text-sm">Започнете бесплатно</Button>
         </div>
 
         {/* Mobile Menu Button */}
@@ -248,7 +243,7 @@ export const Navbar = () => {
               Цени
             </Link>
 
-            {/* Mobile Resources Accordion */}
+            {/* Mobile Resources Accordion
             <div>
               <button
                 onClick={() => setMobileResourcesOpen(!mobileResourcesOpen)}
@@ -287,9 +282,10 @@ export const Navbar = () => {
                 </div>
               </motion.div>
             </div>
+            */}
 
             <Link
-              href="#"
+              href="/contact"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
             >
@@ -303,19 +299,20 @@ export const Navbar = () => {
             <div className="mb-6 h-px w-full bg-[linear-gradient(to_right,transparent,rgba(0,0,0,0.15)_20%,rgba(0,0,0,0.15)_80%,transparent)] mask-[repeating-linear-gradient(to_right,black_0px,black_4px,transparent_4px,transparent_8px)] dark:hidden" />
             {/* Dotted gradient divider - dark mode */}
             <div className="mb-6 hidden h-px w-full bg-[linear-gradient(to_right,transparent,rgba(255,255,255,0.2)_20%,rgba(255,255,255,0.2)_80%,transparent)] mask-[repeating-linear-gradient(to_right,black_0px,black_4px,transparent_4px,transparent_8px)] dark:block" />
-            <Link
-              href="/login"
+            {/* <Link
+              href="https://app.opus.mk"
               onClick={() => setMobileMenuOpen(false)}
               className="block w-full rounded-xl border border-neutral-300 px-4 py-3.5 text-center text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
             >
               Најава
+            </Link> */}
+            <Link href="https://app.opus.mk" onClick={() => setMobileMenuOpen(false)}>
+              <Button
+                className="mt-3 w-full rounded-xl px-4 py-3.5 text-base"
+              >
+                Започнете бесплатно
+              </Button>
             </Link>
-            <Button
-              onClick={() => setMobileMenuOpen(false)}
-              className="mt-3 w-full rounded-xl px-4 py-3.5 text-base"
-            >
-              Започнете бесплатно
-            </Button>
           </div>
         </div>
       </motion.div>

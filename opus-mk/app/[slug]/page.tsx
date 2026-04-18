@@ -87,14 +87,14 @@ export default function BusinessProfilePage() {
   }
 
   const servicesByCategory: Record<string, typeof profile.services> = {};
-  profile.services.forEach((s) => {
+  profile.services.forEach((s: any) => {
     const cat = s.categoryName || "Services";
     if (!servicesByCategory[cat]) servicesByCategory[cat] = [];
     servicesByCategory[cat].push(s);
   });
 
-  const coverPhoto = profile.media.find((m) => m.type === "cover");
-  const gallery = profile.media.filter((m) => m.type === "gallery");
+  const coverPhoto = profile.media.find((m: any) => m.type === "cover");
+  const gallery = profile.media.filter((m: any) => m.type === "gallery");
 
   const staggerContainer: Variants = {
     hidden: { opacity: 0 },
@@ -228,7 +228,7 @@ export default function BusinessProfilePage() {
           <motion.div variants={fadeInUp} className="pb-4 pt-2">
             <h2 className="text-[13px] font-bold uppercase tracking-wider text-muted-foreground mb-3">Gallery</h2>
             <div className="flex gap-3 overflow-x-auto pb-4 snap-x px-1 -mx-1">
-              {gallery.map((media) => (
+              {gallery.map((media: any) => (
                 <motion.div key={media._id} whileHover={{ scale: 1.02 }} className="w-48 h-48 sm:w-64 sm:h-64 shrink-0 rounded-[1.25rem] overflow-hidden snap-center bg-muted relative shadow-sm border border-border/20">
                   <Image
                     src={media.url}
@@ -268,7 +268,7 @@ export default function BusinessProfilePage() {
                     </h3>
                   )}
                   <div className="space-y-3">
-                      {services.map((service) => (
+                      {services.map((service: any) => (
                         <motion.div key={service._id} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                           <Link href={`/${slug}/book?service=${service._id}`} className="group block">
                             <div className="flex items-center justify-between p-4 rounded-2xl bg-card border border-border/40 transition-all duration-300 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 active:scale-[0.98]">
@@ -350,7 +350,7 @@ export default function BusinessProfilePage() {
 
               {/* Review cards */}
               <div className="space-y-3">
-                {reviews.map((review) => (
+                {reviews.map((review: any) => (
                   <ReviewCard
                     key={review._id}
                     reviewerName={review.reviewerName}

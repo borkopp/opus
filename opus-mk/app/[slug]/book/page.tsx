@@ -110,7 +110,7 @@ export default function BookingPage() {
   }, [isAuthenticated, opusUser, hasPreFilled, customerName, customerEmail, customerPhone]);
 
   // ── Derived data ──
-  const selectedService = profile?.services.find((s) => s._id === selectedServiceId);
+  const selectedService = profile?.services.find((s: any) => s._id === selectedServiceId);
 
   // Build date options (next 14 days)
   const dateOptions = useMemo(() => {
@@ -272,7 +272,7 @@ export default function BookingPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {profile.services.map((service) => (
+              {profile.services.map((service: any) => (
                 <button
                   key={service._id}
                   onClick={() => handleSelectService(service._id)}
@@ -363,7 +363,7 @@ export default function BookingPage() {
                   >
                     Any Staff
                   </button>
-                  {profile.staff.map((member) => (
+                  {profile.staff.map((member: any) => (
                     <button
                       key={member._id}
                       onClick={() => { setSelectedStaffId(member._id); setSelectedSlot(null); }}
@@ -457,7 +457,7 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 animate-slide-up-fade-in">
-                  {slots.map((slot) => {
+                  {slots.map((slot: any) => {
                     const time = new Date(slot.startAt);
                     const timeStr = `${String(time.getUTCHours()).padStart(2, "0")}:${String(time.getUTCMinutes()).padStart(2, "0")}`;
                     const isSelected = selectedSlot?.startAt === slot.startAt;

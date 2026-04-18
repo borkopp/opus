@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { Input, InputProps } from "@/components/ui/input";
+import React, { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
 
-interface DebouncedInputProps extends Omit<InputProps, "onChange"> {
+interface DebouncedInputProps extends Omit<React.ComponentProps<"input">, "onChange"> {
   value: string;
   onChange: (value: string) => void;
   debounceMs?: number;

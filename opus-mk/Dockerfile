@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# Build context must be the repo root (.) so the convex symlink can be resolved.
 
 ARG NODE_VERSION=22-slim
 
@@ -6,7 +7,7 @@ ARG NODE_VERSION=22-slim
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY opus-mk/package.json opus-mk/package-lock.json* ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
@@ -24,7 +25,10 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+# Copy app source (excluding the convex symlink)
+COPY opus-mk/ .
+# Copy the real convex directory, resolving the symlink
+COPY opus-dashboard/convex/ ./convex/
 
 RUN npm run build
 

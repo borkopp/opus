@@ -129,10 +129,10 @@ function BookingsList({ clerkId }: { clerkId: string }) {
   // Split into upcoming and past
   const now = Date.now();
   const upcoming = bookings.filter(
-    (b) => b.startAt > now && b.status !== "cancelled" && b.status !== "no_show"
+    (b: any) => b.startAt > now && b.status !== "cancelled" && b.status !== "no_show"
   );
   const past = bookings.filter(
-    (b) => b.startAt <= now || b.status === "cancelled" || b.status === "no_show"
+    (b: any) => b.startAt <= now || b.status === "cancelled" || b.status === "no_show"
   );
 
   return (
@@ -143,7 +143,7 @@ function BookingsList({ clerkId }: { clerkId: string }) {
             Upcoming
           </h2>
           <div className="space-y-3">
-            {upcoming.map((booking) => (
+            {upcoming.map((booking: any) => (
               <BookingCard key={booking._id} booking={booking} isUpcoming />
             ))}
           </div>
@@ -156,7 +156,7 @@ function BookingsList({ clerkId }: { clerkId: string }) {
             Past
           </h2>
           <div className="space-y-3">
-            {past.map((booking) => (
+            {past.map((booking: any) => (
               <BookingCard key={booking._id} booking={booking} />
             ))}
           </div>

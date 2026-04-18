@@ -326,8 +326,8 @@ export const processMessage = internalAction({
 
     // Build message history for Claude
     const messages: Anthropic.MessageParam[] = history
-      .filter(m => m.role === "user" || m.role === "assistant")
-      .map(m => ({
+      .filter((m: any) => m.role === "user" || m.role === "assistant")
+      .map((m: any) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       }));
@@ -382,7 +382,7 @@ export const processMessage = internalAction({
         messages.push({ role: "user", content: toolResults });
       } else {
         // end_turn — extract JSON response
-        const textBlock = response.content.find(b => b.type === "text") as Anthropic.TextBlock | undefined;
+        const textBlock = response.content.find((b: any) => b.type === "text") as Anthropic.TextBlock | undefined;
         if (textBlock) {
           try {
             // Claude may wrap JSON in markdown code fences

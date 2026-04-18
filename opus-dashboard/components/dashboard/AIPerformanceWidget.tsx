@@ -50,21 +50,21 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
          y: 0,
          transition: {
             duration: 0.6,
-            ease: [0.22, 1, 0.36, 1],
+            ease: [0.22, 1, 0.36, 1] as number[],
             staggerChildren: 0.1
-         }
+         } as any
       }
    };
 
    const itemVars = {
       hidden: { opacity: 0, scale: 0.95, y: 10 },
-      visible: { 
-         opacity: 1, 
-         scale: 1, 
+      visible: {
+         opacity: 1,
+         scale: 1,
          y: 0,
-         transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+         transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as number[] }
       }
-   };
+   } as any;
 
    return (
       <motion.div

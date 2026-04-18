@@ -123,7 +123,7 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
         type="number"
         min={min}
         max={max}
-        value={bookingRules[field]}
+        value={String(bookingRules[field])}
         aria-describedby={errors[field] ? `${id}-error` : hint ? `${id}-hint` : undefined}
         aria-invalid={!!errors[field]}
         onChange={(val) => {

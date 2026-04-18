@@ -72,7 +72,8 @@ jobs:
       - name: Build & push opus-mk
         uses: docker/build-push-action@v6
         with:
-          context: ./opus-mk
+          context: .
+          file: ./opus-mk/Dockerfile
           push: true
           tags: |
             ${{ env.MK_IMAGE }}:latest

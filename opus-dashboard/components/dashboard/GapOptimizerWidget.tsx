@@ -175,7 +175,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                         transition={{ delay: 0.2 }}
                         className="text-[11px] font-semibold text-muted-foreground font-outfit uppercase tracking-widest mt-1 opacity-70 flex items-center gap-1"
                       >
-                        Est. Value: <span className="text-foreground"><Price minorUnits={summary.totalEstimatedRevenueMinorUnits} currency={summary.currency} /></span>
+                        Est. Value: <span className="text-foreground"><Price amount={summary.totalEstimatedRevenueMinorUnits} /></span>
                       </motion.div>
                     </div>
 

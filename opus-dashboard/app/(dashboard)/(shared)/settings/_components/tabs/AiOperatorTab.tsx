@@ -238,7 +238,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     step="0.05"
                     min="0"
                     max="1"
-                    value={ai.aiConfidenceThreshold}
+                    value={String(ai.aiConfidenceThreshold)}
                     aria-describedby={confidenceError ? "confidence-error" : "confidence-hint"}
                     aria-invalid={!!confidenceError}
                     className={cn("bg-white", confidenceError && "border-destructive")}

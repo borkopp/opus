@@ -242,8 +242,6 @@ export default function DashboardHome() {
           <RevenueChartWidget
             revenueData={weeklyRevenueChart}
             formatMoney={formatMoney}
-            totalRevenue={currentWeeekRevenue / 100}
-            percentChange={revenueGrowth}
           />
         </div>
         <div className="md:col-span-1 h-full min-h-0">

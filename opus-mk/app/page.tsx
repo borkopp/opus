@@ -222,7 +222,7 @@ export default function DiscoverPage() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-150"
             style={{ opacity: gridVisible ? 1 : 0 }}
           >
-            {displayItems.map((org) => (
+            {displayItems.map((org: any) => (
               <Link key={org._id} href={`/${org.slug}`} className="group block">
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border/40 transition-[border-color,box-shadow,transform] duration-150 hover:border-border hover:shadow-sm active:scale-[0.98] h-full">
                   {/* Logo */}

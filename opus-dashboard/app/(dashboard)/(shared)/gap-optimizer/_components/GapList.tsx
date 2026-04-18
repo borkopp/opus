@@ -69,7 +69,7 @@ function GapCard({ gap, orgId }: { gap: any, orgId: string }) {
                         <span>{gap.staffName}</span>
                         <span className="text-border text-xs">•</span>
                         <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                            <Price minorUnits={gap.estimatedRevenueMinorUnits} currency={gap.currency || "MKD"} />
+                            <Price amount={gap.estimatedRevenueMinorUnits} />
                         </span>
                     </div>
                 </div>

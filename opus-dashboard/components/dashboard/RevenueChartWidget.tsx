@@ -26,20 +26,20 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as number[],
         staggerChildren: 0.1
-      }
+      } as any
     }
   };
 
   const itemVars = {
     hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
+      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as number[] }
     }
-  };
+  } as any;
 
   // Identify today
   const today = new Date().getDay();

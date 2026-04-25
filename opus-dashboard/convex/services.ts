@@ -133,6 +133,11 @@ export const createService = mutation({
             createdAt: Date.now(),
         });
 
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "service",
+            entityId: serviceId,
+        });
+
         return serviceId;
     },
 });
@@ -240,6 +245,11 @@ export const updateService = mutation({
             await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
         }
 
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "service",
+            entityId: args.serviceId,
+        });
+
         return args.serviceId;
     }
 });
@@ -280,6 +290,12 @@ export const deactivateService = mutation({
 
         // Recompute listing status — a service was deactivated
         await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });
+
+        // Remove the embedding row — deactivated/deleted service should not appear in search
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "service",
+            entityId: args.serviceId,
+        });
 
         return null;
     }

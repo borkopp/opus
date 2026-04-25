@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 // ─────────────────────────────────────────────────────
 // REVIEWS
@@ -112,6 +113,12 @@ export const create = mutation({
             resourceId: reviewId,
             after: { rating: args.rating, bookingId: args.bookingId },
             createdAt: now,
+        });
+
+        // Refresh the org's reputation embedding — new review changes the snippet
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "reputation",
+            entityId: args.orgId,
         });
 
         return reviewId;

@@ -12,7 +12,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.87.0",
+    "@anthropic-ai/sdk": "^0.91.1",
     "@clerk/clerk-react": "^5.60.0",
     "@clerk/nextjs": "^6.37.3",
     "@hookform/resolvers": "^5.2.2",
@@ -30,6 +30,7 @@
     "motion": "^12.38.0",
     "next": "^16.1.6",
     "next-themes": "^0.4.6",
+    "openai": "^6.34.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",

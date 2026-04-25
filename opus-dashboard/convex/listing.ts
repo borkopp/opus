@@ -169,6 +169,11 @@ export const publishOrg = mutation({
             after: { listingStatus: "published" },
             createdAt: now,
         });
+
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "org",
+            entityId: args.orgId,
+        });
     },
 });
 
@@ -204,6 +209,11 @@ export const unpublishOrg = mutation({
             before: { listingStatus: org.listingStatus },
             after: { listingStatus: "unpublished" },
             createdAt: now,
+        });
+
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "org",
+            entityId: args.orgId,
         });
     },
 });
@@ -290,6 +300,11 @@ export const recomputeListingStatus = internalMutation({
                 before: { listingStatus: currentStatus },
                 after: { listingStatus: newStatus, allBlockingMet: allMet },
                 createdAt: now,
+            });
+
+            await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+                entityType: "org",
+                entityId: args.orgId,
             });
         }
     },

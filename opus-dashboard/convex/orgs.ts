@@ -144,6 +144,11 @@ export const createOrg = mutation({
             createdAt: Date.now(),
         });
 
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "org",
+            entityId: orgId,
+        });
+
         return orgId;
     },
 });
@@ -282,6 +287,19 @@ export const updateProfile = mutation({
         if (hasListingChange) {
             await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId });
         }
+
+        // Re-embed if any searchable text field changed
+        const embeddingRelevantFields = [
+            "name", "tagline", "bio", "tags", "priceRange", "city", "neighborhood",
+            "beautyCategory", "cuisine", "venueType",
+        ] as const;
+        const hasEmbeddingChange = embeddingRelevantFields.some((k) => fields[k] !== undefined);
+        if (hasEmbeddingChange) {
+            await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+                entityType: "org",
+                entityId: orgId,
+            });
+        }
     },
 });
 
@@ -317,6 +335,11 @@ export const updatePublishStatus = mutation({
             before: { listingStatus: org.listingStatus },
             after: { listingStatus: args.isPublished ? "published" : "unpublished" },
             createdAt: now,
+        });
+
+        await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
+            entityType: "org",
+            entityId: args.orgId,
         });
     },
 });

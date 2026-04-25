@@ -47,6 +47,7 @@ export function useOpusUser() {
 export function OpusUserProvider({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const getOrCreate = useMutation(api.opusUsers.getOrCreate);
+  const linkSession = useMutation(api.marketplace.conversations.linkSessionToOpusUser);
   const [synced, setSynced] = useState(false);
   const [syncedUserId, setSyncedUserId] = useState<Id<"opus_users"> | null>(null);
 
@@ -64,9 +65,17 @@ export function OpusUserProvider({ children }: { children: ReactNode }) {
       .then((id) => {
         setSyncedUserId(id);
         setSynced(true);
+        // Link any in-progress marketplace chat session to this user
+        const sessionId =
+          typeof window !== "undefined"
+            ? localStorage.getItem("opus_chat_session")
+            : null;
+        if (sessionId) {
+          linkSession({ sessionId, opusUserId: id }).catch(() => {});
+        }
       })
       .catch(console.error);
-  }, [isLoaded, isSignedIn, user, synced, getOrCreate]);
+  }, [isLoaded, isSignedIn, user, synced, getOrCreate, linkSession]);
 
   // Reset on sign-out
   useEffect(() => {

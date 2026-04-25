@@ -3,7 +3,7 @@ import { AuthConfig } from "convex/server";
 export default {
   providers: [
     {
-      domain: "https://delicate-hyena-31.clerk.accounts.dev",
+      domain: process.env.CLERK_JWT_ISSUER_DOMAIN ?? "https://clerk.opus.mk",
       applicationID: "convex",
     },
   ],

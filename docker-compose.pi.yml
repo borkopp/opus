@@ -1,4 +1,40 @@
 services:
+  # ── Self-hosted Convex backend (queries, mutations, websockets) ───────────
+  convex-backend:
+    image: ghcr.io/get-convex/convex-backend:latest
+    container_name: convex-backend
+    ports:
+      - "127.0.0.1:3210:3210"   # API / websocket
+      - "127.0.0.1:3211:3211"   # HTTP actions
+    environment:
+      INSTANCE_NAME: ${CONVEX_INSTANCE_NAME}
+      INSTANCE_SECRET: ${CONVEX_INSTANCE_SECRET}
+    env_file:
+      - /opt/opus/.env.convex
+    volumes:
+      - convex-data:/convex/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3210/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ── Self-hosted Convex admin dashboard (localhost only) ───────────────────
+  convex-dashboard:
+    image: ghcr.io/get-convex/convex-dashboard:latest
+    container_name: convex-dashboard
+    ports:
+      - "127.0.0.1:6791:6791"
+    environment:
+      NEXT_PUBLIC_DEPLOYMENT_URL: http://127.0.0.1:3210
+    depends_on:
+      convex-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── opus-dashboard (https://dashboard.opus.mk) ────────────────────────────
   opus-dashboard:
     build:
       context: ./opus-dashboard
@@ -8,9 +44,12 @@ services:
         NEXT_PUBLIC_CONVEX_SITE_URL: ${NEXT_PUBLIC_CONVEX_SITE_URL}
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
         NEXT_PUBLIC_ROOT_DOMAIN: ${NEXT_PUBLIC_ROOT_DOMAIN}
+        NEXT_PUBLIC_MK_URL: ${NEXT_PUBLIC_MK_URL}
+        NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
     image: opus-dashboard:local
+    container_name: opus-dashboard
     ports:
-      - "3006:3000"
+      - "127.0.0.1:3006:3000"
     env_file:
       - /opt/opus/.env.dashboard
     restart: unless-stopped
@@ -19,8 +58,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 30s
 
+  # ── opus-mk (https://app.opus.mk) ─────────────────────────────────────────
   opus-mk:
     build:
       context: .
@@ -28,9 +68,13 @@ services:
       args:
         NEXT_PUBLIC_CONVEX_URL: ${NEXT_PUBLIC_CONVEX_URL}
         NEXT_PUBLIC_CONVEX_SITE_URL: ${NEXT_PUBLIC_CONVEX_SITE_URL}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_DASHBOARD_URL: ${NEXT_PUBLIC_DASHBOARD_URL}
+        NEXT_PUBLIC_MAPBOX_TOKEN: ${NEXT_PUBLIC_MAPBOX_TOKEN}
     image: opus-mk:local
+    container_name: opus-mk
     ports:
-      - "3007:3000"
+      - "127.0.0.1:3007:3000"
     env_file:
       - /opt/opus/.env.mk
     restart: unless-stopped
@@ -39,4 +83,25 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 30s
+
+  # ── Cloudflare Tunnel ─────────────────────────────────────────────────────
+  # Reads /opt/opus/cloudflared/config.yml and the credentials JSON mounted
+  # into /etc/cloudflared. `cloudflared tunnel login` + `tunnel create opus`
+  # are run on the host first; the resulting <UUID>.json is symlinked into
+  # /opt/opus/cloudflared/credentials.json.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - /opt/opus/cloudflared:/etc/cloudflared:ro
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      - opus-dashboard
+      - opus-mk
+      - convex-backend
+
+volumes:
+  convex-data:

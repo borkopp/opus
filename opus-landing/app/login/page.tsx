@@ -94,21 +94,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-function Logo() {
-  return (
-    <Link
-      href="/"
-      className="flex items-center gap-2 text-neutral-900 dark:text-white"
-    >
-      <Image
-        src="https://assets.aceternity.com/logo.png"
-        alt="Logo"
-        width={24}
-        height={24}
-        className="size-6"
-      />
-      <span className="text-lg font-semibold">Simplistic</span>
-    </Link>
-  );
-}

@@ -15,10 +15,10 @@ function NumberCounter({ value, prefix = "", suffix = "", decimals = 0 }: { valu
     const update = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Ease out expo
       const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      
+
       const current = start + (end - start) * ease;
       setDisplayValue(current);
 
@@ -52,10 +52,10 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
   };
 
   return (
-    <Card className="flex flex-col bg-card/60 backdrop-blur-md p-5 h-full overflow-hidden rounded-[24px] border-border/40 relative">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-      
-      <motion.div 
+    <Card className="flex flex-col bg-card p-5 h-full overflow-hidden relative">
+      {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" /> */}
+
+      <motion.div
         variants={containerVars}
         initial="hidden"
         animate="visible"
@@ -87,7 +87,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
         </motion.div>
 
         <motion.div variants={itemVars} className="flex items-center gap-3 mb-6">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.02, translateY: -2 }}
             className="group relative flex flex-col gap-0.5 items-center justify-center p-3.5 bg-secondary/20 rounded-[18px] flex-1 border border-border/30 transition-colors hover:bg-secondary/40 hover:border-primary/20 cursor-default"
           >
@@ -96,7 +96,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
             </span>
             <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">New <span className="serif-accent-inline text-[10px]">Visitors</span></span>
           </motion.div>
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.02, translateY: -2 }}
             className="group relative flex flex-col gap-0.5 items-center justify-center p-3.5 bg-secondary/20 rounded-[18px] flex-1 border border-border/30 transition-colors hover:bg-secondary/40 hover:border-primary/20 cursor-default"
           >
@@ -120,8 +120,8 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
               </div>
               <div className="flex flex-col gap-2.5">
                 {validCustomers.slice(0, 3).map((c: any, i: number) => (
-                  <motion.div 
-                    key={c.id} 
+                  <motion.div
+                    key={c.id}
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + (i * 0.1) }}
@@ -145,12 +145,12 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
         })()}
 
         {(insights.atRiskChurn > 0 || (noShowRisk?.customers && noShowRisk.customers.length > 0)) && (
-          <motion.div 
+          <motion.div
             variants={itemVars}
             className="mt-auto pt-4 border-t border-border/20 space-y-1.5"
           >
             {insights.atRiskChurn > 0 && (
-              <motion.div 
+              <motion.div
                 animate={{ scale: [1, 1.02, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 className="flex items-center justify-between p-2 rounded-xl bg-destructive/5 text-[11px] text-destructive font-bold font-outfit border border-destructive/10"
@@ -163,7 +163,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
               </motion.div>
             )}
             {noShowRisk?.customers?.length > 0 && (
-              <motion.div 
+              <motion.div
                 animate={{ scale: [1, 1.01, 1] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
                 className="flex items-center justify-between p-2 rounded-xl bg-accent/5 text-[11px] text-accent font-bold font-outfit border border-accent/10"

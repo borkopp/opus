@@ -137,7 +137,7 @@ export function DepositManagementTab({ orgId, initialData }: DepositManagementTa
           </div>
 
           {deposits.depositRequired && (
-            <div className="grid gap-6 mt-4 p-6 border border-border/60 rounded-xl bg-background shadow-sm">
+            <div className="grid gap-6 mt-4 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
               <div className="grid gap-2 max-w-sm">
                 <Label htmlFor="deposit-type">Calculation Method</Label>
                 <Select

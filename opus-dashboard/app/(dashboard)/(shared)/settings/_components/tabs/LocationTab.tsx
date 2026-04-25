@@ -82,7 +82,7 @@ export function LocationTab({ orgId, initialData }: LocationTabProps) {
             Set your address and pin your location on the map so customers can find you.
           </p>
         </div>
-        <div className="space-y-10">
+        <div className="grid gap-10 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           {/* Address fields */}
           <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
             <div className="sm:col-span-2 grid gap-2">

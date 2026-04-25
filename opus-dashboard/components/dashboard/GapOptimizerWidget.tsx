@@ -50,7 +50,10 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
       transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
       className="h-full"
     >
-      <Card className="ai-widget-overlay terracotta-glow group relative flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 overflow-hidden rounded-[28px] transition-all duration-500 shadow-sm hover:shadow-md">
+      <Card
+        style={{ '--ai-overlay-rotation': '180deg' } as any}
+        className="ai-widget-overlay terracotta-glow group relative flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 overflow-hidden rounded-[28px] transition-all duration-500 shadow-l"
+      >
 
         {/* Terracotta radial spotlight — design system pattern */}
         <div className="absolute inset-0 pointer-events-none" style={{

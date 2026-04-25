@@ -149,7 +149,7 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
           <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Booking <span className="serif-accent-inline text-2xl">Operations</span></h2>
           <p className="text-sm text-muted-foreground">Control how customers see and book your availability.</p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6 max-w-2xl">
+        <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l sm:grid-cols-2 max-w-2xl">
           {numField("slot-duration", "Slot Duration", "minutes", "slotDurationMins", 1, 480,
             "How long each appointment takes, e.g. 30 for a half-hour slot.")}
           {numField("buffer-time", "Buffer Time", "minutes", "bufferTimeMins", 0, 240,

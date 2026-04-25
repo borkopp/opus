@@ -25,8 +25,11 @@ const playfair = Playfair_Display({ subsets: ['latin'], weight: ['500', '600'], 
 // });
 
 export const metadata: Metadata = {
-  title: "OPUS",
-  description: "Omni-Service OS",
+  title: {
+    default: "OPUS",
+    template: "%s | OPUS",
+  },
+  description: "The intelligent operating system for modern service businesses. Unified scheduling, AI-powered automation, and business intelligence.",
   icons: {
     icon: "/convex.svg",
   },

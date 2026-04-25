@@ -190,7 +190,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
           {ai.aiEnabled && (
             <div className="space-y-6 mt-4">
               {/* ── Core Settings ── */}
-              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-sm">
+              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
                 {/* Persona Name with live chat bubble preview */}
                 <div className="grid gap-2 max-w-xl">
                   <Label htmlFor="persona-name">Persona Name</Label>
@@ -274,9 +274,9 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
               </div>
 
               {/* ── Channels with live-dot indicators ── */}
-              <div className="p-6 border border-border/60 rounded-xl bg-background shadow-sm space-y-4">
+              <div className="p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l space-y-4">
                 <div>
-                <h3 className="font-medium text-sm mb-0.5">Active <span className="serif-accent-inline text-sm">Channels</span></h3>
+                  <h3 className="font-medium text-sm mb-0.5">Active <span className="serif-accent-inline text-sm">Channels</span></h3>
                   <p className="text-xs text-muted-foreground">
                     Choose which channels the AI will handle.
                   </p>
@@ -322,7 +322,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
               </div>
 
               {/* ── Conversation Style ── */}
-              <div className="space-y-5">
+              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
                 <div>
                   <h3 className="font-medium text-sm mb-0.5">Conversation <span className="serif-accent-inline text-sm">Style</span></h3>
                   <p className="text-xs text-muted-foreground">
@@ -419,7 +419,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
               </div>
 
               {/* ── Working Hours ── */}
-              <div className="space-y-5">
+              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <h3 className="font-medium text-sm">Working Hours</h3>

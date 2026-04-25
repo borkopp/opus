@@ -14,8 +14,21 @@ import React, { useState } from "react";
 import { useTheme } from "next-themes";
 import { industryRoutes, getNavLinks } from "@/lib/vertical-nav-config";
 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useClerk } from "@clerk/nextjs";
+import { IconLogout, IconSettings, IconUser } from "@tabler/icons-react";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { isLoaded, isSignedIn } = useUser();
+    const { isLoaded, isSignedIn, user } = useUser();
+    const { signOut } = useClerk();
     const router = useRouter();
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
@@ -120,11 +133,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {!mounted && <div className="h-5 w-5" />}
                         </button>
                         {profile?.orgId && <NotificationBell orgId={profile.orgId} />}
-                        <img
-                            src={profile?.user?.avatarUrl || "https://ui-avatars.com/api/?name=User"}
-                            className="h-10 w-10 flex-shrink-0 rounded-full border border-border/60 shadow-sm"
-                            alt="Avatar"
-                        />
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="outline-none">
+                                    <img
+                                        src={profile?.user?.avatarUrl || "https://ui-avatars.com/api/?name=User"}
+                                        className="h-10 w-10 flex-shrink-0 rounded-full border border-border/60 shadow-sm hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
+                                        alt="Avatar"
+                                    />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56" align="end" forceMount>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">{profile?.user?.name || user?.fullName}</p>
+                                        <p className="text-xs leading-none text-muted-foreground">
+                                            {user?.primaryEmailAddress?.emailAddress}
+                                        </p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem onClick={() => router.push("/settings")}>
+                                        <IconSettings className="mr-2 h-4 w-4" />
+                                        <span>Settings</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuGroup>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:bg-destructive/10">
+                                    <IconLogout className="mr-2 h-4 w-4" />
+                                    <span>Log out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
             </header>

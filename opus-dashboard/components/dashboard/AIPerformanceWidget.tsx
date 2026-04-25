@@ -73,7 +73,10 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
          animate="visible"
          className="h-full"
       >
-         <Card className="ai-widget-overlay terracotta-glow flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 relative overflow-hidden rounded-[28px] transition-all duration-700 group border-border/40">
+         <Card
+            style={{ '--ai-overlay-rotation': '15deg' } as any}
+            className="ai-widget-overlay terracotta-glow flex flex-col h-full bg-card/70 shadow-l backdrop-blur-xl p-6 col-span-1 lg:col-span-1 relative overflow-hidden rounded-[28px] transition-all duration-700 group border-border/40"
+         >
 
             {/* Terracotta radial spotlight — design system pattern */}
             <div className="absolute inset-0 pointer-events-none" style={{

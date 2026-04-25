@@ -84,7 +84,7 @@ export function DomainTab({ orgId, initialData }: DomainTabProps) {
           <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Custom <span className="serif-accent-inline text-2xl">Domain</span></h2>
           <p className="text-sm text-muted-foreground">Use your own domain for your booking page.</p>
         </div>
-        <div className="space-y-4">
+        <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           <div className="grid gap-2 max-w-xl">
             <Label htmlFor="vercel-bound-cname-endpoint">
               Your custom domain

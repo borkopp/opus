@@ -102,7 +102,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto pb-10">
       {/* ── Page Header ── */}
-      <div className="flex items-start justify-between border-b border-border/40 pb-5">
+      {/* <div className="flex items-start justify-between border-b border-border/40 pb-5">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-semibold font-display tracking-tight text-foreground">
@@ -114,7 +114,7 @@ export default function SettingsPage() {
             Manage your organization&apos;s preferences, branding, and automation.
           </p>
         </div>
-      </div>
+      </div> */}
 
       <Tabs
         value={activeTab}

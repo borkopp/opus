@@ -64,7 +64,7 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
           </p>
         </div>
         
-        <div className="space-y-10">
+        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           <div className="flex items-center justify-between gap-4">
             <div>
               <Label htmlFor="gap-enabled" className="select-none font-medium cursor-pointer text-foreground">

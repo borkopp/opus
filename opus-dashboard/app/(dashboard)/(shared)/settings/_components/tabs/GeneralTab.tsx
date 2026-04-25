@@ -109,7 +109,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
           <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Display & <span className="serif-accent-inline text-2xl">Region</span></h2>
           <p className="text-sm text-muted-foreground">Set your timezone, language, and currency for the platform.</p>
         </div>
-        <div className="space-y-10">
+        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           <div className="grid gap-2 max-w-xl">
             <Label htmlFor="timezone">Timezone</Label>
             <DebouncedInput

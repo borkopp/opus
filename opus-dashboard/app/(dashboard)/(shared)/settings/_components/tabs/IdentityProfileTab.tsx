@@ -211,7 +211,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               The hero banner on your opus.mk listing.
             </p>
           </div>
-          <div className="space-y-10">
+          <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
             {cover ? (
               <div className="relative group rounded-xl overflow-hidden">
                 <img
@@ -275,7 +275,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               Your business name, tagline, and bio shown on opus.mk.
             </p>
           </div>
-          <div className="space-y-10">
+          <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
             <div className="flex items-start gap-6">
               {/* Logo upload — semantic button */}
               <div className="shrink-0">
@@ -390,7 +390,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               Add Photos
             </Button>
           </div>
-          <div className="space-y-10">
+          <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
             {gallery.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {gallery.map((m) => (
@@ -447,7 +447,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               How customers can reach you outside the platform.
             </p>
           </div>
-          <div className="space-y-10">
+          <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
             <div className="grid gap-1.5 max-w-xl">
               <Label htmlFor="phone" className="flex items-center gap-1.5">
                 <IconPhone size={14} className="text-muted-foreground" /> Phone Number
@@ -520,7 +520,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               Applied to your booking page and opus.mk listing.
             </p>
           </div>
-          <div className="space-y-10">
+          <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-2xl">
               {(
                 [

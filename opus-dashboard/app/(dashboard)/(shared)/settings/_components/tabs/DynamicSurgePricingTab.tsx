@@ -82,7 +82,7 @@ export function DynamicSurgePricingTab({ orgId, initialData }: DynamicSurgePrici
           </div>
 
           {surge.surgePricingEnabled && (
-            <div className="text-sm text-muted-foreground p-5 border border-dashed border-border/60 rounded-xl bg-background">
+            <div className="text-sm text-muted-foreground p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
               Surge rules are configured by your account team and applied automatically.
               <span className="font-medium mt-2 block text-foreground">
                 Active rules: {surge.surgeRules.length}

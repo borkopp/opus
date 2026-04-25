@@ -124,7 +124,7 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
             Choose how and when customers receive booking alerts.
           </p>
         </div>
-        <div className="space-y-10">
+        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           <div className="divide-y divide-border/50 border border-border/60 rounded-xl overflow-hidden">
             {([
               { id: "sms-enabled",      label: "SMS Text Messages",     desc: "Send confirmation and reminder texts to customers",      key: "smsEnabled" as const },
@@ -144,7 +144,7 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
               </div>
             ))}
           </div>
-          <div className="grid gap-2 mt-2 max-w-xl">
+          <div className="grid gap-2 max-w-xl">
             <Label htmlFor="reminder-hours">
               Send reminders before appointment{" "}
               <span className="text-muted-foreground font-normal ml-1">
@@ -193,7 +193,7 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
             Control in-app notifications shown in your dashboard navbar.
           </p>
         </div>
-        <div className="space-y-10">
+        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
           {/* Master toggle */}
           <div className="flex items-center justify-between gap-4">
             <div>

@@ -4,7 +4,7 @@ import { SignIn } from "@clerk/nextjs";
 export default function Login() {
     return (
         <AuthLayout>
-            <SignIn fallbackRedirectUrl="/onboarding" signUpUrl="/signup" />
+            <SignIn path="/login" fallbackRedirectUrl="/onboarding" signUpUrl="/signup" />
         </AuthLayout>
     );
 }

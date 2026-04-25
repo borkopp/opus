@@ -6,27 +6,27 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 function StatCounter({ value, suffix = "", decimals = 0 }: { value: number, suffix?: string, decimals?: number }) {
-  const [displayValue, setDisplayValue] = useState(0);
+   const [displayValue, setDisplayValue] = useState(0);
 
-  useEffect(() => {
-    let start = 0;
-    const end = value;
-    const duration = 1500;
-    const startTime = performance.now();
+   useEffect(() => {
+      let start = 0;
+      const end = value;
+      const duration = 1500;
+      const startTime = performance.now();
 
-    const update = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 4); // Ease-out-quart
-      const current = start + (end - start) * ease;
-      setDisplayValue(current);
-      if (progress < 1) requestAnimationFrame(update);
-    };
+      const update = (currentTime: number) => {
+         const elapsed = currentTime - startTime;
+         const progress = Math.min(elapsed / duration, 1);
+         const ease = 1 - Math.pow(1 - progress, 4); // Ease-out-quart
+         const current = start + (end - start) * ease;
+         setDisplayValue(current);
+         if (progress < 1) requestAnimationFrame(update);
+      };
 
-    requestAnimationFrame(update);
-  }, [value]);
+      requestAnimationFrame(update);
+   }, [value]);
 
-  return <>{displayValue.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>;
+   return <>{displayValue.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>;
 }
 
 interface StaffUtilisationItem {
@@ -83,8 +83,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
       >
          <Card className="flex flex-col bg-card p-5 col-span-1 lg:col-span-1 h-full rounded-[24px] border-border/40 shadow-sm transition-all duration-500 hover:shadow-md">
             <motion.div variants={itemVars} className="flex justify-between items-center mb-4">
-               <h2 className="text-xl font-semibold font-display text-primary">Staff Capacity</h2>
-               <div className="w-1.5 h-1.5 rounded-full bg-primary/30 animate-pulse" />
+               <h2 className="text-xl font-semibold font-display text-primary">Staff <span className="serif-accent-inline">Capacity</span></h2>
             </motion.div>
 
             <motion.div variants={itemVars} className="flex items-center gap-6 mb-5 pb-5 border-b border-border/20">
@@ -125,7 +124,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                   </div>
                </div>
                <div className="flex flex-col">
-                  <span className="text-3xl font-bold font-display leading-none">Overall</span>
+                  <span className="text-3xl font-bold font-display leading-none"><span className="text-3xl">Overall</span></span>
                   <span className="text-sm text-muted-foreground font-medium mt-1">
                      Shop Utilisation Today
                   </span>
@@ -139,8 +138,8 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                   staffUtilisation.slice(0, 4).map((s: any, idx: number) => {
                      const pct = Math.min(100, isNaN(s.utilisationPct) ? 0 : s.utilisationPct);
                      return (
-                        <motion.div 
-                           key={s.staffName} 
+                        <motion.div
+                           key={s.staffName}
                            variants={itemVars}
                            className="flex flex-col gap-2 group cursor-default"
                         >

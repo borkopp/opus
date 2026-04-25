@@ -146,8 +146,8 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Booking Operations</h2>
-          <p className="text-muted-foreground">Control how customers see and book your availability.</p>
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Booking <span className="serif-accent-inline text-2xl">Operations</span></h2>
+          <p className="text-sm text-muted-foreground">Control how customers see and book your availability.</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6 max-w-2xl">
           {numField("slot-duration", "Slot Duration", "minutes", "slotDurationMins", 1, 480,
@@ -161,7 +161,7 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
         </div>
 
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} />
             {isSaving ? "Saving…" : "Save Booking Rules"}
           </Button>

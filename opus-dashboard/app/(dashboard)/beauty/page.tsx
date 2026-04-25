@@ -13,6 +13,7 @@ import {
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { formatPrice } from "@/components/ui/price";
+import { motion } from "framer-motion";
 
 // Widgets
 import { RevenueTargetWidget } from "@/components/dashboard/RevenueTargetWidget";
@@ -131,7 +132,7 @@ export default function DashboardHome() {
   if (profile === undefined) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
@@ -167,7 +168,7 @@ export default function DashboardHome() {
   ) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
@@ -205,11 +206,18 @@ export default function DashboardHome() {
   const utilisationPct = totalAvailableMins > 0 ? Math.round((totalBookedMins / totalAvailableMins) * 100) : 0;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto overflow-visible h-[calc(100vh-150px)]">
+    <div className="flex flex-col gap-8 w-full max-w-[1700px] mx-auto overflow-visible min-h-[calc(100vh-150px)]">
+      {/* Greeting Header */}
       {/* <GreetingHeader profile={profile} /> */}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 overflow-visible min-h-0">
-        {/* First Row: Schedule, Next In, and Staff */}
+      {/* ── Dashboard Grid ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 overflow-visible min-h-0"
+      >
+        {/* ── Row 1: Schedule + AI Widgets + Staff ── */}
         <div className="md:col-span-2 h-full max-h-[500px] min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
@@ -227,7 +235,7 @@ export default function DashboardHome() {
           />
         </div>
 
-        {/* Second Row: Insights, Analytics, and AI */}
+        {/* ── Row 2: Insights + Revenue Chart + AI Performance ── */}
         <div className="md:col-span-1 h-full min-h-0">
           <CustomerInsightsWidget
             insights={customerInsights}
@@ -249,7 +257,7 @@ export default function DashboardHome() {
             aiPerformance={aiPerformance}
           />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

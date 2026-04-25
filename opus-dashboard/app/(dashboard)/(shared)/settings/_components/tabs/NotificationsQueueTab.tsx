@@ -119,8 +119,8 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Outbound Notifications</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Outbound <span className="serif-accent-inline text-2xl">Notifications</span></h2>
+          <p className="text-sm text-muted-foreground">
             Choose how and when customers receive booking alerts.
           </p>
         </div>
@@ -178,7 +178,7 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
           </div>
         </div>
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} />
             {isSaving ? "Saving…" : "Save Notification Settings"}
           </Button>
@@ -188,8 +188,8 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
       {/* ── Dashboard Alerts ── */}
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Dashboard Alerts</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Dashboard <span className="serif-accent-inline text-2xl">Alerts</span></h2>
+          <p className="text-sm text-muted-foreground">
             Control in-app notifications shown in your dashboard navbar.
           </p>
         </div>
@@ -234,7 +234,7 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
           )}
         </div>
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} />
             {isSaving ? "Saving…" : "Save Alert Settings"}
           </Button>

@@ -77,8 +77,8 @@ export function LocationTab({ orgId, initialData }: LocationTabProps) {
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Business Location</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Business <span className="serif-accent-inline text-2xl">Location</span></h2>
+          <p className="text-sm text-muted-foreground">
             Set your address and pin your location on the map so customers can find you.
           </p>
         </div>
@@ -156,7 +156,7 @@ export function LocationTab({ orgId, initialData }: LocationTabProps) {
           </div>
         </div>
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} /> Save Location
           </Button>
         </div>

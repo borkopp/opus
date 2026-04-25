@@ -4,6 +4,7 @@ import { ArrowRight, Plus, CalendarIcon, MessageSquare, Wand, Trash } from "luci
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 export function GreetingHeader({ profile }: { profile: any }) {
   const today = new Date();
@@ -47,30 +48,33 @@ export function GreetingHeader({ profile }: { profile: any }) {
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between w-full  relative z-10">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between w-full relative z-10"
+    >
       <div className="flex items-center gap-4 lg:gap-6 w-full lg:w-auto">
-        <div className="flex flex-col items-center justify-center bg-card rounded-[24px] shadow-s dark:shadow-l w-16 h-16 lg:w-20 lg:h-20 shrink-0">
+        <div className="flex flex-col items-center justify-center bg-card rounded-[24px] shadow-s dark:shadow-l w-16 h-16 lg:w-20 lg:h-20 shrink-0 border border-border/30">
           <span className="font-outfit text-xl lg:text-3xl font-bold leading-none">{format(today, "dd")}</span>
         </div>
         <div className="flex flex-col justify-center">
           <span className="text-md font-semibold">{format(today, "EEEE")}</span>
-          <span className="text-md text-muted-foreground">{format(today, "MMMM")}</span>
+          <span className="text-md text-muted-foreground"><span className="serif-accent-inline text-md">{format(today, "MMMM")}</span></span>
         </div>
-        {/* <div className="hidden lg:flex h-10 w-[1px] bg-border mx-2"></div> */}
-
       </div>
 
       <div className="flex flex-wrap items-center justify-start lg:justify-end gap-3 w-full lg:w-auto mt-2 lg:mt-0">
-        <Button onClick={handleClearData} variant="outline" className="rounded-full shadow-sm font-semibold border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors">
+        <Button onClick={handleClearData} variant="outline" className="rounded-full shadow-sm font-semibold border-destructive/40 text-destructive bg-destructive/10 hover:bg-destructive/20 transition-colors active:scale-[0.98]">
           <Trash className="h-4 w-4" />
         </Button>
-        <Button onClick={handleSeedData} variant="outline" className="rounded-full shadow-sm font-semibold border-primary/40 text-primary bg-primary/10 hover:bg-primary/20 transition-colors">
+        <Button onClick={handleSeedData} variant="outline" className="rounded-full shadow-sm font-semibold border-accent/40 text-accent bg-accent/10 hover:bg-accent/20 transition-colors active:scale-[0.98]">
           <Wand className="h-4 w-4" />
         </Button>
-        <Button variant="terracotta" className="rounded-full shadow-md px-6 py-6 hidden items-center justify-center lg:flex">
+        <Button variant="terracotta" className="rounded-full shadow-md px-6 py-6 hidden items-center justify-center lg:flex active:scale-[0.98]">
           <Plus className="h-4 w-4" /> New Booking
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

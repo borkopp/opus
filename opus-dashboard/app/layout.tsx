@@ -5,12 +5,13 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
-import { Syne, DM_Sans, DM_Mono, Outfit } from 'next/font/google'
+import { Syne, DM_Sans, DM_Mono, Outfit, Playfair_Display } from 'next/font/google'
 
 const syne = Syne({ subsets: ['latin'], weight: ['500', '600'], variable: '--font-syne' })
 const dmSans = DM_Sans({ subsets: ['latin'], weight: ['300', '400', '500'], variable: '--font-dm-sans' })
 const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400'], variable: '--font-dm-mono' })
 const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'], variable: '--font-outfit' })
+const playfair = Playfair_Display({ subsets: ['latin'], weight: ['500', '600'], style: 'italic', variable: '--font-playfair' })
 
 
 // const geistMono = Geist_Mono({
@@ -39,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${outfit.variable} font-sans antialiased`}
+        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${outfit.variable} ${playfair.variable} font-sans antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <ClerkProvider dynamic>

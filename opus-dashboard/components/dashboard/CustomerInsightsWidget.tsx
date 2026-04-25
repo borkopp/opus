@@ -62,14 +62,14 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
         className="flex flex-col h-full relative z-10"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold font-display text-primary tracking-tight">Insights & Today</h2>
+          <h2 className="text-xl font-semibold font-display text-primary tracking-tight"><span className="serif-accent-inline">Insights</span> & Today</h2>
           <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
         </div>
 
         {/* Today's Quick Stats */}
         <motion.div variants={itemVars} className="grid grid-cols-2 gap-3 border-b border-border/20 pb-6 mb-6">
           <div className="flex flex-col gap-1.5 group cursor-default">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <div className="flex items-center gap-1.5 micro-label text-muted-foreground">
               <TrendingUp className="w-3 h-3 text-green-500 transition-transform group-hover:translate-y-[-2px]" /> Revenue
             </div>
             <span className="text-2xl font-bold font-outfit text-foreground leading-none">
@@ -77,7 +77,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
             </span>
           </div>
           <div className="flex flex-col gap-1.5 border-l border-border/20 pl-4 group cursor-default">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <div className="flex items-center gap-1.5 micro-label text-muted-foreground">
               <Calendar className="w-3 h-3 text-primary transition-transform group-hover:rotate-12" /> Bookings
             </div>
             <span className="text-2xl font-bold font-outfit text-foreground leading-none">
@@ -94,7 +94,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
             <span className="font-outfit text-3xl font-black text-primary leading-none">
               <NumberCounter value={insights.newThisMonth} />
             </span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary/70 transition-colors">New Visitors</span>
+            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">New <span className="serif-accent-inline text-[10px]">Visitors</span></span>
           </motion.div>
           <motion.div 
             whileHover={{ scale: 1.02, translateY: -2 }}
@@ -103,7 +103,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
             <span className="font-outfit text-3xl font-black text-primary leading-none">
               <NumberCounter value={insights.returningThisMonth} />
             </span>
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary/70 transition-colors">Returning</span>
+            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">Returning</span>
           </motion.div>
         </motion.div>
 

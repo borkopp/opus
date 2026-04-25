@@ -16,7 +16,7 @@ export function LiveScheduleWidget({ groupedByStaff, handleAction, checkIn, comp
   return (
     <Card className="flex flex-col h-full bg-card p-5 rounded-[24px]">
       <div className="flex justify-between items-center mb-4 shrink-0">
-        <h2 className="text-xl font-semibold font-display text-primary">Live Schedule</h2>
+        <h2 className="text-xl font-semibold font-display text-primary"><span className="serif-accent-inline">Live</span> Schedule</h2>
         <Badge variant="outline" className="rounded-full shadow-sm text-[11px] font-bold font-outfit">
           {allBookings.length} Bookings Today
         </Badge>
@@ -35,12 +35,12 @@ export function LiveScheduleWidget({ groupedByStaff, handleAction, checkIn, comp
             {allBookings.map((b: any) => (
               <div key={b._id} className="flex items-center justify-between p-3 rounded-[20px] bg-popover border border-border/30 hover:bg-secondary/40 transition-all duration-300 group relative">
                 <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-card border border-border/40 shrink-0 shadow-sm text-[10px] font-bold font-outfit text-primary">
+                  <div className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-card border border-border/40 shrink-0 shadow-sm micro-label text-accent">
                     {format(new Date(b.startAt), "HH:mm")}
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="font-semibold text-sm text-primary truncate">{b.customerName}</span>
-                    <span className="text-[10px] font-medium text-muted-foreground/80 truncate flex items-center gap-1.5 uppercase tracking-wide">
+                    <span className="micro-label text-muted-foreground/80 truncate flex items-center gap-1.5">
                       {b.serviceName} <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 shrink-0" /> {b.staffName}
                     </span>
                   </div>

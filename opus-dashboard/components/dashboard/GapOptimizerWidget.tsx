@@ -31,7 +31,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
     if (manualScanning) return
     setManualScanning(true)
     try {
-      await scan({ 
+      await scan({
         orgId: orgId as any,
         detectedBy: "manual_scan"
       })
@@ -50,56 +50,38 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
       transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
       className="h-full"
     >
-      <Card className="group relative flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 overflow-hidden rounded-[28px] transition-all duration-500 shadow-sm hover:shadow-md">
+      <Card className="ai-widget-overlay terracotta-glow group relative flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 overflow-hidden rounded-[28px] transition-all duration-500 shadow-sm hover:shadow-md">
 
-        {/* Premium AI Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-transparent to-accent/[0.08] pointer-events-none" />
+        {/* Terracotta radial spotlight — design system pattern */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          background: summary?.enabled
+            ? 'radial-gradient(circle at 70% 80%, rgba(206,93,69,0.04), transparent 60%)'
+            : 'none'
+        }} />
 
-        {/* Animated Blobs */}
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none animate-pulse duration-[4000ms]" />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-accent/15 rounded-full blur-[100px] pointer-events-none animate-pulse duration-[6000ms]" />
-
-        {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
+        {/* Ambient Blobs */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 bg-accent/6 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="flex justify-between items-start mb-6 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className={`absolute inset-0 rounded-2xl blur-lg transition-all duration-500 ${summary?.enabled ? "bg-primary/20 group-hover:bg-primary/30" : "bg-muted/30"}`} />
-              <div className={`flex items-center justify-center w-12 h-12 rounded-2xl shadow-lg relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 ${summary?.enabled ? "dark:bg-neutral-600 bg-gradient-to-br from-primary to-primary/80 text-white shadow-primary/20" : "bg-muted text-muted-foreground"}`}>
-                <motion.div
-                  animate={{
-                    rotate: summary?.enabled ? [0, 15, -15, 0] : 0,
-                    scale: summary?.enabled ? [1, 1.1, 1.1, 1] : 1
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Sparkles className={`h-6 w-6 ${summary?.enabled ? "text-white dark:text-black" : "text-muted-foreground"}`} />
-                </motion.div>
-              </div>
-            </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold font-display text-foreground leading-none">Fill Gaps</span>
-                {summary?.enabled ? (
-                  <div className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Live</span>
+                <span className="text-lg font-bold font-display text-foreground leading-none">Fill <span className="serif-accent-inline">Gaps</span></span>
+                {/* {summary?.enabled ? (
+                  <div className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 flex items-center gap-1">
+                    <div className="w-1 h-1 rounded-full bg-accent animate-pulse" />
+                    <span className="micro-label text-accent">Live</span>
                   </div>
                 ) : (
                   <div className="px-2 py-0.5 rounded-full bg-muted border border-border flex items-center gap-1">
                     <div className="w-1 h-1 rounded-full bg-muted-foreground" />
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Off</span>
+                    <span className="micro-label text-muted-foreground">Off</span>
                   </div>
-                )}
+                )} */}
               </div>
               <p className="text-xs text-muted-foreground mt-1 tracking-wide">
-                {isPacked ? "Schedule is packed" : "AI-detected open slots"}
+                {isPacked ? "Schedule is packed" : <>AI-detected <span className="serif-accent-inline text-xs">open</span> slots</>}
               </p>
             </div>
           </div>
@@ -110,7 +92,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
               size="icon"
               onClick={handleScan}
               disabled={manualScanning}
-              className="h-8 w-8 rounded-xl bg-primary/5 hover:bg-primary/10 text-primary border border-primary/10 transition-all duration-300 active:scale-95"
+              className="h-8 w-8 rounded-xl bg-accent/5 hover:bg-accent/10 text-accent border border-accent/10 transition-all duration-300 active:scale-95"
             >
               <RefreshCw className={`h-4 w-4 ${manualScanning ? "animate-spin" : ""}`} />
             </Button>
@@ -146,7 +128,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                     >
                       <CheckIcon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                     </motion.div>
-                    <span className="text-lg font-semibold font-display text-emerald-600 dark:text-emerald-400">Zero Gaps!</span>
+                    <span className="text-lg font-semibold font-display text-emerald-600 dark:text-emerald-400">Zero <span className="serif-accent-inline text-lg !text-emerald-500">Gaps!</span></span>
                     <span className="text-muted-foreground text-xs font-medium mt-1">Ai has found no gaps to fill.</span>
                   </motion.div>
                 ) : (
@@ -167,15 +149,15 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                         >
                           {summary.openCount}
                         </motion.span>
-                        <span className="text-primary font-bold text-sm">recoverable gaps</span>
+                        <span className="serif-accent-inline text-base">recoverable gaps</span>
                       </div>
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
-                        className="text-[11px] font-semibold text-muted-foreground font-outfit uppercase tracking-widest mt-1 opacity-70 flex items-center gap-1"
+                        className="micro-label text-muted-foreground mt-2 flex items-center gap-1"
                       >
-                        Est. Value: <span className="text-foreground"><Price amount={summary.totalEstimatedRevenueMinorUnits} /></span>
+                        Est. Value: <span className="text-foreground font-outfit"><Price amount={summary.totalEstimatedRevenueMinorUnits} /></span>
                       </motion.div>
                     </div>
 
@@ -187,7 +169,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                     >
                       <div className="flex flex-col gap-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-xs font-bold text-foreground/80 uppercase tracking-tight font-outfit">
+                          <span className="micro-label text-foreground/80">
                             Auto-Sent
                           </span>
                           <span className="text-sm font-black text-indigo-500 font-outfit">
@@ -198,8 +180,8 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
 
                       <div className="flex flex-col gap-2">
                         <div className="flex justify-between items-end">
-                          <span className="text-xs font-bold text-foreground/80 uppercase tracking-tight font-outfit">
-                            Filled
+                          <span className="micro-label text-foreground/80">
+                            <span className="serif-accent-inline text-[10px]">Filled</span>
                           </span>
                           <span className="text-sm font-black text-emerald-500 font-outfit">
                             {summary.filledCount}
@@ -213,10 +195,10 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
               </AnimatePresence>
             </div>
 
-            <div className="pt-5 mt-auto border-t border-primary/10 relative z-10 w-full group/link">
+            <div className="pt-5 mt-auto border-t border-accent/10 relative z-10 w-full group/link">
               <Link href="/gap-optimizer" className="w-full">
-                <button className="w-full flex items-center justify-between hover:bg-primary/5 rounded-2xl h-11 px-4 text-xs font-bold text-primary group-hover:translate-y-[-2px] transition-all duration-300">
-                  View AI Manager
+                <button className="w-full flex items-center justify-between hover:bg-accent/5 rounded-2xl h-11 px-4 text-xs font-bold text-accent group-hover:translate-y-[-2px] transition-all duration-300">
+                  View AI <span className="serif-accent-inline text-xs ml-1">Manager</span>
                   <div className="flex items-center gap-1">
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">View</span>
                     <ArrowRight className="h-4 w-4" />
@@ -227,11 +209,8 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
           </>
         ) : (
           <div className="flex flex-col flex-1 justify-center items-center relative z-10 gap-4 text-center px-2">
-            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
-              <Sparkles className="h-7 w-7 text-muted-foreground/50" />
-            </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Gap Optimizer is off</p>
+              <p className="text-sm font-semibold text-foreground">Gap Optimizer is <span className="serif-accent-inline text-sm">off</span></p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Enable AI to automatically fill cancellations and gaps in your schedule.
               </p>
@@ -239,7 +218,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
             <Link href="/settings?tab=gaps" className="w-full mt-2">
               <Button
                 variant="outline"
-                className="w-full rounded-2xl h-10 text-xs font-bold gap-2 border-primary/30 text-primary hover:bg-primary/5 hover:text-primary hover:border-primary/60"
+                className="w-full rounded-2xl h-10 text-xs font-bold gap-2 border-accent/30 text-accent hover:bg-accent/5 hover:text-accent hover:border-accent/60"
               >
                 <Settings className="h-3.5 w-3.5" />
                 Configure in Settings

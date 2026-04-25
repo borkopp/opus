@@ -57,8 +57,8 @@ export function DynamicSurgePricingTab({ orgId, initialData }: DynamicSurgePrici
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Dynamic Surge Pricing</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Dynamic <span className="serif-accent-inline text-2xl">Surge</span> Pricing</h2>
+          <p className="text-sm text-muted-foreground">
             Automatically charge more during your busiest hours.
           </p>
         </div>
@@ -91,7 +91,7 @@ export function DynamicSurgePricingTab({ orgId, initialData }: DynamicSurgePrici
           )}
         </div>
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} />
             {isSaving ? "Saving…" : "Save Pricing Rules"}
           </Button>

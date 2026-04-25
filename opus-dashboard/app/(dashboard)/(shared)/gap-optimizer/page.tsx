@@ -16,7 +16,7 @@ export default function GapOptimizerPage() {
     if (!isLoaded || profile === undefined || openGaps === undefined) {
         return (
             <div className="flex h-[400px] w-full items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
             </div>
         );
     }

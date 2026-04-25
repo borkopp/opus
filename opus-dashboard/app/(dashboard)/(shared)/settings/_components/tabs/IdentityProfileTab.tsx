@@ -206,8 +206,8 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
         {/* ── Cover Photo ─────────────────────────────────────── */}
         <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-medium tracking-tight mb-1">Cover Photo</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Cover <span className="serif-accent-inline text-2xl">Photo</span></h2>
+            <p className="text-sm text-muted-foreground">
               The hero banner on your opus.mk listing.
             </p>
           </div>
@@ -270,8 +270,8 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
         {/* ── Identity & Profile ──────────────────────────────── */}
         <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-medium tracking-tight mb-1">Identity & Profile</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Identity & <span className="serif-accent-inline text-2xl">Profile</span></h2>
+            <p className="text-sm text-muted-foreground">
               Your business name, tagline, and bio shown on opus.mk.
             </p>
           </div>
@@ -372,7 +372,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
         <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
           <div className="flex items-start justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-2xl font-medium tracking-tight mb-1">Gallery</h2>
+              <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Gallery</h2>
               <p className="text-muted-foreground">Showcase your work, venue, and team.</p>
             </div>
             <Button
@@ -442,8 +442,8 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
         {/* ── Contact & Social ────────────────────────────────── */}
         <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-medium tracking-tight mb-1">Contact & Social</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Contact & <span className="serif-accent-inline text-2xl">Social</span></h2>
+            <p className="text-sm text-muted-foreground">
               How customers can reach you outside the platform.
             </p>
           </div>
@@ -515,8 +515,8 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
         {/* ── Brand Colors ────────────────────────────────────── */}
         <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
           <div className="mb-8">
-            <h2 className="text-2xl font-medium tracking-tight mb-1">Brand Colors</h2>
-            <p className="text-muted-foreground">
+            <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Brand <span className="serif-accent-inline text-2xl">Colors</span></h2>
+            <p className="text-sm text-muted-foreground">
               Applied to your booking page and opus.mk listing.
             </p>
           </div>
@@ -572,7 +572,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="gap-2"
+            className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform"
           >
             <IconDeviceFloppy size={18} /> Save Branding
           </Button>

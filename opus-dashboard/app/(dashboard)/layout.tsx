@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <div className="flex w-full flex-col h-screen overflow-hidden">
-            <header className="flex h-20 shrink-0 items-center justify-between px-4 md:px-8 z-50 relative w-full pt-4">
+            <header className="flex h-20 shrink-0 items-center justify-between px-4 md:px-8 z-50 relative w-full pt-4 bg-background/80 backdrop-blur-xl">
                 <div className="flex items-center justify-between w-full max-w-[1700px] mx-auto relative">
                     <div className="flex items-center gap-2 shrink-0">
                         <Logo />
@@ -91,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     key={link.href}
                                     href={link.href}
                                     className={cn(
-                                        "flex items-center justify-center gap-2 h-10 rounded-full transition-all duration-300 ease-in-out cursor-pointer",
+                                        "flex items-center justify-center gap-2 h-10 rounded-full transition-all duration-300 ease-in-out cursor-pointer active:scale-[0.98]",
                                         isActive
                                             ? "bg-primary text-primary-foreground px-4 shadow-sm"
                                             : "hover:bg-secondary text-muted-foreground w-10 px-0"
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="flex items-center gap-4 shrink-0 justify-end">
                         <button
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                            className="flex items-center justify-center h-10 w-10 rounded-full bg-secondary text-primary hover:bg-secondary/80 transition-colors border border-border/40"
+                            className="flex items-center justify-center h-10 w-10 rounded-full bg-secondary text-primary hover:bg-secondary/80 transition-colors border border-border/40 active:scale-[0.98]"
                         >
                             {mounted && (theme === "dark" ? <IconSun className="h-5 w-5" /> : <IconMoon className="h-5 w-5" />)}
                             {!mounted && <div className="h-5 w-5" />}

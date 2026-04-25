@@ -58,7 +58,7 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0 border-border/40">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1 text-foreground">Gap Optimizer</h2>
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1 text-foreground">Gap <span className="serif-accent-inline text-2xl">Optimizer</span></h2>
           <p className="text-muted-foreground text-sm">
             AI automatically discovers holes in your schedule and privately invites VIP customers to fill them.
           </p>

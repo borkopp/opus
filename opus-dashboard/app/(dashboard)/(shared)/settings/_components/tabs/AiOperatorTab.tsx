@@ -154,17 +154,17 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
         {/* ── Section header with live status badge ── */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-medium tracking-tight">
-              AI Booking Assistant
+            <h2 className="text-2xl font-medium font-display tracking-tight">
+              AI Booking <span className="serif-accent-inline text-2xl">Assistant</span>
             </h2>
             {ai.aiEnabled && (
-              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
                 Live
               </span>
             )}
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Let an AI handle customer messages and booking requests automatically.
           </p>
         </div>
@@ -276,7 +276,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
               {/* ── Channels with live-dot indicators ── */}
               <div className="p-6 border border-border/60 rounded-xl bg-background shadow-sm space-y-4">
                 <div>
-                  <h3 className="font-medium text-sm mb-0.5">Active Channels</h3>
+                <h3 className="font-medium text-sm mb-0.5">Active <span className="serif-accent-inline text-sm">Channels</span></h3>
                   <p className="text-xs text-muted-foreground">
                     Choose which channels the AI will handle.
                   </p>
@@ -324,7 +324,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
               {/* ── Conversation Style ── */}
               <div className="space-y-5">
                 <div>
-                  <h3 className="font-medium text-sm mb-0.5">Conversation Style</h3>
+                  <h3 className="font-medium text-sm mb-0.5">Conversation <span className="serif-accent-inline text-sm">Style</span></h3>
                   <p className="text-xs text-muted-foreground">
                     Shape how the AI communicates with your customers.
                   </p>
@@ -508,7 +508,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
           )}
         </div>
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} /> {isSaving ? "Saving…" : "Save AI Settings"}
           </Button>
         </div>

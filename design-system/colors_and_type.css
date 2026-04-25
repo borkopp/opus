@@ -1,0 +1,246 @@
+/* =======================================================================
+   OPUS Design System — colors_and_type.css
+   Dark-mode-first. Terracotta accent on obsidian neutrals.
+   Load Google Fonts: Syne, DM Sans, DM Mono, Playfair Display, Audiowide.
+   ======================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@1,500;1,600&family=Audiowide&display=swap');
+
+:root {
+  /* ---------- Brand accent (terracotta) ---------- */
+  --accent:         #ce5d45;   /* primary accent - buttons, focus, links */
+  --accent-hot:     #e8472a;   /* louder variant - charts, glow */
+  --accent-soft:    #f4a07a;   /* tints, hovers on dark */
+  --accent-wash:    rgba(206, 93, 69, 0.08);  /* section glow */
+
+  /* ---------- Neutrals — DARK (default) ---------- */
+  --bg-0:           #000000;   /* page (deepest) */
+  --bg-1:           #0d0d0d;   /* app shell */
+  --bg-2:           #141412;   /* surface */
+  --bg-3:           #1e1e1c;   /* card */
+  --bg-4:           #262624;   /* popover / raised */
+  --bg-5:           #2a2a28;   /* hovered surface */
+
+  --fg-1:           #faf9f7;   /* primary text */
+  --fg-2:           #c7c3bc;   /* secondary text */
+  --fg-3:           #8a8680;   /* tertiary / placeholder */
+  --fg-4:           #57534e;   /* disabled / dividers */
+
+  --border:         rgba(255, 255, 255, 0.10);
+  --border-strong:  rgba(255, 255, 255, 0.18);
+  --border-focus:   rgba(206, 93, 69, 0.45);
+
+  /* ---------- Semantic ---------- */
+  --success:        #4ea97a;
+  --warning:        #e3b34a;
+  --danger:         #e8472a;
+  --info:           #6c8cd5;
+  --presence:       #3ecf5b;
+
+  /* ---------- Type families ---------- */
+  --font-display:   'DM Sans', system-ui, sans-serif;
+  --font-body:      'DM Sans', system-ui, sans-serif;
+  --font-mono:      'DM Mono', 'JetBrains Mono', monospace;
+  --font-serif:     'Playfair Display', Georgia, serif;  /* italic-only accents */
+  --font-logo:      'Audiowide', sans-serif;
+
+  /* ---------- Type scale (semantic) ---------- */
+  --h1-size:        clamp(2.75rem, 5vw, 4.5rem);   /* hero */
+  --h1-lh:          1.05;
+  --h1-weight:      500;
+  --h1-tracking:    -0.025em;
+
+  --h2-size:        clamp(2rem, 3.5vw, 3rem);
+  --h2-lh:          1.1;
+  --h2-weight:      500;
+  --h2-tracking:    -0.02em;
+
+  --h3-size:        1.5rem;
+  --h3-lh:          1.25;
+  --h3-weight:      500;
+  --h3-tracking:    -0.01em;
+
+  --h4-size:        1.125rem;
+  --h4-lh:          1.35;
+  --h4-weight:      600;
+
+  --body-size:      1rem;
+  --body-lh:        1.55;
+  --body-weight:    400;
+
+  --small-size:     0.875rem;
+  --small-lh:       1.45;
+
+  --micro-size:     0.75rem;
+
+  --label-size:     0.625rem;       /* 10px ALL-CAPS micro-labels */
+  --label-tracking: 0.15em;
+  --label-weight:   700;
+
+  /* ---------- Radii ---------- */
+  --radius-xs:      4px;
+  --radius-sm:      8px;
+  --radius-md:      12px;
+  --radius-lg:      16px;     /* default for cards */
+  --radius-xl:      20px;
+  --radius-2xl:     28px;
+  --radius-pill:    9999px;
+
+  /* ---------- Shadows (multi-layer) ---------- */
+  --shadow-s:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 1px 2px rgba(0,0,0,0.4);
+  --shadow-m:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 1px 2px rgba(0,0,0,0.5),
+    0 4px 8px rgba(0,0,0,0.3);
+  --shadow-l:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 1px 2px rgba(0,0,0,0.5),
+    0 6px 12px rgba(0,0,0,0.35),
+    0 20px 40px rgba(0,0,0,0.45);
+  --shadow-cta:
+    0 1px 0 rgba(255,255,255,0.15) inset,
+    0 3px 5px rgba(206,93,69,0.5),
+    0 10px 20px rgba(0,0,0,0.35);
+  --shadow-focus:
+    0 0 0 2px var(--bg-1),
+    0 0 0 4px var(--border-focus);
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ---------- Easing ---------- */
+  --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --spring:         linear(0, 0.5 30%, 1 70%, 0.95 85%, 1);
+
+  /* ---------- Layout ---------- */
+  --max-marketing: 1280px;
+  --max-dashboard: 1700px;
+  --header-h:      64px;
+}
+
+/* ---------- Light mode override ---------- */
+[data-theme="light"] {
+  --bg-0:   #f7f4ef;
+  --bg-1:   #faf9f7;
+  --bg-2:   #ffffff;
+  --bg-3:   #ffffff;
+  --bg-4:   #f3efe9;
+  --bg-5:   #ede8df;
+
+  --fg-1:   #1a1a18;
+  --fg-2:   #57534e;
+  --fg-3:   #78726b;
+  --fg-4:   #c2bdb4;
+
+  --border:        rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+}
+
+/* =======================================================================
+   Semantic typography — use as @apply'able classes or direct element styles
+   ======================================================================= */
+.opus-h1, .opus h1 {
+  font-family: var(--font-display);
+  font-size: var(--h1-size);
+  line-height: var(--h1-lh);
+  font-weight: var(--h1-weight);
+  letter-spacing: var(--h1-tracking);
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+.opus-h2, .opus h2 {
+  font-family: var(--font-display);
+  font-size: var(--h2-size);
+  line-height: var(--h2-lh);
+  font-weight: var(--h2-weight);
+  letter-spacing: var(--h2-tracking);
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+.opus-h3, .opus h3 {
+  font-family: var(--font-display);
+  font-size: var(--h3-size);
+  line-height: var(--h3-lh);
+  font-weight: var(--h3-weight);
+  letter-spacing: var(--h3-tracking);
+  color: var(--fg-1);
+}
+.opus-h4, .opus h4 {
+  font-family: var(--font-body);
+  font-size: var(--h4-size);
+  line-height: var(--h4-lh);
+  font-weight: var(--h4-weight);
+  color: var(--fg-1);
+}
+.opus-body, .opus p {
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: var(--body-lh);
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+.opus-small {
+  font-family: var(--font-body);
+  font-size: var(--small-size);
+  line-height: var(--small-lh);
+  color: var(--fg-2);
+}
+.opus-micro {
+  font-family: var(--font-body);
+  font-size: var(--micro-size);
+  color: var(--fg-3);
+}
+.opus-label {
+  font-family: var(--font-body);
+  font-size: var(--label-size);
+  letter-spacing: var(--label-tracking);
+  font-weight: var(--label-weight);
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.opus-mono, .opus code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+.opus-serif-accent {            /* italic display accent, usually terracotta */
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--accent);
+}
+.opus-logo {
+  font-family: var(--font-logo);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-1);
+}
+
+/* =======================================================================
+   Base page reset for .opus-root containers
+   ======================================================================= */
+.opus-root {
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: var(--body-lh);
+  color: var(--fg-1);
+  background: var(--bg-1);
+  font-feature-settings: "ss01", "cv01";
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}

@@ -1,0 +1,64 @@
+/* preview/card.css — shared wrapper for design system cards */
+@import url('../colors_and_type.css');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-1);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv01";
+}
+body {
+  width: 700px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.card {
+  padding: 20px 24px;
+  box-sizing: border-box;
+  width: 700px;
+}
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.swatch {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 64px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.swatch .hex {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-2);
+}
+.swatch .name {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+.label-eyebrow {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--fg-3);
+  margin-bottom: 10px;
+}

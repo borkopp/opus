@@ -130,14 +130,14 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">Fill Gaps</h1>
-                    <p className="text-muted-foreground mt-1">AI discovers gaps in your schedule and drafts outreach messages to your best customers.</p>
+                    <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">Fill <span className="serif-accent-inline text-3xl">Gaps</span></h1>
+                    <p className="text-sm text-muted-foreground mt-1">AI discovers gaps in your schedule and drafts outreach messages to your best customers.</p>
                 </div>
                 <div>
                     <Button
                         onClick={handleScan}
                         disabled={isScanning}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm transition-all rounded-full h-10 px-5 gap-2"
+                        className="bg-accent hover:bg-accent/90 text-white font-medium shadow-sm transition-all rounded-full h-10 px-5 gap-2 active:scale-[0.98]"
                     >
                         {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         {isScanning ? "Scanning..." : "Scan today"}

@@ -82,7 +82,7 @@ export default function SettingsPage() {
   if (profile === undefined || data === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
@@ -106,12 +106,12 @@ export default function SettingsPage() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-semibold font-display tracking-tight text-foreground">
-              Organization Settings
+              Organization <span className="serif-accent-inline text-2xl">Settings</span>
             </h1>
             {orgId && <ListedBadge orgId={orgId} />}
           </div>
           <p className="text-sm text-muted-foreground">
-            Manage your organization's preferences, branding, and automation.
+            Manage your organization&apos;s preferences, branding, and automation.
           </p>
         </div>
       </div>
@@ -126,7 +126,7 @@ export default function SettingsPage() {
         <div className="w-full md:w-56 lg:w-60 shrink-0">
           <TabsList className="flex flex-col h-auto w-full items-start bg-transparent p-0">
             {/* Core */}
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-3 pt-1 pb-2">
+            <p className="micro-label text-muted-foreground/50 px-3 pt-1 pb-2">
               Core
             </p>
             {[
@@ -139,15 +139,15 @@ export default function SettingsPage() {
               <TabsTrigger
                 key={value}
                 value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative"
+                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
               >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100 transition-opacity" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
                 {icon} {label}
               </TabsTrigger>
             ))}
 
             {/* Channels */}
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-3 pt-5 pb-2">
+            <p className="micro-label text-muted-foreground/50 px-3 pt-5 pb-2">
               Channels
             </p>
             {[
@@ -157,15 +157,15 @@ export default function SettingsPage() {
               <TabsTrigger
                 key={value}
                 value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative"
+                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
               >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100 transition-opacity" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
                 {icon} {label}
               </TabsTrigger>
             ))}
 
             {/* Identity */}
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50 px-3 pt-5 pb-2">
+            <p className="micro-label text-muted-foreground/50 px-3 pt-5 pb-2">
               Identity
             </p>
             {[
@@ -176,9 +176,9 @@ export default function SettingsPage() {
               <TabsTrigger
                 key={value}
                 value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative"
+                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
               >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-primary opacity-0 data-[state=active]:opacity-100 transition-opacity" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
                 {icon} {label}
               </TabsTrigger>
             ))}

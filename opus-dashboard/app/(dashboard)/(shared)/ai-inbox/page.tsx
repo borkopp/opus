@@ -25,7 +25,7 @@ export default function AIInboxPage() {
   if (!orgId || profile === undefined || conversations === undefined) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
       </div>
     );
   }
@@ -34,9 +34,9 @@ export default function AIInboxPage() {
     <div className="flex flex-col h-full">
       {/* Page header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0">
-        <IconMessageChatbot size={20} className="text-muted-foreground" />
+        <IconMessageChatbot size={20} className="text-accent" />
         <div>
-          <h1 className="text-lg font-semibold">AI Front-desk</h1>
+          <h1 className="text-lg font-semibold font-display">AI <span className="serif-accent-inline text-lg">Front-desk</span></h1>
           <p className="text-xs text-muted-foreground">Conversations handled by your AI agent</p>
         </div>
       </div>

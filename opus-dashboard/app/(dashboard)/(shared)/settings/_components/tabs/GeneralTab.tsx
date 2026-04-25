@@ -106,8 +106,8 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
     >
       <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
-          <h2 className="text-2xl font-medium tracking-tight mb-1">Display & Region</h2>
-          <p className="text-muted-foreground">Set your timezone, language, and currency for the platform.</p>
+          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Display & <span className="serif-accent-inline text-2xl">Region</span></h2>
+          <p className="text-sm text-muted-foreground">Set your timezone, language, and currency for the platform.</p>
         </div>
         <div className="space-y-10">
           <div className="grid gap-2 max-w-xl">
@@ -215,7 +215,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
         </div>
 
         <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
             <IconDeviceFloppy size={18} />
             {isSaving ? "Saving…" : "Save Settings"}
           </Button>

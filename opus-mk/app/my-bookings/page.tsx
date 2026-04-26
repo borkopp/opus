@@ -78,7 +78,7 @@ export default function MyBookingsPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 pt-6 pb-12">
+      <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 md:pb-32">
         {!isLoaded ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (

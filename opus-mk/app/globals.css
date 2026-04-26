@@ -32,6 +32,8 @@
   --color-card: var(--card);
   --color-rating: var(--rating);
   --color-success: var(--success);
+  --color-accent-soft: var(--accent-soft);
+  --color-surface-elevated: var(--surface-elevated);
   --color-online: var(--online);
   --color-cta: var(--cta);
   --color-cta-foreground: var(--cta-foreground);
@@ -90,6 +92,9 @@
   /* earthy emerald — confirmation, success states */
   --online: oklch(72% 0.20 142);
   /* fresh green — real-time presence indicators */
+  
+  --accent-soft: oklch(78% 0.10 35);
+  --surface-elevated: oklch(99% 0.004 75);
 
   --chart-1: oklch(57% 0.21 27);
   --chart-2: oklch(12% 0.004 60);
@@ -137,6 +142,9 @@
   --success: oklch(65% 0.16 162);
   --online: oklch(74% 0.20 142);
 
+  --accent-soft: oklch(72% 0.13 35);
+  --surface-elevated: oklch(20% 0.005 60);
+
   --chart-1: oklch(57% 0.21 27);
   --chart-2: oklch(92% 0.005 75);
   --chart-3: oklch(38% 0.004 60);
@@ -181,6 +189,9 @@
     --rating: oklch(80% 0.19 70);
     --success: oklch(65% 0.16 162);
     --online: oklch(74% 0.20 142);
+
+    --accent-soft: oklch(72% 0.13 35);
+    --surface-elevated: oklch(20% 0.005 60);
 
     --chart-1: oklch(57% 0.21 27);
     --chart-2: oklch(92% 0.005 75);
@@ -274,4 +285,12 @@
     opacity: 0;
     transform: scale(1);
   }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

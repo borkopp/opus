@@ -18,7 +18,7 @@ export function HeaderAuth() {
 
   if (!isSignedIn) {
     return (
-      <SignInButton mode="redirect">
+      <SignInButton mode="modal">
         <button className="text-xs font-semibold text-primary bg-secondary hover:bg-secondary/80 px-3 py-1.5 rounded-full transition-colors">
           Sign in
         </button>
@@ -28,13 +28,6 @@ export function HeaderAuth() {
 
   return (
     <div className="flex items-center gap-2">
-      <Link
-        href="/my-bookings"
-        className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-full hover:bg-secondary/60 transition-colors"
-      >
-        <IconCalendarEvent size={14} aria-hidden="true" />
-        <span className="hidden sm:inline">My Bookings</span>
-      </Link>
       <UserButton
         appearance={{
           elements: {

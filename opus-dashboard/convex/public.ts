@@ -98,14 +98,24 @@ export const listPublished = query({
             ? String(cursor + numItems)
             : null;
 
+        // Fetch covers
+        const covers = await Promise.all(page.map(o =>
+            ctx.db
+                .query("org_media")
+                .withIndex("by_org_type", (q) => q.eq("orgId", o._id).eq("type", "cover"))
+                .order("asc")
+                .first()
+        ));
+
         // Return only public-safe fields
         return {
-            items: page.map((o) => ({
+            items: page.map((o, i) => ({
                 _id: o._id,
                 name: o.name,
                 slug: o.slug,
                 industry: o.industry,
                 logoUrl: o.logoUrl,
+                coverImageUrl: covers[i]?.url,
                 tagline: o.tagline,
                 city: o.city,
                 neighborhood: o.neighborhood,
@@ -118,6 +128,7 @@ export const listPublished = query({
                 cuisine: o.cuisine,
                 venueType: o.venueType,
                 coordinates: o.coordinates,
+                openingHours: o.openingHours,
             })),
             nextCursor,
             totalCount: filtered.length,
@@ -300,19 +311,34 @@ export const searchPublished = query({
             ? results.filter((o) => o.city?.toLowerCase() === args.city!.toLowerCase())
             : results;
 
-        return filtered.map((o) => ({
+        const covers = await Promise.all(filtered.map(o =>
+            ctx.db
+                .query("org_media")
+                .withIndex("by_org_type", (q) => q.eq("orgId", o._id).eq("type", "cover"))
+                .order("asc")
+                .first()
+        ));
+
+        return filtered.map((o, i) => ({
             _id: o._id,
             name: o.name,
             slug: o.slug,
             industry: o.industry,
             logoUrl: o.logoUrl,
+            coverImageUrl: covers[i]?.url,
             tagline: o.tagline,
             city: o.city,
+            neighborhood: o.neighborhood,
+            tags: o.tags,
             averageRating: o.averageRating,
             reviewCount: o.reviewCount,
             priceRange: o.priceRange,
             beautyCategory: o.beautyCategory,
+            cuisine: o.cuisine,
+            venueType: o.venueType,
             coordinates: o.coordinates,
+            openingHours: o.openingHours,
+            isFeatured: !!(o.featuredUntil && o.featuredUntil > now),
         }));
     },
 });

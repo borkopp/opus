@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { Toaster } from "sonner";
 import { Syne, DM_Sans, DM_Mono, Audiowide, Instrument_Serif } from "next/font/google";
+import { FloatNav } from "@/components/FloatNav";
 
 const syne = Syne({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-syne" });
 const dmSans = DM_Sans({ subsets: ["latin"], weight: ["300", "400", "500"], variable: "--font-dm-sans" });
@@ -38,6 +39,7 @@ export default function RootLayout({
         <ClerkProvider>
           <ConvexClientProvider>
             {children}
+            <FloatNav />
             <Toaster richColors position="top-center" />
           </ConvexClientProvider>
         </ClerkProvider>

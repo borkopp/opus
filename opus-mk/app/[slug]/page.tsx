@@ -110,7 +110,7 @@ export default function BusinessProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-44">
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -392,7 +392,7 @@ export default function BusinessProfilePage() {
         initial={{ y: 100 }} 
         animate={{ y: 0 }} 
         transition={{ type: "spring", damping: 20, delay: 0.6 }}
-        className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border/40 p-4 z-50"
+        className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border/40 pt-4 px-4 pb-24 md:pb-28 z-50"
       >
         <div className="max-w-3xl mx-auto">
           <Link href={`/${slug}/book`}>

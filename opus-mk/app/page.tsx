@@ -8,7 +8,7 @@ import { useResolveCity } from "@/hooks/use-resolve-city";
 import Link from "next/link";
 
 export default function HomePage() {
-  const { city } = useResolveCity();
+  const { displayCity } = useResolveCity();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -17,10 +17,12 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <Logo className="text-xl" />
           <div className="flex items-center gap-3">
+            {displayCity && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <IconMapPin size={13} aria-hidden="true" />
-              <span>{city}</span>
+              <span>{displayCity}</span>
             </div>
+          )}
             <Link
               href="/discover"
               className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"

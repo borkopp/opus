@@ -35,7 +35,7 @@ function haversineKm(a: MKCity, b: { lat: number; lng: number }): number {
 export function resolveCityFromCoords(coords: {
   lat: number;
   lng: number;
-}): string {
+}): string | null {
   let best = MK_CITIES[0];
   let bestDist = haversineKm(best, coords);
   for (const city of MK_CITIES.slice(1)) {
@@ -45,6 +45,6 @@ export function resolveCityFromCoords(coords: {
       bestDist = d;
     }
   }
-  // If more than 50 km from any known city centroid, fall back to default
-  return bestDist < 50 ? best.name : "Skopje";
+  // If more than 50 km from any known city centroid, user is outside service area
+  return bestDist < 50 ? best.name : null;
 }

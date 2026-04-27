@@ -149,8 +149,8 @@ export async function POST(req: NextRequest) {
   let body: {
     query: string;
     sessionId: string;
-    city?: string;
-    coords?: { lat: number; lng: number };
+    city?: string | null;
+    coords?: { lat: number; lng: number } | null;
     locale?: string;
   };
   try {
@@ -159,9 +159,15 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { query, sessionId, city = "Skopje", coords, locale = "en" } = body;
+  const { query, sessionId, coords, locale = "en" } = body;
+  const city = body.city;
+
   if (!query?.trim() || !sessionId) {
     return new Response("query and sessionId required", { status: 400 });
+  }
+
+  if (!city) {
+    return new Response("Location access is required to find businesses near you.", { status: 400 });
   }
 
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -188,7 +194,7 @@ export async function POST(req: NextRequest) {
           query: query.trim().slice(0, MAX_QUERY_CHARS),
           sessionId,
           city,
-          coords,
+          coords: coords ?? undefined,
           locale,
         });
       } catch (err) {

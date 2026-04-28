@@ -59,16 +59,18 @@ function buildSystemPrompt(
     timeZone: "Europe/Skopje",
   });
 
-  const languageInstruction =
-    locale === "mk"
-      ? `\nЈазик: Секогаш одговарај на стандарден македонски јазик, пишувај на кирилица.\n${MK_VOCAB}`
-      : `\nLanguage: Detect the language from the user's message and reply in the same language. If Macedonian (Cyrillic), use standard Macedonian:\n${MK_VOCAB}\nIf English, reply in English.`;
+  const languageInstruction = `\nLanguage: Detect the language from the user's message and reply in the exact same language. If they ask in English, reply in English. If they ask in Macedonian (Cyrillic), reply in standard Macedonian:\n${MK_VOCAB}`;
 
   return `You are OPUS, a friendly local-discovery assistant for Macedonia.
 Today: ${dateStr} (Europe/Skopje). User location: ${city}.${languageInstruction}
 
-Write a SHORT conversational reply (2–4 sentences) about the search results below.
-Be warm, specific, and direct. Reference businesses by name.
+CRITICAL STRICTNESS RULES:
+1. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
+2. Cross-industry strictness: If the user asks for 'date night' or 'restaurant' (hospitality), DO NOT recommend barbershops, salons, or beauty services. If they ask for 'nails' or 'haircut' (beauty), DO NOT recommend restaurants or bars.
+3. If the SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
+4. If no businesses in the SEARCH RESULTS perfectly match the intent, apologize and explicitly say you couldn't find exactly what they're looking for. DO NOT recommend unrelated businesses.
+
+Write a SHORT conversational reply (2–4 sentences). Be warm, specific, and direct. Reference businesses by name.
 ${timeHint ? `Time context: ${timeHint}. If a business is closed at that time, mention it or skip it.` : ""}
 Do NOT list businesses as bullet points — weave them naturally into prose.
 Do NOT output JSON. Plain conversational text only.
@@ -150,6 +152,7 @@ export async function POST(req: NextRequest) {
     query: string;
     sessionId: string;
     city?: string | null;
+    displayCity?: string | null;
     coords?: { lat: number; lng: number } | null;
     locale?: string;
   };
@@ -159,7 +162,7 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { query, sessionId, coords, locale = "en" } = body;
+  const { query, sessionId, coords, locale = "en", displayCity } = body;
   const city = body.city;
 
   if (!query?.trim() || !sessionId) {
@@ -220,7 +223,7 @@ export async function POST(req: NextRequest) {
       const contextJson = candidatesToContextJson(topCandidates);
       const timeHintStr = timeHintFromKind(timeIntent.kind);
 
-      const systemPrompt = buildSystemPrompt(city, locale, contextJson, timeHintStr, Date.now());
+      const systemPrompt = buildSystemPrompt(displayCity || city, locale, contextJson, timeHintStr, Date.now());
       const historyMessages: Anthropic.MessageParam[] = history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
@@ -228,11 +231,29 @@ export async function POST(req: NextRequest) {
 
       // 2. Stream Anthropic prose response
       let fullText = "";
+      let recommendedSlugs: string[] | null = null;
       try {
         const claudeStream = anthropic.messages.stream({
           model: "claude-haiku-4-5-20251001",
           max_tokens: MAX_RESPONSE_TOKENS,
           system: systemPrompt,
+          tools: [
+            {
+              name: "show_businesses",
+              description: "Use this tool to display specific businesses to the user in the UI. You MUST call this tool if you are recommending any businesses. ONLY include the slugs of businesses that PERFECTLY match the user's intent. If none match, DO NOT call this tool, or call it with an empty array.",
+              input_schema: {
+                type: "object",
+                properties: {
+                  slugs: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Slugs of the businesses to display in the UI."
+                  }
+                },
+                required: ["slugs"]
+              }
+            }
+          ],
           messages: [
             ...historyMessages,
             { role: "user", content: query.trim().slice(0, MAX_QUERY_CHARS) },
@@ -253,8 +274,18 @@ export async function POST(req: NextRequest) {
         const finalMessage = await claudeStream.finalMessage();
         const usage = finalMessage.usage;
 
+        for (const block of finalMessage.content) {
+          if (block.type === "tool_use" && block.name === "show_businesses") {
+            recommendedSlugs = (block.input as any).slugs || [];
+          }
+        }
+
         // 3. Emit recommendations
-        const recData = topCandidates.map((c) => ({
+        const finalCandidates = recommendedSlugs
+          ? topCandidates.filter((c) => recommendedSlugs?.includes(c.slug))
+          : []; // If Claude didn't call the tool, show no recommendations.
+
+        const recData = finalCandidates.map((c) => ({
           orgId: c.orgId,
           slug: c.slug,
           name: c.name,
@@ -282,7 +313,7 @@ export async function POST(req: NextRequest) {
           model: "claude-haiku-4-5-20251001",
           inputTokens: usage.input_tokens,
           outputTokens: usage.output_tokens,
-        }).catch(() => {});
+        }).catch(() => { });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "AI unavailable";
         controller.enqueue(sse({ type: "error", message: msg }));

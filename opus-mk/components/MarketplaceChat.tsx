@@ -47,7 +47,7 @@ interface Props {
 
 export function MarketplaceChat({ onFirstMessage }: Props) {
   const sessionId = useSessionId();
-  const { city, coords } = useResolveCity();
+  const { city, displayCity, coords } = useResolveCity();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -93,6 +93,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
             query: trimmed,
             sessionId,
             city,
+            displayCity,
             coords: coords ?? undefined,
             locale: navigator.language?.startsWith("mk") ? "mk" : "en",
           }),
@@ -161,7 +162,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
         setIsLoading(false);
       }
     },
-    [sessionId, isLoading, messageCount, city, coords, messages.length, onFirstMessage],
+    [sessionId, isLoading, messageCount, city, displayCity, coords, messages.length, onFirstMessage],
   );
 
   const rateLimited = messageCount >= RATE_LIMIT_PER_SESSION;
@@ -207,7 +208,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
                 <button
                   key={s.label}
                   onClick={() => sendMessage(s.query)}
-                  disabled={isLoading}
+                  disabled={isLoading || !city}
                   className="shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors disabled:opacity-50"
                   style={{
                     background: "rgba(255,255,255,0.10)",
@@ -228,11 +229,13 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
             </div>
             <ChatComposer
               onSend={sendMessage}
-              disabled={isLoading || !sessionId || rateLimited}
+              disabled={isLoading || !sessionId || rateLimited || !city}
               placeholder={
                 rateLimited
                   ? "Session limit reached. Refresh to continue."
-                  : "Ask anything — 'date night tonight'…"
+                  : !city
+                    ? "Resolving location…"
+                    : "Ask anything — 'date night tonight'…"
               }
             />
           </div>
@@ -251,11 +254,13 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
           <div className="shrink-0 px-4 pb-28 md:pb-24 pt-2">
             <ChatComposer
               onSend={sendMessage}
-              disabled={isLoading || !sessionId || rateLimited}
+              disabled={isLoading || !sessionId || rateLimited || !city}
               placeholder={
                 rateLimited
                   ? "Session limit reached. Refresh to continue."
-                  : "Ask anything — 'date night tonight'…"
+                  : !city
+                    ? "Resolving location…"
+                    : "Ask anything — 'date night tonight'…"
               }
             />
           </div>

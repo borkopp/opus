@@ -45,6 +45,5 @@ export function resolveCityFromCoords(coords: {
       bestDist = d;
     }
   }
-  // If more than 50 km from any known city centroid, user is outside service area
-  return bestDist < 50 ? best.name : null;
+  return best.name;
 }

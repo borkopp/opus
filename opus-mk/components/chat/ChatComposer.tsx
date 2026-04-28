@@ -2,6 +2,7 @@
 
 import { useState, useRef, KeyboardEvent } from "react";
 import { IconSend, IconSparkles } from "@tabler/icons-react";
+import { Sparkle, Sparkles } from "lucide-react";
 
 interface Props {
   onSend: (text: string) => void;
@@ -51,7 +52,7 @@ export function ChatComposer({ onSend, disabled, placeholder }: Props) {
         boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
       }}
     >
-      <IconSparkles
+      <Sparkle
         size={18}
         className="shrink-0 mb-0.5 self-center"
         style={{ color: "rgba(244,160,122,0.8)" }}
@@ -84,7 +85,7 @@ export function ChatComposer({ onSend, disabled, placeholder }: Props) {
           boxShadow: hasValue ? "0 2px 8px rgba(225,99,73,0.5)" : "none",
         }}
       >
-        <IconSend size={15} color={hasValue ? "#fff" : "rgba(255,255,255,0.3)"} />
+        <IconSend size={15} className="" color={hasValue ? "#fff" : "rgba(255,255,255,0.3)"} />
       </button>
     </div>
   );

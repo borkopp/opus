@@ -9,6 +9,7 @@
   --font-mono: var(--font-dm-mono);
   --font-display: var(--font-syne);
   --font-outfit: var(--font-outfit);
+  --font-serif: var(--font-instrument-serif);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -20,6 +21,8 @@
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-2-foreground: var(--accent-2-foreground);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -74,6 +77,9 @@
   --accent: #e16349;
   --accent-foreground: oklch(99% 0.004 75);
 
+  --accent-2: rgba(225, 125, 97, 0.9);
+  --accent-2-foreground: oklch(99% 0.004 75);
+
   --destructive: oklch(52% 0.22 27);
 
   --border: oklch(90% 0.004 75);
@@ -92,7 +98,7 @@
   /* earthy emerald — confirmation, success states */
   --online: oklch(72% 0.20 142);
   /* fresh green — real-time presence indicators */
-  
+
   --accent-soft: oklch(78% 0.10 35);
   --surface-elevated: oklch(99% 0.004 75);
 
@@ -291,6 +297,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

@@ -141,18 +141,16 @@ export function DiscoverClient() {
           >
             {dayLabel}
           </p>
-          <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-white mb-8">
-            Where to{" "}
-            <span
-              style={{
-                fontFamily: "var(--font-instrument-serif)",
-                fontStyle: "italic",
-                fontWeight: 400,
-                color: "var(--accent)",
-              }}
+          <h1
+            className="text-[2rem] sm:text-[2.25rem] mb-6 font-medium text-white leading-[1.1]"
+            style={{ textWrap: "balance" } as React.CSSProperties}
+          >
+            Explore spots in{" "}
+            <em
+              className="text-accent font-serif text-[2.3rem]"
             >
-              tonight?
-            </span>
+              {city}
+            </em>
           </h1>
           <div className="space-y-4">
             <AiSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />

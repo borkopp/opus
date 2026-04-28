@@ -2,7 +2,7 @@
 
 import { BusinessCard, Recommendation } from "./BusinessCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IconSparkles } from "@tabler/icons-react";
+import { Sparkle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 export type ChatMessage = {
@@ -21,7 +21,7 @@ function AssistantMessage({ msg }: { msg: ChatMessage }) {
   return (
     <div className="flex gap-2.5 items-start">
       <div className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 mt-0.5">
-        <IconSparkles size={14} />
+        <Sparkle size={14} />
       </div>
       <div className="flex-1 min-w-0">
         {msg.isStreaming && !msg.content ? (

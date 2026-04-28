@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { HeaderAuth } from "@/components/HeaderAuth";
+import { HowItWorks } from "@/components/HowItWorks";
 import { MarketplaceChat } from "@/components/MarketplaceChat";
 import { useResolveCity } from "@/hooks/use-resolve-city";
 
@@ -14,27 +15,32 @@ export default function HomePage() {
     <div className="dark h-[100dvh] bg-black relative overflow-hidden">
       {/* Cinematic background photo — Mobile */}
       <div
-        className="absolute inset-0 bg-cover bg-center transition-opacity duration-700 md:hidden"
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 md:hidden ${hasStarted ? 'opacity-20' : 'opacity-90'}`}
         style={{
           backgroundImage: "url('/abstract-vertical.png')",
-          opacity: hasStarted ? 0.12 : 0.9,
         }}
       />
       {/* Cinematic background photo — Tablet & Above */}
       <div
-        className="absolute inset-0 bg-cover bg-center transition-opacity duration-700 hidden md:block"
+        className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 hidden md:block ${hasStarted ? 'opacity-10' : 'opacity-60'}`}
         style={{
           backgroundImage: "url('/abstract-bg.jpg')",
-          opacity: hasStarted ? 0.12 : 0.9,
         }}
       />
-      {/* Gradient overlay */}
+
+      {/* Gradient overlay for initial state */}
       <div
-        className="absolute inset-0 transition-opacity duration-700"
+        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${hasStarted ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         style={{
-          background: hasStarted
-            ? "rgba(0,0,0,0.88)"
-            : "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.72) 72%, rgba(0,0,0,0.97) 100%)",
+          background: "linear-gradient(180deg, rgba(0,0,0,0.28) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.72) 72%, rgba(0,0,0,0.97) 100%)",
+        }}
+      />
+
+      {/* Dark dim overlay for chat state */}
+      <div
+        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${hasStarted ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{
+          background: "rgba(0,0,0,0.40)"
         }}
       />
 
@@ -49,9 +55,10 @@ export default function HomePage() {
                   className="w-1.5 h-1.5 rounded-full bg-[var(--online)] shrink-0"
                   style={{ boxShadow: "0 0 6px var(--online)" }}
                 />
-                <span className="text-xs text-white/85">{city}</span>
+                <span className="text-xs text-white/85">You are in <b>{city}</b></span>
               </div>
             )}
+
             <HeaderAuth />
           </div>
         </div>

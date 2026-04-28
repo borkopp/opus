@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export const Logo = ({ className }: { className?: string }) => {
   return (
-    <span
+    <Link
+      href="/"
       className={cn(
         "uppercase tracking-wider",
         className
@@ -10,6 +12,6 @@ export const Logo = ({ className }: { className?: string }) => {
       style={{ fontFamily: "var(--font-audiowide), sans-serif" }}
     >
       OPUS
-    </span>
+    </Link>
   );
 };

@@ -12,7 +12,7 @@ export function AiSearchBar({
     <div className="relative group">
       <IconSparkles
         size={18}
-        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-rating"
+        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-accent-2"
         aria-hidden="true"
       />
       <label htmlFor="discover-search" className="sr-only">
@@ -24,7 +24,7 @@ export function AiSearchBar({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         autoComplete="off"
-        className="pl-10 h-14 rounded-2xl bg-card border-border/60 text-base placeholder:text-muted-foreground/40 shadow-sm transition-[border-color,box-shadow] focus-visible:ring-1 focus-visible:ring-rating focus-visible:border-rating"
+        className="pl-10 h-14 rounded-2xl bg-card border-border/60 text-base placeholder:text-muted-foreground/40 shadow-sm transition-[border-color,box-shadow] focus-visible:ring-1 focus-visible:ring-accent-2 focus-visible:border-accent-2"
       />
       {searchQuery.length > 0 && (
         <button

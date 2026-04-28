@@ -125,6 +125,7 @@ export const retrieve = action({
     candidates: Candidate[];
     timeIntent: TimeIntent;
     history: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+    availableCategories: string[];
   }> => {
     const trimmedQuery = args.query.trim().slice(0, 500);
     if (trimmedQuery.length === 0) {
@@ -189,8 +190,14 @@ export const retrieve = action({
       ...serviceHits.map((h) => ({ ...h, weight: 0.95 })),
       ...repHits.map((h) => ({ ...h, weight: 1.0 })),
     ];
+    // 6.5 Extract available categories in the current city
+    const availableCategories = await ctx.runQuery(
+      internal.marketplace.retrieveHelpers.getAvailableCategories,
+      { city: args.city }
+    );
+
     if (allHits.length === 0) {
-      return { conversationId, candidates: [], timeIntent, history };
+      return { conversationId, candidates: [], timeIntent, history, availableCategories };
     }
 
     // 7. Fetch the embedding rows (vectorSearch returns _id + _score only)
@@ -237,7 +244,7 @@ export const retrieve = action({
       }
     }
     if (bestByOrg.size === 0) {
-      return { conversationId, candidates: [], timeIntent, history };
+      return { conversationId, candidates: [], timeIntent, history, availableCategories };
     }
 
     // 10. Resolve to org rows
@@ -292,6 +299,6 @@ export const retrieve = action({
       .sort((a, b) => b.score - a.score)
       .slice(0, RETURN_CANDIDATE_LIMIT);
 
-    return { conversationId, candidates, timeIntent, history };
+    return { conversationId, candidates, timeIntent, history, availableCategories };
   },
 });

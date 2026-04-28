@@ -50,6 +50,7 @@ function buildSystemPrompt(
   candidatesJson: string,
   timeHint: string,
   now: number,
+  availableCategories: string[],
 ): string {
   const dateStr = new Date(now).toLocaleDateString("en-GB", {
     weekday: "long",
@@ -58,6 +59,10 @@ function buildSystemPrompt(
     day: "numeric",
     timeZone: "Europe/Skopje",
   });
+
+  const categoriesStr = availableCategories.length > 0 
+    ? availableCategories.map(c => c.replace(/_/g, " ")).join(", ")
+    : "beauty services";
 
   const languageInstruction = `\nLanguage: Detect the language from the user's message and reply in the exact same language. If they ask in English, reply in English. If they ask in Macedonian (Cyrillic), reply in standard Macedonian:\n${MK_VOCAB}`;
 
@@ -70,6 +75,7 @@ CRITICAL STRICTNESS RULES:
 3. Cross-industry strictness: If the user asks for 'date night' or 'restaurant' (hospitality), DO NOT recommend barbershops, salons, or beauty services. If they ask for 'nails' or 'haircut' (beauty), DO NOT recommend restaurants or bars.
 4. If the SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
 5. If no businesses in the SEARCH RESULTS perfectly match the intent, apologize and explicitly say you couldn't find exactly what they're looking for in ${city}. DO NOT recommend unrelated businesses and DO NOT ask about other countries.
+6. NEVER recommend external services or platforms (e.g., Google Maps, TripAdvisor, calling ahead). If you don't have results, simply state that you don't have any matching listings right now, but that OPUS currently features ${categoriesStr} in their area.
 
 Write a SHORT conversational reply (2–4 sentences). Be warm, specific, and direct. Reference businesses by name.
 ${timeHint ? `Time context: ${timeHint}. If a business is closed at that time, mention it or skip it.` : ""}
@@ -206,13 +212,13 @@ export async function POST(req: NextRequest) {
         return;
       }
 
-      const { candidates, conversationId, timeIntent, history } = retrieveResult;
+      const { candidates, conversationId, timeIntent, history, availableCategories } = retrieveResult;
 
       const topCandidates = (candidates as Candidate[]).slice(0, 4);
       const contextJson = candidatesToContextJson(topCandidates);
       const timeHintStr = timeHintFromKind(timeIntent.kind);
 
-      const systemPrompt = buildSystemPrompt(city || "Unknown Location", locale, contextJson, timeHintStr, Date.now());
+      const systemPrompt = buildSystemPrompt(city || "Unknown Location", locale, contextJson, timeHintStr, Date.now(), availableCategories);
       const historyMessages: Anthropic.MessageParam[] = history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,

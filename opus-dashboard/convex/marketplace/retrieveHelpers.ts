@@ -21,3 +21,25 @@ export const getEmbeddingsByIds = internalQuery({
     return docs.filter((d): d is Doc<"marketplace_embeddings"> => d !== null);
   },
 });
+
+export const getAvailableCategories = internalQuery({
+  args: { city: v.optional(v.string()) },
+  handler: async (ctx, args): Promise<string[]> => {
+    const allPublished = await ctx.db
+      .query("orgs")
+      .withIndex("by_listing_status", (q) => q.eq("listingStatus", "published"))
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
+
+    const cityOrgs = args.city
+      ? allPublished.filter((o) => o.city?.toLowerCase() === args.city!.toLowerCase())
+      : allPublished;
+
+    const categoriesSet = new Set(
+      cityOrgs
+        .map((o) => o.beautyCategory || o.industry)
+        .filter(Boolean)
+    );
+    return Array.from(categoriesSet) as string[];
+  },
+});

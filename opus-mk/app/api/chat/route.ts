@@ -50,7 +50,7 @@ function buildSystemPrompt(
   candidatesJson: string,
   timeHint: string,
   now: number,
-  availableCategories: string[],
+  availableCategories: string[] = [],
 ): string {
   const dateStr = new Date(now).toLocaleDateString("en-GB", {
     weekday: "long",
@@ -60,7 +60,7 @@ function buildSystemPrompt(
     timeZone: "Europe/Skopje",
   });
 
-  const categoriesStr = availableCategories.length > 0 
+  const categoriesStr = availableCategories && availableCategories.length > 0 
     ? availableCategories.map(c => c.replace(/_/g, " ")).join(", ")
     : "beauty services";
 

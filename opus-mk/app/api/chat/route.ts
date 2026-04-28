@@ -65,10 +65,11 @@ function buildSystemPrompt(
 Today: ${dateStr}. User location: ${city}.${languageInstruction}
 
 CRITICAL STRICTNESS RULES:
-1. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
-2. Cross-industry strictness: If the user asks for 'date night' or 'restaurant' (hospitality), DO NOT recommend barbershops, salons, or beauty services. If they ask for 'nails' or 'haircut' (beauty), DO NOT recommend restaurants or bars.
-3. If the SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
-4. If no businesses in the SEARCH RESULTS perfectly match the intent, apologize and explicitly say you couldn't find exactly what they're looking for. DO NOT recommend unrelated businesses.
+1. OPUS is an INTERNATIONAL service. You are currently helping a user in ${city}. DO NOT ask them about Macedonia, and DO NOT assume they want recommendations in Macedonia. The Macedonian vocabulary instructions are purely for linguistic translation if they speak Macedonian.
+2. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
+3. Cross-industry strictness: If the user asks for 'date night' or 'restaurant' (hospitality), DO NOT recommend barbershops, salons, or beauty services. If they ask for 'nails' or 'haircut' (beauty), DO NOT recommend restaurants or bars.
+4. If the SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
+5. If no businesses in the SEARCH RESULTS perfectly match the intent, apologize and explicitly say you couldn't find exactly what they're looking for in ${city}. DO NOT recommend unrelated businesses and DO NOT ask about other countries.
 
 Write a SHORT conversational reply (2–4 sentences). Be warm, specific, and direct. Reference businesses by name.
 ${timeHint ? `Time context: ${timeHint}. If a business is closed at that time, mention it or skip it.` : ""}

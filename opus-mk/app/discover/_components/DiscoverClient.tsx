@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useUserLocation } from "@/hooks/use-user-location";
+import { useResolveCity } from "@/hooks/use-resolve-city";
 import { calcDistanceMeters } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -34,16 +35,19 @@ export function DiscoverClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<BeautyCategory | undefined>();
   const { coords } = useUserLocation();
+  const { city, displayCity } = useResolveCity();
+  const resolvedCity = displayCity || city || undefined;
   const [gridVisible, setGridVisible] = useState(true);
   const prevCoordsRef = useRef<typeof coords>(null);
 
-  const listings = useQuery(api.public.listPublished, {
-    industry: "beauty_wellness",
-  });
+  const listings = useQuery(
+    api.public.listPublished,
+    resolvedCity ? { industry: "beauty_wellness", city: resolvedCity } : "skip"
+  );
 
   const searchResults = useQuery(
     api.public.searchPublished,
-    searchQuery.length >= 2 ? { query: searchQuery } : "skip"
+    searchQuery.length >= 2 && resolvedCity ? { query: searchQuery, city: resolvedCity } : "skip"
   );
 
   useEffect(() => {

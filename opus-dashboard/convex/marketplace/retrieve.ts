@@ -205,13 +205,12 @@ export const retrieve = action({
       scoreById.set(h._id, { score: h._score, weight: h.weight });
     }
 
-    // 8. Filter (post-search) by isPublished and industry only.
-    // City is used as a ranking bonus below, not a hard gate — users
-    // may search for businesses in other cities, or their geolocation
-    // may resolve to the wrong city.
+    // 8. Filter (post-search) by isPublished, industry, and city.
+    // City is now a strict filter to prevent out-of-location hallucinations.
     const filtered = embeddingDocs.filter((row) => {
       if (!row.isPublished) return false;
       if (args.industry && row.industry !== args.industry) return false;
+      if (args.city && row.city?.toLowerCase() !== args.city.toLowerCase()) return false;
       return true;
     });
 

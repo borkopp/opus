@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
         retrieveResult = await convex.action(api.marketplace.retrieve.retrieve, {
           query: query.trim().slice(0, MAX_QUERY_CHARS),
           sessionId,
-          city,
+          city: displayCity || city || undefined,
           coords: coords ?? undefined,
           locale,
         });
@@ -208,16 +208,6 @@ export async function POST(req: NextRequest) {
       }
 
       const { candidates, conversationId, timeIntent, history } = retrieveResult;
-
-      if (candidates.length === 0) {
-        controller.enqueue(
-          sse({ type: "text", text: `I couldn't find any matching businesses in ${city} right now. Try a broader search, or browse all listings.` }),
-        );
-        controller.enqueue(sse({ type: "recommendations", data: [] }));
-        controller.enqueue(sse({ type: "done" }));
-        controller.close();
-        return;
-      }
 
       const topCandidates = (candidates as Candidate[]).slice(0, 4);
       const contextJson = candidatesToContextJson(topCandidates);

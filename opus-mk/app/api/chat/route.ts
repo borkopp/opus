@@ -61,8 +61,8 @@ function buildSystemPrompt(
 
   const languageInstruction = `\nLanguage: Detect the language from the user's message and reply in the exact same language. If they ask in English, reply in English. If they ask in Macedonian (Cyrillic), reply in standard Macedonian:\n${MK_VOCAB}`;
 
-  return `You are OPUS, a friendly local-discovery assistant for Macedonia.
-Today: ${dateStr} (Europe/Skopje). User location: ${city}.${languageInstruction}
+  return `You are OPUS, a friendly local-discovery assistant.
+Today: ${dateStr}. User location: ${city}.${languageInstruction}
 
 CRITICAL STRICTNESS RULES:
 1. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
@@ -152,7 +152,6 @@ export async function POST(req: NextRequest) {
     query: string;
     sessionId: string;
     city?: string | null;
-    displayCity?: string | null;
     coords?: { lat: number; lng: number } | null;
     locale?: string;
   };
@@ -162,8 +161,7 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  const { query, sessionId, coords, locale = "en", displayCity } = body;
-  const city = body.city;
+  const { query, sessionId, coords, locale = "en", city } = body;
 
   if (!query?.trim() || !sessionId) {
     return new Response("query and sessionId required", { status: 400 });
@@ -196,7 +194,7 @@ export async function POST(req: NextRequest) {
         retrieveResult = await convex.action(api.marketplace.retrieve.retrieve, {
           query: query.trim().slice(0, MAX_QUERY_CHARS),
           sessionId,
-          city: displayCity || city || undefined,
+          city: city || undefined,
           coords: coords ?? undefined,
           locale,
         });
@@ -213,7 +211,7 @@ export async function POST(req: NextRequest) {
       const contextJson = candidatesToContextJson(topCandidates);
       const timeHintStr = timeHintFromKind(timeIntent.kind);
 
-      const systemPrompt = buildSystemPrompt(displayCity || city, locale, contextJson, timeHintStr, Date.now());
+      const systemPrompt = buildSystemPrompt(city || "Unknown Location", locale, contextJson, timeHintStr, Date.now());
       const historyMessages: Anthropic.MessageParam[] = history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,

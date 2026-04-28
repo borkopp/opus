@@ -35,8 +35,8 @@ export function DiscoverClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<BeautyCategory | undefined>();
   const { coords } = useUserLocation();
-  const { city, displayCity } = useResolveCity();
-  const resolvedCity = displayCity || city || undefined;
+  const { city } = useResolveCity();
+  const resolvedCity = city || undefined;
   const [gridVisible, setGridVisible] = useState(true);
   const prevCoordsRef = useRef<typeof coords>(null);
 
@@ -81,11 +81,11 @@ export function DiscoverClient() {
         return true;
       })
       .map((org: any) => {
-      const distanceMeters = coords && org.coordinates
-        ? calcDistanceMeters(coords.lat, coords.lng, org.coordinates.lat, org.coordinates.lng)
-        : Infinity;
-      return { ...org, _distanceMeters: distanceMeters };
-    });
+        const distanceMeters = coords && org.coordinates
+          ? calcDistanceMeters(coords.lat, coords.lng, org.coordinates.lat, org.coordinates.lng)
+          : Infinity;
+        return { ...org, _distanceMeters: distanceMeters };
+      });
 
     // Rank all items
     const rankedOrgs = rankOrgs(
@@ -156,10 +156,10 @@ export function DiscoverClient() {
           </h1>
           <div className="space-y-4">
             <AiSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-            
+
             {!isSearchActive && (
-              <CategoryRail 
-                selectedCategory={selectedCategory} 
+              <CategoryRail
+                selectedCategory={selectedCategory}
                 onSelect={setSelectedCategory}
                 availableCategoryIds={availableCategoryIds}
               />

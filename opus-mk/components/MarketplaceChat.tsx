@@ -47,7 +47,7 @@ interface Props {
 
 export function MarketplaceChat({ onFirstMessage }: Props) {
   const sessionId = useSessionId();
-  const { city, displayCity, coords } = useResolveCity();
+  const { city, coords } = useResolveCity();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -93,7 +93,6 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
             query: trimmed,
             sessionId,
             city,
-            displayCity,
             coords: coords ?? undefined,
             locale: navigator.language?.startsWith("mk") ? "mk" : "en",
           }),
@@ -162,7 +161,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
         setIsLoading(false);
       }
     },
-    [sessionId, isLoading, messageCount, city, displayCity, coords, messages.length, onFirstMessage],
+    [sessionId, isLoading, messageCount, city, coords, messages.length, onFirstMessage],
   );
 
   const rateLimited = messageCount >= RATE_LIMIT_PER_SESSION;

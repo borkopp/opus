@@ -7,7 +7,7 @@ import { MarketplaceChat } from "@/components/MarketplaceChat";
 import { useResolveCity } from "@/hooks/use-resolve-city";
 
 export default function HomePage() {
-  const { displayCity } = useResolveCity();
+  const { city } = useResolveCity();
   const [hasStarted, setHasStarted] = useState(false);
 
   return (
@@ -43,13 +43,13 @@ export default function HomePage() {
         <div className="max-w-2xl mx-auto px-5 py-3 flex items-center justify-between">
           <Logo className="text-xl text-white/90" />
           <div className="flex items-center gap-3">
-            {displayCity && (
+            {city && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
                 <span
                   className="w-1.5 h-1.5 rounded-full bg-[var(--online)] shrink-0"
                   style={{ boxShadow: "0 0 6px var(--online)" }}
                 />
-                <span className="text-xs text-white/85">{displayCity}</span>
+                <span className="text-xs text-white/85">{city}</span>
               </div>
             )}
             <HeaderAuth />

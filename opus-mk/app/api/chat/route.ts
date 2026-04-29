@@ -21,7 +21,8 @@ import { Id } from "@/convex/_generated/dataModel";
 
 const MAX_QUERY_CHARS = 500;
 const MAX_BODY_BYTES = 2048;
-const MAX_RESPONSE_TOKENS = 500;
+const MAX_RESPONSE_TOKENS = 800; // bumped from 500 — needed for multi-recommendation prose
+const HISTORY_TURN_CAP = 6;      // last 3 exchanges — prevents token creep on long sessions
 
 // ── mk vocab block — copied verbatim from convex/ai/agent.ts
 // Do NOT paraphrase; these linguistic choices are intentional for Macedonian correctness.
@@ -44,6 +45,57 @@ MACEDONIAN VOCABULARY — use ONLY these forms (never the Serbian/Bulgarian equi
 - "Достапен" NOT "Slobodan" (SR)
 - "Слободен термин" for available slot`.trim();
 
+// ── Industry detection ─────────────────────────────────────────────────────────
+// Runs before retrieve so the vector search is scoped to the correct vertical.
+// Returns undefined for ambiguous queries — retrieve will search all industries.
+
+function deriveIndustry(
+  query: string,
+): "hospitality" | "beauty_wellness" | undefined {
+  const q = query.toLowerCase();
+
+  const hospitalityTerms = [
+    // English
+    "restaurant", "dinner", "lunch", "brunch", "breakfast", "date night",
+    "eat", "eating", "food", "cafe", "bar", "pub", "table", "reservation",
+    "drinks", "coffee", "cocktail", "wine", "dine", "dining", "bistro",
+    "tavern", "grill", "pizza", "sushi", "burger",
+    // Macedonian
+    "ресторан", "вечера", "ручек", "маса", "кафе", "бар", "јадење",
+    "пиење", "резервација на маса", "вино", "коктел",
+  ];
+
+  const beautyTerms = [
+    // English
+    "haircut", "hair cut", "barber", "barbershop", "nails", "nail",
+    "salon", "massage", "spa", "facial", "eyebrow", "lash", "wax",
+    "tattoo", "piercing", "manicure", "pedicure", "blowout", "coloring",
+    // Macedonian
+    "шишање", "фризер", "нокти", "масажа", "салон", "тетоважа",
+    "пирсинг", "маникир", "педикир", "веѓи", "трепки",
+  ];
+
+  const isHospitality = hospitalityTerms.some((t) => q.includes(t));
+  const isBeauty = beautyTerms.some((t) => q.includes(t));
+
+  // If both match (edge case: "dinner after my haircut") — return undefined,
+  // let retrieve search all and Claude sort it out with the cross-industry rules.
+  if (isHospitality && isBeauty) return undefined;
+  if (isHospitality) return "hospitality";
+  if (isBeauty) return "beauty_wellness";
+  return undefined;
+}
+
+// ── Locale detection ───────────────────────────────────────────────────────────
+// Server-side Cyrillic detection is more reliable than asking Claude to detect
+// language from short or ambiguous queries like "date night".
+
+function detectLocale(query: string, fallback: string): string {
+  return /[\u0400-\u04FF]/.test(query) ? "mk" : fallback;
+}
+
+// ── System prompt ──────────────────────────────────────────────────────────────
+
 function buildSystemPrompt(
   city: string,
   locale: string,
@@ -60,31 +112,40 @@ function buildSystemPrompt(
     timeZone: "Europe/Skopje",
   });
 
-  const categoriesStr = availableCategories && availableCategories.length > 0 
-    ? availableCategories.map(c => c.replace(/_/g, " ")).join(", ")
-    : "beauty services";
+  const categoriesStr =
+    availableCategories && availableCategories.length > 0
+      ? availableCategories.map((c) => c.replace(/_/g, " ")).join(", ")
+      : "beauty services";
 
-  const languageInstruction = `\nLanguage: Detect the language from the user's message and reply in the exact same language. If they ask in English, reply in English. If they ask in Macedonian (Cyrillic), reply in standard Macedonian:\n${MK_VOCAB}`;
+  const languageInstruction =
+    locale === "mk"
+      ? `\nLanguage: Reply in standard Macedonian (Cyrillic):\n${MK_VOCAB}`
+      : `\nLanguage: Reply in English.`;
 
   return `You are OPUS, a friendly local-discovery assistant.
 Today: ${dateStr}. User location: ${city}.${languageInstruction}
 
 CRITICAL STRICTNESS RULES:
-1. OPUS is an INTERNATIONAL service. You are currently helping a user in ${city}. DO NOT ask them about Macedonia, and DO NOT assume they want recommendations in Macedonia. The Macedonian vocabulary instructions are purely for linguistic translation if they speak Macedonian.
+1. OPUS is an INTERNATIONAL service. You are helping a user in ${city}. DO NOT assume they want recommendations in Macedonia.
 2. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
-3. Cross-industry strictness: If the user asks for 'date night' or 'restaurant' (hospitality), DO NOT recommend barbershops, salons, or beauty services. If they ask for 'nails' or 'haircut' (beauty), DO NOT recommend restaurants or bars.
-4. If the SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
-5. If no businesses in the SEARCH RESULTS perfectly match the intent, apologize and explicitly say you couldn't find exactly what they're looking for in ${city}. DO NOT recommend unrelated businesses and DO NOT ask about other countries.
-6. NEVER recommend external services or platforms (e.g., Google Maps, TripAdvisor, calling ahead). If you don't have results, simply state that you don't have any matching listings right now, but that OPUS currently features ${categoriesStr} in their area.
+3. Cross-industry strictness: If the user asks for food/dining, DO NOT recommend beauty businesses. If they ask for haircut/nails, DO NOT recommend restaurants.
+4. If SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
+5. If no businesses PERFECTLY match, apologize and say you couldn't find exactly what they're looking for in ${city}. State that OPUS currently features ${categoriesStr} in their area.
+6. NEVER recommend external services (Google Maps, TripAdvisor, etc.).
+7. If a business is marked hasTableAvailability: false, mention it may be fully booked and suggest calling ahead or trying another option.
+8. If a business is marked hasTableAvailability: true, you can confidently say it has availability.
 
 Write a SHORT conversational reply (2–4 sentences). Be warm, specific, and direct. Reference businesses by name.
 ${timeHint ? `Time context: ${timeHint}. If a business is closed at that time, mention it or skip it.` : ""}
 Do NOT list businesses as bullet points — weave them naturally into prose.
 Do NOT output JSON. Plain conversational text only.
+When recommending businesses, you MUST call the show_businesses tool.
 
 SEARCH RESULTS:
 ${candidatesJson}`;
 }
+
+// ── Candidate serialisation ────────────────────────────────────────────────────
 
 type Candidate = {
   orgId: Id<"orgs">;
@@ -102,6 +163,7 @@ type Candidate = {
   industry: string;
   city?: string;
   neighborhood?: string;
+  hasTableAvailability?: boolean | null; // hospitality only, null = unknown
 };
 
 function candidatesToContextJson(candidates: Candidate[]): string {
@@ -110,11 +172,21 @@ function candidatesToContextJson(candidates: Candidate[]): string {
     slug: c.slug,
     description: c.snippet.split("\n").slice(0, 4).join(" ").slice(0, 300),
     city: [c.neighborhood, c.city].filter(Boolean).join(", ") || undefined,
-    rating: c.averageRating > 0 ? `${c.averageRating.toFixed(1)}★ (${c.reviewCount} reviews)` : undefined,
-    distanceKm: c.distanceM != null ? `${(c.distanceM / 1000).toFixed(1)}km away` : undefined,
+    rating:
+      c.averageRating > 0
+        ? `${c.averageRating.toFixed(1)}★ (${c.reviewCount} reviews)`
+        : undefined,
+    distanceKm:
+      c.distanceM != null ? `${(c.distanceM / 1000).toFixed(1)}km away` : undefined,
     openNow: c.isOpenNow,
     openAt: c.isOpenAt,
-    hours: c.openingHoursToday ? `${c.openingHoursToday.open}–${c.openingHoursToday.close}` : undefined,
+    hours: c.openingHoursToday
+      ? `${c.openingHoursToday.open}–${c.openingHoursToday.close}`
+      : undefined,
+    // Only include for hospitality — avoids confusing Claude for beauty businesses
+    ...(c.industry === "hospitality" && c.hasTableAvailability != null
+      ? { hasTableAvailability: c.hasTableAvailability }
+      : {}),
   }));
   return JSON.stringify(slim, null, 0);
 }
@@ -148,8 +220,9 @@ function timeHintFromKind(kind: string): string {
   return "";
 }
 
+// ── Route handler ──────────────────────────────────────────────────────────────
+
 export async function POST(req: NextRequest) {
-  // Coarse body-size guard
   const contentLength = req.headers.get("content-length");
   if (contentLength && parseInt(contentLength) > MAX_BODY_BYTES) {
     return new Response("Request too large", { status: 413 });
@@ -175,7 +248,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (!city) {
-    return new Response("Location access is required to find businesses near you.", { status: 400 });
+    return new Response(
+      "Location access is required to find businesses near you.",
+      { status: 400 },
+    );
   }
 
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -185,7 +261,6 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder();
-
   function sse(obj: object): Uint8Array {
     return encoder.encode(`data: ${JSON.stringify(obj)}\n\n`);
   }
@@ -195,38 +270,72 @@ export async function POST(req: NextRequest) {
       const convex = new ConvexHttpClient(convexUrl);
       const anthropic = new Anthropic({ apiKey: anthropicKey });
 
+      // ── Derive intent before hitting Convex ──────────────────────────────
+      const trimmedQuery = query.trim();
+      const industryHint = deriveIndustry(trimmedQuery);
+      const detectedLocale = detectLocale(trimmedQuery, locale);
+
       // 1. Retrieve candidates (+ persists user turn in Convex)
-      let retrieveResult: Awaited<ReturnType<typeof convex.action<typeof api.marketplace.retrieve.retrieve>>>;
+      let retrieveResult: Awaited<
+        ReturnType<typeof convex.action<typeof api.marketplace.retrieve.retrieve>>
+      >;
       try {
         retrieveResult = await convex.action(api.marketplace.retrieve.retrieve, {
-          query: query.trim().slice(0, MAX_QUERY_CHARS),
+          query: trimmedQuery.slice(0, MAX_QUERY_CHARS),
           sessionId,
           city: city || undefined,
           coords: coords ?? undefined,
-          locale,
+          locale: detectedLocale,
+          industry: industryHint, // ← scopes vector search to correct vertical
         });
-      } catch (err) {
-        controller.enqueue(sse({ type: "error", message: "Search unavailable. Please try again." }));
+      } catch {
+        controller.enqueue(
+          sse({ type: "error", message: "Search unavailable. Please try again." }),
+        );
         controller.enqueue(sse({ type: "done" }));
         controller.close();
         return;
       }
 
-      const { candidates, conversationId, timeIntent, history, availableCategories } = retrieveResult;
+      const {
+        candidates,
+        conversationId,
+        timeIntent,
+        history,
+        availableCategories,
+        partySize, // new field from retrieve — used for bookingIntent
+      } = retrieveResult;
 
       const topCandidates = (candidates as Candidate[]).slice(0, 4);
       const contextJson = candidatesToContextJson(topCandidates);
       const timeHintStr = timeHintFromKind(timeIntent.kind);
 
-      const systemPrompt = buildSystemPrompt(city || "Unknown Location", locale, contextJson, timeHintStr, Date.now(), availableCategories);
-      const historyMessages: Anthropic.MessageParam[] = history.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
+      const systemPrompt = buildSystemPrompt(
+        city || "Unknown Location",
+        detectedLocale,
+        contextJson,
+        timeHintStr,
+        Date.now(),
+        availableCategories,
+      );
+
+      // Cap history to last N turns to prevent token creep on long sessions
+      const historyMessages: Anthropic.MessageParam[] = history
+        .slice(-HISTORY_TURN_CAP)
+        .map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
 
       // 2. Stream Anthropic prose response
       let fullText = "";
       let recommendedSlugs: string[] | null = null;
+      let bookingIntent: {
+        isoDate?: string;
+        time?: string;
+        partySize?: number;
+      } | null = null;
+
       try {
         const claudeStream = anthropic.messages.stream({
           model: "claude-haiku-4-5-20251001",
@@ -235,23 +344,48 @@ export async function POST(req: NextRequest) {
           tools: [
             {
               name: "show_businesses",
-              description: "Use this tool to display specific businesses to the user in the UI. You MUST call this tool if you are recommending any businesses. ONLY include the slugs of businesses that PERFECTLY match the user's intent. If none match, DO NOT call this tool, or call it with an empty array.",
+              description:
+                "Use this tool to display specific businesses to the user in the UI. " +
+                "You MUST call this tool if you are recommending any businesses. " +
+                "ONLY include the slugs of businesses that PERFECTLY match the user's intent. " +
+                "If none match, call it with an empty slugs array. " +
+                "If the user expressed a specific date, time, or party size, populate bookingIntent " +
+                "so the booking flow can be pre-filled.",
               input_schema: {
-                type: "object",
+                type: "object" as const,
                 properties: {
                   slugs: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Slugs of the businesses to display in the UI."
-                  }
+                    description: "Slugs of the businesses to display.",
+                  },
+                  bookingIntent: {
+                    type: "object",
+                    description:
+                      "Pre-fill the booking flow. Only populate fields the user explicitly stated.",
+                    properties: {
+                      isoDate: {
+                        type: "string",
+                        description: "Date in YYYY-MM-DD format.",
+                      },
+                      time: {
+                        type: "string",
+                        description: "Time in HH:MM 24h format.",
+                      },
+                      partySize: {
+                        type: "integer",
+                        description: "Number of guests.",
+                      },
+                    },
+                  },
                 },
-                required: ["slugs"]
-              }
-            }
+                required: ["slugs"],
+              },
+            },
           ],
           messages: [
             ...historyMessages,
-            { role: "user", content: query.trim().slice(0, MAX_QUERY_CHARS) },
+            { role: "user", content: trimmedQuery.slice(0, MAX_QUERY_CHARS) },
           ],
         });
 
@@ -271,44 +405,74 @@ export async function POST(req: NextRequest) {
 
         for (const block of finalMessage.content) {
           if (block.type === "tool_use" && block.name === "show_businesses") {
-            recommendedSlugs = (block.input as any).slugs || [];
+            const input = block.input as {
+              slugs: string[];
+              bookingIntent?: {
+                isoDate?: string;
+                time?: string;
+                partySize?: number;
+              };
+            };
+            recommendedSlugs = input.slugs || [];
+            bookingIntent = input.bookingIntent ?? null;
           }
         }
 
-        // 3. Emit recommendations
+        // 3. Build recommendation payload with pre-filled booking URLs
         const finalCandidates = recommendedSlugs
           ? topCandidates.filter((c) => recommendedSlugs?.includes(c.slug))
-          : []; // If Claude didn't call the tool, show no recommendations.
+          : [];
 
-        const recData = finalCandidates.map((c) => ({
-          orgId: c.orgId,
-          slug: c.slug,
-          name: c.name,
-          reason: c.snippet.split("\n").slice(1, 3).join(" ").slice(0, 120) || c.snippet.slice(0, 120),
-          availabilityHint: deriveAvailabilityHint(c, timeIntent.kind),
-          averageRating: c.averageRating,
-          reviewCount: c.reviewCount,
-          city: c.city,
-          distanceM: c.distanceM,
-          isOpenNow: c.isOpenNow,
-        }));
+        const recData = finalCandidates.map((c) => {
+          // Build booking URL — pre-fill if Claude extracted intent
+          const bookingParams = new URLSearchParams();
+          if (bookingIntent?.isoDate) bookingParams.set("date", bookingIntent.isoDate);
+          if (bookingIntent?.time) bookingParams.set("time", bookingIntent.time);
+          // partySize: prefer what Claude extracted, fall back to retrieve's extraction
+          const resolvedPartySize = bookingIntent?.partySize ?? (partySize as number | undefined);
+          if (resolvedPartySize) bookingParams.set("party", String(resolvedPartySize));
+          const bookingQuery = bookingParams.toString();
+          const bookingUrl = bookingQuery
+            ? `/${c.slug}/book?${bookingQuery}`
+            : `/${c.slug}/book`;
+
+          return {
+            orgId: c.orgId,
+            slug: c.slug,
+            name: c.name,
+            reason:
+              c.snippet.split("\n").slice(1, 3).join(" ").slice(0, 120) ||
+              c.snippet.slice(0, 120),
+            availabilityHint: deriveAvailabilityHint(c, timeIntent.kind),
+            averageRating: c.averageRating,
+            reviewCount: c.reviewCount,
+            city: c.city,
+            distanceM: c.distanceM,
+            isOpenNow: c.isOpenNow,
+            hasTableAvailability: c.hasTableAvailability ?? null,
+            bookingUrl, // ← pre-filled deep link
+          };
+        });
+
         controller.enqueue(sse({ type: "recommendations", data: recData }));
         controller.enqueue(sse({ type: "done" }));
 
         // 4. Fire-and-forget persist assistant turn
-        void convex.mutation(api.marketplace.messages.persistAssistantTurn, {
-          conversationId,
-          content: fullText,
-          recommendations: recData.map((r) => ({
-            orgId: r.orgId,
-            slug: r.slug,
-            reason: r.reason,
-            availabilityHint: r.availabilityHint,
-          })),
-          model: "claude-haiku-4-5-20251001",
-          inputTokens: usage.input_tokens,
-          outputTokens: usage.output_tokens,
-        }).catch(() => { });
+        void convex
+          .mutation(api.marketplace.messages.persistAssistantTurn, {
+            conversationId,
+            content: fullText,
+            recommendations: recData.map((r) => ({
+              orgId: r.orgId,
+              slug: r.slug,
+              reason: r.reason,
+              availabilityHint: r.availabilityHint,
+            })),
+            model: "claude-haiku-4-5-20251001",
+            inputTokens: usage.input_tokens,
+            outputTokens: usage.output_tokens,
+          })
+          .catch(() => { });
       } catch (err) {
         const msg = err instanceof Error ? err.message : "AI unavailable";
         controller.enqueue(sse({ type: "error", message: msg }));

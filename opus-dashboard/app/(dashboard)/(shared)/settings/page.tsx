@@ -282,9 +282,6 @@ export default function SettingsPage() {
               instagramHandle: org.instagramHandle || "",
               instagramPageId: org.instagramPageId || "",
               websiteUrl: org.websiteUrl || "",
-              primary: org.brandColors?.primary || "#000000",
-              secondary: org.brandColors?.secondary || "#ffffff",
-              accent: org.brandColors?.accent || "#3b82f6",
             }}
             media={media ?? []}
           />

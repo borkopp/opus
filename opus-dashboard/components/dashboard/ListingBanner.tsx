@@ -68,7 +68,7 @@ const BLOCKING_ITEMS: ChecklistItem[] = [
   },
   {
     key: "availabilitySet",
-    label: "Availability configured",
+    label: "Staff Availability",
     icon: <IconCalendar size={16} stroke={1.5} />,
     href: "/beauty/staff",
   },

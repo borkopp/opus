@@ -51,13 +51,6 @@ export default defineSchema({
       v.literal("hospitality"),
     ),
 
-    // ── Branding ──
-    brandColors: v.optional(v.object({
-      primary: v.string(),                   // hex e.g. "#1A1A2E"
-      secondary: v.string(),
-      accent: v.string(),
-    })),
-
     // ── Location ──
     address: v.optional(v.string()),         // "Ul. Makedonija 12"
     city: v.optional(v.string()),            // "Skopje"

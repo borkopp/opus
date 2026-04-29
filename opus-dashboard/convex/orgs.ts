@@ -27,6 +27,20 @@ export const getOnboardingOrg = query({
             industry: org.industry,
             onboardingStep: org.onboardingStep,
             isOnboardingComplete: org.isOnboardingComplete,
+            // Location
+            address: org.address,
+            city: org.city,
+            neighborhood: org.neighborhood,
+            coordinates: org.coordinates,
+            // Industry specific
+            beautyCategory: org.beautyCategory,
+            venueType: org.venueType,
+            cuisine: org.cuisine,
+            // Hours
+            openingHours: org.openingHours,
+            // Profile
+            tagline: org.tagline,
+            bio: org.bio,
         };
     },
 });
@@ -165,12 +179,6 @@ export const updateProfile = mutation({
         // Core
         name: v.optional(v.string()),
         logoUrl: v.optional(v.string()),
-        brandColors: v.optional(v.object({
-            primary: v.string(),
-            secondary: v.string(),
-            accent: v.string(),
-        })),
-
         // Location
         address: v.optional(v.string()),
         city: v.optional(v.string()),
@@ -250,7 +258,7 @@ export const updateProfile = mutation({
 
         // Apply only defined fields
         const optionalFields = [
-            "name", "logoUrl", "brandColors",
+            "name", "logoUrl",
             "address", "city", "neighborhood", "postalCode", "country", "coordinates",
             "tagline", "bio",
             "tags", "priceRange",

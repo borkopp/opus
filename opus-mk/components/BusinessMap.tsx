@@ -184,6 +184,7 @@ export default function BusinessMap({
             latitude: coordinates.lat,
             zoom: 15,
           }}
+          projection="mercator"
           attributionControl={false}
           dragRotate={false}
           pitchWithRotate={false}

@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 import {
     Scissors, UtensilsCrossed, Check, ArrowRight, ArrowLeft,
     MapPin, Sparkles, User, Building2, Globe,
-    Upload, X, ImageIcon
+    Upload, X, ImageIcon, Search, Loader2, Copy
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,6 +37,8 @@ interface FormState {
     address: string;
     city: string;
     neighborhood: string;
+    postalCode: string;
+    country: string;
     coordinates: { lat: number; lng: number } | null;
     // Step 2 — hospitality specific
     venueType: VenueType | null;
@@ -52,7 +55,7 @@ interface FormState {
     defaultDurationMins: number;
 }
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DEFAULT_HOURS = DAYS.map((_, i) => ({
     dayOfWeek: i,
     open: "09:00",
@@ -66,21 +69,29 @@ const CUISINE_TAGS = [
 ];
 
 const BEAUTY_CATEGORIES: { id: BeautyCategory; label: string }[] = [
-    { id: "barbershop",        label: "Barbershop" },
-    { id: "hair_salon",        label: "Hair Salon" },
-    { id: "nail_salon",        label: "Nail Salon" },
-    { id: "spa",               label: "Spa" },
-    { id: "beauty_salon",      label: "Beauty Salon" },
-    { id: "lash_studio",       label: "Lash Studio" },
-    { id: "brow_bar",          label: "Brow Bar" },
-    { id: "tattoo_studio",     label: "Tattoo Studio" },
-    { id: "massage_therapy",   label: "Massage Therapy" },
-    { id: "wellness_center",   label: "Wellness Center" },
-    { id: "personal_trainer",  label: "Personal Trainer" },
+    { id: "barbershop", label: "Barbershop" },
+    { id: "hair_salon", label: "Hair Salon" },
+    { id: "nail_salon", label: "Nail Salon" },
+    { id: "spa", label: "Spa" },
+    { id: "beauty_salon", label: "Beauty Salon" },
+    { id: "lash_studio", label: "Lash Studio" },
+    { id: "brow_bar", label: "Brow Bar" },
+    { id: "tattoo_studio", label: "Tattoo Studio" },
+    { id: "massage_therapy", label: "Massage Therapy" },
+    { id: "wellness_center", label: "Wellness Center" },
+    { id: "personal_trainer", label: "Personal Trainer" },
 ];
 
 const BEAUTY_STEPS = ["Industry", "Business", "Location", "Hours", "Profile"];
 const HOSP_STEPS = ["Industry", "Venue", "Location", "Hours", "Setup"];
+
+const LocationMapPicker = dynamic(
+    () => import("@/components/dashboard/LocationMapPicker"),
+    {
+        ssr: false,
+        loading: () => <div className="w-full h-[320px] rounded-[20px] bg-secondary/50 animate-pulse border border-border/40" />
+    }
+);
 
 // ─────────────────────────────────────────────────────
 // Shared UI primitives
@@ -412,51 +423,161 @@ function StepIdentity({ form, set }: { form: FormState; set: (k: keyof FormState
 // STEP 2 — Location
 // ─────────────────────────────────────────────────────
 function StepLocation({ form, set }: { form: FormState; set: (k: keyof FormState, v: any) => void }) {
+    const [query, setQuery] = useState(form.address || "");
+    const [results, setResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearch = async (val: string) => {
+        setQuery(val);
+        if (val.length < 3) {
+            setResults([]);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${token}&limit=5`;
+            const res = await fetch(url);
+            const data = await res.json();
+            setResults(data.features || []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const selectResult = (feature: any) => {
+        const [lng, lat] = feature.center;
+
+        // Extract address details
+        let city = "";
+        let neighborhood = "";
+        let postalCode = "";
+        let country = "";
+        
+        feature.context?.forEach((ctx: any) => {
+            if (ctx.id.startsWith("place")) city = ctx.text;
+            if (ctx.id.startsWith("locality") || ctx.id.startsWith("district")) neighborhood = ctx.text;
+            if (ctx.id.startsWith("postcode")) postalCode = ctx.text;
+            if (ctx.id.startsWith("country")) country = ctx.short_code?.toUpperCase() || ctx.text;
+        });
+
+        const address = feature.text || feature.place_name.split(",")[0];
+
+        set("coordinates", { lat, lng });
+        set("address", address);
+        set("city", city);
+        set("neighborhood", neighborhood);
+        set("postalCode", postalCode);
+        set("country", country || "MK");
+        setResults([]);
+        setQuery(feature.place_name);
+    };
+
+    const handleMapChange = async (coords: { lat: number; lng: number }) => {
+        set("coordinates", coords);
+
+        // Reverse geocode to update address fields
+        try {
+            const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+            const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lng},${coords.lat}.json?access_token=${token}&limit=1`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const feature = data.features?.[0];
+            if (feature) {
+                let city = "";
+                let neighborhood = "";
+                let postalCode = "";
+                let country = "";
+                feature.context?.forEach((ctx: any) => {
+                    if (ctx.id.startsWith("place")) city = ctx.text;
+                    if (ctx.id.startsWith("locality") || ctx.id.startsWith("district")) neighborhood = ctx.text;
+                    if (ctx.id.startsWith("postcode")) postalCode = ctx.text;
+                    if (ctx.id.startsWith("country")) country = ctx.short_code?.toUpperCase() || ctx.text;
+                });
+                const address = feature.text || feature.place_name.split(",")[0];
+                set("address", address);
+                set("city", city);
+                set("neighborhood", neighborhood);
+                set("postalCode", postalCode);
+                set("country", country || "MK");
+                setQuery(feature.place_name);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     return (
-        <div className="space-y-5">
+        <div className="space-y-6">
             <div>
                 <h2 className="text-2xl font-bold font-display text-primary">Location</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Customers on opus.mk will use this to find you. A map picker will be available to pin your exact location.
+                    Search for your business address or pin it directly on the map.
                 </p>
             </div>
 
-            <div>
-                <FieldLabel>City</FieldLabel>
-                <TextInput
-                    placeholder="Skopje"
-                    value={form.city}
-                    onChange={(e) => set("city", e.target.value)}
-                />
+            <div className="relative">
+                <FieldLabel>Business address</FieldLabel>
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                    <TextInput
+                        placeholder="Search for your address..."
+                        className="pl-11 pr-11"
+                        value={query}
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                    {isSearching && (
+                        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 text-primary animate-spin" size={16} />
+                    )}
+                </div>
+
+                {results.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-card border border-border/40 rounded-[20px] shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1">
+                        {results.map((r) => (
+                            <button
+                                key={r.id}
+                                type="button"
+                                className="w-full text-left px-4 py-3 text-sm hover:bg-secondary transition flex flex-col gap-0.5"
+                                onClick={() => selectResult(r)}
+                            >
+                                <span className="font-semibold text-foreground">{r.text}</span>
+                                <span className="text-xs text-muted-foreground truncate">{r.place_name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            <div>
-                <FieldLabel>Address</FieldLabel>
-                <TextInput
-                    placeholder="ul. Makedonija 12"
-                    value={form.address}
-                    onChange={(e) => set("address", e.target.value)}
-                />
+            <div className="space-y-1.5">
+                <FieldLabel>Adjust map pin</FieldLabel>
+                <div className="rounded-[20px] overflow-hidden border border-border/40 shadow-sm">
+                    <LocationMapPicker
+                        coords={form.coordinates}
+                        onChange={handleMapChange}
+                    />
+                </div>
             </div>
 
-            <div>
-                <FieldLabel>Neighborhood / area (optional)</FieldLabel>
-                <TextInput
-                    placeholder="Centar, Karpoš, Aerodrom…"
-                    value={form.neighborhood}
-                    onChange={(e) => set("neighborhood", e.target.value)}
-                />
-            </div>
-
-            {/* Mapbox picker placeholder — wire up when Mapbox token is available */}
-            <div className="rounded-[20px] border border-dashed border-border/40 bg-secondary/30 p-6 flex flex-col items-center justify-center gap-2 text-center">
-                <MapPin size={24} className="text-muted-foreground/50" />
-                <p className="text-sm font-medium text-muted-foreground">Interactive map picker</p>
-                <p className="text-xs text-muted-foreground/60">Add your Mapbox token in <code className="bg-secondary px-1 rounded">.env.local</code> to enable</p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5">
-                    <code className="bg-secondary px-1 rounded">NEXT_PUBLIC_MAPBOX_TOKEN</code>
-                </p>
-            </div>
+            {form.address && (
+                <div className="p-4 rounded-[20px] bg-accent/5 border border-accent/20 space-y-1 flex items-start gap-3">
+                    <div className="mt-1 w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                        <MapPin size={16} className="text-accent" />
+                    </div>
+                    <div>
+                        <p className="text-xs font-bold text-accent/60 uppercase tracking-widest">Confirmed Address</p>
+                        <p className="text-sm font-semibold text-accent">{form.address}</p>
+                        <p className="text-xs text-accent/70">
+                            {form.city}
+                            {form.neighborhood ? `, ${form.neighborhood}` : ""}
+                            {form.postalCode ? ` ${form.postalCode}` : ""}
+                            {form.country ? `, ${form.country}` : ""}
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -468,6 +589,16 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
     const updateDay = (i: number, field: string, value: string | boolean) => {
         const updated = form.openingHours.map((d, idx) =>
             idx === i ? { ...d, [field]: value } : d
+        );
+        set("openingHours", updated);
+    };
+
+    const copyToAll = (i: number) => {
+        const source = form.openingHours[i];
+        const updated = form.openingHours.map((d) =>
+            !d.isClosed
+                ? { ...d, open: source.open, close: source.close }
+                : d
         );
         set("openingHours", updated);
     };
@@ -484,12 +615,12 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
             <div className="space-y-2">
                 {form.openingHours.map((day, i) => (
                     <div key={i} className={cn(
-                        "flex items-center gap-3 rounded-[16px] border px-4 py-3 transition",
+                        "group flex items-center gap-3 rounded-[16px] border px-4 py-3 transition",
                         day.isClosed
                             ? "border-border/20 bg-secondary/30 opacity-60"
                             : "border-border/40 bg-card"
                     )}>
-                        <div className="w-10 text-sm font-semibold font-outfit text-muted-foreground flex-shrink-0">
+                        <div className="w-24 text-sm font-semibold font-outfit text-muted-foreground flex-shrink-0">
                             {DAYS[i]}
                         </div>
                         <button
@@ -522,6 +653,15 @@ function StepHours({ form, set }: { form: FormState; set: (k: keyof FormState, v
                                     onChange={(e) => updateDay(i, "close", e.target.value)}
                                     className="rounded-lg border border-border/40 bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
                                 />
+
+                                <button
+                                    type="button"
+                                    onClick={() => copyToAll(i)}
+                                    className="ml-auto opacity-0 group-hover:opacity-100 flex items-center gap-1.5 text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-md transition-all hover:bg-primary/20 uppercase tracking-wider"
+                                >
+                                    <Copy size={12} />
+                                    Apply to all
+                                </button>
                             </div>
                         )}
                     </div>
@@ -677,7 +817,7 @@ function StepComplete({ industry }: { industry: Industry }) {
 const LS_KEY = "opus_onboarding_v1";
 
 function saveProgress(data: { orgId: string; step: number; industry: Industry }) {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch {}
+    try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch { }
 }
 
 function loadProgress(): { orgId: string; step: number; industry: Industry } | null {
@@ -689,7 +829,7 @@ function loadProgress(): { orgId: string; step: number; industry: Industry } | n
 }
 
 function clearProgress() {
-    try { localStorage.removeItem(LS_KEY); } catch {}
+    try { localStorage.removeItem(LS_KEY); } catch { }
 }
 
 // ─────────────────────────────────────────────────────
@@ -716,6 +856,8 @@ export default function Onboarding() {
         address: "",
         city: "",
         neighborhood: "",
+        postalCode: "",
+        country: "MK",
         coordinates: null,
         venueType: null,
         cuisine: [],
@@ -764,6 +906,18 @@ export default function Onboarding() {
                 ...f,
                 industry: existingOrg.industry as Industry,
                 name: existingOrg.name === "Untitled" ? "" : existingOrg.name,
+                address: (existingOrg as any).address || "",
+                city: (existingOrg as any).city || "",
+                neighborhood: (existingOrg as any).neighborhood || "",
+                postalCode: (existingOrg as any).postalCode || "",
+                country: (existingOrg as any).country || "MK",
+                coordinates: (existingOrg as any).coordinates || null,
+                beautyCategory: (existingOrg as any).beautyCategory || null,
+                venueType: (existingOrg as any).venueType || null,
+                cuisine: (existingOrg as any).cuisine || [],
+                openingHours: (existingOrg as any).openingHours || DEFAULT_HOURS,
+                tagline: (existingOrg as any).tagline || "",
+                bio: (existingOrg as any).bio || "",
             }));
             const resumeStep = Math.max(1, Math.min(existingOrg.onboardingStep, 4));
             setStep(resumeStep);
@@ -832,7 +986,9 @@ export default function Onboarding() {
                     address: form.address,
                     city: form.city,
                     neighborhood: form.neighborhood,
-                    country: "MK",
+                    postalCode: form.postalCode,
+                    coordinates: form.coordinates ?? undefined,
+                    country: form.country || "MK",
                     onboardingStep: 3,
                 });
                 saveProgress({ orgId, step: 3, industry: form.industry! });

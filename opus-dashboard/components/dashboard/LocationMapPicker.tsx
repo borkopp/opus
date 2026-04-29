@@ -49,10 +49,11 @@ export default function LocationMapPicker({
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(coords ?? null);
   const [geocoding, setGeocoding] = useState(false);
 
-  // Sync external coords changes (e.g. initial load)
+  // Sync external coords changes (e.g. initial load or search selection)
   useEffect(() => {
-    if (coords && !pin) {
+    if (coords && (coords.lat !== pin?.lat || coords.lng !== pin?.lng)) {
       setPin(coords);
+      flyTo(coords.lat, coords.lng);
     }
   }, [coords]); // eslint-disable-line
 
@@ -120,6 +121,7 @@ export default function LocationMapPicker({
             latitude: pin?.lat ?? DEFAULT_CENTER.lat,
             zoom: pin ? 15 : 12,
           }}
+          projection="mercator"
           onClick={handleMapClick}
           cursor="crosshair"
           dragRotate={false}
@@ -143,7 +145,7 @@ export default function LocationMapPicker({
                 title="Drag to reposition"
               >
                 <div
-                  className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg ring-2 ring-background"
+                  className="w-10 h-10 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg ring-2 ring-background"
                   style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.25)" }}
                 >
                   <IconMapPin size={18} />
@@ -165,13 +167,13 @@ export default function LocationMapPicker({
         )}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-4 my-2">
         <p className="text-xs text-muted-foreground">
           {pin
             ? `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)} — drag pin or click map to adjust`
             : "No coordinates set"}
         </p>
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           size="sm"
@@ -185,7 +187,7 @@ export default function LocationMapPicker({
             <IconSearch size={13} />
           )}
           Find on map
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

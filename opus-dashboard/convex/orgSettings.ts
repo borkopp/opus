@@ -288,11 +288,6 @@ export const updateOrgBranding = mutation({
         instagramHandle: v.optional(v.string()),
         instagramPageId: v.optional(v.string()),
         websiteUrl: v.optional(v.string()),
-        brandColors: v.optional(v.object({
-            primary: v.string(),
-            secondary: v.string(),
-            accent: v.string(),
-        })),
     },
     handler: async (ctx, args) => {
         await requireRole(ctx, args.orgId, "owner");
@@ -309,7 +304,6 @@ export const updateOrgBranding = mutation({
             instagramHandle: args.instagramHandle,
             instagramPageId: args.instagramPageId,
             websiteUrl: args.websiteUrl,
-            brandColors: args.brandColors,
             updatedAt: Date.now()
         });
 

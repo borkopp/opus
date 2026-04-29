@@ -104,13 +104,13 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
       value="general"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
+      <div className="border-b pb-12 mb-12 last:border-b-0">
         <div className="mb-8">
           <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Display & <span className="serif-accent-inline text-2xl">Region</span></h2>
           <p className="text-sm text-muted-foreground">Set your timezone, language, and currency for the platform.</p>
         </div>
         <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
-          <div className="grid gap-2 max-w-xl">
+          <div className="grid gap-2 max-w-4xl">
             <Label htmlFor="timezone">Timezone</Label>
             <DebouncedInput
               id="timezone"
@@ -131,7 +131,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
             <FieldError id="timezone-error" message={errors.timezone} />
           </div>
 
-          <div className="grid gap-2 max-w-xl">
+          <div className="grid gap-2 max-w-4xl">
             <Label htmlFor="locale">
               Language & Region{" "}
               <span className="text-muted-foreground font-normal ml-1">(e.g. en-GB, mk-MK)</span>

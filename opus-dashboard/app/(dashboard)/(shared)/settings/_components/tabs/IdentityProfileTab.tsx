@@ -199,10 +199,10 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
       value="branding"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-8 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-8 items-start">
         <div className="space-y-6">
           {/* ── Cover Photo ─────────────────────────────────────── */}
-          <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
+          <div className="border-b pb-12 mb-12 last:border-b-0">
             <div className="mb-8">
               <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Cover <span className="serif-accent-inline text-2xl">Photo</span></h2>
               <p className="text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
           </div>
 
           {/* ── Identity & Profile ──────────────────────────────── */}
-          <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
+          <div className="border-b pb-12 mb-12 last:border-b-0">
             <div className="mb-8">
               <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Identity & <span className="serif-accent-inline text-2xl">Profile</span></h2>
               <p className="text-sm text-muted-foreground">
@@ -356,7 +356,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
                   rows={4}
                   placeholder="We're a small team of passionate barbers dedicated to..."
                   className={cn(
-                    "w-full rounded-xl border border-input bg-white px-3 py-2.5 text-sm ring-offset-background",
+                    "w-full rounded-xl border border-input px-3 py-2.5 text-sm ring-offset-background",
                     "placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     "resize-y min-h-[100px]",
                   )}
@@ -367,7 +367,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
           </div>
 
           {/* ── Gallery Photos ──────────────────────────────────── */}
-          <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
+          <div className="border-b pb-12 mb-12 last:border-b-0">
             <div className="flex items-start justify-between gap-4 mb-8">
               <div>
                 <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Gallery</h2>
@@ -438,7 +438,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
           </div>
 
           {/* ── Contact & Social ────────────────────────────────── */}
-          <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
+          <div className="border-b pb-12 mb-12 last:border-b-0">
             <div className="mb-8">
               <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Contact & <span className="serif-accent-inline text-2xl">Social</span></h2>
               <p className="text-sm text-muted-foreground">
@@ -446,7 +446,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
               </p>
             </div>
             <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
-              <div className="grid gap-1.5 max-w-xl">
+              <div className="grid gap-1.5 max-w-4xl">
                 <Label htmlFor="phone" className="flex items-center gap-1.5">
                   <IconPhone size={14} className="text-muted-foreground" /> Phone Number
                 </Label>
@@ -458,7 +458,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
                   onChange={(val) => setBranding({ ...branding, phone: val })}
                 />
               </div>
-              <div className="grid gap-1.5 max-w-xl">
+              <div className="grid gap-1.5 max-w-4xl">
                 <Label htmlFor="instagram-handle" className="flex items-center gap-1.5">
                   <IconBrandInstagram size={14} className="text-muted-foreground" /> Instagram
                   Handle
@@ -476,7 +476,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
                   />
                 </div>
               </div>
-              <div className="grid gap-1.5 max-w-xl">
+              <div className="grid gap-1.5 max-w-4xl">
                 <Label htmlFor="instagram-page-id" className="flex items-center gap-1.5">
                   <IconBrandInstagram size={14} className="text-muted-foreground" /> Instagram Page
                   ID
@@ -495,7 +495,7 @@ export function IdentityProfileTab({ orgId, initialData, media }: IdentityProfil
                   Your numeric Meta Page ID — find it in Facebook/Instagram Business settings. Required for the AI to reply to customer DMs.
                 </p>
               </div>
-              <div className="grid gap-1.5 max-w-xl">
+              <div className="grid gap-1.5 max-w-4xl">
                 <Label htmlFor="website-url" className="flex items-center gap-1.5">
                   <IconWorld size={14} className="text-muted-foreground" /> Website URL
                 </Label>

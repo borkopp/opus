@@ -185,7 +185,7 @@ export default function SettingsPage() {
           </TabsList>
         </div>
 
-        <div className="flex-1 max-w-4xl min-w-0">
+        <div className="flex-1 max-w-7xl min-w-0">
           <GeneralTab
             orgId={orgId}
             initialData={{

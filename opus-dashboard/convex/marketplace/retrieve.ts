@@ -129,6 +129,9 @@ type Candidate = {
   averageRating: number;
   reviewCount: number;
   beautyCategory?: string;
+  venueType?: string;
+  cuisine?: string[];
+  openingHoursTomorrow?: { open: string; close: string };
   industry: "beauty_wellness" | "hospitality";
   city?: string;
   neighborhood?: string;
@@ -356,9 +359,12 @@ export const retrieve = action({
           isOpenAt: openAt,
           snippet: best.snippet,
           openingHoursToday: openingHoursToday(org, now),
+          openingHoursTomorrow: openingHoursToday(org, now + 86_400_000),
           averageRating: org.averageRating,
           reviewCount: org.reviewCount,
           beautyCategory: org.beautyCategory,
+          venueType: org.venueType,
+          cuisine: org.cuisine,
           industry: org.industry,
           city: org.city,
           neighborhood: org.neighborhood,

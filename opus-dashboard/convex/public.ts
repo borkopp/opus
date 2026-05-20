@@ -210,6 +210,9 @@ export const getPublicProfile = query({
             // Hours
             openingHours: org.openingHours,
 
+            // Menu (hospitality)
+            menuText: org.menuText,
+
             // Discovery
             tags: org.tags,
             priceRange: org.priceRange,

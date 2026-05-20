@@ -42,7 +42,7 @@ export function DiscoverClient() {
 
   const listings = useQuery(
     api.public.listPublished,
-    resolvedCity ? { industry: "beauty_wellness", city: resolvedCity } : "skip"
+    resolvedCity ? { city: resolvedCity } : "skip"
   );
 
   const searchResults = useQuery(

@@ -27,6 +27,7 @@ import {
 import ChatWidget from "@/components/ChatWidget";
 import { HeaderAuth } from "@/components/HeaderAuth";
 import { motion, type Variants } from "framer-motion";
+import { HospitalitySection } from "./_components/HospitalitySection";
 
 const BusinessMap = dynamic(() => import("@/components/BusinessMap"), {
   ssr: false,
@@ -110,7 +111,7 @@ export default function BusinessProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-44">
+    <div className={`min-h-screen bg-background ${profile.industry === "hospitality" ? "pb-12" : "pb-44"}`}>
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -146,7 +147,7 @@ export default function BusinessProfilePage() {
               priority
               sizes="100vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-background via-background/20 to-transparent" />
           </motion.div>
         </motion.div>
       )}
@@ -254,20 +255,31 @@ export default function BusinessProfilePage() {
           </motion.div>
         )}
 
-        {/* ── Services ── */}
-        <motion.div variants={fadeInUp}>
-          <Separator className="my-3" />
-          <div className="pt-4 pb-4">
-            <h2 className="text-lg font-bold tracking-tight mb-5">Services</h2>
-            <div className="space-y-8">
-              {Object.entries(servicesByCategory).map(([category, services]) => (
-                <div key={category}>
-                  {Object.keys(servicesByCategory).length > 1 && (
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-3 ml-1">
-                      {category}
-                    </h3>
-                  )}
-                  <div className="space-y-3">
+        {/* ── Vertical-specific sections ── */}
+        {profile.industry === "hospitality" ? (
+          <HospitalitySection
+            openingHours={profile.openingHours}
+            menuText={profile.menuText}
+            venueType={profile.venueType}
+            cuisine={profile.cuisine}
+            priceRange={profile.priceRange}
+            tags={profile.tags}
+          />
+        ) : (
+          /* ── Beauty: Services ── */
+          <motion.div variants={fadeInUp}>
+            <Separator className="my-3" />
+            <div className="pt-4 pb-4">
+              <h2 className="text-lg font-bold tracking-tight mb-5">Services</h2>
+              <div className="space-y-8">
+                {Object.entries(servicesByCategory).map(([category, services]) => (
+                  <div key={category}>
+                    {Object.keys(servicesByCategory).length > 1 && (
+                      <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 mb-3 ml-1">
+                        {category}
+                      </h3>
+                    )}
+                    <div className="space-y-3">
                       {services.map((service: any) => (
                         <motion.div key={service._id} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                           <Link href={`/${slug}/book?service=${service._id}`} className="group block">
@@ -305,12 +317,13 @@ export default function BusinessProfilePage() {
                           </Link>
                         </motion.div>
                       ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* ── Reviews ── */}
         {reviews && reviews.length > 0 && (
@@ -388,23 +401,25 @@ export default function BusinessProfilePage() {
       </motion.div>
 
       {/* ── Sticky bottom CTA ── */}
-      <motion.div 
-        initial={{ y: 100 }} 
-        animate={{ y: 0 }} 
-        transition={{ type: "spring", damping: 20, delay: 0.6 }}
-        className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border/40 pt-4 px-4 pb-24 md:pb-28 z-50"
-      >
-        <div className="max-w-3xl mx-auto">
-          <Link href={`/${slug}/book`}>
-            <motion.div whileTap={{ scale: 0.98 }}>
-              <Button className="w-full h-14 rounded-2xl text-[17px] font-bold tracking-wide bg-cta text-cta-foreground hover:bg-cta/90 shadow-lg shadow-cta/20 relative overflow-hidden group border border-black/10 dark:border-white/10">
-                <span className="relative z-10 flex items-center justify-center gap-2">Book Now</span>
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-              </Button>
-            </motion.div>
-          </Link>
-        </div>
-      </motion.div>
+      {profile.industry !== "hospitality" && (
+        <motion.div
+          initial={{ y: 100 }}
+          animate={{ y: 0 }}
+          transition={{ type: "spring", damping: 20, delay: 0.6 }}
+          className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border/40 pt-4 px-4 pb-24 md:pb-28 z-50"
+        >
+          <div className="max-w-3xl mx-auto">
+            <Link href={`/${slug}/book`}>
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <Button className="w-full h-14 rounded-2xl text-[17px] font-bold tracking-wide bg-cta text-cta-foreground hover:bg-cta/90 shadow-lg shadow-cta/20 relative overflow-hidden group border border-black/10 dark:border-white/10">
+                  <span className="relative z-10 flex items-center justify-center gap-2">Book Now</span>
+                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                </Button>
+              </motion.div>
+            </Link>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── AI Chat Widget ── */}
       {profile.aiWebchatEnabled && (

@@ -160,11 +160,67 @@ type Candidate = {
   averageRating: number;
   reviewCount: number;
   beautyCategory?: string;
+  venueType?: string;
+  cuisine?: string[];
+  openingHoursTomorrow?: { open: string; close: string };
   industry: string;
   city?: string;
   neighborhood?: string;
   hasTableAvailability?: boolean | null; // hospitality only, null = unknown
 };
+
+const SNIPPET_METADATA_PREFIXES = [
+  "Type:", "Cuisine:", "Address:", "Location:", "Tags:",
+  "Opening hours:", "Menu:", "## ", "- ",
+];
+
+function extractReason(snippet: string): string {
+  const lines = snippet.split("\n").slice(1); // skip name on line 0
+  const meaningful = lines.filter((line) => {
+    const t = line.trim();
+    return t.length > 0 && !SNIPPET_METADATA_PREFIXES.some((p) => t.startsWith(p));
+  });
+  return meaningful.slice(0, 2).join(" ").slice(0, 120);
+}
+
+function fmt12h(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h >= 12 ? "pm" : "am";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}${period}` : `${h12}:${m.toString().padStart(2, "0")}${period}`;
+}
+
+function deriveNextOpens(c: Candidate): string | undefined {
+  if (c.isOpenNow) return undefined;
+
+  // Current Skopje time in minutes since midnight
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Belgrade",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(new Date());
+  const nowMins =
+    parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) * 60 +
+    parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+
+  const toMins = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  // Opens later today?
+  if (c.openingHoursToday && toMins(c.openingHoursToday.open) > nowMins) {
+    return `today ${fmt12h(c.openingHoursToday.open)}`;
+  }
+
+  // Opens tomorrow?
+  if (c.openingHoursTomorrow) {
+    return `tomorrow ${fmt12h(c.openingHoursTomorrow.open)}`;
+  }
+
+  return undefined;
+}
 
 function candidatesToContextJson(candidates: Candidate[]): string {
   const slim = candidates.map((c) => ({
@@ -440,17 +496,19 @@ export async function POST(req: NextRequest) {
             orgId: c.orgId,
             slug: c.slug,
             name: c.name,
-            reason:
-              c.snippet.split("\n").slice(1, 3).join(" ").slice(0, 120) ||
-              c.snippet.slice(0, 120),
+            reason: extractReason(c.snippet),
+            venueType: c.venueType,
+            cuisine: c.cuisine,
             availabilityHint: deriveAvailabilityHint(c, timeIntent.kind),
             averageRating: c.averageRating,
             reviewCount: c.reviewCount,
             city: c.city,
             distanceM: c.distanceM,
             isOpenNow: c.isOpenNow,
+            closesAt: c.isOpenNow ? (c.openingHoursToday?.close ?? null) : null,
+            opensAt: deriveNextOpens(c) ?? null,
             hasTableAvailability: c.hasTableAvailability ?? null,
-            bookingUrl, // ← pre-filled deep link
+            bookingUrl,
           };
         });
 

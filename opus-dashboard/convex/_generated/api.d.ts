@@ -41,6 +41,7 @@ import type * as marketplace_messages from "../marketplace/messages.js";
 import type * as marketplace_openingHours from "../marketplace/openingHours.js";
 import type * as marketplace_retrieve from "../marketplace/retrieve.js";
 import type * as marketplace_retrieveHelpers from "../marketplace/retrieveHelpers.js";
+import type * as marketplace_scraped from "../marketplace/scraped.js";
 import type * as marketplace_sourceText from "../marketplace/sourceText.js";
 import type * as marketplace_timeIntent from "../marketplace/timeIntent.js";
 import type * as myFunctions from "../myFunctions.js";
@@ -112,6 +113,7 @@ declare const fullApi: ApiFromModules<{
   "marketplace/openingHours": typeof marketplace_openingHours;
   "marketplace/retrieve": typeof marketplace_retrieve;
   "marketplace/retrieveHelpers": typeof marketplace_retrieveHelpers;
+  "marketplace/scraped": typeof marketplace_scraped;
   "marketplace/sourceText": typeof marketplace_sourceText;
   "marketplace/timeIntent": typeof marketplace_timeIntent;
   myFunctions: typeof myFunctions;

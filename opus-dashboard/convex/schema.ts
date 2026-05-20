@@ -154,6 +154,33 @@ export default defineSchema({
     onboardingStep: v.number(),              // 0–5, drives completion score UI
     isOnboardingComplete: v.boolean(),
 
+    // ── Scraper / external data ──
+    // Set on orgs imported by the Skopje scraper pipeline.
+    source: v.optional(v.union(
+      v.literal("customer"),   // onboarded paying business (default)
+      v.literal("scraped"),    // imported by the Skopje scraper
+    )),
+    claimStatus: v.optional(v.union(
+      v.literal("unclaimed"),
+      v.literal("claim_pending"),
+      v.literal("claimed"),
+    )),
+    googlePlaceId: v.optional(v.string()),
+    woltSlug: v.optional(v.string()),
+    glovoSlug: v.optional(v.string()),
+    lastScrapedAt: v.optional(v.number()),
+
+    // Menu text (markdown blob) — embedded by the RAG pipeline for dietary queries.
+    menuText: v.optional(v.string()),
+
+    // Review workflow for the scraper admin tool.
+    reviewStatus: v.optional(v.union(
+      v.literal("needs_review"),
+      v.literal("in_progress"),
+      v.literal("ready"),
+    )),
+    reviewerNotes: v.optional(v.string()),
+
     // ── Soft delete ──
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
@@ -166,6 +193,9 @@ export default defineSchema({
     .index("by_listing_status", ["listingStatus"])
     .index("by_instagram_page_id", ["instagramPageId"])
     .index("by_city_listing", ["city", "listingStatus"])
+    .index("by_source", ["source"])
+    .index("by_google_place", ["googlePlaceId"])
+    .index("by_source_review", ["source", "reviewStatus"])
     .searchIndex("search_by_name", {
       searchField: "name",
       filterFields: ["listingStatus", "isDeleted", "city", "industry", "beautyCategory"],

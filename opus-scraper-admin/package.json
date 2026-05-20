@@ -1,0 +1,35 @@
+{
+  "name": "opus-scraper-admin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "scrape:osm": "tsx scripts/scrape-osm.ts",
+    "scrape:wolt": "tsx scripts/scrape-wolt.ts",
+    "scrape:wolt:menus": "tsx scripts/scrape-wolt-menus.ts",
+    "import:geojson": "tsx scripts/import-geojson.ts",
+    "upsert": "tsx scripts/merge-and-upsert.ts",
+    "delete:scraped": "tsx scripts/delete-scraped.ts",
+    "enrich:hours": "tsx scripts/enrich-hours-from-osm.ts",
+    "clear:hours": "tsx scripts/clear-hours.ts",
+    "reset:menus": "node -e \"const fs=require('fs'),p='data/wolt-places.json';fs.writeFileSync(p,JSON.stringify(JSON.parse(fs.readFileSync(p,'utf8')).map(v=>({...v,menuText:null})),null,2));console.log('menuText cleared from wolt-places.json');\""
+  },
+  "dependencies": {
+    "convex": "^1.17.0",
+    "lucide-react": "^0.446.0",
+    "playwright": "^1.60.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.6"
+  }
+}

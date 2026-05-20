@@ -80,6 +80,11 @@ export function buildOrgChunk(org: Doc<"orgs">): string {
     parts.push(`Tags: ${org.tags.join(", ")}.`);
   }
 
+  if (org.menuText) {
+    const trimmed = org.menuText.slice(0, 2000);
+    parts.push(`Menu:\n${trimmed}`);
+  }
+
   return parts.join("\n");
 }
 

@@ -16,7 +16,7 @@ export function LiveScheduleWidget({ groupedByStaff, handleAction, checkIn, comp
   return (
     <Card className="flex flex-col h-full bg-card p-5 rounded-[24px]">
       <div className="flex justify-between items-center mb-4 shrink-0">
-        <h2 className="text-xl font-semibold font-display text-primary"><span className="serif-accent-inline">Live</span> Schedule</h2>
+        <h2 className="text-xl font-semibold font-display text-primary">Live Schedule</h2>
         <Badge variant="outline" className="rounded-full shadow-sm text-[11px] font-bold font-outfit">
           {allBookings.length} Bookings Today
         </Badge>

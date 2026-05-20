@@ -70,7 +70,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
           <div className="flex items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold font-display text-foreground leading-none">Fill <span className="serif-accent-inline">Gaps</span></span>
+                <span className="text-lg font-bold font-display text-foreground leading-none">Fill Gaps</span>
                 {/* {summary?.enabled ? (
                   <div className="px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 flex items-center gap-1">
                     <div className="w-1 h-1 rounded-full bg-accent animate-pulse" />

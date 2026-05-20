@@ -83,7 +83,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
       >
          <Card className="flex flex-col bg-card p-5 col-span-1 lg:col-span-1 h-full rounded-[24px] border-border/40 shadow-sm transition-all duration-500 hover:shadow-md">
             <motion.div variants={itemVars} className="flex justify-between items-center mb-4">
-               <h2 className="text-xl font-semibold font-display text-primary">Staff <span className="serif-accent-inline">Capacity</span></h2>
+               <h2 className="text-xl font-semibold font-display text-primary">Staff Capacity</h2>
             </motion.div>
 
             <motion.div variants={itemVars} className="flex items-center gap-6 mb-5 pb-5 border-b border-border/20">

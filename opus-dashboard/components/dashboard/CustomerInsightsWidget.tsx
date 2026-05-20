@@ -62,7 +62,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
         className="flex flex-col h-full relative z-10"
       >
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold font-display text-primary tracking-tight"><span className="serif-accent-inline">Insights</span> & Today</h2>
+          <h2 className="text-xl font-semibold font-display text-primary tracking-tight">Insights & Today</h2>
           <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
         </div>
 

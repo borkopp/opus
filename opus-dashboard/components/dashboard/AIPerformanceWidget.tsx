@@ -113,7 +113,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                   </motion.div>
                   <div>
                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold font-display text-foreground leading-none">AI <span className="serif-accent-inline">Agent</span></span>
+                        <span className="text-lg font-bold font-display text-foreground leading-none">AI Agent</span>
                         {enabled ? (
                            <motion.div
                               initial={{ scale: 0.8, opacity: 0 }}

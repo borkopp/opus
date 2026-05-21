@@ -384,7 +384,7 @@ export default function AskScreen() {
 
   const dockBottomPadding = keyboardVisible
     ? Spacing.two
-    : insets.bottom + BottomTabInset + Spacing.three;
+    : insets.bottom + BottomTabInset - Spacing.three;
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>

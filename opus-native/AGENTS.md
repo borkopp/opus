@@ -25,6 +25,8 @@ React Native app for the OPUS marketplace. Shares the **same Convex backend** as
 
 3. **Physical device (Expo Go):** Keep `EXPO_PUBLIC_CONVEX_URL=http://127.0.0.1:3210` — `src/lib/convex-url.ts` rewrites to your Mac's LAN IP from Metro's debugger host. If it still fails, set the LAN URL explicitly in `.env.local`.
 
+4. **Images:** Local Convex storage is on the **same URL as `EXPO_PUBLIC_CONVEX_URL`** (`/api/storage/...` on port `3210`). `src/lib/resolve-media-url.ts` rebuilds every image URL from that origin so Expo Go on a physical device uses your Mac's LAN IP (not `127.0.0.1`). Production uses `*.convex.site` automatically.
+
 ## Convex layout
 
 - `convex/` → symlink to `../opus-dashboard/convex`

@@ -955,11 +955,14 @@ export default function Onboarding() {
             if (step === 1) {
                 let id = orgId;
                 if (!id) {
+                    console.log("[Onboarding] Creating org:", { name: form.name.trim(), industry: form.industry });
                     id = await createOrg({ name: form.name.trim(), industry: form.industry! });
+                    console.log("[Onboarding] Org created:", id);
                     setOrgId(id);
                 }
                 // Always update profile to persist step 2 + any vertical-specific fields.
                 // Pass industry in case the user went back to step 0 and changed it.
+                console.log("[Onboarding] Updating profile:", { orgId: id, step: 2 });
                 await updateProfile({
                     orgId: id as any,
                     name: form.name.trim(),
@@ -973,6 +976,7 @@ export default function Onboarding() {
                         cuisine: form.cuisine,
                     }),
                 });
+                console.log("[Onboarding] Profile updated, advancing to step 2");
                 saveProgress({ orgId: id!, step: 2, industry: form.industry! });
                 setStep(2);
                 setIsLoading(false);
@@ -1103,7 +1107,11 @@ export default function Onboarding() {
             {step === 4 && form.industry === "beauty_wellness" && <StepBeautyProfile form={form} set={set} />}
             {step === 4 && form.industry === "hospitality" && <StepHospSetup form={form} set={set} />}
 
-            {error && <p className="mt-4 text-sm text-destructive font-medium">{error}</p>}
+            {error && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <p className="text-sm text-destructive font-medium">{error}</p>
+                </div>
+            )}
 
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-border/40">
                 {step > 0 ? (

@@ -17,12 +17,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { api } from '@/lib/convex-api';
+import { formatDuration, formatPrice } from '@/lib/format';
 import { DiscoverColors } from '@/constants/discover';
 import { Spacing } from '@/constants/theme';
 import { useLocation } from '@/context/location-context';
 import { priceRangeSymbol } from '@/lib/discover/feed';
 import { isOpenNow } from '@/lib/discover/opening-hours';
 import { venueLabel } from '@/lib/discover/venue-label';
+import { resolveMediaUrl } from '@/lib/resolve-media-url';
 import { useTheme } from '@/hooks/use-theme';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -54,19 +56,6 @@ function mapboxStaticUrl(
     `${w}x${h}@2x` +
     `?access_token=${MAPBOX_TOKEN}&logo=false&attribution=false`
   );
-}
-
-function formatPrice(minor: number, currency?: string): string {
-  const sym = currency?.toUpperCase() === 'GBP' ? '£' : currency?.toUpperCase() === 'USD' ? '$' : '€';
-  const amount = minor / 100;
-  return `${sym}${amount % 1 === 0 ? Math.round(amount) : amount.toFixed(2)}`;
-}
-
-function formatDuration(mins: number): string {
-  if (mins < 60) return `${mins}m`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  return m === 0 ? `${h}h` : `${h}h ${m}m`;
 }
 
 function todayDayIndex(): number {
@@ -191,11 +180,12 @@ function HoursRow({
 }
 
 function ServiceRow({ service, theme }: { service: Service; theme: ReturnType<typeof import('@/hooks/use-theme').useTheme> }) {
+  const photoUri = resolveMediaUrl(service.photoUrl);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 14, gap: 12 }}>
-      {service.photoUrl ? (
+      {photoUri ? (
         <Image
-          source={{ uri: service.photoUrl }}
+          source={{ uri: photoUri }}
           style={{ width: 56, height: 56, borderRadius: 10 }}
           contentFit="cover"
           transition={200}
@@ -224,11 +214,12 @@ function ServiceRow({ service, theme }: { service: Service; theme: ReturnType<ty
 }
 
 function StaffCard({ member, theme }: { member: StaffMember; theme: ReturnType<typeof import('@/hooks/use-theme').useTheme> }) {
+  const avatarUri = resolveMediaUrl(member.avatarUrl);
   return (
     <View style={{ alignItems: 'center', gap: 8, width: 88 }}>
-      {member.avatarUrl ? (
+      {avatarUri ? (
         <Image
-          source={{ uri: member.avatarUrl }}
+          source={{ uri: avatarUri }}
           style={{ width: 64, height: 64, borderRadius: 32 }}
           contentFit="cover"
           transition={200}
@@ -542,7 +533,10 @@ export default function BusinessProfileScreen() {
     return <CenteredMessage theme={theme} message="Business not found." />;
   }
 
-  const coverUri = profile.media?.find((m: any) => m.type === 'cover')?.url ?? profile.logoUrl;
+  const coverUri = resolveMediaUrl(
+    profile.media?.find((m: any) => m.type === 'cover')?.url ?? profile.logoUrl,
+  );
+  const logoUri = resolveMediaUrl(profile.logoUrl);
   const galleryMedia = profile.media?.filter((m: any) => m.type !== 'cover') ?? [];
   const isOpen = isOpenNow(profile.openingHours as OpeningHoursEntry[]);
   const price = priceRangeSymbol(profile.priceRange);
@@ -676,7 +670,7 @@ export default function BusinessProfileScreen() {
           </View>
 
           {/* Logo badge */}
-          {profile.logoUrl ? (
+          {logoUri ? (
             <View style={{
               position: 'absolute',
               bottom: -LOGO_OVERLAP,
@@ -690,7 +684,7 @@ export default function BusinessProfileScreen() {
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             }}>
               <Image
-                source={{ uri: profile.logoUrl }}
+                source={{ uri: logoUri }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 transition={200}
@@ -733,7 +727,7 @@ export default function BusinessProfileScreen() {
 
         {/* ── Action Buttons ───────────────────────────────────── */}
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 20 }}>
-          <ActionButton icon="calendar.badge.plus" label="Book" onPress={() => {}} primary theme={theme} />
+          <ActionButton icon="calendar.badge.plus" label="Book" onPress={() => router.push(`/book/${slug}`)} primary theme={theme} />
           {profile.phone ? (
             <ActionButton
               icon="phone.fill"
@@ -896,7 +890,10 @@ export default function BusinessProfileScreen() {
           <View style={{ marginTop: 28, paddingHorizontal: 20 }}>
             <SectionLabel label="Gallery" theme={theme} />
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4 }}>
-              {galleryMedia.slice(0, 6).map((m: any, idx: number) => (
+              {galleryMedia.slice(0, 6).map((m: any, idx: number) => {
+                const galleryUri = resolveMediaUrl(m.url);
+                if (!galleryUri) return null;
+                return (
                 <View
                   key={m._id}
                   style={{
@@ -908,7 +905,7 @@ export default function BusinessProfileScreen() {
                   }}
                 >
                   <Image
-                    source={{ uri: m.url }}
+                    source={{ uri: galleryUri }}
                     style={{ width: '100%', height: '100%' }}
                     contentFit="cover"
                     transition={300}
@@ -923,7 +920,8 @@ export default function BusinessProfileScreen() {
                     </LinearGradient>
                   ) : null}
                 </View>
-              ))}
+                );
+              })}
             </View>
           </View>
         ) : null}

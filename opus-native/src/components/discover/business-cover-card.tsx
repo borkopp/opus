@@ -9,6 +9,7 @@ import { isOpenNow } from '@/lib/discover/opening-hours';
 import { priceRangeSymbol } from '@/lib/discover/feed';
 import type { PublishedListing } from '@/lib/discover/types';
 import { venueLabel } from '@/lib/discover/venue-label';
+import { resolveMediaUrl } from '@/lib/resolve-media-url';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/constants/theme';
 import { useLocation } from '@/context/location-context';
@@ -23,7 +24,8 @@ export function BusinessCoverCard({ listing, onPress }: Props) {
   const theme = useTheme();
   const location = useLocation();
   const open = isOpenNow(listing.openingHours);
-  const coverUri = listing.coverImageUrl ?? listing.logoUrl;
+  const coverUri = resolveMediaUrl(listing.coverImageUrl ?? listing.logoUrl);
+  const logoUri = resolveMediaUrl(listing.logoUrl);
   const price = priceRangeSymbol(listing.priceRange);
 
   const distanceLabel =
@@ -55,9 +57,9 @@ export function BusinessCoverCard({ listing, onPress }: Props) {
           />
         ) : (
           <View style={[styles.fallback, { backgroundColor: theme.backgroundElement }]}>
-            {listing.logoUrl ? (
+            {logoUri ? (
               <Image
-                source={{ uri: listing.logoUrl }}
+                source={{ uri: logoUri }}
                 style={styles.logo}
                 contentFit="cover"
                 transition={200}

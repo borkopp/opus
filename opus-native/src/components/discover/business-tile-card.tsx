@@ -9,6 +9,7 @@ import { priceRangeSymbol } from "@/lib/discover/feed";
 import { haversineKm, fmtDistance } from "@/lib/discover/distance";
 import type { PublishedListing } from "@/lib/discover/types";
 import { venueLabel } from "@/lib/discover/venue-label";
+import { resolveMediaUrl } from "@/lib/resolve-media-url";
 import { useTheme } from "@/hooks/use-theme";
 
 type Props = {
@@ -23,7 +24,7 @@ export function BusinessTileCard({ listing, onPress }: Props) {
   const theme = useTheme();
   const location = useLocation();
   const open = isOpenNow(listing.openingHours);
-  const imageUri = listing.coverImageUrl ?? listing.logoUrl;
+  const imageUri = resolveMediaUrl(listing.coverImageUrl ?? listing.logoUrl);
   const price = priceRangeSymbol(listing.priceRange);
   const label = venueLabel(listing);
 

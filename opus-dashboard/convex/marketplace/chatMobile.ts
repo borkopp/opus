@@ -228,19 +228,35 @@ function deriveAvailabilityHint(
   candidate: Candidate,
   timeIntentKind: string,
 ): string | undefined {
+  const closeToday = candidate.openingHoursToday?.close;
+  const closeTomorrow = candidate.openingHoursTomorrow?.close;
+  const openToday = candidate.openingHoursToday?.open;
+  const openTomorrow = candidate.openingHoursTomorrow?.open;
+
   if (timeIntentKind === "now") {
-    return candidate.isOpenNow ? "Open now" : "Currently closed";
+    if (candidate.isOpenNow) {
+      return closeToday ? `Closes at ${fmt12h(closeToday)}` : undefined;
+    }
+    return openToday ? `Opens at ${fmt12h(openToday)}` : "Currently closed";
   }
   if (timeIntentKind === "tonight") {
-    if (candidate.isOpenAt === true) return "Open tonight";
+    if (candidate.isOpenAt === true) {
+      return closeToday ? `Closes at ${fmt12h(closeToday)}` : undefined;
+    }
     if (candidate.isOpenAt === false) return "Closed tonight";
   }
   if (timeIntentKind === "tomorrow") {
-    if (candidate.isOpenAt === true) return "Open tomorrow";
+    if (candidate.isOpenAt === true) {
+      return closeTomorrow ? `Closes at ${fmt12h(closeTomorrow)}` : undefined;
+    }
     if (candidate.isOpenAt === false) return "Closed tomorrow";
   }
-  if (candidate.openingHoursToday) {
-    return `Open ${candidate.openingHoursToday.open}–${candidate.openingHoursToday.close}`;
+  // No time intent — show closing time if currently open, otherwise hours range
+  if (candidate.isOpenNow && closeToday) {
+    return `Closes at ${fmt12h(closeToday)}`;
+  }
+  if (openToday && closeToday) {
+    return `Open ${fmt12h(openToday)} – ${fmt12h(closeToday)}`;
   }
   return undefined;
 }
@@ -268,6 +284,9 @@ export type MobileRecommendation = {
   isOpenNow: boolean;
   opensAt?: string;
   industry: string;
+  beautyCategory?: string;
+  venueType?: string;
+  cuisine?: string[];
 };
 
 export type MobileChatResult = {
@@ -401,6 +420,9 @@ export const chat = action({
       isOpenNow: c.isOpenNow,
       opensAt: deriveNextOpens(c),
       industry: c.industry,
+      beautyCategory: c.beautyCategory,
+      venueType: c.venueType,
+      cuisine: c.cuisine,
     }));
 
     // 4. Persist assistant turn before returning

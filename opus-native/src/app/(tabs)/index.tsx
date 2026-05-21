@@ -1,5 +1,6 @@
 import { useAction } from "convex/react";
 import { GlassView, isGlassEffectAPIAvailable } from "expo-glass-effect";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -21,6 +22,9 @@ import { api } from "@/lib/convex-api";
 import { useSessionId } from "@/hooks/use-session-id";
 import { useTheme } from "@/hooks/use-theme";
 import { BottomTabInset, Spacing } from "@/constants/theme";
+import { DiscoverColors } from "@/constants/discover";
+import { useLocation } from "@/context/location-context";
+import { beautyCategoryLabel } from "@/lib/discover/beauty-categories";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +41,9 @@ type Recommendation = {
   isOpenNow: boolean;
   opensAt?: string;
   industry: string;
+  beautyCategory?: string;
+  venueType?: string;
+  cuisine?: string[];
 };
 
 type Message = {
@@ -68,6 +75,26 @@ function getDayGreeting(): string {
   return "Good evening";
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function recVenueLabel(rec: Recommendation): string {
+  if (rec.industry === "hospitality") {
+    const type =
+      rec.venueType
+        ?.replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase()) ?? "Restaurant";
+    const cuisine = rec.cuisine?.[0];
+    return cuisine ? `${type} · ${cuisine}` : type;
+  }
+  return (
+    beautyCategoryLabel(rec.beautyCategory) ??
+    rec.beautyCategory
+      ?.replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase()) ??
+    "Beauty"
+  );
+}
+
 // ── Business card ─────────────────────────────────────────────────────────────
 
 function BusinessCard({
@@ -79,43 +106,54 @@ function BusinessCard({
 }) {
   const glassAvailable = isGlassEffectAPIAvailable();
 
+  const distanceLabel =
+    rec.distanceM != null
+      ? rec.distanceM < 1000
+        ? `${Math.round(rec.distanceM)} m away`
+        : `${(rec.distanceM / 1000).toFixed(1)} km away`
+      : null;
+
+  const statusColor = rec.isOpenNow ? "#22c55e" : "#ef4444";
+  const statusLabel = rec.isOpenNow
+    ? "Open"
+    : rec.opensAt
+      ? `Opens ${rec.opensAt}`
+      : "Closed";
+
   const inner = (
     <View style={styles.cardInner}>
+      {/* Initial avatar + name + status */}
       <View style={styles.cardHeader}>
-        <Text
-          style={[styles.cardName, { color: theme.text }]}
-          numberOfLines={1}
-        >
-          {rec.name}
-        </Text>
         <View
           style={[
-            styles.badge,
-            { backgroundColor: rec.isOpenNow ? "#22c55e22" : "#ef444422" },
+            styles.cardAvatar,
+            { backgroundColor: DiscoverColors.accent + "1A" },
           ]}
         >
-          <View
-            style={[
-              styles.badgeDot,
-              { backgroundColor: rec.isOpenNow ? "#22c55e" : "#ef4444" },
-            ]}
-          />
           <Text
-            style={[
-              styles.badgeText,
-              { color: rec.isOpenNow ? "#22c55e" : "#ef4444" },
-            ]}
+            style={[styles.cardAvatarText, { color: DiscoverColors.accent }]}
           >
-            {rec.isOpenNow
-              ? "Open"
-              : rec.opensAt
-                ? `Opens ${rec.opensAt}`
-                : "Closed"}
+            {rec.name.charAt(0).toUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.cardTitleBlock}>
+          <Text
+            style={[styles.cardName, { color: theme.text }]}
+            numberOfLines={1}
+          >
+            {rec.name}
+          </Text>
+          <Text
+            style={[styles.cardIndustry, { color: theme.textSecondary }]}
+            numberOfLines={1}
+          >
+            {recVenueLabel(rec)}
           </Text>
         </View>
       </View>
 
-      {rec.availabilityHint || rec.reason ? (
+      {/* Reason / availability hint */}
+      {(rec.availabilityHint ?? rec.reason) ? (
         <Text
           style={[styles.cardHint, { color: theme.textSecondary }]}
           numberOfLines={2}
@@ -124,41 +162,79 @@ function BusinessCard({
         </Text>
       ) : null}
 
-      <View style={styles.cardMeta}>
-        {rec.averageRating > 0 && (
-          <Text style={[styles.metaText, { color: theme.textSecondary }]}>
-            ★ {rec.averageRating.toFixed(1)}
-            {rec.reviewCount > 0 ? ` · ${rec.reviewCount}` : ""}
-          </Text>
-        )}
-        {rec.city && (
-          <Text style={[styles.metaText, { color: theme.textSecondary }]}>
-            {rec.city}
-          </Text>
-        )}
-        {rec.distanceM != null && (
-          <Text style={[styles.metaText, { color: theme.textSecondary }]}>
-            {rec.distanceM < 1000
-              ? `${Math.round(rec.distanceM)}m`
-              : `${(rec.distanceM / 1000).toFixed(1)}km`}
-          </Text>
-        )}
+      {/* Footer: rating · distance · status · chevron */}
+      <View style={styles.cardFooter}>
+        <View style={styles.cardMeta}>
+          {rec.averageRating > 0 && (
+            <View style={styles.ratingRow}>
+              <Text style={styles.star}>★</Text>
+              <Text style={[styles.metaText, { color: theme.text }]}>
+                {rec.averageRating.toFixed(1)}
+              </Text>
+              {rec.reviewCount > 0 && (
+                <Text style={[styles.metaText, { color: theme.textSecondary }]}>
+                  · {rec.reviewCount}
+                </Text>
+              )}
+            </View>
+          )}
+          {distanceLabel && (
+            <Text style={[styles.metaText, { color: theme.textSecondary }]}>
+              {distanceLabel}
+            </Text>
+          )}
+        </View>
+        <View style={styles.cardFooterRight}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusColor + "18" },
+            ]}
+          >
+            <View
+              style={[styles.statusDot, { backgroundColor: statusColor }]}
+            />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {statusLabel}
+            </Text>
+          </View>
+          <SymbolView
+            name={{
+              ios: "chevron.right",
+              android: "chevron_right",
+              web: "chevron_right",
+            }}
+            size={11}
+            tintColor={theme.textSecondary}
+          />
+        </View>
       </View>
     </View>
   );
 
   if (Platform.OS === "ios" && glassAvailable) {
     return (
-      <GlassView style={styles.card} glassEffectStyle="regular">
+      <Pressable
+        onPress={() => router.push(`/business/${rec.slug}`)}
+        style={({ pressed }) => [styles.card, pressed && { opacity: 0.72 }]}
+      >
+        <GlassView style={StyleSheet.absoluteFill} glassEffectStyle="regular" />
         {inner}
-      </GlassView>
+      </Pressable>
     );
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.backgroundElement }]}>
+    <Pressable
+      onPress={() => router.push(`/business/${rec.slug}`)}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: theme.backgroundElement },
+        pressed && { opacity: 0.72 },
+      ]}
+    >
       {inner}
-    </View>
+    </Pressable>
   );
 }
 
@@ -307,6 +383,7 @@ export default function AskScreen() {
   const insets = useSafeAreaInsets();
   const sessionId = useSessionId();
   const sendChat = useAction(api.marketplace.chatMobile.chat);
+  const location = useLocation();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -351,6 +428,8 @@ export default function AskScreen() {
           query: trimmed,
           sessionId,
           locale: "en",
+          city: location.status === "ready" ? location.city : undefined,
+          coords: location.status === "ready" ? location.coords : undefined,
         });
         setMessages((prev) =>
           prev.map((m) =>
@@ -538,27 +617,46 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 15, lineHeight: 22 },
 
   cardScroll: { marginTop: 8, marginLeft: -4 },
-  cardScrollContent: { paddingLeft: 4, gap: 8, paddingRight: 12 },
-  card: { width: 192, borderRadius: 16, overflow: "hidden" },
-  cardInner: { padding: 12, gap: 4 },
-  cardHeader: {
+  cardScrollContent: { paddingLeft: 4, gap: 10, paddingRight: 12 },
+  card: { width: 260, borderRadius: 18, overflow: "hidden" },
+  cardInner: { padding: 14, gap: 10 },
+
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  cardAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  cardAvatarText: { fontSize: 18, fontWeight: "700" },
+  cardTitleBlock: { flex: 1, gap: 1 },
+  cardName: { fontSize: 14, fontWeight: "600" },
+  cardIndustry: { fontSize: 12 },
+
+  cardHint: { fontSize: 12, lineHeight: 17 },
+
+  cardFooter: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 4,
+    gap: 6,
+    marginTop: 2,
   },
-  cardName: { fontSize: 14, fontWeight: "600", flex: 1 },
-  badge: {
+  cardMeta: { flexDirection: "row", alignItems: "center", gap: 6, flex: 1 },
+  ratingRow: { flexDirection: "row", alignItems: "center", gap: 3 },
+  star: { fontSize: 11, color: "#FFD173" },
+  metaText: { fontSize: 12 },
+  cardFooterRight: { flexDirection: "row", alignItems: "center", gap: 6 },
+  statusBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
     borderRadius: 999,
   },
-  badgeDot: { width: 6, height: 6, borderRadius: 3 },
-  badgeText: { fontSize: 12, fontWeight: "600" },
-  cardHint: { fontSize: 12, lineHeight: 16 },
-  cardMeta: { flexDirection: "row", gap: 8, flexWrap: "wrap", marginTop: 2 },
-  metaText: { fontSize: 12 },
+  statusDot: { width: 5, height: 5, borderRadius: 999 },
+  statusText: { fontSize: 11, fontWeight: "600" },
 });

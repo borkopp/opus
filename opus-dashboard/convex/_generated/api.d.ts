@@ -34,6 +34,7 @@ import type * as hospitality_tables from "../hospitality/tables.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_braintree from "../lib/braintree.js";
 import type * as listing from "../listing.js";
+import type * as marketplace_chatMobile from "../marketplace/chatMobile.js";
 import type * as marketplace_conversations from "../marketplace/conversations.js";
 import type * as marketplace_embeddings from "../marketplace/embeddings.js";
 import type * as marketplace_embeddingsHelpers from "../marketplace/embeddingsHelpers.js";
@@ -106,6 +107,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/braintree": typeof lib_braintree;
   listing: typeof listing;
+  "marketplace/chatMobile": typeof marketplace_chatMobile;
   "marketplace/conversations": typeof marketplace_conversations;
   "marketplace/embeddings": typeof marketplace_embeddings;
   "marketplace/embeddingsHelpers": typeof marketplace_embeddingsHelpers;

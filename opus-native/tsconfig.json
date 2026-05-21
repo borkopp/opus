@@ -8,12 +8,15 @@
       ],
       "@/assets/*": [
         "./assets/*"
+      ],
+      "@opus/convex-generated/*": [
+        "../opus-dashboard/convex/_generated/*"
       ]
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]

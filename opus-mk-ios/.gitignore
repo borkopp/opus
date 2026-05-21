@@ -1,0 +1,10 @@
+# Xcode user state
+**/xcuserdata/
+**/*.xcuserstate
+**/DerivedData/
+
+# Local secrets (copy from Secrets.example.plist)
+**/Secrets.plist
+
+# macOS
+.DS_Store

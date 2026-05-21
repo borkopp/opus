@@ -3,3 +3,13 @@
 !.env.example
 !.vps-env-templates/**
 .cursor/settings.json
+
+# iOS (opus-mk-ios)
+opus-mk-ios/**/Secrets.plist
+opus-mk-ios/**/xcuserdata/
+opus-mk-ios/**/*.xcuserstate
+
+
+.agents/
+.cursor/
+.claude/

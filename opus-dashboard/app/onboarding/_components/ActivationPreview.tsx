@@ -4,34 +4,27 @@ import Image from "next/image";
 import { Clock3, MapPin, Scissors, Star } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
-import { Badge } from "@/components/ui/badge";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Separator } from "@/components/ui/separator";
 import { formatPrice } from "@/components/ui/price";
 
 type Preview = FunctionReturnType<typeof api.activation.getPreview>;
 
-export function ActivationPreview({ preview }: { preview: Preview | undefined }) {
+export function ActivationPreview({
+  preview,
+}: {
+  preview: Preview | undefined;
+}) {
   if (!preview) {
     return (
-      <Empty className="min-h-96 border">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Scissors />
-          </EmptyMedia>
-          <EmptyTitle>Your listing takes shape here</EmptyTitle>
-          <EmptyDescription>
-            Add your business details and this preview will update from Convex in
-            real time.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <div className="border-y border-border py-20 text-center">
+        <Scissors className="mx-auto size-6 text-muted-foreground" />
+        <p className="mt-5 font-display text-lg font-semibold">
+          Your listing takes shape here
+        </p>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          Add your business details and this preview will update from Convex in
+          real time.
+        </p>
+      </div>
     );
   }
 
@@ -41,7 +34,7 @@ export function ActivationPreview({ preview }: { preview: Preview | undefined })
   );
 
   return (
-    <article className="overflow-hidden rounded-3xl border bg-card shadow-l">
+    <article className="w-full overflow-hidden border-y border-border">
       <div className="relative aspect-[16/9] bg-secondary">
         {cover ? (
           <Image
@@ -55,14 +48,11 @@ export function ActivationPreview({ preview }: { preview: Preview | undefined })
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in_oklab,var(--accent)_28%,transparent),transparent_42%),linear-gradient(145deg,var(--primary),color-mix(in_oklab,var(--primary)_74%,var(--accent)))]" />
         )}
-        <Badge className="absolute left-4 top-4" variant="secondary">
-          Preview
-        </Badge>
       </div>
 
-      <div className="flex flex-col gap-5 p-5">
+      <div className="flex flex-col gap-5 py-7">
         <div className="flex items-start gap-4">
-          <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border bg-background">
+          <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
             {preview.logoUrl ? (
               <Image
                 src={preview.logoUrl}
@@ -108,7 +98,7 @@ export function ActivationPreview({ preview }: { preview: Preview | undefined })
           </span>
         </div>
 
-        <Separator />
+        <div className="h-px bg-border" />
 
         <div className="flex flex-col gap-3">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -118,7 +108,7 @@ export function ActivationPreview({ preview }: { preview: Preview | undefined })
             preview.services.slice(0, 3).map((service) => (
               <div
                 key={service._id}
-                className="flex items-center justify-between gap-4 rounded-2xl bg-secondary/60 p-3"
+                className="flex items-center justify-between gap-4 border-b border-border py-3 last:border-b-0"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{service.name}</p>

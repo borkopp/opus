@@ -3,13 +3,8 @@ import {
   IconCalendarEvent,
   IconUsers,
   IconSettings,
-  IconReportMoney,
-  IconToolsKitchen2,
-  IconMap,
-  IconClipboardList,
-  IconMessageChatbot,
-  IconSparkles,
 } from "@tabler/icons-react";
+import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Vertical Navigation Config
@@ -38,40 +33,20 @@ export interface VerticalNavConfig {
 
 // ── Route mapping — industry DB value → URL base ─────────────────────────────
 export const industryRoutes: Record<string, string> = {
-  beauty_wellness: "/beauty",
-  hospitality: "/hospitality",
-  professional_services: "/beauty", // fallback until PS vertical is built
+  [ACTIVE_INDUSTRY]: ACTIVE_DASHBOARD_PATH,
 };
 
 // ── Per-vertical nav configs ─────────────────────────────────────────────────
 export const verticalNavConfig: Record<string, VerticalNavConfig> = {
-  beauty_wellness: {
-    basePath: "/beauty",
+  [ACTIVE_INDUSTRY]: {
+    basePath: ACTIVE_DASHBOARD_PATH,
     label: "Beauty & Wellness",
     primaryLinks: [
       { label: "Dashboard", href: "{base}", icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" /> },
       { label: "Bookings",  href: "{base}/bookings",  icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" /> },
       { label: "Staff",     href: "{base}/staff",      icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
       { label: "Services",  href: "{base}/services",   icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Finances",  href: "{base}/finances",   icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
-      { label: "AI Inbox",  href: "/ai-inbox",         icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Fill Gaps", href: "/gap-optimizer",    icon: <IconSparkles className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",  href: "/settings",         icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
-    ],
-  },
-  hospitality: {
-    basePath: "/hospitality",
-    label: "Hospitality",
-    primaryLinks: [
-      { label: "Dashboard",    href: "{base}",               icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Floor Plan",   href: "{base}/floor-plan",    icon: <IconMap className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Reservations", href: "{base}/reservations",  icon: <IconClipboardList className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Staff",        href: "{base}/staff",         icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Menu",         href: "{base}/menu",          icon: <IconToolsKitchen2 className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Finances",     href: "{base}/finances",      icon: <IconReportMoney className="h-5 w-5 flex-shrink-0" /> },
-      { label: "AI Inbox",     href: "/ai-inbox",            icon: <IconMessageChatbot className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Fill Gaps",    href: "/gap-optimizer",       icon: <IconSparkles className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Settings",     href: "/settings",            icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },
 };
@@ -81,7 +56,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
  * Replaces `{base}` placeholder with the actual base path.
  */
 export function getNavLinks(industry: string): { basePath: string; links: Array<{ label: string; href: string; icon: React.ReactNode }> } {
-  const config = verticalNavConfig[industry] ?? verticalNavConfig.beauty_wellness;
+  const config = verticalNavConfig[industry] ?? verticalNavConfig[ACTIVE_INDUSTRY];
   const base = config.basePath;
 
   return {

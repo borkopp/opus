@@ -41,7 +41,7 @@ export function TabButton({
   icon,
   ...props
 }: TabTriggerSlotProps & {
-  icon: typeof TabIcons.ask.symbol;
+  icon: (typeof TabIcons)[keyof typeof TabIcons]["symbol"];
 }) {
   const scheme = useColorScheme();
   const colors = Colors[scheme === "unspecified" ? "light" : scheme];

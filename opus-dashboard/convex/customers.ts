@@ -10,11 +10,7 @@ export const findOrCreateCustomer = mutation({
         phone: v.optional(v.string()), // E.164
     },
     handler: async (ctx, args) => {
-        // Basic verification - this could be called publicly during booking, 
-        // but in many platforms the staff might call it. We'll leave it without requireRole for now, 
-        // but ideally, we ensure it's called via secure routes (like the public booking flow or staff dashboard).
-        // The public booking flow would use an org token or similar. For now, no strict auth check here
-        // since 'customers' represents the end-user.
+        const { staffMember } = await requireRole(ctx, args.orgId, "staff");
 
         if (!args.email && !args.phone) {
             throw new ConvexError("Must provide either email or phone to identify customer.");
@@ -57,6 +53,20 @@ export const findOrCreateCustomer = mutation({
             isDeleted: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
+        });
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            actorId: staffMember._id,
+            action: "customer.created",
+            resourceType: "customers",
+            resourceId: customerId,
+            after: {
+                name: args.name,
+                hasEmail: Boolean(args.email),
+                hasPhone: Boolean(args.phone),
+            },
+            createdAt: Date.now(),
         });
 
         return customerId;
@@ -127,16 +137,28 @@ export const updateCustomer = mutation({
     handler: async (ctx, args) => {
         const { orgId, customerId, ...updates } = args;
 
-        await requireRole(ctx, orgId, "staff");
+        const { staffMember } = await requireRole(ctx, orgId, "staff");
 
         const customer = await ctx.db.get(customerId);
         if (!customer || customer.orgId !== orgId || customer.isDeleted) {
             throw new ConvexError("Customer not found.");
         }
 
+        const updatedAt = Date.now();
         await ctx.db.patch(customerId, {
             ...updates,
-            updatedAt: Date.now()
+            updatedAt
+        });
+        await ctx.db.insert("audit_log", {
+            orgId,
+            actorType: "staff",
+            actorId: staffMember._id,
+            action: "customer.updated",
+            resourceType: "customers",
+            resourceId: customerId,
+            before: customer,
+            after: updates,
+            createdAt: updatedAt,
         });
 
         return customerId;
@@ -149,15 +171,25 @@ export const recordGdprConsent = mutation({
         customerId: v.id("customers"),
     },
     handler: async (ctx, args) => {
-        // Could be called from public flow, so we skip auth if needed, but safe to verify org
+        const { staffMember } = await requireRole(ctx, args.orgId, "staff");
         const customer = await ctx.db.get(args.customerId);
         if (!customer || customer.orgId !== args.orgId || customer.isDeleted) {
             throw new ConvexError("Customer not found.");
         }
 
+        const now = Date.now();
         await ctx.db.patch(args.customerId, {
-            gdprConsentAt: Date.now(),
-            updatedAt: Date.now(),
+            gdprConsentAt: now,
+            updatedAt: now,
+        });
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            actorId: staffMember._id,
+            action: "customer.gdpr_consent_recorded",
+            resourceType: "customers",
+            resourceId: args.customerId,
+            createdAt: now,
         });
         return true;
     }
@@ -169,22 +201,34 @@ export const requestGdprErasure = mutation({
         customerId: v.id("customers"),
     },
     handler: async (ctx, args) => {
-        // Usually called by staff on behalf of customer, or customer portal
+        const { staffMember } = await requireRole(ctx, args.orgId, "manager");
         const customer = await ctx.db.get(args.customerId);
         if (!customer || customer.orgId !== args.orgId || customer.isDeleted) {
             throw new ConvexError("Customer not found.");
         }
 
         // Soft delete & anonymise
+        const now = Date.now();
         await ctx.db.patch(args.customerId, {
             name: "Anonymised User",
             email: undefined,
             phone: undefined,
             avatarUrl: undefined,
-            gdprErasureRequestedAt: Date.now(),
+            gdprErasureRequestedAt: now,
             isDeleted: true,
-            deletedAt: Date.now(),
-            updatedAt: Date.now(),
+            deletedAt: now,
+            updatedAt: now,
+        });
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            actorId: staffMember._id,
+            action: "customer.gdpr_erasure_requested",
+            resourceType: "customers",
+            resourceId: args.customerId,
+            before: customer,
+            after: { isDeleted: true, gdprErasureRequestedAt: now },
+            createdAt: now,
         });
 
         return true;
@@ -232,7 +276,7 @@ export const searchCustomers = query({
         // In a real sophisticated layout we would index phone/email differently, 
         // but for MVP we fetch up to 20 by name, or fallback to exact phone/email match.
 
-        let results = nameMatches;
+        const results = nameMatches;
 
         if (results.length === 0) {
             // Check exact email

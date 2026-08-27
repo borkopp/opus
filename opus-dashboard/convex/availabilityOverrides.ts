@@ -36,6 +36,9 @@ export const createOverride = mutation({
                 startTime: args.type === "custom_hours" ? args.startTime : undefined,
                 endTime: args.type === "custom_hours" ? args.endTime : undefined,
                 note: args.note,
+                isDeleted: false,
+                deletedAt: undefined,
+                updatedAt: timestamp,
             });
 
             await ctx.db.insert("audit_log", {
@@ -58,7 +61,9 @@ export const createOverride = mutation({
                 startTime: args.type === "custom_hours" ? args.startTime : undefined,
                 endTime: args.type === "custom_hours" ? args.endTime : undefined,
                 note: args.note,
+                isDeleted: false,
                 createdAt: timestamp,
+                updatedAt: timestamp,
             });
 
             await ctx.db.insert("audit_log", {
@@ -90,8 +95,12 @@ export const deleteOverride = mutation({
             throw new ConvexError("Override not found.");
         }
 
-        // Hard delete is acceptable for overrides (ephemeral)
-        await ctx.db.delete(args.overrideId);
+        const now = Date.now();
+        await ctx.db.patch(args.overrideId, {
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
+        });
 
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
@@ -101,7 +110,7 @@ export const deleteOverride = mutation({
             resourceType: "availability_overrides",
             resourceId: args.overrideId,
             before: existingOverride,
-            createdAt: Date.now(),
+            createdAt: now,
         });
 
         return null;
@@ -123,10 +132,10 @@ export const listOverrides = query({
         // Given reasonable sizes, this is fine. 
         // Optimization: In a huge enterprise app, we'd add "by_staff_date" index to filter ranges directly.
         // Thankfully we HAVE `by_staff_date`. Range filtering over string indexed keys in convex is possible with .gte .lte
-        let q = ctx.db.query("availability_overrides")
+        const q = ctx.db.query("availability_overrides")
             .withIndex("by_staff_date", q => q.eq("staffId", args.staffId));
 
-        let overrides = await q.collect();
+        let overrides = (await q.collect()).filter((override) => !override.isDeleted);
 
         if (args.fromDate) {
             overrides = overrides.filter(o => o.date >= args.fromDate!);
@@ -150,7 +159,9 @@ export const listOrgOverrides = query({
 
         let overrides = await ctx.db
             .query("availability_overrides")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .withIndex("by_org_active", q =>
+                q.eq("orgId", args.orgId).eq("isDeleted", false)
+            )
             .collect();
 
         if (args.fromDate) {

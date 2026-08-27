@@ -119,13 +119,6 @@ export const Navbar = () => {
             Платформа
           </Link>
 
-          <Link
-            href="/pricing"
-            className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
-            Цени
-          </Link>
-
           {/* Ресурси Navigation Menu
           <NavigationMenu viewport={false}>
             <NavigationMenuList>
@@ -196,7 +189,7 @@ export const Navbar = () => {
             Најава
           </Link> */}
           <Link href="https://app.opus.mk">
-            <Button className="px-4 py-2 text-sm">Започнете бесплатно</Button>
+            <Button className="px-4 py-2 text-sm">Отворете OPUS</Button>
           </Link>
         </div>
 
@@ -233,14 +226,6 @@ export const Navbar = () => {
               className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
             >
               Платформа
-            </Link>
-
-            <Link
-              href="/pricing"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
-            >
-              Цени
             </Link>
 
             {/* Mobile Resources Accordion
@@ -310,7 +295,7 @@ export const Navbar = () => {
               <Button
                 className="mt-3 w-full rounded-xl px-4 py-3.5 text-base"
               >
-                Започнете бесплатно
+                Отворете OPUS
               </Button>
             </Link>
           </div>

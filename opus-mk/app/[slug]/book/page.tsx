@@ -20,7 +20,6 @@ import {
   IconArrowLeft,
   IconClock,
   IconCash,
-  IconCreditCard,
   IconCircleCheck,
   IconConfetti,
 } from "@tabler/icons-react";
@@ -581,7 +580,7 @@ export default function BookingPage() {
                         </div>
                         <div>
                           <p className="font-semibold text-sm text-foreground">Pay in cash</p>
-                          <p className="text-xs text-muted-foreground">Pay at the venue</p>
+                          <p className="text-xs text-muted-foreground">Pay at the studio</p>
                         </div>
                       </div>
                       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">

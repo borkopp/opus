@@ -1,26 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { DebouncedInput } from "@/components/ui/debounced-input";
-import { IconDeviceFloppy, IconSearch, IconLoader2, IconMapPin } from "@tabler/icons-react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
+import { useMutation } from "convex/react";
+import { MapPin, Save, Search, X } from "lucide-react";
+import { toast } from "sonner";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
+import { TabsContent } from "@/components/ui/tabs";
+import { useMapboxSearch } from "@/hooks/use-mapbox-search";
+import {
+  parseMapboxFeature,
+  reverseGeocodeMapbox,
+  type BusinessLocation,
+} from "@/lib/mapbox";
+import { SettingsCard } from "../SettingsCard";
 
 const LocationMapPicker = dynamic(
   () => import("@/components/dashboard/LocationMapPicker"),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-[320px] rounded-xl bg-muted animate-pulse border border-border/60" />
-    ),
+    loading: () => <div className="h-80 rounded-2xl border bg-muted" />,
   },
 );
 
@@ -36,266 +46,257 @@ interface LocationTabProps {
   };
 }
 
-export function LocationTab({ orgId, initialData }: LocationTabProps) {
-  const [location, setLocation] = useState({ ...initialData });
+function message(error: unknown): string {
+  return error instanceof Error
+    ? error.message
+    : "Location could not be saved.";
+}
+
+export function LocationTab({ initialData }: LocationTabProps) {
+  const [location, setLocation] = useState(initialData);
+  const [query, setQuery] = useState(initialData.address);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [query, setQuery] = useState(initialData.address || "");
-  const [results, setResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const { results, isSearching, error, clearResults } = useMapboxSearch(
+    query,
+    isSearchOpen,
+  );
+  const save = useMutation(api.activation.saveLocation);
 
   useEffect(() => {
-    setLocation({ ...initialData });
-    setQuery(initialData.address || "");
-  }, [
-    initialData.address,
-    initialData.city,
-    initialData.neighborhood,
-    initialData.postalCode,
-    initialData.country,
-    initialData.coordinates,
-  ]);
+    if (!isSearchOpen) return;
 
-  const updateLocation = useMutation(api.orgSettings.updateLocation);
-
-  const handleSearch = async (val: string) => {
-    setQuery(val);
-    if (val.length < 3) {
-      setResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(val)}.json?access_token=${token}&limit=5`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setResults(data.features || []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const selectResult = (feature: any) => {
-    const [lng, lat] = feature.center;
-    let city = "";
-    let neighborhood = "";
-    let postalCode = "";
-    let country = "";
-
-    feature.context?.forEach((ctx: any) => {
-      if (ctx.id.startsWith("place")) city = ctx.text;
-      if (ctx.id.startsWith("locality") || ctx.id.startsWith("district")) neighborhood = ctx.text;
-      if (ctx.id.startsWith("postcode")) postalCode = ctx.text;
-      if (ctx.id.startsWith("country")) country = ctx.short_code?.toUpperCase() || ctx.text;
-    });
-
-    const address = feature.text || feature.place_name.split(",")[0];
-
-    setLocation({
-      ...location,
-      coordinates: { lat, lng },
-      address,
-      city,
-      neighborhood,
-      postalCode,
-      country: country || "MK",
-    });
-    setResults([]);
-    setQuery(feature.place_name);
-  };
-
-  const handleMapChange = async (coords: { lat: number; lng: number }) => {
-    setLocation((prev) => ({ ...prev, coordinates: coords }));
-
-    try {
-      const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${coords.lng},${coords.lat}.json?access_token=${token}&limit=1`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const feature = data.features?.[0];
-      if (feature) {
-        let city = "";
-        let neighborhood = "";
-        let postalCode = "";
-        let country = "";
-        feature.context?.forEach((ctx: any) => {
-          if (ctx.id.startsWith("place")) city = ctx.text;
-          if (ctx.id.startsWith("locality") || ctx.id.startsWith("district")) neighborhood = ctx.text;
-          if (ctx.id.startsWith("postcode")) postalCode = ctx.text;
-          if (ctx.id.startsWith("country")) country = ctx.short_code?.toUpperCase() || ctx.text;
-        });
-        const address = feature.text || feature.place_name.split(",")[0];
-        setLocation((prev) => ({
-          ...prev,
-          address,
-          city,
-          neighborhood,
-          postalCode,
-          country: country || "MK",
-        }));
-        setQuery(feature.place_name);
+    const dismissSearch = (event: PointerEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false);
       }
-    } catch (e) {
-      console.error(e);
+    };
+
+    document.addEventListener("pointerdown", dismissSearch);
+    return () => document.removeEventListener("pointerdown", dismissSearch);
+  }, [isSearchOpen]);
+
+  const applyLocation = (next: BusinessLocation) => {
+    setLocation({
+      address: next.address,
+      city: next.city,
+      neighborhood: next.neighborhood,
+      postalCode: next.postalCode,
+      country: next.country,
+      coordinates: next.coordinates,
+    });
+    setQuery(next.displayName);
+    setIsSearchOpen(false);
+    clearResults();
+  };
+
+  const clearSearch = () => {
+    setQuery("");
+    setIsSearchOpen(false);
+    clearResults();
+  };
+
+  const handleMapChange = async (coordinates: { lat: number; lng: number }) => {
+    setLocation((current) => ({ ...current, coordinates }));
+    try {
+      const resolved = await reverseGeocodeMapbox(coordinates);
+      if (resolved) applyLocation(resolved);
+    } catch (caught) {
+      toast.error(message(caught));
     }
   };
 
   const handleSave = async () => {
+    if (!location.coordinates) {
+      toast.error("Confirm the map pin before saving.");
+      return;
+    }
     setIsSaving(true);
     try {
-      await updateLocation({
-        orgId,
-        address: location.address || undefined,
-        city: location.city || undefined,
+      await save({
+        address: location.address,
+        city: location.city,
         neighborhood: location.neighborhood || undefined,
         postalCode: location.postalCode || undefined,
-        country: location.country || undefined,
-        coordinates: location.coordinates ?? undefined,
+        country: location.country,
+        coordinates: location.coordinates,
       });
       toast.success("Location saved");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (caught) {
+      toast.error(message(caught));
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
+  const update = (
+    field: keyof Omit<typeof location, "coordinates">,
+    value: string,
+  ) => setLocation((current) => ({ ...current, [field]: value }));
+
   return (
-    <TabsContent
-      value="location"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Business <span className="serif-accent-inline text-2xl">Location</span></h2>
-          <p className="text-sm text-muted-foreground">
-            Set your address and pin your location on the map so customers can find you.
-          </p>
-        </div>
-        <div className="grid gap-10 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
-          {/* Map & Search Section */}
-          <div className="grid gap-6">
-            <div className="grid gap-2 max-w-2xl relative">
-              <Label>Search Address</Label>
-              <div className="relative">
-                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                <Input
-                  placeholder="Search for your business address..."
-                  className="pl-10 pr-10 bg-white"
-                  value={query}
-                  onChange={(e) => handleSearch(e.target.value)}
-                />
-                {isSearching && (
-                  <IconLoader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" size={16} />
+    <TabsContent value="location" className="m-0">
+      <SettingsCard
+        title="Business location"
+        description="This confirmed address and map pin power onboarding, marketplace discovery, directions, and distance sorting."
+        footer={
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? <Spinner /> : <Save />}
+            Save location
+          </Button>
+        }
+      >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="settings-address-search">
+                Find an address
+              </FieldLabel>
+              <div ref={searchContainerRef} className="relative">
+                <InputGroup>
+                  <InputGroupAddon>
+                    {isSearching ? <Spinner /> : <Search />}
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="settings-address-search"
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setIsSearchOpen(true);
+                    }}
+                    onFocus={() => setIsSearchOpen(true)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        setIsSearchOpen(false);
+                        event.currentTarget.blur();
+                      }
+                    }}
+                    placeholder="Search by street or venue"
+                    autoComplete="off"
+                    aria-autocomplete="list"
+                    aria-controls="settings-address-results"
+                    aria-expanded={isSearchOpen && results.length > 0}
+                  />
+                  {query && (
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        aria-label="Clear address search"
+                        onClick={clearSearch}
+                        size="icon-xs"
+                        variant="ghost"
+                      >
+                        <X />
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  )}
+                </InputGroup>
+                {isSearchOpen && results.length > 0 && (
+                  <div
+                    id="settings-address-results"
+                    role="listbox"
+                    className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border bg-popover shadow-lg"
+                  >
+                    {results.map((feature) => (
+                      <button
+                        key={feature.id}
+                        type="button"
+                        role="option"
+                        aria-selected="false"
+                        className="flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-secondary"
+                        onClick={() =>
+                          applyLocation(parseMapboxFeature(feature))
+                        }
+                      >
+                        <span className="text-sm font-medium">
+                          {feature.text}
+                        </span>
+                        <span className="truncate text-xs text-muted-foreground">
+                          {feature.place_name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </Field>
 
-              {results.length > 0 && (
-                <div className="absolute z-50 w-full top-full mt-1 bg-card border border-border/40 rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1">
-                  {results.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      className="w-full text-left px-4 py-3 text-sm hover:bg-secondary transition flex flex-col gap-0.5"
-                      onClick={() => selectResult(r)}
-                    >
-                      <span className="font-semibold text-foreground">{r.text}</span>
-                      <span className="text-xs text-muted-foreground truncate">{r.place_name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="grid gap-2 max-w-2xl">
-              <Label htmlFor="map-pin">
-                Map pin{" "}
-                <span className="text-muted-foreground font-normal ml-1">
-                  Click the map or drag the pin to set your exact location.
-                </span>
-              </Label>
+            <Field>
+              <FieldLabel>Exact map pin</FieldLabel>
               <LocationMapPicker
                 coords={location.coordinates}
                 onChange={handleMapChange}
               />
+            </Field>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field className="sm:col-span-2">
+                <FieldLabel htmlFor="settings-address">
+                  Street address
+                </FieldLabel>
+                <Input
+                  id="settings-address"
+                  value={location.address}
+                  onChange={(event) => update("address", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-city">City</FieldLabel>
+                <Input
+                  id="settings-city"
+                  value={location.city}
+                  onChange={(event) => update("city", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-neighborhood">
+                  Neighborhood
+                </FieldLabel>
+                <Input
+                  id="settings-neighborhood"
+                  value={location.neighborhood}
+                  onChange={(event) =>
+                    update("neighborhood", event.target.value)
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-postal">Postal code</FieldLabel>
+                <Input
+                  id="settings-postal"
+                  value={location.postalCode}
+                  onChange={(event) => update("postalCode", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-country">Country code</FieldLabel>
+                <Input
+                  id="settings-country"
+                  maxLength={2}
+                  className="uppercase"
+                  value={location.country}
+                  onChange={(event) => update("country", event.target.value)}
+                />
+              </Field>
             </div>
-          </div>
 
-          <div className="h-px bg-border/40" />
-
-          {/* Detailed fields for confirmation/fine-tuning */}
-          <div className="grid gap-6">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center">
-                  <IconMapPin size={14} className="text-accent" />
-                </div>
-                Confirmed Details
-              </h3>
-              
-              <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
-                <div className="sm:col-span-2 grid gap-2">
-                  <Label htmlFor="street-address">Street address</Label>
-                  <DebouncedInput
-                    id="street-address"
-                    placeholder="Ul. Makedonija 12"
-                    value={location.address}
-                    onChange={(val) => setLocation({ ...location, address: val })}
-                    className="bg-white"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="city">City</Label>
-                  <DebouncedInput
-                    id="city"
-                    placeholder="Skopje"
-                    value={location.city}
-                    onChange={(val) => setLocation({ ...location, city: val })}
-                    className="bg-white"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="neighborhood">Neighborhood</Label>
-                  <DebouncedInput
-                    id="neighborhood"
-                    placeholder="Centar"
-                    value={location.neighborhood}
-                    onChange={(val) => setLocation({ ...location, neighborhood: val })}
-                    className="bg-white"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="postal-code">Postal code</Label>
-                  <DebouncedInput
-                    id="postal-code"
-                    placeholder="1000"
-                    value={location.postalCode}
-                    onChange={(val) => setLocation({ ...location, postalCode: val })}
-                    className="bg-white"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="country">Country</Label>
-                  <DebouncedInput
-                    id="country"
-                    placeholder="MK"
-                    value={location.country}
-                    onChange={(val) => setLocation({ ...location, country: val })}
-                    className="bg-white"
-                  />
-                </div>
+            {location.coordinates && (
+              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                <MapPin />
+                {location.coordinates.lat.toFixed(5)},{" "}
+                {location.coordinates.lng.toFixed(5)}
               </div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} /> Save Location
-          </Button>
-        </div>
-      </div>
+            )}
+
+          </FieldGroup>
+      </SettingsCard>
     </TabsContent>
   );
 }

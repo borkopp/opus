@@ -930,7 +930,7 @@ export default function BookScreen() {
           </View>
 
           <Text style={{ fontSize: 30, fontWeight: '800', color: theme.text, letterSpacing: -0.5, textAlign: 'center', marginBottom: 10 }}>
-            You're booked!
+            You&apos;re booked!
           </Text>
           <Text style={{ fontSize: 16, color: theme.textSecondary, textAlign: 'center', marginBottom: 36, paddingHorizontal: 40, lineHeight: 24 }}>
             We look forward to seeing you at {profile.name}.

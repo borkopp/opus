@@ -1,18 +1,19 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
-import { format, isSameDay, setHours, setMinutes } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { BookingCard } from "./BookingCard";
 import { IconPlus, IconClock, IconGripVertical } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { Id } from "@/convex/_generated/dataModel";
+import { BookingView, StaffView } from "./types";
 
 const START_HOUR = 8;
 const END_HOUR = 20;
 const HOUR_HEIGHT = 90;
 const HEADER_HEIGHT = 56; // h-14 = 3.5rem = 56px — staff header row
 const SNAP_MINUTES = 15; // Snap to 15-minute intervals
-const PIXELS_PER_MINUTE = HOUR_HEIGHT / 60;
-
 /** Convert a pixel offset (relative to the grid, not including header) to { hours, minutes } */
 function offsetToTime(offsetPx: number): { hours: number; minutes: number } {
     const totalMinutes = (offsetPx / HOUR_HEIGHT) * 60 + START_HOUR * 60;
@@ -27,9 +28,9 @@ function timeToOffset(hours: number, minutes: number): number {
 }
 
 interface DragState {
-    bookingId: string;
-    booking: any;
-    staffId: string;
+    bookingId: Id<"bookings">;
+    booking: BookingView;
+    staffId: Id<"staff_members">;
     /** The Y offset where the user grabbed the card relative to the card's top */
     grabOffsetY: number;
     /** Current top position in the grid (px, not including header) */
@@ -48,11 +49,11 @@ export function BookingsTimeline({
     onReschedule,
     currentDate
 }: {
-    bookings: any[];
-    staffMembers: any[];
-    selectedBookingId: string | null;
-    onSelectBooking: (id: string | null) => void;
-    onReschedule?: (bookingId: string, newStartAt: number) => void;
+    bookings: BookingView[];
+    staffMembers: StaffView[];
+    selectedBookingId: Id<"bookings"> | null;
+    onSelectBooking: (id: Id<"bookings"> | null) => void;
+    onReschedule?: (bookingId: Id<"bookings">, newStartAt: number) => void;
     currentDate: Date;
 }) {
     const hours = useMemo(() => Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i), []);
@@ -61,11 +62,11 @@ export function BookingsTimeline({
     const [drag, setDrag] = useState<DragState | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const hasScrolledRef = useRef(false);
-    const columnRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+    const columnRefs = useRef<Map<Id<"staff_members">, HTMLDivElement>>(new Map());
     const dragStartMouseY = useRef(0);
     const isDragging = useRef(false);
     const dragTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const pendingDragBooking = useRef<{ booking: any; startY: number; grabOffsetY: number } | null>(null);
+    const pendingDragBooking = useRef<{ booking: BookingView; startY: number; grabOffsetY: number } | null>(null);
 
     // Update the red line for current time
     useEffect(() => {
@@ -113,7 +114,7 @@ export function BookingsTimeline({
     }, [currentTimeOffset, bookings]);
 
     // --- Drag to reschedule handlers ---
-    const handleDragStart = useCallback((e: React.MouseEvent, booking: any) => {
+    const handleDragStart = useCallback((e: React.MouseEvent, booking: BookingView) => {
         if (!onReschedule) return;
         // Don't allow dragging completed, cancelled, or no-show bookings
         if (["completed", "cancelled", "no_show"].includes(booking.status)) return;
@@ -318,7 +319,7 @@ export function BookingsTimeline({
                                 <div className="flex items-center gap-2">
                                     <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden">
                                         {staff.avatarUrl ? (
-                                            <img src={staff.avatarUrl} alt={staff.displayName} className="w-full h-full object-cover" />
+                                            <Image src={staff.avatarUrl} alt={staff.displayName} width={24} height={24} className="w-full h-full object-cover" />
                                         ) : (
                                             staff.displayName.charAt(0)
                                         )}

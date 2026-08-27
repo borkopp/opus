@@ -99,20 +99,23 @@ export const upsertEmbedding = internalMutation({
         city: args.city,
         industry: args.industry,
         isPublished: args.isPublished,
+        isDeleted: false,
+        deletedAt: undefined,
         updatedAt: now,
       });
       return existing._id;
     }
     return await ctx.db.insert("marketplace_embeddings", {
       ...args,
+      isDeleted: false,
       createdAt: now,
       updatedAt: now,
     });
   },
 });
 
-// Soft "delete" — remove the row entirely. Embeddings are derived
-// data; no audit value is lost.
+// Embeddings are derived data, but still follow the repository-wide soft-delete
+// policy so a reset never physically destroys production records.
 export const deleteEmbeddingByEntity = internalMutation({
   args: { entityType: ENTITY_TYPE, entityId: v.string() },
   handler: async (ctx, { entityType, entityId }) => {
@@ -122,7 +125,15 @@ export const deleteEmbeddingByEntity = internalMutation({
         q.eq("entityType", entityType).eq("entityId", entityId),
       )
       .unique();
-    if (existing) await ctx.db.delete(existing._id);
+    if (existing && !existing.isDeleted) {
+      const now = Date.now();
+      await ctx.db.patch(existing._id, {
+        isPublished: false,
+        isDeleted: true,
+        deletedAt: now,
+        updatedAt: now,
+      });
+    }
   },
 });
 
@@ -141,7 +152,7 @@ export const setEmbeddingPublished = internalMutation({
         q.eq("entityType", entityType).eq("entityId", entityId),
       )
       .unique();
-    if (existing && existing.isPublished !== isPublished) {
+    if (existing && !existing.isDeleted && existing.isPublished !== isPublished) {
       await ctx.db.patch(existing._id, { isPublished, updatedAt: Date.now() });
     }
   },

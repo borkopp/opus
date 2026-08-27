@@ -1,7 +1,6 @@
 "use client"
 
 import { Card } from "@/components/ui/card";
-import { Clock, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -9,7 +8,7 @@ function StatCounter({ value, suffix = "", decimals = 0 }: { value: number, suff
    const [displayValue, setDisplayValue] = useState(0);
 
    useEffect(() => {
-      let start = 0;
+      const start = 0;
       const end = value;
       const duration = 1500;
       const startTime = performance.now();
@@ -135,16 +134,16 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                {staffUtilisation.length === 0 ? (
                   <span className="text-sm text-muted-foreground text-center py-4">No staff capacity data</span>
                ) : (
-                  staffUtilisation.slice(0, 4).map((s: any, idx: number) => {
-                     const pct = Math.min(100, isNaN(s.utilisationPct) ? 0 : s.utilisationPct);
+                  staffUtilisation.slice(0, 4).map((staff, index) => {
+                     const pct = Math.min(100, isNaN(staff.utilisationPct) ? 0 : staff.utilisationPct);
                      return (
                         <motion.div
-                           key={s.staffName}
+                           key={staff.staffName}
                            variants={itemVars}
                            className="flex flex-col gap-2 group cursor-default"
                         >
                            <div className="flex justify-between items-center">
-                              <span className="text-foreground/90 group-hover:text-primary transition-colors">{s.staffName}</span>
+                              <span className="text-foreground/90 group-hover:text-primary transition-colors">{staff.staffName}</span>
                               <span className="font-outfit text-primary/80">
                                  <StatCounter value={pct} suffix="%" />
                               </span>
@@ -153,7 +152,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                               <motion.div
                                  initial={{ width: 0 }}
                                  animate={{ width: `${pct}%` }}
-                                 transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1], delay: 0.4 + (idx * 0.1) }}
+                                 transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1], delay: 0.4 + (index * 0.1) }}
                                  className={`h-full rounded-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.1)] ${getUtilisationColor(pct)}`}
                               />
                            </div>

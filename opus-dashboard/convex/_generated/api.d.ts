@@ -8,12 +8,14 @@
  * @module
  */
 
+import type * as activation from "../activation.js";
 import type * as ai_agent from "../ai/agent.js";
 import type * as ai_conversations from "../ai/conversations.js";
 import type * as ai_gapOptimizer from "../ai/gapOptimizer.js";
 import type * as ai_gapOptimizerHelpers from "../ai/gapOptimizerHelpers.js";
 import type * as ai_messages from "../ai/messages.js";
 import type * as auditLog from "../auditLog.js";
+import type * as auth from "../auth.js";
 import type * as availability from "../availability.js";
 import type * as availabilityOverrides from "../availabilityOverrides.js";
 import type * as bookings from "../bookings.js";
@@ -21,18 +23,18 @@ import type * as crons from "../crons.js";
 import type * as customers from "../customers.js";
 import type * as dashboard from "../dashboard.js";
 import type * as dashboardNotifications from "../dashboardNotifications.js";
-import type * as dev from "../dev.js";
 import type * as files from "../files.js";
-import type * as fixLogos from "../fixLogos.js";
-import type * as hospitality_dev from "../hospitality/dev.js";
 import type * as hospitality_findBestTable from "../hospitality/findBestTable.js";
 import type * as hospitality_floorPlans from "../hospitality/floorPlans.js";
 import type * as hospitality_onboarding from "../hospitality/onboarding.js";
 import type * as hospitality_reservationSettings from "../hospitality/reservationSettings.js";
 import type * as hospitality_reservations from "../hospitality/reservations.js";
 import type * as hospitality_tables from "../hospitality/tables.js";
+import type * as lib_activation from "../lib/activation.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_braintree from "../lib/braintree.js";
+import type * as lib_productScope from "../lib/productScope.js";
+import type * as lib_publicProfile from "../lib/publicProfile.js";
 import type * as listing from "../listing.js";
 import type * as marketplace_chatMobile from "../marketplace/chatMobile.js";
 import type * as marketplace_conversations from "../marketplace/conversations.js";
@@ -45,7 +47,6 @@ import type * as marketplace_retrieveHelpers from "../marketplace/retrieveHelper
 import type * as marketplace_scraped from "../marketplace/scraped.js";
 import type * as marketplace_sourceText from "../marketplace/sourceText.js";
 import type * as marketplace_timeIntent from "../marketplace/timeIntent.js";
-import type * as myFunctions from "../myFunctions.js";
 import type * as notifications from "../notifications.js";
 import type * as opusUsers from "../opusUsers.js";
 import type * as orgMedia from "../orgMedia.js";
@@ -81,12 +82,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  activation: typeof activation;
   "ai/agent": typeof ai_agent;
   "ai/conversations": typeof ai_conversations;
   "ai/gapOptimizer": typeof ai_gapOptimizer;
   "ai/gapOptimizerHelpers": typeof ai_gapOptimizerHelpers;
   "ai/messages": typeof ai_messages;
   auditLog: typeof auditLog;
+  auth: typeof auth;
   availability: typeof availability;
   availabilityOverrides: typeof availabilityOverrides;
   bookings: typeof bookings;
@@ -94,18 +97,18 @@ declare const fullApi: ApiFromModules<{
   customers: typeof customers;
   dashboard: typeof dashboard;
   dashboardNotifications: typeof dashboardNotifications;
-  dev: typeof dev;
   files: typeof files;
-  fixLogos: typeof fixLogos;
-  "hospitality/dev": typeof hospitality_dev;
   "hospitality/findBestTable": typeof hospitality_findBestTable;
   "hospitality/floorPlans": typeof hospitality_floorPlans;
   "hospitality/onboarding": typeof hospitality_onboarding;
   "hospitality/reservationSettings": typeof hospitality_reservationSettings;
   "hospitality/reservations": typeof hospitality_reservations;
   "hospitality/tables": typeof hospitality_tables;
+  "lib/activation": typeof lib_activation;
   "lib/auth": typeof lib_auth;
   "lib/braintree": typeof lib_braintree;
+  "lib/productScope": typeof lib_productScope;
+  "lib/publicProfile": typeof lib_publicProfile;
   listing: typeof listing;
   "marketplace/chatMobile": typeof marketplace_chatMobile;
   "marketplace/conversations": typeof marketplace_conversations;
@@ -118,7 +121,6 @@ declare const fullApi: ApiFromModules<{
   "marketplace/scraped": typeof marketplace_scraped;
   "marketplace/sourceText": typeof marketplace_sourceText;
   "marketplace/timeIntent": typeof marketplace_timeIntent;
-  myFunctions: typeof myFunctions;
   notifications: typeof notifications;
   opusUsers: typeof opusUsers;
   orgMedia: typeof orgMedia;

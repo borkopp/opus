@@ -1,4 +1,4 @@
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 
 export const ensureUser = mutation({
@@ -77,7 +77,8 @@ export const getMyProfile = query({
             return null;
         }
 
-        // Find the first org this user belongs to (with a valid, non-deleted org)
+        // Resolve the active tenant from server-owned user state. Memberships are
+        // only a fallback for development data created before activeOrgId.
         const staffProfiles = await ctx.db
             .query("staff_members")
             .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -85,15 +86,14 @@ export const getMyProfile = query({
             .filter((q) => q.eq(q.field("isActive"), true))
             .collect();
 
-        let activeStaff = null;
-        let activeOrg = null;
-        for (const sp of staffProfiles) {
-            const org = await ctx.db.get(sp.orgId);
-            if (org && !org.isDeleted) {
-                activeStaff = sp;
-                activeOrg = org;
-                break;
-            }
+        const preferredStaff = user.activeOrgId
+            ? staffProfiles.find((profile) => profile.orgId === user.activeOrgId)
+            : undefined;
+        const activeStaff = preferredStaff ?? staffProfiles[0] ?? null;
+        const activeOrg = activeStaff ? await ctx.db.get(activeStaff.orgId) : null;
+
+        if (activeOrg?.isDeleted) {
+            return { user };
         }
 
         return {

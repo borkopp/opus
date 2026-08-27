@@ -2,25 +2,22 @@
 
 import { useQuery, useAction } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 import { useState } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter
-} from "@/components/ui/card"
+import type { CSSProperties } from "react"
+import { Card } from "@/components/ui/card"
 import { Price } from "@/components/ui/price"
 import Link from "next/link"
-import { ArrowRight, CheckIcon, Sparkles, Settings, RefreshCw } from "lucide-react"
+import { ArrowRight, CheckIcon, Settings, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Shimmer } from "@/components/ai-elements/shimmer"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-export function GapOptimizerWidget({ orgId }: { orgId: string }) {
-  const summary = useQuery(api.ai.gapOptimizerHelpers.getTodaySummary, { orgId: orgId as any })
+type OverlayStyle = CSSProperties & { "--ai-overlay-rotation": string };
+
+export function GapOptimizerWidget({ orgId }: { orgId: Id<"orgs"> }) {
+  const summary = useQuery(api.ai.gapOptimizerHelpers.getTodaySummary, { orgId })
   const scan = useAction(api.ai.gapOptimizer.scanDayForOrg)
   const [manualScanning, setManualScanning] = useState(false)
 
@@ -32,7 +29,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
     setManualScanning(true)
     try {
       await scan({
-        orgId: orgId as any,
+        orgId,
         detectedBy: "manual_scan"
       })
       toast.success("Schedule scan complete")
@@ -51,7 +48,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
       className="h-full"
     >
       <Card
-        style={{ '--ai-overlay-rotation': '180deg' } as any}
+        style={{ "--ai-overlay-rotation": "180deg" } as OverlayStyle}
         className="ai-widget-overlay terracotta-glow group relative flex flex-col h-full bg-card/60 backdrop-blur-xl p-6 col-span-1 lg:col-span-1 overflow-hidden rounded-[28px] transition-all duration-500 shadow-l"
       >
 
@@ -84,7 +81,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                 )} */}
               </div>
               <p className="text-xs text-muted-foreground mt-1 tracking-wide">
-                {isPacked ? "Schedule is packed" : <>AI-detected <span className="serif-accent-inline text-xs">open</span> slots</>}
+                {isPacked ? "Schedule is packed" : <>AI-detected open slots</>}
               </p>
             </div>
           </div>
@@ -131,7 +128,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                     >
                       <CheckIcon className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                     </motion.div>
-                    <span className="text-lg font-semibold font-display text-emerald-600 dark:text-emerald-400">Zero <span className="serif-accent-inline text-lg !text-emerald-500">Gaps!</span></span>
+                    <span className="text-lg font-semibold font-display text-emerald-600 dark:text-emerald-400">Zero Gaps!</span>
                     <span className="text-muted-foreground text-xs font-medium mt-1">Ai has found no gaps to fill.</span>
                   </motion.div>
                 ) : (
@@ -152,7 +149,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                         >
                           {summary.openCount}
                         </motion.span>
-                        <span className="serif-accent-inline text-base">recoverable gaps</span>
+                        recoverable gaps
                       </div>
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -184,7 +181,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
                       <div className="flex flex-col gap-2">
                         <div className="flex justify-between items-end">
                           <span className="micro-label text-foreground/80">
-                            <span className="serif-accent-inline text-[10px]">Filled</span>
+                            Filled
                           </span>
                           <span className="text-sm font-black text-emerald-500 font-outfit">
                             {summary.filledCount}
@@ -201,7 +198,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
             <div className="pt-5 mt-auto border-t border-accent/10 relative z-10 w-full group/link">
               <Link href="/gap-optimizer" className="w-full">
                 <button className="w-full flex items-center justify-between hover:bg-accent/5 rounded-2xl h-11 px-4 text-xs font-bold text-accent group-hover:translate-y-[-2px] transition-all duration-300">
-                  View AI <span className="serif-accent-inline text-xs ml-1">Manager</span>
+                  View AI Manager
                   <div className="flex items-center gap-1">
                     <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">View</span>
                     <ArrowRight className="h-4 w-4" />
@@ -213,7 +210,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: string }) {
         ) : (
           <div className="flex flex-col flex-1 justify-center items-center relative z-10 gap-4 text-center px-2">
             <div>
-              <p className="text-sm font-semibold text-foreground">Gap Optimizer is <span className="serif-accent-inline text-sm">off</span></p>
+              <p className="text-sm font-semibold text-foreground">Gap Optimizer is off</p>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Enable AI to automatically fill cancellations and gaps in your schedule.
               </p>

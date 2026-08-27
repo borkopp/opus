@@ -5,7 +5,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { IconCalendarEvent, IconTrash, IconPlus, IconLoader2 } from "@tabler/icons-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/file-validation";
 
 export function TimeOffSection({ orgId, staffId }: { orgId: Id<"orgs">; staffId: Id<"staff_members"> }) {
     const overrides = useQuery(api.availabilityOverrides.listOverrides, { orgId, staffId });
@@ -39,8 +39,8 @@ export function TimeOffSection({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
         try {
             await deleteOverride({ orgId, overrideId });
             toast.success("Override removed");
-        } catch (err: any) {
-            toast.error(err.message || "Failed to remove override");
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, "Failed to remove override"));
         }
     };
 
@@ -68,8 +68,8 @@ export function TimeOffSection({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
             setStartTime("09:00");
             setEndTime("17:00");
             setNote("");
-        } catch (err: any) {
-            toast.error(err.message || "Failed to add override");
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, "Failed to add override"));
         } finally {
             setIsSaving(false);
         }

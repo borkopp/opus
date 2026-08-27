@@ -2,25 +2,24 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { api } from "@/convex/_generated/api";
 
 export function SyncUser() {
-    const { isLoaded, isSignedIn } = useUser();
+    const { isLoaded, isSignedIn, user } = useUser();
     const ensureUser = useMutation(api.users.ensureUser);
-    const [hasSynced, setHasSynced] = useState(false);
+    const syncedUserIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (!isLoaded) return;
+        if (!isLoaded || !isSignedIn || !user?.id) return;
+        if (syncedUserIdRef.current === user.id) return;
 
-        if (isSignedIn && !hasSynced) {
-            ensureUser()
-                .then(() => setHasSynced(true))
-                .catch(console.error);
-        } else if (!isSignedIn) {
-            setHasSynced(false);
-        }
-    }, [isLoaded, isSignedIn, hasSynced, ensureUser]);
+        syncedUserIdRef.current = user.id;
+        void ensureUser().catch((error: unknown) => {
+            syncedUserIdRef.current = null;
+            console.error("Failed to synchronize the signed-in user", error);
+        });
+    }, [ensureUser, isLoaded, isSignedIn, user?.id]);
 
     return null;
 }

@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Logo } from "@/components/Logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -23,10 +22,8 @@ import {
   IconStarFilled,
   IconChevronRight,
 } from "@tabler/icons-react";
-import ChatWidget from "@/components/ChatWidget";
 import { HeaderAuth } from "@/components/HeaderAuth";
 import { motion, type Variants } from "framer-motion";
-import { HospitalitySection } from "./_components/HospitalitySection";
 
 const BusinessMap = dynamic(() => import("@/components/BusinessMap"), {
   ssr: false,
@@ -120,9 +117,7 @@ export default function BusinessProfilePage() {
   };
 
   return (
-    <div
-      className={`min-h-screen bg-background ${profile.industry === "hospitality" ? "pb-12" : "pb-44"}`}
-    >
+    <div className="min-h-screen bg-background pb-44">
       {/* ── Header ── */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -336,19 +331,8 @@ export default function BusinessProfilePage() {
           </motion.div>
         )}
 
-        {/* ── Vertical-specific sections ── */}
-        {profile.industry === "hospitality" ? (
-          <HospitalitySection
-            openingHours={profile.openingHours}
-            menuText={profile.menuText}
-            venueType={profile.venueType}
-            cuisine={profile.cuisine}
-            priceRange={profile.priceRange}
-            tags={profile.tags}
-          />
-        ) : (
-          /* ── Beauty: Services ── */
-          <motion.div variants={fadeInUp}>
+        {/* ── Services ── */}
+        <motion.div variants={fadeInUp}>
             <Separator className="my-3" />
             <div className="pt-4 pb-4">
               <h2 className="text-lg font-bold tracking-tight mb-5">
@@ -432,8 +416,7 @@ export default function BusinessProfilePage() {
                 )}
               </div>
             </div>
-          </motion.div>
-        )}
+        </motion.div>
 
         {/* ── Reviews ── */}
         {reviews && reviews.length > 0 && (
@@ -514,8 +497,7 @@ export default function BusinessProfilePage() {
       </motion.div>
 
       {/* ── Sticky bottom CTA ── */}
-      {profile.industry !== "hospitality" && (
-        <motion.div
+      <motion.div
           initial={{ y: 100 }}
           animate={{ y: 0 }}
           transition={{ type: "spring", damping: 20, delay: 0.6 }}
@@ -533,17 +515,8 @@ export default function BusinessProfilePage() {
               </motion.div>
             </Link>
           </div>
-        </motion.div>
-      )}
+      </motion.div>
 
-      {/* ── AI Chat Widget ── */}
-      {profile.aiWebchatEnabled && (
-        <ChatWidget
-          orgId={profile._id}
-          personaName={profile.aiPersonaName}
-          greetingMessage={profile.aiGreetingMessage}
-        />
-      )}
     </div>
   );
 }

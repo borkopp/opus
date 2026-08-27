@@ -2,6 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { computeSlotsForDate } from "./slots";
+import { isActiveIndustry } from "./lib/productScope";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC BOOKING — opus.mk
@@ -34,7 +35,12 @@ export const createPublicBooking = mutation({
     handler: async (ctx, args) => {
         // ── Validate org is published ──
         const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted || (org.listingStatus !== "published")) {
+        if (
+            !org ||
+            org.isDeleted ||
+            org.listingStatus !== "published" ||
+            !isActiveIndustry(org.industry)
+        ) {
             throw new ConvexError("This business is not currently accepting bookings.");
         }
 
@@ -57,6 +63,18 @@ export const createPublicBooking = mutation({
 
         if (!service.staffIds.includes(args.staffId)) {
             throw new ConvexError("This staff member cannot perform this service.");
+        }
+
+        const bookingDate = new Date(args.startAt).toISOString().slice(0, 10);
+        const availableSlots = await computeSlotsForDate(
+            ctx,
+            args.orgId,
+            args.staffId,
+            args.serviceId,
+            bookingDate,
+        );
+        if (!availableSlots.some((slot) => slot.startAt === args.startAt)) {
+            throw new ConvexError("This time slot is outside working hours or no longer available.");
         }
 
         // ── Org settings ──
@@ -121,7 +139,7 @@ export const createPublicBooking = mutation({
 
         // ── Customer upsert by phone ──
         const normalizedPhone = args.customerPhone.replace(/\s/g, "");
-        let customer = await ctx.db
+        const customer = await ctx.db
             .query("customers")
             .withIndex("by_org_phone", (q) => q.eq("orgId", args.orgId).eq("phone", normalizedPhone))
             .first();
@@ -258,7 +276,12 @@ export const getPublicSlots = query({
     handler: async (ctx, args) => {
         // Verify org is published
         const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted || org.listingStatus !== "published") return [];
+        if (
+            !org ||
+            org.isDeleted ||
+            org.listingStatus !== "published" ||
+            !isActiveIndustry(org.industry)
+        ) return [];
 
         // Verify service is publicly visible
         const service = await ctx.db.get(args.serviceId);
@@ -278,7 +301,12 @@ export const getPublicAvailableDates = query({
     },
     handler: async (ctx, args) => {
         const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted || org.listingStatus !== "published") return [];
+        if (
+            !org ||
+            org.isDeleted ||
+            org.listingStatus !== "published" ||
+            !isActiveIndustry(org.industry)
+        ) return [];
 
         const service = await ctx.db.get(args.serviceId);
         if (!service || service.isDeleted || !service.isActive || !service.isOpusVisible) return [];

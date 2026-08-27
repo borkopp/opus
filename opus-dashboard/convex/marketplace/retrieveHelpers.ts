@@ -18,7 +18,10 @@ export const getEmbeddingsByIds = internalQuery({
   args: { ids: v.array(v.id("marketplace_embeddings")) },
   handler: async (ctx, { ids }): Promise<Array<Doc<"marketplace_embeddings">>> => {
     const docs = await Promise.all(ids.map((id) => ctx.db.get(id)));
-    return docs.filter((d): d is Doc<"marketplace_embeddings"> => d !== null);
+    return docs.filter(
+      (document): document is Doc<"marketplace_embeddings"> =>
+        document !== null && !document.isDeleted,
+    );
   },
 });
 

@@ -16,7 +16,10 @@ export function StatWidget({ title, value, icon: Icon, subValue, actionText, act
   return (
     <Card className={cn("flex flex-col justify-between p-5 h-full min-h-[160px] gap-2 rounded-[24px] border border-border/40 shadow-sm bg-card", className)}>
       <div className="flex flex-col">
-        <span className="text-xl font-semibold font-display text-primary">{title}</span>
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="h-4 w-4 text-accent" />}
+          <span className="text-xl font-semibold font-display text-primary">{title}</span>
+        </div>
         <div className="font-outfit text-2xl lg:text-3xl font-bold tracking-tight text-primary mt-1.5">{value}</div>
       </div>
 

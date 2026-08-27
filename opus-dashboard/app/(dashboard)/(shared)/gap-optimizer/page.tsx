@@ -5,9 +5,11 @@ import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { GapOptimizerHeader } from "./_components/GapOptimizerHeader";
 import { GapList } from "./_components/GapList";
+import { redirect } from "next/navigation";
+import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 
-export default function GapOptimizerPage() {
-    const { isLoaded, isSignedIn } = useUser();
+function DormantGapOptimizerPage() {
+    const { isLoaded } = useUser();
     const profile = useQuery(api.users.getMyProfile);
     const orgId = profile?.orgId;
 
@@ -31,4 +33,9 @@ export default function GapOptimizerPage() {
             </div>
         </div>
     );
+}
+
+export default function GapOptimizerPage() {
+    if (!ACTIVE_CAPABILITIES.automatedGapOptimizer) redirect("/beauty");
+    return <DormantGapOptimizerPage />;
 }

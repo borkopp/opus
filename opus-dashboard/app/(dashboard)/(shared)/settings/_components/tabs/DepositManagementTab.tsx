@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { CircleAlert, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { DebouncedInput } from "@/components/ui/debounced-input";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -14,12 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IconDeviceFloppy, IconAlertCircle } from "@tabler/icons-react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { validPercentage, validFixedDeposit, type FieldErrors } from "../validation";
+import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
 interface DepositManagementTabProps {
   orgId: Id<"orgs">;
@@ -36,7 +38,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <IconAlertCircle size={13} className="shrink-0" />
+      <CircleAlert className="shrink-0" />
       {message}
     </p>
   );
@@ -102,8 +104,10 @@ export function DepositManagementTab({ orgId, initialData }: DepositManagementTa
         depositValue,
       });
       if (isMounted.current) toast.success("Deposit settings saved");
-    } catch (e: any) {
-      if (isMounted.current) toast.error(e.message ?? "Failed to save deposit settings.");
+    } catch (error) {
+      if (isMounted.current) {
+        toast.error(error instanceof Error ? error.message : "Failed to save deposit settings.");
+      }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
@@ -114,30 +118,29 @@ export function DepositManagementTab({ orgId, initialData }: DepositManagementTa
       value="deposits"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Deposit <span className="serif-accent-inline text-2xl">Management</span></h2>
-          <p className="text-sm text-muted-foreground">Require upfront capital to secure a booking.</p>
-        </div>
-        <div className="space-y-10">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="deposit-required" className="select-none font-medium cursor-pointer">
-                Require Deposit on Booking Creation
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Customers must pay upfront before the booking is confirmed.
-              </p>
-            </div>
-            <Switch
+      <SettingsCard
+        title="Booking deposits"
+        description="Decide whether customers pay upfront to secure an appointment and how that amount is calculated."
+        contentClassName="flex flex-col gap-6"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Saving…" : "Save deposit settings"}
+          </Button>
+        }
+      >
+          <SettingsToggleRow
+            title="Require a deposit"
+            description="Customers must complete the deposit before their booking is confirmed."
+            control={<Switch
               id="deposit-required"
               checked={deposits.depositRequired}
               onCheckedChange={(c) => setDeposits({ ...deposits, depositRequired: c })}
-            />
-          </div>
+            />}
+          />
 
           {deposits.depositRequired && (
-            <div className="grid gap-6 mt-4 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+            <div className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5 sm:grid-cols-2">
               <div className="grid gap-2 max-w-sm">
                 <Label htmlFor="deposit-type">Calculation Method</Label>
                 <Select
@@ -171,25 +174,19 @@ export function DepositManagementTab({ orgId, initialData }: DepositManagementTa
                   step={deposits.depositType === "percentage" ? "1" : "0.01"}
                   aria-describedby={errors.depositValue ? "deposit-value-error" : undefined}
                   aria-invalid={!!errors.depositValue}
-                  className={cn("bg-white", errors.depositValue && "border-destructive")}
+                  className={cn(errors.depositValue && "border-destructive")}
                   onChange={(val) => {
                     setDeposits({ ...deposits, depositValueStr: val });
-                    errors.depositValue && setErrors((e) => ({ ...e, depositValue: undefined }));
+                    if (errors.depositValue) {
+                      setErrors((current) => ({ ...current, depositValue: undefined }));
+                    }
                   }}
                 />
                 <FieldError id="deposit-value-error" message={errors.depositValue} />
               </div>
             </div>
           )}
-        </div>
-
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} />
-            {isSaving ? "Saving…" : "Save Deposit Settings"}
-          </Button>
-        </div>
-      </div>
+      </SettingsCard>
     </TabsContent>
   );
 }

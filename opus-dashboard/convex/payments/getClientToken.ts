@@ -9,12 +9,16 @@ export const getClientToken = action({
     args: { orgId: v.id("orgs") },
     returns: v.string(),
     handler: async (ctx, args) => {
+        await ctx.runQuery(internal.auth.assertOrgRole, {
+            orgId: args.orgId,
+            role: "staff",
+        });
         const org = await ctx.runQuery(internal.orgs.getById, { orgId: args.orgId });
-        if (!org?.stripeAccountId) throw new ConvexError("Org has no payment account configured.");
+        if (!org?.braintreeMerchantAccountId) throw new ConvexError("Org has no payment account configured.");
 
         const gateway = getGateway();
         const response = await gateway.clientToken.generate({
-            merchantAccountId: org.stripeAccountId,
+            merchantAccountId: org.braintreeMerchantAccountId,
         });
         return response.clientToken;
     },

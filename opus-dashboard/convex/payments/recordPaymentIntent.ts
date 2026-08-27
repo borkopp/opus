@@ -6,8 +6,8 @@ export const recordPaymentIntent = internalMutation({
         orgId: v.id("orgs"),
         bookingId: v.id("bookings"),
         customerId: v.id("customers"),
-        providerTransactionId: v.string(), // Maps to stripePaymentIntentId
-        clientToken: v.string(), // Maps to stripeClientSecret
+        providerTransactionId: v.string(),
+        clientToken: v.string(),
         amountMinorUnits: v.number(),
         currency: v.string(),
         status: v.union(
@@ -25,8 +25,8 @@ export const recordPaymentIntent = internalMutation({
             orgId: args.orgId,
             bookingId: args.bookingId,
             customerId: args.customerId,
-            stripePaymentIntentId: args.providerTransactionId,
-            stripeClientSecret: args.clientToken,
+            providerTransactionId: args.providerTransactionId,
+            providerClientToken: args.clientToken,
             amountMinorUnits: args.amountMinorUnits,
             currency: args.currency,
             status: args.status,

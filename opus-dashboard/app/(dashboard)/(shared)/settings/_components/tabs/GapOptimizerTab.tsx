@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import { Save } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { IconDeviceFloppy } from "@tabler/icons-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
 interface GapOptimizerTabProps {
   orgId: Id<"orgs">;
@@ -27,13 +29,6 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    setOptimizer({
-      enabled: initialData.gapOptimizerEnabled,
-      minGapMins: initialData.gapOptimizerMinGapMins,
-    });
-  }, [initialData.gapOptimizerEnabled, initialData.gapOptimizerMinGapMins]);
-
   const updateSettings = useMutation(api.orgSettings.updateGapOptimizerSettings);
 
   const handleSave = async () => {
@@ -45,8 +40,8 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
         gapOptimizerMinGapMins: optimizer.minGapMins,
       });
       toast.success("Gap Optimizer settings saved");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save gap settings.");
     }
     setIsSaving(false);
   };
@@ -56,44 +51,40 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
       value="gaps"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0 border-border/40">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1 text-foreground">Gap <span className="serif-accent-inline text-2xl">Optimizer</span></h2>
-          <p className="text-muted-foreground text-sm">
-            AI automatically discovers holes in your schedule and privately invites VIP customers to fill them.
-          </p>
-        </div>
-        
-        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="gap-enabled" className="select-none font-medium cursor-pointer text-foreground">
-                Enable AI Gap Optimizer
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Automatically triggers a background scan whenever a booking is cancelled.
-              </p>
-            </div>
-            <Switch
+      <SettingsCard
+        title="Gap optimizer"
+        description="Find useful openings in the calendar and invite suitable customers to fill them."
+        contentClassName="flex flex-col gap-6"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Saving…" : "Save optimizer settings"}
+          </Button>
+        }
+      >
+          <SettingsToggleRow
+            title="Enable gap optimizer"
+            description="Run a background scan whenever a cancellation creates a new opening."
+            control={<Switch
               id="gap-enabled"
               checked={optimizer.enabled}
               onCheckedChange={(c) =>
                 setOptimizer({ ...optimizer, enabled: c })
               }
-            />
-          </div>
+            />}
+          />
 
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
-              <Label htmlFor="min-gap-mins" className="select-none font-medium text-foreground">
-                Minimum Gap Duration (minutes)
+              <Label htmlFor="min-gap-mins" className="select-none font-medium">
+                Minimum gap duration
               </Label>
-              <p className="text-xs text-muted-foreground mt-0.5 max-w-[80%]">
-                The minimum size of an empty slot before AI considers it a "gap" worth attempting to fill. 
-                Shorter durations allow filling more slots, but may crowd your calendar.
+              <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
+                Ignore openings shorter than this. A larger threshold keeps
+                outreach focused on slots worth filling.
               </p>
             </div>
-            <div className="w-32">
+            <div className="flex w-36 items-center gap-2">
               <Input
                 id="min-gap-mins"
                 type="number"
@@ -105,17 +96,10 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
                   setOptimizer({ ...optimizer, minGapMins: parseInt(e.target.value) || 30 })
                 }
               />
+              <span className="text-xs text-muted-foreground">min</span>
             </div>
           </div>
-        </div>
-
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 h-10 px-5 rounded-full font-medium">
-            <IconDeviceFloppy size={18} />
-            {isSaving ? "Saving…" : "Save Settings"}
-          </Button>
-        </div>
-      </div>
+      </SettingsCard>
     </TabsContent>
   );
 }

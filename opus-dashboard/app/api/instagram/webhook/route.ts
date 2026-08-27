@@ -1,10 +1,28 @@
 import { ConvexHttpClient } from "convex/browser";
-import { api, internal } from "@/convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { NextRequest } from "next/server";
 import crypto from "crypto";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+type InstagramMessagingEvent = {
+  sender?: { id?: string };
+  message?: { is_echo?: boolean; text?: string };
+};
+
+type InstagramEntry = {
+  id?: string;
+  messaging?: InstagramMessagingEvent[];
+};
+
+type InstagramWebhookBody = {
+  entry?: InstagramEntry[];
+};
+
+function isInstagramWebhookBody(value: unknown): value is InstagramWebhookBody {
+  return typeof value === "object" && value !== null;
+}
 
 // ── Webhook verification (GET) ──────────────────────────────────────────────
 
@@ -35,11 +53,14 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid signature", { status: 401 });
   }
 
-  let body: any;
+  let body: unknown;
   try {
     body = JSON.parse(rawBody);
   } catch {
     return new Response("Invalid JSON", { status: 400 });
+  }
+  if (!isInstagramWebhookBody(body)) {
+    return new Response("Invalid payload", { status: 400 });
   }
 
   // Instagram requires a fast 200 — process async
@@ -68,12 +89,13 @@ function verifySignature(rawBody: string, signature: string | null): boolean {
 
 // ── Event processing ─────────────────────────────────────────────────────────
 
-async function processEvents(body: any) {
-  const entries: any[] = body.entry ?? [];
+async function processEvents(body: InstagramWebhookBody) {
+  const entries = body.entry ?? [];
 
   for (const entry of entries) {
-    const pageId: string = entry.id; // Instagram page PSID
-    const messagingEvents: any[] = entry.messaging ?? [];
+    const pageId = entry.id;
+    if (!pageId) continue;
+    const messagingEvents = entry.messaging ?? [];
 
     // Resolve orgId from pageId
     const orgId = await convex.query(api.orgs.getByInstagramPageId, { instagramPageId: pageId });
@@ -87,10 +109,10 @@ async function processEvents(body: any) {
       // Skip echoes (messages sent by the page itself)
       if (!event.message || event.message.is_echo) continue;
       // Skip non-text messages (stickers, attachments, etc.)
-      if (!event.message.text) continue;
+      if (!event.message.text || !event.sender?.id) continue;
 
-      const senderId: string = event.sender.id;
-      const messageText: string = event.message.text;
+      const senderId = event.sender.id;
+      const messageText = event.message.text;
 
       // Get or create conversation
       const existingConversation = await convex.query(api.ai.conversations.getConversationByThread, {

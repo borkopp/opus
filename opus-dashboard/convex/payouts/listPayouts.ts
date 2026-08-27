@@ -12,7 +12,7 @@ export const listPayouts = query({
         // Requires an owner or manager
         await requireRole(ctx, args.orgId, "manager");
 
-        let payoutsQuery = ctx.db
+        const payoutsQuery = ctx.db
             .query("payouts")
             .withIndex("by_org", (q) => q.eq("orgId", args.orgId));
 

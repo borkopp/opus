@@ -15,6 +15,10 @@ export async function OPTIONS() {
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Internal error";
+}
+
 export async function POST(req: NextRequest) {
   let body: unknown;
   try {
@@ -31,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Get or create conversation for this session
-    let existingConversation = await convex.query(api.ai.conversations.getConversationByThread, {
+    const existingConversation = await convex.query(api.ai.conversations.getConversationByThread, {
       channel: "webchat",
       channelThreadId: sessionId,
     });
@@ -76,9 +80,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(result, { headers: CORS_HEADERS });
-  } catch (e: any) {
-    console.error("[/api/chat] Error:", e);
-    return NextResponse.json({ error: e.message ?? "Internal error" }, { status: 500, headers: CORS_HEADERS });
+  } catch (error: unknown) {
+    console.error("[/api/chat] Error:", error);
+    return NextResponse.json({ error: errorMessage(error) }, { status: 500, headers: CORS_HEADERS });
   }
 }
 
@@ -108,8 +112,8 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ messages }, { headers: CORS_HEADERS });
-  } catch (e: any) {
-    console.error("[/api/chat GET] Error:", e);
-    return NextResponse.json({ error: e.message ?? "Internal error" }, { status: 500, headers: CORS_HEADERS });
+  } catch (error: unknown) {
+    console.error("[/api/chat GET] Error:", error);
+    return NextResponse.json({ error: errorMessage(error) }, { status: 500, headers: CORS_HEADERS });
   }
 }

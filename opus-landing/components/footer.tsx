@@ -11,10 +11,6 @@ export function Footer() {
       href: "/#product",
     },
     {
-      title: "Цени",
-      href: "/pricing",
-    },
-    {
       title: "Контакт",
       href: "/contact",
     },
@@ -47,7 +43,7 @@ export function Footer() {
 
   const signups = [
     {
-      title: "Започнете бесплатно",
+      title: "Отворете OPUS",
       href: "https://app.opus.mk",
     },
     {

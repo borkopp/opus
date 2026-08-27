@@ -1,48 +1,60 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
+import {
+  CalendarClock,
+  Globe2,
+  MapPin,
+  Palette,
+  Settings2,
+} from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  IconSettings,
-  IconCalendarTime,
-  IconCreditCard,
-  IconFlame,
-  IconBellRinging,
-  IconRobot,
-  IconPalette,
-  IconMapPin,
-  IconWorldWww,
-  IconSparkles,
-} from "@tabler/icons-react";
-import { ListedBadge } from "@/components/dashboard/ListingBanner";
+import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 import { GeneralTab } from "./_components/tabs/GeneralTab";
 import { BookingOperationsTab } from "./_components/tabs/BookingOperationsTab";
-import { DepositManagementTab } from "./_components/tabs/DepositManagementTab";
-import { DynamicSurgePricingTab } from "./_components/tabs/DynamicSurgePricingTab";
-import { NotificationsQueueTab } from "./_components/tabs/NotificationsQueueTab";
-import { AiOperatorTab } from "./_components/tabs/AiOperatorTab";
 import { IdentityProfileTab } from "./_components/tabs/IdentityProfileTab";
 import { LocationTab } from "./_components/tabs/LocationTab";
 import { DomainTab } from "./_components/tabs/DomainTab";
-import { GapOptimizerTab } from "./_components/tabs/GapOptimizerTab";
 
 const VALID_TABS = [
   "general",
   "booking",
-  "deposits",
-  "surge",
-  "notifications",
-  "ai",
   "branding",
   "location",
   "domain",
-  "gaps",
 ] as const;
 type SettingsTab = (typeof VALID_TABS)[number];
+
+const SETTINGS_GROUPS = [
+  {
+    label: "Business",
+    items: [
+      { value: "branding", label: "Branding", icon: Palette },
+      { value: "location", label: "Location", icon: MapPin },
+      { value: "domain", label: "Domain", icon: Globe2 },
+      { value: "general", label: "Display & region", icon: Settings2 },
+    ],
+  },
+  {
+    label: "Appointments",
+    items: [
+      { value: "booking", label: "Booking rules", icon: CalendarClock },
+    ],
+  },
+] satisfies Array<{
+  label: string;
+  items: Array<{
+    value: SettingsTab;
+    label: string;
+    icon: typeof Settings2;
+  }>;
+}>;
 
 export default function SettingsPage() {
   const profile = useQuery(api.users.getMyProfile);
@@ -52,23 +64,13 @@ export default function SettingsPage() {
 
   // ── URL-driven tab state ──
   const tabFromUrl = searchParams.get("tab") as SettingsTab | null;
-  const initialTab =
-    tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "general";
-  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
-
-  // Sync tab state when URL changes (e.g. browser back/forward)
-  useEffect(() => {
-    const t = searchParams.get("tab") as SettingsTab | null;
-    if (t && VALID_TABS.includes(t) && t !== activeTab) {
-      setActiveTab(t);
-    }
-  }, [searchParams]);
+  const activeTab =
+    tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "branding";
 
   const handleTabChange = useCallback(
     (value: string) => {
       const tab = value as SettingsTab;
-      setActiveTab(tab);
-      const url = tab === "general" ? "/settings" : `/settings?tab=${tab}`;
+      const url = tab === "branding" ? "/settings" : `/settings?tab=${tab}`;
       router.replace(url, { scroll: false });
     },
     [router],
@@ -82,7 +84,7 @@ export default function SettingsPage() {
   if (profile === undefined || data === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
+        <Spinner className="size-6" />
       </div>
     );
   }
@@ -100,93 +102,65 @@ export default function SettingsPage() {
   const { settings, org, media } = data;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto pb-10">
-      {/* ── Page Header ── */}
-      {/* <div className="flex items-start justify-between border-b border-border/40 pb-5">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-semibold font-display tracking-tight text-foreground">
-              Organization <span className="serif-accent-inline text-2xl">Settings</span>
-            </h1>
-            {orgId && <ListedBadge orgId={orgId} />}
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8 pb-12">
+      <header className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+            <Settings2 />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Manage your organization&apos;s preferences, branding, and automation.
-          </p>
+          <div>
+            <p className="micro-label text-muted-foreground">Workspace</p>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">
+              Settings
+            </h1>
+          </div>
         </div>
-      </div> */}
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+          Shape how {org.name} appears, accepts bookings, communicates with
+          customers, and runs day to day.
+        </p>
+      </header>
 
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
         orientation="vertical"
-        className="flex flex-col md:flex-row gap-8 w-full items-start"
+        className="grid w-full items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10"
       >
-        {/* ── Sidebar Navigation ── */}
-        <div className="w-full md:w-56 lg:w-60 shrink-0">
-          <TabsList className="flex flex-col h-auto w-full items-start bg-transparent p-0">
-            {/* Core */}
-            <p className="micro-label text-muted-foreground/50 px-3 pt-1 pb-2">
-              Core
-            </p>
-            {[
-              { value: "general", label: "General", icon: <IconSettings size={16} stroke={1.5} /> },
-              { value: "booking", label: "Booking Rules", icon: <IconCalendarTime size={16} stroke={1.5} /> },
-              { value: "deposits", label: "Deposits", icon: <IconCreditCard size={16} stroke={1.5} /> },
-              { value: "surge", label: "Surge Pricing", icon: <IconFlame size={16} stroke={1.5} /> },
-              { value: "gaps", label: "Gap Optimizer", icon: <IconSparkles size={16} stroke={1.5} /> },
-            ].map(({ value, label, icon }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
+        <Card className="overflow-hidden border border-border/60 p-2 lg:sticky lg:top-4">
+          <TabsList
+            aria-label="Settings sections"
+            className="flex h-auto w-full items-stretch justify-start gap-1 overflow-x-auto bg-transparent p-0 lg:flex-col lg:overflow-visible"
+          >
+            {SETTINGS_GROUPS.map((group, groupIndex) => (
+              <div
+                key={group.label}
+                className={cn(
+                  "flex shrink-0 gap-1 lg:w-full lg:flex-col",
+                  groupIndex > 0 && "lg:mt-4",
+                )}
               >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
-                {icon} {label}
-              </TabsTrigger>
-            ))}
-
-            {/* Channels */}
-            <p className="micro-label text-muted-foreground/50 px-3 pt-5 pb-2">
-              Channels
-            </p>
-            {[
-              { value: "notifications", label: "Notifications", icon: <IconBellRinging size={16} stroke={1.5} /> },
-              { value: "ai", label: "AI Agent", icon: <IconRobot size={16} stroke={1.5} /> },
-            ].map(({ value, label, icon }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
-              >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
-                {icon} {label}
-              </TabsTrigger>
-            ))}
-
-            {/* Identity */}
-            <p className="micro-label text-muted-foreground/50 px-3 pt-5 pb-2">
-              Identity
-            </p>
-            {[
-              { value: "branding", label: "Branding", icon: <IconPalette size={16} stroke={1.5} /> },
-              { value: "location", label: "Location", icon: <IconMapPin size={16} stroke={1.5} /> },
-              { value: "domain", label: "Domain", icon: <IconWorldWww size={16} stroke={1.5} /> },
-            ].map(({ value, label, icon }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="group w-full justify-start gap-2.5 px-3 py-2 text-sm data-[state=active]:bg-accent/5 data-[state=active]:text-accent data-[state=active]:font-semibold data-[state=active]:shadow-none text-muted-foreground hover:text-foreground hover:bg-muted/30 rounded-lg font-medium transition-colors relative active:scale-[0.98]"
-              >
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent opacity-0 data-[state=active]:opacity-100 transition-opacity" />
-                {icon} {label}
-              </TabsTrigger>
+                <p className="micro-label hidden px-3 pb-1 text-muted-foreground lg:block">
+                  {group.label}
+                </p>
+                {group.items.map(({ value, label, icon: Icon }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    className="h-10 flex-none justify-start gap-2.5 rounded-xl px-3 text-muted-foreground transition-[background-color,color,transform] duration-150 hover:bg-muted/70 hover:text-foreground active:scale-[0.98] data-[state=active]:bg-accent/10 data-[state=active]:font-semibold data-[state=active]:text-accent data-[state=active]:shadow-none lg:w-full"
+                  >
+                    <Icon />
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </div>
             ))}
           </TabsList>
-        </div>
+        </Card>
 
-        <div className="flex-1 max-w-7xl min-w-0">
+        <div className="min-w-0 max-w-5xl">
           <GeneralTab
+            key={`general-${settings.updatedAt}`}
             orgId={orgId}
             initialData={{
               timezone: settings.timezone,
@@ -199,6 +173,7 @@ export default function SettingsPage() {
             }}
           />
           <BookingOperationsTab
+            key={`booking-${settings.updatedAt}`}
             orgId={orgId}
             initialData={{
               timezone: settings.timezone,
@@ -210,68 +185,8 @@ export default function SettingsPage() {
               bufferTimeMins: settings.bufferTimeMins,
             }}
           />
-          <DepositManagementTab
-            orgId={orgId}
-            initialData={{
-              depositRequired: settings.depositRequired,
-              depositType: settings.depositType,
-              depositValue: settings.depositValue,
-            }}
-          />
-          <DynamicSurgePricingTab
-            orgId={orgId}
-            initialData={{
-              surgePricingEnabled: settings.surgePricingEnabled,
-              surgeRules: settings.surgeRules || [],
-            }}
-          />
-          <GapOptimizerTab
-            orgId={orgId}
-            initialData={{
-              gapOptimizerEnabled: settings.gapOptimizerEnabled ?? true,
-              gapOptimizerMinGapMins: settings.gapOptimizerMinGapMins ?? 30,
-            }}
-          />
-          <NotificationsQueueTab
-            orgId={orgId}
-            initialData={{
-              smsEnabled: settings.smsEnabled,
-              emailEnabled: settings.emailEnabled,
-              whatsappEnabled: settings.whatsappEnabled,
-              reminderHoursBefore: settings.reminderHoursBefore,
-              dashboardNotificationsEnabled: settings.dashboardNotificationsEnabled ?? true,
-              dashboardSoundEnabled: settings.dashboardSoundEnabled ?? true,
-              dashboardToastEnabled: settings.dashboardToastEnabled ?? true,
-            }}
-          />
-          <AiOperatorTab
-            orgId={orgId}
-            initialData={{
-              aiEnabled: settings.aiEnabled,
-              aiPersonaName: settings.aiPersonaName,
-              aiConfidenceThreshold: settings.aiConfidenceThreshold,
-              aiHandoffPhoneNumber: settings.aiHandoffPhoneNumber || "",
-              aiWebchatEnabled: settings.aiWebchatEnabled ?? false,
-              aiInstagramEnabled: settings.aiInstagramEnabled ?? false,
-              aiSystemPrompt: settings.aiSystemPrompt ?? "",
-              aiGreetingMessage: settings.aiGreetingMessage ?? "",
-              aiTone: (settings.aiTone as any) ?? "friendly",
-              aiLanguage: (settings.aiLanguage as any) ?? "auto",
-              aiWorkingHoursEnabled: settings.aiWorkingHoursEnabled ?? false,
-              aiWorkingHours: settings.aiWorkingHours ?? [
-                { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
-                { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
-                { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
-                { dayOfWeek: 4, startTime: "09:00", endTime: "18:00" },
-                { dayOfWeek: 5, startTime: "09:00", endTime: "18:00" },
-                { dayOfWeek: 6, startTime: "10:00", endTime: "16:00" },
-                { dayOfWeek: 0, startTime: "10:00", endTime: "16:00" },
-              ],
-              aiWorkingHoursEnabled_days: [true, true, true, true, true, false, false],
-              aiAwayMessage: settings.aiAwayMessage ?? "",
-            }}
-          />
           <IdentityProfileTab
+            key={`branding-${org.updatedAt}`}
             orgId={orgId}
             initialData={{
               name: org.name,
@@ -286,6 +201,7 @@ export default function SettingsPage() {
             media={media ?? []}
           />
           <LocationTab
+            key={`location-${org.updatedAt}`}
             orgId={orgId}
             initialData={{
               address: org.address || "",

@@ -16,11 +16,13 @@ export interface UserLocation {
  */
 export function useUserLocation(): UserLocation {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [state, setState] = useState<LocationState>("idle");
+  const [state, setState] = useState<LocationState>("loading");
 
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    setState("loading");
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      const timer = window.setTimeout(() => setState("denied"), 0);
+      return () => window.clearTimeout(timer);
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });

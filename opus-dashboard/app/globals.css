@@ -195,8 +195,8 @@
   --secondary-foreground: oklch(98% 0.005 75);
 
   /* Muted */
-  --muted: hsl(0, 0%, 70%);
-  --muted-foreground: hsl(0, 0%, 30%);
+  --muted: hsl(0, 0%, 14%);
+  --muted-foreground: hsl(0, 0%, 64%);
 
   /* Accent — Terracotta unchanged, still high-contrast on dark */
   --accent: oklch(57% 0.21 27);

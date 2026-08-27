@@ -91,11 +91,6 @@ export function BusinessGridCard({
               {distanceLabel && (
                 <span className="text-[11px] text-white/50">{distanceLabel}</span>
               )}
-              {org.priceRange && (
-                <span className="text-[11px] font-semibold text-white/70">
-                  {org.priceRange === "budget" ? "€" : org.priceRange === "mid" ? "€€" : "€€€"}
-                </span>
-              )}
             </div>
           </div>
         </div>

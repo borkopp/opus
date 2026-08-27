@@ -23,7 +23,7 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Ask</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={TabIcons.ask.sf}
-          md={TabIcons.ask.md}
+          md={TabIcons.ask.md.default}
         />
       </NativeTabs.Trigger>
 
@@ -31,7 +31,7 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Discover</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           sf={TabIcons.discover.sf}
-          md={TabIcons.discover.md}
+          md={TabIcons.discover.md.default}
         />
       </NativeTabs.Trigger>
     </NativeTabs>

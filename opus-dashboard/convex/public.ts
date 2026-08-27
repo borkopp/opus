@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { buildPublicProfile } from "./lib/publicProfile";
+import { ACTIVE_INDUSTRY, isActiveIndustry } from "./lib/productScope";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC QUERIES — opus.mk
@@ -49,15 +51,16 @@ export const listPublished = query({
     },
     handler: async (ctx, args) => {
         // Base query: published + not deleted
-        let orgsQuery = ctx.db
+        const orgsQuery = ctx.db
             .query("orgs")
-            .withIndex("by_listing_status", (q) => q.eq("listingStatus", "published"))
-            .filter((q) => q.eq(q.field("isDeleted"), false));
+            .withIndex("by_listing_status_deleted", (q) =>
+                q.eq("listingStatus", "published").eq("isDeleted", false)
+            );
 
         const allOrgs = await orgsQuery.collect();
 
         // Filter in memory (Convex doesn't support multi-field index filtering on different fields)
-        let filtered = allOrgs;
+        let filtered = allOrgs.filter((org) => isActiveIndustry(org.industry));
 
         if (args.city) {
             const cityLower = args.city.toLowerCase();
@@ -102,7 +105,9 @@ export const listPublished = query({
         const covers = await Promise.all(page.map(o =>
             ctx.db
                 .query("org_media")
-                .withIndex("by_org_type", (q) => q.eq("orgId", o._id).eq("type", "cover"))
+                .withIndex("by_org_type_active", (q) =>
+                    q.eq("orgId", o._id).eq("type", "cover").eq("isDeleted", false)
+                )
                 .order("asc")
                 .first()
         ));
@@ -145,151 +150,14 @@ export const getPublicProfile = query({
             .withIndex("by_slug", (q) => q.eq("slug", args.slug))
             .first();
 
-        if (!org || org.isDeleted || org.listingStatus !== "published") return null;
+        if (
+            !org ||
+            org.isDeleted ||
+            org.listingStatus !== "published" ||
+            !isActiveIndustry(org.industry)
+        ) return null;
 
-        // Fetch media
-        const media = await ctx.db
-            .query("org_media")
-            .withIndex("by_org", (q) => q.eq("orgId", org._id))
-            .collect();
-
-        // Fetch published services
-        const services = await ctx.db
-            .query("services")
-            .withIndex("by_org_active", (q) =>
-                q.eq("orgId", org._id).eq("isActive", true)
-            )
-            .filter((q) => q.eq(q.field("isDeleted"), false))
-            .filter((q) => q.eq(q.field("isOpusVisible"), true))
-            .collect();
-
-        // Fetch service categories
-        const categoryIds = [...new Set(services.map((s) => s.categoryId).filter(Boolean))];
-        const categories = await Promise.all(
-            categoryIds.map((id) => ctx.db.get(id!))
-        );
-        const categoryMap = Object.fromEntries(
-            categories.filter(Boolean).map((c) => [c!._id, c!.name])
-        );
-
-        // Fetch staff with public bio (only those linked to a service)
-        const staffIds = [...new Set(services.flatMap((s) => s.staffIds))];
-        const staff = await Promise.all(
-            staffIds.slice(0, 20).map((id) => ctx.db.get(id))
-        );
-
-        // Fetch AI settings
-        const orgSettings = await ctx.db
-            .query("org_settings")
-            .withIndex("by_org", (q) => q.eq("orgId", org._id))
-            .first();
-
-        return {
-            // Core identity
-            _id: org._id,
-            name: org.name,
-            slug: org.slug,
-            industry: org.industry,
-            logoUrl: org.logoUrl,
-
-            // Listing copy
-            tagline: org.tagline,
-            bio: org.bio,
-
-            // Location
-            address: org.address,
-            city: org.city,
-            neighborhood: org.neighborhood,
-            coordinates: org.coordinates,
-
-            // Contact & social
-            phone: org.phone,
-            instagramHandle: org.instagramHandle,
-            websiteUrl: org.websiteUrl,
-
-            // Hours
-            openingHours: org.openingHours,
-
-            // Menu (hospitality)
-            menuText: org.menuText,
-
-            // Discovery
-            tags: org.tags,
-            priceRange: org.priceRange,
-            beautyCategory: org.beautyCategory,
-            cuisine: org.cuisine,
-            venueType: org.venueType,
-
-            // Reviews summary
-            averageRating: org.averageRating,
-            reviewCount: org.reviewCount,
-
-            // Media (sorted by sortOrder)
-            media: media
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((m) => ({ _id: m._id, url: m.url, type: m.type, caption: m.caption })),
-
-            // Services grouped by category
-            services: services
-                .sort((a, b) => a.sortOrder - b.sortOrder)
-                .map((s) => ({
-                    _id: s._id,
-                    name: s.name,
-                    consumerDescription: s.consumerDescription,
-                    highlights: s.highlights,
-                    photoUrl: s.photoUrl,
-                    durationMins: s.durationMins,
-                    priceMinorUnits: s.priceMinorUnits,
-                    currency: s.currency,
-                    categoryName: s.categoryId ? categoryMap[s.categoryId] : undefined,
-                })),
-
-            // AI webchat
-            aiWebchatEnabled: !!(orgSettings?.aiEnabled && orgSettings?.aiWebchatEnabled),
-            aiPersonaName: orgSettings?.aiPersonaName ?? "Aria",
-            aiGreetingMessage: orgSettings?.aiGreetingMessage ?? null,
-
-            // Public staff profiles
-            staff: staff
-                .filter(Boolean)
-                .filter((s) => s!.isActive && !s!.isDeleted)
-                .map((s) => ({
-                    _id: s!._id,
-                    displayName: s!.displayName,
-                    bio: s!.bio,
-                    avatarUrl: s!.avatarUrl,
-                    specialties: s!.specialties,
-                })),
-        };
-    },
-});
-
-// ─── Public availability (no auth) ───────────────────
-// Thin wrapper — the actual slot engine is in convex/slots.ts.
-// This query forwards to it without auth checks so opus.mk can
-// show availability to unauthenticated visitors.
-export const getPublicAvailability = query({
-    args: {
-        orgId: v.id("orgs"),
-        staffId: v.optional(v.id("staff_members")),
-        serviceId: v.id("services"),
-        date: v.string(),                // "YYYY-MM-DD"
-    },
-    handler: async (ctx, args) => {
-        // Verify org is published
-        const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted || org.listingStatus !== "published") return [];
-
-        // Verify service is publicly visible
-        const service = await ctx.db.get(args.serviceId);
-        if (!service || service.isDeleted || !service.isActive || !service.isOpusVisible) return [];
-
-        // Delegate to the existing slot computation (imported inline here
-        // to avoid duplicating the availability logic — see convex/slots.ts)
-        // For now return an empty array as a stub; the slots.ts function will
-        // be refactored to share a `computeSlots` helper callable from both
-        // staff-facing and public queries.
-        return [];
+        return await buildPublicProfile(ctx, org);
     },
 });
 
@@ -304,20 +172,23 @@ export const searchPublished = query({
         const results = await ctx.db
             .query("orgs")
             .withSearchIndex("search_by_name", (q) => {
-                let search = q.search("name", args.query).eq("listingStatus", "published").eq("isDeleted", false);
+                const search = q.search("name", args.query).eq("listingStatus", "published").eq("isDeleted", false);
                 return search;
             })
             .take(20);
 
         const now = Date.now();
+        const activeResults = results.filter((org) => org.industry === ACTIVE_INDUSTRY);
         const filtered = args.city
-            ? results.filter((o) => o.city?.toLowerCase() === args.city!.toLowerCase())
-            : results;
+            ? activeResults.filter((o) => o.city?.toLowerCase() === args.city!.toLowerCase())
+            : activeResults;
 
         const covers = await Promise.all(filtered.map(o =>
             ctx.db
                 .query("org_media")
-                .withIndex("by_org_type", (q) => q.eq("orgId", o._id).eq("type", "cover"))
+                .withIndex("by_org_type_active", (q) =>
+                    q.eq("orgId", o._id).eq("type", "cover").eq("isDeleted", false)
+                )
                 .order("asc")
                 .first()
         ));

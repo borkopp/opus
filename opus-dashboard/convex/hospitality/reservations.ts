@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { Id } from "../_generated/dataModel";
+import { Doc, Id } from "../_generated/dataModel";
 import { mutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { requireAuth, requireRole } from "../lib/auth";
@@ -8,7 +8,7 @@ import { requireAuth, requireRole } from "../lib/auth";
 // Helper: get primary contact from a customer record
 // ─────────────────────────────────────────────────────────────────────────────
 function getPrimaryContact(
-  customer: any,
+  customer: Doc<"customers">,
 ): { channel: "email" | "sms" | "whatsapp" | "push"; address: string } | null {
   if (customer.preferredChannel === "whatsapp" && customer.phone)
     return { channel: "whatsapp", address: customer.phone };

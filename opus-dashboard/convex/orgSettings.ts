@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
-import { requireRole } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
 
 export const getOrgSettings = query({
     args: { orgId: v.id("orgs") },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const org = await ctx.db.get(args.orgId);
         if (!org || org.isDeleted) return null;
 
@@ -16,7 +17,9 @@ export const getOrgSettings = query({
 
         const media = await ctx.db
             .query("org_media")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
+            .withIndex("by_org_active", q =>
+                q.eq("orgId", args.orgId).eq("isDeleted", false)
+            )
             .collect();
 
         return {
@@ -59,6 +62,9 @@ export const updateOrgSettings = mutation({
             updatedAt: Date.now(),
         });
 
+        await ctx.runMutation(internal.listing.recomputeListingStatus, {
+            orgId: args.orgId,
+        });
         return true;
     }
 });
@@ -295,7 +301,8 @@ export const updateOrgBranding = mutation({
         const org = await ctx.db.get(args.orgId);
         if (!org || org.isDeleted) throw new Error("Org not found");
 
-        await ctx.db.patch(args.orgId, {
+        const now = Date.now();
+        const updates = {
             name: args.name,
             logoUrl: args.logoUrl,
             tagline: args.tagline,
@@ -304,7 +311,25 @@ export const updateOrgBranding = mutation({
             instagramHandle: args.instagramHandle,
             instagramPageId: args.instagramPageId,
             websiteUrl: args.websiteUrl,
-            updatedAt: Date.now()
+            updatedAt: now
+        };
+        await ctx.db.patch(args.orgId, updates);
+
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            action: "org.branding_updated",
+            resourceType: "orgs",
+            resourceId: args.orgId,
+            before: {
+                name: org.name,
+                logoUrl: org.logoUrl,
+                tagline: org.tagline,
+                bio: org.bio,
+                phone: org.phone,
+            },
+            after: updates,
+            createdAt: now,
         });
 
         // Recompute listing status — name, logo, or location may have changed
@@ -358,14 +383,34 @@ export const updateLocation = mutation({
         const org = await ctx.db.get(args.orgId);
         if (!org || org.isDeleted) throw new Error("Org not found");
 
-        await ctx.db.patch(args.orgId, {
+        const now = Date.now();
+        const updates = {
             address: args.address,
             city: args.city,
             neighborhood: args.neighborhood,
             postalCode: args.postalCode,
             country: args.country,
             coordinates: args.coordinates,
-            updatedAt: Date.now(),
+            updatedAt: now,
+        };
+        await ctx.db.patch(args.orgId, updates);
+
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            action: "org.location_updated",
+            resourceType: "orgs",
+            resourceId: args.orgId,
+            before: {
+                address: org.address,
+                city: org.city,
+                neighborhood: org.neighborhood,
+                postalCode: org.postalCode,
+                country: org.country,
+                coordinates: org.coordinates,
+            },
+            after: updates,
+            createdAt: now,
         });
 
         await ctx.runMutation(internal.listing.recomputeListingStatus, { orgId: args.orgId });

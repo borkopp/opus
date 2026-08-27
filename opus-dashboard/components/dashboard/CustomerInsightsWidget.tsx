@@ -1,13 +1,15 @@
 import { Card } from "@/components/ui/card";
-import { UserPlus, AlertTriangle, TrendingUp, Calendar, Users, ArrowUpRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { TrendingUp, Calendar, Users, ArrowUpRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { api } from "@/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
 function NumberCounter({ value, prefix = "", suffix = "", decimals = 0 }: { value: number, prefix?: string, suffix?: string, decimals?: number }) {
   const [displayValue, setDisplayValue] = useState(0);
 
   useEffect(() => {
-    let start = 0;
+    const start = 0;
     const end = value;
     const duration = 1000;
     const startTime = performance.now();
@@ -33,7 +35,25 @@ function NumberCounter({ value, prefix = "", suffix = "", decimals = 0 }: { valu
   return <>{prefix}{displayValue.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>;
 }
 
-export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, formatMoney, revenueToday, bookingsToday }: any) {
+type CustomerInsights = FunctionReturnType<typeof api.dashboard.getCustomerInsights>;
+type TopCustomer = FunctionReturnType<typeof api.dashboard.getTopCustomers>[number];
+type NoShowRisk = FunctionReturnType<typeof api.dashboard.getNoShowStats>;
+
+export function CustomerInsightsWidget({
+  insights,
+  topCustomers,
+  noShowRisk,
+  formatMoney,
+  revenueToday,
+  bookingsToday,
+}: {
+  insights: CustomerInsights;
+  topCustomers: TopCustomer[];
+  noShowRisk: NoShowRisk;
+  formatMoney: (minorUnits: number) => string;
+  revenueToday: number;
+  bookingsToday: number;
+}) {
   const containerVars = {
     hidden: { opacity: 0, y: 10 },
     visible: {
@@ -94,7 +114,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
             <span className="font-outfit text-3xl font-black text-primary leading-none">
               <NumberCounter value={insights.newThisMonth} />
             </span>
-            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">New <span className="serif-accent-inline text-[10px]">Visitors</span></span>
+            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">New Visitors</span>
           </motion.div>
           <motion.div
             whileHover={{ scale: 1.02, translateY: -2 }}
@@ -108,7 +128,7 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
         </motion.div>
 
         {(() => {
-          const validCustomers = topCustomers.filter((c: any) => c.totalSpendMinorUnits > 0);
+          const validCustomers = topCustomers.filter((customer) => customer.totalSpendMinorUnits > 0);
           if (validCustomers.length === 0) return null;
           return (
             <motion.div variants={itemVars} className="space-y-3">
@@ -119,23 +139,23 @@ export function CustomerInsightsWidget({ insights, topCustomers, noShowRisk, for
                 <ArrowUpRight className="w-3 h-3 text-muted-foreground/50" />
               </div>
               <div className="flex flex-col gap-2.5">
-                {validCustomers.slice(0, 3).map((c: any, i: number) => (
+                {validCustomers.slice(0, 3).map((customer, index) => (
                   <motion.div
-                    key={c.id}
+                    key={customer.id}
                     initial={{ opacity: 0, x: -5 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + (i * 0.1) }}
+                    transition={{ delay: 0.5 + (index * 0.1) }}
                     whileHover={{ x: 4 }}
                     className="flex justify-between items-center text-[13px] font-outfit group cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-black flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        {i + 1}
+                        {index + 1}
                       </div>
-                      <span className="font-semibold text-foreground truncate max-w-[100px] group-hover:text-primary transition-colors">{c.name}</span>
+                      <span className="font-semibold text-foreground truncate max-w-[100px] group-hover:text-primary transition-colors">{customer.name}</span>
                     </div>
                     <span className="font-bold text-foreground">
-                      {formatMoney(c.totalSpendMinorUnits)}
+                      {formatMoney(customer.totalSpendMinorUnits)}
                     </span>
                   </motion.div>
                 ))}

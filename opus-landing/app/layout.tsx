@@ -23,9 +23,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "OPUS - AI Платформа за вашиот бизнис",
+  title: "OPUS - Термини за студија за убавина",
   description:
-    "All-in-one AI платформа за салони за убавина, берберници и ресторани.",
+    "OPUS им помага на малите студија за убавина во Македонија да управуваат со термини и да ги пополнат празните места во календарот.",
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="mk" suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
       >

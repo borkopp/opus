@@ -1,17 +1,21 @@
 "use client"
 
 import { Card } from "@/components/ui/card";
-import { Bot, ChevronDown, Settings, Sparkles } from "lucide-react";
+import { Bot, ChevronDown, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
+import type { Variants } from "framer-motion";
+import { api } from "@/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
 function StatCounter({ value, suffix = "", decimals = 0 }: { value: number, suffix?: string, decimals?: number }) {
    const [displayValue, setDisplayValue] = useState(0);
 
    useEffect(() => {
-      let start = 0;
+      const start = 0;
       const end = value;
       const duration = 1200;
       const startTime = performance.now();
@@ -32,13 +36,10 @@ function StatCounter({ value, suffix = "", decimals = 0 }: { value: number, suff
 }
 
 interface AIPerformanceProps {
-   aiPerformance: {
-      aiEnabled: boolean;
-      totalConversations: number;
-      bookingRate: number;
-      handoffRate: number;
-   };
+   aiPerformance: FunctionReturnType<typeof api.dashboard.getAIPerformance>;
 }
+
+type OverlayStyle = CSSProperties & { "--ai-overlay-rotation": string };
 
 export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
    const enabled = aiPerformance?.aiEnabled ?? false;
@@ -50,11 +51,11 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
          y: 0,
          transition: {
             duration: 0.6,
-            ease: [0.22, 1, 0.36, 1] as number[],
+            ease: [0.22, 1, 0.36, 1],
             staggerChildren: 0.1
-         } as any
+         }
       }
-   };
+   } satisfies Variants;
 
    const itemVars = {
       hidden: { opacity: 0, scale: 0.95, y: 10 },
@@ -62,9 +63,9 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
          opacity: 1,
          scale: 1,
          y: 0,
-         transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as number[] }
+         transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
       }
-   } as any;
+   } satisfies Variants;
 
    return (
       <motion.div
@@ -74,7 +75,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
          className="h-full"
       >
          <Card
-            style={{ '--ai-overlay-rotation': '15deg' } as any}
+            style={{ "--ai-overlay-rotation": "15deg" } as OverlayStyle}
             className="ai-widget-overlay terracotta-glow flex flex-col h-full bg-card/70 shadow-l backdrop-blur-xl p-6 col-span-1 lg:col-span-1 relative overflow-hidden rounded-[28px] transition-all duration-700 group border-border/40"
          >
 
@@ -130,7 +131,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                            </div>
                         )}
                      </div>
-                     <p className="text-xs text-muted-foreground mt-1 tracking-wide">Autonomous <span className="serif-accent-inline text-xs">Front-Desk</span></p>
+                     <p className="text-xs text-muted-foreground mt-1 tracking-wide">Autonomous Front-Desk</p>
                   </div>
                </div>
             </div>
@@ -145,7 +146,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                            >
                               <StatCounter value={aiPerformance.totalConversations} />
                            </motion.span>
-                           <span className="serif-accent-inline text-base">chats</span>
+                           chats
                         </div>
                         <span className="micro-label text-muted-foreground mt-2 flex items-center gap-1.5">
                            Monthly Conversations
@@ -224,7 +225,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                      <Bot className="h-7 w-7 text-muted-foreground/50" />
                   </motion.div>
                   <div>
-                     <p className="text-sm font-semibold text-foreground">AI Agent is <span className="serif-accent-inline text-sm">off</span></p>
+                     <p className="text-sm font-semibold text-foreground">AI Agent is off</p>
                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         Enable the AI front-desk to handle bookings and customer messages automatically.
                      </p>

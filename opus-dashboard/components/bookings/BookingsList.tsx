@@ -3,19 +3,19 @@
 import { useMemo } from "react";
 import { format, differenceInMinutes } from "date-fns";
 import { cn } from "@/lib/utils";
-import { IconCircleCheck, IconSparkles, IconDotsCircleHorizontal } from "@tabler/icons-react";
+import { IconSparkles } from "@tabler/icons-react";
 import { Price } from "@/components/ui/price";
+import { Id } from "@/convex/_generated/dataModel";
+import { BookingView } from "./types";
 
 export function BookingsList({
     bookings,
-    staffMembers,
     selectedBookingId,
     onSelectBooking
 }: {
-    bookings: any[];
-    staffMembers: any[];
-    selectedBookingId: string | null;
-    onSelectBooking: (id: string | null) => void;
+    bookings: BookingView[];
+    selectedBookingId: Id<"bookings"> | null;
+    onSelectBooking: (id: Id<"bookings"> | null) => void;
 }) {
 
     const sortedBookings = useMemo(() => {
@@ -118,4 +118,3 @@ export function BookingsList({
         </div>
     );
 }
-

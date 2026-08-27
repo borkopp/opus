@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { internalQuery, query, QueryCtx } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { requireAuth } from "./lib/auth";
 
 // --- Time Utilities ---
 
@@ -10,16 +11,11 @@ function timeToMins(timeStr: string): number {
     return h * 60 + m;
 }
 
-/** Formats local date to YYYY-MM-DD */
-function formatDate(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
 // --- Core Engine ---
 
 /** Core reusable logic for computing available slots on a given date */
 export async function computeSlotsForDate(
-    ctx: QueryCtx,
+    ctx: Pick<QueryCtx, "db">,
     orgId: Id<"orgs">,
     staffId: Id<"staff_members"> | "any",
     serviceId: Id<"services">,
@@ -37,7 +33,7 @@ export async function computeSlotsForDate(
 
     if (!orgSettings) throw new ConvexError("Organization settings not found.");
 
-    let staffMembersToProcess: Id<"staff_members">[] = [];
+    const staffMembersToProcess: Id<"staff_members">[] = [];
 
     if (staffId === "any") {
         const assignedStaff = service.staffIds;
@@ -58,7 +54,7 @@ export async function computeSlotsForDate(
     const midnightMs = new Date(`${date}T00:00:00Z`).getTime();
     const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
 
-    let allSlotsMap = new Map<number, {
+    const allSlotsMap = new Map<number, {
         startAt: number,
         endAt: number,
         priceMinorUnits: number,
@@ -70,7 +66,9 @@ export async function computeSlotsForDate(
     for (const currentStaffId of staffMembersToProcess) {
         const override = await ctx.db
             .query("availability_overrides")
-            .withIndex("by_staff_date", q => q.eq("staffId", currentStaffId).eq("date", date))
+            .withIndex("by_staff_date_active", q =>
+                q.eq("staffId", currentStaffId).eq("date", date).eq("isDeleted", false)
+            )
             .first();
 
         let workingHours: { startTime: string, endTime: string } | null = null;
@@ -85,10 +83,16 @@ export async function computeSlotsForDate(
         } else {
             const rule = await ctx.db
                 .query("availability_rules")
-                .withIndex("by_staff_day", q => q.eq("staffId", currentStaffId).eq("dayOfWeek", dayOfWeek))
+                .withIndex("by_staff_day_active", q =>
+                    q
+                        .eq("staffId", currentStaffId)
+                        .eq("dayOfWeek", dayOfWeek)
+                        .eq("isDeleted", false)
+                        .eq("isActive", true)
+                )
                 .first();
 
-            if (rule && rule.isActive) {
+            if (rule) {
                 workingHours = { startTime: rule.startTime, endTime: rule.endTime };
                 breaks = rule.breaks || [];
             }
@@ -100,7 +104,7 @@ export async function computeSlotsForDate(
         const endMins = timeToMins(workingHours.endTime);
         const durationMins = service.durationMins;
 
-        let rawSlots: { start: number, end: number }[] = [];
+        const rawSlots: { start: number, end: number }[] = [];
         for (let m = startMins; m + durationMins <= endMins; m += orgSettings.slotDurationMins) {
             const slotEnd = m + durationMins;
             const overlapsBreak = breaks.some(b => {
@@ -216,6 +220,7 @@ export const getAvailableSlots = query({
         date: v.string(), // "YYYY-MM-DD"
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         return await computeSlotsForDate(ctx, args.orgId, args.staffId, args.serviceId, args.date);
     }
 });
@@ -228,6 +233,7 @@ export const getAvailableDates = query({
         month: v.string(), // "YYYY-MM"
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const [year, m] = args.month.split("-").map(Number);
         const daysInMonth = new Date(Date.UTC(year, m, 0)).getDate();
 
@@ -308,7 +314,9 @@ export const computeFreeIntervalsForDate = internalQuery({
 
         const override = await ctx.db
             .query("availability_overrides")
-            .withIndex("by_staff_date", q => q.eq("staffId", staffId).eq("date", date))
+            .withIndex("by_staff_date_active", q =>
+                q.eq("staffId", staffId).eq("date", date).eq("isDeleted", false)
+            )
             .first();
 
         let workingHours: { startTime: string, endTime: string } | null = null;
@@ -323,10 +331,16 @@ export const computeFreeIntervalsForDate = internalQuery({
         } else {
             const rule = await ctx.db
                 .query("availability_rules")
-                .withIndex("by_staff_day", q => q.eq("staffId", staffId).eq("dayOfWeek", dayOfWeek))
+                .withIndex("by_staff_day_active", q =>
+                    q
+                        .eq("staffId", staffId)
+                        .eq("dayOfWeek", dayOfWeek)
+                        .eq("isDeleted", false)
+                        .eq("isActive", true)
+                )
                 .first();
 
-            if (rule && rule.isActive) {
+            if (rule) {
                 workingHours = { startTime: rule.startTime, endTime: rule.endTime };
                 breaks = rule.breaks || [];
             }

@@ -19,24 +19,24 @@ export default function Hero() {
       />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-32">
         <div>
-          <Badge href="https://app.opus.mk">Запознајте го вашиот нов дигитален асистент</Badge>
+          <Badge href="https://app.opus.mk">За мали студија за убавина во Македонија</Badge>
         </div>
 
         <h1 className="mt-4 max-w-3xl text-4xl font-normal tracking-tight text-neutral-700 md:text-6xl dark:text-neutral-300">
-          Вашиот бизнис работи.
+          Помалку празни термини.
           <br />
-          Вие <span className="text-brand-primary font-playfair italic md:text-7xl font-medium" > владеете</span> со него.
+          Повеќе <span className="text-brand-primary font-playfair italic md:text-7xl font-medium" > резервирани</span> клиенти.
         </h1>
 
         <p className="mt-4 max-w-2xl text-base text-neutral-700 md:text-xl dark:text-neutral-300">
-          OPUS го автоматизира закажувањето, плаќањата и комуникацијата со клиенти. Од салони за убавина до ресторани. Сè на едно место.
+          OPUS им помага на малите студија за убавина да управуваат со термини и да ги претворат откажувањата и празните места во календарот во резервирани термини.
         </p>
 
         <div className="mt-8 flex items-center gap-4">
           <Link href="https://app.opus.mk">
             <Button>
               <span className="flex items-center gap-2">
-                Започнете бесплатно <Arrow className="size-4" />
+                Отворете OPUS <Arrow className="size-4" />
               </span>
             </Button>
           </Link>

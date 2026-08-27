@@ -24,13 +24,13 @@ import { motion } from "framer-motion";
 const STEPS = [
   {
     title: "AI Concierge",
-    description: "Just type what you're looking for—from 'date night spots' to 'haircut now'—and let OPUS find you an available spot.",
+    description: "Describe the beauty or wellness appointment you need and OPUS will find relevant studios.",
     Icon: IconMessages,
     color: "#6366f1",
   },
   {
     title: "Curated Discovery",
-    description: "Explore the best beauty, wellness, and hospitality spots, hand-picked for your location.",
+    description: "Explore beauty and wellness studios available in your selected city.",
     Icon: IconSearch,
     color: "var(--accent)",
   },
@@ -43,7 +43,7 @@ const STEPS = [
   },
   {
     title: "Smart Learning",
-    description: "OPUS learns your preferences over time to deliver increasingly personalized recommendations.",
+    description: "Compare services, opening hours, ratings, and availability before choosing a studio.",
     Icon: IconSparkles,
     color: "#f59e0b",
   },
@@ -122,7 +122,7 @@ export function HowItWorks() {
               How OPUS Works
             </DialogTitle>
             <DialogDescription className="text-white/50 text-sm">
-              Your AI-powered gateway to the best local services.
+              Find and book beauty appointments in Macedonia.
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto no-scrollbar">
@@ -148,7 +148,7 @@ export function HowItWorks() {
             How OPUS Works
           </SheetTitle>
           <SheetDescription className="text-white/50 text-sm">
-            Discover, book, and enjoy local gems.
+            Discover and book local beauty studios.
           </SheetDescription>
         </SheetHeader>
         <div className="overflow-y-auto no-scrollbar">

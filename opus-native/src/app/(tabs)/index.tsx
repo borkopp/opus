@@ -410,6 +410,9 @@ export default function AskScreen() {
 
   const hasMessages = messages.length > 0;
 
+  const locationCity = location.status === "ready" ? location.city : undefined;
+  const locationCoords = location.status === "ready" ? location.coords : undefined;
+
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
@@ -428,8 +431,8 @@ export default function AskScreen() {
           query: trimmed,
           sessionId,
           locale: "en",
-          city: location.status === "ready" ? location.city : undefined,
-          coords: location.status === "ready" ? location.coords : undefined,
+          city: locationCity,
+          coords: locationCoords,
         });
         setMessages((prev) =>
           prev.map((m) =>
@@ -454,7 +457,13 @@ export default function AskScreen() {
         setIsLoading(false);
       }
     },
-    [isLoading, sendChat, sessionId],
+    [
+      isLoading,
+      locationCity,
+      locationCoords,
+      sendChat,
+      sessionId,
+    ],
   );
 
   const handleSend = useCallback(() => {

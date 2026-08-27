@@ -2,9 +2,11 @@ import { v, ConvexError } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { internal, api } from "./_generated/api";
 import { requireAuth, requireRole } from "./lib/auth";
+import type { Doc } from "./_generated/dataModel";
+import { computeSlotsForDate } from "./slots";
 
 function getPrimaryContact(
-  customer: any,
+  customer: Doc<"customers">,
 ): { channel: "email" | "sms" | "whatsapp" | "push"; address: string } | null {
   if (customer.preferredChannel === "whatsapp" && customer.phone)
     return { channel: "whatsapp", address: customer.phone };
@@ -247,7 +249,7 @@ export const createBooking = mutation({
   },
 });
 
-export const confirmBooking = mutation({
+export const confirmBooking = internalMutation({
   args: {
     orgId: v.id("orgs"),
     bookingId: v.id("bookings"),
@@ -443,9 +445,9 @@ export const cancelBooking = mutation({
     orgId: v.id("orgs"),
     bookingId: v.id("bookings"),
     reason: v.optional(v.string()),
-    cancelledByUserId: v.optional(v.string()), // Used to determine who cancelled
   },
   handler: async (ctx, args) => {
+    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
     const booking = await ctx.db.get(args.bookingId);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
@@ -461,14 +463,14 @@ export const cancelBooking = mutation({
       status: "cancelled",
       cancelledAt: Date.now(),
       cancellationReason: args.reason,
-      cancelledBy: args.cancelledByUserId || "unknown",
+      cancelledBy: staffMember._id,
       updatedAt: Date.now(),
     });
 
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
-      actorType: args.cancelledByUserId === "customer" ? "user" : "staff", // Simplified
-      actorId: args.cancelledByUserId || "unknown",
+      actorType: "staff",
+      actorId: staffMember._id,
       action: "booking.cancelled",
       resourceType: "bookings",
       resourceId: args.bookingId,
@@ -481,6 +483,10 @@ export const cancelBooking = mutation({
     const service = await ctx.db.get(booking.serviceId);
     const staff = await ctx.db.get(booking.staffId);
     if (customer && service && staff) {
+      const orgSettings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", q => q.eq("orgId", args.orgId))
+        .first();
       const contact = getPrimaryContact(customer);
       if (contact) {
         await ctx.runMutation(internal.notifications.scheduleNotification, {
@@ -495,7 +501,7 @@ export const cancelBooking = mutation({
             serviceName: service.name,
             staffName: staff.displayName,
             startAt: booking.startAt,
-            cancellationPolicy: "24 hours",
+            cancellationPolicy: `${orgSettings?.cancellationWindowHours ?? 24} hours`,
           },
         });
       }
@@ -507,16 +513,11 @@ export const cancelBooking = mutation({
         orgId: args.orgId,
         type: "booking_cancelled",
         title: "Booking Cancelled",
-        body: `${customer.name} cancelled their ${service.name} on ${cancelDateLabel}`,
+        body: `The ${service.name} booking for ${customer.name} on ${cancelDateLabel} was cancelled`,
         bookingId: booking._id,
         customerId: customer._id,
       });
       
-      const orgSettings = await ctx.db
-        .query("org_settings")
-        .withIndex("by_org", q => q.eq("orgId", args.orgId))
-        .first();
-
       const timeZone = orgSettings?.timezone || "Europe/Belgrade";
       const parts = new Intl.DateTimeFormat("en-US", {
           timeZone,
@@ -532,13 +533,15 @@ export const cancelBooking = mutation({
       
       const serviceDate = `${year}-${month}-${day}`;
 
-      await ctx.scheduler.runAfter(0, api.ai.gapOptimizer.scanDayForOrg, {
-        orgId: args.orgId,
-        serviceDate,
-        staffIds: [booking.staffId],
-        detectedBy: "cancellation",
-        triggeredByBookingId: booking._id,
-      });
+      if (orgSettings?.gapOptimizerEnabled) {
+        await ctx.scheduler.runAfter(0, api.ai.gapOptimizer.scanDayForOrg, {
+          orgId: args.orgId,
+          serviceDate,
+          staffIds: [booking.staffId],
+          detectedBy: "cancellation",
+          triggeredByBookingId: booking._id,
+        });
+      }
     }
 
     return true;
@@ -599,25 +602,27 @@ export const markNoShow = mutation({
     const staff = await ctx.db.get(booking.staffId);
     const service = await ctx.db.get(booking.serviceId);
     if (staff && customer && service) {
-      let staffEmail = "system@omni.com";
+      let staffEmail: string | null = null;
       if (staff.userId) {
         const user = await ctx.db.get(staff.userId);
         if (user && user.email) staffEmail = user.email;
       }
-      await ctx.runMutation(internal.notifications.scheduleNotification, {
-        orgId: args.orgId,
-        customerId: customer._id,
-        bookingId: booking._id,
-        channel: "email",
-        type: "no_show_warning",
-        recipientAddress: staffEmail,
-        templateData: {
-          customerName: customer.name,
-          serviceName: service.name,
-          staffName: staff.displayName,
-          startAt: booking.startAt,
-        },
-      });
+      if (staffEmail) {
+        await ctx.runMutation(internal.notifications.scheduleNotification, {
+          orgId: args.orgId,
+          customerId: customer._id,
+          bookingId: booking._id,
+          channel: "email",
+          type: "no_show_warning",
+          recipientAddress: staffEmail,
+          templateData: {
+            customerName: customer.name,
+            serviceName: service.name,
+            staffName: staff.displayName,
+            startAt: booking.startAt,
+          },
+        });
+      }
 
       // Dashboard notification
       const nsDate = new Date(booking.startAt);
@@ -643,6 +648,7 @@ export const rescheduleBooking = mutation({
     newStartAt: v.number(),
   },
   handler: async (ctx, args) => {
+    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
     // Find existing
     const oldBooking = await ctx.db.get(args.bookingId);
     if (
@@ -662,6 +668,7 @@ export const rescheduleBooking = mutation({
       status: "cancelled",
       cancellationReason: "Rescheduled",
       cancelledAt: Date.now(),
+      cancelledBy: staffMember._id,
       updatedAt: Date.now(),
     });
 
@@ -671,38 +678,20 @@ export const rescheduleBooking = mutation({
     const service = await ctx.db.get(oldBooking.serviceId);
     if (!service) throw new ConvexError("Service not found");
 
-    const nextMidnightMs =
-      new Date(
-        new Date(args.newStartAt).toISOString().split("T")[0] + "T00:00:00Z",
-      ).getTime() +
-      24 * 60 * 60 * 1000;
-    const midnightMs = nextMidnightMs - 24 * 60 * 60 * 1000;
-
-    const existingBookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_staff_start", (q) =>
-        q
-          .eq("staffId", oldBooking.staffId)
-          .gte("startAt", midnightMs)
-          .lt("startAt", nextMidnightMs),
-      )
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("isDeleted"), false),
-          q.neq(q.field("status"), "cancelled"),
-        ),
-      )
-      .collect();
-
     const endAt = args.newStartAt + service.durationMins * 60 * 1000;
 
-    // Let's assume typical buffer
-    const conflict = existingBookings.find((b) => {
-      return b.startAt < endAt && b.endAt > args.newStartAt;
-    });
-
-    if (conflict) {
-      throw new ConvexError("The new slot conflicts with another booking.");
+    const date = new Date(args.newStartAt).toISOString().slice(0, 10);
+    const availableSlots = await computeSlotsForDate(
+      ctx,
+      args.orgId,
+      oldBooking.staffId,
+      oldBooking.serviceId,
+      date,
+    );
+    if (!availableSlots.some((slot) => slot.startAt === args.newStartAt)) {
+      throw new ConvexError(
+        "The new time is outside working hours or no longer available.",
+      );
     }
 
     const newBookingId = await ctx.db.insert("bookings", {
@@ -719,6 +708,8 @@ export const rescheduleBooking = mutation({
       status: oldBooking.status, // maintain deposit status
       source: oldBooking.source,
       aiConversationId: oldBooking.aiConversationId,
+      opusUserId: oldBooking.opusUserId,
+      customerNote: oldBooking.customerNote,
       isDeleted: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -726,8 +717,8 @@ export const rescheduleBooking = mutation({
 
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
-      actorType: "system",
-      actorId: "rescheduling_flow",
+      actorType: "staff",
+      actorId: staffMember._id,
       action: "booking.rescheduled",
       resourceType: "bookings",
       resourceId: newBookingId,
@@ -764,7 +755,7 @@ export const listBookingsByOrg = query({
     await requireAuth(ctx, args.orgId);
 
     // Using by_org_start
-    let q = ctx.db.query("bookings");
+    const q = ctx.db.query("bookings");
 
     let bookings;
     if (args.fromDate && args.toDate) {
@@ -830,7 +821,7 @@ export const listBookingsByStaff = query({
   handler: async (ctx, args) => {
     await requireAuth(ctx, args.orgId);
 
-    let q = ctx.db.query("bookings");
+    const q = ctx.db.query("bookings");
     let bookings;
     if (args.fromDate && args.toDate) {
       bookings = await q

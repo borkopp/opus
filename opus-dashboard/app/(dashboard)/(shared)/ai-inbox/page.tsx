@@ -6,16 +6,18 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ConversationList } from "@/components/ai-inbox/ConversationList";
 import { ConversationDetail } from "@/components/ai-inbox/ConversationDetail";
-import { IconMessageChatbot } from "@tabler/icons-react";
+import { BotMessageSquare } from "lucide-react";
+import { redirect } from "next/navigation";
+import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 
 type StatusFilter = "all" | "active" | "handed_off" | "resolved";
 
-export default function AIInboxPage() {
+function DormantAIInboxPage() {
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId as Id<"orgs"> | undefined;
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<Id<"ai_conversations"> | null>(null);
 
   const conversations = useQuery(
     api.ai.conversations.listConversations,
@@ -34,7 +36,7 @@ export default function AIInboxPage() {
     <div className="flex flex-col h-full">
       {/* Page header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0">
-        <IconMessageChatbot size={20} className="text-accent" />
+        <BotMessageSquare size={20} className="text-accent" />
         <div>
           <h1 className="text-lg font-semibold font-display">AI <span className="serif-accent-inline text-lg">Front-desk</span></h1>
           <p className="text-xs text-muted-foreground">Conversations handled by your AI agent</p>
@@ -46,7 +48,7 @@ export default function AIInboxPage() {
         {/* Left: conversation list */}
         <div className="w-80 shrink-0">
           <ConversationList
-            conversations={(conversations ?? []) as any[]}
+            conversations={conversations}
             selectedId={selectedId}
             onSelect={setSelectedId}
             statusFilter={statusFilter}
@@ -59,11 +61,11 @@ export default function AIInboxPage() {
           {selectedId ? (
             <ConversationDetail
               orgId={orgId}
-              conversationId={selectedId as Id<"ai_conversations">}
+              conversationId={selectedId}
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
-              <IconMessageChatbot size={40} className="text-muted-foreground/30" />
+              <BotMessageSquare size={40} className="text-muted-foreground/30" />
               <p className="text-sm text-muted-foreground">Select a conversation to view messages</p>
             </div>
           )}
@@ -71,4 +73,9 @@ export default function AIInboxPage() {
       </div>
     </div>
   );
+}
+
+export default function AIInboxPage() {
+  if (!ACTIVE_CAPABILITIES.aiFrontDesk) redirect("/beauty");
+  return <DormantAIInboxPage />;
 }

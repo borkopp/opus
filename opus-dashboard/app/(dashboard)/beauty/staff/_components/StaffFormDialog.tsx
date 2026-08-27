@@ -19,6 +19,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { getErrorMessage, readStorageId, validateImageFile } from "@/lib/file-validation";
+
+type StaffRole = "owner" | "manager" | "staff";
+
+function isStaffRole(value: string): value is StaffRole {
+    return value === "owner" || value === "manager" || value === "staff";
+}
 
 export function StaffFormDialog({
     orgId,
@@ -42,10 +49,9 @@ export function StaffFormDialog({
     const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
     const [displayName, setDisplayName] = useState("");
-    const [role, setRole] = useState<"owner" | "manager" | "staff">("staff");
+    const [role, setRole] = useState<StaffRole>("staff");
     const [bio, setBio] = useState("");
     const [specialties, setSpecialties] = useState("");
-    const [payoutSharePct, setPayoutSharePct] = useState("");
     const [avatarUrl, setAvatarUrl] = useState("");
     const [isActive, setIsActive] = useState(true);
 
@@ -60,7 +66,6 @@ export function StaffFormDialog({
             setRole(existingStaff.role);
             setBio(existingStaff.bio || "");
             setSpecialties((existingStaff.specialties || []).join(", "));
-            setPayoutSharePct(existingStaff.payoutSharePct?.toString() || "");
             setAvatarUrl(existingStaff.avatarUrl || "");
             setIsActive(existingStaff.isActive ?? true);
         }
@@ -69,6 +74,11 @@ export function StaffFormDialog({
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const validationError = validateImageFile(file);
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
         setIsUploading(true);
         setError("");
@@ -83,10 +93,9 @@ export function StaffFormDialog({
 
             if (!result.ok) throw new Error("Upload failed");
 
-            const { storageId } = await result.json();
-            setAvatarUrl(storageId);
-        } catch (err: any) {
-            setError(err.message || "Failed to upload image");
+            setAvatarUrl(readStorageId(await result.json()));
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, "Failed to upload image"));
         } finally {
             setIsUploading(false);
         }
@@ -99,8 +108,6 @@ export function StaffFormDialog({
 
         try {
             const specArray = specialties.split(",").map(s => s.trim()).filter(Boolean);
-            const payoutNum = payoutSharePct ? parseInt(payoutSharePct) : undefined;
-
             if (isEdit && staffId) {
                 await updateStaffMember({
                     orgId,
@@ -109,7 +116,6 @@ export function StaffFormDialog({
                     role,
                     bio,
                     specialties: specArray,
-                    payoutSharePct: payoutNum,
                     avatarUrl,
                     isActive,
                 });
@@ -120,13 +126,12 @@ export function StaffFormDialog({
                     role,
                     bio,
                     specialties: specArray,
-                    payoutSharePct: payoutNum,
                     avatarUrl,
                 });
             }
             onOpenChange(false);
-        } catch (err: any) {
-            setError(err.message || "Failed to save staff member");
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, "Failed to save staff member"));
         } finally {
             setIsSaving(false);
         }
@@ -172,7 +177,14 @@ export function StaffFormDialog({
                         </div>
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="role">Role <span className="text-red-500">*</span></Label>
-                            <select id="role" className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" value={role} onChange={e => setRole(e.target.value as any)}>
+                            <select
+                                id="role"
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={role}
+                                onChange={(event) => {
+                                    if (isStaffRole(event.target.value)) setRole(event.target.value);
+                                }}
+                            >
                                 <option value="staff">Staff (Standard)</option>
                                 <option value="manager">Manager</option>
                                 <option value="owner">Owner</option>
@@ -185,15 +197,9 @@ export function StaffFormDialog({
                         <Textarea id="bio" className="min-h-[80px]" value={bio} onChange={e => setBio(e.target.value)} placeholder="A short bio for the booking page..." />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="specs">Specialties</Label>
-                            <Input id="specs" value={specialties} onChange={e => setSpecialties(e.target.value)} placeholder="Fades, Trims (comma separated)" />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="payout">Payout Share (%)</Label>
-                            <Input id="payout" type="number" min="0" max="100" value={payoutSharePct} onChange={e => setPayoutSharePct(e.target.value)} placeholder="e.g. 70" />
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="specs">Specialties</Label>
+                        <Input id="specs" value={specialties} onChange={e => setSpecialties(e.target.value)} placeholder="Fades, Trims (comma separated)" />
                     </div>
 
                     {isEdit && (

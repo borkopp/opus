@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Settings",
-  description: "Configure your organization profile, booking rules, AI agent, and integrations.",
+  description: "Configure your beauty studio profile, location, and booking rules.",
 };
 
 export default function SettingsLayout({

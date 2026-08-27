@@ -4,17 +4,19 @@ This file provides context, rules, and conventions for AI coding assistants (Cur
 
 ---
 
+## Product Scope Authority
+
+Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard currently serves beauty appointment businesses in Macedonia only. Hospitality, payments, autonomous AI features, international expansion, and native clients are dormant or deferred; preserve their foundations but do not expose or expand them without explicit user authorization. Prioritize the documented golden booking journey. The Expo/React Native and SwiftUI apps come last and are outside the current web phase.
+
+---
+
 ## What This Project Is
 
-**OPUS** is a multi-tenant SaaS platform — a white-label Business Operating System for service-based businesses (barbers, salons, spas, consultants, personal trainers, and similar).
+**OPUS** is currently a beauty appointment SaaS for small beauty businesses in Macedonia.
 
-It is **not** a simple booking tool. It is a full-stack vertical SaaS with three revenue layers:
+Canonical positioning: **OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.**
 
-1. Monthly SaaS subscriptions (Starter / Growth / Enterprise tiers)
-2. Payment processing margin via Stripe Connect
-3. Future fintech products (instant payouts, revenue-based lending)
-
-Each business that signs up gets their own branded experience — custom subdomain or domain, their own color scheme, and optionally their own mobile app on the App Store / Google Play.
+Do not infer active product scope from dormant schemas or old integrations. The root scope document is authoritative.
 
 ---
 
@@ -24,8 +26,7 @@ Each business that signs up gets their own branded experience — custom subdoma
 | -------------- | ---------------------------------------------------------------------------------------------- |
 | Backend / DB   | [Convex](https://convex.dev) — real-time database, mutations, queries, actions, scheduled jobs |
 | Frontend       | Next.js 16 (App Router) with PPR (Partial Prerendering)                                        |
-| Mobile         | React Native + Expo EAS                                                                        |
-| Payments       | Stripe Connect (split payouts), Stripe Treasury (future)                                       |
+| Deferred       | Native clients, payments, and fintech foundations; preserve but do not expose or expand        |
 | Auth           | Clerk                                                                                          |
 | AI             | Anthropic Claude (`claude-sonnet-4-6`) via the Anthropic SDK                                   |
 | Voice AI       | Vapi or Retell AI (future)                                                                     |
@@ -191,9 +192,9 @@ Incoming requests arrive on either:
 
 ---
 
-## AI Agent Rules
+## Dormant AI Agent Foundations
 
-The AI front-desk feature uses Claude to autonomously handle inbound customer messages (WhatsApp, Instagram DM, web chat).
+AI front-desk work is P2 and not part of the active product promise. Preserve the existing safety rules, but do not expand or market this foundation without explicit authorization and verified provider configuration.
 
 ### Confidence threshold
 
@@ -219,9 +220,9 @@ When calling Claude, always inject:
 
 ---
 
-## Payments & Payouts
+## Deferred Payments & Payouts
 
-- All payment processing goes through **Stripe Connect**.
+- Payments are P2 and not part of the active product promise. If explicitly reactivated, all payment processing goes through **Stripe Connect**.
 - Never store full card details anywhere. Stripe handles PCI compliance.
 - Payout splits are defined in `payout_splits`. When a `payment_intent` transitions to `succeeded` (via Stripe webhook), a Convex Action reads the split config and creates one `payouts` row per recipient, then initiates Stripe transfers.
 - The platform fee recipient (`type: "platform"`) does not require a transfer — it stays in the platform's Stripe account.
@@ -231,7 +232,7 @@ When calling Claude, always inject:
 
 ## Notifications
 
-Outbound notifications (SMS, email, WhatsApp) are queued in the `notifications` table and processed by a scheduled Convex Action. Do not call Twilio or Resend directly from mutations — always write to the queue and let the scheduler handle delivery. This prevents timeouts and allows retries on failure.
+Outbound notifications (SMS, email, WhatsApp) use the `notifications` queue when the corresponding provider is configured. Do not call Twilio or Resend directly from mutations — always write to the queue and let the scheduler handle delivery. Never claim delivery without configured providers and verified results.
 
 ---
 

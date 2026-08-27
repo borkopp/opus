@@ -44,6 +44,8 @@ export const setAvailabilityRule = mutation({
                 endTime: args.endTime,
                 breaks: args.breaks,
                 isActive: args.isActive,
+                isDeleted: false,
+                deletedAt: undefined,
                 updatedAt: timestamp,
             });
 
@@ -68,6 +70,7 @@ export const setAvailabilityRule = mutation({
                 endTime: args.endTime,
                 breaks: args.breaks,
                 isActive: args.isActive,
+                isDeleted: false,
                 createdAt: timestamp,
                 updatedAt: timestamp,
             });
@@ -106,6 +109,8 @@ export const deleteAvailabilityRule = mutation({
 
         await ctx.db.patch(args.ruleId, {
             isActive: false,
+            isDeleted: true,
+            deletedAt: Date.now(),
             updatedAt: Date.now(),
         });
 
@@ -175,6 +180,8 @@ export const copyScheduleToAllStaff = mutation({
                         endTime: sourceRule.endTime,
                         breaks: sourceRule.breaks,
                         isActive: sourceRule.isActive,
+                        isDeleted: false,
+                        deletedAt: undefined,
                         updatedAt: timestamp,
                     });
                 } else {
@@ -186,8 +193,9 @@ export const copyScheduleToAllStaff = mutation({
                         endTime: sourceRule.endTime,
                         breaks: sourceRule.breaks,
                         isActive: sourceRule.isActive,
+                        isDeleted: false,
                         createdAt: timestamp,
-                        updatedAt: timestamp, // added to fix typescript error although not listed in schema snippet it's a good practice, actually let's double check schema
+                        updatedAt: timestamp,
                     });
                 }
             }
@@ -217,6 +225,7 @@ export const listAvailabilityRules = query({
         const rules = await ctx.db
             .query("availability_rules")
             .withIndex("by_staff", q => q.eq("staffId", args.staffId))
+            .filter((q) => q.eq(q.field("isDeleted"), false))
             .collect();
 
         return rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek);
@@ -234,6 +243,7 @@ export const getWeeklySchedule = query({
         const rules = await ctx.db
             .query("availability_rules")
             .withIndex("by_staff", q => q.eq("staffId", args.staffId))
+            .filter((q) => q.eq(q.field("isDeleted"), false))
             .collect();
 
         // Build a Map for fast lookup

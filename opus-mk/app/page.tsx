@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { HeaderAuth } from "@/components/HeaderAuth";
-import { HowItWorks } from "@/components/HowItWorks";
 import { MarketplaceChat } from "@/components/MarketplaceChat";
 import { useResolveCity } from "@/hooks/use-resolve-city";
 
 export default function HomePage() {
-  const { city } = useResolveCity();
+  const { city, coords, isFallback } = useResolveCity();
   const [hasStarted, setHasStarted] = useState(false);
 
   return (
@@ -55,7 +54,9 @@ export default function HomePage() {
                   className="w-1.5 h-1.5 rounded-full bg-[var(--online)] shrink-0"
                   style={{ boxShadow: "0 0 6px var(--online)" }}
                 />
-                <span className="text-xs text-white/85">You are in <b>{city}</b></span>
+                <span className="text-xs text-white/85">
+                  {isFallback ? "Showing" : "You are in"} <b>{city}</b>
+                </span>
               </div>
             )}
 
@@ -69,7 +70,11 @@ export default function HomePage() {
         className="absolute inset-0 z-10 flex flex-col"
         style={{ paddingTop: 56 }}
       >
-        <MarketplaceChat onFirstMessage={() => setHasStarted(true)} />
+        <MarketplaceChat
+          city={city}
+          coords={coords}
+          onFirstMessage={() => setHasStarted(true)}
+        />
       </main>
 
     </div>

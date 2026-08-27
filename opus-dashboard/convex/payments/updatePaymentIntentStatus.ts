@@ -1,10 +1,11 @@
 import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import type { Doc } from "../_generated/dataModel";
 
 export const updatePaymentIntentStatus = internalMutation({
     args: {
-        providerTransactionId: v.string(), // This is the stripePaymentIntentId field
+        providerTransactionId: v.string(),
         status: v.union(
             v.literal("requires_payment_method"),
             v.literal("requires_confirmation"),
@@ -20,8 +21,8 @@ export const updatePaymentIntentStatus = internalMutation({
     handler: async (ctx, args) => {
         const intent = await ctx.db
             .query("payment_intents")
-            .withIndex("by_stripe_id", (q) =>
-                q.eq("stripePaymentIntentId", args.providerTransactionId)
+            .withIndex("by_provider_transaction", (q) =>
+                q.eq("providerTransactionId", args.providerTransactionId)
             )
             .first();
 
@@ -29,7 +30,7 @@ export const updatePaymentIntentStatus = internalMutation({
             throw new ConvexError("Payment intent not found.");
         }
 
-        const updates: any = {
+        const updates: Partial<Doc<"payment_intents">> = {
             status: args.status,
             updatedAt: Date.now(),
         };

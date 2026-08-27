@@ -1,7 +1,8 @@
 "use client";
 import { cn } from "@/lib/utils";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import React, { useEffect, useRef } from "react";
+import React from "react";
+import Link from "next/link";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -35,10 +36,10 @@ export const LogoSVG = (props: React.SVGProps<SVGSVGElement>) => {
 
 export const Logo = () => {
     return (
-        <a href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
             <LogoSVG />
             <span className="text-2xl font-medium">Notus</span>
-        </a>
+        </Link>
     );
 };
 

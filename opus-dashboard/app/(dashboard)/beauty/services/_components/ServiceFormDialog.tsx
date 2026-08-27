@@ -18,9 +18,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRef } from "react";
+import { getErrorMessage, readStorageId, validateImageFile } from "@/lib/file-validation";
 
 export function ServiceFormDialog({
     orgId,
@@ -88,7 +88,7 @@ export function ServiceFormDialog({
                 setStaffIds(staffMembers.map(s => s._id));
             }
         }
-    }, [isEdit, existingService, orgSettings, staffMembers, open]); // trigger on open so defaults apply
+    }, [isEdit, existingService, orgSettings, staffMembers, open, staffIds.length]); // trigger on open so defaults apply
 
     const toggleStaffId = (id: string, checked: boolean) => {
         if (checked) setStaffIds(prev => [...prev, id]);
@@ -98,6 +98,11 @@ export function ServiceFormDialog({
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const validationError = validateImageFile(file, 2);
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
         setIsUploading(true);
         setError("");
@@ -112,10 +117,9 @@ export function ServiceFormDialog({
 
             if (!result.ok) throw new Error("Upload failed");
 
-            const { storageId } = await result.json();
-            setPhotoUrl(storageId);
-        } catch (err: any) {
-            setError(err.message || "Failed to upload image");
+            setPhotoUrl(readStorageId(await result.json()));
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, "Failed to upload image"));
         } finally {
             setIsUploading(false);
         }
@@ -179,8 +183,8 @@ export function ServiceFormDialog({
                 });
             }
             onOpenChange(false);
-        } catch (err: any) {
-            setError(err.message || "Failed to save service");
+        } catch (error: unknown) {
+            setError(getErrorMessage(error, "Failed to save service"));
         } finally {
             setIsSaving(false);
         }

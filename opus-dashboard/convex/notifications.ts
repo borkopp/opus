@@ -1,6 +1,7 @@
-import { internalMutation, internalAction, action } from "./_generated/server";
+import { internalMutation, internalAction, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
+import { Doc } from "./_generated/dataModel";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. Queue Entry (Transaction-safe)
@@ -25,6 +26,7 @@ export const scheduleNotification = internalMutation({
       v.literal("receipt"),
       v.literal("review_request"),
       v.literal("no_show_warning"),
+      v.literal("staff_invite"),
     ),
     recipientAddress: v.string(),
     templateData: v.any(),
@@ -56,7 +58,7 @@ export const processNotifications = internalAction({
   args: {},
   handler: async (ctx): Promise<string | null> => {
     // 1. Find up to 50 pending notifications scheduled for now or earlier
-    const pendingNotifications: any[] = await ctx.runQuery(
+    const pendingNotifications = await ctx.runQuery(
       internal.notifications.getPendingNotificationsToProcess,
     );
 
@@ -66,9 +68,9 @@ export const processNotifications = internalAction({
     // We don't await them directly here to avoid the batch job timing out.
     // Convex background actions will queue safely.
     await Promise.allSettled(
-      pendingNotifications.map((n: any) =>
+      pendingNotifications.map((notification) =>
         ctx.runAction(internal.notifications.processIndividualNotification, {
-          notificationId: n._id,
+          notificationId: notification._id,
         }),
       ),
     );
@@ -80,7 +82,7 @@ export const processNotifications = internalAction({
 // Helper Query for the processor
 export const getPendingNotificationsToProcess = internalQuery({
   args: {},
-  handler: async (ctx): Promise<any[]> => {
+  handler: async (ctx): Promise<Doc<"notifications">[]> => {
     const now = Date.now();
     return await ctx.db
       .query("notifications")
@@ -90,8 +92,6 @@ export const getPendingNotificationsToProcess = internalQuery({
       .take(50);
   },
 });
-
-import { internalQuery } from "./_generated/server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. Individual Notification Handler (Action with Side Effects)
@@ -113,43 +113,22 @@ export const processIndividualNotification = internalAction({
     if (!notification || notification.status !== "pending") return null;
 
     let success = false;
-    let externalId = undefined;
-    let errorReason = undefined;
+    let errorReason: string | undefined;
 
     try {
       if (notification.channel === "email") {
-        // [Stub] Resend implementation
-        console.log(
-          `[Email Stub] Sending ${notification.type} to ${notification.recipientAddress}`,
-        );
-        if (notification.type === "gap_fill_offer") {
-            const tmpl = notification.templateData;
-            console.log(`[Email Stub template] Hi ${tmpl.customerName}, ${tmpl.draftedMessage} Link: ${tmpl.bookingLinkToken}`);
-        }
-        // const res = await fetch("https://api.resend.com/emails", {...})
-        success = true;
-        externalId = `resend_${Date.now()}`;
+        throw new Error("Email delivery is not configured.");
       } else if (
         notification.channel === "sms" ||
         notification.channel === "whatsapp"
       ) {
-        // [Stub] Twilio implementation
-        console.log(
-          `[Twilio Stub] Sending ${notification.type} via ${notification.channel} to ${notification.recipientAddress}`,
-        );
-        if (notification.type === "gap_fill_offer") {
-            const tmpl = notification.templateData;
-            console.log(`[Twilio Stub template] Hi ${tmpl.customerName}, ${tmpl.draftedMessage} Link: ${tmpl.bookingLinkToken}`);
-        }
-        // const res = await fetch("https://api.twilio.com/...", {...})
-        success = true;
-        externalId = `twilio_${Date.now()}`;
+        throw new Error("SMS and WhatsApp delivery are not configured.");
       } else {
         throw new Error(`Unsupported channel: ${notification.channel}`);
       }
-    } catch (e: any) {
+    } catch (error: unknown) {
       success = false;
-      errorReason = e.message ?? "Unknown provider error";
+      errorReason = error instanceof Error ? error.message : "Unknown provider error";
     }
 
     // Write results back to the database
@@ -158,7 +137,6 @@ export const processIndividualNotification = internalAction({
       orgId: notification.orgId,
       status: success ? "sent" : "failed",
       sentAt: success ? Date.now() : undefined,
-      externalMessageId: externalId,
       failureReason: errorReason,
     });
   },
@@ -167,7 +145,7 @@ export const processIndividualNotification = internalAction({
 // Helper Query for Action
 export const getNotificationById = internalQuery({
   args: { notificationId: v.id("notifications") },
-  handler: async (ctx, args): Promise<any | null> => {
+  handler: async (ctx, args): Promise<Doc<"notifications"> | null> => {
     return await ctx.db.get(args.notificationId);
   },
 });
@@ -188,7 +166,7 @@ export const updateNotificationStatus = internalMutation({
     const existing = await ctx.db.get(args.notificationId);
     if (!existing) return;
 
-    const updates: any = { status: args.status };
+    const updates: Partial<Doc<"notifications">> = { status: args.status };
     if (args.sentAt !== undefined) updates.sentAt = args.sentAt;
     if (args.externalMessageId !== undefined)
       updates.externalMessageId = args.externalMessageId;
@@ -214,7 +192,7 @@ export const updateNotificationStatus = internalMutation({
 });
 
 function getPrimaryContact(
-  customer: any,
+  customer: Doc<"customers">,
 ): { channel: "email" | "sms" | "whatsapp" | "push"; address: string } | null {
   if (customer.preferredChannel === "whatsapp" && customer.phone)
     return { channel: "whatsapp", address: customer.phone };

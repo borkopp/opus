@@ -1,6 +1,7 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { requireAuth } from "./lib/auth";
 
 export const getDailySchedule = query({
     args: {
@@ -9,6 +10,7 @@ export const getDailySchedule = query({
         endOfDayMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -44,6 +46,7 @@ export const getUpcomingBookings = query({
         limit: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -85,6 +88,7 @@ export const getRevenueStats = query({
         endMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -110,6 +114,7 @@ export const getBookingStats = query({
         endMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -139,6 +144,7 @@ export const getNoShowStats = query({
         orgId: v.id("orgs"),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         // Find customers with > 0 no shows
         const customers = await ctx.db
             .query("customers")
@@ -169,6 +175,7 @@ export const getStaffUtilisation = query({
         endMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         // Simplified utilisation: For each staff, calculate booked minutes vs available over the period
         // For accurate available minutes, we'd need to expand logic across everyday of the period.
         // For now, we'll return booked minutes per staff, and we can compute static available mins or rough estimate.
@@ -232,6 +239,7 @@ export const getTopServices = query({
         endMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -282,12 +290,12 @@ export const getNotificationLog = query({
         status: v.optional(v.string())
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         let q = ctx.db
             .query("notifications")
             .withIndex("by_org", q => q.eq("orgId", args.orgId));
 
         if (args.status) {
-            // @ts-ignore
             q = q.filter(query => query.eq(query.field("status"), args.status));
         }
 
@@ -315,6 +323,7 @@ export const getDashboardMetrics = query({
         endOfDayMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", (q) =>
@@ -337,17 +346,9 @@ export const getDashboardMetrics = query({
             }
         });
 
-        // For empty slots today, we can estimate based on number of active staff vs booked slots.
-        // It's technically safer to call exactly computeSlotsForDate, but let's provide a basic computation or import it if needed.
-        // Since we didn't import computeSlotsForDate yet, we'll return a placeholder 0 empty slots for now,
-        // unless we want to do a rough math estimate. Let's stick with 0 or a rough estimate.
-
-        let emptySlotsToday = 0; // Placeholder
-
         return {
             totalBookingsToday,
-            revenueToday,
-            emptySlotsToday
+            revenueToday
         };
     }
 });
@@ -365,6 +366,7 @@ export const getWeeklyComparison = query({
         lastMonthEndMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const fetchStats = async (startMs: number, endMs: number) => {
             const bookings = await ctx.db
                 .query("bookings")
@@ -406,6 +408,7 @@ export const getRevenueByStaff = query({
         endMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const bookings = await ctx.db
             .query("bookings")
             .withIndex("by_org_start", q => q.eq("orgId", args.orgId).gte("startAt", args.startMs).lt("startAt", args.endMs))
@@ -442,6 +445,7 @@ export const getCustomerInsights = query({
         monthEndMs: v.number()
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const customers = await ctx.db
             .query("customers")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
@@ -479,6 +483,7 @@ export const getTopCustomers = query({
         orgId: v.id("orgs")
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const customers = await ctx.db
             .query("customers")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
@@ -503,6 +508,7 @@ export const getAIPerformance = query({
         endMs: v.number()
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const settings = await ctx.db
             .query("org_settings")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
@@ -518,7 +524,7 @@ export const getAIPerformance = query({
         // Filter in memory for time range just based on createdAt
         const recentConvs = conversations.filter(c => c.createdAt >= args.startMs && c.createdAt <= args.endMs);
 
-        let total = recentConvs.length;
+        const total = recentConvs.length;
         let handoffCount = 0;
         let bookingsCreated = 0;
 
@@ -546,6 +552,7 @@ export const getWeeklyRevenueChart = query({
         previousWeekEndMs: v.number(),
     },
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         const fetchDaily = async (startMs: number, endMs: number) => {
             const bookings = await ctx.db
                 .query("bookings")

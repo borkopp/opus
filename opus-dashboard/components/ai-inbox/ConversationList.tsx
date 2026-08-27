@@ -4,25 +4,18 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ConversationStatusBadge } from "./ConversationStatusBadge";
 import { IconBrandInstagram, IconMessageChatbot, IconInbox } from "@tabler/icons-react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 
 type Status = "active" | "handed_off" | "resolved";
 
-interface ConversationSummary {
-  _id: string;
-  channel: "instagram" | "webchat";
-  status: Status;
-  customerName: string | null;
-  lastMessagePreview: string | null;
-  lastMessageAt: number;
-  bookingCount: number;
-  handoffReason?: string;
-  createdAt: number;
-}
+type ConversationSummary = FunctionReturnType<typeof api.ai.conversations.listConversations>[number];
 
 interface Props {
   conversations: ConversationSummary[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedId: Id<"ai_conversations"> | null;
+  onSelect: (id: Id<"ai_conversations">) => void;
   statusFilter: Status | "all";
   onFilterChange: (status: Status | "all") => void;
 }

@@ -1,15 +1,9 @@
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { api } from "@/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
-interface Message {
-  _id: string;
-  role: "user" | "assistant" | "system";
-  content: string;
-  confidenceScore?: number;
-  actionType?: string;
-  actionReferenceId?: string;
-  createdAt: number;
-}
+type Message = FunctionReturnType<typeof api.ai.messages.listMessages>[number];
 
 export function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user";

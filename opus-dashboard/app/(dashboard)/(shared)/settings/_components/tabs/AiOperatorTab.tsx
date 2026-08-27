@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState } from "react";
+import { Bot, CircleAlert, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -8,18 +9,20 @@ import { TabsContent } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { DebouncedInput } from "@/components/ui/debounced-input";
 import { DebouncedTextarea } from "@/components/ui/debounced-textarea";
-import { IconDeviceFloppy, IconAlertCircle, IconRobot } from "@tabler/icons-react";
+import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { validConfidence } from "../validation";
+import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <IconAlertCircle size={13} className="shrink-0" />
+      <CircleAlert className="shrink-0" />
       {message}
     </p>
   );
@@ -43,7 +46,7 @@ function ConfidenceMeter({ value }: { value: number }) {
       pct >= 40 ? "Moderate — balances autonomy and escalation" :
         "Low — escalates to you frequently";
   return (
-    <div className="max-w-xl space-y-1.5">
+    <div className="flex max-w-xl flex-col gap-1.5">
       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
         <div
           className={cn("h-full rounded-full transition-all duration-500 ease-out", color)}
@@ -76,30 +79,10 @@ interface AiOperatorTabProps {
 }
 
 export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
-  const isMounted = useRef(true);
-  useEffect(() => { return () => { isMounted.current = false; }; }, []);
-
   const [ai, setAi] = useState({ ...initialData });
   const [confidenceError, setConfidenceError] = useState<string | undefined>();
   const [personaError, setPersonaError] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    setAi({ ...initialData });
-  }, [
-    initialData.aiEnabled,
-    initialData.aiPersonaName,
-    initialData.aiConfidenceThreshold,
-    initialData.aiHandoffPhoneNumber,
-    initialData.aiWebchatEnabled,
-    initialData.aiInstagramEnabled,
-    initialData.aiSystemPrompt,
-    initialData.aiGreetingMessage,
-    initialData.aiTone,
-    initialData.aiLanguage,
-    initialData.aiWorkingHoursEnabled,
-    initialData.aiAwayMessage,
-  ]);
 
   const updateAiSettings = useMutation(api.orgSettings.updateAiSettings);
 
@@ -137,11 +120,11 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
         aiWorkingHours: activeHours,
         aiAwayMessage: ai.aiAwayMessage || undefined,
       });
-      if (isMounted.current) toast.success("AI settings saved");
-    } catch (e: any) {
-      if (isMounted.current) toast.error(e.message ?? "Failed to save AI settings.");
+      toast.success("AI settings saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save AI settings.");
     } finally {
-      if (isMounted.current) setIsSaving(false);
+      setIsSaving(false);
     }
   };
 
@@ -150,47 +133,42 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
       value="ai"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
-        {/* ── Section header with live status badge ── */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-1">
-            <h2 className="text-2xl font-medium font-display tracking-tight">
-              AI Booking <span className="serif-accent-inline text-2xl">Assistant</span>
-            </h2>
-            {ai.aiEnabled && (
-              <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                Live
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Let an AI handle customer messages and booking requests automatically.
-          </p>
-        </div>
-
-        <div className="space-y-10">
-          {/* ── Enable toggle ── */}
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <Label htmlFor="ai-enabled" className="select-none font-medium cursor-pointer">
-                Activate AI Operator
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Enable the autonomous Claude-powered booking engine.
-              </p>
-            </div>
-            <Switch
+      <SettingsCard
+        title="AI booking assistant"
+        description="Configure how the assistant speaks, when it works, and when it hands a conversation to your team."
+        action={
+          <Badge variant={ai.aiEnabled ? "default" : "secondary"}>
+            {ai.aiEnabled ? "Live" : "Off"}
+          </Badge>
+        }
+        contentClassName="flex flex-col gap-6"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Saving…" : "Save AI settings"}
+          </Button>
+        }
+      >
+          <SettingsToggleRow
+            title="Activate AI assistant"
+            description="Allow the assistant to handle enabled customer channels and booking questions."
+            control={<Switch
               id="ai-enabled"
               checked={ai.aiEnabled}
               onCheckedChange={(c) => setAi({ ...ai, aiEnabled: c })}
-            />
-          </div>
+            />}
+          />
 
           {ai.aiEnabled && (
-            <div className="space-y-6 mt-4">
+            <div className="flex flex-col gap-5">
               {/* ── Core Settings ── */}
-              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
+                <div>
+                  <h3 className="text-sm font-semibold">Assistant identity</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Set its name, confidence threshold, and escalation route.
+                  </p>
+                </div>
                 {/* Persona Name with live chat bubble preview */}
                 <div className="grid gap-2 max-w-xl">
                   <Label htmlFor="persona-name">Persona Name</Label>
@@ -200,17 +178,17 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     maxLength={50}
                     aria-describedby={personaError ? "persona-name-error" : undefined}
                     aria-invalid={!!personaError}
-                    className={cn("bg-white", personaError && "border-destructive")}
+                    className={cn(personaError && "border-destructive")}
                     onChange={(val) => {
                       setAi({ ...ai, aiPersonaName: val });
-                      personaError && setPersonaError(undefined);
+                      if (personaError) setPersonaError(undefined);
                     }}
                   />
                   {/* Live persona preview — updates as you type */}
                   {!personaError && ai.aiPersonaName.trim() ? (
                     <div className="flex items-start gap-2 mt-1">
                       <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <IconRobot size={12} className="text-primary" />
+                        <Bot className="text-primary" />
                       </div>
                       <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-1.5 text-xs text-muted-foreground">
                         Hi! I&apos;m{" "}
@@ -241,10 +219,10 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     value={String(ai.aiConfidenceThreshold)}
                     aria-describedby={confidenceError ? "confidence-error" : "confidence-hint"}
                     aria-invalid={!!confidenceError}
-                    className={cn("bg-white", confidenceError && "border-destructive")}
+                    className={cn(confidenceError && "border-destructive")}
                     onChange={(val) => {
                       setAi({ ...ai, aiConfidenceThreshold: parseFloat(val) });
-                      confidenceError && setConfidenceError(undefined);
+                      if (confidenceError) setConfidenceError(undefined);
                     }}
                   />
                   {!confidenceError && (
@@ -263,7 +241,6 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   <DebouncedInput
                     id="handoff-phone"
                     value={ai.aiHandoffPhoneNumber}
-                    className="bg-white"
                     placeholder="+38971234567"
                     onChange={(val) => setAi({ ...ai, aiHandoffPhoneNumber: val })}
                   />
@@ -271,10 +248,10 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     When the AI can&apos;t help, the customer can be directed to call this number.
                   </p>
                 </div>
-              </div>
+              </section>
 
               {/* ── Channels with live-dot indicators ── */}
-              <div className="p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l space-y-4">
+              <section className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-5">
                 <div>
                   <h3 className="font-medium text-sm mb-0.5">Active <span className="serif-accent-inline text-sm">Channels</span></h3>
                   <p className="text-xs text-muted-foreground">
@@ -319,10 +296,10 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     />
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* ── Conversation Style ── */}
-              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
                 <div>
                   <h3 className="font-medium text-sm mb-0.5">Conversation <span className="serif-accent-inline text-sm">Style</span></h3>
                   <p className="text-xs text-muted-foreground">
@@ -394,7 +371,6 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   <DebouncedInput
                     id="greeting-message"
                     value={ai.aiGreetingMessage}
-                    className="bg-white"
                     placeholder="Hi! I'm Aria, your booking assistant. How can I help you today?"
                     onChange={(val) => setAi({ ...ai, aiGreetingMessage: val })}
                   />
@@ -410,16 +386,16 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     onChange={(val) => setAi({ ...ai, aiSystemPrompt: val })}
                     placeholder="Always greet customers by name. Never discuss competitor pricing. Only offer services from our menu..."
                     rows={4}
-                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring/50 placeholder:text-muted-foreground"
+                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
                   />
                   <p className="text-xs text-muted-foreground">
                     Add extra rules or context for the AI — e.g. how to greet customers, what not to discuss, or special policies.
                   </p>
                 </div>
-              </div>
+              </section>
 
               {/* ── Working Hours ── */}
-              <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <h3 className="font-medium text-sm">Working Hours</h3>
@@ -434,7 +410,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   />
                 </div>
                 {ai.aiWorkingHoursEnabled && (
-                  <div className="space-y-3">
+                  <div className="flex flex-col gap-3">
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => {
                       const dayIndex = i;
                       const hoursEntry = ai.aiWorkingHours.find(
@@ -466,7 +442,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                             type="time"
                             disabled={!isEnabled}
                             value={hoursEntry?.startTime ?? "09:00"}
-                            className="bg-white w-28 text-sm"
+                            className="w-28 text-sm"
                             onChange={(val) => {
                               const updated = ai.aiWorkingHours.map((h) =>
                                 h.dayOfWeek === dayIndex ? { ...h, startTime: val } : h,
@@ -479,7 +455,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                             type="time"
                             disabled={!isEnabled}
                             value={hoursEntry?.endTime ?? "18:00"}
-                            className="bg-white w-28 text-sm"
+                            className="w-28 text-sm"
                             onChange={(val) => {
                               const updated = ai.aiWorkingHours.map((h) =>
                                 h.dayOfWeek === dayIndex ? { ...h, endTime: val } : h,
@@ -498,21 +474,15 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                         onChange={(val) => setAi({ ...ai, aiAwayMessage: val })}
                         placeholder="We're currently outside business hours. Please reach out again during our working hours!"
                         rows={3}
-                        className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring/50 placeholder:text-muted-foreground"
+                        className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
                       />
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
             </div>
           )}
-        </div>
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} /> {isSaving ? "Saving…" : "Save AI Settings"}
-          </Button>
-        </div>
-      </div>
+      </SettingsCard>
     </TabsContent>
   );
 }

@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { CircleAlert, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { DebouncedInput } from "@/components/ui/debounced-input";
-import { IconDeviceFloppy, IconAlertCircle } from "@tabler/icons-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { posInt, nonNegInt, type FieldErrors } from "../validation";
+import { SettingsCard } from "../SettingsCard";
 
 interface BookingOperationsTabProps {
   orgId: Id<"orgs">;
@@ -32,7 +34,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <IconAlertCircle size={13} className="shrink-0" />
+      <CircleAlert className="shrink-0" />
       {message}
     </p>
   );
@@ -97,8 +99,10 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
         locale: initialData.locale,
       });
       if (isMounted.current) toast.success("Booking rules saved");
-    } catch (e: any) {
-      if (isMounted.current) toast.error(e.message ?? "Failed to save booking rules.");
+    } catch (error) {
+      if (isMounted.current) {
+        toast.error(error instanceof Error ? error.message : "Failed to save booking rules.");
+      }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
@@ -130,7 +134,7 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
           setBookingRules({ ...bookingRules, [field]: parseInt(val) });
           clearError(field);
         }}
-        className={cn("bg-white", errors[field] && "border-destructive")}
+        className={cn(errors[field] && "border-destructive")}
       />
       {hint && !errors[field] && (
         <p id={`${id}-hint`} className="text-xs text-muted-foreground">{hint}</p>
@@ -144,12 +148,17 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
       value="booking"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="border-b pb-12 mb-12 last:border-b-0">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Booking <span className="serif-accent-inline text-2xl">Operations</span></h2>
-          <p className="text-sm text-muted-foreground">Control how customers see and book your availability.</p>
-        </div>
-        <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l sm:grid-cols-2 max-w-4xl">
+      <SettingsCard
+        title="Booking rules"
+        description="Control the shape of your calendar: appointment intervals, lead time, cancellation notice, and breathing room between bookings."
+        contentClassName="grid gap-6 sm:grid-cols-2"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Saving…" : "Save booking rules"}
+          </Button>
+        }
+      >
           {numField("slot-duration", "Slot Duration", "minutes", "slotDurationMins", 1, 480,
             "How long each appointment takes, e.g. 30 for a half-hour slot.")}
           {numField("buffer-time", "Buffer Time", "minutes", "bufferTimeMins", 0, 240,
@@ -158,15 +167,7 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
             "How far ahead customers can book, e.g. 60 days means two months out.")}
           {numField("cancellation-window", "Cancellation Notice", "hours", "cancellationWindowHours", 1, 8760,
             "How much notice a customer must give to cancel, e.g. 24 = 24 hours.")}
-        </div>
-
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} />
-            {isSaving ? "Saving…" : "Save Booking Rules"}
-          </Button>
-        </div>
-      </div>
+      </SettingsCard>
     </TabsContent>
   );
 }

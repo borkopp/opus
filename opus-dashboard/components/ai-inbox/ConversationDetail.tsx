@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { ConversationStatusBadge } from "./ConversationStatusBadge";
 import { Button } from "@/components/ui/button";
-import { IconBrandInstagram, IconMessageChatbot, IconMessageOff, IconUser } from "@tabler/icons-react";
+import { Instagram, BotMessageSquare, MessageSquareOff, User } from "lucide-react";
 import { format } from "date-fns";
 
 interface Props {
@@ -41,8 +41,8 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
     try {
       await resolveConversation({ orgId, conversationId });
       toast.success("Conversation resolved");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to resolve conversation");
     }
   };
 
@@ -50,12 +50,12 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
     try {
       await handoffConversation({ orgId, conversationId, reason: "Staff takeover" });
       toast.success("Conversation taken over — AI is no longer responding");
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to take over conversation");
     }
   };
 
-  const ChannelIcon = conversation.channel === "instagram" ? IconBrandInstagram : IconMessageChatbot;
+  const ChannelIcon = conversation.channel === "instagram" ? Instagram : BotMessageSquare;
 
   return (
     <div className="flex flex-col h-full">
@@ -63,7 +63,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
       <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 shrink-0 bg-muted/10">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <IconUser size={16} className="text-muted-foreground" />
+            <User size={16} className="text-muted-foreground" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -105,12 +105,12 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4">
         {!messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <IconMessageOff size={28} className="text-muted-foreground/40" />
+            <MessageSquareOff size={28} className="text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">No messages yet</p>
           </div>
         ) : (
-          (messages as any[]).map((msg: any) => (
-            <MessageBubble key={msg._id} message={msg} />
+          messages.map((message) => (
+            <MessageBubble key={message._id} message={message} />
           ))
         )}
       </div>

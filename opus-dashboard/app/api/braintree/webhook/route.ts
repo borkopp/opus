@@ -1,6 +1,7 @@
 import { getGateway } from "@/convex/lib/braintree";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
+import type { WebhookNotification } from "braintree";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     const gateway = getGateway();
 
     // Verify webhook authenticity
-    let notification: any;
+    let notification: WebhookNotification;
     try {
         notification = await gateway.webhookNotification.parse(btSignature, btPayload);
     } catch (error) {

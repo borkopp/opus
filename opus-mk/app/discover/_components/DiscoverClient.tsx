@@ -2,15 +2,14 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useUserLocation } from "@/hooks/use-user-location";
+import { useState, useMemo } from "react";
 import { useResolveCity } from "@/hooks/use-resolve-city";
 import { calcDistanceMeters } from "@/lib/format";
+import { ACTIVE_INDUSTRY } from "@/lib/product-scope";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { DiscoverHeader } from "./DiscoverHeader";
 import { AiSearchBar } from "./AiSearchBar";
-import { SuggestionChips } from "./SuggestionChips";
 import { CategoryRail } from "./CategoryRail";
 import { FeaturedCarousel } from "./FeaturedCarousel";
 import { NearYouList } from "./NearYouList";
@@ -34,15 +33,12 @@ export function DiscoverClient() {
   const { label: dayLabel } = { label: getDayPeriod() };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<BeautyCategory | undefined>();
-  const { coords } = useUserLocation();
-  const { city } = useResolveCity();
+  const { coords, city, isFallback } = useResolveCity();
   const resolvedCity = city || undefined;
-  const [gridVisible, setGridVisible] = useState(true);
-  const prevCoordsRef = useRef<typeof coords>(null);
 
   const listings = useQuery(
     api.public.listPublished,
-    resolvedCity ? { city: resolvedCity } : "skip"
+    resolvedCity ? { city: resolvedCity, industry: ACTIVE_INDUSTRY } : "skip"
   );
 
   const searchResults = useQuery(
@@ -50,25 +46,16 @@ export function DiscoverClient() {
     searchQuery.length >= 2 && resolvedCity ? { query: searchQuery, city: resolvedCity } : "skip"
   );
 
-  useEffect(() => {
-    if (coords && !prevCoordsRef.current) {
-      setGridVisible(false);
-      const t = setTimeout(() => setGridVisible(true), 180);
-      prevCoordsRef.current = coords;
-      return () => clearTimeout(t);
-    }
-    prevCoordsRef.current = coords;
-  }, [coords]);
-
   const isSearchActive = searchQuery.length >= 2;
   const rawItems = isSearchActive ? searchResults : listings?.items;
   const isLoading = rawItems === undefined;
 
   // Derive available categories from ALL listings (even if a category is selected, we want to know what else exists)
-  const availableCategoryIds = useMemo(() => {
-    if (!listings?.items) return new Set<string>();
-    return new Set(listings.items.map((item: any) => item.beautyCategory).filter(Boolean));
-  }, [listings?.items]);
+  const availableCategoryIds = new Set(
+    listings?.items
+      .map((item) => item.beautyCategory)
+      .filter((category): category is NonNullable<typeof category> => Boolean(category)),
+  );
 
   // Compute ranking and separation of featured vs feed
   const { featuredOrgs, feedOrgs } = useMemo(() => {
@@ -76,11 +63,11 @@ export function DiscoverClient() {
 
     // Annotate items with distance if we have coords
     const annotatedOrgs = rawItems
-      .filter((org: any) => {
+      .filter((org) => {
         if (selectedCategory && org.beautyCategory !== selectedCategory) return false;
         return true;
       })
-      .map((org: any) => {
+      .map((org) => {
         const distanceMeters = coords && org.coordinates
           ? calcDistanceMeters(coords.lat, coords.lng, org.coordinates.lat, org.coordinates.lng)
           : Infinity;
@@ -130,7 +117,7 @@ export function DiscoverClient() {
 
   return (
     <div className="dark min-h-screen bg-black flex flex-col">
-      <DiscoverHeader />
+      <DiscoverHeader city={city} isFallback={isFallback} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-0 md:px-8 pt-6 pb-28 md:pb-32">
         {/* Search Header Area */}
@@ -152,6 +139,11 @@ export function DiscoverClient() {
               {city}
             </em>
           </h1>
+          {isFallback && city && (
+            <p className="mb-4 text-sm text-white/55">
+              Showing {city} while precise location is unavailable.
+            </p>
+          )}
           <div className="space-y-4">
             <AiSearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 
@@ -166,10 +158,7 @@ export function DiscoverClient() {
         </div>
 
         {/* Content Area */}
-        <div
-          className="transition-opacity duration-150"
-          style={{ opacity: gridVisible ? 1 : 0 }}
-        >
+        <div>
           {isLoading ? (
             <div className="space-y-8 px-4 md:px-0">
               {/* Featured Skeleton */}

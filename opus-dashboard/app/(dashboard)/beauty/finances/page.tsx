@@ -20,11 +20,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { IconWallet, IconBuildingBank, IconAlertTriangle, IconLock, IconChartPie } from "@tabler/icons-react";
 import { Price } from "@/components/ui/price";
+import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 
-export default function FinancesPage() {
+function DormantFinancesPage() {
   const profile = useQuery(api.users.getMyProfile);
   const router = useRouter();
 
@@ -75,7 +76,7 @@ export default function FinancesPage() {
             Finances & Payouts
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Manage your organization's earnings, payouts, and revenue splits.
+            Manage your organization&apos;s earnings, payouts, and revenue splits.
           </p>
         </div>
       </div>
@@ -168,7 +169,7 @@ export default function FinancesPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    payouts.map((payout: any) => (
+                    payouts.map((payout) => (
                       <TableRow key={payout._id} className="group hover:bg-muted/10">
                         <TableCell className="font-medium whitespace-nowrap text-muted-foreground pl-6">
                           <span className="text-foreground">{format(payout.createdAt, "MMM d, yyyy")}</span> <br />
@@ -178,7 +179,7 @@ export default function FinancesPage() {
                           {payout.recipientType}
                         </TableCell>
                         <TableCell className="text-muted-foreground font-mono text-xs">
-                          {payout.stripeAccountId || "Platform Wallet"}
+                          {payout.payoutAddress || "Platform Wallet"}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -228,7 +229,7 @@ export default function FinancesPage() {
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1">Global Fallback</h4>
                 {splitConfigs.length > 0 ? (
                   splitConfigs[0].recipients.map(
-                    (recipient: any, i: number) => (
+                    (recipient, i) => (
                       <div
                         key={i}
                         className="flex items-center justify-between p-3.5 border border-border/80 rounded-xl bg-background shadow-sm hover:shadow-md transition-shadow"
@@ -237,9 +238,9 @@ export default function FinancesPage() {
                           <span className="font-semibold text-foreground capitalize truncate">
                             {recipient.type} Wallet
                           </span>
-                          {recipient.stripeAccountId && (
+                          {recipient.payoutAddress && (
                             <span className="text-[11px] font-mono text-muted-foreground truncate opacity-80">
-                              ID: {recipient.stripeAccountId}
+                              Account: {recipient.payoutAddress}
                             </span>
                           )}
                         </div>
@@ -284,4 +285,9 @@ export default function FinancesPage() {
       </div>
     </div>
   );
+}
+
+export default function FinancesPage() {
+  if (!ACTIVE_CAPABILITIES.payments) redirect("/beauty");
+  return <DormantFinancesPage />;
 }

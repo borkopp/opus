@@ -6,6 +6,7 @@ import { internal } from "../_generated/api";
 import { Anthropic } from "@anthropic-ai/sdk";
 import { classifyFreeIntervals, findInteriorGaps } from "../slots";
 import { estimateGapRevenue } from "./gapOptimizerHelpers";
+import { Id } from "../_generated/dataModel";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -77,11 +78,11 @@ export const scanDayForOrg = action({
         };
         staffReports: StaffReport[];
     }> => {
-        const { orgSettings, activeStaff, services }: {
-            orgSettings: any;
-            activeStaff: any[];
-            services: any[];
-        } = await ctx.runQuery(
+        await ctx.runQuery(internal.auth.assertOrgRole, {
+            orgId: args.orgId,
+            role: "staff",
+        });
+        const { orgSettings, activeStaff, services } = await ctx.runQuery(
             internal.ai.gapOptimizerHelpers.getOrgSettingsAndStaff,
             { orgId: args.orgId, staffIds: args.staffIds }
         );
@@ -164,12 +165,12 @@ export const scanDayForOrg = action({
 
             for (const gap of gaps) {
                 const staffServices = services.filter(
-                    (s: any) => s.staffIds.includes(staff._id) && s.durationMins <= gap.durationMins
+                    (service) => service.staffIds.includes(staff._id) && service.durationMins <= gap.durationMins
                 );
                 const estimatedRevenueMinorUnits = estimateGapRevenue(staffServices, gap.durationMins);
 
                 const draftedCandidates: Array<{
-                    customerId: any;
+                    customerId: Id<"customers">;
                     score: number;
                     rationale: string;
                     channel: "sms" | "email" | "whatsapp";
@@ -197,7 +198,8 @@ IMPORTANT RULES:
                             max_tokens: 512,
                             messages: [{ role: "user", content: prompt }],
                         });
-                        const text = (response.content[0] as any).text as string;
+                        const content = response.content[0];
+                        const text = content?.type === "text" ? content.text : "";
                         const match = text.match(/\{[\s\S]*\}/);
                         if (match) {
                             const parsed = JSON.parse(match[0]);

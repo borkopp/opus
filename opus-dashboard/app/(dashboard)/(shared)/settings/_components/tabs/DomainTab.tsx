@@ -1,17 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { CircleAlert, Globe2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { DebouncedInput } from "@/components/ui/debounced-input";
-import { IconDeviceFloppy, IconAlertCircle } from "@tabler/icons-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { validHostname, type FieldErrors } from "../validation";
+import { SettingsCard } from "../SettingsCard";
 
 interface DomainTabProps {
   orgId: Id<"orgs">;
@@ -26,7 +29,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <IconAlertCircle size={13} className="shrink-0" />
+      <CircleAlert className="shrink-0" />
       {message}
     </p>
   );
@@ -67,8 +70,10 @@ export function DomainTab({ orgId, initialData }: DomainTabProps) {
         customDomain: domain.customDomain.trim() || undefined,
       });
       if (isMounted.current) toast.success("Domain updated");
-    } catch (e: any) {
-      if (isMounted.current) toast.error(e.message ?? "Failed to update domain.");
+    } catch (error) {
+      if (isMounted.current) {
+        toast.error(error instanceof Error ? error.message : "Failed to update domain.");
+      }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
@@ -79,12 +84,17 @@ export function DomainTab({ orgId, initialData }: DomainTabProps) {
       value="domain"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="max-w-3xl border-b pb-12 mb-12 last:border-b-0">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Custom <span className="serif-accent-inline text-2xl">Domain</span></h2>
-          <p className="text-sm text-muted-foreground">Use your own domain for your booking page.</p>
-        </div>
-        <div className="grid gap-6 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+      <SettingsCard
+        title="Custom domain"
+        description="Use a domain your customers already recognize for the public booking experience."
+        contentClassName="grid gap-6"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Connecting…" : "Save domain"}
+          </Button>
+        }
+      >
           <div className="grid gap-2 max-w-xl">
             <Label htmlFor="vercel-bound-cname-endpoint">
               Your custom domain
@@ -101,32 +111,30 @@ export function DomainTab({ orgId, initialData }: DomainTabProps) {
               }
               aria-invalid={!!errors.customDomain}
               className={cn(
-                "bg-white font-mono text-sm",
+                "font-mono text-sm",
                 errors.customDomain && "border-destructive",
               )}
               onChange={(val) => {
                 setDomain({ customDomain: val });
-                errors.customDomain &&
-                  setErrors((e) => ({ ...e, customDomain: undefined }));
+                if (errors.customDomain) {
+                  setErrors((current) => ({ ...current, customDomain: undefined }));
+                }
               }}
             />
             <FieldError id="domain-error" message={errors.customDomain} />
           </div>
 
-          <p id="domain-hint" className="text-sm text-muted-foreground max-w-xl leading-relaxed">
-            At your domain registrar (e.g. GoDaddy, Cloudflare), add a <strong className="text-foreground font-mono text-xs">CNAME</strong> record pointing to{" "}
-            <strong className="text-foreground font-mono text-xs">cname.vercel-dns.com</strong>
-            {" "}before saving here. Leave this field empty to remove the custom domain.
-          </p>
-        </div>
-
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} />
-            {isSaving ? "Connecting…" : "Connect Domain"}
-          </Button>
-        </div>
-      </div>
+          <Alert id="domain-hint">
+            <Globe2 />
+            <AlertTitle>DNS setup</AlertTitle>
+            <AlertDescription>
+              Add a <strong className="font-mono">CNAME</strong> record at your
+              registrar pointing to{" "}
+              <strong className="font-mono">cname.vercel-dns.com</strong>, then
+              save the hostname here. Clear the field to disconnect it.
+            </AlertDescription>
+          </Alert>
+      </SettingsCard>
     </TabsContent>
   );
 }

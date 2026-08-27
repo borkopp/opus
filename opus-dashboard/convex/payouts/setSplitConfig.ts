@@ -1,6 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
+import { requireRole } from "../lib/auth";
 
 export const setSplitConfig = mutation({
     args: {
@@ -11,11 +12,12 @@ export const setSplitConfig = mutation({
                 type: v.union(v.literal("staff"), v.literal("owner"), v.literal("platform")),
                 staffId: v.optional(v.id("staff_members")),
                 sharePct: v.number(),
-                stripeAccountId: v.optional(v.string()), // This maps to PayPal email
+                payoutAddress: v.optional(v.string()),
             })
         ),
     },
     handler: async (ctx, args) => {
+        const { staffMember } = await requireRole(ctx, args.orgId, "owner");
         // 1. Validate total equals 100
         const total = args.recipients.reduce((sum, r) => sum + r.sharePct, 0);
         if (total !== 100) {
@@ -24,8 +26,8 @@ export const setSplitConfig = mutation({
 
         // 2. Validate Platform recipient constraints
         const platformRecipients = args.recipients.filter(r => r.type === "platform");
-        if (platformRecipients.some(r => r.stripeAccountId)) {
-            throw new ConvexError("Platform recipient must not have a stripeAccountId configured.");
+        if (platformRecipients.some(r => r.payoutAddress)) {
+            throw new ConvexError("Platform recipient must not have a payout address configured.");
         }
 
         // 3. Upsert logic
@@ -86,8 +88,8 @@ export const setSplitConfig = mutation({
         // 4. Audit Log
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
-            actorType: "system", // Should be staff/owner in a real auth context
-            actorId: "dashboard",
+            actorType: "staff",
+            actorId: staffMember._id,
             action: "payout_splits.updated",
             resourceType: "payout_splits",
             resourceId: configId,

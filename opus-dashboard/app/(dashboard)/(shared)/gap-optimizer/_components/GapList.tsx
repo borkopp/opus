@@ -3,15 +3,23 @@
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import { toast } from "sonner";
 import { Price } from "@/components/ui/price";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X, Clock, MessageSquare, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { X, Clock, MessageSquare, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export function GapList({ gaps, orgId }: { gaps: any[], orgId: string }) {
+type Gap = FunctionReturnType<typeof api.ai.gapOptimizerHelpers.getOpenGapsForOrg>[number];
+type Candidate = Gap["topCandidates"][number];
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : "Something went wrong";
+}
+
+export function GapList({ gaps, orgId }: { gaps: Gap[]; orgId: Id<"orgs"> }) {
     if (gaps.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-border rounded-[24px] bg-card/50">
@@ -29,15 +37,15 @@ export function GapList({ gaps, orgId }: { gaps: any[], orgId: string }) {
     );
 }
 
-function GapCard({ gap, orgId }: { gap: any, orgId: string }) {
+function GapCard({ gap, orgId }: { gap: Gap; orgId: Id<"orgs"> }) {
     const dismissGap = useMutation(api.ai.gapOptimizerHelpers.dismissGap);
 
     const onDismiss = async () => {
         try {
-            await dismissGap({ orgId: orgId as Id<"orgs">, gapId: gap._id });
+            await dismissGap({ orgId, gapId: gap._id });
             toast.success("Gap dismissed");
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (error: unknown) {
+            toast.error(errorMessage(error));
         }
     };
 
@@ -85,8 +93,8 @@ function GapCard({ gap, orgId }: { gap: any, orgId: string }) {
                 {gap.topCandidates.length === 0 ? (
                     <div className="p-5 text-sm text-muted-foreground text-center">No suitable candidates found for this gap.</div>
                 ) : (
-                    gap.topCandidates.map((c: any) => (
-                        <CandidateRow key={c._id} candidate={c} orgId={orgId} gapStatus={gap.status} />
+                    gap.topCandidates.map((candidate) => (
+                        <CandidateRow key={candidate._id} candidate={candidate} orgId={orgId} gapStatus={gap.status} />
                     ))
                 )}
             </div>
@@ -94,7 +102,15 @@ function GapCard({ gap, orgId }: { gap: any, orgId: string }) {
     );
 }
 
-function CandidateRow({ candidate, orgId, gapStatus }: { candidate: any, orgId: string, gapStatus: string }) {
+function CandidateRow({
+    candidate,
+    orgId,
+    gapStatus,
+}: {
+    candidate: Candidate;
+    orgId: Id<"orgs">;
+    gapStatus: Gap["status"];
+}) {
     const [expanded, setExpanded] = useState(false);
     const approveAndSend = useMutation(api.ai.gapOptimizerHelpers.approveAndSendCandidate);
     const dismissCandidate = useMutation(api.ai.gapOptimizerHelpers.dismissCandidate);
@@ -103,10 +119,10 @@ function CandidateRow({ candidate, orgId, gapStatus }: { candidate: any, orgId: 
     const onSend = async () => {
         setIsSending(true);
         try {
-            await approveAndSend({ orgId: orgId as Id<"orgs">, candidateId: candidate._id });
+            await approveAndSend({ orgId, candidateId: candidate._id });
             toast.success(`Message sent to ${candidate.customerName}`);
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (error: unknown) {
+            toast.error(errorMessage(error));
         } finally {
             setIsSending(false);
         }
@@ -114,10 +130,10 @@ function CandidateRow({ candidate, orgId, gapStatus }: { candidate: any, orgId: 
 
     const onDismiss = async () => {
         try {
-            await dismissCandidate({ orgId: orgId as Id<"orgs">, candidateId: candidate._id });
+            await dismissCandidate({ orgId, candidateId: candidate._id });
             toast.success("Candidate skipped");
-        } catch (e: any) {
-            toast.error(e.message);
+        } catch (error: unknown) {
+            toast.error(errorMessage(error));
         }
     };
 

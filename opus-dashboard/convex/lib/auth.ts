@@ -2,7 +2,7 @@ import { ConvexError } from "convex/values";
 import { Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
 
-export async function requireAuth(ctx: QueryCtx, orgId: Id<"orgs">) {
+export async function requireUser(ctx: QueryCtx) {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
         throw new ConvexError("Unauthenticated");
@@ -17,24 +17,72 @@ export async function requireAuth(ctx: QueryCtx, orgId: Id<"orgs">) {
         throw new ConvexError("Unauthorised");
     }
 
-    const staffMember = await ctx.db
-        .query("staff_members")
-        .withIndex("by_org_user", (q) => q.eq("orgId", orgId).eq("userId", user._id))
-        .first();
+    return { identity, user };
+}
 
-    if (!staffMember || staffMember.isDeleted) {
+export async function requireActiveOrg(
+    ctx: QueryCtx,
+    expectedOrgId?: Id<"orgs">,
+) {
+    const { identity, user } = await requireUser(ctx);
+
+    let activeOrgId = user.activeOrgId;
+
+    // Development data may predate activeOrgId. Resolve a single valid
+    // membership for this request without trusting a client-provided tenant.
+    if (!activeOrgId) {
+        const memberships = await ctx.db
+            .query("staff_members")
+            .withIndex("by_user", (q) => q.eq("userId", user._id))
+            .collect();
+
+        const activeMembership = memberships.find(
+            (membership) => !membership.isDeleted && membership.isActive,
+        );
+        activeOrgId = activeMembership?.orgId;
+    }
+
+    if (!activeOrgId) {
+        throw new ConvexError("No active business");
+    }
+
+    if (expectedOrgId && expectedOrgId !== activeOrgId) {
         throw new ConvexError("Unauthorised");
     }
 
-    return { user, staffMember };
+    const org = await ctx.db.get(activeOrgId);
+    if (!org || org.isDeleted) {
+        throw new ConvexError("Business not found");
+    }
+
+    const staffMember = await ctx.db
+        .query("staff_members")
+        .withIndex("by_org_user", (q) =>
+            q.eq("orgId", activeOrgId).eq("userId", user._id),
+        )
+        .first();
+
+    if (!staffMember || staffMember.isDeleted || !staffMember.isActive) {
+        throw new ConvexError("Unauthorised");
+    }
+
+    return { identity, user, org, orgId: activeOrgId, staffMember };
+}
+
+export async function requireAuth(
+    ctx: QueryCtx,
+    expectedOrgId?: Id<"orgs">,
+) {
+    return await requireActiveOrg(ctx, expectedOrgId);
 }
 
 export async function requireRole(
     ctx: QueryCtx,
-    orgId: Id<"orgs">,
+    expectedOrgId: Id<"orgs"> | undefined,
     minRole: "owner" | "manager" | "staff"
 ) {
-    const { user, staffMember } = await requireAuth(ctx, orgId);
+    const auth = await requireAuth(ctx, expectedOrgId);
+    const { staffMember } = auth;
 
     const roleWeights = {
         owner: 3,
@@ -46,5 +94,5 @@ export async function requireRole(
         throw new ConvexError("Unauthorised");
     }
 
-    return { user, staffMember };
+    return auth;
 }

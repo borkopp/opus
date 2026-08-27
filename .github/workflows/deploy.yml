@@ -11,9 +11,89 @@ env:
   MK_IMAGE: ghcr.io/${{ github.repository_owner }}/opus-mk
 
 jobs:
+  quality-dashboard:
+    name: Dashboard quality gate
+    runs-on: ubuntu-latest
+    env:
+      HAS_E2E_CREDENTIALS: ${{ secrets.E2E_CLERK_USER_EMAIL != '' && secrets.CLERK_SECRET_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: opus-dashboard/package-lock.json
+      - name: Install dashboard dependencies
+        working-directory: opus-dashboard
+        run: npm ci
+      - name: Lint with zero warnings
+        working-directory: opus-dashboard
+        run: npm run lint
+      - name: Type-check
+        working-directory: opus-dashboard
+        run: npm run typecheck
+      - name: Run Convex and contract tests
+        working-directory: opus-dashboard
+        run: npm test
+      - name: Build dashboard
+        working-directory: opus-dashboard
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
+        run: npm run build
+      - name: Install Playwright browser
+        if: env.HAS_E2E_CREDENTIALS == 'true'
+        working-directory: opus-dashboard
+        run: npx playwright install --with-deps chromium
+      - name: Run authenticated onboarding smoke tests
+        if: env.HAS_E2E_CREDENTIALS == 'true'
+        working-directory: opus-dashboard
+        env:
+          E2E_CLERK_USER_EMAIL: ${{ secrets.E2E_CLERK_USER_EMAIL }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+        run: npm run test:e2e
+
+  quality-consumers:
+    name: Marketplace, native, and scraper compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            opus-mk/package-lock.json
+            opus-native/package-lock.json
+            opus-scraper-admin/package-lock.json
+      - name: Build opus.mk
+        working-directory: opus-mk
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
+        run: |
+          npm ci
+          npm run build
+      - name: Lint and type-check native
+        working-directory: opus-native
+        run: |
+          npm ci
+          npm run lint
+          npx tsc --noEmit
+      - name: Build scraper admin
+        working-directory: opus-scraper-admin
+        run: |
+          npm ci
+          npm run build
+
   # ── Build both images in parallel ─────────────────────────────────────────
   build-dashboard:
     name: Build opus-dashboard
+    needs: [quality-dashboard, quality-consumers]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,6 +132,7 @@ jobs:
 
   build-mk:
     name: Build opus-mk
+    needs: [quality-dashboard, quality-consumers]
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "noEmitOnError": false,
+    "skipLibCheck": true,
+    "incremental": false,
+    "rootDir": ".",
+    "outDir": "./dist/types"
+  },
+  "include": ["components/ui/**/*.tsx", "components/ui/**/*.ts", "lib/utils.ts"],
+  "exclude": ["node_modules", ".next"]
+}

@@ -2,12 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
 import { IconLoader2 } from "@tabler/icons-react";
 import { BookingsSplitView } from "@/components/bookings/BookingsSplitView";
 
 export default function BookingsPage() {
-    const { user } = useUser();
     // We get orgId from profile
     const profile = useQuery(api.users.getMyProfile);
     const orgId = profile?.orgId;

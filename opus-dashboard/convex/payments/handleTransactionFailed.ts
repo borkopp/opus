@@ -5,7 +5,7 @@ import { ConvexError } from "convex/values";
 
 export const handleTransactionFailed = action({
     args: {
-        providerTransactionId: v.string(), // Maps to stripePaymentIntentId
+        providerTransactionId: v.string(),
         reason: v.string(),
     },
     handler: async (ctx, args) => {

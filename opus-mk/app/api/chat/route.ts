@@ -18,6 +18,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { ACTIVE_INDUSTRY } from "@/lib/product-scope";
 
 const MAX_QUERY_CHARS = 500;
 const MAX_BODY_BYTES = 2048;
@@ -45,50 +46,9 @@ MACEDONIAN VOCABULARY — use ONLY these forms (never the Serbian/Bulgarian equi
 - "Достапен" NOT "Slobodan" (SR)
 - "Слободен термин" for available slot`.trim();
 
-// ── Industry detection ─────────────────────────────────────────────────────────
-// Runs before retrieve so the vector search is scoped to the correct vertical.
-// Returns undefined for ambiguous queries — retrieve will search all industries.
-
-function deriveIndustry(
-  query: string,
-): "hospitality" | "beauty_wellness" | undefined {
-  const q = query.toLowerCase();
-
-  const hospitalityTerms = [
-    // English
-    "restaurant", "dinner", "lunch", "brunch", "breakfast", "date night",
-    "eat", "eating", "food", "cafe", "bar", "pub", "table", "reservation",
-    "drinks", "coffee", "cocktail", "wine", "dine", "dining", "bistro",
-    "tavern", "grill", "pizza", "sushi", "burger",
-    // Macedonian
-    "ресторан", "вечера", "ручек", "маса", "кафе", "бар", "јадење",
-    "пиење", "резервација на маса", "вино", "коктел",
-  ];
-
-  const beautyTerms = [
-    // English
-    "haircut", "hair cut", "barber", "barbershop", "nails", "nail",
-    "salon", "massage", "spa", "facial", "eyebrow", "lash", "wax",
-    "tattoo", "piercing", "manicure", "pedicure", "blowout", "coloring",
-    // Macedonian
-    "шишање", "фризер", "нокти", "масажа", "салон", "тетоважа",
-    "пирсинг", "маникир", "педикир", "веѓи", "трепки",
-  ];
-
-  const isHospitality = hospitalityTerms.some((t) => q.includes(t));
-  const isBeauty = beautyTerms.some((t) => q.includes(t));
-
-  // If both match (edge case: "dinner after my haircut") — return undefined,
-  // let retrieve search all and Claude sort it out with the cross-industry rules.
-  if (isHospitality && isBeauty) return undefined;
-  if (isHospitality) return "hospitality";
-  if (isBeauty) return "beauty_wellness";
-  return undefined;
-}
-
 // ── Locale detection ───────────────────────────────────────────────────────────
 // Server-side Cyrillic detection is more reliable than asking Claude to detect
-// language from short or ambiguous queries like "date night".
+// language from short or ambiguous queries.
 
 function detectLocale(query: string, fallback: string): string {
   return /[\u0400-\u04FF]/.test(query) ? "mk" : fallback;
@@ -126,14 +86,12 @@ function buildSystemPrompt(
 Today: ${dateStr}. User location: ${city}.${languageInstruction}
 
 CRITICAL STRICTNESS RULES:
-1. OPUS is an INTERNATIONAL service. You are helping a user in ${city}. DO NOT assume they want recommendations in Macedonia.
+1. OPUS currently serves beauty and wellness businesses in Macedonia. Keep every recommendation within this active scope.
 2. ONLY recommend businesses from the SEARCH RESULTS that PERFECTLY match the user's specific request.
-3. Cross-industry strictness: If the user asks for food/dining, DO NOT recommend beauty businesses. If they ask for haircut/nails, DO NOT recommend restaurants.
+3. If the user asks for something outside beauty and wellness, explain that OPUS currently focuses on beauty appointments and do not recommend an unrelated business.
 4. If SEARCH RESULTS contain irrelevant businesses, IGNORE THEM COMPLETELY.
 5. If no businesses PERFECTLY match, apologize and say you couldn't find exactly what they're looking for in ${city}. State that OPUS currently features ${categoriesStr} in their area.
 6. NEVER recommend external services (Google Maps, TripAdvisor, etc.).
-7. If a business is marked hasTableAvailability: false, mention it may be fully booked and suggest calling ahead or trying another option.
-8. If a business is marked hasTableAvailability: true, you can confidently say it has availability.
 
 Write a SHORT conversational reply (2–4 sentences). Be warm, specific, and direct. Reference businesses by name.
 ${timeHint ? `Time context: ${timeHint}. If a business is closed at that time, mention it or skip it.` : ""}
@@ -160,13 +118,10 @@ type Candidate = {
   averageRating: number;
   reviewCount: number;
   beautyCategory?: string;
-  venueType?: string;
-  cuisine?: string[];
   openingHoursTomorrow?: { open: string; close: string };
   industry: string;
   city?: string;
   neighborhood?: string;
-  hasTableAvailability?: boolean | null; // hospitality only, null = unknown
 };
 
 const SNIPPET_METADATA_PREFIXES = [
@@ -239,10 +194,6 @@ function candidatesToContextJson(candidates: Candidate[]): string {
     hours: c.openingHoursToday
       ? `${c.openingHoursToday.open}–${c.openingHoursToday.close}`
       : undefined,
-    // Only include for hospitality — avoids confusing Claude for beauty businesses
-    ...(c.industry === "hospitality" && c.hasTableAvailability != null
-      ? { hasTableAvailability: c.hasTableAvailability }
-      : {}),
   }));
   return JSON.stringify(slim, null, 0);
 }
@@ -328,7 +279,6 @@ export async function POST(req: NextRequest) {
 
       // ── Derive intent before hitting Convex ──────────────────────────────
       const trimmedQuery = query.trim();
-      const industryHint = deriveIndustry(trimmedQuery);
       const detectedLocale = detectLocale(trimmedQuery, locale);
 
       // 1. Retrieve candidates (+ persists user turn in Convex)
@@ -342,7 +292,7 @@ export async function POST(req: NextRequest) {
           city: city || undefined,
           coords: coords ?? undefined,
           locale: detectedLocale,
-          industry: industryHint, // ← scopes vector search to correct vertical
+          industry: ACTIVE_INDUSTRY,
         });
       } catch {
         controller.enqueue(
@@ -359,7 +309,6 @@ export async function POST(req: NextRequest) {
         timeIntent,
         history,
         availableCategories,
-        partySize, // new field from retrieve — used for bookingIntent
       } = retrieveResult;
 
       const topCandidates = (candidates as Candidate[]).slice(0, 4);
@@ -389,7 +338,6 @@ export async function POST(req: NextRequest) {
       let bookingIntent: {
         isoDate?: string;
         time?: string;
-        partySize?: number;
       } | null = null;
 
       try {
@@ -405,7 +353,7 @@ export async function POST(req: NextRequest) {
                 "You MUST call this tool if you are recommending any businesses. " +
                 "ONLY include the slugs of businesses that PERFECTLY match the user's intent. " +
                 "If none match, call it with an empty slugs array. " +
-                "If the user expressed a specific date, time, or party size, populate bookingIntent " +
+                "If the user expressed a specific date or time, populate bookingIntent " +
                 "so the booking flow can be pre-filled.",
               input_schema: {
                 type: "object" as const,
@@ -427,10 +375,6 @@ export async function POST(req: NextRequest) {
                       time: {
                         type: "string",
                         description: "Time in HH:MM 24h format.",
-                      },
-                      partySize: {
-                        type: "integer",
-                        description: "Number of guests.",
                       },
                     },
                   },
@@ -466,7 +410,6 @@ export async function POST(req: NextRequest) {
               bookingIntent?: {
                 isoDate?: string;
                 time?: string;
-                partySize?: number;
               };
             };
             recommendedSlugs = input.slugs || [];
@@ -484,9 +427,6 @@ export async function POST(req: NextRequest) {
           const bookingParams = new URLSearchParams();
           if (bookingIntent?.isoDate) bookingParams.set("date", bookingIntent.isoDate);
           if (bookingIntent?.time) bookingParams.set("time", bookingIntent.time);
-          // partySize: prefer what Claude extracted, fall back to retrieve's extraction
-          const resolvedPartySize = bookingIntent?.partySize ?? (partySize as number | undefined);
-          if (resolvedPartySize) bookingParams.set("party", String(resolvedPartySize));
           const bookingQuery = bookingParams.toString();
           const bookingUrl = bookingQuery
             ? `/${c.slug}/book?${bookingQuery}`
@@ -497,8 +437,6 @@ export async function POST(req: NextRequest) {
             slug: c.slug,
             name: c.name,
             reason: extractReason(c.snippet),
-            venueType: c.venueType,
-            cuisine: c.cuisine,
             availabilityHint: deriveAvailabilityHint(c, timeIntent.kind),
             averageRating: c.averageRating,
             reviewCount: c.reviewCount,
@@ -507,7 +445,6 @@ export async function POST(req: NextRequest) {
             isOpenNow: c.isOpenNow,
             closesAt: c.isOpenNow ? (c.openingHoursToday?.close ?? null) : null,
             opensAt: deriveNextOpens(c) ?? null,
-            hasTableAvailability: c.hasTableAvailability ?? null,
             bookingUrl,
           };
         });

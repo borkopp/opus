@@ -8,13 +8,14 @@ import {
     IconDotsCircleHorizontal
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { BookingView } from "./types";
 
 export function BookingCard({
     booking,
     isSelected,
     onClick
 }: {
-    booking: any;
+    booking: BookingView;
     isSelected: boolean;
     onClick: () => void;
 }) {
@@ -95,4 +96,3 @@ export function BookingCard({
         </div>
     );
 }
-

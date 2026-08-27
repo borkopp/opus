@@ -3,20 +3,23 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-    IconBell,
-    IconBellRinging,
-    IconCalendarPlus,
-    IconCalendarOff,
-    IconAlertTriangle,
-    IconX,
-    IconCheck,
-    IconArrowRight,
-} from "@tabler/icons-react";
+    Bell,
+    BellRing,
+    CalendarPlus,
+    CalendarX,
+    TriangleAlert,
+    X,
+    Check,
+    ArrowRight,
+} from "lucide-react";
+
+type DashboardNotification = FunctionReturnType<typeof api.dashboardNotifications.list>[number];
 
 // ─────────────────────────────────────────────────────
 // Web Audio chime — no audio file required
@@ -48,22 +51,22 @@ function getTypeConfig(type: string) {
     switch (type) {
         case "new_booking":
             return {
-                icon: <IconCalendarPlus size={16} stroke={2} />,
+                icon: <CalendarPlus size={16} strokeWidth={2} />,
                 iconBg: "bg-accent/10 text-accent",
             };
         case "booking_cancelled":
             return {
-                icon: <IconCalendarOff size={16} stroke={2} />,
+                icon: <CalendarX size={16} strokeWidth={2} />,
                 iconBg: "bg-destructive/10 text-destructive",
             };
         case "no_show":
             return {
-                icon: <IconAlertTriangle size={16} stroke={2} />,
+                icon: <TriangleAlert size={16} strokeWidth={2} />,
                 iconBg: "bg-amber-500/10 text-amber-600",
             };
         default:
             return {
-                icon: <IconBell size={16} stroke={2} />,
+                icon: <Bell size={16} strokeWidth={2} />,
                 iconBg: "bg-secondary text-muted-foreground",
             };
     }
@@ -77,7 +80,7 @@ function NotificationItem({
     onDismiss,
     onRead,
 }: {
-    notification: any;
+    notification: DashboardNotification;
     onDismiss: (id: Id<"dashboard_notifications">) => void;
     onRead: (id: Id<"dashboard_notifications">) => void;
 }) {
@@ -133,7 +136,7 @@ function NotificationItem({
                 }}
                 className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
             >
-                <IconX size={13} />
+                <X size={13} />
             </button>
         </div>
     );
@@ -149,7 +152,7 @@ function NotificationToast({
     onDismiss,
     onClick,
 }: {
-    notification: any;
+    notification: DashboardNotification;
     onDismiss: () => void;
     onClick: () => void;
 }) {
@@ -210,7 +213,7 @@ function NotificationToast({
                     }}
                     className="absolute right-2.5 top-2.5 p-1 rounded-lg hover:bg-secondary text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                 >
-                    <IconX size={14} />
+                    <X size={14} />
                 </button>
             </div>
 
@@ -245,9 +248,8 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
 
     const [open, setOpen] = useState(false);
     const [pulse, setPulse] = useState(false);
-    const [toastNotification, setToastNotification] = useState<any>(null);
+    const [toastNotification, setToastNotification] = useState<DashboardNotification | null>(null);
     const prevCountRef = useRef<number | null>(null);
-    const prevNotificationsRef = useRef<any[] | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
@@ -256,23 +258,26 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
         if (unreadCount === undefined || !notifications) return;
         if (prevCountRef.current === null) {
             prevCountRef.current = unreadCount;
-            prevNotificationsRef.current = notifications;
             return;
         }
         if (unreadCount > prevCountRef.current && dashEnabled) {
             if (soundEnabled && document.visibilityState === "visible") {
                 playChime();
             }
-            setPulse(true);
-            setTimeout(() => setPulse(false), 3000);
+            const pulseStartTimer = window.setTimeout(() => setPulse(true), 0);
+            const pulseEndTimer = window.setTimeout(() => setPulse(false), 3000);
 
             // Show toast with the newest notification (only when dropdown is closed)
             if (toastEnabled && !open && notifications.length > 0) {
-                setToastNotification(notifications[0]);
+                window.setTimeout(() => setToastNotification(notifications[0]), 0);
             }
+            prevCountRef.current = unreadCount;
+            return () => {
+                window.clearTimeout(pulseStartTimer);
+                window.clearTimeout(pulseEndTimer);
+            };
         }
         prevCountRef.current = unreadCount;
-        prevNotificationsRef.current = notifications;
     }, [unreadCount, notifications, open, dashEnabled, soundEnabled, toastEnabled]);
 
     // Close dropdown on outside click
@@ -287,18 +292,16 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
         return () => document.removeEventListener("mousedown", handler);
     }, [open]);
 
-    // Dismiss toast when dropdown opens
-    useEffect(() => {
-        if (open) setToastNotification(null);
-    }, [open]);
-
     const hasUnread = dashEnabled && (unreadCount ?? 0) > 0;
 
     return (
         <div ref={containerRef} className="relative">
             {/* Bell button */}
             <button
-                onClick={() => setOpen((v) => !v)}
+                onClick={() => {
+                    setToastNotification(null);
+                    setOpen((value) => !value);
+                }}
                 className={cn(
                     "relative flex items-center justify-center h-10 w-10 rounded-full transition-colors border",
                     open
@@ -307,9 +310,9 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
                 )}
             >
                 {hasUnread ? (
-                    <IconBellRinging className="h-5 w-5" />
+                    <BellRing className="h-5 w-5" />
                 ) : (
-                    <IconBell className="h-5 w-5" />
+                    <Bell className="h-5 w-5" />
                 )}
 
                 {/* Count badge */}
@@ -359,7 +362,7 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
                                 onClick={() => markAllRead({ orgId })}
                                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                             >
-                                <IconCheck size={12} />
+                                <Check size={12} />
                                 Mark all read
                             </button>
                         )}
@@ -370,7 +373,7 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
                         {!notifications || notifications.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
                                 <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-3">
-                                    <IconBell size={18} className="text-muted-foreground/50" />
+                                    <Bell size={18} className="text-muted-foreground/50" />
                                 </div>
                                 <p className="text-sm font-medium text-foreground">All caught up</p>
                                 <p className="text-xs text-muted-foreground mt-1">New bookings and updates will appear here.</p>
@@ -399,7 +402,7 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
                                 onClick={() => setOpen(false)}
                             >
                                 View all notifications
-                                <IconArrowRight size={12} />
+                                <ArrowRight size={12} />
                             </a>
                         </div>
                     )}

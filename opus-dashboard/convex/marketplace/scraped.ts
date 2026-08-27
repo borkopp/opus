@@ -148,8 +148,6 @@ export const upsertScrapedOrg = mutation({
         planStatus: "canceled",
         reviewCount: 0,
         averageRating: 0,
-        onboardingStep: 0,
-        isOnboardingComplete: false,
         isDeleted: false,
         createdAt: now,
       });
@@ -174,7 +172,9 @@ export const upsertScrapedOrg = mutation({
             type: photo.type,
             caption: photo.caption,
             sortOrder: sortOrder++,
+            isDeleted: false,
             uploadedAt: now,
+            updatedAt: now,
           });
         }
       }
@@ -242,12 +242,11 @@ export const listScrapedOrgs = query({
     googlePlaceId: v.optional(v.string()),
     woltSlug: v.optional(v.string()),
     glovoSlug: v.optional(v.string()),
-    listingStatus: v.optional(v.union(
+    listingStatus: v.union(
       v.literal("unpublished"),
-      v.literal("ready"),
       v.literal("published"),
       v.literal("suspended"),
-    )),
+    ),
     reviewStatus: v.optional(v.union(
       v.literal("needs_review"),
       v.literal("in_progress"),
@@ -586,7 +585,7 @@ export const bulkPublishReady = mutation({
   },
 });
 
-// ── Hard delete all scraped orgs (and their media + embeddings) ──────────────
+// ── Soft delete all scraped orgs (function name retained for API compatibility) ─
 
 export const hardDeleteAllScraped = mutation({
   args: { adminKey: v.string() },
@@ -601,21 +600,54 @@ export const hardDeleteAllScraped = mutation({
 
     let deleted = 0;
     for (const org of orgs) {
-      // Delete org_media rows
+      if (org.isDeleted) continue;
+      const now = Date.now();
+
       const media = await ctx.db
         .query("org_media")
         .withIndex("by_org", (q) => q.eq("orgId", org._id))
         .collect();
-      for (const m of media) await ctx.db.delete(m._id);
+      for (const item of media) {
+        if (!item.isDeleted) {
+          await ctx.db.patch(item._id, {
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
+          });
+        }
+      }
 
-      // Delete marketplace_embeddings rows
       const embeddings = await ctx.db
         .query("marketplace_embeddings")
         .withIndex("by_org", (q) => q.eq("orgId", org._id))
         .collect();
-      for (const e of embeddings) await ctx.db.delete(e._id);
+      for (const embedding of embeddings) {
+        if (!embedding.isDeleted) {
+          await ctx.db.patch(embedding._id, {
+            isPublished: false,
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
+          });
+        }
+      }
 
-      await ctx.db.delete(org._id);
+      await ctx.db.patch(org._id, {
+        listingStatus: "unpublished",
+        isDeleted: true,
+        deletedAt: now,
+        updatedAt: now,
+      });
+      await ctx.db.insert("audit_log", {
+        orgId: org._id,
+        actorType: "system",
+        action: "scraped_org.soft_deleted",
+        resourceType: "orgs",
+        resourceId: org._id,
+        before: { listingStatus: org.listingStatus, isDeleted: org.isDeleted },
+        after: { listingStatus: "unpublished", isDeleted: true },
+        createdAt: now,
+      });
       deleted++;
     }
 

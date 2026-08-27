@@ -289,7 +289,7 @@ function BusinessMapCard({
       `https://api.mapbox.com/directions/v5/mapbox/${mode}/${userCoords.lng},${userCoords.lat};${coords.lng},${coords.lat}?overview=false&access_token=${MAPBOX_TOKEN}`,
     )
       .then((r) => r.json())
-      .then((data: { routes?: Array<{ duration: number; distance: number }> }) => {
+      .then((data: { routes?: { duration: number; distance: number }[] }) => {
         if (cancelled || !data.routes?.[0]) return;
         const r = data.routes[0];
         setEta({ duration: r.duration, distance: r.distance });
@@ -727,7 +727,9 @@ export default function BusinessProfileScreen() {
 
         {/* ── Action Buttons ───────────────────────────────────── */}
         <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, marginTop: 20 }}>
-          <ActionButton icon="calendar.badge.plus" label="Book" onPress={() => router.push(`/book/${slug}`)} primary theme={theme} />
+          {profile.industry === 'beauty_wellness' ? (
+            <ActionButton icon="calendar.badge.plus" label="Book" onPress={() => router.push(`/book/${slug}`)} primary theme={theme} />
+          ) : null}
           {profile.phone ? (
             <ActionButton
               icon="phone.fill"

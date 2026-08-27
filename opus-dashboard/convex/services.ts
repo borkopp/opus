@@ -12,7 +12,7 @@ export const listServices = query({
     handler: async (ctx, args) => {
         await requireAuth(ctx, args.orgId);
 
-        let q = ctx.db.query("services").withIndex("by_org", (q) => q.eq("orgId", args.orgId));
+        const q = ctx.db.query("services").withIndex("by_org", (q) => q.eq("orgId", args.orgId));
 
         const services = await q.filter((q) => q.eq(q.field("isDeleted"), false)).collect();
 

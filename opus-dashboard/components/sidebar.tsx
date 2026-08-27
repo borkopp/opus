@@ -5,10 +5,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import {
-  IconApi,
   IconMenu2,
-  IconMessagePlus,
-  IconRotate,
   IconX,
 } from "@tabler/icons-react";
 

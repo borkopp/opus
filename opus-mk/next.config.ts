@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "**",
-      }
+      },
     ],
   },
 };

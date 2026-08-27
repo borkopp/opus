@@ -1,6 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { internalQuery, internalMutation, query, mutation } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
+import { Doc } from "../_generated/dataModel";
 import { requireAuth, requireRole } from "../lib/auth";
 
 export const MIN_TOTAL_VISITS = 3;
@@ -82,9 +82,9 @@ export const rankCandidatesForGap = internalQuery({
 });
 
 export function estimateGapRevenue(
-    services: any[], 
+    services: Array<Pick<Doc<"services">, "priceMinorUnits" | "durationMins">>,
     durationMins: number
-) {
+): number {
     if (services.length === 0) return 0;
     const avgPrice = services.reduce((acc, s) => acc + s.priceMinorUnits, 0) / services.length;
     const avgDuration = services.reduce((acc, s) => acc + s.durationMins, 0) / services.length;
@@ -111,8 +111,10 @@ export const approveAndSendCandidate = mutation({
         if (!customer) throw new ConvexError("Customer not found");
 
         const staff = await ctx.db.get(gap.staffId);
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new ConvexError("Business not found");
 
-        const bookingLinkToken = "TODO_LINK"; 
+        const bookingLink = `https://opus.mk/${org.slug}/book`;
 
         const notificationId = await ctx.db.insert("notifications", {
             orgId: args.orgId,
@@ -126,7 +128,7 @@ export const approveAndSendCandidate = mutation({
                 gapStartAt: gap.gapStartAt,
                 gapEndAt: gap.gapEndAt,
                 draftedMessage: candidate.draftedMessage,
-                bookingLinkToken
+                bookingLink
             },
             status: "pending",
             scheduledFor: Date.now(),
@@ -248,7 +250,6 @@ export const getTodaySummary = query({
         await requireAuth(ctx, args.orgId);
         
         // Find gaps for today
-        const startOfTodayMs = new Date().setHours(0, 0, 0, 0); // Very rough, ideally should use timezone 
         const dateStr = new Date().toISOString().split("T")[0]; // Also rough
 
         const allGaps = await ctx.db
@@ -278,7 +279,7 @@ export const getTodaySummary = query({
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
             .first();
 
-        const enabled = settings?.gapOptimizerEnabled ?? true;
+        const enabled = settings?.gapOptimizerEnabled ?? false;
 
         return {
             enabled,

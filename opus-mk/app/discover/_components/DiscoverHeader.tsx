@@ -1,9 +1,12 @@
 import { Logo } from "@/components/Logo";
 import { HeaderAuth } from "@/components/HeaderAuth";
-import { useResolveCity } from "@/hooks/use-resolve-city";
 
-export function DiscoverHeader() {
-  const { city } = useResolveCity();
+interface DiscoverHeaderProps {
+  city: string | null;
+  isFallback: boolean;
+}
+
+export function DiscoverHeader({ city, isFallback }: DiscoverHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/5">
@@ -16,7 +19,9 @@ export function DiscoverHeader() {
                 className="w-1.5 h-1.5 rounded-full bg-[var(--online)] shrink-0"
                 style={{ boxShadow: "0 0 6px var(--online)" }}
               />
-              <span className="text-xs text-white/85">{city}</span>
+              <span className="text-xs text-white/85">
+                {isFallback ? `Showing ${city}` : city}
+              </span>
             </div>
           )}
           <HeaderAuth />

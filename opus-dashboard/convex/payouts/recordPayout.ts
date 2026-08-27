@@ -8,10 +8,10 @@ export const recordPayout = internalMutation({
         paymentIntentId: v.id("payment_intents"),
         recipientType: v.union(v.literal("staff"), v.literal("owner"), v.literal("platform")),
         staffId: v.optional(v.id("staff_members")),
-        connectedAccountId: v.string(), // This maps to stripeAccountId
+        payoutAddress: v.string(),
         amountMinorUnits: v.number(),
         currency: v.string(),
-        providerTransferId: v.optional(v.string()), // This maps to stripeTransferId
+        providerTransferId: v.optional(v.string()),
         status: v.union(v.literal("pending"), v.literal("in_transit"), v.literal("paid"), v.literal("failed")),
     },
     handler: async (ctx, args) => {
@@ -21,10 +21,10 @@ export const recordPayout = internalMutation({
             paymentIntentId: args.paymentIntentId,
             recipientType: args.recipientType,
             staffId: args.staffId,
-            stripeAccountId: args.connectedAccountId, // Map arg to schema field
+            payoutAddress: args.payoutAddress,
             amountMinorUnits: args.amountMinorUnits,
             currency: args.currency,
-            stripeTransferId: args.providerTransferId, // Map arg to schema field
+            providerTransferId: args.providerTransferId,
             status: args.status,
             createdAt: Date.now(),
             updatedAt: Date.now(),

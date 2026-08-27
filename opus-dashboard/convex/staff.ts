@@ -242,7 +242,7 @@ export const inviteStaffMember = mutation({
         await ctx.db.insert("notifications", {
             orgId: args.orgId,
             channel: "email",
-            type: "booking_confirmation", // Using a placeholder since there is no 'invite' type yet. (Needs to be added if strict)
+            type: "staff_invite",
             recipientAddress: args.email,
             templateData: { token, inviteId },
             status: "pending",
@@ -303,6 +303,10 @@ export const acceptStaffInvite = mutation({
         await ctx.db.patch(invite.staffId, {
             userId: user._id,
             updatedAt: Date.now()
+        });
+        await ctx.db.patch(user._id, {
+            activeOrgId: invite.orgId,
+            updatedAt: Date.now(),
         });
 
         // Mark invite as accepted

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,13 +14,13 @@ import { IconClock, IconCopy, IconLoader2, IconPlus, IconTrash } from "@tabler/i
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/file-validation";
 
 const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId: Id<"staff_members"> }) {
     const defaultSchedule = useQuery(api.availability.getWeeklySchedule, { orgId, staffId });
     const setAvailabilityRule = useMutation(api.availability.setAvailabilityRule);
-    const deleteAvailabilityRule = useMutation(api.availability.deleteAvailabilityRule);
     const copyToAll = useMutation(api.availability.copyScheduleToAllStaff);
 
     const [savingStates, setSavingStates] = useState<Record<number, boolean>>({});
@@ -29,7 +30,7 @@ export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
         return <Skeleton className="h-[600px] w-full rounded-xl" />;
     }
 
-    const handleSaveDay = async (day: number, data: any) => {
+    const handleSaveDay = async (day: number, data: DayFormValue) => {
         setSavingStates(prev => ({ ...prev, [day]: true }));
         try {
             await setAvailabilityRule({
@@ -41,8 +42,8 @@ export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
                 breaks: data.breaks,
                 isActive: data.isActive,
             });
-        } catch (err: any) {
-            alert(err.message || `Failed to save schedule for ${DAYS_OF_WEEK[day]}`);
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, `Failed to save schedule for ${DAYS_OF_WEEK[day]}`));
         } finally {
             setSavingStates(prev => ({ ...prev, [day]: false }));
         }
@@ -55,8 +56,8 @@ export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
         try {
             await copyToAll({ orgId, sourceStaffId: staffId });
             alert("Schedule copied perfectly to all staff.");
-        } catch (err: any) {
-            alert(err.message || "Failed to copy schedule");
+        } catch (error: unknown) {
+            toast.error(getErrorMessage(error, "Failed to copy schedule"));
         } finally {
             setIsCopying(false);
         }
@@ -94,6 +95,9 @@ export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId:
     );
 }
 
+type DaySchedule = FunctionReturnType<typeof api.availability.getWeeklySchedule>[number];
+type DayFormValue = Pick<DaySchedule, "isActive" | "startTime" | "endTime" | "breaks">;
+
 function DayRow({
     dayName,
     schedule,
@@ -101,9 +105,9 @@ function DayRow({
     onSave
 }: {
     dayName: string;
-    schedule: any;
+    schedule: DaySchedule;
     isSaving: boolean;
-    onSave: (data: any) => void;
+    onSave: (data: DayFormValue) => void;
 }) {
     // Local copy to handle fast typing before flushing to server via blur/save
     const [isActive, setIsActive] = useState(schedule.isActive);

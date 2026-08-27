@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { IconArrowLeft, IconCheck, IconLoader2, IconUser, IconCalendar, IconClock, IconScissors } from "@tabler/icons-react";
+import { IconArrowLeft, IconCheck, IconLoader2, IconUser, IconCalendar, IconScissors } from "@tabler/icons-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -126,8 +126,8 @@ export default function NewBookingPage() {
 
             toast.success("Booking created successfully!");
             router.push("/beauty/bookings"); // back to list
-        } catch (error: any) {
-            toast.error(error.message || "Failed to create booking.");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Failed to create booking.");
         } finally {
             setIsSubmitting(false);
         }

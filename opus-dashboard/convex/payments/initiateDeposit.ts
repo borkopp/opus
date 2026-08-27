@@ -16,8 +16,12 @@ export const initiateDeposit = action({
     },
     returns: v.object({ transactionId: v.string(), status: v.string() }),
     handler: async (ctx, args) => {
+        await ctx.runQuery(internal.auth.assertOrgRole, {
+            orgId: args.orgId,
+            role: "staff",
+        });
         const org = await ctx.runQuery(internal.orgs.getById, { orgId: args.orgId });
-        if (!org?.stripeAccountId) throw new ConvexError("Org has no payment account configured.");
+        if (!org?.braintreeMerchantAccountId) throw new ConvexError("Org has no payment account configured.");
 
         // Braintree uses decimal amounts, not minor units
         const amountDecimal = (args.amountMinorUnits / 100).toFixed(2);
@@ -26,7 +30,7 @@ export const initiateDeposit = action({
         const result = await gateway.transaction.sale({
             amount: amountDecimal,
             paymentMethodNonce: args.paymentMethodNonce,
-            merchantAccountId: org.stripeAccountId,
+            merchantAccountId: org.braintreeMerchantAccountId,
             orderId: args.bookingId,           // traceable reference
             options: {
                 submitForSettlement: true,        // charge immediately

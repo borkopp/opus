@@ -87,7 +87,7 @@ export const updatePreferences = mutation({
         if (!user || user.isDeleted) throw new ConvexError("User not found.");
         if (user.clerkId !== identity.subject) throw new ConvexError("Unauthorised");
 
-        const { opusUserId, ...updates } = args;
+        const updates = args;
         const patch: Record<string, unknown> = { updatedAt: Date.now() };
 
         if (updates.preferredCity !== undefined) patch.preferredCity = updates.preferredCity;

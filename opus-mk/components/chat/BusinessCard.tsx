@@ -7,8 +7,6 @@ export type Recommendation = {
   orgId: string;
   slug: string;
   reason: string;
-  venueType?: string;
-  cuisine?: string[];
   availabilityHint?: string;
   name?: string;
   logoUrl?: string;
@@ -101,22 +99,6 @@ export function BusinessCard({ rec }: { rec: Recommendation }) {
             />
           </div>
         </div>
-
-        {/* Venue type + cuisine chips */}
-        {(rec.venueType || rec.cuisine?.length) && (
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            {rec.venueType && (
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground capitalize">
-                {rec.venueType}
-              </span>
-            )}
-            {rec.cuisine?.slice(0, 3).map((c) => (
-              <span key={c} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground capitalize">
-                {c}
-              </span>
-            ))}
-          </div>
-        )}
 
         {/* Reason — only when there's actual descriptive text */}
         {rec.reason && (

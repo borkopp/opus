@@ -33,7 +33,7 @@ async function reverseGeocodeCity(lat: number, lng: number): Promise<string> {
       const res = await fetch(
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?types=place&language=en&limit=1&access_token=${MAPBOX_TOKEN}`,
       );
-      const data = await res.json() as { features?: Array<{ text?: string }> };
+      const data = await res.json() as { features?: { text?: string }[] };
       const city = data.features?.[0]?.text;
       if (city) return city;
     } catch {}

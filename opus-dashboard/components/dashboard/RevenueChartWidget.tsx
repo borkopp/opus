@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Bar, BarChart, XAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { motion } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 interface RevenueDataItem {
   day: string;
@@ -26,26 +27,26 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       y: 0,
       transition: {
         duration: 0.6,
-        ease: [0.22, 1, 0.36, 1] as number[],
+        ease: [0.22, 1, 0.36, 1],
         staggerChildren: 0.1
-      } as any
+      }
     }
-  };
+  } satisfies Variants;
 
   const itemVars = {
     hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as number[] }
+      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
     }
-  } as any;
+  } satisfies Variants;
 
   // Identify today
   const today = new Date().getDay();
   const daysMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const todayName = daysMap[today];
-  const todayIndex = revenueData?.findIndex((d: any) => d.day.startsWith(todayName));
+  const todayIndex = revenueData.findIndex((item) => item.day.startsWith(todayName));
 
   return (
     <motion.div
@@ -90,7 +91,7 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                 cursor={false}
                 content={({ active, payload }) => {
                   if (active && payload && payload.length > 0 && payload[0]?.value !== undefined) {
-                    const data = payload[0].payload;
+                    const data = payload[0].payload as RevenueDataItem;
                     return (
                       <div className="bg-white rounded-2xl p-4 shadow-2xl border border-black/5 flex flex-col items-center animate-in fade-in zoom-in duration-200 -mt-12">
                         <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest leading-none mb-1.5">
@@ -113,7 +114,7 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                 animationDuration={1500}
                 animationEasing="ease-out"
               >
-                {revenueData?.map((entry: any, index: number) => {
+                {revenueData.map((entry, index) => {
                   // Logic: Highlight if hovered, ELSE highlight if it's today AND nothing is hovered.
                   const isHighlighted = activeBar !== null ? activeBar === index : index === todayIndex;
 
@@ -121,7 +122,7 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                   // #2A2A2A is a neutral gray that stands out on #111
                   return (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`${entry.day}-${index}`}
                       fill={isHighlighted ? "#FF725C" : "#2A2A2A"}
                       style={{ cursor: 'pointer', transition: 'fill 0.2s ease' }}
                     />

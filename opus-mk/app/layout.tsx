@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: "OPUS — Discover & Book",
     template: "%s | OPUS",
   },
-  description: "Discover the best beauty, wellness, and hospitality businesses near you. Book instantly on opus.mk.",
+  description: "Discover beauty and wellness studios in Macedonia and book an appointment on opus.mk.",
 };
 
 export const viewport: Viewport = {

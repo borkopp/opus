@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
 
 // ─────────────────────────────────────────────────────
 // List all media for an org, ordered by type then sortOrder.
@@ -8,16 +9,24 @@ import { requireRole } from "./lib/auth";
 export const listByOrg = query({
     args: { orgId: v.id("orgs") },
     handler: async (ctx, args) => {
+        await requireRole(ctx, args.orgId, "staff");
         const media = await ctx.db
             .query("org_media")
-            .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+            .withIndex("by_org_active", (q) =>
+                q.eq("orgId", args.orgId).eq("isDeleted", false)
+            )
             .collect();
         return media.sort((a, b) => a.sortOrder - b.sortOrder);
     },
 });
 
-export const generateUploadUrl = mutation(async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
+export const generateUploadUrl = mutation({
+    args: {},
+    returns: v.string(),
+    handler: async (ctx) => {
+        await requireRole(ctx, undefined, "staff");
+        return await ctx.storage.generateUploadUrl();
+    },
 });
 
 // ─────────────────────────────────────────────────────
@@ -49,13 +58,32 @@ export const addMedia = mutation({
             throw new ConvexError("Must provide either a valid url or storageId");
         }
 
+        const now = Date.now();
+        if (args.type === "cover") {
+            const covers = await ctx.db
+                .query("org_media")
+                .withIndex("by_org_type_active", (q) =>
+                    q.eq("orgId", args.orgId).eq("type", "cover").eq("isDeleted", false)
+                )
+                .collect();
+            for (const cover of covers) {
+                await ctx.db.patch(cover._id, {
+                    isDeleted: true,
+                    deletedAt: now,
+                    updatedAt: now,
+                });
+            }
+        }
+
         const mediaId = await ctx.db.insert("org_media", {
             orgId: args.orgId,
             url: finalUrl,
             type: args.type,
             caption: args.caption,
             sortOrder: args.sortOrder,
-            uploadedAt: Date.now(),
+            isDeleted: false,
+            uploadedAt: now,
+            updatedAt: now,
         });
 
         await ctx.db.insert("audit_log", {
@@ -66,16 +94,18 @@ export const addMedia = mutation({
             resourceType: "org_media",
             resourceId: mediaId,
             after: { type: args.type, url: finalUrl },
-            createdAt: Date.now(),
+            createdAt: now,
         });
 
+        await ctx.runMutation(internal.listing.recomputeListingStatus, {
+            orgId: args.orgId,
+        });
         return mediaId;
     },
 });
 
 // ─────────────────────────────────────────────────────
-// Remove a media item (hard delete — media is replaceable,
-// not a business record requiring soft-delete audit trail).
+// Remove a media item using the same soft-delete policy as other org records.
 // ─────────────────────────────────────────────────────
 export const removeMedia = mutation({
     args: {
@@ -90,7 +120,12 @@ export const removeMedia = mutation({
             throw new ConvexError("Media not found.");
         }
 
-        await ctx.db.delete(args.mediaId);
+        const now = Date.now();
+        await ctx.db.patch(args.mediaId, {
+            isDeleted: true,
+            deletedAt: now,
+            updatedAt: now,
+        });
 
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
@@ -100,7 +135,11 @@ export const removeMedia = mutation({
             resourceType: "org_media",
             resourceId: args.mediaId,
             before: { type: media.type, url: media.url },
-            createdAt: Date.now(),
+            createdAt: now,
+        });
+
+        await ctx.runMutation(internal.listing.recomputeListingStatus, {
+            orgId: args.orgId,
         });
     },
 });
@@ -120,10 +159,20 @@ export const reorderMedia = mutation({
         const timestamp = Date.now();
         for (let i = 0; i < args.mediaIds.length; i++) {
             const item = await ctx.db.get(args.mediaIds[i]);
-            if (item && item.orgId === args.orgId && item.sortOrder !== i) {
-                await ctx.db.patch(args.mediaIds[i], { sortOrder: i });
+            if (item && item.orgId === args.orgId && !item.isDeleted && item.sortOrder !== i) {
+                await ctx.db.patch(args.mediaIds[i], { sortOrder: i, updatedAt: timestamp });
             }
         }
+
+        await ctx.db.insert("audit_log", {
+            orgId: args.orgId,
+            actorType: "staff",
+            action: "org_media.reordered",
+            resourceType: "org_media",
+            resourceId: args.orgId,
+            after: { mediaIds: args.mediaIds },
+            createdAt: timestamp,
+        });
         return null;
     },
 });

@@ -5,7 +5,6 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSessionId } from "@/hooks/use-session-id";
-import { useResolveCity } from "@/hooks/use-resolve-city";
 import { MessageStream, ChatMessage } from "@/components/chat/MessageStream";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { Recommendation } from "@/components/chat/BusinessCard";
@@ -15,10 +14,10 @@ const RATE_LIMIT_PER_SESSION = 30;
 const MAX_QUERY_LENGTH = 500;
 
 const SUGGESTIONS = [
-  { label: "Date night 🌙", query: "date night with my girlfriend tonight" },
+  { label: "Fresh nails 💅", query: "manicure available today" },
   { label: "Quick haircut 💈", query: "haircut available now" },
-  { label: "Relaxing spa 🧖", query: "couples spa this evening" },
-  { label: "Birthday treat 🎂", query: "birthday pampering today" },
+  { label: "Relaxing massage 🧖", query: "massage available this evening" },
+  { label: "Makeup appointment ✨", query: "makeup appointment today" },
 ];
 
 type SSEChunk =
@@ -43,12 +42,13 @@ function getDayPeriod(): { label: string; heroTail: string } {
 }
 
 interface Props {
+  city: string | null;
+  coords: { lat: number; lng: number } | null;
   onFirstMessage?: () => void;
 }
 
-export function MarketplaceChat({ onFirstMessage }: Props) {
+export function MarketplaceChat({ city, coords, onFirstMessage }: Props) {
   const sessionId = useSessionId();
-  const { city, coords } = useResolveCity();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -237,7 +237,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
                     ? "Session limit reached. Refresh to continue."
                     : !city
                       ? "Resolving location…"
-                      : "Ask anything — 'date night tonight'…"
+                      : "Ask for a beauty appointment…"
                 }
               />
               <div className="flex hidden md:flex gap-2 overflow-x-auto pt-3 no-scrollbar md:justify-center">
@@ -302,7 +302,7 @@ export function MarketplaceChat({ onFirstMessage }: Props) {
                     ? "Session limit reached. Refresh to continue."
                     : !city
                       ? "Resolving location…"
-                      : "Ask anything — 'date night tonight'…"
+                      : "Ask for a beauty appointment…"
                 }
               />
             </motion.div>

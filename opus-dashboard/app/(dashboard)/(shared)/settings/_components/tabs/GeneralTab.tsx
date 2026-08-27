@@ -1,16 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import { CircleAlert, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TabsContent } from "@/components/ui/tabs";
 import { DebouncedInput } from "@/components/ui/debounced-input";
-import { IconDeviceFloppy, IconAlertCircle } from "@tabler/icons-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
+import { SettingsCard } from "../SettingsCard";
 import {
   validTimezone,
   validLocale,
@@ -36,7 +38,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
     <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <IconAlertCircle size={13} className="shrink-0" />
+      <CircleAlert className="shrink-0" />
       {message}
     </p>
   );
@@ -89,8 +91,10 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
     try {
       await updateOrgSettings({ orgId, ...general, ...bookingRules });
       if (isMounted.current) toast.success("Settings saved");
-    } catch (e: any) {
-      if (isMounted.current) toast.error(e.message ?? "Failed to save settings.");
+    } catch (error) {
+      if (isMounted.current) {
+        toast.error(error instanceof Error ? error.message : "Failed to save settings.");
+      }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
@@ -104,12 +108,17 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
       value="general"
       className="m-0 focus-visible:outline-none focus-visible:ring-0"
     >
-      <div className="border-b pb-12 mb-12 last:border-b-0">
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium font-display tracking-tight mb-1">Display & <span className="serif-accent-inline text-2xl">Region</span></h2>
-          <p className="text-sm text-muted-foreground">Set your timezone, language, and currency for the platform.</p>
-        </div>
-        <div className="grid gap-8 p-6 border border-border/60 rounded-xl bg-background shadow-s dark:shadow-l">
+      <SettingsCard
+        title="Display & region"
+        description="Set the timezone, language, and currency used throughout your dashboard and customer experience."
+        contentClassName="grid gap-8"
+        footer={
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? "Saving…" : "Save changes"}
+          </Button>
+        }
+      >
           <div className="grid gap-2 max-w-4xl">
             <Label htmlFor="timezone">Timezone</Label>
             <DebouncedInput
@@ -123,7 +132,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                 setGeneral({ ...general, timezone: val });
                 clearError("timezone");
               }}
-              className={cn("bg-white", errors.timezone && "border-destructive")}
+              className={cn(errors.timezone && "border-destructive")}
             />
             <p className="text-xs text-muted-foreground">
               Use a city-based timezone, e.g. <span className="font-mono">Europe/London</span> or <span className="font-mono">America/New_York</span>.
@@ -147,7 +156,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                 setGeneral({ ...general, locale: val });
                 clearError("locale");
               }}
-              className={cn("bg-white", errors.locale && "border-destructive")}
+              className={cn(errors.locale && "border-destructive")}
             />
             <FieldError id="locale-error" message={errors.locale} />
           </div>
@@ -181,15 +190,15 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                     clearError("currency");
                   }}
                   className={cn(
-                    "p-6 rounded-2xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 group relative overflow-hidden",
+                    "group relative flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-5 transition-[background-color,border-color,transform,box-shadow] duration-150 active:scale-[0.98]",
                     general.currency === c.code
-                      ? "border-primary bg-primary/5 shadow-md scale-[1.02]"
-                      : "border-border bg-card hover:border-primary/30 hover:bg-muted/30",
+                      ? "border-accent bg-accent/10 shadow-sm"
+                      : "border-border/60 bg-background hover:border-accent/30 hover:bg-muted/30",
                     errors.currency && "border-destructive/50",
                   )}
                 >
                   {general.currency === c.code && (
-                    <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-accent text-[10px] text-accent-foreground">
                       ✓
                     </div>
                   )}
@@ -197,7 +206,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                     className={cn(
                       "text-3xl font-black font-display transition-colors",
                       general.currency === c.code
-                        ? "text-primary"
+                        ? "text-accent"
                         : "text-muted-foreground/40 group-hover:text-muted-foreground",
                     )}
                   >
@@ -212,15 +221,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
             </div>
             <FieldError id="currency-error" message={errors.currency} />
           </div>
-        </div>
-
-        <div className="mt-10 pt-6 flex">
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-full h-10 px-5 active:scale-[0.98] transition-transform">
-            <IconDeviceFloppy size={18} />
-            {isSaving ? "Saving…" : "Save Settings"}
-          </Button>
-        </div>
-      </div>
+      </SettingsCard>
     </TabsContent>
   );
 }

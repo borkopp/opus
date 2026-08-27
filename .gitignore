@@ -13,3 +13,12 @@ opus-mk-ios/**/*.xcuserstate
 .agents/
 .cursor/
 .claude/
+# design-sync (claude.ai/design)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+opus-dashboard/.ds-compiled.css
+opus-dashboard/dist/types/
+opus-dashboard/index.d.ts

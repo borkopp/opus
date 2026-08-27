@@ -6,6 +6,28 @@ import { action, internalAction, ActionCtx } from "../_generated/server";
 import { internal, api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 
+type ToolInput = Record<string, unknown>;
+type AvailabilitySlot = {
+  startAt: number;
+  availableStaffIds: Id<"staff_members">[];
+};
+
+function requiredString(input: ToolInput, key: string): string {
+  const value = input[key];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new ConvexError(`Missing or invalid ${key}`);
+  }
+  return value;
+}
+
+function requiredNumber(input: ToolInput, key: string): number {
+  const value = input[key];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new ConvexError(`Missing or invalid ${key}`);
+  }
+  return value;
+}
+
 // ── Tool definitions ────────────────────────────────────────────────────────
 
 const AI_TOOLS: Anthropic.Tool[] = [
@@ -170,7 +192,7 @@ async function dispatchTool(
   channel: "instagram" | "webchat",
   tool: Anthropic.ToolUseBlock
 ): Promise<string> {
-  const input = tool.input as Record<string, any>;
+  const input = tool.input as ToolInput;
 
   switch (tool.name) {
     case "list_services": {
@@ -180,21 +202,23 @@ async function dispatchTool(
     }
 
     case "check_availability": {
-      let slots: any[];
+      const serviceId = requiredString(input, "serviceId") as Id<"services">;
+      const date = requiredString(input, "date");
+      let slots: AvailabilitySlot[];
       try {
         slots = await ctx.runQuery(internal.slots.getAvailableSlotsForAI, {
           orgId,
-          serviceId: input.serviceId,
-          date: input.date,
+          serviceId,
+          date,
         });
       } catch {
         return "Invalid serviceId. Please call list_services first and use the exact serviceId value returned.";
       }
 
-      if (!slots.length) return `No available slots on ${input.date}.`;
+      if (!slots.length) return `No available slots on ${date}.`;
 
       // Return slots formatted for Claude — include startAt for create_booking
-      const formatted = slots.map((s: any) => {
+      const formatted = slots.map((s) => {
         const d = new Date(s.startAt);
         const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: ORG_TIMEZONE });
         const staffId = s.availableStaffIds[0];
@@ -204,27 +228,36 @@ async function dispatchTool(
     }
 
     case "create_booking": {
+      const customerName = requiredString(input, "customerName");
+      const customerPhone = requiredString(input, "customerPhone");
+      const staffId = requiredString(input, "staffId") as Id<"staff_members">;
+      const serviceId = requiredString(input, "serviceId") as Id<"services">;
+      const startAt = requiredNumber(input, "startAt");
+
       // Find or create customer
       const customerId = await ctx.runMutation(internal.customers.findOrCreateCustomerForAI, {
         orgId,
-        name: input.customerName,
-        phone: input.customerPhone,
+        name: customerName,
+        phone: customerPhone,
       });
 
       // Create the booking
-      let bookingId: any;
+      let bookingId: Id<"bookings">;
       try {
         bookingId = await ctx.runMutation(internal.bookings.createBookingForAI, {
           orgId,
-          staffId: input.staffId,
-          serviceId: input.serviceId,
+          staffId,
+          serviceId,
           customerId,
-          startAt: input.startAt,
+          startAt,
           conversationId,
           channel,
         });
-      } catch (e: any) {
-        return `Booking failed: ${e.message ?? "Invalid service or staff ID. Use exact IDs from list_services and check_availability."}`;
+      } catch (error: unknown) {
+        const message = error instanceof Error
+          ? error.message
+          : "Invalid service or staff ID. Use exact IDs from list_services and check_availability.";
+        return `Booking failed: ${message}`;
       }
 
       // Log the booking action in ai_messages
@@ -232,7 +265,7 @@ async function dispatchTool(
         orgId,
         conversationId,
         role: "assistant",
-        content: `Booking created for ${input.customerName}`,
+        content: `Booking created for ${customerName}`,
         actionType: "booking_created",
         actionReferenceId: bookingId,
       });
@@ -243,7 +276,7 @@ async function dispatchTool(
         bookingId,
       });
 
-      const d = new Date(input.startAt);
+      const d = new Date(startAt);
       const readableDate = d.toLocaleDateString("en-GB", {
         weekday: "long",
         day: "numeric",
@@ -252,13 +285,14 @@ async function dispatchTool(
       });
       const readableTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: ORG_TIMEZONE });
 
-      return `Booking confirmed for ${input.customerName} on ${readableDate} at ${readableTime}.`;
+      return `Booking confirmed for ${customerName} on ${readableDate} at ${readableTime}.`;
     }
 
     case "get_customer_bookings": {
+      const customerPhone = requiredString(input, "customerPhone");
       const bookings = await ctx.runQuery(internal.bookings.getCustomerBookingsForAI, {
         orgId,
-        customerPhone: input.customerPhone,
+        customerPhone,
       });
 
       if (!bookings.length) return "No upcoming bookings found for that phone number.";
@@ -326,10 +360,10 @@ export const processMessage = internalAction({
 
     // Build message history for Claude
     const messages: Anthropic.MessageParam[] = history
-      .filter((m: any) => m.role === "user" || m.role === "assistant")
-      .map((m: any) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
+      .filter((message) => message.role === "user" || message.role === "assistant")
+      .map((message) => ({
+        role: message.role as "user" | "assistant",
+        content: message.content,
       }));
     messages.push({ role: "user", content: args.userMessage });
 
@@ -382,7 +416,9 @@ export const processMessage = internalAction({
         messages.push({ role: "user", content: toolResults });
       } else {
         // end_turn — extract JSON response
-        const textBlock = response.content.find((b: any) => b.type === "text") as Anthropic.TextBlock | undefined;
+        const textBlock = response.content.find(
+          (block): block is Anthropic.TextBlock => block.type === "text",
+        );
         if (textBlock) {
           try {
             // Claude may wrap JSON in markdown code fences

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IconPlus, IconEdit, IconTrash, IconCheck, IconX, IconArrowUp, IconArrowDown, IconGripVertical } from "@tabler/icons-react";
+import { IconPlus, IconEdit, IconTrash, IconCheck, IconX, IconGripVertical } from "@tabler/icons-react";
+import { getErrorMessage } from "@/lib/file-validation";
 
 export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
     const categories = useQuery(api.serviceCategories.listCategories, { orgId });
@@ -57,8 +58,8 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
         if (window.confirm(`Are you sure you want to delete the category "${catName}"? Any services within it must be reassigned or deleted first.`)) {
             try {
                 await deleteCategory({ orgId, categoryId });
-            } catch (err: any) {
-                alert(err.message || "Failed to delete category");
+            } catch (error: unknown) {
+                alert(getErrorMessage(error, "Failed to delete category"));
             }
         }
     };

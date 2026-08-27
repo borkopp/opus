@@ -118,13 +118,11 @@ export default defineSchema({
     )),
 
     // ── opus.mk marketplace visibility ──
-    // NOTE: optional during migration — make required after running migrateListingStatus
-    listingStatus: v.optional(v.union(
+    listingStatus: v.union(
       v.literal("unpublished"),              // default — owner has not attempted to publish
-      v.literal("ready"),                    // all blocking conditions met, owner can publish
       v.literal("published"),               // live on opus.mk
       v.literal("suspended"),               // was published but a blocking condition broke
-    )),
+    ),
     publishedAt: v.optional(v.number()),     // timestamp of first publish
     featuredUntil: v.optional(v.number()),   // paid featured placement
 
@@ -132,9 +130,9 @@ export default defineSchema({
     reviewCount: v.number(),                 // default 0
     averageRating: v.number(),              // 0–5; stored as float (updated by cron)
 
-    // ── Stripe ──
-    stripeAccountId: v.optional(v.string()),
-    stripeCustomerId: v.optional(v.string()),
+    // ── Braintree ──
+    braintreeMerchantAccountId: v.optional(v.string()),
+    braintreeCustomerId: v.optional(v.string()),
 
     // ── Subscription ──
     plan: v.union(
@@ -149,10 +147,6 @@ export default defineSchema({
       v.literal("canceled"),
     ),
     trialEndsAt: v.optional(v.number()),
-
-    // ── Onboarding progress ──
-    onboardingStep: v.number(),              // 0–5, drives completion score UI
-    isOnboardingComplete: v.boolean(),
 
     // ── Scraper / external data ──
     // Set on orgs imported by the Skopje scraper pipeline.
@@ -189,8 +183,9 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_custom_domain", ["customDomain"])
-    .index("by_stripe_account", ["stripeAccountId"])
+    .index("by_braintree_merchant", ["braintreeMerchantAccountId"])
     .index("by_listing_status", ["listingStatus"])
+    .index("by_listing_status_deleted", ["listingStatus", "isDeleted"])
     .index("by_instagram_page_id", ["instagramPageId"])
     .index("by_city_listing", ["city", "listingStatus"])
     .index("by_source", ["source"])
@@ -218,10 +213,15 @@ export default defineSchema({
     ),
     caption: v.optional(v.string()),
     sortOrder: v.number(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
     uploadedAt: v.number(),
+    updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
-    .index("by_org_type", ["orgId", "type"]),
+    .index("by_org_type", ["orgId", "type"])
+    .index("by_org_active", ["orgId", "isDeleted"])
+    .index("by_org_type_active", ["orgId", "type", "isDeleted"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -326,6 +326,7 @@ export default defineSchema({
     phone: v.optional(v.string()),
     name: v.string(),
     avatarUrl: v.optional(v.string()),
+    activeOrgId: v.optional(v.id("orgs")),
 
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
@@ -403,7 +404,7 @@ export default defineSchema({
     ),
 
     // Payout config
-    stripeConnectedAccountId: v.optional(v.string()),
+    payoutAccountId: v.optional(v.string()),
     payoutSharePct: v.optional(v.number()),
 
     // No-show risk score
@@ -418,7 +419,8 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_user", ["userId"])
     .index("by_org_user", ["orgId", "userId"])
-    .index("by_org_role", ["orgId", "role"]),
+    .index("by_org_role", ["orgId", "role"])
+    .index("by_org_active", ["orgId", "isActive", "isDeleted"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -506,7 +508,9 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_category", ["orgId", "categoryId"])
     .index("by_org_active", ["orgId", "isActive"])
-    .index("by_org_opus", ["orgId", "isOpusVisible"]),
+    .index("by_org_opus", ["orgId", "isOpusVisible"])
+    .index("by_org_active_deleted", ["orgId", "isActive", "isDeleted"])
+    .index("by_org_visible_active", ["orgId", "isOpusVisible", "isActive", "isDeleted"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -523,12 +527,17 @@ export default defineSchema({
       endTime: v.string(),
     }))),
     isActive: v.boolean(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
     .index("by_staff", ["staffId"])
-    .index("by_staff_day", ["staffId", "dayOfWeek"]),
+    .index("by_staff_day", ["staffId", "dayOfWeek"])
+    .index("by_staff_day_active", ["staffId", "dayOfWeek", "isDeleted", "isActive"])
+    .index("by_org_active", ["orgId", "isActive", "isDeleted"])
+    .index("by_staff_active", ["staffId", "isActive", "isDeleted"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -545,10 +554,15 @@ export default defineSchema({
     startTime: v.optional(v.string()),
     endTime: v.optional(v.string()),
     note: v.optional(v.string()),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
     createdAt: v.number(),
+    updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
-    .index("by_staff_date", ["staffId", "date"]),
+    .index("by_staff_date", ["staffId", "date"])
+    .index("by_staff_date_active", ["staffId", "date", "isDeleted"])
+    .index("by_org_active", ["orgId", "isDeleted"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -634,8 +648,8 @@ export default defineSchema({
     bookingId: v.optional(v.id("bookings")),
     customerId: v.id("customers"),
 
-    stripePaymentIntentId: v.string(),
-    stripeClientSecret: v.string(),
+    providerTransactionId: v.string(),
+    providerClientToken: v.string(),
 
     amountMinorUnits: v.number(),
     currency: v.string(),
@@ -657,7 +671,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
-    .index("by_stripe_id", ["stripePaymentIntentId"])
+    .index("by_provider_transaction", ["providerTransactionId"])
     .index("by_booking", ["bookingId"]),
 
 
@@ -676,7 +690,7 @@ export default defineSchema({
       ),
       staffId: v.optional(v.id("staff_members")),
       sharePct: v.number(),
-      stripeAccountId: v.optional(v.string()),
+      payoutAddress: v.optional(v.string()),
     })),
 
     isActive: v.boolean(),
@@ -701,12 +715,12 @@ export default defineSchema({
       v.literal("platform"),
     ),
     staffId: v.optional(v.id("staff_members")),
-    stripeAccountId: v.string(),
+    payoutAddress: v.string(),
 
     amountMinorUnits: v.number(),
     currency: v.string(),
 
-    stripeTransferId: v.optional(v.string()),
+    providerTransferId: v.optional(v.string()),
     status: v.union(
       v.literal("pending"),
       v.literal("in_transit"),
@@ -724,7 +738,7 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_booking", ["bookingId"])
     .index("by_staff", ["staffId"])
-    .index("by_stripe_transfer", ["stripeTransferId"]),
+    .index("by_provider_transfer", ["providerTransferId"]),
 
 
   // ─────────────────────────────────────────────────────
@@ -936,6 +950,7 @@ export default defineSchema({
       v.literal("review_request"),
       v.literal("no_show_warning"),
       v.literal("gap_fill_offer"),
+      v.literal("staff_invite"),
     ),
 
     recipientAddress: v.string(),
@@ -1369,12 +1384,15 @@ export default defineSchema({
       v.literal("hospitality"),
     ),
     isPublished: v.boolean(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
 
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_entity", ["entityType", "entityId"])
     .index("by_org", ["orgId"])
+    .index("by_org_active", ["orgId", "isDeleted"])
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
       dimensions: 1536,

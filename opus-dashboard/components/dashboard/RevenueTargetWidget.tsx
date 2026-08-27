@@ -1,13 +1,11 @@
 "use client"
 
-import { Target } from "lucide-react"
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
 
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -55,7 +53,7 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
   return (
     <Card className="flex flex-col h-full bg-card rounded-[24px]">
       <CardHeader className="items-center">
-        <CardTitle className="text-xl font-semibold font-display text-primary flex items-center gap-2"> Today's Goal
+        <CardTitle className="text-xl font-semibold font-display text-primary flex items-center gap-2"> Today&apos;s Goal
         </CardTitle>
         <CardDescription>Are we on track today?</CardDescription>
       </CardHeader>

@@ -119,8 +119,8 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
             });
             if (results) setScanResults(results as ScanResult);
             toast.success("Scan completed");
-        } catch (e: any) {
-            toast.error(e.message || "Failed to scan");
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : "Failed to scan");
         } finally {
             setIsScanning(false);
         }

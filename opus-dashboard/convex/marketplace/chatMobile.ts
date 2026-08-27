@@ -231,7 +231,6 @@ function deriveAvailabilityHint(
   const closeToday = candidate.openingHoursToday?.close;
   const closeTomorrow = candidate.openingHoursTomorrow?.close;
   const openToday = candidate.openingHoursToday?.open;
-  const openTomorrow = candidate.openingHoursTomorrow?.open;
 
   if (timeIntentKind === "now") {
     if (candidate.isOpenNow) {

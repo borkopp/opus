@@ -10,9 +10,10 @@ import { IconSun, IconMoon } from "@tabler/icons-react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 import { useTheme } from "next-themes";
-import { industryRoutes, getNavLinks } from "@/lib/vertical-nav-config";
+import { getNavLinks } from "@/lib/vertical-nav-config";
+import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
 
 import {
     DropdownMenu,
@@ -24,7 +25,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useClerk } from "@clerk/nextjs";
-import { IconLogout, IconSettings, IconUser } from "@tabler/icons-react";
+import { IconLogout, IconSettings } from "@tabler/icons-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { isLoaded, isSignedIn, user } = useUser();
@@ -32,28 +34,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
 
     const profile = useQuery(api.users.getMyProfile);
 
     useEffect(() => {
-        setMounted(true);
         if (isLoaded && !isSignedIn) {
-            router.push("/login");
+            router.replace("/login");
         }
     }, [isLoaded, isSignedIn, router]);
+
+    useEffect(() => {
+        if (profile && !profile.orgId) {
+            router.replace("/onboarding");
+        }
+    }, [profile, router]);
 
     // ── Industry-based routing ──────────────────────────────
     useEffect(() => {
         if (!profile || !profile.industry) return;
 
-        const targetBase = industryRoutes[profile.industry];
-
-        // Unknown industry → fallback
-        if (!targetBase) {
-            router.push("/beauty");
-            return;
-        }
+        const targetBase = ACTIVE_DASHBOARD_PATH;
 
         // Bare dashboard root → redirect to vertical module
         if (pathname === "/") {
@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // Allow shared routes (settings, etc.)
-        const sharedPaths = ["/settings", "/ai-inbox", "/gap-optimizer"];
+        const sharedPaths = ["/settings", "/notifications"];
         if (sharedPaths.some((p) => pathname.startsWith(p))) return;
 
         // If in the wrong vertical module, redirect
@@ -79,13 +79,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
-    if (profile && !profile.orgId) {
-        router.push("/onboarding");
-        return null;
-    }
+    if (!isSignedIn) return null;
+
+    if (profile && !profile.orgId) return null;
 
     // ── Resolve nav links from vertical config ──────────────
-    const industry = profile?.industry ?? "beauty_wellness";
+    const industry = profile?.industry === ACTIVE_INDUSTRY ? profile.industry : ACTIVE_INDUSTRY;
     const { basePath: industryBase, links: primaryLinks } = getNavLinks(industry);
 
     return (
@@ -129,19 +128,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                             className="flex items-center justify-center h-10 w-10 rounded-full bg-secondary text-primary hover:bg-secondary/80 transition-colors border border-border/40 active:scale-[0.98]"
                         >
-                            {mounted && (theme === "dark" ? <IconSun className="h-5 w-5" /> : <IconMoon className="h-5 w-5" />)}
-                            {!mounted && <div className="h-5 w-5" />}
+                            <IconMoon className="h-5 w-5 dark:hidden" />
+                            <IconSun className="hidden h-5 w-5 dark:block" />
                         </button>
                         {profile?.orgId && <NotificationBell orgId={profile.orgId} />}
                         
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button className="outline-none">
-                                    <img
-                                        src={profile?.user?.avatarUrl || "https://ui-avatars.com/api/?name=User"}
-                                        className="h-10 w-10 flex-shrink-0 rounded-full border border-border/60 shadow-sm hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer"
-                                        alt="Avatar"
-                                    />
+                                    <Avatar className="h-10 w-10 border border-border/60 shadow-sm transition-all hover:ring-2 hover:ring-primary/20">
+                                        <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
+                                        <AvatarFallback>{(profile?.user?.name ?? user?.fullName ?? "U").charAt(0)}</AvatarFallback>
+                                    </Avatar>
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end" forceMount>

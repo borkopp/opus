@@ -2,13 +2,14 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import {
   startOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  subMonths,
 } from "date-fns";
 import { useMemo } from "react";
 import { toast } from "sonner";
@@ -16,14 +17,12 @@ import { formatPrice } from "@/components/ui/price";
 import { motion } from "framer-motion";
 
 // Widgets
-import { RevenueTargetWidget } from "@/components/dashboard/RevenueTargetWidget";
 import { GapOptimizerWidget } from "@/components/dashboard/GapOptimizerWidget";
 import { LiveScheduleWidget } from "@/components/dashboard/LiveScheduleWidget";
 import { RevenueChartWidget } from "@/components/dashboard/RevenueChartWidget";
 import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationWidget";
 import { CustomerInsightsWidget } from "@/components/dashboard/CustomerInsightsWidget";
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
-import { GreetingHeader } from "@/components/dashboard/GreetingHeader";
 import { ListingBanner } from "@/components/dashboard/ListingBanner";
 
 export default function DashboardHome() {
@@ -38,20 +37,8 @@ export default function DashboardHome() {
 
   const startOfCurrentMonthMs = startOfMonth(today).getTime();
   const endOfCurrentMonthMs = endOfMonth(today).getTime();
-  const startOfPreviousMonthMs = startOfMonth(subMonths(today, 1)).getTime();
-  const endOfPreviousMonthMs = endOfMonth(subMonths(today, 1)).getTime();
-
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
-
-  // Listing readiness — drives whether to show dashboard or onboarding banner
-  const listingReadiness = useQuery(
-    api.listing.getListingReadiness,
-    orgId ? { orgId } : "skip"
-  );
-
-  // True when listing is published (dashboard should show)
-  const isPublished = listingReadiness?.listingStatus === "published";
 
   // Mutations
   const checkIn = useMutation(api.bookings.checkInBooking);
@@ -65,34 +52,9 @@ export default function DashboardHome() {
     orgId ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs } : "skip",
   );
 
-  const upcomingBookings = useQuery(
-    api.dashboard.getUpcomingBookings,
-    orgId ? { orgId, startMs: today.getTime(), endMs: endOfTodayMs, limit: 3 } : "skip",
-  );
-
   const dailySchedule = useQuery(
     api.dashboard.getDailySchedule,
     orgId ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs } : "skip",
-  );
-
-  const weeklyComparison = useQuery(
-    api.dashboard.getWeeklyComparison,
-    orgId ? {
-      orgId,
-      thisWeekStartMs: startOfCurrentWeekMs,
-      thisWeekEndMs: endOfCurrentWeekMs,
-      lastWeekStartMs: startOfPreviousWeekMs,
-      lastWeekEndMs: endOfPreviousWeekMs,
-      thisMonthStartMs: startOfCurrentMonthMs,
-      thisMonthEndMs: endOfCurrentMonthMs,
-      lastMonthStartMs: startOfPreviousMonthMs,
-      lastMonthEndMs: endOfPreviousMonthMs,
-    } : "skip",
-  );
-
-  const bookingStats = useQuery(
-    api.dashboard.getBookingStats,
-    orgId ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs } : "skip",
   );
 
   const staffUtilisation = useQuery(
@@ -100,10 +62,6 @@ export default function DashboardHome() {
     orgId ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs } : "skip",
   );
 
-  const revenueByStaff = useQuery(
-    api.dashboard.getRevenueByStaff,
-    orgId ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs } : "skip",
-  );
   const customerInsights = useQuery(
     api.dashboard.getCustomerInsights,
     orgId ? { orgId, monthStartMs: startOfCurrentMonthMs, monthEndMs: endOfCurrentMonthMs } : "skip",
@@ -139,26 +97,11 @@ export default function DashboardHome() {
 
   if (!orgId) return null;
 
-  // ── If listing is NOT published, show ONLY the ListingBanner ──
-  if (!isPublished) {
-    return (
-      <div className="flex items-start justify-center min-h-full w-full pt-8 pb-12">
-        <div className="w-full max-w-4xl">
-          <ListingBanner orgId={orgId} />
-        </div>
-      </div>
-    );
-  }
-
-  // ── Dashboard loading state (only reached when published) ──
+  // ── Dashboard loading state ──
   if (
     dashboardMetrics === undefined ||
-    upcomingBookings === undefined ||
     dailySchedule === undefined ||
-    weeklyComparison === undefined ||
-    bookingStats === undefined ||
     staffUtilisation === undefined ||
-    revenueByStaff === undefined ||
     customerInsights === undefined ||
     topCustomers === undefined ||
     noShowRiskCustomers === undefined ||
@@ -176,7 +119,8 @@ export default function DashboardHome() {
   // Derived calculations for UI
   const formatMoney = (minorUnits: number) => formatPrice(minorUnits, orgSettingsData?.settings?.currency, orgSettingsData?.settings?.locale);
 
-  const groupedByStaff: Record<string, any[]> = {};
+  type DailyBooking = FunctionReturnType<typeof api.dashboard.getDailySchedule>[number];
+  const groupedByStaff: Record<string, DailyBooking[]> = {};
   dailySchedule.forEach((booking) => {
     if (!groupedByStaff[booking.staffName]) {
       groupedByStaff[booking.staffName] = [];
@@ -184,32 +128,27 @@ export default function DashboardHome() {
     groupedByStaff[booking.staffName].push(booking);
   });
 
-  const handleAction = async (action: any, bookingId: string, successMessage: string) => {
+  const handleCheckIn = async (bookingId: Id<"bookings">) => {
     try {
-      await action({ orgId, bookingId });
-      toast.success(successMessage);
-    } catch (error: any) {
-      toast.error(error.message || "Action failed");
+      await checkIn({ orgId, bookingId });
+      toast.success("Customer checked in");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Check-in failed");
     }
   };
 
-  const currentWeeekRevenue = weeklyComparison.week.current.revenue;
-  const previousWeekRevenue = weeklyComparison.week.previous.revenue;
-  const revenueGrowth = previousWeekRevenue > 0 ? ((currentWeeekRevenue - previousWeekRevenue) / previousWeekRevenue) * 100 : 0;
-
-  const staffChartData = revenueByStaff.map(s => ({ staffName: s.staffName, revenue: s.revenue / 100 }));
-
-  const nextBooking = upcomingBookings[0];
-
-  const totalBookedMins = staffUtilisation.reduce((sum, s) => sum + s.bookedMins, 0);
-  const totalAvailableMins = staffUtilisation.reduce((sum, s) => sum + s.availableMins, 0);
-  const utilisationPct = totalAvailableMins > 0 ? Math.round((totalBookedMins / totalAvailableMins) * 100) : 0;
+  const handleComplete = async (bookingId: Id<"bookings">) => {
+    try {
+      await complete({ orgId, bookingId });
+      toast.success("Booking completed");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Could not complete booking");
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-[1700px] mx-auto overflow-visible min-h-[calc(100vh-150px)]">
-      {/* Greeting Header */}
-      {/* <GreetingHeader profile={profile} /> */}
-
+      <ListingBanner orgId={orgId} />
       {/* ── Dashboard Grid ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -221,9 +160,8 @@ export default function DashboardHome() {
         <div className="md:col-span-2 h-full max-h-[500px] min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
-            handleAction={handleAction}
-            checkIn={checkIn}
-            complete={complete}
+            onCheckIn={handleCheckIn}
+            onComplete={handleComplete}
           />
         </div>
         <div className="md:col-span-1 h-full min-h-0">

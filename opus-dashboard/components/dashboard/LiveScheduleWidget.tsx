@@ -3,8 +3,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { CheckCircle, AlertCircle } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 
-export function LiveScheduleWidget({ groupedByStaff, handleAction, checkIn, complete }: { groupedByStaff: any, handleAction: any, checkIn: any, complete: any }) {
+type DailyBooking = FunctionReturnType<typeof api.dashboard.getDailySchedule>[number];
+
+export function LiveScheduleWidget({
+  groupedByStaff,
+  onCheckIn,
+  onComplete,
+}: {
+  groupedByStaff: Record<string, DailyBooking[]>;
+  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
+  onComplete: (bookingId: Id<"bookings">) => Promise<void>;
+}) {
   const staffMembers = Object.keys(groupedByStaff);
 
   // Flatten and sort by time to maintain a chronological view if needed, 
@@ -32,35 +45,35 @@ export function LiveScheduleWidget({ groupedByStaff, handleAction, checkIn, comp
           </div>
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 pb-4">
-            {allBookings.map((b: any) => (
-              <div key={b._id} className="flex items-center justify-between p-3 rounded-[20px] bg-popover border border-border/30 hover:bg-secondary/40 transition-all duration-300 group relative">
+            {allBookings.map((booking) => (
+              <div key={booking._id} className="flex items-center justify-between p-3 rounded-[20px] bg-popover border border-border/30 hover:bg-secondary/40 transition-all duration-300 group relative">
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-card border border-border/40 shrink-0 shadow-sm micro-label text-accent">
-                    {format(new Date(b.startAt), "HH:mm")}
+                    {format(new Date(booking.startAt), "HH:mm")}
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-semibold text-sm text-primary truncate">{b.customerName}</span>
+                    <span className="font-semibold text-sm text-primary truncate">{booking.customerName}</span>
                     <span className="micro-label text-muted-foreground/80 truncate flex items-center gap-1.5">
-                      {b.serviceName} <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 shrink-0" /> {b.staffName}
+                      {booking.serviceName} <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 shrink-0" /> {booking.staffName}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 pr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {b.status === "confirmed" && (
-                    <Button variant="outline" className="rounded-full h-7 px-3 text-[10px] font-bold border-primary/10 hover:bg-primary hover:text-white hover:border-primary transition-all" onClick={() => handleAction(checkIn, b._id, "Customer checked in")}>
+                  {booking.status === "confirmed" && (
+                    <Button variant="outline" className="rounded-full h-7 px-3 text-[10px] font-bold border-primary/10 hover:bg-primary hover:text-white hover:border-primary transition-all" onClick={() => void onCheckIn(booking._id)}>
                       In
                     </Button>
                   )}
-                  {(b.status === "confirmed" || b.status === "checked_in") && (
-                    <Button variant="terracotta" className="rounded-full h-7 px-3 text-[10px] font-bold shadow-sm" onClick={() => handleAction(complete, b._id, "Booking completed")}>
+                  {(booking.status === "confirmed" || booking.status === "checked_in") && (
+                    <Button variant="terracotta" className="rounded-full h-7 px-3 text-[10px] font-bold shadow-sm" onClick={() => void onComplete(booking._id)}>
                       Done
                     </Button>
                   )}
                 </div>
 
                 {/* Show status icon if completed always */}
-                {b.status === "completed" && (
+                {booking.status === "completed" && (
                   <div className="flex items-center justify-center w-7 h-7 text-green-600 bg-green-500/10 rounded-full border border-green-500/20">
                     <CheckCircle className="w-3.5 h-3.5" />
                   </div>

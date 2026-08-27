@@ -4,7 +4,7 @@ import { v } from "convex/values";
 export const getPaymentIntent = internalQuery({
     args: {
         id: v.optional(v.id("payment_intents")),
-        providerTransactionId: v.optional(v.string()), // This maps to stripePaymentIntentId
+        providerTransactionId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         if (args.id) {
@@ -14,8 +14,8 @@ export const getPaymentIntent = internalQuery({
         if (args.providerTransactionId) {
             return await ctx.db
                 .query("payment_intents")
-                .withIndex("by_stripe_id", (q) =>
-                    q.eq("stripePaymentIntentId", args.providerTransactionId!)
+                .withIndex("by_provider_transaction", (q) =>
+                    q.eq("providerTransactionId", args.providerTransactionId!)
                 )
                 .first();
         }

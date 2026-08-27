@@ -60,7 +60,7 @@ No test framework is configured — there are no test commands.
 |-------|-----------|
 | Backend / DB | Convex (real-time DB, mutations, queries, actions, scheduled jobs) |
 | Frontend | Next.js 16 (App Router, PPR) |
-| Auth | Clerk (`ctx.auth` in Convex; `staff_members` table is the permission boundary) |
+| Auth | Better Auth email OTP through Convex (`staff_members` is the permission boundary) |
 | Payments | Stripe Connect (split payouts) |
 | AI | Anthropic Claude (`claude-sonnet-4-6`) |
 | Messaging | Twilio (SMS/WhatsApp), Resend (email) |
@@ -79,7 +79,7 @@ proxy.ts (app/proxy.ts in opus-dashboard)
       │  (by_slug index for subdomains, by_custom_domain for custom domains)
       ▼
 Next.js App Router
-  ├── (dashboard)/   — authenticated owner/staff UI (Clerk)
+  ├── (dashboard)/   — authenticated owner/staff UI (Better Auth)
   ├── (booking)/     — public white-labeled booking flow
   └── api/           — Stripe webhooks, AI webhooks
       │
@@ -93,7 +93,7 @@ Convex Backend (convex/)
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Stripe, Clerk, Twilio, Resend, Anthropic
+External APIs: Resend plus optional/deferred Stripe, Twilio, and Anthropic integrations
 ```
 
 ---
@@ -123,9 +123,9 @@ ctx.db.query("bookings").collect()
 
 ## Authentication & Authorisation
 
-- Clerk handles auth. Always derive `orgId` from `ctx.auth` — never accept it as a client-supplied argument.
+- Better Auth handles passwordless email OTP and exposes identity through `ctx.auth`. Always derive user identity and `orgId` server-side — never accept either as a client-supplied argument.
 - `staff_members` table is the permission boundary (roles: `owner`, `manager`, `staff`).
-- Three distinct user types: `users` (platform), `staff_members` (org employees), `customers` (booking subjects — not Clerk users). Never mix them.
+- Three distinct user types: `users` (platform), `staff_members` (org employees), `customers` (booking subjects — not authenticated accounts). Never mix them.
 
 ---
 

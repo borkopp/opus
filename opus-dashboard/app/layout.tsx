@@ -2,17 +2,42 @@ import type { Metadata } from "next";
 // import { Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
-import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
-import { Syne, DM_Sans, DM_Mono, Outfit, Playfair_Display } from 'next/font/google'
+import {
+  Syne,
+  DM_Sans,
+  DM_Mono,
+  Outfit,
+  Playfair_Display,
+} from "next/font/google";
 
-const syne = Syne({ subsets: ['latin'], weight: ['500', '600'], variable: '--font-syne' })
-const dmSans = DM_Sans({ subsets: ['latin'], weight: ['300', '400', '500'], variable: '--font-dm-sans' })
-const dmMono = DM_Mono({ subsets: ['latin'], weight: ['400'], variable: '--font-dm-mono' })
-const outfit = Outfit({ subsets: ['latin'], weight: ['300', '400', '500', '600', '700'], variable: '--font-outfit' })
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['500', '600'], style: 'italic', variable: '--font-playfair' })
-
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  variable: "--font-syne",
+});
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  variable: "--font-dm-sans",
+});
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-dm-mono",
+});
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-outfit",
+});
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: "italic",
+  variable: "--font-playfair",
+});
 
 // const geistMono = Geist_Mono({
 //   variable: "--font-geist-mono",
@@ -29,9 +54,9 @@ export const metadata: Metadata = {
     default: "OPUS",
     template: "%s | OPUS",
   },
-  description: "The intelligent operating system for modern service businesses. Unified scheduling, AI-powered automation, and business intelligence.",
+  description: "Manage appointments for your beauty studio with OPUS.",
   icons: {
-    icon: "/convex.svg",
+    icon: "/opus-mark.svg",
   },
 };
 
@@ -45,13 +70,16 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${outfit.variable} ${playfair.variable} font-sans antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <ClerkProvider dynamic>
-            <ConvexClientProvider>
-              {children}
-              <Toaster richColors position="bottom-right" />
-            </ConvexClientProvider>
-          </ClerkProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ConvexClientProvider>
+            {children}
+            <Toaster richColors position="bottom-right" />
+          </ConvexClientProvider>
         </ThemeProvider>
       </body>
     </html>

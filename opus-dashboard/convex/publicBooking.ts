@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { computeSlotsForDate } from "./slots";
 import { isActiveIndustry } from "./lib/productScope";
+import { ensureCurrentOpusUser } from "./lib/opusUserAuth";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC BOOKING — opus.mk
@@ -13,7 +14,7 @@ import { isActiveIndustry } from "./lib/productScope";
 // and then creates a booking — essentially combining customer upsert + booking
 // creation in a single atomic transaction.
 //
-// No Clerk/auth check required — the org must be published.
+// Guests remain supported. Signed-in identity is derived server-side.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const createPublicBooking = mutation({
@@ -30,9 +31,13 @@ export const createPublicBooking = mutation({
             v.literal("cash"),
             v.literal("online"),     // Coming soon; rejected for now
         ),
-        opusUserId: v.optional(v.id("opus_users")),
     },
     handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        const opusUserId = identity
+            ? (await ensureCurrentOpusUser(ctx))._id
+            : undefined;
+
         // ── Validate org is published ──
         const org = await ctx.db.get(args.orgId);
         if (
@@ -144,6 +149,14 @@ export const createPublicBooking = mutation({
             .withIndex("by_org_phone", (q) => q.eq("orgId", args.orgId).eq("phone", normalizedPhone))
             .first();
 
+        if (
+            opusUserId &&
+            customer?.opusUserId &&
+            customer.opusUserId !== opusUserId
+        ) {
+            throw new ConvexError("This phone number is linked to another account.");
+        }
+
         let customerId;
         if (customer && !customer.isDeleted) {
             customerId = customer._id;
@@ -159,7 +172,7 @@ export const createPublicBooking = mutation({
                 name: args.customerName,
                 phone: normalizedPhone,
                 email: args.customerEmail,
-                opusUserId: args.opusUserId,
+                opusUserId,
                 totalVisits: 0,
                 totalSpendMinorUnits: 0,
                 noShowCount: 0,
@@ -174,8 +187,8 @@ export const createPublicBooking = mutation({
         }
 
         // If opusUserId is provided, also link it to existing customer
-        if (args.opusUserId && customer && !customer.opusUserId) {
-            await ctx.db.patch(customerId, { opusUserId: args.opusUserId, updatedAt: Date.now() });
+        if (opusUserId && customer && !customer.opusUserId) {
+            await ctx.db.patch(customerId, { opusUserId, updatedAt: Date.now() });
         }
 
         // ── Surge pricing snapshot ──
@@ -205,7 +218,7 @@ export const createPublicBooking = mutation({
             staffId: args.staffId,
             serviceId: args.serviceId,
             customerId,
-            opusUserId: args.opusUserId,
+            opusUserId,
             startAt: args.startAt,
             endAt,
             priceMinorUnits,
@@ -214,7 +227,7 @@ export const createPublicBooking = mutation({
             surgeMultiplierPct,
             customerNote: args.customerNote,
             status: "confirmed",  // Cash payment = instant confirmation
-            source: args.opusUserId ? "opus_web" : "web",
+            source: opusUserId ? "opus_web" : "web",
             isDeleted: false,
             createdAt: Date.now(),
             updatedAt: Date.now(),
@@ -224,7 +237,7 @@ export const createPublicBooking = mutation({
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
             actorType: "user",
-            actorId: "opus.mk",
+            actorId: opusUserId ?? "opus.mk",
             action: "booking.created",
             resourceType: "bookings",
             resourceId: bookingId,
@@ -234,7 +247,7 @@ export const createPublicBooking = mutation({
                 startAt: args.startAt,
                 priceMinorUnits,
                 status: "confirmed",
-                source: "web",
+                source: opusUserId ? "opus_web" : "web",
                 paymentMethod: args.paymentMethod,
             },
             createdAt: Date.now(),

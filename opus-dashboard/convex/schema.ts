@@ -321,7 +321,8 @@ export default defineSchema({
   // One user can belong to multiple orgs via staff_members.
   // ─────────────────────────────────────────────────────
   users: defineTable({
-    clerkId: v.optional(v.string()),
+    authUserId: v.optional(v.string()),
+    clerkId: v.optional(v.string()), // Legacy Clerk subject; retained during account relinking.
     email: v.string(),
     phone: v.optional(v.string()),
     name: v.string(),
@@ -334,6 +335,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_email", ["email"])
+    .index("by_auth_user_id", ["authUserId"])
     .index("by_clerk_id", ["clerkId"]),
 
 
@@ -341,11 +343,12 @@ export default defineSchema({
   // OPUS USERS
   // Platform-wide end-consumer identity (opus.mk visitors).
   // These are NOT business owners or staff.
-  // Uses the same Clerk instance — differentiated by public metadata.
+  // Uses the shared Better Auth deployment — differentiated by app context.
   // Scoped globally (no orgId) — they span multiple businesses.
   // ─────────────────────────────────────────────────────
   opus_users: defineTable({
-    clerkId: v.optional(v.string()),         // Clerk subject ID after sign-in
+    authUserId: v.optional(v.string()),      // Better Auth user ID after sign-in
+    clerkId: v.optional(v.string()),         // Legacy Clerk subject retained during relinking
     email: v.string(),
     phone: v.optional(v.string()),           // E.164
     name: v.string(),
@@ -379,6 +382,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_email", ["email"])
+    .index("by_auth_user_id", ["authUserId"])
     .index("by_clerk_id", ["clerkId"]),
 
 
@@ -1295,9 +1299,10 @@ export default defineSchema({
 
   // ─────────────────────────────────────────────────────
   // MARKETPLACE CONVERSATIONS
-  // One row per chat session on opus.mk. Anonymous-friendly:
-  // identified by client-generated sessionId until sign-in promotes
-  // the row to an opus_users row via linkSessionToOpusUser.
+  // One row per chat session on opus.mk. Anonymous-friendly and identified by
+  // a client-generated sessionId. opusUserId is retained for a future
+  // server-verifiable account-linking flow; it is not set from a bearer session
+  // ID alone.
   // ─────────────────────────────────────────────────────
   marketplace_conversations: defineTable({
     sessionId: v.string(),                        // client-generated UUID (localStorage)

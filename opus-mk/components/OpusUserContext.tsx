@@ -1,10 +1,10 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
-import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { authClient } from "@/lib/auth-client";
 import { useEffect, useState } from "react";
 
 // ─────────────────────────────────────────────────────
@@ -45,58 +45,66 @@ export function useOpusUser() {
 }
 
 export function OpusUserProvider({ children }: { children: ReactNode }) {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isAuthenticated: hasAuthSession, isLoading: isAuthLoading } =
+    useConvexAuth();
+  const { data: session, isPending: isSessionLoading } =
+    authClient.useSession();
+  const authUserId = session?.user.id ?? null;
   const getOrCreate = useMutation(api.opusUsers.getOrCreate);
-  const linkSession = useMutation(api.marketplace.conversations.linkSessionToOpusUser);
-  const [synced, setSynced] = useState(false);
-  const [syncedUserId, setSyncedUserId] = useState<Id<"opus_users"> | null>(null);
+  const [syncedAccount, setSyncedAccount] = useState<{
+    authUserId: string;
+    opusUserId: Id<"opus_users">;
+  } | null>(null);
 
   // Upsert opus_users record on sign-in
   useEffect(() => {
-    if (!isLoaded || !isSignedIn || !user || synced) return;
+    if (
+      isAuthLoading ||
+      isSessionLoading ||
+      !hasAuthSession ||
+      !authUserId ||
+      syncedAccount?.authUserId === authUserId
+    ) {
+      return;
+    }
 
-    getOrCreate({
-      clerkId: user.id,
-      email: user.primaryEmailAddress?.emailAddress ?? "",
-      name: user.fullName ?? user.firstName ?? "User",
-      phone: user.primaryPhoneNumber?.phoneNumber,
-      avatarUrl: user.imageUrl,
-    })
+    let cancelled = false;
+
+    getOrCreate({})
       .then((id) => {
-        setSyncedUserId(id);
-        setSynced(true);
-        // Link any in-progress marketplace chat session to this user
-        const sessionId =
-          typeof window !== "undefined"
-            ? localStorage.getItem("opus_chat_session")
-            : null;
-        if (sessionId) {
-          linkSession({ sessionId, opusUserId: id }).catch(() => {});
-        }
+        if (cancelled) return;
+        setSyncedAccount({ authUserId, opusUserId: id });
       })
       .catch(console.error);
-  }, [isLoaded, isSignedIn, user, synced, getOrCreate, linkSession]);
 
-  // Reset on sign-out
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      setSynced(false);
-      setSyncedUserId(null);
-    }
-  }, [isLoaded, isSignedIn]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    authUserId,
+    getOrCreate,
+    hasAuthSession,
+    isAuthLoading,
+    isSessionLoading,
+    syncedAccount?.authUserId,
+  ]);
 
   // Query the opus_users record once synced
   const opusUser = useQuery(
-    api.opusUsers.getByClerkId,
-    isSignedIn && user ? { clerkId: user.id } : "skip"
+    api.opusUsers.getCurrent,
+    hasAuthSession && authUserId ? {} : "skip",
   );
 
-  const isLoading = !isLoaded || (isSignedIn && !synced);
+  const isSynced = syncedAccount?.authUserId === authUserId;
+  const isLoading =
+    isAuthLoading ||
+    isSessionLoading ||
+    (hasAuthSession && (!isSynced || opusUser === undefined));
 
   const value: OpusUserContextValue = {
     isLoading,
-    isAuthenticated: !!isSignedIn && synced && !!opusUser,
-    opusUserId: opusUser?._id ?? syncedUserId,
+    isAuthenticated: hasAuthSession && isSynced && !!opusUser,
+    opusUserId: opusUser?._id ?? (isSynced ? syncedAccount.opusUserId : null),
     opusUser: opusUser
       ? {
           _id: opusUser._id,

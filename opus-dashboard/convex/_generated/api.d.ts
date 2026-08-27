@@ -18,6 +18,7 @@ import type * as auditLog from "../auditLog.js";
 import type * as auth from "../auth.js";
 import type * as availability from "../availability.js";
 import type * as availabilityOverrides from "../availabilityOverrides.js";
+import type * as betterAuth from "../betterAuth.js";
 import type * as bookings from "../bookings.js";
 import type * as crons from "../crons.js";
 import type * as customers from "../customers.js";
@@ -30,9 +31,11 @@ import type * as hospitality_onboarding from "../hospitality/onboarding.js";
 import type * as hospitality_reservationSettings from "../hospitality/reservationSettings.js";
 import type * as hospitality_reservations from "../hospitality/reservations.js";
 import type * as hospitality_tables from "../hospitality/tables.js";
+import type * as http from "../http.js";
 import type * as lib_activation from "../lib/activation.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_braintree from "../lib/braintree.js";
+import type * as lib_opusUserAuth from "../lib/opusUserAuth.js";
 import type * as lib_productScope from "../lib/productScope.js";
 import type * as lib_publicProfile from "../lib/publicProfile.js";
 import type * as listing from "../listing.js";
@@ -92,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   availability: typeof availability;
   availabilityOverrides: typeof availabilityOverrides;
+  betterAuth: typeof betterAuth;
   bookings: typeof bookings;
   crons: typeof crons;
   customers: typeof customers;
@@ -104,9 +108,11 @@ declare const fullApi: ApiFromModules<{
   "hospitality/reservationSettings": typeof hospitality_reservationSettings;
   "hospitality/reservations": typeof hospitality_reservations;
   "hospitality/tables": typeof hospitality_tables;
+  http: typeof http;
   "lib/activation": typeof lib_activation;
   "lib/auth": typeof lib_auth;
   "lib/braintree": typeof lib_braintree;
+  "lib/opusUserAuth": typeof lib_opusUserAuth;
   "lib/productScope": typeof lib_productScope;
   "lib/publicProfile": typeof lib_publicProfile;
   listing: typeof listing;
@@ -176,4 +182,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
+};

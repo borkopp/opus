@@ -59,7 +59,7 @@ export const listMessages = query({
   },
 });
 
-// Used by the public webchat API route — no Clerk auth, but verifies org ownership via conversation
+// Used by the public webchat API route — no end-user auth, but verifies org ownership via conversation
 export const listMessagesForWebchat = query({
   args: {
     orgId: v.id("orgs"),

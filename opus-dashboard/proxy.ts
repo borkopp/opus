@@ -1,16 +1,31 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { getSessionCookie } from "better-auth/cookies";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-const isProtectedRoute = createRouteMatcher(["/server"]);
+export default function proxy(request: NextRequest) {
+  // This is an optimistic navigation guard only. Every protected Convex
+  // function still derives identity and tenant membership server-side.
+  if (!getSessionCookie(request)) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set(
+      "callbackUrl",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
+    return NextResponse.redirect(loginUrl);
+  }
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) await auth.protect();
-});
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
+    "/",
+    "/beauty/:path*",
+    "/settings/:path*",
+    "/notifications/:path*",
+    "/onboarding/:path*",
+    "/ai-inbox/:path*",
+    "/gap-optimizer/:path*",
+    "/hospitality/:path*",
   ],
 };

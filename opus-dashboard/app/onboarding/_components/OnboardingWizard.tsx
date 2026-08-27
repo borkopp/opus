@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { InputHTMLAttributes } from "react";
-import { useUser } from "@clerk/nextjs";
 import type { FunctionReturnType } from "convex/server";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -978,8 +977,11 @@ function ReviewStep({
 export function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isLoaded, isSignedIn } = useUser();
-  const profile = useQuery(api.users.getMyProfile);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const profile = useQuery(
+    api.users.getMyProfile,
+    isAuthenticated ? {} : "skip",
+  );
   const state = useQuery(api.activation.getState, profile?.orgId ? {} : "skip");
   const preview = useQuery(
     api.activation.getPreview,
@@ -999,15 +1001,10 @@ export function OnboardingWizard() {
   const saveStorefront = useMutation(api.activation.saveStorefront);
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) router.replace("/login");
-  }, [isLoaded, isSignedIn, router]);
+    if (!isLoading && !isAuthenticated) router.replace("/login");
+  }, [isAuthenticated, isLoading, router]);
 
-  if (
-    !isLoaded ||
-    !isSignedIn ||
-    profile === undefined ||
-    (profile?.orgId && !state)
-  ) {
+  if (isLoading || !isAuthenticated || !profile || (profile?.orgId && !state)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner className="size-8" />

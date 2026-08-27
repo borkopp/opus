@@ -2,7 +2,7 @@
 //
 // All public functions require adminKey matching process.env.ADMIN_API_KEY.
 // The standalone review app (opus-scraper-admin/) calls these directly via
-// ConvexHttpClient using the deployment URL — no Clerk session required.
+// ConvexHttpClient using the deployment URL — no user session required.
 
 import { ConvexError } from "convex/values";
 import { v } from "convex/values";

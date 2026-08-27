@@ -25,7 +25,7 @@ Each business that signs up gets their own branded experience — custom subdoma
 | Frontend | Next.js 16 (App Router) with PPR (Partial Prerendering) |
 | Mobile | React Native + Expo EAS |
 | Payments | Stripe Connect (split payouts), Stripe Treasury (future) |
-| Auth | Clerk |
+| Auth | Better Auth email OTP through Convex |
 | AI | Anthropic Claude (`claude-sonnet-4-6`) via the Anthropic SDK |
 | Voice AI | Vapi or Retell AI (future) |
 | Messaging | Twilio (SMS + WhatsApp), Resend (email) |
@@ -150,10 +150,10 @@ await ctx.db.insert("audit_log", {
 
 ## Authentication & Authorisation
 
-- Auth is handled by **Clerk**. The Convex `ctx.auth` object carries the authenticated user identity.
+- Auth is handled by **Better Auth** with passwordless email OTP. The Convex `ctx.auth` object carries the authenticated user identity.
 - Always resolve `orgId` from the authenticated session — never accept it as a raw user-supplied argument to mutations.
 - The `staff_members` table is the permission boundary. A user's role (`owner`, `manager`, `staff`) is org-scoped and must be checked before any sensitive mutation.
-- Customers are **not** platform users. They do not have Clerk accounts. Never mix up the `users`, `staff_members`, and `customers` tables.
+- Customers are **not** platform users. They do not have authenticated accounts. Never mix up the `users`, `staff_members`, and `customers` tables.
 
 ```typescript
 // Resolve orgId safely — never trust client-supplied orgId

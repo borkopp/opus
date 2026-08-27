@@ -1,25 +1,28 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { useEffect, useRef } from "react";
 import { api } from "@/convex/_generated/api";
 
 export function SyncUser() {
-    const { isLoaded, isSignedIn, user } = useUser();
-    const ensureUser = useMutation(api.users.ensureUser);
-    const syncedUserIdRef = useRef<string | null>(null);
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const ensureUser = useMutation(api.users.ensureUser);
+  const hasSyncedRef = useRef(false);
 
-    useEffect(() => {
-        if (!isLoaded || !isSignedIn || !user?.id) return;
-        if (syncedUserIdRef.current === user.id) return;
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      hasSyncedRef.current = false;
+      return;
+    }
+    if (hasSyncedRef.current) return;
 
-        syncedUserIdRef.current = user.id;
-        void ensureUser().catch((error: unknown) => {
-            syncedUserIdRef.current = null;
-            console.error("Failed to synchronize the signed-in user", error);
-        });
-    }, [ensureUser, isLoaded, isSignedIn, user?.id]);
+    hasSyncedRef.current = true;
+    void ensureUser().catch((error: unknown) => {
+      hasSyncedRef.current = false;
+      console.error("Failed to synchronize the signed-in user", error);
+    });
+  }, [ensureUser, isAuthenticated, isLoading]);
 
-    return null;
+  return null;
 }

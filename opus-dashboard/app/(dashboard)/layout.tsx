@@ -1,8 +1,7 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { Logo } from "@/components/sidebar";
@@ -24,24 +23,26 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useClerk } from "@clerk/nextjs";
 import { IconLogout, IconSettings } from "@tabler/icons-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { authClient } from "@/lib/auth-client";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { isLoaded, isSignedIn, user } = useUser();
-    const { signOut } = useClerk();
+    const { isAuthenticated, isLoading } = useConvexAuth();
     const router = useRouter();
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
 
-    const profile = useQuery(api.users.getMyProfile);
+    const profile = useQuery(
+        api.users.getMyProfile,
+        isAuthenticated ? {} : "skip",
+    );
 
     useEffect(() => {
-        if (isLoaded && !isSignedIn) {
+        if (!isLoading && !isAuthenticated) {
             router.replace("/login");
         }
-    }, [isLoaded, isSignedIn, router]);
+    }, [isAuthenticated, isLoading, router]);
 
     useEffect(() => {
         if (profile && !profile.orgId) {
@@ -71,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
     }, [profile, pathname, router]);
 
-    if (!isLoaded || profile === undefined) {
+    if (isLoading || (isAuthenticated && !profile)) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -79,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
-    if (!isSignedIn) return null;
+    if (!isAuthenticated) return null;
 
     if (profile && !profile.orgId) return null;
 
@@ -138,16 +139,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <button className="outline-none">
                                     <Avatar className="h-10 w-10 border border-border/60 shadow-sm transition-all hover:ring-2 hover:ring-primary/20">
                                         <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
-                                        <AvatarFallback>{(profile?.user?.name ?? user?.fullName ?? "U").charAt(0)}</AvatarFallback>
+                                        <AvatarFallback>{(profile?.user?.name ?? "U").charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-56" align="end" forceMount>
                                 <DropdownMenuLabel className="font-normal">
                                     <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium leading-none">{profile?.user?.name || user?.fullName}</p>
+                                        <p className="text-sm font-medium leading-none">{profile?.user?.name}</p>
                                         <p className="text-xs leading-none text-muted-foreground">
-                                            {user?.primaryEmailAddress?.emailAddress}
+                                            {profile?.user?.email}
                                         </p>
                                     </div>
                                 </DropdownMenuLabel>
@@ -159,7 +160,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:bg-destructive/10">
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        void authClient.signOut().then(() => router.replace("/login"));
+                                    }}
+                                    className="text-destructive focus:bg-destructive/10"
+                                >
                                     <IconLogout className="mr-2 h-4 w-4" />
                                     <span>Log out</span>
                                 </DropdownMenuItem>

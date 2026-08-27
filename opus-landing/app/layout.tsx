@@ -26,6 +26,7 @@ export const metadata: Metadata = {
   title: "OPUS - Термини за студија за убавина",
   description:
     "OPUS им помага на малите студија за убавина во Македонија да управуваат со термини и да ги пополнат празните места во календарот.",
+  icons: { icon: "/opus-mark.svg" },
 };
 
 export default function RootLayout({

@@ -1,7 +1,7 @@
 "use client";
 
-import { useUser, RedirectToSignIn } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { HeaderAuth } from "@/components/HeaderAuth";
@@ -20,7 +20,8 @@ import { formatPrice } from "@/lib/format";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   IconArrowLeft,
   IconCalendarEvent,
@@ -31,33 +32,67 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 
+type MarketplaceBooking = FunctionReturnType<
+  typeof api.opusUsers.getMyBookings
+>[number];
+
 // ── Status badge styling ──
 function statusConfig(status: string) {
   switch (status) {
     case "confirmed":
-      return { label: "Confirmed", variant: "default" as const, className: "bg-success/10 text-success border-success/20" };
+      return {
+        label: "Confirmed",
+        variant: "default" as const,
+        className: "bg-success/10 text-success border-success/20",
+      };
     case "completed":
-      return { label: "Completed", variant: "default" as const, className: "bg-primary/10 text-primary border-primary/20" };
+      return {
+        label: "Completed",
+        variant: "default" as const,
+        className: "bg-primary/10 text-primary border-primary/20",
+      };
     case "cancelled":
-      return { label: "Cancelled", variant: "default" as const, className: "bg-destructive/10 text-destructive border-destructive/20" };
+      return {
+        label: "Cancelled",
+        variant: "default" as const,
+        className: "bg-destructive/10 text-destructive border-destructive/20",
+      };
     case "no_show":
-      return { label: "No Show", variant: "default" as const, className: "bg-destructive/10 text-destructive border-destructive/20" };
+      return {
+        label: "No Show",
+        variant: "default" as const,
+        className: "bg-destructive/10 text-destructive border-destructive/20",
+      };
     case "pending_payment":
-      return { label: "Pending", variant: "default" as const, className: "bg-rating/10 text-rating border-rating/20" };
+      return {
+        label: "Pending",
+        variant: "default" as const,
+        className: "bg-rating/10 text-rating border-rating/20",
+      };
     case "checked_in":
-      return { label: "Checked In", variant: "default" as const, className: "bg-success/10 text-success border-success/20" };
+      return {
+        label: "Checked In",
+        variant: "default" as const,
+        className: "bg-success/10 text-success border-success/20",
+      };
     default:
-      return { label: status, variant: "default" as const, className: "bg-secondary text-muted-foreground" };
+      return {
+        label: status,
+        variant: "default" as const,
+        className: "bg-secondary text-muted-foreground",
+      };
   }
 }
 
 export default function MyBookingsPage() {
-  const { isLoaded, isSignedIn, user } = useUser();
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const router = useRouter();
 
-  // Must be signed in to view bookings
-  if (isLoaded && !isSignedIn) {
-    return <RedirectToSignIn />;
-  }
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/sign-in?callbackUrl=%2Fmy-bookings");
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,22 +114,23 @@ export default function MyBookingsPage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 pt-6 pb-28 md:pb-32">
-        {!isLoaded ? (
+        {isLoading || !isAuthenticated ? (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-28 rounded-2xl" />
             ))}
           </div>
         ) : (
-          <BookingsList clerkId={user!.id} />
+          <BookingsList />
         )}
       </div>
     </div>
   );
 }
 
-function BookingsList({ clerkId }: { clerkId: string }) {
-  const bookings = useQuery(api.opusUsers.getMyBookings, { clerkId });
+function BookingsList() {
+  const [referenceTime] = useState(Date.now);
+  const bookings = useQuery(api.opusUsers.getMyBookings, {});
 
   if (bookings === undefined) {
     return (
@@ -127,12 +163,17 @@ function BookingsList({ clerkId }: { clerkId: string }) {
   }
 
   // Split into upcoming and past
-  const now = Date.now();
   const upcoming = bookings.filter(
-    (b: any) => b.startAt > now && b.status !== "cancelled" && b.status !== "no_show"
+    (booking) =>
+      booking.startAt > referenceTime &&
+      booking.status !== "cancelled" &&
+      booking.status !== "no_show",
   );
   const past = bookings.filter(
-    (b: any) => b.startAt <= now || b.status === "cancelled" || b.status === "no_show"
+    (booking) =>
+      booking.startAt <= referenceTime ||
+      booking.status === "cancelled" ||
+      booking.status === "no_show",
   );
 
   return (
@@ -143,7 +184,7 @@ function BookingsList({ clerkId }: { clerkId: string }) {
             Upcoming
           </h2>
           <div className="space-y-3">
-            {upcoming.map((booking: any) => (
+            {upcoming.map((booking) => (
               <BookingCard key={booking._id} booking={booking} isUpcoming />
             ))}
           </div>
@@ -156,7 +197,7 @@ function BookingsList({ clerkId }: { clerkId: string }) {
             Past
           </h2>
           <div className="space-y-3">
-            {past.map((booking: any) => (
+            {past.map((booking) => (
               <BookingCard key={booking._id} booking={booking} />
             ))}
           </div>
@@ -170,24 +211,7 @@ function BookingCard({
   booking,
   isUpcoming,
 }: {
-  booking: {
-    _id: string;
-    orgId: string;
-    customerId: string;
-    opusUserId: string;
-    startAt: number;
-    endAt: number;
-    status: string;
-    priceMinorUnits: number;
-    currency: string;
-    orgName: string;
-    orgSlug: string;
-    orgLogoUrl?: string;
-    serviceName: string;
-    serviceDurationMins: number;
-    staffName: string;
-    hasReview: boolean;
-  };
+  booking: MarketplaceBooking;
   isUpcoming?: boolean;
 }) {
   const status = statusConfig(booking.status);
@@ -232,7 +256,9 @@ function BookingCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <Link href={`/${booking.orgSlug}`} className="min-w-0">
-              <p className="text-sm font-semibold truncate">{booking.serviceName}</p>
+              <p className="text-sm font-semibold truncate">
+                {booking.serviceName}
+              </p>
               <p className="text-xs text-muted-foreground truncate mt-0.5">
                 {booking.orgName}
               </p>
@@ -264,7 +290,10 @@ function BookingCard({
           {isCompleted && (
             <div className="mt-3">
               {canReview && !justReviewed ? (
-                <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+                <Dialog
+                  open={reviewDialogOpen}
+                  onOpenChange={setReviewDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-rating/10 text-rating border border-rating/20 hover:bg-rating/20 transition-colors">
                       <IconStarFilled size={12} aria-hidden="true" />
@@ -273,12 +302,11 @@ function BookingCard({
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="sr-only">Leave a Review</DialogTitle>
+                      <DialogTitle className="sr-only">
+                        Leave a Review
+                      </DialogTitle>
                     </DialogHeader>
                     <ReviewForm
-                      orgId={booking.orgId as Id<"orgs">}
-                      opusUserId={booking.opusUserId as Id<"opus_users">}
-                      customerId={booking.customerId as Id<"customers">}
                       bookingId={booking._id as Id<"bookings">}
                       businessName={booking.orgName}
                       serviceName={booking.serviceName}
@@ -289,7 +317,7 @@ function BookingCard({
                     />
                   </DialogContent>
                 </Dialog>
-              ) : (booking.hasReview || justReviewed) ? (
+              ) : booking.hasReview || justReviewed ? (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-success/10 text-success border border-success/20">
                   <IconCircleCheck size={12} aria-hidden="true" />
                   Reviewed

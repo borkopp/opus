@@ -96,7 +96,7 @@ export default function BookingPage() {
   const [confirmation, setConfirmation] = useState<any | null>(null);
 
   // ── Opus user context (pre-fill when signed in) ──
-  const { isAuthenticated, opusUserId, opusUser } = useOpusUser();
+  const { isAuthenticated, opusUser } = useOpusUser();
   const [hasPreFilled, setHasPreFilled] = useState(false);
 
   useEffect(() => {
@@ -201,7 +201,6 @@ export default function BookingPage() {
         customerEmail: customerEmail.trim() || undefined,
         customerNote: customerNote.trim() || undefined,
         paymentMethod: "cash",
-        ...(opusUserId ? { opusUserId } : {}),
       });
 
       setConfirmation(result);

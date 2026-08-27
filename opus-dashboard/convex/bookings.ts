@@ -875,7 +875,7 @@ export const listBookingsByCustomer = query({
   },
 });
 
-// Internal variant used by the AI action — no Clerk auth, accepts ai_webchat source
+// Internal variant used by the AI action — no end-user auth, accepts ai_webchat source
 export const createBookingForAI = internalMutation({
   args: {
     orgId: v.id("orgs"),

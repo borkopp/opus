@@ -10,23 +10,30 @@ export const ensureUser = mutation({
             throw new ConvexError("Unauthenticated");
         }
 
-        const { subject: clerkId, email, name, pictureUrl, phoneNumber } = identity;
+        const authUserId = identity.subject;
+        const email = identity.email?.trim().toLowerCase();
+        if (!email) {
+            throw new ConvexError("Authenticated account has no verified email");
+        }
+        const name = identity.name?.trim() || email.split("@")[0] || "OPUS user";
+        const { pictureUrl, phoneNumber } = identity;
 
         const existingUser = await ctx.db
             .query("users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+            .withIndex("by_auth_user_id", (q) => q.eq("authUserId", authUserId))
             .first();
 
         if (existingUser) {
+            if (existingUser.isDeleted) {
+                throw new ConvexError("Account unavailable");
+            }
             if (
                 existingUser.email !== email ||
-                existingUser.name !== name ||
                 existingUser.avatarUrl !== pictureUrl ||
                 existingUser.phone !== phoneNumber
             ) {
                 await ctx.db.patch(existingUser._id, {
-                    email: email ?? "",
-                    name: name ?? "Unknown User",
+                    email,
                     avatarUrl: pictureUrl,
                     phone: phoneNumber,
                     updatedAt: Date.now(),
@@ -35,10 +42,40 @@ export const ensureUser = mutation({
             return existingUser._id;
         }
 
+        const emailMatches = await ctx.db
+            .query("users")
+            .withIndex("by_email", (q) => q.eq("email", email))
+            .collect();
+        const activeEmailMatches = emailMatches.filter((user) => !user.isDeleted);
+
+        if (activeEmailMatches.length > 1) {
+            throw new ConvexError("Multiple accounts use this email");
+        }
+
+        const legacyUser = activeEmailMatches[0];
+        if (legacyUser) {
+            if (legacyUser.authUserId && legacyUser.authUserId !== authUserId) {
+                throw new ConvexError("Account email is already linked");
+            }
+
+            await ctx.db.patch(legacyUser._id, {
+                authUserId,
+                email,
+                avatarUrl: pictureUrl,
+                phone: phoneNumber,
+                updatedAt: Date.now(),
+            });
+            return legacyUser._id;
+        }
+
+        if (emailMatches.some((user) => user.isDeleted)) {
+            throw new ConvexError("Account unavailable");
+        }
+
         return await ctx.db.insert("users", {
-            clerkId,
-            email: email ?? "",
-            name: name ?? "Unknown User",
+            authUserId,
+            email,
+            name,
             avatarUrl: pictureUrl,
             phone: phoneNumber,
             isDeleted: false,
@@ -70,7 +107,7 @@ export const getMyProfile = query({
 
         const user = await ctx.db
             .query("users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+            .withIndex("by_auth_user_id", (q) => q.eq("authUserId", identity.subject))
             .first();
 
         if (!user || user.isDeleted) {

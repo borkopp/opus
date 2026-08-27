@@ -1,27 +1,21 @@
-import { SignIn } from "@clerk/nextjs";
+import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
 
-export default function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const callbackUrl =
+    typeof params.callbackUrl === "string" ? params.callbackUrl : undefined;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <SignIn
-        fallbackRedirectUrl="/"
-        signUpUrl="/sign-up"
-        appearance={{
-          elements: {
-            rootBox: "mx-auto",
-            card: "shadow-none border border-border/40 rounded-2xl bg-card",
-            headerTitle: "font-display text-foreground",
-            headerSubtitle: "text-muted-foreground",
-            socialButtonsBlockButton:
-              "rounded-xl border-border/40 hover:bg-secondary/50 transition-colors",
-            formFieldInput:
-              "rounded-xl border-border/40 bg-background focus:ring-2 focus:ring-primary/20 focus:border-primary/40",
-            formButtonPrimary:
-              "bg-cta text-cta-foreground hover:bg-cta/90 rounded-xl font-semibold",
-            footerActionLink: "text-primary hover:text-primary/80",
-          },
-        }}
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <EmailOtpForm
+        title="Welcome back"
+        description="Enter your email and we will send a one-time code for your OPUS bookings."
+        callbackUrl={callbackUrl}
       />
-    </div>
+    </main>
   );
 }

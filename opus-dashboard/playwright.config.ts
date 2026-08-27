@@ -1,7 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-const hasClerkCredentials = Boolean(
-  process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-);
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -25,7 +22,4 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  globalSetup: hasClerkCredentials
-    ? "./tests/e2e/global.setup.ts"
-    : undefined,
 });

@@ -73,7 +73,7 @@ export const findOrCreateCustomer = mutation({
     },
 });
 
-// Internal variant used by the AI action (no Clerk auth required)
+// Internal variant used by the AI action (no end-user auth required)
 export const findOrCreateCustomerForAI = internalMutation({
     args: {
         orgId: v.id("orgs"),

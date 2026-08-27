@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireRole } from "./lib/auth";
+import { requireCurrentOpusUser } from "./lib/opusUserAuth";
 import { internal } from "./_generated/api";
 
 // ─────────────────────────────────────────────────────
@@ -14,23 +15,16 @@ import { internal } from "./_generated/api";
 // ─── Create a review ─────────────────────────────────
 export const create = mutation({
     args: {
-        orgId: v.id("orgs"),
-        opusUserId: v.id("opus_users"),
-        customerId: v.id("customers"),
         bookingId: v.optional(v.id("bookings")),
         reservationId: v.optional(v.id("reservations")),
         rating: v.number(),                  // 1–5
         body: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) throw new ConvexError("Unauthenticated");
-
-        // Verify the opus user matches the authenticated session
-        const opusUser = await ctx.db.get(args.opusUserId);
-        if (!opusUser || opusUser.isDeleted || opusUser.clerkId !== identity.subject) {
-            throw new ConvexError("Unauthorised");
-        }
+        // Identity and ownership are derived server-side; no client-supplied
+        // opusUserId, orgId, or customerId is trusted.
+        const { user: opusUser } = await requireCurrentOpusUser(ctx);
+        const opusUserId = opusUser._id;
 
         // Validate rating range
         if (!Number.isInteger(args.rating) || args.rating < 1 || args.rating > 5) {
@@ -38,21 +32,28 @@ export const create = mutation({
         }
 
         // Require at least one of bookingId or reservationId
-        if (!args.bookingId && !args.reservationId) {
+        if (
+            (!args.bookingId && !args.reservationId) ||
+            (args.bookingId && args.reservationId)
+        ) {
             throw new ConvexError("A review must be linked to a completed booking or reservation.");
         }
 
-        // Verify the referenced booking/reservation is completed and belongs to this customer
+        let orgId: Id<"orgs">;
+        let customerId: Id<"customers">;
+
+        // Verify the referenced booking/reservation belongs to this account.
         if (args.bookingId) {
             const booking = await ctx.db.get(args.bookingId);
             if (
                 !booking ||
-                booking.orgId !== args.orgId ||
-                booking.customerId !== args.customerId ||
+                booking.opusUserId !== opusUserId ||
                 booking.status !== "completed"
             ) {
                 throw new ConvexError("Can only review a completed booking.");
             }
+            orgId = booking.orgId;
+            customerId = booking.customerId;
 
             // One review per booking
             const existing = await ctx.db
@@ -62,22 +63,25 @@ export const create = mutation({
             if (existing && !existing.isDeleted) {
                 throw new ConvexError("A review for this booking already exists.");
             }
-        }
-
-        if (args.reservationId) {
-            const reservation = await ctx.db.get(args.reservationId);
+        } else {
+            const reservationId = args.reservationId;
+            if (!reservationId) {
+                throw new ConvexError("A review target is required.");
+            }
+            const reservation = await ctx.db.get(reservationId);
             if (
                 !reservation ||
-                reservation.orgId !== args.orgId ||
-                reservation.customerId !== args.customerId ||
+                reservation.opusUserId !== opusUserId ||
                 reservation.status !== "completed"
             ) {
                 throw new ConvexError("Can only review a completed reservation.");
             }
+            orgId = reservation.orgId;
+            customerId = reservation.customerId;
 
             const existing = await ctx.db
                 .query("reviews")
-                .withIndex("by_reservation", (q) => q.eq("reservationId", args.reservationId))
+                .withIndex("by_reservation", (q) => q.eq("reservationId", reservationId))
                 .first();
             if (existing && !existing.isDeleted) {
                 throw new ConvexError("A review for this reservation already exists.");
@@ -87,9 +91,9 @@ export const create = mutation({
         const now = Date.now();
 
         const reviewId = await ctx.db.insert("reviews", {
-            orgId: args.orgId,
-            opusUserId: args.opusUserId,
-            customerId: args.customerId,
+            orgId,
+            opusUserId,
+            customerId,
             bookingId: args.bookingId,
             reservationId: args.reservationId,
             rating: args.rating,
@@ -102,12 +106,12 @@ export const create = mutation({
         });
 
         // Update the org's aggregate rating
-        await updateOrgRatingAggregate(ctx, args.orgId);
+        await updateOrgRatingAggregate(ctx, orgId);
 
         await ctx.db.insert("audit_log", {
-            orgId: args.orgId,
+            orgId,
             actorType: "opus_user",
-            actorId: args.opusUserId,
+            actorId: opusUserId,
             action: "review.created",
             resourceType: "reviews",
             resourceId: reviewId,
@@ -118,7 +122,7 @@ export const create = mutation({
         // Refresh the org's reputation embedding — new review changes the snippet
         await ctx.scheduler.runAfter(0, internal.marketplace.embeddings.embedEntity, {
             entityType: "reputation",
-            entityId: args.orgId,
+            entityId: orgId,
         });
 
         return reviewId;

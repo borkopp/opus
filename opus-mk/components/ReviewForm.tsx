@@ -16,9 +16,6 @@ import { motion, AnimatePresence } from "framer-motion";
 // ─────────────────────────────────────────────────────
 
 interface ReviewFormProps {
-  orgId: Id<"orgs">;
-  opusUserId: Id<"opus_users">;
-  customerId: Id<"customers">;
   bookingId: Id<"bookings">;
   businessName: string;
   serviceName: string;
@@ -26,9 +23,6 @@ interface ReviewFormProps {
 }
 
 export function ReviewForm({
-  orgId,
-  opusUserId,
-  customerId,
   bookingId,
   businessName,
   serviceName,
@@ -53,17 +47,16 @@ export function ReviewForm({
     setIsSubmitting(true);
     try {
       await createReview({
-        orgId,
-        opusUserId,
-        customerId,
         bookingId,
         rating,
         body: body.trim() || undefined,
       });
       toast.success("Review submitted! Thank you for your feedback.");
       onSuccess();
-    } catch (error: any) {
-      toast.error(error.data || error.message || "Failed to submit review.");
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to submit review.";
+      toast.error(message);
     }
     setIsSubmitting(false);
   };
@@ -82,7 +75,11 @@ export function ReviewForm({
       </div>
 
       {/* Star Rating */}
-      <div className="flex items-center gap-1 mb-2" role="radiogroup" aria-label="Rating">
+      <div
+        className="flex items-center gap-1 mb-2"
+        role="radiogroup"
+        aria-label="Rating"
+      >
         {[1, 2, 3, 4, 5].map((star) => (
           <motion.button
             key={star}

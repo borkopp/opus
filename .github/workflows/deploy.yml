@@ -15,7 +15,7 @@ jobs:
     name: Dashboard quality gate
     runs-on: ubuntu-latest
     env:
-      HAS_E2E_CREDENTIALS: ${{ secrets.E2E_CLERK_USER_EMAIL != '' && secrets.CLERK_SECRET_KEY != '' }}
+      HAS_E2E_CREDENTIALS: ${{ secrets.E2E_BETTER_AUTH_EMAIL != '' && secrets.E2E_BETTER_AUTH_OTP != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,7 +40,6 @@ jobs:
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
           NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
         run: npm run build
       - name: Install Playwright browser
@@ -51,10 +50,10 @@ jobs:
         if: env.HAS_E2E_CREDENTIALS == 'true'
         working-directory: opus-dashboard
         env:
-          E2E_CLERK_USER_EMAIL: ${{ secrets.E2E_CLERK_USER_EMAIL }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          E2E_BETTER_AUTH_EMAIL: ${{ secrets.E2E_BETTER_AUTH_EMAIL }}
+          E2E_BETTER_AUTH_OTP: ${{ secrets.E2E_BETTER_AUTH_OTP }}
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
         run: npm run test:e2e
 
   quality-consumers:
@@ -127,7 +126,6 @@ jobs:
           build-args: |
             NEXT_PUBLIC_CONVEX_URL=${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
             NEXT_PUBLIC_CONVEX_SITE_URL=${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
             NEXT_PUBLIC_ROOT_DOMAIN=${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
 
   build-mk:

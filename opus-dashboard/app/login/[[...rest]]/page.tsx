@@ -1,10 +1,22 @@
 import { AuthLayout } from "@/components/login";
-import { SignIn } from "@clerk/nextjs";
+import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
 
-export default function Login() {
-    return (
-        <AuthLayout>
-            <SignIn path="/login" fallbackRedirectUrl="/onboarding" signUpUrl="/signup" />
-        </AuthLayout>
-    );
+export default async function Login({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const callbackUrl =
+    typeof params.callbackUrl === "string" ? params.callbackUrl : undefined;
+
+  return (
+    <AuthLayout>
+      <EmailOtpForm
+        title="Welcome back"
+        description="Use your studio email. We will send a one-time code—no password to remember."
+        callbackUrl={callbackUrl}
+      />
+    </AuthLayout>
+  );
 }

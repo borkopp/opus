@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "./logo";
+import { cn } from "@/lib/utils";
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -426,13 +427,12 @@ const ChevronDownIcon = (props: React.SVGProps<SVGSVGElement>) => {
 
 const LogoIcon = ({ className }: { className: string }) => {
   return (
-    <Image
-      src="https://assets.aceternity.com/logo.png"
-      alt="Logo"
-      width={66}
-      height={65}
-      className={className}
-    />
+    <span className={cn("inline-flex items-center justify-center rounded-[0.38em] bg-current/10", className)} aria-label="OPUS">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="size-[65%] fill-none stroke-current" strokeWidth="2.8" strokeLinecap="round">
+        <path d="M9.2 5.2a7 7 0 1 0 0 13.6" />
+        <path d="M14.8 5.2a7 7 0 1 1 0 13.6" />
+      </svg>
+    </span>
   );
 };
 

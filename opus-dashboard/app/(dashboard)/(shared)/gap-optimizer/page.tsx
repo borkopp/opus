@@ -1,21 +1,23 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
 import { GapOptimizerHeader } from "./_components/GapOptimizerHeader";
 import { GapList } from "./_components/GapList";
 import { redirect } from "next/navigation";
 import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 
 function DormantGapOptimizerPage() {
-    const { isLoaded } = useUser();
-    const profile = useQuery(api.users.getMyProfile);
+    const { isAuthenticated, isLoading } = useConvexAuth();
+    const profile = useQuery(
+        api.users.getMyProfile,
+        isAuthenticated ? {} : "skip",
+    );
     const orgId = profile?.orgId;
 
     const openGaps = useQuery(api.ai.gapOptimizerHelpers.getOpenGapsForOrg, orgId ? { orgId } : "skip");
 
-    if (!isLoaded || profile === undefined || openGaps === undefined) {
+    if (isLoading || profile === undefined || openGaps === undefined) {
         return (
             <div className="flex h-[400px] w-full items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />

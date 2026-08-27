@@ -1,76 +1,41 @@
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import {
+    ensureCurrentOpusUser,
+    getCurrentOpusUser,
+    requireCurrentOpusUser,
+} from "./lib/opusUserAuth";
 
 // ─────────────────────────────────────────────────────
 // opus_users — platform-wide end-consumer identity
 // Used by opus.mk visitors. NOT business owners / staff.
+// Identity is derived server-side from ctx.auth (Better Auth); legacy clerkId
+// data is retained only for one-time email-based account relinking.
 // ─────────────────────────────────────────────────────
 
 // ─── Upsert: create or return existing opus user ─────
-// Called on sign-in or at booking time when creating via opus.mk.
+// Called on sign-in or at booking time when creating via opus.mk. All identity
+// and profile fields come from ctx.auth.
 export const getOrCreate = mutation({
-    args: {
-        clerkId: v.string(),
-        email: v.string(),
-        name: v.string(),
-        phone: v.optional(v.string()),
-        avatarUrl: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        // Look up existing user by Clerk ID
-        const existing = await ctx.db
-            .query("opus_users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-            .first();
-
-        if (existing && !existing.isDeleted) {
-            // Update profile fields that may have changed in Clerk
-            await ctx.db.patch(existing._id, {
-                email: args.email,
-                name: args.name,
-                phone: args.phone ?? existing.phone,
-                avatarUrl: args.avatarUrl ?? existing.avatarUrl,
-                updatedAt: Date.now(),
-            });
-            return existing._id;
-        }
-
-        // Create new opus_user
-        const userId = await ctx.db.insert("opus_users", {
-            clerkId: args.clerkId,
-            email: args.email,
-            name: args.name,
-            phone: args.phone,
-            avatarUrl: args.avatarUrl,
-            opusPoints: 0,
-            tier: "bronze",
-            marketingOptIn: false,
-            isDeleted: false,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-        });
-
-        return userId;
+    args: {},
+    handler: async (ctx) => {
+        const user = await ensureCurrentOpusUser(ctx);
+        return user._id;
     },
 });
 
-// ─── Get by Clerk ID ─────────────────────────────────
-export const getByClerkId = query({
-    args: { clerkId: v.string() },
-    handler: async (ctx, args) => {
-        const user = await ctx.db
-            .query("opus_users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-            .first();
-        if (!user || user.isDeleted) return null;
-        return user;
+// ─── Get current signed-in consumer ─────────────────
+export const getCurrent = query({
+    args: {},
+    handler: async (ctx) => {
+        const current = await getCurrentOpusUser(ctx);
+        return current?.user ?? null;
     },
 });
 
 // ─── Update preferences ──────────────────────────────
 export const updatePreferences = mutation({
     args: {
-        opusUserId: v.id("opus_users"),
         preferredCity: v.optional(v.string()),
         preferredChannel: v.optional(v.union(
             v.literal("whatsapp"),
@@ -80,37 +45,24 @@ export const updatePreferences = mutation({
         marketingOptIn: v.optional(v.boolean()),
     },
     handler: async (ctx, args) => {
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) throw new ConvexError("Unauthenticated");
-
-        const user = await ctx.db.get(args.opusUserId);
-        if (!user || user.isDeleted) throw new ConvexError("User not found.");
-        if (user.clerkId !== identity.subject) throw new ConvexError("Unauthorised");
-
-        const updates = args;
+        const { user } = await requireCurrentOpusUser(ctx);
         const patch: Record<string, unknown> = { updatedAt: Date.now() };
 
-        if (updates.preferredCity !== undefined) patch.preferredCity = updates.preferredCity;
-        if (updates.preferredChannel !== undefined) patch.preferredChannel = updates.preferredChannel;
-        if (updates.marketingOptIn !== undefined) patch.marketingOptIn = updates.marketingOptIn;
+        if (args.preferredCity !== undefined) patch.preferredCity = args.preferredCity;
+        if (args.preferredChannel !== undefined) patch.preferredChannel = args.preferredChannel;
+        if (args.marketingOptIn !== undefined) patch.marketingOptIn = args.marketingOptIn;
 
-        await ctx.db.patch(args.opusUserId, patch);
+        await ctx.db.patch(user._id, patch);
     },
 });
 
 // ─── Get my bookings (for opus.mk "My Bookings" page) ──
 export const getMyBookings = query({
-    args: {
-        clerkId: v.string(),
-    },
-    handler: async (ctx, args) => {
-        // Look up the opus_users record
-        const opusUser = await ctx.db
-            .query("opus_users")
-            .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
-            .first();
-
-        if (!opusUser || opusUser.isDeleted) return [];
+    args: {},
+    handler: async (ctx) => {
+        const current = await getCurrentOpusUser(ctx);
+        if (!current) return [];
+        const opusUser = current.user;
 
         // Get all bookings for this opus user
         const bookings = await ctx.db

@@ -74,7 +74,7 @@ export function ListingBanner({ orgId }: { orgId: Id<"orgs"> }) {
             <CardDescription>
               {readiness.listingStatus === "suspended"
                 ? "Repair the missing requirement and the engine will restore your listing."
-                : "Your dashboard remains available while you finish the storefront."}
+                : "Your dashboard remains available while you finish the booking setup."}
             </CardDescription>
           </div>
         </div>

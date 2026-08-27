@@ -6,7 +6,7 @@ This file provides context, rules, and conventions for AI coding assistants (Cur
 
 ## Product Scope Authority
 
-Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard currently serves beauty appointment businesses in Macedonia only. Hospitality, payments, autonomous AI features, international expansion, and native clients are dormant or deferred; preserve their foundations but do not expose or expand them without explicit user authorization. Prioritize the documented golden booking journey. The Expo/React Native and SwiftUI apps come last and are outside the current web phase.
+Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard currently serves beauty appointment businesses in Macedonia only. Hospitality, payments, autonomous AI features, international expansion, and native clients are dormant or deferred; preserve their foundations but do not expose or expand them without explicit user authorization. Prioritize the documented golden booking journey. Native clients are outside this web-focused monorepo.
 
 ---
 
@@ -57,7 +57,6 @@ Do not infer active product scope from dormant schemas or old integrations. The 
 │
 ├── components/              # Shared React components
 ├── lib/                     # Shared frontend utilities
-├── mobile/                  # React Native / Expo app
 └── AGENTS.md                # This file
 ```
 

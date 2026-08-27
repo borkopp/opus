@@ -19,12 +19,10 @@ import { v } from "convex/values";
 //   Identity      : users, staff_members, opus_users
 //   Catalogue     : service_categories, services
 //   Scheduling    : availability_rules, availability_overrides, bookings
-//   Payments      : payment_intents, payout_splits, payouts
 //   CRM           : customers, customer_notes
 //   Marketplace   : reviews
 //   AI            : ai_conversations, ai_messages
 //   Ops           : notifications, audit_log
-//   Hospitality   : floor_plans, tables, reservation_settings, reservations
 //   RAG (opus.mk) : marketplace_conversations, marketplace_messages, marketplace_embeddings
 //
 // Platform-scope exception: opus_users, users, marketplace_* — these span all orgs
@@ -48,7 +46,6 @@ export default defineSchema({
     // ── Vertical ──
     industry: v.union(
       v.literal("beauty_wellness"),
-      v.literal("hospitality"),
     ),
 
     // ── Location ──
@@ -106,16 +103,6 @@ export default defineSchema({
       v.literal("personal_trainer"),
     )),
 
-    // ── Hospitality-specific ──
-    // Only populated when industry = "hospitality"
-    cuisine: v.optional(v.array(v.string())), // ["Macedonian", "Grill", "Vegan-friendly"]
-    venueType: v.optional(v.union(
-      v.literal("restaurant"),
-      v.literal("cafe"),
-      v.literal("bar"),
-      v.literal("club"),
-      v.literal("hotel"),
-    )),
 
     // ── opus.mk marketplace visibility ──
     listingStatus: v.union(
@@ -130,9 +117,6 @@ export default defineSchema({
     reviewCount: v.number(),                 // default 0
     averageRating: v.number(),              // 0–5; stored as float (updated by cron)
 
-    // ── Braintree ──
-    braintreeMerchantAccountId: v.optional(v.string()),
-    braintreeCustomerId: v.optional(v.string()),
 
     // ── Subscription ──
     plan: v.union(
@@ -183,7 +167,6 @@ export default defineSchema({
   })
     .index("by_slug", ["slug"])
     .index("by_custom_domain", ["customDomain"])
-    .index("by_braintree_merchant", ["braintreeMerchantAccountId"])
     .index("by_listing_status", ["listingStatus"])
     .index("by_listing_status_deleted", ["listingStatus", "isDeleted"])
     .index("by_instagram_page_id", ["instagramPageId"])
@@ -208,7 +191,6 @@ export default defineSchema({
     type: v.union(
       v.literal("cover"),      // hero banner — only one should be cover per org
       v.literal("gallery"),    // general venue/service photos
-      v.literal("menu"),       // menu / price list images (hospitality)
       v.literal("team"),       // photo of the team / individual staff
     ),
     caption: v.optional(v.string()),
@@ -407,9 +389,6 @@ export default defineSchema({
       v.literal("staff"),
     ),
 
-    // Payout config
-    payoutAccountId: v.optional(v.string()),
-    payoutSharePct: v.optional(v.number()),
 
     // No-show risk score
     noShowRiskScore: v.optional(v.number()), // 0–1
@@ -594,7 +573,6 @@ export default defineSchema({
 
     // Status lifecycle
     status: v.union(
-      v.literal("pending_payment"),
       v.literal("confirmed"),
       v.literal("checked_in"),
       v.literal("completed"),
@@ -602,17 +580,11 @@ export default defineSchema({
       v.literal("no_show"),
     ),
 
-    // Payment
-    paymentIntentId: v.optional(v.id("payment_intents")),
-    depositPaidAt: v.optional(v.number()),
-    depositMinorUnits: v.optional(v.number()),
 
     // Booking source — includes opus channels
     source: v.union(
       v.literal("web"),          // business's own booking page
-      v.literal("mobile"),       // business's own mobile app
       v.literal("opus_web"),     // opus.mk website
-      v.literal("opus_app"),     // OPUS mobile app (future)
       v.literal("ai_whatsapp"),
       v.literal("ai_instagram"),
       v.literal("ai_webchat"),
@@ -640,109 +612,7 @@ export default defineSchema({
     .index("by_staff_start", ["staffId", "startAt"])           // slot conflict check
     .index("by_customer", ["customerId"])
     .index("by_org_start", ["orgId", "startAt"])               // daily schedule view
-    .index("by_payment_intent", ["paymentIntentId"])
     .index("by_opus_user", ["opusUserId"]),
-
-
-  // ─────────────────────────────────────────────────────
-  // PAYMENT INTENTS
-  // ─────────────────────────────────────────────────────
-  payment_intents: defineTable({
-    orgId: v.id("orgs"),
-    bookingId: v.optional(v.id("bookings")),
-    customerId: v.id("customers"),
-
-    providerTransactionId: v.string(),
-    providerClientToken: v.string(),
-
-    amountMinorUnits: v.number(),
-    currency: v.string(),
-
-    status: v.union(
-      v.literal("requires_payment_method"),
-      v.literal("requires_confirmation"),
-      v.literal("requires_action"),
-      v.literal("processing"),
-      v.literal("succeeded"),
-      v.literal("canceled"),
-      v.literal("failed"),
-    ),
-
-    succeededAt: v.optional(v.number()),
-    receiptUrl: v.optional(v.string()),
-
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"])
-    .index("by_provider_transaction", ["providerTransactionId"])
-    .index("by_booking", ["bookingId"]),
-
-
-  // ─────────────────────────────────────────────────────
-  // PAYOUT SPLITS
-  // ─────────────────────────────────────────────────────
-  payout_splits: defineTable({
-    orgId: v.id("orgs"),
-    serviceId: v.optional(v.id("services")),
-
-    recipients: v.array(v.object({
-      type: v.union(
-        v.literal("staff"),
-        v.literal("owner"),
-        v.literal("platform"),
-      ),
-      staffId: v.optional(v.id("staff_members")),
-      sharePct: v.number(),
-      payoutAddress: v.optional(v.string()),
-    })),
-
-    isActive: v.boolean(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"])
-    .index("by_org_service", ["orgId", "serviceId"]),
-
-
-  // ─────────────────────────────────────────────────────
-  // PAYOUTS
-  // ─────────────────────────────────────────────────────
-  payouts: defineTable({
-    orgId: v.id("orgs"),
-    bookingId: v.id("bookings"),
-    paymentIntentId: v.id("payment_intents"),
-
-    recipientType: v.union(
-      v.literal("staff"),
-      v.literal("owner"),
-      v.literal("platform"),
-    ),
-    staffId: v.optional(v.id("staff_members")),
-    payoutAddress: v.string(),
-
-    amountMinorUnits: v.number(),
-    currency: v.string(),
-
-    providerTransferId: v.optional(v.string()),
-    status: v.union(
-      v.literal("pending"),
-      v.literal("in_transit"),
-      v.literal("paid"),
-      v.literal("failed"),
-    ),
-
-    scheduledFor: v.optional(v.number()),
-    paidAt: v.optional(v.number()),
-    failureReason: v.optional(v.string()),
-
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"])
-    .index("by_booking", ["bookingId"])
-    .index("by_staff", ["staffId"])
-    .index("by_provider_transfer", ["providerTransferId"]),
 
 
   // ─────────────────────────────────────────────────────

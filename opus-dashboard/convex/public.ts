@@ -21,10 +21,7 @@ import { ACTIVE_INDUSTRY, isActiveIndustry } from "./lib/productScope";
 export const listPublished = query({
     args: {
         city: v.optional(v.string()),
-        industry: v.optional(v.union(
-            v.literal("beauty_wellness"),
-            v.literal("hospitality"),
-        )),
+        industry: v.optional(v.literal("beauty_wellness")),
         beautyCategory: v.optional(v.union(
             v.literal("barbershop"),
             v.literal("hair_salon"),

@@ -16,6 +16,7 @@ Future agents must:
 4. Prioritize reliability of the documented golden booking journey.
 5. Keep marketing claims aligned with behavior that is genuinely operational and configured.
 6. Ask for explicit user authorization before changing product scope or enabling another vertical.
+7. Keep this repository focused on the web applications; native clients were removed from the monorepo.
 7. Leave the Expo/React Native and SwiftUI applications until last; do not touch them during the current web stabilization phase unless the user explicitly requests native work.
 
 ---

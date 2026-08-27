@@ -26,6 +26,5 @@ export const config = {
     "/onboarding/:path*",
     "/ai-inbox/:path*",
     "/gap-optimizer/:path*",
-    "/hospitality/:path*",
   ],
 };

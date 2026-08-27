@@ -274,7 +274,7 @@ describe("beauty activation engine", () => {
     );
   });
 
-  test("soft deletes media and removes the listing from public visibility", async () => {
+  test("soft deletes media without blocking the public listing", async () => {
     const { owner, orgId } = await completeBeautySetup(t);
     await owner.mutation(api.listing.publishOrg, { orgId });
     const media = await owner.query(api.orgMedia.listByOrg, { orgId });
@@ -288,7 +288,7 @@ describe("beauty activation engine", () => {
     const org = await t.run(async (ctx) => await ctx.db.get(orgId));
     expect(deletedMedia?.isDeleted).toBe(true);
     expect(deletedMedia?.deletedAt).toEqual(expect.any(Number));
-    expect(org?.listingStatus).toBe("suspended");
+    expect(org?.listingStatus).toBe("published");
   });
 
   test("exposes real public availability and atomically rejects slot conflicts", async () => {

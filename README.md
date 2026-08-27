@@ -20,7 +20,7 @@ Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scop
 
 `opus-dashboard/convex` is the backend source of truth. `opus-mk/convex` points to that shared backend.
 
-The repository also contains dormant or deferred foundations, including hospitality, ingestion tools, Expo/React Native, and SwiftUI. Preserve those foundations, but do not infer active scope from them. The native apps in `opus-native/` and `opus-mk-ios/` come last and are intentionally outside the current web phase.
+The repository also contains dormant or deferred foundations, including hospitality and ingestion tools. Preserve those foundations, but do not infer active scope from them.
 
 ## Technology
 

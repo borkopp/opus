@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **OPUS** is a multi-tenant SaaS white-label Business Operating System for service-based businesses (barbers, salons, spas, consultants, trainers). Three revenue layers: monthly subscriptions, payment processing margin via Braintree, and future fintech products.
 
-Each business gets a branded experience: custom subdomain or domain, their own color scheme, optionally their own mobile app.
+Each business gets a branded web experience: a custom subdomain or domain and their own color scheme.
 
 ---
 

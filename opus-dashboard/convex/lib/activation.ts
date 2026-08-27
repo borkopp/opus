@@ -8,7 +8,6 @@ export type ActivationStep =
   | "location"
   | "service"
   | "hours"
-  | "storefront"
   | "review";
 
 export type ActivationRequirementCode =
@@ -17,9 +16,7 @@ export type ActivationRequirementCode =
   | "provider"
   | "service"
   | "availability"
-  | "booking_settings"
-  | "storefront"
-  | "payments";
+  | "booking_settings";
 
 export interface ActivationRequirement {
   code: ActivationRequirementCode;
@@ -156,11 +153,6 @@ export async function getBeautyActivationState(
       firstService &&
       firstService.durationMins % settings.slotDurationMins === 0,
   );
-  const storefrontComplete =
-    hasText(org.logoUrl) || media.some((item) => item.type === "cover");
-  const paymentsComplete =
-    !settings?.depositRequired || hasText(org.braintreeMerchantAccountId);
-
   const requirements = [
     requirement(
       "business_identity",
@@ -204,20 +196,6 @@ export async function getBeautyActivationState(
       bookingSettingsComplete,
       "/settings?tab=booking",
     ),
-    requirement(
-      "storefront",
-      "Storefront image",
-      "Upload a logo or cover photo.",
-      storefrontComplete,
-      "/onboarding?step=storefront",
-    ),
-    requirement(
-      "payments",
-      "Deposit payments",
-      "Connect Braintree when online deposits are enabled.",
-      paymentsComplete,
-      "/settings?tab=deposits",
-    ),
   ];
 
   let nextStep: ActivationStep = "review";
@@ -225,7 +203,6 @@ export async function getBeautyActivationState(
   else if (!locationComplete) nextStep = "location";
   else if (!serviceComplete) nextStep = "service";
   else if (!availabilityComplete || !bookingSettingsComplete) nextStep = "hours";
-  else if (!storefrontComplete) nextStep = "storefront";
 
   return {
     org,

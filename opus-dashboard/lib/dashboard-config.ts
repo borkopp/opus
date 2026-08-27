@@ -8,16 +8,12 @@ export type WidgetId =
     | "staff-capacity"
     | "ai-performance"
     | "insights-today"
-    // Hospitality widgets — will be added when that vertical is built
-    | "floor-plan-live"
-    | "covers-today"
-    | "reservation-timeline"
-    | "table-turnover";
+    ;
 
 export type DashboardConfig = {
     industry: string;
-    primaryEntity: "booking" | "reservation";
-    calendarView: "appointment" | "floor-plan";
+    primaryEntity: "booking";
+    calendarView: "appointment";
     widgets: WidgetId[];
 };
 
@@ -32,19 +28,5 @@ export const beautyDashboardConfig: DashboardConfig = {
         "staff-capacity",
         "ai-performance",
         "insights-today",
-    ],
-};
-
-// ── Hospitality ──────────────────────────────────────────────────────────
-export const hospitalityDashboardConfig: DashboardConfig = {
-    industry: "hospitality",
-    primaryEntity: "reservation",
-    calendarView: "floor-plan",
-    widgets: [
-        "floor-plan-live",
-        "covers-today",
-        "reservation-timeline",
-        "table-turnover",
-        "ai-performance",
     ],
 };

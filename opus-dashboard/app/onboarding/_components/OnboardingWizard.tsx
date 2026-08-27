@@ -12,13 +12,10 @@ import {
   ArrowRight,
   Check,
   Clock3,
-  ImagePlus,
   Search,
   Store,
-  Upload,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,38 +28,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { parseMapboxFeature, type BusinessLocation } from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
-import { validateImageFile } from "@/lib/file-validation";
 import { ActivationPreview } from "./ActivationPreview";
 
 type ActivationState = FunctionReturnType<typeof api.activation.getState>;
 type BeautyCategory = (typeof beautyCategories)[number][0];
-type HoursStep =
-  | "hours-0"
-  | "hours-1"
-  | "hours-2"
-  | "hours-3"
-  | "hours-4"
-  | "hours-5"
-  | "hours-6";
 type WizardStep =
   | "business-name"
   | "business-category"
   | "location"
   | "service-name"
-  | "service-description"
-  | "service-duration"
   | "service-price"
-  | HoursStep
-  | "storefront-logo"
-  | "storefront-cover"
-  | "storefront-tagline"
-  | "storefront-bio"
-  | "storefront-phone"
-  | "storefront-gallery"
+  | "service-duration"
+  | "hours"
   | "review";
 
 const STEP_ORDER: WizardStep[] = [
@@ -70,22 +50,9 @@ const STEP_ORDER: WizardStep[] = [
   "business-category",
   "location",
   "service-name",
-  "service-description",
-  "service-duration",
   "service-price",
-  "hours-0",
-  "hours-1",
-  "hours-2",
-  "hours-3",
-  "hours-4",
-  "hours-5",
-  "hours-6",
-  "storefront-logo",
-  "storefront-cover",
-  "storefront-tagline",
-  "storefront-bio",
-  "storefront-phone",
-  "storefront-gallery",
+  "service-duration",
+  "hours",
   "review",
 ];
 
@@ -95,8 +62,9 @@ const STEP_ALIASES: Record<string, WizardStep> = {
   location: "location",
   service: "service-name",
   "service-name": "service-name",
-  hours: "hours-0",
-  storefront: "storefront-logo",
+  hours: "hours",
+  "hours-0": "hours",
+  storefront: "review",
   review: "review",
 };
 
@@ -140,18 +108,8 @@ const DEFAULT_HOURS: OpeningHour[] = DAYS.map((_, dayOfWeek) => ({
 
 interface ServiceDraft {
   name: string;
-  description: string;
   durationMins: number;
   price: string;
-}
-
-interface StorefrontDraft {
-  tagline: string;
-  bio: string;
-  phone: string;
-  logo: File | null;
-  cover: File | null;
-  gallery: File[];
 }
 
 interface OnboardingDraft {
@@ -160,7 +118,6 @@ interface OnboardingDraft {
   location: BusinessLocation | null;
   service: ServiceDraft;
   hours: OpeningHour[];
-  storefront: StorefrontDraft;
 }
 
 function errorMessage(error: unknown): string {
@@ -193,19 +150,10 @@ function createDraft(state: ActivationState | undefined): OnboardingDraft {
     location: state ? createLocationFromState(state) : null,
     service: {
       name: service?.name ?? "",
-      description: service?.consumerDescription ?? service?.description ?? "",
       durationMins: service?.durationMins ?? 30,
       price: service ? (service.priceMinorUnits / 100).toFixed(2) : "",
     },
     hours: state?.org.openingHours ?? DEFAULT_HOURS,
-    storefront: {
-      tagline: state?.org.tagline ?? "",
-      bio: state?.org.bio ?? "",
-      phone: state?.org.phone ?? "",
-      logo: null,
-      cover: null,
-      gallery: [],
-    },
   };
 }
 
@@ -213,16 +161,14 @@ function sectionLabel(step: WizardStep): string {
   if (step.startsWith("business")) return "Your studio";
   if (step === "location") return "Location";
   if (step.startsWith("service")) return "Your first service";
-  if (step.startsWith("hours")) return "Opening hours";
-  if (step.startsWith("storefront")) return "Public profile";
+  if (step === "hours") return "Opening hours";
   return "Ready to go";
 }
 
 function firstStepForSection(section: string): WizardStep {
   if (section === "location") return "location";
   if (section === "service") return "service-name";
-  if (section === "hours") return "hours-0";
-  if (section === "storefront") return "storefront-logo";
+  if (section === "hours") return "hours";
   if (section === "review") return "review";
   return "business-name";
 }
@@ -310,9 +256,6 @@ function TextInputStep({
   onBack,
   onSaved,
   validate,
-  optional = false,
-  multiline = false,
-  maxLength,
   type = "text",
   inputMode,
   min,
@@ -328,9 +271,6 @@ function TextInputStep({
   onBack: () => void;
   onSaved: (value: string) => Promise<void> | void;
   validate?: (value: string) => string | null;
-  optional?: boolean;
-  multiline?: boolean;
-  maxLength?: number;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   min?: number;
@@ -367,43 +307,26 @@ function TextInputStep({
         <label className="sr-only" htmlFor={id}>
           {title}
         </label>
-        {multiline ? (
-          <Textarea
-            id={id}
-            autoFocus
-            value={inputValue}
-            maxLength={maxLength}
-            placeholder={placeholder}
-            aria-invalid={Boolean(error)}
-            className={cn(
-              "min-h-32 resize-none rounded-none border-x-0 border-t-0 border-b bg-transparent px-0 py-3 text-center text-xl shadow-none placeholder:text-muted-foreground/50 focus-visible:border-accent focus-visible:ring-0 sm:text-2xl",
-              error && "border-destructive focus-visible:border-destructive",
-            )}
-            onChange={(event) => setInputValue(event.target.value)}
-          />
-        ) : (
-          <Input
-            id={id}
-            autoFocus
-            type={type}
-            inputMode={inputMode}
-            min={min}
-            step={step}
-            value={inputValue}
-            maxLength={maxLength}
-            placeholder={placeholder}
-            aria-invalid={Boolean(error)}
-            className={minimalInputClass(Boolean(error))}
-            onChange={(event) => setInputValue(event.target.value)}
-          />
-        )}
+        <Input
+          id={id}
+          autoFocus
+          type={type}
+          inputMode={inputMode}
+          min={min}
+          step={step}
+          value={inputValue}
+          placeholder={placeholder}
+          aria-invalid={Boolean(error)}
+          className={minimalInputClass(Boolean(error))}
+          onChange={(event) => setInputValue(event.target.value)}
+        />
         <div
           className={cn(
             "mt-3 min-h-5 text-center text-sm",
             error ? "text-destructive" : "text-muted-foreground",
           )}
         >
-          {error ?? (optional ? "Optional" : "")}
+          {error}
         </div>
       </div>
       <WizardActions
@@ -623,41 +546,55 @@ function formatHoursRange(day: OpeningHour): string {
   return `${day.open} – ${day.close}`;
 }
 
-function HoursDayStep({
-  day,
+function HoursStep({
+  hours,
   canGoBack,
   onBack,
   onSaved,
 }: {
-  day: OpeningHour;
+  hours: OpeningHour[];
   canGoBack: boolean;
   onBack: () => void;
-  onSaved: (day: OpeningHour) => Promise<void>;
+  onSaved: (hours: OpeningHour[]) => Promise<void>;
 }) {
-  const [isClosed, setIsClosed] = useState(day.isClosed);
-  const [hoursValue, setHoursValue] = useState(
-    day.isClosed ? "" : formatHoursRange(day),
+  const [draftHours, setDraftHours] = useState(hours);
+  const [rangeValues, setRangeValues] = useState(
+    hours.map((day) => (day.isClosed ? "" : formatHoursRange(day))),
   );
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = isClosed ? null : parseHoursRange(hoursValue);
-    if (!isClosed && !parsed) {
-      setError("Use a range like 09:00 – 18:00.");
+    const parsedHours = draftHours.map((day, index) => {
+      const parsed = day.isClosed
+        ? null
+        : parseHoursRange(rangeValues[index] ?? "");
+      return {
+        ...day,
+        open: parsed?.open ?? day.open,
+        close: parsed?.close ?? day.close,
+      };
+    });
+    const invalidDay = draftHours.find(
+      (day, index) =>
+        !day.isClosed && !parseHoursRange(rangeValues[index] ?? ""),
+    );
+    if (invalidDay) {
+      setError(
+        `Use a range like 09:00 – 18:00 for ${DAYS[invalidDay.dayOfWeek]}.`,
+      );
+      return;
+    }
+    if (draftHours.every((day) => day.isClosed)) {
+      setError("Choose at least one day when your studio is open.");
       return;
     }
 
     setError(null);
     setIsSubmitting(true);
     try {
-      await onSaved({
-        ...day,
-        open: parsed?.open ?? day.open,
-        close: parsed?.close ?? day.close,
-        isClosed,
-      });
+      await onSaved(parsedHours);
     } catch (caught) {
       toast.error(errorMessage(caught));
     } finally {
@@ -669,44 +606,72 @@ function HoursDayStep({
     <form className="w-full" onSubmit={submit}>
       <StepHeading
         eyebrow="Opening hours"
-        title={`When are you open on ${DAYS[day.dayOfWeek]}?`}
-        description="Set one range for this day. You can always fine-tune your schedule later."
+        title="When can customers book?"
+        description="Set your weekly hours once. You can fine-tune individual days later."
       />
-      <div className="mt-12">
-        {isClosed ? (
-          <p className="py-5 text-center text-2xl text-muted-foreground sm:text-3xl">
-            Closed
-          </p>
-        ) : (
-          <>
-            <label className="sr-only" htmlFor={`hours-${day.dayOfWeek}`}>
-              {DAYS[day.dayOfWeek]} opening hours
+      <div className="mt-10 space-y-1">
+        {draftHours.map((day, index) => (
+          <div
+            key={day.dayOfWeek}
+            className="grid grid-cols-[5.5rem_minmax(0,1fr)_4rem] items-center gap-3 border-b border-border py-3 text-left last:border-b-0"
+          >
+            <label
+              className="text-sm font-medium"
+              htmlFor={`hours-${day.dayOfWeek}`}
+            >
+              {DAYS[day.dayOfWeek]}
             </label>
             <Input
               id={`hours-${day.dayOfWeek}`}
-              autoFocus
-              value={hoursValue}
+              value={day.isClosed ? "" : (rangeValues[index] ?? "")}
               placeholder="09:00 – 18:00"
+              disabled={day.isClosed}
+              aria-label={`${DAYS[day.dayOfWeek]} opening hours`}
               aria-invalid={Boolean(error)}
-              className={minimalInputClass(Boolean(error))}
-              onChange={(event) => setHoursValue(event.target.value)}
+              className={cn(
+                "h-10 rounded-none border-x-0 border-t-0 bg-transparent px-0 text-center text-sm shadow-none placeholder:text-muted-foreground/50 focus-visible:border-accent focus-visible:ring-0",
+                error && "border-destructive focus-visible:border-destructive",
+              )}
+              onChange={(event) => {
+                setRangeValues((current) =>
+                  current.map((value, valueIndex) =>
+                    valueIndex === index ? event.target.value : value,
+                  ),
+                );
+                setError(null);
+              }}
             />
-          </>
-        )}
-        <div className="mt-3 min-h-5 text-center text-sm text-destructive">
-          {error}
-        </div>
-        <button
-          type="button"
-          className="mx-auto mt-3 block text-sm text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-accent"
-          onClick={() => {
-            setIsClosed((current) => !current);
-            setError(null);
-          }}
-        >
-          {isClosed ? "Set opening hours" : "Mark this day closed"}
-        </button>
+            <button
+              type="button"
+              className="text-right text-xs text-muted-foreground transition-colors hover:text-accent"
+              onClick={() => {
+                setDraftHours((current) =>
+                  current.map((currentDay) =>
+                    currentDay.dayOfWeek === day.dayOfWeek
+                      ? { ...currentDay, isClosed: !currentDay.isClosed }
+                      : currentDay,
+                  ),
+                );
+                setRangeValues((current) =>
+                  current.map((value, valueIndex) =>
+                    valueIndex === index
+                      ? day.isClosed
+                        ? formatHoursRange(day)
+                        : ""
+                      : value,
+                  ),
+                );
+                setError(null);
+              }}
+            >
+              {day.isClosed ? "Open" : "Closed"}
+            </button>
+          </div>
+        ))}
       </div>
+      <p className="mt-4 min-h-5 text-center text-sm text-destructive">
+        {error}
+      </p>
       <WizardActions
         canGoBack={canGoBack}
         onBack={onBack}
@@ -714,145 +679,6 @@ function HoursDayStep({
       />
     </form>
   );
-}
-
-function ImageStep({
-  kind,
-  value,
-  existingLabel,
-  hasExistingImage,
-  canGoBack,
-  onBack,
-  onSaved,
-  multiple = false,
-  optional = false,
-}: {
-  kind: "logo" | "cover" | "gallery";
-  value: File | File[] | null;
-  existingLabel?: string;
-  hasExistingImage?: boolean;
-  canGoBack: boolean;
-  onBack: () => void;
-  onSaved: (value: File | File[] | null) => Promise<void> | void;
-  multiple?: boolean;
-  optional?: boolean;
-}) {
-  const [selected, setSelected] = useState<File | File[] | null>(value);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isCover = kind === "cover";
-  const title =
-    kind === "logo"
-      ? "Add your studio logo"
-      : kind === "cover"
-        ? "Choose a cover photo"
-        : "Show a little more of your work";
-  const description =
-    kind === "logo"
-      ? "A clear mark helps customers recognize your studio."
-      : kind === "cover"
-        ? "This is the first image customers see on your public profile."
-        : "Add a few photos of your space or your work if you have them ready.";
-  const selectedFiles = Array.isArray(selected)
-    ? selected
-    : selected
-      ? [selected]
-      : [];
-
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (isCover && !selected && !hasExistingImage) {
-      setError("Choose a cover photo to continue.");
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await onSaved(selected);
-    } catch (caught) {
-      toast.error(errorMessage(caught));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form className="w-full" onSubmit={submit}>
-      <StepHeading
-        eyebrow="Public profile"
-        title={title}
-        description={description}
-      />
-      <div className="mt-12 text-center">
-        <label
-          htmlFor={`storefront-${kind}`}
-          className="inline-flex cursor-pointer items-center gap-3 border-b border-border pb-3 text-lg transition-colors hover:border-accent hover:text-accent"
-        >
-          {kind === "gallery" ? (
-            <ImagePlus className="size-5" />
-          ) : (
-            <Upload className="size-5" />
-          )}
-          <span>
-            {selectedFiles.length
-              ? `${selectedFiles.length} photo${selectedFiles.length === 1 ? "" : "s"} selected`
-              : (existingLabel ??
-                (kind === "logo"
-                  ? "Choose a logo"
-                  : kind === "cover"
-                    ? "Choose a cover photo"
-                    : "Choose photos"))}
-          </span>
-        </label>
-        <Input
-          id={`storefront-${kind}`}
-          type="file"
-          accept="image/*"
-          multiple={multiple}
-          className="sr-only"
-          onChange={(event) => {
-            const files = Array.from(event.target.files ?? []);
-            const validationError = files.map(validateImageFile).find(Boolean);
-            if (validationError) {
-              setError(validationError);
-              return;
-            }
-            setError(null);
-            setSelected(multiple ? files : (files[0] ?? null));
-          }}
-        />
-        <p
-          className={cn(
-            "mt-4 min-h-5 text-sm",
-            error ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
-          {error ?? (optional ? "Optional" : "")}
-        </p>
-      </div>
-      <WizardActions
-        canGoBack={canGoBack}
-        onBack={onBack}
-        isSubmitting={isSubmitting}
-      />
-    </form>
-  );
-}
-
-async function uploadFile(
-  file: File,
-  generateUploadUrl: () => Promise<string>,
-): Promise<Id<"_storage">> {
-  const validation = validateImageFile(file);
-  if (validation) throw new Error(validation);
-  const url = await generateUploadUrl();
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": file.type },
-    body: file,
-  });
-  if (!response.ok) throw new Error("Image upload failed.");
-  const result = (await response.json()) as { storageId: Id<"_storage"> };
-  return result.storageId;
 }
 
 function ReviewStep({
@@ -997,8 +823,6 @@ export function OnboardingWizard() {
   const saveLocation = useMutation(api.activation.saveLocation);
   const saveFirstService = useMutation(api.activation.saveFirstService);
   const saveHours = useMutation(api.activation.saveHours);
-  const generateUploadUrl = useMutation(api.activation.generateUploadUrl);
-  const saveStorefront = useMutation(api.activation.saveStorefront);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) router.replace("/login");
@@ -1064,11 +888,10 @@ export function OnboardingWizard() {
     } as ServiceDraft;
     updateDraft({ service });
 
-    if (field === "price") {
+    if (field === "durationMins") {
       await saveFirstService({
         serviceId: state?.firstService?._id,
         name: service.name,
-        description: service.description || undefined,
         durationMins: service.durationMins,
         priceMinorUnits: Math.round(
           Number(service.price.replace(",", ".")) * 100,
@@ -1079,72 +902,12 @@ export function OnboardingWizard() {
     goNext();
   };
 
-  const handleHoursSaved = async (day: OpeningHour) => {
-    const nextHours = currentDraft.hours.map((current) =>
-      current.dayOfWeek === day.dayOfWeek ? day : current,
-    );
-    updateDraft({ hours: nextHours });
-    if (day.dayOfWeek === DAYS.length - 1) {
-      await saveHours({ openingHours: nextHours });
-      toast.success("Opening hours saved");
-    }
+  const handleHoursSaved = async (hours: OpeningHour[]) => {
+    await saveHours({ openingHours: hours });
+    updateDraft({ hours });
+    toast.success("Opening hours saved");
     goNext();
   };
-
-  const handleImageSaved = async (
-    kind: "logo" | "cover" | "gallery",
-    value: File | File[] | null,
-  ) => {
-    const storefront = {
-      ...currentDraft.storefront,
-      [kind]:
-        kind === "gallery"
-          ? Array.isArray(value)
-            ? value
-            : []
-          : Array.isArray(value)
-            ? (value[0] ?? null)
-            : value,
-    } as StorefrontDraft;
-    updateDraft({ storefront });
-
-    if (kind === "gallery") {
-      const [logoStorageId, coverStorageId, galleryStorageIds] =
-        await Promise.all([
-          storefront.logo
-            ? uploadFile(storefront.logo, generateUploadUrl)
-            : undefined,
-          storefront.cover
-            ? uploadFile(storefront.cover, generateUploadUrl)
-            : undefined,
-          Promise.all(
-            storefront.gallery.map((file) =>
-              uploadFile(file, generateUploadUrl),
-            ),
-          ),
-        ]);
-      await saveStorefront({
-        tagline: storefront.tagline || undefined,
-        bio: storefront.bio || undefined,
-        phone: storefront.phone || undefined,
-        logoStorageId,
-        coverStorageId,
-        galleryStorageIds,
-      });
-      toast.success("Public profile saved");
-    }
-    goNext();
-  };
-
-  const imageExists = Boolean(
-    currentDraft.storefront.logo ||
-    currentDraft.storefront.cover ||
-    state?.org.logoUrl ||
-    state?.media.some((item) => item.type === "cover"),
-  );
-  const hourIndex = step.startsWith("hours-")
-    ? Number(step.slice("hours-".length))
-    : -1;
 
   return (
     <main className="min-h-screen bg-background">
@@ -1229,20 +992,23 @@ export function OnboardingWizard() {
             />
           )}
 
-          {step === "service-description" && (
+          {step === "service-price" && (
             <TextInputStep
-              id="service-description"
+              id="service-price"
               eyebrow="Your first service"
-              title="How would you describe it?"
-              description="A short description helps customers choose with confidence."
-              value={currentDraft.service.description}
-              placeholder="What is included, and what should customers expect?"
+              title="What does it cost?"
+              description="Enter the price customers will see."
+              value={currentDraft.service.price}
+              placeholder="25.00 MKD"
+              inputMode="decimal"
               canGoBack={canGoBack}
               onBack={goBack}
-              maxLength={500}
-              multiline
-              optional
-              onSaved={(value) => handleServiceSaved("description", value)}
+              validate={(value) => {
+                return /^\d+([.,]\d{1,2})?$/.test(value)
+                  ? null
+                  : "Enter a valid price.";
+              }}
+              onSaved={(value) => handleServiceSaved("price", value)}
             />
           )}
 
@@ -1262,146 +1028,23 @@ export function OnboardingWizard() {
               onBack={goBack}
               validate={(value) => {
                 const duration = Number(value);
+                const slotDuration = state?.settings?.slotDurationMins ?? 15;
                 return !Number.isInteger(duration) || duration <= 0
                   ? "Enter a whole number of minutes."
-                  : null;
+                  : duration % slotDuration !== 0
+                    ? `Use a multiple of ${slotDuration} minutes.`
+                    : null;
               }}
               onSaved={(value) => handleServiceSaved("durationMins", value)}
             />
           )}
 
-          {step === "service-price" && (
-            <TextInputStep
-              id="service-price"
-              eyebrow="Your first service"
-              title="What does it cost?"
-              description="Enter the price customers will see."
-              value={currentDraft.service.price}
-              placeholder="25.00 MKD"
-              inputMode="decimal"
-              canGoBack={canGoBack}
-              onBack={goBack}
-              validate={(value) =>
-                /^\d+([.,]\d{1,2})?$/.test(value)
-                  ? null
-                  : "Enter a valid price."
-              }
-              onSaved={(value) => handleServiceSaved("price", value)}
-            />
-          )}
-
-          {hourIndex >= 0 && (
-            <HoursDayStep
-              day={currentDraft.hours[hourIndex] ?? DEFAULT_HOURS[hourIndex]}
+          {step === "hours" && (
+            <HoursStep
+              hours={currentDraft.hours}
               canGoBack={canGoBack}
               onBack={goBack}
               onSaved={handleHoursSaved}
-            />
-          )}
-
-          {step === "storefront-logo" && (
-            <ImageStep
-              kind="logo"
-              value={currentDraft.storefront.logo}
-              existingLabel={
-                state?.org.logoUrl ? "Keep current logo" : undefined
-              }
-              canGoBack={canGoBack}
-              onBack={goBack}
-              onSaved={(value) => handleImageSaved("logo", value)}
-              optional
-            />
-          )}
-
-          {step === "storefront-cover" && (
-            <ImageStep
-              kind="cover"
-              value={currentDraft.storefront.cover}
-              existingLabel={
-                imageExists ? "Keep current profile image" : undefined
-              }
-              hasExistingImage={imageExists}
-              canGoBack={canGoBack}
-              onBack={goBack}
-              onSaved={(value) => handleImageSaved("cover", value)}
-            />
-          )}
-
-          {step === "storefront-tagline" && (
-            <TextInputStep
-              id="storefront-tagline"
-              eyebrow="Public profile"
-              title="What should your tagline say?"
-              description="Keep it short. This line appears next to your studio name."
-              value={currentDraft.storefront.tagline}
-              placeholder="Sharp cuts. Easy booking."
-              canGoBack={canGoBack}
-              onBack={goBack}
-              maxLength={100}
-              optional
-              onSaved={(tagline) => {
-                updateDraft({
-                  storefront: { ...currentDraft.storefront, tagline },
-                });
-                goNext();
-              }}
-            />
-          )}
-
-          {step === "storefront-bio" && (
-            <TextInputStep
-              id="storefront-bio"
-              eyebrow="Public profile"
-              title="Tell customers about your studio"
-              description="Share what you care about and what the experience feels like."
-              value={currentDraft.storefront.bio}
-              placeholder="A calm space for considered beauty appointments."
-              canGoBack={canGoBack}
-              onBack={goBack}
-              maxLength={800}
-              multiline
-              optional
-              onSaved={(bio) => {
-                updateDraft({
-                  storefront: { ...currentDraft.storefront, bio },
-                });
-                goNext();
-              }}
-            />
-          )}
-
-          {step === "storefront-phone" && (
-            <TextInputStep
-              id="storefront-phone"
-              eyebrow="Public profile"
-              title="What number should customers use?"
-              description="Add a phone number for questions or appointment changes."
-              value={currentDraft.storefront.phone}
-              placeholder="+389 70 000 000"
-              type="tel"
-              inputMode="tel"
-              canGoBack={canGoBack}
-              onBack={goBack}
-              maxLength={30}
-              optional
-              onSaved={(phone) => {
-                updateDraft({
-                  storefront: { ...currentDraft.storefront, phone },
-                });
-                goNext();
-              }}
-            />
-          )}
-
-          {step === "storefront-gallery" && (
-            <ImageStep
-              kind="gallery"
-              value={currentDraft.storefront.gallery}
-              canGoBack={canGoBack}
-              onBack={goBack}
-              onSaved={(value) => handleImageSaved("gallery", value)}
-              multiple
-              optional
             />
           )}
 

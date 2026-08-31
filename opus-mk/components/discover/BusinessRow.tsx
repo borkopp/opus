@@ -21,7 +21,7 @@ export function BusinessRow({
 
   return (
     <Link href={href} className="group block">
-      <div className="flex items-center gap-4 py-4 border-b border-white/5 transition-all duration-150 active:scale-[0.98]">
+      <div className="flex items-center gap-4 py-4 border-b border-primary-foreground/5 transition-all duration-150 active:scale-[0.98]">
         {/* Thumbnail — only when an image is available */}
         {thumbnail && (
           <div className="w-16 h-16 rounded-xl bg-secondary shrink-0 overflow-hidden relative border border-border/50">
@@ -67,13 +67,13 @@ export function BusinessRow({
 
             {isOpenNow ? (
               <div className="flex items-center gap-1 text-xs">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span className="font-medium text-emerald-400">Open</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                <span className="font-medium text-success">Open</span>
               </div>
             ) : (
               <div className="flex items-center gap-1 text-xs">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-400/60" />
-                <span className="font-medium text-red-400/70">Closed</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-danger/70" />
+                <span className="font-medium text-danger">Closed</span>
               </div>
             )}
           </div>

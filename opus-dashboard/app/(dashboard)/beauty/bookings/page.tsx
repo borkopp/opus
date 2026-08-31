@@ -22,7 +22,7 @@ export default function BookingsPage() {
     }
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto h-[calc(100vh-140px)]">
+        <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto flex-1 min-h-full">
             <BookingsSplitView bookings={bookings} staffMembers={staffMembers} orgId={orgId} />
         </div>
     );

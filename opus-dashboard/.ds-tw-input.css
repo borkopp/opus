@@ -3,7 +3,7 @@
    loads the brand fonts at runtime, and defines the Next.js font CSS variables
    (normally injected by next/font) so var(--font-*) resolves in the bundle. */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,500;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Commissioner:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&subset=cyrillic,cyrillic-ext,latin,latin-ext&display=swap');
 
 @import "./app/globals.css";
 
@@ -11,13 +11,11 @@
 @source "../.design-sync/previews";
 
 :root {
-  --font-dm-sans: 'DM Sans', system-ui, sans-serif;
-  --font-syne: 'Syne', system-ui, sans-serif;
-  --font-dm-mono: 'DM Mono', ui-monospace, monospace;
-  --font-outfit: 'Outfit', system-ui, sans-serif;
-  --font-playfair: 'Playfair Display', Georgia, serif;
+  --font-manrope: 'Manrope', system-ui, sans-serif;
+  --font-commissioner: 'Commissioner', system-ui, sans-serif;
+  --font-ibm-plex-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
 body {
-  font-family: var(--font-dm-sans);
+  font-family: var(--font-manrope);
 }

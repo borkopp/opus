@@ -3,38 +3,28 @@ import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { Toaster } from "sonner";
 import {
-  Syne,
-  DM_Sans,
-  DM_Mono,
-  Audiowide,
-  Instrument_Serif,
+  Commissioner,
+  Manrope,
+  IBM_Plex_Mono,
 } from "next/font/google";
 import { FloatNav } from "@/components/FloatNav";
 
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-syne",
+const commissioner = Commissioner({
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700"],
+  variable: "--font-commissioner",
 });
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-dm-sans",
+
+const manrope = Manrope({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
 });
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-dm-mono",
-});
-const audiowide = Audiowide({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-audiowide",
-});
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-instrument-serif",
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500"],
+  variable: "--font-ibm-plex-mono",
 });
 
 export const metadata: Metadata = {
@@ -50,7 +40,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#FAF9F7",
+  themeColor: "#F6F6F3",
 };
 
 export default function RootLayout({
@@ -59,9 +49,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="mk">
       <body
-        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${audiowide.variable} ${instrumentSerif.variable} font-sans antialiased`}
+        className={`${commissioner.variable} ${manrope.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
         <ConvexClientProvider>
           {children}

@@ -16,7 +16,7 @@ export function ModeToggle({ className }: { className?: string }) {
         }
       }}
       suppressHydrationWarning
-      className={`flex cursor-pointer items-center justify-center text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white ${className}`}
+      className={`flex cursor-pointer items-center justify-center text-muted-foreground transition-colors hover:text-foreground ${className}`}
       aria-label="Toggle theme"
     >
       <SunIcon className="hidden h-5 w-5 dark:block" />

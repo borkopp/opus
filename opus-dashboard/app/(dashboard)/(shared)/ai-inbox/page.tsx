@@ -33,12 +33,12 @@ function DormantAIInboxPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-full">
       {/* Page header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0">
-        <BotMessageSquare size={20} className="text-accent" />
+        <BotMessageSquare size={20} className="text-muted-foreground" />
         <div>
-          <h1 className="text-lg font-semibold font-display">AI <span className="serif-accent-inline text-lg">Front-desk</span></h1>
+          <h1 className="text-lg font-semibold font-display">AI <span className="font-display italic text-primary">Front-desk</span></h1>
           <p className="text-xs text-muted-foreground">Conversations handled by your AI agent</p>
         </div>
       </div>

@@ -1,15 +1,16 @@
 # OPUS Design System — how to build with it
 
-OPUS is a warm, **dark-mode-first** SaaS for service businesses (barbers, salons,
-spas). One hot emotional color — **terracotta** — on obsidian neutrals; no cool
-blues. Components are shadcn/ui primitives built on Radix + Tailwind v4.
+OPUS uses a light-first **Cobalt Ledger** identity for beauty studios (barbers,
+salons, spas). Cobalt is the action color, supported by ink, canvas, apricot,
+moss, and pomegranate semantic states. Components are shadcn/ui primitives built
+on Radix + Tailwind v4.
 
 ## Setup & wrapping
 - **No provider needed.** Components render standalone. Light mode is the default
   (warm-white surfaces); for dark mode add `class="dark"` to any ancestor — every
   token flips automatically.
-- Fonts load at runtime (Google Fonts): **Syne** (display/numbers), **DM Sans**
-  (UI), **DM Mono** (labels/code). Nothing to import.
+- Fonts load at runtime (Google Fonts): **Commissioner** (display/numbers),
+  **Manrope** (UI), and **IBM Plex Mono** (labels/code). Nothing to import.
 - A few components are data/imperative-bound: `Price` reads org currency from app
   context (renders a skeleton without it); `Toaster` is the host for `sonner`'s
   imperative `toast()`. Treat those as integration points, not static UI.
@@ -23,21 +24,22 @@ in `styles.css`):
 |---|---|
 | Page / text | `bg-background` `text-foreground` |
 | Card surface | `bg-card` `text-card-foreground` |
-| Primary (obsidian) | `bg-primary` `text-primary-foreground` |
-| **Accent (terracotta)** | `bg-accent` `text-accent-foreground` |
+| Primary (cobalt) | `bg-primary` `text-primary-foreground` |
+| Brand-soft accent | `bg-accent` `text-accent-foreground` |
 | Secondary / muted | `bg-secondary` · `bg-muted` `text-muted-foreground` |
-| Danger | `bg-destructive` `text-white` |
+| Success / warning / danger | `bg-success` · `bg-highlight` · `bg-destructive` |
+| Danger foreground | `text-destructive-foreground` |
 | Lines / focus | `border-border` `ring-ring` |
 | Radius | `rounded-md` `rounded-lg` (16px) `rounded-full` (pills) |
-| Type | `font-sans` · `font-display` (Syne) · `font-mono` |
+| Type | `font-sans` · `font-display` (Commissioner) · `font-mono` (IBM Plex Mono) |
 
-Signature moves: **terracotta for the one primary CTA per view** —
-`<Button variant="terracotta">` — everything else `outline`/`ghost`/`secondary`;
-`font-display` with `tabular-nums` for money and big numbers; pill buttons
-(`rounded-full`); soft layered shadows (`shadow-s/m/l`).
+Signature moves: **cobalt for the one primary CTA per view** —
+`<Button variant="default">` — everything else `outline`/`ghost`/`secondary`;
+`font-display` with `tabular-nums` for money and big numbers; use pills only for
+compact status or metadata; prefer restrained `shadow-sm`/`shadow-md` surfaces.
 
 ## Component API highlights
-- `Button` variants: `default` `terracotta` `secondary` `outline` `ghost`
+- `Button` variants: `default` `secondary` `outline` `ghost`
   `destructive` `link`; sizes `xs sm default lg icon`.
 - `Badge` for status (`default` confirmed, `secondary` pending, `destructive`
   cancelled). `Alert` variants `default` / `destructive`.
@@ -64,7 +66,7 @@ and the per-component `<Name>.prompt.md` / `<Name>.d.ts` for props and compositi
     <span className="font-display tabular-nums text-lg">£480</span>
   </CardContent>
   <CardFooter className="gap-2">
-    <Button variant="terracotta">New booking</Button>
+    <Button variant="default">New booking</Button>
     <Button variant="outline">View schedule</Button>
   </CardFooter>
 </Card>

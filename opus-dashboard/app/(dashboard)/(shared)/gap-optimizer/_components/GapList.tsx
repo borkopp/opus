@@ -22,7 +22,7 @@ function errorMessage(error: unknown): string {
 export function GapList({ gaps, orgId }: { gaps: Gap[]; orgId: Id<"orgs"> }) {
     if (gaps.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-border rounded-[24px] bg-card/50">
+            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-border rounded-lg bg-card/50">
                 <p className="text-muted-foreground font-medium">No gaps found. Schedule looks solid!</p>
             </div>
         );
@@ -56,10 +56,8 @@ function GapCard({ gap, orgId }: { gap: Gap; orgId: Id<"orgs"> }) {
     const timeLabel = `${String(start.getUTCHours()).padStart(2, "0")}:${String(start.getUTCMinutes()).padStart(2, "0")} - ${String(end.getUTCHours()).padStart(2, "0")}:${String(end.getUTCMinutes()).padStart(2, "0")}`;
 
     return (
-        <Card className="flex flex-col bg-card rounded-[24px] overflow-hidden border border-border shadow-sm group">
-            <div className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 relative">
-                {/* Visual Blob */}
-                <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full pointer-events-none" />
+        <Card className="flex flex-col overflow-hidden group">
+            <div className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-secondary/40 relative">
 
                 <div className="flex flex-col gap-1 z-10">
                     <div className="flex items-center gap-2">
@@ -68,7 +66,7 @@ function GapCard({ gap, orgId }: { gap: Gap; orgId: Id<"orgs"> }) {
                             <Clock className="w-3 h-3" /> {gap.durationMins}m
                         </span>
                         {gap.status === "outreach_sent" && (
-                            <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 text-xs font-semibold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/50">
+                            <span className="bg-brand-soft text-primary text-xs font-semibold px-2 py-0.5 rounded-full border border-brand-soft">
                                 Sent
                             </span>
                         )}
@@ -76,7 +74,7 @@ function GapCard({ gap, orgId }: { gap: Gap; orgId: Id<"orgs"> }) {
                     <div className="text-muted-foreground text-sm flex items-center gap-2 font-medium">
                         <span>{gap.staffName}</span>
                         <span className="text-border text-xs">•</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <span className="text-success font-semibold">
                             <Price amount={gap.estimatedRevenueMinorUnits} />
                         </span>
                     </div>
@@ -149,13 +147,13 @@ function CandidateRow({
                         <div className={cn(
                             "flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border",
                             candidate.confidenceScore > 0.8 
-                                ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20" 
-                                : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                                ? "bg-success/10 text-success border-success/20"
+                                : "bg-highlight/10 text-warning border-highlight/20"
                         )}>
                             {(candidate.confidenceScore * 100).toFixed(0)}% Match
                         </div>
                         {isSent && (
-                            <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800/50">
+                            <span className="bg-brand-soft text-primary text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border border-brand-soft">
                                 Sent
                             </span>
                         )}
@@ -189,7 +187,7 @@ function CandidateRow({
                                 size="sm" 
                                 onClick={onSend} 
                                 disabled={isSending}
-                                className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                                className="h-8 bg-primary hover:bg-primary/90 text-primary-foreground shrink-0"
                             >
                                 <Send className="w-3.5 h-3.5 mr-1.5" />
                                 {isSending ? "..." : "Send"}

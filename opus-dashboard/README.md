@@ -13,6 +13,14 @@ npm run dev
 
 The combined command starts Next.js on port 3000 and the shared Convex backend on port 3210. Use `npm run dev:frontend` or `npm run dev:backend` to run one side only.
 
+## Transactional email
+
+Public tenant-site bookings require a six-digit email code before the booking mutation runs. Confirmations, calendar attachments, client reminders, and selected-team notifications are delivered from the Convex notification queue through Resend.
+
+Configure `RESEND_API_KEY`, `AUTH_EMAIL_FROM`, `BETTER_AUTH_SECRET`, and `SITE_URL` on the Convex deployment. `BOOKING_OTP_SECRET` is an optional dedicated OTP hashing/encryption secret; when it is absent, the backend uses `BETTER_AUTH_SECRET`. See [`env.example`](env.example) for the complete local contract.
+
+Owners configure client reminders, team new-booking emails, team reminder times, and exact dashboard recipients under **Settings → Notifications**.
+
 ## Checks
 
 ```bash

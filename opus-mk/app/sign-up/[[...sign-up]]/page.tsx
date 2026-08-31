@@ -1,4 +1,5 @@
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 
 export default async function SignUpPage({
   searchParams,
@@ -10,12 +11,12 @@ export default async function SignUpPage({
     typeof params.callbackUrl === "string" ? params.callbackUrl : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <AuthLayout>
       <EmailOtpForm
-        title="Create your OPUS access"
-        description="Use your email to receive a secure one-time code. No password is required."
+        title="Keep your bookings close"
+        description="Use your email to create your booking access. No password is required."
         callbackUrl={callbackUrl}
       />
-    </main>
+    </AuthLayout>
   );
 }

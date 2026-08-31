@@ -1,59 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, CircleAlert, Save } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { DebouncedInput } from "@/components/ui/debounced-input";
-import { DebouncedTextarea } from "@/components/ui/debounced-textarea";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DebouncedInput } from "@/components/ui/debounced-input";
+import { DebouncedTextarea } from "@/components/ui/debounced-textarea";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { TabsContent } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
+import {
+  SettingsCard,
+  SettingsSection,
+  SettingsToggleRow,
+} from "../SettingsCard";
 import { validConfidence } from "../validation";
-import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <CircleAlert className="shrink-0" />
-      {message}
-    </p>
-  );
-}
+const TONES = [
+  { value: "friendly", label: "Friendly" },
+  { value: "professional", label: "Professional" },
+  { value: "casual", label: "Casual" },
+  { value: "formal", label: "Formal" },
+] as const;
 
-const TONE_CONFIG = {
-  friendly: { emoji: "🤝", label: "Friendly" },
-  professional: { emoji: "💼", label: "Professional" },
-  casual: { emoji: "😌", label: "Casual" },
-  formal: { emoji: "🎩", label: "Formal" },
-} as const;
+const LANGUAGES = [
+  { value: "auto", label: "Auto-detect" },
+  { value: "en", label: "English" },
+  { value: "mk", label: "Македонски" },
+] as const;
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function ConfidenceMeter({ value }: { value: number }) {
-  const pct = Math.max(0, Math.min(1, isNaN(value) ? 0 : value)) * 100;
+  const percentage =
+    Math.max(0, Math.min(1, Number.isNaN(value) ? 0 : value)) * 100;
   const color =
-    pct >= 70 ? "bg-emerald-500" :
-      pct >= 40 ? "bg-amber-500" :
-        "bg-red-500";
+    percentage >= 70
+      ? "bg-success"
+      : percentage >= 40
+        ? "bg-highlight"
+        : "bg-danger";
   const label =
-    pct >= 70 ? "High — AI handles most requests autonomously" :
-      pct >= 40 ? "Moderate — balances autonomy and escalation" :
-        "Low — escalates to you frequently";
+    percentage >= 70
+      ? "Higher confidence, fewer automatic replies"
+      : percentage >= 40
+        ? "Balanced confidence and escalation"
+        : "Lower confidence, more automatic replies";
+
   return (
-    <div className="flex max-w-xl flex-col gap-1.5">
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+    <div className="flex flex-col gap-2">
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
         <div
-          className={cn("h-full rounded-full transition-all duration-500 ease-out", color)}
-          style={{ width: `${pct}%` }}
+          className={cn("h-full rounded-full transition-[width]", color)}
+          style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -72,37 +90,41 @@ interface AiOperatorTabProps {
     aiTone: "friendly" | "professional" | "casual" | "formal";
     aiLanguage: "auto" | "en" | "mk";
     aiWorkingHoursEnabled: boolean;
-    aiWorkingHours: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
+    aiWorkingHours: Array<{
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+    }>;
     aiWorkingHoursEnabled_days: boolean[];
     aiAwayMessage: string;
   };
 }
 
 export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
-  const [ai, setAi] = useState({ ...initialData });
-  const [confidenceError, setConfidenceError] = useState<string | undefined>();
-  const [personaError, setPersonaError] = useState<string | undefined>();
+  const [ai, setAi] = useState(initialData);
+  const [personaError, setPersonaError] = useState<string>();
+  const [confidenceError, setConfidenceError] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
-
   const updateAiSettings = useMutation(api.orgSettings.updateAiSettings);
 
   const handleSave = async () => {
     let hasErrors = false;
     if (!ai.aiPersonaName.trim()) {
-      setPersonaError("Persona name is required.");
+      setPersonaError("Enter the name shown to customers.");
       hasErrors = true;
     }
     if (!validConfidence(ai.aiConfidenceThreshold)) {
-      setConfidenceError("Enter a number between 0 and 1 (e.g. 0.75).");
+      setConfidenceError("Enter a number between 0 and 1.");
       hasErrors = true;
     }
     if (hasErrors) return;
+
     setPersonaError(undefined);
     setConfidenceError(undefined);
     setIsSaving(true);
     try {
       const activeHours = ai.aiWorkingHours.filter(
-        (h, i) => ai.aiWorkingHoursEnabled_days[i] !== false,
+        (_, index) => ai.aiWorkingHoursEnabled_days[index],
       );
       await updateAiSettings({
         orgId,
@@ -120,368 +142,401 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
         aiWorkingHours: activeHours,
         aiAwayMessage: ai.aiAwayMessage || undefined,
       });
-      toast.success("AI settings saved");
+      toast.success("AI front-desk settings saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save AI settings.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to save AI front-desk settings.",
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
+  const updateWorkingHour = (
+    dayOfWeek: number,
+    field: "startTime" | "endTime",
+    value: string,
+  ) => {
+    setAi((current) => ({
+      ...current,
+      aiWorkingHours: current.aiWorkingHours.map((entry) =>
+        entry.dayOfWeek === dayOfWeek ? { ...entry, [field]: value } : entry,
+      ),
+    }));
+  };
+
   return (
-    <TabsContent
-      value="ai"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
+    <TabsContent value="ai" className="m-0">
       <SettingsCard
-        title="AI booking assistant"
-        description="Configure how the assistant speaks, when it works, and when it hands a conversation to your team."
+        title="AI front desk"
+        description="Configure assistant behavior and handoff rules. Automated channels work only when their provider connection is configured."
         action={
-          <Badge variant={ai.aiEnabled ? "default" : "secondary"}>
-            {ai.aiEnabled ? "Live" : "Off"}
+          <Badge variant={ai.aiEnabled ? "success" : "secondary"}>
+            {ai.aiEnabled ? "Enabled" : "Off"}
           </Badge>
         }
-        contentClassName="flex flex-col gap-6"
+        contentClassName="flex flex-col gap-7"
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
             {isSaving ? "Saving…" : "Save AI settings"}
           </Button>
         }
       >
-          <SettingsToggleRow
-            title="Activate AI assistant"
-            description="Allow the assistant to handle enabled customer channels and booking questions."
-            control={<Switch
+        <SettingsToggleRow
+          title="Enable AI front desk"
+          description="Use this configuration on connected and enabled customer channels."
+          control={
+            <Switch
               id="ai-enabled"
+              aria-label="Enable AI front desk"
               checked={ai.aiEnabled}
-              onCheckedChange={(c) => setAi({ ...ai, aiEnabled: c })}
-            />}
-          />
+              onCheckedChange={(checked) =>
+                setAi((current) => ({ ...current, aiEnabled: checked }))
+              }
+            />
+          }
+        />
 
-          {ai.aiEnabled && (
-            <div className="flex flex-col gap-5">
-              {/* ── Core Settings ── */}
-              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
-                <div>
-                  <h3 className="text-sm font-semibold">Assistant identity</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Set its name, confidence threshold, and escalation route.
-                  </p>
-                </div>
-                {/* Persona Name with live chat bubble preview */}
-                <div className="grid gap-2 max-w-xl">
-                  <Label htmlFor="persona-name">Persona Name</Label>
+        {ai.aiEnabled && (
+          <>
+            <Separator />
+
+            <SettingsSection
+              title="Assistant identity"
+              description="Set the customer-facing name, confidence threshold, and handoff route."
+            >
+              <FieldGroup className="max-w-2xl">
+                <Field data-invalid={Boolean(personaError)}>
+                  <FieldLabel htmlFor="persona-name">Assistant name</FieldLabel>
                   <DebouncedInput
                     id="persona-name"
                     value={ai.aiPersonaName}
                     maxLength={50}
-                    aria-describedby={personaError ? "persona-name-error" : undefined}
-                    aria-invalid={!!personaError}
-                    className={cn(personaError && "border-destructive")}
-                    onChange={(val) => {
-                      setAi({ ...ai, aiPersonaName: val });
+                    aria-describedby="persona-name-description"
+                    aria-invalid={Boolean(personaError)}
+                    onChange={(value) => {
+                      setAi((current) => ({
+                        ...current,
+                        aiPersonaName: value,
+                      }));
                       if (personaError) setPersonaError(undefined);
                     }}
                   />
-                  {/* Live persona preview — updates as you type */}
-                  {!personaError && ai.aiPersonaName.trim() ? (
-                    <div className="flex items-start gap-2 mt-1">
-                      <div className="h-6 w-6 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-                        <Bot className="text-primary" />
-                      </div>
-                      <div className="bg-muted/60 rounded-2xl rounded-tl-sm px-3 py-1.5 text-xs text-muted-foreground">
-                        Hi! I&apos;m{" "}
-                        <span className="font-medium text-foreground">{ai.aiPersonaName.trim()}</span>
-                        , your booking assistant. How can I help?
-                      </div>
-                    </div>
-                  ) : !personaError ? (
-                    <p className="text-xs text-muted-foreground">
-                      The name shown to customers (e.g. &ldquo;Aria&rdquo;).
-                    </p>
-                  ) : null}
-                  <FieldError id="persona-name-error" message={personaError} />
-                </div>
+                  <FieldDescription id="persona-name-description">
+                    The name customers see in automated conversations.
+                  </FieldDescription>
+                  <FieldError>{personaError}</FieldError>
+                </Field>
 
-                {/* Confidence threshold with visual meter */}
-                <div className="grid gap-2 max-w-xl">
-                  <Label htmlFor="confidence-threshold">
-                    Confidence Threshold
-                    <span className="text-muted-foreground font-normal ml-1">(0–1)</span>
-                  </Label>
+                <Field data-invalid={Boolean(confidenceError)}>
+                  <FieldLabel htmlFor="confidence-threshold">
+                    Confidence threshold
+                  </FieldLabel>
                   <DebouncedInput
                     id="confidence-threshold"
                     type="number"
-                    step="0.05"
                     min="0"
                     max="1"
+                    step="0.05"
                     value={String(ai.aiConfidenceThreshold)}
-                    aria-describedby={confidenceError ? "confidence-error" : "confidence-hint"}
-                    aria-invalid={!!confidenceError}
-                    className={cn(confidenceError && "border-destructive")}
-                    onChange={(val) => {
-                      setAi({ ...ai, aiConfidenceThreshold: parseFloat(val) });
+                    aria-describedby="confidence-description"
+                    aria-invalid={Boolean(confidenceError)}
+                    onChange={(value) => {
+                      setAi((current) => ({
+                        ...current,
+                        aiConfidenceThreshold: Number.parseFloat(value),
+                      }));
                       if (confidenceError) setConfidenceError(undefined);
                     }}
                   />
-                  {!confidenceError && (
-                    <>
-                      <ConfidenceMeter value={ai.aiConfidenceThreshold} />
-                      <p id="confidence-hint" className="text-xs text-muted-foreground">
-                        How sure the AI needs to be before responding on its own. Lower = handles more, higher = escalates more. Try 0.75 to start.
-                      </p>
-                    </>
-                  )}
-                  <FieldError id="confidence-error" message={confidenceError} />
-                </div>
+                  <ConfidenceMeter value={ai.aiConfidenceThreshold} />
+                  <FieldDescription id="confidence-description">
+                    Below this score, the conversation is handed to a person.
+                  </FieldDescription>
+                  <FieldError>{confidenceError}</FieldError>
+                </Field>
 
-                <div className="grid gap-2 max-w-xl">
-                  <Label htmlFor="handoff-phone">Escalation Phone Number</Label>
+                <Field>
+                  <FieldLabel htmlFor="handoff-phone">
+                    Handoff phone number
+                  </FieldLabel>
                   <DebouncedInput
                     id="handoff-phone"
                     value={ai.aiHandoffPhoneNumber}
-                    placeholder="+38971234567"
-                    onChange={(val) => setAi({ ...ai, aiHandoffPhoneNumber: val })}
+                    placeholder="+389 71 234 567"
+                    onChange={(value) =>
+                      setAi((current) => ({
+                        ...current,
+                        aiHandoffPhoneNumber: value,
+                      }))
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">
-                    When the AI can&apos;t help, the customer can be directed to call this number.
-                  </p>
-                </div>
-              </section>
+                  <FieldDescription>
+                    Customers can be directed here when the assistant cannot
+                    help.
+                  </FieldDescription>
+                </Field>
+              </FieldGroup>
+            </SettingsSection>
 
-              {/* ── Channels with live-dot indicators ── */}
-              <section className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-5">
-                <div>
-                  <h3 className="font-medium text-sm mb-0.5">Active <span className="serif-accent-inline text-sm">Channels</span></h3>
-                  <p className="text-xs text-muted-foreground">
-                    Choose which channels the AI will handle.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between max-w-xl">
-                    <div className="flex items-center gap-2">
-                      {ai.aiWebchatEnabled && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
-                      )}
-                      <span className={cn("text-sm font-medium transition-colors", ai.aiWebchatEnabled && "text-foreground")}>
-                        Webchat Widget
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        — embedded chat on your booking page
-                      </span>
-                    </div>
+            <Separator />
+
+            <SettingsSection
+              title="Channels"
+              description="These switches permit an existing channel connection; they do not configure the provider itself."
+            >
+              <div className="flex flex-col gap-3">
+                <SettingsToggleRow
+                  title="Web chat"
+                  description="Allow the assistant on the configured booking-page chat."
+                  control={
                     <Switch
                       id="webchat-enabled"
+                      aria-label="Enable web chat"
                       checked={ai.aiWebchatEnabled}
-                      onCheckedChange={(c) => setAi({ ...ai, aiWebchatEnabled: c })}
+                      onCheckedChange={(checked) =>
+                        setAi((current) => ({
+                          ...current,
+                          aiWebchatEnabled: checked,
+                        }))
+                      }
                     />
-                  </div>
-                  <div className="flex items-center justify-between max-w-xl">
-                    <div className="flex items-center gap-2">
-                      {ai.aiInstagramEnabled && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" aria-hidden="true" />
-                      )}
-                      <span className={cn("text-sm font-medium transition-colors", ai.aiInstagramEnabled && "text-foreground")}>
-                        Instagram DM
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        — replies to customer DMs automatically
-                      </span>
-                    </div>
+                  }
+                />
+                <SettingsToggleRow
+                  title="Instagram DM"
+                  description="Allow the assistant on the configured Instagram connection."
+                  control={
                     <Switch
                       id="instagram-enabled"
+                      aria-label="Enable Instagram DM"
                       checked={ai.aiInstagramEnabled}
-                      onCheckedChange={(c) => setAi({ ...ai, aiInstagramEnabled: c })}
+                      onCheckedChange={(checked) =>
+                        setAi((current) => ({
+                          ...current,
+                          aiInstagramEnabled: checked,
+                        }))
+                      }
                     />
-                  </div>
-                </div>
-              </section>
+                  }
+                />
+              </div>
+            </SettingsSection>
 
-              {/* ── Conversation Style ── */}
-              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
-                <div>
-                  <h3 className="font-medium text-sm mb-0.5">Conversation <span className="serif-accent-inline text-sm">Style</span></h3>
-                  <p className="text-xs text-muted-foreground">
-                    Shape how the AI communicates with your customers.
-                  </p>
-                </div>
+            <Separator />
 
-                {/* Tone pills with emoji */}
-                <div className="grid gap-2 max-w-xl">
-                  <Label>Tone</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(["friendly", "professional", "casual", "formal"] as const).map((tone) => (
-                      <button
-                        key={tone}
-                        type="button"
-                        aria-pressed={ai.aiTone === tone}
-                        onClick={() => setAi({ ...ai, aiTone: tone })}
-                        className={cn(
-                          "px-3.5 py-1.5 rounded-lg text-sm border transition-all duration-150 flex items-center gap-1.5",
-                          "active:scale-95",
-                          ai.aiTone === tone
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                            : "bg-background border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground",
-                        )}
-                      >
-                        <span aria-hidden="true">{TONE_CONFIG[tone].emoji}</span>
-                        {TONE_CONFIG[tone].label}
-                      </button>
+            <SettingsSection
+              title="Conversation style"
+              description="Choose how the assistant speaks and opens a conversation."
+            >
+              <FieldGroup className="max-w-2xl">
+                <Field>
+                  <FieldLabel>Tone</FieldLabel>
+                  <ToggleGroup
+                    type="single"
+                    value={ai.aiTone}
+                    onValueChange={(value) => {
+                      if (!value) return;
+                      setAi((current) => ({
+                        ...current,
+                        aiTone:
+                          value as AiOperatorTabProps["initialData"]["aiTone"],
+                      }));
+                    }}
+                    variant="outline"
+                    spacing={2}
+                    aria-label="Assistant tone"
+                    className="flex flex-wrap"
+                  >
+                    {TONES.map((tone) => (
+                      <ToggleGroupItem key={tone.value} value={tone.value}>
+                        {tone.label}
+                      </ToggleGroupItem>
                     ))}
-                  </div>
-                </div>
+                  </ToggleGroup>
+                </Field>
 
-                {/* Language pills */}
-                <div className="grid gap-2 max-w-xl">
-                  <Label>Language</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(
-                      [
-                        { value: "auto", label: "Auto-detect" },
-                        { value: "en", label: "English" },
-                        { value: "mk", label: "Македонски" },
-                      ] as const
-                    ).map(({ value, label }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={ai.aiLanguage === value}
-                        onClick={() => setAi({ ...ai, aiLanguage: value })}
-                        className={cn(
-                          "px-4 py-1.5 rounded-lg text-sm border transition-all duration-150",
-                          "active:scale-95",
-                          ai.aiLanguage === value
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                            : "bg-background border-border/60 text-muted-foreground hover:border-primary/60 hover:text-foreground",
-                        )}
+                <Field>
+                  <FieldLabel>Language</FieldLabel>
+                  <ToggleGroup
+                    type="single"
+                    value={ai.aiLanguage}
+                    onValueChange={(value) => {
+                      if (!value) return;
+                      setAi((current) => ({
+                        ...current,
+                        aiLanguage:
+                          value as AiOperatorTabProps["initialData"]["aiLanguage"],
+                      }));
+                    }}
+                    variant="outline"
+                    spacing={2}
+                    aria-label="Assistant language"
+                    className="flex flex-wrap"
+                  >
+                    {LANGUAGES.map((language) => (
+                      <ToggleGroupItem
+                        key={language.value}
+                        value={language.value}
                       >
-                        {label}
-                      </button>
+                        {language.label}
+                      </ToggleGroupItem>
                     ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Auto-detect replies in the same language the customer writes in (English or
-                    Macedonian).
-                  </p>
-                </div>
+                  </ToggleGroup>
+                  <FieldDescription>
+                    Auto-detect replies in English or Macedonian based on the
+                    customer&apos;s message.
+                  </FieldDescription>
+                </Field>
 
-                <div className="grid gap-2 max-w-xl">
-                  <Label htmlFor="greeting-message">Greeting Message</Label>
+                <Field>
+                  <FieldLabel htmlFor="greeting-message">
+                    Greeting message
+                  </FieldLabel>
                   <DebouncedInput
                     id="greeting-message"
                     value={ai.aiGreetingMessage}
-                    placeholder="Hi! I'm Aria, your booking assistant. How can I help you today?"
-                    onChange={(val) => setAi({ ...ai, aiGreetingMessage: val })}
+                    placeholder="Hi! How can I help with your appointment?"
+                    onChange={(value) =>
+                      setAi((current) => ({
+                        ...current,
+                        aiGreetingMessage: value,
+                      }))
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Sent automatically when a new conversation starts.
-                  </p>
-                </div>
-                <div className="grid gap-2 max-w-xl">
-                  <Label htmlFor="custom-instructions">Custom Instructions</Label>
+                  <FieldDescription>
+                    Sent when a new automated conversation starts.
+                  </FieldDescription>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="custom-instructions">
+                    Custom instructions
+                  </FieldLabel>
                   <DebouncedTextarea
                     id="custom-instructions"
                     value={ai.aiSystemPrompt}
-                    onChange={(val) => setAi({ ...ai, aiSystemPrompt: val })}
-                    placeholder="Always greet customers by name. Never discuss competitor pricing. Only offer services from our menu..."
                     rows={4}
-                    className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
+                    placeholder="Add studio-specific rules and context."
+                    onChange={(value) =>
+                      setAi((current) => ({
+                        ...current,
+                        aiSystemPrompt: value,
+                      }))
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Add extra rules or context for the AI — e.g. how to greet customers, what not to discuss, or special policies.
-                  </p>
-                </div>
-              </section>
+                  <FieldDescription>
+                    Add boundaries, special policies, or preferred wording.
+                  </FieldDescription>
+                </Field>
+              </FieldGroup>
+            </SettingsSection>
 
-              {/* ── Working Hours ── */}
-              <section className="grid gap-6 rounded-2xl border border-border/50 bg-background p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-medium text-sm">Working Hours</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Restrict the AI to specific hours. Outside these, it sends the away message.
-                    </p>
-                  </div>
+            <Separator />
+
+            <SettingsSection
+              title="Working hours"
+              description="Optionally limit automated replies to a weekly schedule."
+            >
+              <SettingsToggleRow
+                title="Use working hours"
+                description="Send the away message outside the selected times."
+                control={
                   <Switch
                     id="working-hours-enabled"
+                    aria-label="Use AI working hours"
                     checked={ai.aiWorkingHoursEnabled}
-                    onCheckedChange={(c) => setAi({ ...ai, aiWorkingHoursEnabled: c })}
+                    onCheckedChange={(checked) =>
+                      setAi((current) => ({
+                        ...current,
+                        aiWorkingHoursEnabled: checked,
+                      }))
+                    }
                   />
+                }
+              />
+
+              {ai.aiWorkingHoursEnabled && (
+                <div className="flex max-w-2xl flex-col gap-3">
+                  {DAYS.map((day, dayOfWeek) => {
+                    const hours = ai.aiWorkingHours.find(
+                      (entry) => entry.dayOfWeek === dayOfWeek,
+                    );
+                    const enabled =
+                      ai.aiWorkingHoursEnabled_days[dayOfWeek] ?? false;
+
+                    return (
+                      <div
+                        key={day}
+                        className="grid grid-cols-[auto_2.5rem_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3"
+                      >
+                        <Checkbox
+                          id={`ai-day-${dayOfWeek}`}
+                          checked={enabled}
+                          onCheckedChange={(checked) => {
+                            const enabledDays = [
+                              ...ai.aiWorkingHoursEnabled_days,
+                            ];
+                            enabledDays[dayOfWeek] = checked === true;
+                            setAi((current) => ({
+                              ...current,
+                              aiWorkingHoursEnabled_days: enabledDays,
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`ai-day-${dayOfWeek}`}>{day}</Label>
+                        <DebouncedInput
+                          type="time"
+                          aria-label={`${day} start time`}
+                          disabled={!enabled}
+                          value={hours?.startTime ?? "09:00"}
+                          onChange={(value) =>
+                            updateWorkingHour(dayOfWeek, "startTime", value)
+                          }
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          to
+                        </span>
+                        <DebouncedInput
+                          type="time"
+                          aria-label={`${day} end time`}
+                          disabled={!enabled}
+                          value={hours?.endTime ?? "18:00"}
+                          onChange={(value) =>
+                            updateWorkingHour(dayOfWeek, "endTime", value)
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+
+                  <Field>
+                    <FieldLabel htmlFor="away-message">Away message</FieldLabel>
+                    <DebouncedTextarea
+                      id="away-message"
+                      value={ai.aiAwayMessage}
+                      rows={3}
+                      placeholder="We are currently outside business hours."
+                      onChange={(value) =>
+                        setAi((current) => ({
+                          ...current,
+                          aiAwayMessage: value,
+                        }))
+                      }
+                    />
+                  </Field>
                 </div>
-                {ai.aiWorkingHoursEnabled && (
-                  <div className="flex flex-col gap-3">
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => {
-                      const dayIndex = i;
-                      const hoursEntry = ai.aiWorkingHours.find(
-                        (h) => h.dayOfWeek === dayIndex,
-                      );
-                      const isEnabled = ai.aiWorkingHoursEnabled_days[i] ?? false;
-                      return (
-                        <div key={day} className="flex items-center gap-3 max-w-xl">
-                          <div className="w-12 flex items-center gap-1.5">
-                            <input
-                              type="checkbox"
-                              id={`day-${day}`}
-                              checked={isEnabled}
-                              onChange={(e) => {
-                                const updated = [...ai.aiWorkingHoursEnabled_days];
-                                updated[i] = e.target.checked;
-                                setAi({ ...ai, aiWorkingHoursEnabled_days: updated });
-                              }}
-                              className="rounded"
-                            />
-                            <Label
-                              htmlFor={`day-${day}`}
-                              className="text-sm text-muted-foreground"
-                            >
-                              {day}
-                            </Label>
-                          </div>
-                          <DebouncedInput
-                            type="time"
-                            disabled={!isEnabled}
-                            value={hoursEntry?.startTime ?? "09:00"}
-                            className="w-28 text-sm"
-                            onChange={(val) => {
-                              const updated = ai.aiWorkingHours.map((h) =>
-                                h.dayOfWeek === dayIndex ? { ...h, startTime: val } : h,
-                              );
-                              setAi({ ...ai, aiWorkingHours: updated });
-                            }}
-                          />
-                          <span className="text-muted-foreground text-sm">to</span>
-                          <DebouncedInput
-                            type="time"
-                            disabled={!isEnabled}
-                            value={hoursEntry?.endTime ?? "18:00"}
-                            className="w-28 text-sm"
-                            onChange={(val) => {
-                              const updated = ai.aiWorkingHours.map((h) =>
-                                h.dayOfWeek === dayIndex ? { ...h, endTime: val } : h,
-                              );
-                              setAi({ ...ai, aiWorkingHours: updated });
-                            }}
-                          />
-                        </div>
-                      );
-                    })}
-                    <div className="grid gap-2 max-w-xl pt-2">
-                      <Label htmlFor="away-message">Away Message</Label>
-                      <DebouncedTextarea
-                        id="away-message"
-                        value={ai.aiAwayMessage}
-                        onChange={(val) => setAi({ ...ai, aiAwayMessage: val })}
-                        placeholder="We're currently outside business hours. Please reach out again during our working hours!"
-                        rows={3}
-                        className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
-                      />
-                    </div>
-                  </div>
-                )}
-              </section>
-            </div>
-          )}
+              )}
+            </SettingsSection>
+          </>
+        )}
       </SettingsCard>
     </TabsContent>
   );

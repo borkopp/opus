@@ -296,10 +296,10 @@ export function BookingsTimeline({
             {/* Current Time Indicator */}
             {currentTimeOffset !== null && (
                 <div
-                    className="absolute left-12 right-0 border-t-[1.5px] border-red-500 z-10 pointer-events-none"
+                    className="absolute left-12 right-0 border-t-[1.5px] border-danger z-10 pointer-events-none"
                     style={{ top: currentTimeOffset + HEADER_HEIGHT }}
                 >
-                    <div className="absolute -left-1.5 -top-[5px] w-[9px] h-[9px] rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
+                    <div className="absolute -left-1.5 -top-[5px] w-[9px] h-[9px] rounded-full bg-danger animate-pulse" />
                 </div>
             )}
 

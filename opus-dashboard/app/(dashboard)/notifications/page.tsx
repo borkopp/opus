@@ -24,7 +24,7 @@ function getTypeConfig(type: string) {
         case "new_booking":
             return {
                 icon: <IconCalendarPlus size={18} stroke={2} />,
-                iconBg: "bg-accent/10 text-accent",
+                iconBg: "bg-accent text-accent-foreground",
                 label: "New Booking",
             };
         case "booking_cancelled":
@@ -36,7 +36,7 @@ function getTypeConfig(type: string) {
         case "no_show":
             return {
                 icon: <IconAlertTriangle size={18} stroke={2} />,
-                iconBg: "bg-amber-500/10 text-amber-600",
+                iconBg: "bg-highlight/15 text-warning",
                 label: "No-Show",
             };
         default:
@@ -91,7 +91,7 @@ export default function NotificationsPage() {
     if (!orgId) return null;
 
     return (
-        <div className="w-full max-w-2xl mx-auto py-8 px-4">
+        <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 min-h-full">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -132,7 +132,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* List */}
-            <div className="bg-card border border-border/40 rounded-[24px] overflow-hidden divide-y divide-border/30">
+            <div className="bg-card border border-border/40 rounded-lg overflow-hidden divide-y divide-border/30">
                 {filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center px-6">
                         <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-3">
@@ -170,12 +170,12 @@ export default function NotificationsPage() {
                                     <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
                                         {n.body}
                                     </p>
-                                    <p className="text-xs text-muted-foreground/60 mt-1 font-outfit">
+                                    <p className="text-xs text-muted-foreground/60 mt-1 font-display">
                                         {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
                                     </p>
                                 </div>
                                 {!n.isRead && (
-                                    <div className="absolute right-10 top-4 h-2 w-2 rounded-full bg-accent" />
+                                    <div className="absolute right-10 top-4 h-2 w-2 rounded-full bg-primary" />
                                 )}
                                 <button
                                     type="button"

@@ -77,31 +77,31 @@ function boundaryLabel(source: string): string {
 function classificationMeta(c: string): { label: string; color: string } {
     switch (c) {
         case "interior_gap":
-            return { label: "Interior gap", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/30" };
+            return { label: "Interior gap", color: "text-success bg-success/10 border-success/30" };
         case "below_threshold":
-            return { label: "Below threshold", color: "text-amber-400 bg-amber-500/10 border-amber-500/30" };
+            return { label: "Below threshold", color: "text-warning bg-highlight/10 border-highlight/30" };
         case "edge_of_day":
-            return { label: "Edge of day", color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30" };
+            return { label: "Edge of day", color: "text-muted-foreground bg-muted/30 border-border" };
         case "now_bounded":
-            return { label: "Bounded by now", color: "text-blue-400 bg-blue-500/10 border-blue-500/30" };
+            return { label: "Bounded by now", color: "text-primary bg-accent border-accent" };
         case "past_workday":
-            return { label: "Past workday", color: "text-zinc-500 bg-zinc-500/10 border-zinc-500/30" };
+            return { label: "Past workday", color: "text-muted-foreground bg-muted/30 border-border" };
         default:
-            return { label: c, color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30" };
+            return { label: c, color: "text-muted-foreground bg-muted/30 border-border" };
     }
 }
 
 function staffStatusMeta(s: StaffReport["status"]): { label: string; icon: ReactElement } {
     switch (s) {
         case "day_off":
-            return { label: "Day off", icon: <AlertCircle className="w-3.5 h-3.5 text-zinc-500" /> };
+            return { label: "Day off", icon: <AlertCircle className="w-3.5 h-3.5 text-muted-foreground" /> };
         case "no_working_hours":
-            return { label: "No availability rule", icon: <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> };
+            return { label: "No availability rule", icon: <AlertCircle className="w-3.5 h-3.5 text-warning" /> };
         case "past_workday":
-            return { label: "Workday already ended", icon: <Clock className="w-3.5 h-3.5 text-zinc-500" /> };
+            return { label: "Workday already ended", icon: <Clock className="w-3.5 h-3.5 text-muted-foreground" /> };
         case "scanned":
         default:
-            return { label: "Scanned", icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> };
+            return { label: "Scanned", icon: <CheckCircle2 className="w-3.5 h-3.5 text-success" /> };
     }
 }
 
@@ -130,14 +130,14 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
         <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">Fill <span className="serif-accent-inline text-3xl">Gaps</span></h1>
+                    <h1 className="text-3xl font-bold font-display text-foreground tracking-tight">Fill <span className="font-display italic text-primary">Gaps</span></h1>
                     <p className="text-sm text-muted-foreground mt-1">AI discovers gaps in your schedule and drafts outreach messages to your best customers.</p>
                 </div>
                 <div>
                     <Button
                         onClick={handleScan}
                         disabled={isScanning}
-                        className="bg-accent hover:bg-accent/90 text-white font-medium shadow-sm transition-all rounded-full h-10 px-5 gap-2 active:scale-[0.98]"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-colors rounded-md h-10 px-5 gap-2 active:scale-[0.98]"
                     >
                         {isScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                         {isScanning ? "Scanning..." : "Scan today"}
@@ -153,9 +153,9 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
                         exit={{ opacity: 0, height: 0, y: -10 }}
                         className="mt-4 overflow-hidden"
                     >
-                        <div className="bg-zinc-950 text-zinc-300 rounded-[16px] p-4 border border-zinc-800 shadow-inner text-xs sm:text-sm">
-                            <div className="flex items-center justify-between mb-3 border-b border-zinc-800 pb-2">
-                                <div className="flex items-center gap-2 text-zinc-400 font-semibold tracking-wider uppercase text-xs font-mono">
+                        <div className="bg-ink-surface text-background rounded-lg p-4 border border-border text-xs sm:text-sm">
+                            <div className="flex items-center justify-between mb-3 border-b border-background/15 pb-2">
+                                <div className="flex items-center gap-2 text-background/70 font-semibold tracking-wider uppercase text-xs font-mono">
                                     <Terminal className="w-4 h-4" />
                                     Scan Diagnostics
                                 </div>
@@ -163,7 +163,7 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => setScanResults(null)}
-                                    className="h-6 w-6 p-0 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-full"
+                                    className="h-6 w-6 p-0 text-background/60 hover:text-background hover:bg-background/10 rounded-md"
                                 >
                                     <X className="w-3 h-3" />
                                 </Button>
@@ -215,18 +215,18 @@ export function GapOptimizerHeader({ orgId }: { orgId: string }) {
 
 function Stat({ label, value, hint, highlight }: { label: string; value: string; hint?: string; highlight?: boolean }) {
     return (
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg px-3 py-2">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</div>
-            <div className={cn("text-sm font-semibold", highlight ? "text-emerald-400" : "text-zinc-100")}>{value}</div>
-            {hint && <div className="text-[10px] text-zinc-500 mt-0.5">{hint}</div>}
+        <div className="bg-card border border-border rounded-lg px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+            <div className={cn("text-sm font-semibold", highlight ? "text-success" : "text-foreground")}>{value}</div>
+            {hint && <div className="text-[10px] text-muted-foreground mt-0.5">{hint}</div>}
         </div>
     );
 }
 
 function EmptyDiagnostic({ title, body }: { title: string; body: string }) {
     return (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3 text-zinc-400 font-sans">
-            <div className="text-zinc-200 font-semibold text-sm">{title}</div>
+        <div className="bg-muted/30 border border-border rounded-lg p-3 text-muted-foreground font-sans">
+            <div className="text-foreground font-semibold text-sm">{title}</div>
             <div className="text-xs mt-1">{body}</div>
         </div>
     );
@@ -250,9 +250,9 @@ function ZeroGapsSummary({ reports }: { reports: StaffReport[] }) {
     }
 
     return (
-        <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-3 mb-3 font-sans">
-            <div className="text-indigo-300 font-semibold text-sm">{headline}</div>
-            <div className="text-xs text-zinc-400 mt-1">{explainer}</div>
+        <div className="bg-accent border border-accent rounded-lg p-3 mb-3 font-sans">
+            <div className="text-primary font-semibold text-sm">{headline}</div>
+            <div className="text-xs text-muted-foreground mt-1">{explainer}</div>
         </div>
     );
 }
@@ -262,17 +262,17 @@ function StaffRow({ report }: { report: StaffReport }) {
     const status = staffStatusMeta(report.status);
 
     return (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-zinc-900 transition-colors text-left"
+                className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors text-left"
             >
                 <div className="flex items-center gap-3 min-w-0">
                     {status.icon}
-                    <span className="font-semibold text-zinc-100 truncate">{report.staffName}</span>
-                    <span className="text-[10px] uppercase tracking-wider text-zinc-500">{status.label}</span>
+                    <span className="font-semibold text-background truncate">{report.staffName}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-background/60">{status.label}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground shrink-0">
                     {report.workingWindow && (
                         <span className="hidden sm:inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" />
@@ -284,7 +284,7 @@ function StaffRow({ report }: { report: StaffReport }) {
                     </span>
                     <span className={cn(
                         "inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold",
-                        report.gapsDetected > 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-zinc-800 text-zinc-500"
+                        report.gapsDetected > 0 ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
                     )}>
                         {report.gapsDetected} gap{report.gapsDetected === 1 ? "" : "s"}
                     </span>
@@ -293,9 +293,9 @@ function StaffRow({ report }: { report: StaffReport }) {
             </button>
 
             {open && (
-                <div className="px-3 pb-3 pt-1 border-t border-zinc-800 flex flex-col gap-3">
+                <div className="px-3 pb-3 pt-1 border-t border-border flex flex-col gap-3">
                     {report.status !== "scanned" && (
-                        <div className="text-xs text-zinc-400 pt-2">
+                        <div className="text-xs text-muted-foreground pt-2">
                             {report.status === "day_off" && "This staff member has a day-off override for the selected date."}
                             {report.status === "no_working_hours" && "No availability rule or custom-hours override for this weekday. Add one in Settings → Availability."}
                             {report.status === "past_workday" && "The configured workday already ended. No future gaps remain today."}
@@ -305,23 +305,23 @@ function StaffRow({ report }: { report: StaffReport }) {
                     {report.status === "scanned" && (
                         <>
                             <div>
-                                <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5">Free intervals</div>
+                                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Free intervals</div>
                                 {report.intervals.length === 0 ? (
-                                    <div className="text-xs text-zinc-500">Fully booked — no free time.</div>
+                                    <div className="text-xs text-muted-foreground">Fully booked — no free time.</div>
                                 ) : (
                                     <div className="flex flex-col gap-1.5">
                                         {report.intervals.map((iv, i) => {
                                             const meta = classificationMeta(iv.classification);
                                             return (
                                                 <div key={i} className="flex items-center gap-2 text-xs">
-                                                    <span className="font-mono text-zinc-300 w-[96px]">
+                                                    <span className="font-mono text-foreground w-[96px]">
                                                         {fmt(iv.startAt)}–{fmt(iv.endAt)}
                                                     </span>
-                                                    <span className="text-zinc-500 w-14">{iv.durationMins}m</span>
+                                                    <span className="text-muted-foreground w-14">{iv.durationMins}m</span>
                                                     <span className={cn("px-1.5 py-0.5 rounded border text-[10px] font-semibold", meta.color)}>
                                                         {meta.label}
                                                     </span>
-                                                    <span className="text-zinc-600 text-[10px] truncate">
+                                                    <span className="text-muted-foreground/70 text-[10px] truncate">
                                                         {boundaryLabel(iv.leftBoundary)} → {boundaryLabel(iv.rightBoundary)}
                                                     </span>
                                                 </div>
@@ -333,11 +333,11 @@ function StaffRow({ report }: { report: StaffReport }) {
 
                             {report.candidateFunnel && (
                                 <div>
-                                    <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1.5 flex items-center gap-1.5">
+                                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1.5">
                                         <Users className="w-3 h-3" /> Candidate funnel
                                     </div>
                                     <FunnelBar funnel={report.candidateFunnel} />
-                                    <div className="text-[10px] text-zinc-500 mt-1.5">
+                                    <div className="text-[10px] text-muted-foreground mt-1.5">
                                         Thresholds: ≥{report.candidateFunnel.thresholds.minTotalVisits} visits ·
                                         last {report.candidateFunnel.thresholds.recencyWindowDays}d ·
                                         top {report.candidateFunnel.thresholds.topN}
@@ -346,7 +346,7 @@ function StaffRow({ report }: { report: StaffReport }) {
                             )}
 
                             {report.gapsDetected > 0 && (
-                                <div className="text-xs text-emerald-400">
+                                <div className="text-xs text-success">
                                     {report.draftsCreated === 0
                                         ? `Detected ${report.gapsDetected} gap${report.gapsDetected === 1 ? "" : "s"} but no eligible customers to draft outreach for.`
                                         : `Drafted ${report.draftsCreated} outreach message${report.draftsCreated === 1 ? "" : "s"} across ${report.gapsDetected} gap${report.gapsDetected === 1 ? "" : "s"}.`}
@@ -375,14 +375,14 @@ function FunnelBar({ funnel }: { funnel: FunnelReport }) {
         <div className="flex flex-col gap-1">
             {steps.map(([label, n], i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px]">
-                    <span className="text-zinc-500 w-[120px] shrink-0">{label}</span>
-                    <div className="flex-1 h-3 bg-zinc-800 rounded-full overflow-hidden">
+                    <span className="text-muted-foreground w-[120px] shrink-0">{label}</span>
+                    <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-indigo-500/70"
+                            className="h-full bg-primary/70"
                             style={{ width: `${(n / max) * 100}%` }}
                         />
                     </div>
-                    <span className="text-zinc-300 w-8 text-right font-mono">{n}</span>
+                    <span className="text-foreground w-8 text-right font-mono">{n}</span>
                 </div>
             ))}
         </div>

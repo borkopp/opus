@@ -19,7 +19,6 @@ import { useOpusUser } from "@/components/OpusUserContext";
 import {
   IconArrowLeft,
   IconClock,
-  IconCash,
   IconCircleCheck,
   IconConfetti,
 } from "@tabler/icons-react";
@@ -32,7 +31,9 @@ type BookingStep = "service" | "datetime" | "details" | "confirmed";
 function ConfettiTrigger() {
   useEffect(() => {
     const end = Date.now() + 2 * 1000;
-    const colors = ['#26ccff', '#a25afd', '#ff5e7e', '#88ff5a', '#fcff42', '#ffa62d', '#ff36ff'];
+    const colors = ["--brand", "--highlight", "--success", "--danger"]
+      .map((token) => getComputedStyle(document.documentElement).getPropertyValue(token).trim())
+      .filter(Boolean);
 
     (function frame() {
       confetti({
@@ -200,7 +201,6 @@ export default function BookingPage() {
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || undefined,
         customerNote: customerNote.trim() || undefined,
-        paymentMethod: "cash",
       });
 
       setConfirmation(result);
@@ -324,7 +324,7 @@ export default function BookingPage() {
                   </div>
 
                   {/* Absolute positioned gradient overlay on hover (subtle gloss) */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-white/0 via-white/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none dark:to-white/5" />
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-primary-foreground/0 via-primary-foreground/0 to-primary-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none dark:to-primary-foreground/5" />
                 </button>
               ))}
             </div>
@@ -569,25 +569,6 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <div className="mt-8">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Payment</h3>
-                  <div className="grid gap-3">
-                    <label className="relative flex cursor-pointer items-center justify-between rounded-xl border-2 border-primary bg-primary/5 p-4 shadow-sm transition-all hover:bg-primary/10">
-                      <div className="flex items-center gap-4">
-                        <div className="rounded-full bg-primary/20 p-2 text-primary">
-                          <IconCash size={20} aria-hidden="true" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm text-foreground">Pay in cash</p>
-                          <p className="text-xs text-muted-foreground">Pay at the studio</p>
-                        </div>
-                      </div>
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <IconCircleCheck size={14} />
-                      </div>
-                    </label>
-                  </div>
-                </div>
               </div>
 
               {/* Right Column: Order Summary */}
@@ -643,7 +624,7 @@ export default function BookingPage() {
                       disabled={isSubmitting || !customerName.trim() || !customerPhone.trim()}
                       className="w-full h-12 rounded-xl text-sm font-semibold bg-cta text-cta-foreground hover:bg-cta/90 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-cta/20"
                     >
-                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                      <div className="absolute inset-0 bg-primary-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                       <span className="relative flex items-center justify-center gap-2">
                         {isSubmitting ? (
                           <>
@@ -716,7 +697,7 @@ export default function BookingPage() {
               transition={{ delay: 0.5, type: "spring", damping: 20 }}
               className="w-full max-w-sm rounded-[2rem] bg-card border border-border/40 shadow-sm overflow-hidden"
             >
-              {/* Receipt Header Style */}
+              {/* Appointment summary header */}
               <div className="bg-secondary/20 p-6 flex items-center gap-4 border-b border-dashed border-border/60 relative">
                 <div className="absolute left-0 bottom-0 w-6 h-6 -translate-x-1/2 translate-y-1/2 rounded-full bg-background border-r border-border/40 z-10" />
                 <div className="absolute right-0 bottom-0 w-6 h-6 translate-x-1/2 translate-y-1/2 rounded-full bg-background border-l border-border/40 z-10" />

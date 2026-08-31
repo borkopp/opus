@@ -34,7 +34,7 @@ export const ClientForm = () => {
             </FormItem>
           )}
         />
-        <Button variant="terracotta">Save client</Button>
+        <Button variant="default">Save client</Button>
       </form>
     </Form>
   )

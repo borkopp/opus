@@ -13,6 +13,7 @@ import {
   ChartContainer,
   type ChartConfig,
 } from "@/components/ui/chart"
+import { widgetTitleClassName } from "@/components/dashboard/WidgetTitle"
 
 export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { revenueTodayMinorUnits: number, formatMoney: (v: number) => string }) {
   // Assume daily target is £400 (40000 minor units) for now
@@ -28,10 +29,10 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
   const percentage = Math.round((revenue / target) * 100);
 
   // Colour shifts: red → amber → green
-  let progressColor = "hsl(var(--destructive))";
-  if (percentage >= 100) progressColor = "#10B981"; // Success Green
-  else if (percentage >= 80) progressColor = "hsl(var(--primary))"; // Primary Green
-  else if (percentage >= 50) progressColor = "#F59E0B"; // Amber
+  let progressColor = "var(--danger)";
+  if (percentage >= 100) progressColor = "var(--success)";
+  else if (percentage >= 80) progressColor = "var(--brand)";
+  else if (percentage >= 50) progressColor = "var(--highlight)";
 
   const chartData = [{
     name: "Revenue",
@@ -46,14 +47,14 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
     },
     remaining: {
       label: "Remaining",
-      color: "hsl(var(--secondary))",
+      color: "var(--secondary)",
     },
   } satisfies ChartConfig;
 
   return (
-    <Card className="flex flex-col h-full bg-card rounded-[24px]">
-      <CardHeader className="items-center">
-        <CardTitle className="text-xl font-semibold font-display text-primary flex items-center gap-2"> Today&apos;s Goal
+    <Card className="flex flex-col h-full">
+      <CardHeader className="items-start">
+        <CardTitle className={widgetTitleClassName}>Today&apos;s Goal
         </CardTitle>
         <CardDescription>Are we on track today?</CardDescription>
       </CardHeader>
@@ -79,14 +80,14 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) - 15}
-                          className="fill-foreground text-3xl font-bold font-outfit"
+                          className="fill-foreground text-3xl font-bold font-display"
                         >
                           {formatMoney(revenueTodayMinorUnits).replace(/\.00$/, '')}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 16}
-                          className="fill-muted-foreground text-sm font-semibold uppercase tracking-wider font-outfit"
+                          className="fill-muted-foreground text-sm font-semibold uppercase tracking-wider font-display"
                         >
                           Target {formatMoney(dailyTargetMinorUnits).replace(/\.00$/, '')}
                         </tspan>

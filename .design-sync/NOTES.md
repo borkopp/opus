@@ -6,7 +6,7 @@ project `df47644f-1022-4623-8ce1-ef996a7c5e45` ("OPUS Design System").
 ## What this is
 The repo has **no buildable design-system package** — the components live inside the
 Next.js dashboard app. We sync them via the converter's **synth-entry (package) shape**.
-Brand: warm dark-mode-first SaaS, terracotta (`--accent`) on obsidian neutrals.
+Brand: light-first Cobalt Ledger identity with cobalt (`--brand`) on ink/canvas neutrals and apricot, moss, and pomegranate semantic states.
 
 ## Build wiring (non-obvious — read before re-syncing)
 - **`--entry opus-dashboard/.ds-virtual-entry`** is a *deliberately non-existent* path.
@@ -18,7 +18,7 @@ Brand: warm dark-mode-first SaaS, terracotta (`--accent`) on obsidian neutrals.
   1. `opus-dashboard/.ds-compiled.css` — standalone Tailwind v4 build (the `cssEntry`).
      Compiled from `opus-dashboard/.ds-tw-input.css`, which `@source`s `components/ui`
      + `.design-sync/previews` and **defines the `--font-*` CSS vars** normally injected
-     by `next/font` (Syne/DM Sans/DM Mono/Outfit/Playfair). Without these the bundle
+     by `next/font` (Commissioner/Manrope/IBM Plex Mono). Without these the bundle
      renders in fallback fonts.
   2. `opus-dashboard/dist/types/**` — component `.d.ts` via `tsc -p .ds-dts.tsconfig.json`.
      Needed because the inline shadcn prop types (`React.ComponentProps<…> &
@@ -41,7 +41,7 @@ Brand: warm dark-mode-first SaaS, terracotta (`--accent`) on obsidian neutrals.
 4. Converter: `node .ds-sync/package-build.mjs --config .design-sync/config.json --node-modules opus-dashboard/node_modules --entry opus-dashboard/.ds-virtual-entry --out ./ds-bundle` then validate.
 
 ## Known render warns (triaged — not new on re-sync)
-- `[FONT_REMOTE]` Syne/DM Sans/DM Mono/Outfit/Playfair — intentional: brand fonts load at
+- `[FONT_REMOTE]` Commissioner/Manrope/IBM Plex Mono — intentional: brand fonts load at
   runtime via the Google Fonts `@import` in `.ds-tw-input.css`. Nothing to ship.
 - `[RENDER_SKIPPED]` — user opted out of installing playwright/chromium; render check does
   not run. Verification is structural validate + human review of `.review.html`, not machine screenshots.

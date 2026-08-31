@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { CircleAlert, Save } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { DebouncedInput } from "@/components/ui/debounced-input";
-import { Spinner } from "@/components/ui/spinner";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "convex/react";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
-import { posInt, nonNegInt, type FieldErrors } from "../validation";
+import { Button } from "@/components/ui/button";
+import { DebouncedInput } from "@/components/ui/debounced-input";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { TabsContent } from "@/components/ui/tabs";
 import { SettingsCard } from "../SettingsCard";
+import { nonNegInt, posInt, type FieldErrors } from "../validation";
 
 interface BookingOperationsTabProps {
   orgId: Id<"orgs">;
@@ -28,21 +33,70 @@ interface BookingOperationsTabProps {
   };
 }
 
-type Fields = "slotDurationMins" | "bookingWindowDays" | "cancellationWindowHours" | "bufferTimeMins";
+type Fields =
+  | "slotDurationMins"
+  | "bookingWindowDays"
+  | "cancellationWindowHours"
+  | "bufferTimeMins";
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <CircleAlert className="shrink-0" />
-      {message}
-    </p>
-  );
-}
+const FIELD_CONFIG: Array<{
+  id: string;
+  label: string;
+  unit: string;
+  field: Fields;
+  min: number;
+  max: number;
+  description: string;
+}> = [
+  {
+    id: "slot-duration",
+    label: "Slot duration",
+    unit: "minutes",
+    field: "slotDurationMins",
+    min: 1,
+    max: 480,
+    description: "The smallest interval customers can book.",
+  },
+  {
+    id: "buffer-time",
+    label: "Buffer time",
+    unit: "minutes",
+    field: "bufferTimeMins",
+    min: 0,
+    max: 240,
+    description: "Time kept free after every appointment.",
+  },
+  {
+    id: "booking-window",
+    label: "Advance booking limit",
+    unit: "days",
+    field: "bookingWindowDays",
+    min: 1,
+    max: 730,
+    description: "How far ahead customers may book.",
+  },
+  {
+    id: "cancellation-window",
+    label: "Cancellation notice",
+    unit: "hours",
+    field: "cancellationWindowHours",
+    min: 1,
+    max: 8760,
+    description: "Minimum notice required for a customer cancellation.",
+  },
+];
 
-export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTabProps) {
+export function BookingOperationsTab({
+  orgId,
+  initialData,
+}: BookingOperationsTabProps) {
   const isMounted = useRef(true);
-  useEffect(() => { return () => { isMounted.current = false; }; }, []);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const [bookingRules, setBookingRules] = useState({
     slotDurationMins: initialData.slotDurationMins,
@@ -61,33 +115,57 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
       bufferTimeMins: initialData.bufferTimeMins,
     });
   }, [
-    initialData.slotDurationMins,
     initialData.bookingWindowDays,
-    initialData.cancellationWindowHours,
     initialData.bufferTimeMins,
+    initialData.cancellationWindowHours,
+    initialData.slotDurationMins,
   ]);
 
   const updateOrgSettings = useMutation(api.orgSettings.updateOrgSettings);
 
   function validate(): FieldErrors<Fields> {
-    const errs: FieldErrors<Fields> = {};
-    if (!posInt(bookingRules.slotDurationMins) || bookingRules.slotDurationMins > 480)
-      errs.slotDurationMins = "Must be a whole number between 1 and 480 minutes.";
-    if (!posInt(bookingRules.bookingWindowDays) || bookingRules.bookingWindowDays > 730)
-      errs.bookingWindowDays = "Must be a whole number between 1 and 730 days.";
-    if (!posInt(bookingRules.cancellationWindowHours) || bookingRules.cancellationWindowHours > 8760)
-      errs.cancellationWindowHours = "Must be a whole number between 1 and 8760 hours.";
-    if (!nonNegInt(bookingRules.bufferTimeMins) || bookingRules.bufferTimeMins > 240)
-      errs.bufferTimeMins = "Must be 0 or a whole number up to 240 minutes.";
-    return errs;
+    const nextErrors: FieldErrors<Fields> = {};
+    if (
+      !posInt(bookingRules.slotDurationMins) ||
+      bookingRules.slotDurationMins > 480
+    ) {
+      nextErrors.slotDurationMins = "Enter a whole number between 1 and 480.";
+    }
+    if (
+      !posInt(bookingRules.bookingWindowDays) ||
+      bookingRules.bookingWindowDays > 730
+    ) {
+      nextErrors.bookingWindowDays = "Enter a whole number between 1 and 730.";
+    }
+    if (
+      !posInt(bookingRules.cancellationWindowHours) ||
+      bookingRules.cancellationWindowHours > 8760
+    ) {
+      nextErrors.cancellationWindowHours =
+        "Enter a whole number between 1 and 8,760.";
+    }
+    if (
+      !nonNegInt(bookingRules.bufferTimeMins) ||
+      bookingRules.bufferTimeMins > 240
+    ) {
+      nextErrors.bufferTimeMins = "Enter 0 or a whole number up to 240.";
+    }
+    return nextErrors;
   }
 
-  const clearError = (field: Fields) =>
-    errors[field] && setErrors((e) => ({ ...e, [field]: undefined }));
+  const clearError = (field: Fields) => {
+    if (errors[field]) {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
+  };
 
   const handleSave = async () => {
-    const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
     setErrors({});
     setIsSaving(true);
     try {
@@ -101,72 +179,65 @@ export function BookingOperationsTab({ orgId, initialData }: BookingOperationsTa
       if (isMounted.current) toast.success("Booking rules saved");
     } catch (error) {
       if (isMounted.current) {
-        toast.error(error instanceof Error ? error.message : "Failed to save booking rules.");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to save booking rules.",
+        );
       }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
   };
 
-  const numField = (
-    id: string,
-    label: string,
-    unit: string,
-    field: Fields,
-    min: number,
-    max: number,
-    hint?: string,
-  ) => (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>
-        {label}{" "}
-        <span className="text-muted-foreground font-normal ml-1">({unit})</span>
-      </Label>
-      <DebouncedInput
-        id={id}
-        type="number"
-        min={min}
-        max={max}
-        value={String(bookingRules[field])}
-        aria-describedby={errors[field] ? `${id}-error` : hint ? `${id}-hint` : undefined}
-        aria-invalid={!!errors[field]}
-        onChange={(val) => {
-          setBookingRules({ ...bookingRules, [field]: parseInt(val) });
-          clearError(field);
-        }}
-        className={cn(errors[field] && "border-destructive")}
-      />
-      {hint && !errors[field] && (
-        <p id={`${id}-hint`} className="text-xs text-muted-foreground">{hint}</p>
-      )}
-      <FieldError id={`${id}-error`} message={errors[field]} />
-    </div>
-  );
-
   return (
-    <TabsContent
-      value="booking"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
+    <TabsContent value="booking" className="m-0">
       <SettingsCard
         title="Booking rules"
-        description="Control the shape of your calendar: appointment intervals, lead time, cancellation notice, and breathing room between bookings."
-        contentClassName="grid gap-6 sm:grid-cols-2"
+        description="Control appointment intervals, lead time, cancellation notice, and breathing room between bookings."
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
             {isSaving ? "Saving…" : "Save booking rules"}
           </Button>
         }
       >
-          {numField("slot-duration", "Slot Duration", "minutes", "slotDurationMins", 1, 480,
-            "How long each appointment takes, e.g. 30 for a half-hour slot.")}
-          {numField("buffer-time", "Buffer Time", "minutes", "bufferTimeMins", 0, 240,
-            "Automatically block time after each appointment so you're never back-to-back.")}
-          {numField("booking-window", "Advance Booking Limit", "days", "bookingWindowDays", 1, 730,
-            "How far ahead customers can book, e.g. 60 days means two months out.")}
-          {numField("cancellation-window", "Cancellation Notice", "hours", "cancellationWindowHours", 1, 8760,
-            "How much notice a customer must give to cancel, e.g. 24 = 24 hours.")}
+        <FieldGroup className="grid gap-6 sm:grid-cols-2">
+          {FIELD_CONFIG.map((config) => (
+            <Field
+              key={config.field}
+              data-invalid={Boolean(errors[config.field])}
+            >
+              <FieldLabel htmlFor={config.id}>
+                {config.label} ({config.unit})
+              </FieldLabel>
+              <DebouncedInput
+                id={config.id}
+                type="number"
+                min={config.min}
+                max={config.max}
+                value={String(bookingRules[config.field])}
+                aria-describedby={`${config.id}-description`}
+                aria-invalid={Boolean(errors[config.field])}
+                onChange={(value) => {
+                  setBookingRules((current) => ({
+                    ...current,
+                    [config.field]: Number.parseInt(value, 10),
+                  }));
+                  clearError(config.field);
+                }}
+              />
+              <FieldDescription id={`${config.id}-description`}>
+                {config.description}
+              </FieldDescription>
+              <FieldError>{errors[config.field]}</FieldError>
+            </Field>
+          ))}
+        </FieldGroup>
       </SettingsCard>
     </TabsContent>
   );

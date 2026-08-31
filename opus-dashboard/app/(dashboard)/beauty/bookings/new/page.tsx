@@ -134,7 +134,7 @@ export default function NewBookingPage() {
     };
 
     return (
-        <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-10">
+        <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto flex-1 min-h-full">
             <div className="flex items-center gap-4">
                 <Link href="/beauty/bookings">
                     <Button variant="outline" size="icon">
@@ -301,7 +301,7 @@ export default function NewBookingPage() {
                                         initialFocus
                                     />
                                 </div>
-                                <div className="flex-1 border rounded-md p-4 bg-neutral-50 dark:bg-neutral-900 shadow-inner">
+                                <div className="flex-1 rounded-md border border-border bg-muted/40 p-4 shadow-inner">
                                     <h4 className="font-medium text-sm text-center mb-4 text-muted-foreground">{selectedDate ? format(selectedDate, 'EEEE, MMMM do') : 'Select a date'}</h4>
 
                                     {!selectedServiceId ? (
@@ -311,7 +311,7 @@ export default function NewBookingPage() {
                                             <IconLoader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                                         </div>
                                     ) : availableSlots.length === 0 ? (
-                                        <p className="text-sm text-center text-muted-foreground mt-10 text-orange-600">No availability for this date.</p>
+                                        <p className="mt-10 text-center text-sm text-warning">No availability for this date.</p>
                                     ) : (
                                         <ScrollArea className="h-64 pr-4">
                                             <div className="grid grid-cols-2 gap-2">

@@ -52,7 +52,7 @@ function getTypeConfig(type: string) {
         case "new_booking":
             return {
                 icon: <CalendarPlus size={16} strokeWidth={2} />,
-                iconBg: "bg-accent/10 text-accent",
+                iconBg: "bg-accent text-accent-foreground",
             };
         case "booking_cancelled":
             return {
@@ -62,7 +62,7 @@ function getTypeConfig(type: string) {
         case "no_show":
             return {
                 icon: <TriangleAlert size={16} strokeWidth={2} />,
-                iconBg: "bg-amber-500/10 text-amber-600",
+                iconBg: "bg-highlight/15 text-warning",
             };
         default:
             return {
@@ -117,14 +117,14 @@ function NotificationItem({
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     {notification.body}
                 </p>
-                <p className="text-[10px] text-muted-foreground/60 mt-1 font-outfit">
+                <p className="text-[10px] text-muted-foreground/60 mt-1 font-display">
                     {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                 </p>
             </div>
 
             {/* Unread dot */}
             {!notification.isRead && (
-                <div className="absolute right-8 top-3.5 h-2 w-2 rounded-full bg-accent" />
+                <div className="absolute right-8 top-3.5 h-2 w-2 rounded-full bg-primary" />
             )}
 
             {/* Dismiss button */}
@@ -151,10 +151,12 @@ function NotificationToast({
     notification,
     onDismiss,
     onClick,
+    placement = "header",
 }: {
     notification: DashboardNotification;
     onDismiss: () => void;
     onClick: () => void;
+    placement?: "header" | "sidebar";
 }) {
     const { icon, iconBg } = getTypeConfig(notification.type);
     const [exiting, setExiting] = useState(false);
@@ -173,7 +175,10 @@ function NotificationToast({
     return (
         <div
             className={cn(
-                "absolute right-0 top-12 z-[60] w-[340px] rounded-2xl border border-border/50 bg-card shadow-xl overflow-hidden cursor-pointer",
+                "absolute z-[60] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border/50 bg-card shadow-xl overflow-hidden cursor-pointer",
+                placement === "sidebar"
+                    ? "left-0 bottom-full mb-3 md:left-full md:bottom-0 md:top-auto md:ml-3"
+                    : "right-0 top-12",
                 "transition-all duration-250 ease-out",
                 exiting
                     ? "opacity-0 translate-y-[-8px] scale-95"
@@ -233,7 +238,13 @@ function NotificationToast({
 // ─────────────────────────────────────────────────────
 // Bell + dropdown
 // ─────────────────────────────────────────────────────
-export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
+export function NotificationBell({
+    orgId,
+    placement = "header",
+}: {
+    orgId: Id<"orgs">;
+    placement?: "header" | "sidebar";
+}) {
     const notifications = useQuery(api.dashboardNotifications.list, { orgId });
     const unreadCount = useQuery(api.dashboardNotifications.getUnreadCount, { orgId });
     const orgSettings = useQuery(api.orgSettings.getOrgSettings, { orgId });
@@ -330,6 +341,7 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
             {toastNotification && !open && (
                 <NotificationToast
                     notification={toastNotification}
+                    placement={placement}
                     onDismiss={() => setToastNotification(null)}
                     onClick={() => {
                         if (toastNotification.bookingId) {
@@ -344,15 +356,17 @@ export function NotificationBell({ orgId }: { orgId: Id<"orgs"> }) {
             {/* Dropdown */}
             {open && (
                 <div className={cn(
-                    "absolute right-0 top-12 z-50 w-[380px] rounded-[20px] border border-border/40 bg-card shadow-lg overflow-hidden",
-                    "animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150",
+                    "absolute z-50 w-[380px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/40 bg-card shadow-xl overflow-hidden",
+                    placement === "sidebar"
+                        ? "left-0 bottom-full mb-3 md:left-full md:bottom-0 md:top-auto md:ml-3 animate-in fade-in-0 zoom-in-95 slide-in-from-left-2 duration-150"
+                        : "right-0 top-12 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150",
                 )}>
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold font-display text-primary">Notifications</span>
                             {hasUnread && (
-                                <span className="text-[10px] font-bold bg-accent/10 text-accent px-1.5 py-0.5 rounded-full">
+                                    <span className="text-[10px] font-bold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
                                     {unreadCount} new
                                 </span>
                             )}

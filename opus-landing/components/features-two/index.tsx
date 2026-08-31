@@ -10,14 +10,13 @@ import { MacbookSkeleton } from "./macbook-skeleton";
 import { IPhoneSkeleton } from "./iphone-skeleton";
 import { IPadSkeleton } from "./ipad-skeleton";
 import { EdgeComputing } from "./edge-computing";
-import { Compliance } from "./compliance";
 
 export function FeaturesTwo() {
   return (
     <Container className="px-4 py-10 md:py-20 lg:py-32">
       <div className="mx-auto mb-16 max-w-2xl text-center">
         <Heading as="h2" className="mb-4">
-          Управувајте од <span className="text-brand-primary font-playfair italic">било кој </span> уред
+          Управувајте од било кој уред
         </Heading>
         <Subheading className="text-balance">
           OPUS работи беспрекорно на телефон, таблет и компјутер. Водете го вашиот бизнис од каде сакате.
@@ -107,15 +106,15 @@ function FeatureItem({ children }: { children: React.ReactNode }) {
 
 function BeamCircle() {
   return (
-    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700">
-      <div className="bg-brand-primary h-2 w-2 rounded-full" />
+    <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted">
+      <div className="bg-primary h-2 w-2 rounded-full" />
     </div>
   );
 }
 
 function FeatureTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mt-6 text-center text-base font-medium text-neutral-900 dark:text-neutral-100">
+    <h3 className="mt-6 text-center text-base font-medium text-foreground">
       {children}
     </h3>
   );
@@ -123,7 +122,7 @@ function FeatureTitle({ children }: { children: React.ReactNode }) {
 
 function FeatureDescription({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mx-auto mt-2 max-w-xs text-center text-sm text-balance text-neutral-500 dark:text-neutral-400">
+    <p className="mx-auto mt-2 max-w-xs text-center text-sm text-balance text-muted-foreground">
       {children}
     </p>
   );
@@ -139,15 +138,15 @@ function FeatureBlock({
   description: string;
 }) {
   return (
-    <div className="group rounded-2xl bg-white p-6 shadow-sm ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10">
+    <div className="group rounded-lg border border-border bg-card p-6 shadow-sm">
       <div className="relative flex min-h-40 items-center justify-center mask-radial-from-20%">
         {/* <Scales size={8} className="-z-1 rounded-lg" /> */}
         {icon}
       </div>
-      <h3 className="mt-4 text-sm font-semibold text-neutral-900 dark:text-white">
+      <h3 className="mt-4 text-sm font-semibold text-foreground">
         {title}
       </h3>
-      <p className="mt-2 text-sm text-balance text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-sm text-balance text-muted-foreground">
         {description}
       </p>
     </div>

@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
 
 function StatCounter({ value, suffix = "", decimals = 0 }: { value: number, suffix?: string, decimals?: number }) {
    const [displayValue, setDisplayValue] = useState(0);
@@ -62,14 +63,14 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
    };
 
    const getUtilisationColor = (pct: number) => {
-      if (pct >= 70) return "bg-green-500";
-      if (pct >= 40) return "bg-amber-400";
+      if (pct >= 70) return "bg-success";
+      if (pct >= 40) return "bg-highlight";
       return "bg-destructive";
    };
 
    const getUtilisationText = (pct: number) => {
-      if (pct >= 70) return "text-green-500";
-      if (pct >= 40) return "text-amber-500";
+      if (pct >= 70) return "text-success";
+      if (pct >= 40) return "text-warning";
       return "text-destructive";
    };
 
@@ -80,9 +81,9 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
          animate="visible"
          className="h-full"
       >
-         <Card className="flex flex-col bg-card p-5 col-span-1 lg:col-span-1 h-full rounded-[24px] border-border/40 shadow-sm transition-all duration-500 hover:shadow-md">
+         <Card className="flex flex-col p-5 col-span-1 lg:col-span-1 h-full transition-shadow duration-300 hover:shadow-md">
             <motion.div variants={itemVars} className="flex justify-between items-center mb-4">
-               <h2 className="text-xl font-semibold font-display text-primary">Staff Capacity</h2>
+               <WidgetTitle>Staff Capacity</WidgetTitle>
             </motion.div>
 
             <motion.div variants={itemVars} className="flex items-center gap-6 mb-5 pb-5 border-b border-border/20">
@@ -99,7 +100,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                         </filter>
                      </defs>
                      <path
-                        className="text-secondary dark:text-zinc-800 stroke-current fill-none"
+                        className="text-secondary stroke-current fill-none"
                         style={{ strokeWidth: 4 }}
                         strokeDasharray="100, 100"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -116,7 +117,7 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                      />
                   </svg>
                   <div className="absolute flex flex-col items-center">
-                     <span className="text-sm font-bold font-outfit leading-none">
+                     <span className="text-sm font-bold font-display leading-none">
                         <StatCounter value={isNaN(overallUtilisation) ? 0 : overallUtilisation} />
                         <span className="ml-0.5">%</span>
                      </span>
@@ -143,12 +144,12 @@ export function StaffUtilisationWidget({ staffUtilisation }: StaffUtilisationPro
                            className="flex flex-col gap-2 group cursor-default"
                         >
                            <div className="flex justify-between items-center">
-                              <span className="text-foreground/90 group-hover:text-primary transition-colors">{staff.staffName}</span>
-                              <span className="font-outfit text-primary/80">
+                              <span className="text-foreground transition-colors">{staff.staffName}</span>
+                              <span className="font-display text-foreground">
                                  <StatCounter value={pct} suffix="%" />
                               </span>
                            </div>
-                           <div className="w-full h-3 rounded-full bg-secondary/50 dark:bg-zinc-800/50 shadow-[inset_0_1px_3px_rgba(0,0,0,0.15)] flex items-center p-0.5 overflow-hidden">
+                           <div className="w-full h-3 rounded-full bg-secondary/50 shadow-[inset_0_1px_3px_rgba(0,0,0,0.15)] flex items-center p-0.5 overflow-hidden">
                               <motion.div
                                  initial={{ width: 0 }}
                                  animate={{ width: `${pct}%` }}

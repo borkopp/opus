@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
 import { requireActiveOrg, requireRole } from "./lib/auth";
 
@@ -116,48 +116,5 @@ export const unpublishOrg = mutation({
       { entityType: "org", entityId: orgId },
     );
     return orgId;
-  },
-});
-
-export const recomputeListingStatus = internalMutation({
-  args: { orgId: v.id("orgs") },
-  handler: async (ctx, args) => {
-    const state = await getBeautyActivationState(ctx, args.orgId);
-    if (!state) return;
-
-    const currentStatus = state.org.listingStatus;
-    let nextStatus = currentStatus;
-    if (currentStatus === "published" && !state.allRequiredComplete) {
-      nextStatus = "suspended";
-    } else if (currentStatus === "suspended" && state.allRequiredComplete) {
-      nextStatus = "published";
-    }
-    if (nextStatus === currentStatus) return;
-
-    const now = Date.now();
-    await ctx.db.patch(args.orgId, {
-      listingStatus: nextStatus,
-      updatedAt: now,
-    });
-    await ctx.db.insert("audit_log", {
-      orgId: args.orgId,
-      actorType: "system",
-      action: `org.listing_status.${nextStatus}`,
-      resourceType: "orgs",
-      resourceId: args.orgId,
-      before: { listingStatus: currentStatus },
-      after: {
-        listingStatus: nextStatus,
-        incompleteRequirements: state.requirements
-          .filter((item) => !item.complete)
-          .map((item) => item.code),
-      },
-      createdAt: now,
-    });
-    await ctx.scheduler.runAfter(
-      0,
-      internal.marketplace.embeddings.embedEntity,
-      { entityType: "org", entityId: args.orgId },
-    );
   },
 });

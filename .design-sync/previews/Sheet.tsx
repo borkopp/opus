@@ -22,7 +22,7 @@ export const EditService = () => (
         </div>
       </div>
       <SheetFooter>
-        <Button variant="terracotta">Save changes</Button>
+        <Button variant="default">Save changes</Button>
       </SheetFooter>
     </SheetContent>
   </Sheet>

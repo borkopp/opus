@@ -15,7 +15,7 @@ export const WithLabel = () => (
       <Switch defaultChecked /> Accept online bookings
     </Label>
     <Label style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-      <Switch /> Require deposit at booking
+      <Switch /> Send booking reminders
     </Label>
   </div>
 )

@@ -18,7 +18,19 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
@@ -28,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { parseMapboxFeature, type BusinessLocation } from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
@@ -157,14 +170,6 @@ function createDraft(state: ActivationState | undefined): OnboardingDraft {
   };
 }
 
-function sectionLabel(step: WizardStep): string {
-  if (step.startsWith("business")) return "Your studio";
-  if (step === "location") return "Location";
-  if (step.startsWith("service")) return "Your first service";
-  if (step === "hours") return "Opening hours";
-  return "Ready to go";
-}
-
 function firstStepForSection(section: string): WizardStep {
   if (section === "location") return "location";
   if (section === "service") return "service-name";
@@ -173,33 +178,38 @@ function firstStepForSection(section: string): WizardStep {
   return "business-name";
 }
 
-function minimalInputClass(hasError = false): string {
-  return cn(
-    "h-16 rounded-none border-x-0 border-t-0 border-b border-border bg-transparent px-0 text-center !text-2xl shadow-none placeholder:text-muted-foreground/50 focus-visible:border-accent focus-visible:ring-0 sm:!text-3xl",
-    hasError && "border-destructive focus-visible:border-destructive",
-  );
-}
-
 function StepHeading({
-  eyebrow,
   title,
   description,
 }: {
-  eyebrow: string;
   title: string;
   description: string;
 }) {
   return (
-    <div className="flex flex-col items-center">
-      <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
-        {eyebrow}
-      </p>
-      <h1 className="mt-5 max-w-2xl font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-5xl">
+    <div className="flex flex-col items-center text-center">
+      <h1 className="max-w-4xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-5xl">
         {title}
       </h1>
-      <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
+      <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground">
         {description}
       </p>
+    </div>
+  );
+}
+
+function StepFrame({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex w-full flex-col items-center">
+      <StepHeading title={title} description={description} />
+      <div className="mt-12 w-full max-w-xl">{children}</div>
     </div>
   );
 }
@@ -218,12 +228,12 @@ function WizardActions({
   label?: string;
 }) {
   return (
-    <div className="relative mt-14 flex w-full items-center justify-center gap-4">
+    <div className="relative mt-8 flex w-full items-center justify-center gap-4 sm:mt-10">
       {canGoBack ? (
         <Button
           type="button"
           variant="ghost"
-          className="absolute left-0 border-0 bg-transparent px-0 shadow-none hover:bg-transparent hover:text-accent"
+          className="absolute left-0 border-0 bg-transparent px-0 shadow-none hover:bg-transparent hover:text-foreground"
           onClick={onBack}
         >
           <ArrowLeft data-icon="inline-start" />
@@ -232,7 +242,7 @@ function WizardActions({
       ) : null}
       <Button
         type="submit"
-        variant="terracotta"
+        variant="default"
         size="lg"
         className="min-w-28 shadow-none"
         disabled={disabled || isSubmitting}
@@ -247,7 +257,6 @@ function WizardActions({
 
 function TextInputStep({
   id,
-  eyebrow,
   title,
   description,
   value,
@@ -262,7 +271,6 @@ function TextInputStep({
   step,
 }: {
   id: string;
-  eyebrow: string;
   title: string;
   description: string;
   value: string;
@@ -302,38 +310,39 @@ function TextInputStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepHeading eyebrow={eyebrow} title={title} description={description} />
-      <div className="mt-12 w-full">
-        <label className="sr-only" htmlFor={id}>
-          {title}
-        </label>
-        <Input
-          id={id}
-          autoFocus
-          type={type}
-          inputMode={inputMode}
-          min={min}
-          step={step}
-          value={inputValue}
-          placeholder={placeholder}
-          aria-invalid={Boolean(error)}
-          className={minimalInputClass(Boolean(error))}
-          onChange={(event) => setInputValue(event.target.value)}
+      <StepFrame title={title} description={description}>
+        <Field data-invalid={Boolean(error)}>
+          <FieldLabel className="sr-only" htmlFor={id}>
+            {title}
+          </FieldLabel>
+          <Input
+            id={id}
+            autoFocus
+            type={type}
+            inputMode={inputMode}
+            min={min}
+            step={step}
+            value={inputValue}
+            placeholder={placeholder}
+            aria-invalid={Boolean(error)}
+            variant="prominent"
+            onChange={(event) => {
+              setInputValue(event.target.value);
+              setError(null);
+            }}
+          />
+          <div className="min-h-5">
+            <FieldError className="text-center" aria-live="polite">
+              {error}
+            </FieldError>
+          </div>
+        </Field>
+        <WizardActions
+          canGoBack={canGoBack}
+          onBack={onBack}
+          isSubmitting={isSubmitting}
         />
-        <div
-          className={cn(
-            "mt-3 min-h-5 text-center text-sm",
-            error ? "text-destructive" : "text-muted-foreground",
-          )}
-        >
-          {error}
-        </div>
-      </div>
-      <WizardActions
-        canGoBack={canGoBack}
-        onBack={onBack}
-        isSubmitting={isSubmitting}
-      />
+      </StepFrame>
     </form>
   );
 }
@@ -366,41 +375,51 @@ function BusinessCategoryStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepHeading
-        eyebrow="Your studio"
+      <StepFrame
         title="What kind of studio is this?"
-        description="This helps customers find you in the right place on opus.mk."
-      />
-      <div className="mt-12">
-        <label className="sr-only" htmlFor="business-category">
-          Beauty category
-        </label>
-        <Select
-          value={category}
-          onValueChange={(next) => setCategory(next as BeautyCategory)}
-        >
-          <SelectTrigger
-            id="business-category"
-            className="h-16 w-full justify-center rounded-none border-x-0 border-t-0 border-b border-border bg-transparent px-0 text-center text-2xl shadow-none focus:ring-0 sm:text-3xl"
+        description="This helps customers understand what your studio offers."
+      >
+        <Field>
+          <FieldLabel className="sr-only" htmlFor="business-category">
+            Beauty category
+          </FieldLabel>
+          <Select
+            value={category}
+            onValueChange={(next) => setCategory(next as BeautyCategory)}
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {beautyCategories.map(([itemValue, label]) => (
-                <SelectItem key={itemValue} value={itemValue}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-      <WizardActions
-        canGoBack={canGoBack}
-        onBack={onBack}
-        isSubmitting={isSubmitting}
-      />
+            <SelectTrigger
+              id="business-category"
+              variant="prominent"
+              aria-label="Beauty category"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent
+              variant="prominent"
+              position="popper"
+              align="start"
+              sideOffset={8}
+            >
+              <SelectGroup>
+                {beautyCategories.map(([itemValue, label]) => (
+                  <SelectItem
+                    key={itemValue}
+                    value={itemValue}
+                    variant="prominent"
+                  >
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
+        <WizardActions
+          canGoBack={canGoBack}
+          onBack={onBack}
+          isSubmitting={isSubmitting}
+        />
+      </StepFrame>
     </form>
   );
 }
@@ -451,80 +470,79 @@ function LocationStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepHeading
-        eyebrow="Location"
+      <StepFrame
         title="Where is your studio?"
         description="Search for the address customers should use, then choose the matching place."
-      />
-      <div className="relative mt-12">
-        <label className="sr-only" htmlFor="location-search">
-          Studio address
-        </label>
-        <Search className="pointer-events-none absolute left-0 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          id="location-search"
-          autoFocus
-          value={searchQuery}
-          autoComplete="off"
-          placeholder="Start typing your address"
-          aria-invalid={Boolean(error || searchError)}
-          className={cn(
-            minimalInputClass(Boolean(error || searchError)),
-            "pl-8",
-          )}
-          onChange={(event) => {
-            setSearchQuery(event.target.value);
-            setSelectedLocation(null);
-            setError(null);
-          }}
-        />
-        {results.length > 0 && (
-          <div className="absolute inset-x-0 top-full z-10 border-b border-border bg-background">
-            {results.map((feature) => (
-              <button
-                key={feature.id}
-                type="button"
-                className="flex w-full flex-col gap-1 border-b border-border px-8 py-4 text-left last:border-b-0 hover:text-accent"
-                onClick={() => {
-                  const location = parseMapboxFeature(feature);
-                  setSelectedLocation(location);
-                  setSearchQuery(location.displayName);
-                  clearResults();
+      >
+        <Field data-invalid={Boolean(error || searchError)}>
+          <FieldLabel className="sr-only" htmlFor="location-search">
+            Studio address
+          </FieldLabel>
+          <div className="relative">
+            <InputGroup variant="prominent">
+              <InputGroupAddon>
+                <Search />
+              </InputGroupAddon>
+              <InputGroupInput
+                id="location-search"
+                autoFocus
+                value={searchQuery}
+                autoComplete="off"
+                placeholder="Start typing your address"
+                aria-invalid={Boolean(error || searchError)}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setSelectedLocation(null);
                   setError(null);
                 }}
-              >
-                <span className="text-sm font-medium">{feature.text}</span>
-                <span className="truncate text-xs text-muted-foreground">
-                  {feature.place_name}
-                </span>
-              </button>
-            ))}
+              />
+            </InputGroup>
+            {results.length > 0 && (
+              <div className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-l">
+                {results.map((feature) => (
+                  <button
+                    key={feature.id}
+                    type="button"
+                    className="flex w-full flex-col gap-1 rounded-xl px-4 py-3 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
+                    onClick={() => {
+                      const location = parseMapboxFeature(feature);
+                      setSelectedLocation(location);
+                      setSearchQuery(location.displayName);
+                      clearResults();
+                      setError(null);
+                    }}
+                  >
+                    <span className="text-sm font-medium">{feature.text}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {feature.place_name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-        <div
-          className={cn(
-            "mt-3 min-h-5 text-center text-sm",
-            error || searchError
-              ? "text-destructive"
-              : selectedLocation
-                ? "text-accent"
-                : "text-muted-foreground",
-          )}
-        >
-          {error ?? searchError ?? (selectedLocation ? "Address selected" : "")}
-        </div>
-      </div>
-      <WizardActions
-        canGoBack={canGoBack}
-        onBack={onBack}
-        isSubmitting={isSubmitting}
-        disabled={isSearching}
-      />
-      <p className="mt-5 text-center text-xs text-muted-foreground">
-        {state.org.address
-          ? "You can search again to update this location."
-          : "You can adjust details later in Settings."}
-      </p>
+          <div className="min-h-5 text-center">
+            {error || searchError ? (
+              <FieldError aria-live="polite">{error ?? searchError}</FieldError>
+            ) : selectedLocation ? (
+              <FieldDescription className="text-success">
+                Address selected
+              </FieldDescription>
+            ) : null}
+          </div>
+        </Field>
+        <WizardActions
+          canGoBack={canGoBack}
+          onBack={onBack}
+          isSubmitting={isSubmitting}
+          disabled={isSearching}
+        />
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          {state.org.address
+            ? "You can search again to update this location."
+            : "You can adjust details later in Settings."}
+        </p>
+      </StepFrame>
     </form>
   );
 }
@@ -604,79 +622,81 @@ function HoursStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepHeading
-        eyebrow="Opening hours"
+      <StepFrame
         title="When can customers book?"
         description="Set your weekly hours once. You can fine-tune individual days later."
-      />
-      <div className="mt-10 space-y-1">
-        {draftHours.map((day, index) => (
-          <div
-            key={day.dayOfWeek}
-            className="grid grid-cols-[5.5rem_minmax(0,1fr)_4rem] items-center gap-3 border-b border-border py-3 text-left last:border-b-0"
-          >
-            <label
-              className="text-sm font-medium"
-              htmlFor={`hours-${day.dayOfWeek}`}
+      >
+        <FieldGroup className="gap-2">
+          {draftHours.map((day, index) => (
+            <Field
+              key={day.dayOfWeek}
+              orientation="horizontal"
+              variant="surface"
+              data-disabled={day.isClosed}
+              data-invalid={Boolean(error) && !day.isClosed}
+              className="grid grid-cols-[4.75rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[6rem_minmax(0,1fr)_auto]"
             >
-              {DAYS[day.dayOfWeek]}
-            </label>
-            <Input
-              id={`hours-${day.dayOfWeek}`}
-              value={day.isClosed ? "" : (rangeValues[index] ?? "")}
-              placeholder="09:00 – 18:00"
-              disabled={day.isClosed}
-              aria-label={`${DAYS[day.dayOfWeek]} opening hours`}
-              aria-invalid={Boolean(error)}
-              className={cn(
-                "h-10 rounded-none border-x-0 border-t-0 bg-transparent px-0 text-center text-sm shadow-none placeholder:text-muted-foreground/50 focus-visible:border-accent focus-visible:ring-0",
-                error && "border-destructive focus-visible:border-destructive",
-              )}
-              onChange={(event) => {
-                setRangeValues((current) =>
-                  current.map((value, valueIndex) =>
-                    valueIndex === index ? event.target.value : value,
-                  ),
-                );
-                setError(null);
-              }}
-            />
-            <button
-              type="button"
-              className="text-right text-xs text-muted-foreground transition-colors hover:text-accent"
-              onClick={() => {
-                setDraftHours((current) =>
-                  current.map((currentDay) =>
-                    currentDay.dayOfWeek === day.dayOfWeek
-                      ? { ...currentDay, isClosed: !currentDay.isClosed }
-                      : currentDay,
-                  ),
-                );
-                setRangeValues((current) =>
-                  current.map((value, valueIndex) =>
-                    valueIndex === index
-                      ? day.isClosed
-                        ? formatHoursRange(day)
-                        : ""
-                      : value,
-                  ),
-                );
-                setError(null);
-              }}
-            >
-              {day.isClosed ? "Open" : "Closed"}
-            </button>
-          </div>
-        ))}
-      </div>
-      <p className="mt-4 min-h-5 text-center text-sm text-destructive">
-        {error}
-      </p>
-      <WizardActions
-        canGoBack={canGoBack}
-        onBack={onBack}
-        isSubmitting={isSubmitting}
-      />
+              <FieldLabel htmlFor={`hours-${day.dayOfWeek}`}>
+                {DAYS[day.dayOfWeek]}
+              </FieldLabel>
+              <Input
+                id={`hours-${day.dayOfWeek}`}
+                value={day.isClosed ? "" : (rangeValues[index] ?? "")}
+                placeholder="09:00 – 18:00"
+                disabled={day.isClosed}
+                aria-label={`${DAYS[day.dayOfWeek]} opening hours`}
+                aria-invalid={Boolean(error) && !day.isClosed}
+                variant="surface"
+                className="text-center tabular"
+                onChange={(event) => {
+                  setRangeValues((current) =>
+                    current.map((value, valueIndex) =>
+                      valueIndex === index ? event.target.value : value,
+                    ),
+                  );
+                  setError(null);
+                }}
+              />
+              <div className="flex items-center justify-end gap-2">
+                <span className="hidden text-xs text-muted-foreground sm:inline">
+                  {day.isClosed ? "Closed" : "Open"}
+                </span>
+                <Switch
+                  checked={!day.isClosed}
+                  aria-label={`${day.isClosed ? "Open" : "Close"} ${DAYS[day.dayOfWeek]}`}
+                  onCheckedChange={() => {
+                    setDraftHours((current) =>
+                      current.map((currentDay) =>
+                        currentDay.dayOfWeek === day.dayOfWeek
+                          ? { ...currentDay, isClosed: !currentDay.isClosed }
+                          : currentDay,
+                      ),
+                    );
+                    setRangeValues((current) =>
+                      current.map((value, valueIndex) =>
+                        valueIndex === index
+                          ? day.isClosed
+                            ? formatHoursRange(day)
+                            : ""
+                          : value,
+                      ),
+                    );
+                    setError(null);
+                  }}
+                />
+              </div>
+            </Field>
+          ))}
+        </FieldGroup>
+        <div className="mt-3 min-h-5 text-center">
+          <FieldError aria-live="polite">{error}</FieldError>
+        </div>
+        <WizardActions
+          canGoBack={canGoBack}
+          onBack={onBack}
+          isSubmitting={isSubmitting}
+        />
+      </StepFrame>
     </form>
   );
 }
@@ -694,7 +714,7 @@ function ReviewStep({
   onBack: () => void;
   onPublished: () => void;
 }) {
-  const publish = useMutation(api.listing.publishOrg);
+  const publish = useMutation(api.website.publish);
   const [isPublishing, setIsPublishing] = useState(false);
 
   const handlePublish = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -702,7 +722,7 @@ function ReviewStep({
     setIsPublishing(true);
     try {
       await publish({});
-      toast.success("Published on opus.mk");
+      toast.success("Website published");
       onPublished();
     } catch (caught) {
       toast.error(errorMessage(caught));
@@ -713,76 +733,81 @@ function ReviewStep({
 
   return (
     <div className="w-full">
-      <StepHeading
-        eyebrow="Ready to go"
+      <StepFrame
         title={
-          state.org.listingStatus === "published"
+          state.org.websiteStatus === "published"
             ? "Your studio is live"
             : "A quick final check"
         }
-        description="Everything below is what customers will use to find and book your studio."
-      />
-      <div className="mt-12 text-left">
-        <ul className="divide-y divide-border border-y border-border">
-          {state.requirements.map((requirement) => (
-            <li key={requirement.code} className="flex items-start gap-4 py-4">
-              <span
-                className={cn(
-                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
-                  requirement.complete
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-secondary text-muted-foreground",
-                )}
+        description="Everything below is what customers will use to book on your studio website."
+      >
+        <div>
+          <ul className="flex flex-col gap-2">
+            {state.requirements.map((requirement) => (
+              <li
+                key={requirement.code}
+                className="flex items-start gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-s"
               >
-                {requirement.complete ? (
-                  <Check className="size-3.5" />
-                ) : (
-                  <Clock3 className="size-3.5" />
-                )}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{requirement.label}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {requirement.description}
-                </p>
-              </div>
-              {!requirement.complete && (
-                <Button
-                  asChild
-                  variant="link"
-                  size="sm"
-                  className="h-auto shrink-0 px-0 shadow-none"
+                <span
+                  className={cn(
+                    "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full",
+                    requirement.complete
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-secondary text-muted-foreground",
+                  )}
                 >
-                  <Link href={requirement.actionHref}>Fix</Link>
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
+                  {requirement.complete ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <Clock3 className="size-3.5" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{requirement.label}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {requirement.description}
+                  </p>
+                </div>
+                {!requirement.complete && (
+                  <Button
+                    asChild
+                    variant="link"
+                    size="sm"
+                    className="h-auto shrink-0 px-0 shadow-none"
+                  >
+                    <Link href={requirement.actionHref}>Fix</Link>
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
 
-      <form onSubmit={handlePublish}>
-        <WizardActions
-          canGoBack={canGoBack}
-          onBack={onBack}
-          isSubmitting={isPublishing}
-          disabled={
-            !state.allRequiredComplete ||
-            state.org.listingStatus === "published"
-          }
-          label={
-            state.org.listingStatus === "published" ? "Published" : "Publish"
-          }
-        />
-      </form>
+          <form onSubmit={handlePublish}>
+            <WizardActions
+              canGoBack={canGoBack}
+              onBack={onBack}
+              isSubmitting={isPublishing}
+              disabled={
+                !state.allRequiredComplete ||
+                state.org.websiteStatus === "published"
+              }
+              label={
+                state.org.websiteStatus === "published"
+                  ? "Website published"
+                  : "Publish website"
+              }
+            />
+          </form>
+        </div>
+      </StepFrame>
 
       <div className="mt-20 border-t border-border pt-12 text-left">
         <div className="mb-7 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">
-            Your public listing
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Your studio website
           </p>
           <p className="mt-3 text-sm text-muted-foreground">
-            This is the profile customers will see on opus.mk.
+            This is the information customers will see on your opus.mk website.
           </p>
         </div>
         <ActivationPreview preview={preview} />
@@ -842,7 +867,6 @@ export function OnboardingWizard() {
     : "business-name";
   const step = manualStep ?? derivedStep;
   const stepIndex = STEP_ORDER.indexOf(step);
-  const progress = ((stepIndex + 1) / STEP_ORDER.length) * 100;
   const canGoBack = stepIndex > 0;
 
   const goNext = () => {
@@ -911,12 +935,6 @@ export function OnboardingWizard() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="fixed inset-x-0 top-0 z-20 h-0.5 bg-border">
-        <div
-          className="h-full bg-accent transition-[width] duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
       <header className="px-6 py-6 sm:px-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Logo className="text-2xl" />
@@ -928,19 +946,11 @@ export function OnboardingWizard() {
         </div>
       </header>
 
-      <div className="mx-auto flex min-h-[calc(100vh-92px)] max-w-3xl flex-col items-center px-6 pb-16 pt-8 sm:px-10 sm:pt-16">
-        <div className="mb-12 flex w-full max-w-xl items-center justify-between text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-          <span>{sectionLabel(step)}</span>
-          <span className="font-outfit tracking-normal">
-            {stepIndex + 1} / {STEP_ORDER.length}
-          </span>
-        </div>
-
-        <div className="flex w-full max-w-xl flex-1 items-start justify-center">
+      <div className="mx-auto flex min-h-[calc(100vh-92px)] max-w-6xl flex-col items-center px-6 pb-16 pt-8 sm:px-10 sm:pt-16">
+        <div className="flex w-full flex-1 items-start justify-center">
           {step === "business-name" && (
             <TextInputStep
               id="business-name"
-              eyebrow="Your studio"
               title="Enter your business name"
               description="Use the name your customers already know you by."
               value={currentDraft.name}
@@ -978,7 +988,6 @@ export function OnboardingWizard() {
           {step === "service-name" && (
             <TextInputStep
               id="service-name"
-              eyebrow="Your first service"
               title="What should customers book?"
               description="Start with the service you want to fill first."
               value={currentDraft.service.name}
@@ -995,7 +1004,6 @@ export function OnboardingWizard() {
           {step === "service-price" && (
             <TextInputStep
               id="service-price"
-              eyebrow="Your first service"
               title="What does it cost?"
               description="Enter the price customers will see."
               value={currentDraft.service.price}
@@ -1015,7 +1023,6 @@ export function OnboardingWizard() {
           {step === "service-duration" && (
             <TextInputStep
               id="service-duration"
-              eyebrow="Your first service"
               title="How long does it take?"
               description="Most appointment slots work best in 15-minute increments."
               value={String(currentDraft.service.durationMins)}

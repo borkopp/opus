@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import { operationalSettingsError } from "./orgSettingsValidation";
 
 type ReadCtx = Pick<QueryCtx, "db">;
 
@@ -106,9 +107,8 @@ export async function getBeautyActivationState(
     staff.find((member) => member.role === "owner") ??
     null;
   const firstService =
-    services.find(
-      (service) => owner && service.staffIds.includes(owner._id),
-    ) ?? null;
+    services.find((service) => owner && service.staffIds.includes(owner._id)) ??
+    null;
   const ownerAvailability = owner
     ? availabilityRules.filter((rule) => rule.staffId === owner._id)
     : [];
@@ -127,31 +127,28 @@ export async function getBeautyActivationState(
   const serviceComplete = Boolean(firstService);
   const availabilityComplete = Boolean(
     firstService &&
-      org.openingHours?.some((displayHours) => {
-        if (displayHours.isClosed) return false;
-        const availabilityDay = (displayHours.dayOfWeek + 1) % 7;
-        return ownerAvailability.some((rule) => {
-          if (rule.dayOfWeek !== availabilityDay) return false;
-          const overlapStart = Math.max(
-            timeToMinutes(displayHours.open),
-            timeToMinutes(rule.startTime),
-          );
-          const overlapEnd = Math.min(
-            timeToMinutes(displayHours.close),
-            timeToMinutes(rule.endTime),
-          );
-          return overlapEnd - overlapStart >= firstService.durationMins;
-        });
-      }),
+    org.openingHours?.some((displayHours) => {
+      if (displayHours.isClosed) return false;
+      const availabilityDay = (displayHours.dayOfWeek + 1) % 7;
+      return ownerAvailability.some((rule) => {
+        if (rule.dayOfWeek !== availabilityDay) return false;
+        const overlapStart = Math.max(
+          timeToMinutes(displayHours.open),
+          timeToMinutes(rule.startTime),
+        );
+        const overlapEnd = Math.min(
+          timeToMinutes(displayHours.close),
+          timeToMinutes(rule.endTime),
+        );
+        return overlapEnd - overlapStart >= firstService.durationMins;
+      });
+    }),
   );
   const bookingSettingsComplete = Boolean(
     settings &&
-      Number.isInteger(settings.slotDurationMins) &&
-      settings.slotDurationMins > 0 &&
-      Number.isInteger(settings.bookingWindowDays) &&
-      settings.bookingWindowDays > 0 &&
-      firstService &&
-      firstService.durationMins % settings.slotDurationMins === 0,
+    !operationalSettingsError(settings) &&
+    firstService &&
+    firstService.durationMins % settings.slotDurationMins === 0,
   );
   const requirements = [
     requirement(
@@ -202,7 +199,8 @@ export async function getBeautyActivationState(
   if (!identityComplete) nextStep = "business";
   else if (!locationComplete) nextStep = "location";
   else if (!serviceComplete) nextStep = "service";
-  else if (!availabilityComplete || !bookingSettingsComplete) nextStep = "hours";
+  else if (!availabilityComplete || !bookingSettingsComplete)
+    nextStep = "hours";
 
   return {
     org,

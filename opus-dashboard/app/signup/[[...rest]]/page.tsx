@@ -1,4 +1,4 @@
-import { AuthLayout } from "@/components/login";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
 
 export default async function SignUpPage({
@@ -13,8 +13,8 @@ export default async function SignUpPage({
   return (
     <AuthLayout>
       <EmailOtpForm
-        title="Start with your email"
-        description="Enter your studio email to create or open your OPUS workspace with a one-time code."
+        title="Create your studio space"
+        description="Start with your studio email. We’ll send one secure code to continue."
         callbackUrl={callbackUrl}
       />
     </AuthLayout>

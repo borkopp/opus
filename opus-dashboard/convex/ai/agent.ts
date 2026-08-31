@@ -160,7 +160,7 @@ Rules:
 - CRITICAL: When calling check_availability or create_booking, you MUST copy the exact serviceId value returned by list_services. Never invent, shorten, or derive an ID from the service name. IDs are long opaque strings like "jx76abc123...".
 - CRITICAL: When calling create_booking, copy the exact staffId and startAt values returned by check_availability. Never invent these values.
 - Never include raw database IDs in your message to the customer. Use human-readable names (service name, staff name, date/time).
-- Never promise things outside your capabilities (refunds, custom discounts, etc).
+- Never promise policy exceptions or other things outside your capabilities.
 - If you cannot help confidently, set confidence below the threshold so a human can assist.
 - When creating a booking, always confirm the details with the customer before calling create_booking.
 - Format dates and times clearly (e.g. "Monday, 14 April at 10:00 AM").`;

@@ -20,13 +20,14 @@ The first customers are small teams, usually one to five people, that currently 
 
 ## The only active vertical
 
-`beauty_wellness` is the only enabled product vertical. The dashboard, onboarding, public marketplace, booking flow, navigation, metadata, and marketing must all present a coherent beauty-only product.
+`beauty_wellness` is the only enabled product vertical. The dashboard, onboarding, public studio websites, booking flow, navigation, metadata, and marketing must all present a coherent beauty-only product.
 
 The active web surfaces are:
 
-- `opus-dashboard/` for business onboarding, services, staff, availability, customers, calendar, and appointment management;
-- `opus-mk/` for beauty discovery, public studio profiles, and guest appointment booking;
-- `opus-landing/` for truthful beauty-focused positioning.
+- `opus-dashboard/` for business onboarding, services, staff, availability, customers, calendar, appointment management, automatic `{slug}.opus.mk` studio websites, and guest booking;
+- `opus-landing/` for the truthful beauty-focused `opus.mk` marketing site.
+
+`opus-mk/` is retained as a dormant marketplace package, but marketplace discovery and marketplace publication are paused. Do not delete its schemas or reusable backend foundations, and do not expose or expand the marketplace unless the user explicitly resumes that work.
 
 The enabled-vertical boundaries live in `opus-dashboard/lib/product-scope.ts`, `opus-dashboard/convex/lib/productScope.ts`, and `opus-mk/lib/product-scope.ts`. Deferred dashboard capability flags also live in `opus-dashboard/lib/product-scope.ts`. Do not casually bypass them with a new local condition.
 
@@ -37,7 +38,7 @@ Reliability of this path takes priority over optional features:
 1. A beauty business completes onboarding.
 2. It creates or configures services.
 3. It configures staff members and working hours.
-4. It receives a usable public booking link.
+4. It publishes a usable website at `{business-slug}.opus.mk`.
 5. A customer opens the link without needing an account.
 6. The customer selects a service, staff member when applicable, date, and available time.
 7. The customer enters their details and confirms the appointment.
@@ -54,6 +55,7 @@ Reliability of this path takes priority over optional features:
 - services and prices;
 - staff, business hours, and staff availability;
 - guest public booking;
+- automatic, beauty-only studio websites on OPUS subdomains;
 - calendar and appointment lifecycle management;
 - tenant isolation and booking-conflict protection;
 - clear mobile-responsive states;
@@ -70,24 +72,23 @@ Reliability of this path takes priority over optional features:
 
 - AI front desk and autonomous AI actions;
 - automated gap analysis and campaigns;
-- online payments, payouts, and fintech;
 - loyalty;
 - international expansion;
-- native consumer applications.
+- native consumer applications;
+- marketplace discovery and marketplace expansion.
 
 P2 code may remain as a dormant foundation. It must not be advertised as operational or expanded without explicit instruction.
 
 ## Hospitality freeze
 
-Hospitality was explored during earlier product directions and remains in parts of the schema and backend. It is postponed, not deleted. Preserve historical data and reusable foundations, but do not expose restaurants, cafes, table reservations, floor plans, events, QR menus, QR table payments, split bills, or POS integrations in active UI, routes, filters, demo data, metadata, or marketing.
+Hospitality was explored during earlier product directions and remains in parts of the schema and backend. It is postponed, not deleted. Preserve historical data and reusable foundations, but do not expose restaurants, cafes, table reservations, floor plans, events, or QR menus in active UI, routes, filters, demo data, metadata, or marketing.
 
 Published legacy hospitality records must still be excluded at the server-side public discovery and booking boundary. Old dashboard hospitality URLs must resolve to a safe unavailable state instead of showing unfinished screens.
 
 ## Truthful product claims
 
-- Do not imply that SMS, WhatsApp, email, AI actions, reminders, or payments completed unless the required provider is configured and the behavior has been verified.
+- Do not imply that SMS, WhatsApp, email, AI actions, or reminders completed unless the required provider is configured and the behavior has been verified.
 - Do not publish pricing, trial periods, business metrics, testimonials, or availability claims that are not backed by the live product.
-- Keep cash or in-studio payment wording where online payment is unavailable.
 - Do not introduce unrelated product ideas during stabilization work.
 
 ## Conditions for scope expansion
@@ -105,4 +106,4 @@ Future agents must not introduce or re-enable another vertical based on dormant 
 
 ## Native applications come last
 
-The Expo/React Native app in `opus-native/` and the SwiftUI app in `opus-mk-ios/` are intentionally deferred until the dashboard and web marketplace golden journey is stable. Do not expand, synchronize, or otherwise touch those native applications during the current phase unless the user explicitly authorizes native work. Dashboard and marketplace work comes first; native apps are last.
+Native applications are intentionally deferred until the dashboard and public studio website golden journey is stable. Do not expand, synchronize, or otherwise touch native clients during the current phase unless the user explicitly authorizes native work. Web stabilization comes first; native apps are last.

@@ -9,8 +9,8 @@ const labels: Record<Status, string> = {
 };
 
 const styles: Record<Status, string> = {
-  active: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  handed_off: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  active: "bg-success/10 text-success border border-success/20",
+  handed_off: "bg-highlight/15 text-warning border border-highlight/30",
   resolved: "bg-muted text-muted-foreground",
 };
 

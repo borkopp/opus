@@ -1,23 +1,25 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { CircleAlert, Save } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { DebouncedInput } from "@/components/ui/debounced-input";
-import { Spinner } from "@/components/ui/spinner";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "convex/react";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
-import { SettingsCard } from "../SettingsCard";
+import { Button } from "@/components/ui/button";
+import { DebouncedInput } from "@/components/ui/debounced-input";
 import {
-  validTimezone,
-  validLocale,
-  type FieldErrors,
-} from "../validation";
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Spinner } from "@/components/ui/spinner";
+import { TabsContent } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SettingsCard } from "../SettingsCard";
+import { validLocale, validTimezone, type FieldErrors } from "../validation";
 
 interface GeneralTabProps {
   orgId: Id<"orgs">;
@@ -34,19 +36,21 @@ interface GeneralTabProps {
 
 type Fields = "timezone" | "locale" | "currency";
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-      <CircleAlert className="shrink-0" />
-      {message}
-    </p>
-  );
-}
+const CURRENCIES = [
+  { code: "MKD", symbol: "ден", name: "Macedonian denar" },
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "USD", symbol: "$", name: "US dollar" },
+  { code: "GBP", symbol: "£", name: "British pound" },
+] as const;
 
 export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
   const isMounted = useRef(true);
-  useEffect(() => { return () => { isMounted.current = false; }; }, []);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const [general, setGeneral] = useState({
     timezone: initialData.timezone,
@@ -68,24 +72,38 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
       currency: initialData.currency,
       locale: initialData.locale,
     });
-  }, [initialData.timezone, initialData.currency, initialData.locale]);
+  }, [initialData.currency, initialData.locale, initialData.timezone]);
 
   const updateOrgSettings = useMutation(api.orgSettings.updateOrgSettings);
 
   function validate(): FieldErrors<Fields> {
-    const errs: FieldErrors<Fields> = {};
-    if (!validTimezone(general.timezone))
-      errs.timezone = "Enter a valid IANA timezone (e.g. Europe/Skopje).";
-    if (general.locale && !validLocale(general.locale))
-      errs.locale = "Enter a valid locale tag (e.g. en-GB, mk-MK).";
-    if (!general.currency)
-      errs.currency = "Select a currency.";
-    return errs;
+    const nextErrors: FieldErrors<Fields> = {};
+    if (!validTimezone(general.timezone)) {
+      nextErrors.timezone =
+        "Enter a valid IANA timezone, such as Europe/Skopje.";
+    }
+    if (!validLocale(general.locale)) {
+      nextErrors.locale = "Enter a valid locale tag, such as mk-MK or en-GB.";
+    }
+    if (!general.currency) {
+      nextErrors.currency = "Select a currency.";
+    }
+    return nextErrors;
   }
 
+  const clearError = (field: Fields) => {
+    if (errors[field]) {
+      setErrors((current) => ({ ...current, [field]: undefined }));
+    }
+  };
+
   const handleSave = async () => {
-    const errs = validate();
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    const nextErrors = validate();
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
     setErrors({});
     setIsSaving(true);
     try {
@@ -93,134 +111,108 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
       if (isMounted.current) toast.success("Settings saved");
     } catch (error) {
       if (isMounted.current) {
-        toast.error(error instanceof Error ? error.message : "Failed to save settings.");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save settings.",
+        );
       }
     } finally {
       if (isMounted.current) setIsSaving(false);
     }
   };
 
-  const clearError = (field: Fields) =>
-    errors[field] && setErrors((e) => ({ ...e, [field]: undefined }));
-
   return (
-    <TabsContent
-      value="general"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
+    <TabsContent value="general" className="m-0">
       <SettingsCard
-        title="Display & region"
-        description="Set the timezone, language, and currency used throughout your dashboard and customer experience."
-        contentClassName="grid gap-8"
+        title="General"
+        description="Set the language, timezone, and currency used across the dashboard and booking experience."
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
             {isSaving ? "Saving…" : "Save changes"}
           </Button>
         }
       >
-          <div className="grid gap-2 max-w-4xl">
-            <Label htmlFor="timezone">Timezone</Label>
+        <FieldGroup className="max-w-3xl">
+          <Field data-invalid={Boolean(errors.timezone)}>
+            <FieldLabel htmlFor="timezone">Timezone</FieldLabel>
             <DebouncedInput
               id="timezone"
               value={general.timezone}
               maxLength={64}
               placeholder="Europe/Skopje"
-              aria-describedby={errors.timezone ? "timezone-error" : undefined}
-              aria-invalid={!!errors.timezone}
-              onChange={(val) => {
-                setGeneral({ ...general, timezone: val });
+              aria-describedby="timezone-description"
+              aria-invalid={Boolean(errors.timezone)}
+              onChange={(value) => {
+                setGeneral((current) => ({ ...current, timezone: value }));
                 clearError("timezone");
               }}
-              className={cn(errors.timezone && "border-destructive")}
             />
-            <p className="text-xs text-muted-foreground">
-              Use a city-based timezone, e.g. <span className="font-mono">Europe/London</span> or <span className="font-mono">America/New_York</span>.
-            </p>
-            <FieldError id="timezone-error" message={errors.timezone} />
-          </div>
+            <FieldDescription id="timezone-description">
+              Use a city-based timezone so appointment times remain accurate.
+            </FieldDescription>
+            <FieldError>{errors.timezone}</FieldError>
+          </Field>
 
-          <div className="grid gap-2 max-w-4xl">
-            <Label htmlFor="locale">
-              Language & Region{" "}
-              <span className="text-muted-foreground font-normal ml-1">(e.g. en-GB, mk-MK)</span>
-            </Label>
+          <Field data-invalid={Boolean(errors.locale)}>
+            <FieldLabel htmlFor="locale">Language and region</FieldLabel>
             <DebouncedInput
               id="locale"
               value={general.locale}
               maxLength={12}
-              placeholder="en-GB"
-              aria-describedby={errors.locale ? "locale-error" : undefined}
-              aria-invalid={!!errors.locale}
-              onChange={(val) => {
-                setGeneral({ ...general, locale: val });
+              placeholder="mk-MK"
+              aria-describedby="locale-description"
+              aria-invalid={Boolean(errors.locale)}
+              onChange={(value) => {
+                setGeneral((current) => ({ ...current, locale: value }));
                 clearError("locale");
               }}
-              className={cn(errors.locale && "border-destructive")}
             />
-            <FieldError id="locale-error" message={errors.locale} />
-          </div>
+            <FieldDescription id="locale-description">
+              Use a locale tag such as mk-MK or en-GB.
+            </FieldDescription>
+            <FieldError>{errors.locale}</FieldError>
+          </Field>
 
-          <div className="grid gap-3">
-            <Label>
-              Currency{" "}
-              <span className="text-muted-foreground font-normal ml-1">
-                (Used for formatting across the platform)
-              </span>
-            </Label>
-            <div
-              className="grid grid-cols-2 md:grid-cols-4 gap-4"
-              role="radiogroup"
+          <Field data-invalid={Boolean(errors.currency)}>
+            <FieldLabel>Currency</FieldLabel>
+            <FieldDescription>
+              Used to format service prices and booking totals.
+            </FieldDescription>
+            <ToggleGroup
+              type="single"
+              value={general.currency}
+              onValueChange={(value) => {
+                if (!value) return;
+                setGeneral((current) => ({ ...current, currency: value }));
+                clearError("currency");
+              }}
+              variant="outline"
+              spacing={2}
               aria-label="Currency"
-              aria-describedby={errors.currency ? "currency-error" : undefined}
+              className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4"
             >
-              {[
-                { code: "USD", symbol: "$", name: "US Dollar" },
-                { code: "EUR", symbol: "€", name: "Euro" },
-                { code: "GBP", symbol: "£", name: "British Pound" },
-                { code: "MKD", symbol: "ден", name: "MK Denar" },
-              ].map((c) => (
-                <button
-                  key={c.code}
-                  type="button"
-                  role="radio"
-                  aria-checked={general.currency === c.code}
-                  onClick={() => {
-                    setGeneral({ ...general, currency: c.code });
-                    clearError("currency");
-                  }}
-                  className={cn(
-                    "group relative flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border p-5 transition-[background-color,border-color,transform,box-shadow] duration-150 active:scale-[0.98]",
-                    general.currency === c.code
-                      ? "border-accent bg-accent/10 shadow-sm"
-                      : "border-border/60 bg-background hover:border-accent/30 hover:bg-muted/30",
-                    errors.currency && "border-destructive/50",
-                  )}
+              {CURRENCIES.map((currency) => (
+                <ToggleGroupItem
+                  key={currency.code}
+                  value={currency.code}
+                  className="h-auto min-h-14 flex-col items-start gap-0.5 px-3 py-2 text-left"
                 >
-                  {general.currency === c.code && (
-                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-accent text-[10px] text-accent-foreground">
-                      ✓
-                    </div>
-                  )}
-                  <span
-                    className={cn(
-                      "text-3xl font-black font-display transition-colors",
-                      general.currency === c.code
-                        ? "text-accent"
-                        : "text-muted-foreground/40 group-hover:text-muted-foreground",
-                    )}
-                  >
-                    {c.symbol}
+                  <span className="text-sm font-semibold">
+                    {currency.symbol} {currency.code}
                   </span>
-                  <div className="flex flex-col items-center leading-tight">
-                    <span className="text-sm font-bold uppercase tracking-wider">{c.code}</span>
-                    <span className="text-[10px] text-muted-foreground font-medium">{c.name}</span>
-                  </div>
-                </button>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {currency.name}
+                  </span>
+                </ToggleGroupItem>
               ))}
-            </div>
-            <FieldError id="currency-error" message={errors.currency} />
-          </div>
+            </ToggleGroup>
+            <FieldError>{errors.currency}</FieldError>
+          </Field>
+        </FieldGroup>
       </SettingsCard>
     </TabsContent>
   );

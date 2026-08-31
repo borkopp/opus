@@ -1,13 +1,34 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Fragment } from "react";
 import { format } from "date-fns";
-import { CheckCircle, AlertCircle } from "lucide-react";
-import { Id } from "@/convex/_generated/dataModel";
-import { api } from "@/convex/_generated/api";
+import { CalendarDays, CheckCircle2 } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 
-type DailyBooking = FunctionReturnType<typeof api.dashboard.getDailySchedule>[number];
+import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Separator } from "@/components/ui/separator";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
+
+type DailyBooking = FunctionReturnType<
+  typeof api.dashboard.getDailySchedule
+>[number];
 
 export function LiveScheduleWidget({
   groupedByStaff,
@@ -18,71 +39,153 @@ export function LiveScheduleWidget({
   onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
   onComplete: (bookingId: Id<"bookings">) => Promise<void>;
 }) {
-  const staffMembers = Object.keys(groupedByStaff);
-
-  // Flatten and sort by time to maintain a chronological view if needed, 
-  // or keep it grouped by staff. Since we want a compact grid, 
-  // flattening and sorting chronologically might look best for a general schedule.
-  const allBookings = staffMembers.flatMap(staff => groupedByStaff[staff]);
-  allBookings.sort((a, b) => a.startAt - b.startAt);
+  const allBookings = Object.values(groupedByStaff)
+    .flat()
+    .sort((a, b) => a.startAt - b.startAt);
 
   return (
-    <Card className="flex flex-col h-full bg-card p-5 rounded-[24px]">
-      <div className="flex justify-between items-center mb-4 shrink-0">
-        <h2 className="text-xl font-semibold font-display text-primary">Live Schedule</h2>
-        <Badge variant="outline" className="rounded-full shadow-sm text-[11px] font-bold font-outfit">
-          {allBookings.length} Bookings Today
-        </Badge>
-      </div>
+    <Card className="min-h-0 gap-0 overflow-hidden md:h-full">
+      <CardHeader className="shrink-0 pb-4">
+        <CardTitle>
+          <WidgetTitle>Live Schedule</WidgetTitle>
+        </CardTitle>
+        <CardDescription>{format(new Date(), "EEEE, d MMMM")}</CardDescription>
+        <CardAction>
+          <span className="text-sm text-muted-foreground">
+            {allBookings.length} appointment
+            {allBookings.length === 1 ? "" : "s"}
+          </span>
+        </CardAction>
+      </CardHeader>
 
-      <div className="flex-1 min-h-0 overflow-y-auto pr-2 -mr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <CardContent className="min-h-0 flex-1 pb-5">
         {allBookings.length === 0 ? (
-          <div className="flex items-center justify-center p-8 text-sm text-muted-foreground border border-dashed rounded-[16px] border-border/40 h-full">
-            <div className="flex flex-col items-center gap-2">
-              <AlertCircle className="w-8 h-8 text-muted-foreground/50" />
-              <span>No bookings scheduled for today.</span>
-            </div>
-          </div>
+          <Empty className="h-full min-h-48 bg-muted/30">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CalendarDays />
+              </EmptyMedia>
+              <EmptyTitle>Nothing booked today</EmptyTitle>
+              <EmptyDescription>
+                New appointments will appear here in time order.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 pb-4">
-            {allBookings.map((booking) => (
-              <div key={booking._id} className="flex items-center justify-between p-3 rounded-[20px] bg-popover border border-border/30 hover:bg-secondary/40 transition-all duration-300 group relative">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col items-center justify-center w-10 h-10 rounded-full bg-card border border-border/40 shrink-0 shadow-sm micro-label text-accent">
-                    {format(new Date(booking.startAt), "HH:mm")}
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-semibold text-sm text-primary truncate">{booking.customerName}</span>
-                    <span className="micro-label text-muted-foreground/80 truncate flex items-center gap-1.5">
-                      {booking.serviceName} <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 shrink-0" /> {booking.staffName}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 pr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {booking.status === "confirmed" && (
-                    <Button variant="outline" className="rounded-full h-7 px-3 text-[10px] font-bold border-primary/10 hover:bg-primary hover:text-white hover:border-primary transition-all" onClick={() => void onCheckIn(booking._id)}>
-                      In
-                    </Button>
-                  )}
-                  {(booking.status === "confirmed" || booking.status === "checked_in") && (
-                    <Button variant="terracotta" className="rounded-full h-7 px-3 text-[10px] font-bold shadow-sm" onClick={() => void onComplete(booking._id)}>
-                      Done
-                    </Button>
-                  )}
-                </div>
-
-                {/* Show status icon if completed always */}
-                {booking.status === "completed" && (
-                  <div className="flex items-center justify-center w-7 h-7 text-green-600 bg-green-500/10 rounded-full border border-green-500/20">
-                    <CheckCircle className="w-3.5 h-3.5" />
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="h-full overflow-y-auto pr-1">
+            <ol aria-label="Today's appointments">
+              {allBookings.map((booking, index) => (
+                <Fragment key={booking._id}>
+                  <ScheduleRow
+                    booking={booking}
+                    onCheckIn={onCheckIn}
+                    onComplete={onComplete}
+                  />
+                  {index < allBookings.length - 1 && <Separator />}
+                </Fragment>
+              ))}
+            </ol>
           </div>
         )}
-      </div>
+      </CardContent>
     </Card>
   );
+}
+
+function ScheduleRow({
+  booking,
+  onCheckIn,
+  onComplete,
+}: {
+  booking: DailyBooking;
+  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
+  onComplete: (bookingId: Id<"bookings">) => Promise<void>;
+}) {
+  const isTerminal = ["completed", "cancelled", "no_show"].includes(
+    booking.status,
+  );
+
+  return (
+    <li
+      className={cn(
+        "grid grid-cols-[3.75rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 py-3 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto] sm:gap-x-4",
+        isTerminal && "opacity-60",
+      )}
+    >
+      <div className="flex items-center gap-3 self-stretch">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "h-8 w-0.5 shrink-0 rounded-full bg-border",
+            booking.status === "checked_in" && "bg-primary",
+            booking.status === "completed" && "bg-success",
+            ["cancelled", "no_show"].includes(booking.status) && "bg-danger/50",
+          )}
+        />
+        <time
+          className="font-mono text-sm font-medium tabular-nums text-foreground"
+          dateTime={new Date(booking.startAt).toISOString()}
+        >
+          {format(new Date(booking.startAt), "HH:mm")}
+        </time>
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate text-base font-semibold text-foreground">
+          {booking.customerName}
+        </p>
+        <p className="truncate text-sm text-muted-foreground">
+          {booking.serviceName} · {booking.staffName}
+        </p>
+      </div>
+
+      <div className="col-start-2 row-start-2 justify-self-start sm:col-start-3 sm:row-start-1 sm:justify-self-end">
+        <BookingAction
+          booking={booking}
+          onCheckIn={onCheckIn}
+          onComplete={onComplete}
+        />
+      </div>
+    </li>
+  );
+}
+
+function BookingAction({
+  booking,
+  onCheckIn,
+  onComplete,
+}: {
+  booking: DailyBooking;
+  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
+  onComplete: (bookingId: Id<"bookings">) => Promise<void>;
+}) {
+  switch (booking.status) {
+    case "confirmed":
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void onCheckIn(booking._id)}
+        >
+          Check in
+        </Button>
+      );
+    case "checked_in":
+      return (
+        <Button size="sm" onClick={() => void onComplete(booking._id)}>
+          Complete
+        </Button>
+      );
+    case "completed":
+      return (
+        <Badge variant="success">
+          <CheckCircle2 data-icon="inline-start" />
+          Completed
+        </Badge>
+      );
+    case "cancelled":
+      return <Badge variant="outline">Cancelled</Badge>;
+    case "no_show":
+      return <Badge variant="danger">No show</Badge>;
+  }
 }

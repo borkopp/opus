@@ -506,11 +506,11 @@ export default function BusinessProfilePage() {
           <div className="max-w-3xl mx-auto">
             <Link href={`/${slug}/book`}>
               <motion.div whileTap={{ scale: 0.98 }}>
-                <Button className="w-full h-14 rounded-2xl text-[17px] font-bold tracking-wide bg-cta text-cta-foreground hover:bg-cta/90 shadow-lg shadow-cta/20 relative overflow-hidden group border border-black/10 dark:border-white/10">
+                <Button className="w-full h-14 rounded-2xl text-[17px] font-bold tracking-wide bg-cta text-cta-foreground hover:bg-cta/90 shadow-lg shadow-cta/20 relative overflow-hidden group border border-primary-foreground/10">
                   <span className="relative z-10 flex items-center justify-center gap-2">
                     Book Now
                   </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  <div className="absolute inset-0 bg-primary-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
                 </Button>
               </motion.div>
             </Link>

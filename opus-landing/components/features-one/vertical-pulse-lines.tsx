@@ -15,11 +15,11 @@ export function VerticalPulseLines({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-white to-transparent dark:from-neutral-900" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-white to-transparent dark:from-neutral-900" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-white to-transparent from-muted" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-white to-transparent from-muted" />
       {[0, 1, 2, 3, 4, 5, 6].map((i) => (
         <div key={i} className="relative h-full w-px">
-          <div className="absolute inset-0 border-l border-dashed border-neutral-300 dark:border-neutral-600" />
+          <div className="absolute inset-0 border-l border-dashed border-border" />
           <motion.div
             className="absolute left-0 h-12 w-px bg-linear-to-b from-transparent via-brand-primary to-transparent"
             initial={{ y: "-100%", opacity: 0 }}

@@ -13,7 +13,7 @@ export const NoBookings = () => (
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-      <Button variant="terracotta"><Plus /> Add booking</Button>
+      <Button variant="default"><Plus /> Add booking</Button>
     </EmptyContent>
   </Empty>
 )

@@ -63,12 +63,6 @@ function statusConfig(status: string) {
         variant: "default" as const,
         className: "bg-destructive/10 text-destructive border-destructive/20",
       };
-    case "pending_payment":
-      return {
-        label: "Pending",
-        variant: "default" as const,
-        className: "bg-rating/10 text-rating border-rating/20",
-      };
     case "checked_in":
       return {
         label: "Checked In",

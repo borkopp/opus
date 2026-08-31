@@ -1,239 +1,507 @@
 "use client";
 
-import { useState } from "react";
-import { Id } from "@/convex/_generated/dataModel";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { IconClock, IconCopy, IconLoader2, IconPlus, IconTrash } from "@tabler/icons-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import {
+  CoffeeIcon,
+  CopyIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  SaveIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
+import { cn } from "@/lib/utils";
 
-const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = [
+  { dayOfWeek: 1, label: "Monday" },
+  { dayOfWeek: 2, label: "Tuesday" },
+  { dayOfWeek: 3, label: "Wednesday" },
+  { dayOfWeek: 4, label: "Thursday" },
+  { dayOfWeek: 5, label: "Friday" },
+  { dayOfWeek: 6, label: "Saturday" },
+  { dayOfWeek: 0, label: "Sunday" },
+] as const;
 
-export function WeeklySchedule({ orgId, staffId }: { orgId: Id<"orgs">; staffId: Id<"staff_members"> }) {
-    const defaultSchedule = useQuery(api.availability.getWeeklySchedule, { orgId, staffId });
-    const setAvailabilityRule = useMutation(api.availability.setAvailabilityRule);
-    const copyToAll = useMutation(api.availability.copyScheduleToAllStaff);
+type BreakTime = {
+  startTime: string;
+  endTime: string;
+};
 
-    const [savingStates, setSavingStates] = useState<Record<number, boolean>>({});
-    const [isCopying, setIsCopying] = useState(false);
+type DraftDay = {
+  dayOfWeek: number;
+  isActive: boolean;
+  startTime: string;
+  endTime: string;
+  breaks: BreakTime[];
+};
 
-    if (defaultSchedule === undefined) {
-        return <Skeleton className="h-[600px] w-full rounded-xl" />;
+type ScheduleState = {
+  staffId: Id<"staff_members">;
+  baseline: DraftDay[];
+  draft: DraftDay[];
+};
+
+export function WeeklySchedule({
+  orgId,
+  staffId,
+}: {
+  orgId: Id<"orgs">;
+  staffId: Id<"staff_members">;
+}) {
+  const weeklySchedule = useQuery(api.availability.getWeeklySchedule, {
+    orgId,
+    staffId,
+  });
+  const staff = useQuery(api.staff.listStaffMembers, { orgId });
+  const setAvailabilityRule = useMutation(api.availability.setAvailabilityRule);
+  const copyScheduleToAllStaff = useMutation(
+    api.availability.copyScheduleToAllStaff,
+  );
+
+  const [scheduleState, setScheduleState] = useState<ScheduleState | null>(
+    null,
+  );
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
+
+  useEffect(() => {
+    if (weeklySchedule === undefined) return;
+
+    const nextSchedule = cloneSchedule(weeklySchedule);
+    setScheduleState((current) => {
+      if (current === null || current.staffId !== staffId) {
+        return {
+          staffId,
+          baseline: nextSchedule,
+          draft: cloneSchedule(nextSchedule),
+        };
+      }
+
+      if (schedulesMatch(current.baseline, current.draft)) {
+        return {
+          staffId,
+          baseline: nextSchedule,
+          draft: cloneSchedule(nextSchedule),
+        };
+      }
+
+      return current;
+    });
+  }, [staffId, weeklySchedule]);
+
+  if (
+    weeklySchedule === undefined ||
+    scheduleState === null ||
+    scheduleState.staffId !== staffId
+  ) {
+    return <Skeleton className="h-[620px] w-full rounded-xl" />;
+  }
+
+  const hasChanges = !schedulesMatch(
+    scheduleState.baseline,
+    scheduleState.draft,
+  );
+  const orderedDraft = DAYS.map(({ dayOfWeek }) =>
+    scheduleState.draft.find((day) => day.dayOfWeek === dayOfWeek),
+  ).filter((day): day is DraftDay => day !== undefined);
+
+  const updateDay = (
+    dayOfWeek: number,
+    updates: Partial<Omit<DraftDay, "dayOfWeek">>,
+  ) => {
+    setScheduleState((current) => {
+      if (current === null) return current;
+
+      return {
+        ...current,
+        draft: current.draft.map((day) =>
+          day.dayOfWeek === dayOfWeek ? { ...day, ...updates } : day,
+        ),
+      };
+    });
+  };
+
+  const handleSave = async () => {
+    const validationError = getScheduleValidationError(scheduleState.draft);
+    if (validationError) {
+      toast.error(validationError);
+      return;
     }
 
-    const handleSaveDay = async (day: number, data: DayFormValue) => {
-        setSavingStates(prev => ({ ...prev, [day]: true }));
-        try {
-            await setAvailabilityRule({
-                orgId,
-                staffId,
-                dayOfWeek: day,
-                startTime: data.startTime,
-                endTime: data.endTime,
-                breaks: data.breaks,
-                isActive: data.isActive,
-            });
-        } catch (error: unknown) {
-            toast.error(getErrorMessage(error, `Failed to save schedule for ${DAYS_OF_WEEK[day]}`));
-        } finally {
-            setSavingStates(prev => ({ ...prev, [day]: false }));
-        }
-    };
+    const changedDays = scheduleState.draft.filter((day) => {
+      const baselineDay = scheduleState.baseline.find(
+        (candidate) => candidate.dayOfWeek === day.dayOfWeek,
+      );
+      return baselineDay === undefined || !daysMatch(day, baselineDay);
+    });
+    if (changedDays.length === 0) return;
 
-    const handleCopyAll = async () => {
-        if (!window.confirm("Are you sure you want to copy this exact schedule to ALL other staff members? This will overwrite their existing recurring availability.")) return;
+    setIsSaving(true);
+    try {
+      await Promise.all(
+        changedDays.map((day) =>
+          setAvailabilityRule({
+            orgId,
+            staffId,
+            dayOfWeek: day.dayOfWeek,
+            startTime: day.startTime,
+            endTime: day.endTime,
+            breaks: day.breaks,
+            isActive: day.isActive,
+          }),
+        ),
+      );
 
-        setIsCopying(true);
-        try {
-            await copyToAll({ orgId, sourceStaffId: staffId });
-            alert("Schedule copied perfectly to all staff.");
-        } catch (error: unknown) {
-            toast.error(getErrorMessage(error, "Failed to copy schedule"));
-        } finally {
-            setIsCopying(false);
-        }
-    };
+      setScheduleState((current) =>
+        current
+          ? { ...current, baseline: cloneSchedule(current.draft) }
+          : current,
+      );
+      toast.success("Regular hours saved.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not save regular hours"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    return (
-        <Card className="w-full">
-            <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4">
-                <div>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                        <IconClock size={22} className="text-blue-600" />
-                        Recurring Availability
-                    </CardTitle>
-                    <CardDescription className="mt-1">Define the standard weekly working hours for this staff member.</CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleCopyAll} disabled={isCopying} className="mt-3 sm:mt-0 gap-2">
-                    {isCopying ? <IconLoader2 className="animate-spin w-4 h-4" /> : <IconCopy size={16} />}
-                    Copy to all staff
-                </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-                <div className="flex flex-col gap-1.5 p-3">
-                    {defaultSchedule.map((daySchedule) => (
-                        <DayRow
-                            key={daySchedule.dayOfWeek}
-                            dayName={DAYS_OF_WEEK[daySchedule.dayOfWeek]}
-                            schedule={daySchedule}
-                            isSaving={savingStates[daySchedule.dayOfWeek] || false}
-                            onSave={(data) => handleSaveDay(daySchedule.dayOfWeek, data)}
-                        />
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    );
+  const handleCopyToAll = async () => {
+    if (hasChanges) {
+      toast.error("Save these hours before applying them to the team.");
+      return;
+    }
+
+    if (
+      !window.confirm(
+        "Apply these regular hours to every other staff member? Their current regular hours will be replaced.",
+      )
+    ) {
+      return;
+    }
+
+    setIsCopying(true);
+    try {
+      await copyScheduleToAllStaff({ orgId, sourceStaffId: staffId });
+      toast.success("Regular hours applied to the whole team.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not apply hours to the team"));
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
+  return (
+    <Card className="w-full overflow-hidden">
+      <CardHeader className="border-b">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <CardTitle>Regular hours</CardTitle>
+            <CardDescription className="mt-1.5">
+              Customers can only book this team member during these hours.
+            </CardDescription>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {staff && staff.length > 1 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="More schedule actions"
+                  >
+                    <MoreHorizontalIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      disabled={isCopying}
+                      onSelect={() => void handleCopyToAll()}
+                    >
+                      {isCopying ? <Spinner /> : <CopyIcon />}
+                      Apply saved hours to all staff
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button
+              size="sm"
+              disabled={!hasChanges || isSaving}
+              onClick={handleSave}
+            >
+              {isSaving ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <SaveIcon data-icon="inline-start" />
+              )}
+              Save changes
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-0">
+        <div className="divide-y">
+          {orderedDraft.map((day) => {
+            const dayLabel =
+              DAYS.find((item) => item.dayOfWeek === day.dayOfWeek)?.label ??
+              "Day";
+
+            return (
+              <DayRow
+                key={day.dayOfWeek}
+                day={day}
+                dayLabel={dayLabel}
+                onChange={(updates) => updateDay(day.dayOfWeek, updates)}
+              />
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-type DaySchedule = FunctionReturnType<typeof api.availability.getWeeklySchedule>[number];
-type DayFormValue = Pick<DaySchedule, "isActive" | "startTime" | "endTime" | "breaks">;
-
 function DayRow({
-    dayName,
-    schedule,
-    isSaving,
-    onSave
+  day,
+  dayLabel,
+  onChange,
 }: {
-    dayName: string;
-    schedule: DaySchedule;
-    isSaving: boolean;
-    onSave: (data: DayFormValue) => void;
+  day: DraftDay;
+  dayLabel: string;
+  onChange: (updates: Partial<Omit<DraftDay, "dayOfWeek">>) => void;
 }) {
-    // Local copy to handle fast typing before flushing to server via blur/save
-    const [isActive, setIsActive] = useState(schedule.isActive);
-    const [startTime, setStartTime] = useState(schedule.startTime);
-    const [endTime, setEndTime] = useState(schedule.endTime);
-    const [breaks, setBreaks] = useState<{ startTime: string, endTime: string }[]>(schedule.breaks || []);
+  const updateBreak = (
+    index: number,
+    field: "startTime" | "endTime",
+    value: string,
+  ) => {
+    const nextBreaks = day.breaks.map((breakItem, breakIndex) =>
+      breakIndex === index ? { ...breakItem, [field]: value } : breakItem,
+    );
+    onChange({ breaks: nextBreaks });
+  };
 
-    const hasChanged =
-        isActive !== schedule.isActive ||
-        startTime !== schedule.startTime ||
-        endTime !== schedule.endTime ||
-        JSON.stringify(breaks) !== JSON.stringify(schedule.breaks);
+  const addBreak = () => {
+    if (day.breaks.length >= 3) return;
+    onChange({
+      breaks: [...day.breaks, { startTime: "12:00", endTime: "13:00" }],
+    });
+  };
 
-    const handleApply = () => {
-        onSave({ isActive, startTime, endTime, breaks });
-        toast.success(`${dayName} schedule saved`);
-    };
+  const removeBreak = (index: number) => {
+    onChange({
+      breaks: day.breaks.filter((_, breakIndex) => breakIndex !== index),
+    });
+  };
 
-    const addBreak = () => {
-        setBreaks([...breaks, { startTime: "12:00", endTime: "13:00" }]);
-    };
+  return (
+    <div
+      className={cn(
+        "grid gap-4 px-4 py-4 sm:grid-cols-[9rem_minmax(0,1fr)] sm:px-5",
+        !day.isActive && "bg-muted/20",
+      )}
+    >
+      <div className="flex items-center gap-3 self-start sm:min-h-9">
+        <Switch
+          id={`working-${day.dayOfWeek}`}
+          checked={day.isActive}
+          onCheckedChange={(isActive) => onChange({ isActive })}
+          aria-label={`Set ${dayLabel} as a working day`}
+        />
+        <Label htmlFor={`working-${day.dayOfWeek}`} className="font-medium">
+          {dayLabel}
+        </Label>
+      </div>
 
-    const updateBreak = (index: number, field: 'startTime' | 'endTime', value: string) => {
-        const newB = [...breaks];
-        newB[index][field] = value;
-        setBreaks(newB);
-    };
+      {day.isActive ? (
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Label htmlFor={`start-${day.dayOfWeek}`} className="sr-only">
+              {dayLabel} start time
+            </Label>
+            <Input
+              id={`start-${day.dayOfWeek}`}
+              type="time"
+              value={day.startTime}
+              onChange={(event) => onChange({ startTime: event.target.value })}
+              className="w-[8.5rem] tabular-nums"
+            />
+            <span className="text-sm text-muted-foreground">to</span>
+            <Label htmlFor={`end-${day.dayOfWeek}`} className="sr-only">
+              {dayLabel} end time
+            </Label>
+            <Input
+              id={`end-${day.dayOfWeek}`}
+              type="time"
+              value={day.endTime}
+              onChange={(event) => onChange({ endTime: event.target.value })}
+              className="w-[8.5rem] tabular-nums"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={addBreak}
+              disabled={day.breaks.length >= 3}
+            >
+              <PlusIcon data-icon="inline-start" />
+              Add break
+            </Button>
+          </div>
 
-    const removeBreak = (index: number) => {
-        const newB = [...breaks];
-        newB.splice(index, 1);
-        setBreaks(newB);
-    };
+          {day.breaks.length > 0 && (
+            <div className="flex flex-col gap-2">
+              {day.breaks.map((breakItem, index) => (
+                <div
+                  key={index}
+                  className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/45 px-3 py-2"
+                >
+                  <CoffeeIcon className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="mr-1 text-xs font-medium text-muted-foreground">
+                    Break
+                  </span>
+                  <Label
+                    htmlFor={`break-start-${day.dayOfWeek}-${index}`}
+                    className="sr-only"
+                  >
+                    {dayLabel} break start time
+                  </Label>
+                  <Input
+                    id={`break-start-${day.dayOfWeek}-${index}`}
+                    type="time"
+                    value={breakItem.startTime}
+                    onChange={(event) =>
+                      updateBreak(index, "startTime", event.target.value)
+                    }
+                    className="w-[8.5rem] bg-card tabular-nums"
+                  />
+                  <span className="text-sm text-muted-foreground">to</span>
+                  <Label
+                    htmlFor={`break-end-${day.dayOfWeek}-${index}`}
+                    className="sr-only"
+                  >
+                    {dayLabel} break end time
+                  </Label>
+                  <Input
+                    id={`break-end-${day.dayOfWeek}-${index}`}
+                    type="time"
+                    value={breakItem.endTime}
+                    onChange={(event) =>
+                      updateBreak(index, "endTime", event.target.value)
+                    }
+                    className="w-[8.5rem] bg-card tabular-nums"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Remove ${dayLabel} break ${index + 1}`}
+                    onClick={() => removeBreak(index)}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="self-center text-sm text-muted-foreground">
+          Not available for bookings
+        </p>
+      )}
+    </div>
+  );
+}
 
-    const toggleActive = () => {
-        const newState = !isActive;
-        setIsActive(newState);
-        onSave({ isActive: newState, startTime, endTime, breaks });
-        toast.success(`${dayName} marked as ${newState ? 'working day' : 'off'}`);
+function cloneSchedule(schedule: DraftDay[]): DraftDay[] {
+  return schedule.map((day) => ({
+    dayOfWeek: day.dayOfWeek,
+    isActive: day.isActive,
+    startTime: day.startTime,
+    endTime: day.endTime,
+    breaks: day.breaks.map((breakItem) => ({ ...breakItem })),
+  }));
+}
+
+function daysMatch(first: DraftDay, second: DraftDay) {
+  return (
+    first.dayOfWeek === second.dayOfWeek &&
+    first.isActive === second.isActive &&
+    first.startTime === second.startTime &&
+    first.endTime === second.endTime &&
+    JSON.stringify(first.breaks) === JSON.stringify(second.breaks)
+  );
+}
+
+function schedulesMatch(first: DraftDay[], second: DraftDay[]) {
+  return (
+    first.length === second.length &&
+    first.every((day) => {
+      const matchingDay = second.find(
+        (candidate) => candidate.dayOfWeek === day.dayOfWeek,
+      );
+      return matchingDay !== undefined && daysMatch(day, matchingDay);
+    })
+  );
+}
+
+function getScheduleValidationError(schedule: DraftDay[]) {
+  for (const day of schedule) {
+    if (!day.isActive) continue;
+
+    const dayLabel =
+      DAYS.find((item) => item.dayOfWeek === day.dayOfWeek)?.label ?? "A day";
+    if (!day.startTime || !day.endTime || day.startTime >= day.endTime) {
+      return `${dayLabel}'s end time must be later than its start time.`;
     }
 
-    return (
-        <div
-            className={cn(
-                "p-4 transition-all duration-200 border rounded-xl",
-                isActive
-                    ? "bg-card border-border shadow-sm ring-1 ring-primary/5"
-                    : "bg-muted/30 border-transparent hover:bg-muted/50 cursor-pointer opacity-80"
-            )}
-            onClick={!isActive ? toggleActive : undefined}
-        >
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full">
-                {/* Toggle & Day Label */}
-                <div
-                    className="w-36 flex flex-shrink-0 items-center gap-3 cursor-pointer group"
-                    onClick={isActive ? toggleActive : undefined}
-                >
-                    <div className="relative flex items-center justify-center pointer-events-none">
-                        <Checkbox
-                            id={`toggle-${dayName}`}
-                            checked={isActive}
-                            className="pointer-events-none data-[state=checked]:bg-primary"
-                        />
-                    </div>
-                    <Label htmlFor={`toggle-${dayName}`} className={cn(
-                        "font-semibold cursor-pointer user-select-none transition-colors",
-                        isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                    )}>
-                        {dayName}
-                    </Label>
-                </div>
+    for (const breakItem of day.breaks) {
+      if (
+        !breakItem.startTime ||
+        !breakItem.endTime ||
+        breakItem.startTime >= breakItem.endTime
+      ) {
+        return `${dayLabel} has a break with invalid times.`;
+      }
 
-                {/* Times */}
-                <div className="flex-1 flex flex-wrap items-center gap-3 w-full" onClick={(e) => isActive && e.stopPropagation()}>
-                    {isActive ? (
-                        <>
-                            <div className="flex items-center gap-2">
-                                <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-[110px] text-sm h-9 font-medium" />
-                                <span className="text-muted-foreground/60 px-1">—</span>
-                                <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-[110px] text-sm h-9 font-medium" />
-                            </div>
+      if (
+        breakItem.startTime < day.startTime ||
+        breakItem.endTime > day.endTime
+      ) {
+        return `${dayLabel}'s breaks must be inside its working hours.`;
+      }
+    }
+  }
 
-                            {/* Breaks */}
-                            <div className="flex flex-wrap gap-2 w-full mt-3 sm:mt-0 sm:w-auto sm:border-l sm:pl-5 sm:ml-2">
-                                {breaks.map((b, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 bg-amber-50/50 dark:bg-amber-500/5 p-1.5 rounded-lg border border-amber-200/50 dark:border-amber-500/20 shadow-sm relative group/break">
-                                        <span className="text-[10px] font-bold text-amber-600/70 dark:text-amber-500/70 uppercase tracking-widest px-2">Break</span>
-                                        <Input type="time" value={b.startTime} onChange={e => updateBreak(idx, 'startTime', e.target.value)} className="w-24 text-xs h-7 px-2 font-medium bg-white/50 dark:bg-zinc-900/50 border-amber-200/50 dark:border-amber-500/30" />
-                                        <span className="text-muted-foreground/40">-</span>
-                                        <Input type="time" value={b.endTime} onChange={e => updateBreak(idx, 'endTime', e.target.value)} className="w-24 text-xs h-7 px-2 font-medium bg-white/50 dark:bg-zinc-900/50 border-amber-200/50 dark:border-amber-500/30" />
-                                        <button onClick={() => removeBreak(idx)} className="text-muted-foreground/50 hover:text-red-500 p-1.5 rounded-md opacity-0 group-hover/break:opacity-100 transition-opacity absolute -right-7">
-                                            <IconTrash size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-                                {breaks.length === 0 && (
-                                    <Button variant="ghost" size="sm" onClick={addBreak} className="w-auto self-start h-8 text-xs text-muted-foreground hover:text-foreground font-medium hover:bg-muted duration-200">
-                                        <IconPlus size={14} className="mr-1.5" /> Add Break
-                                    </Button>
-                                )}
-                                {breaks.length > 0 && breaks.length < 3 && (
-                                    <Button variant="ghost" size="sm" onClick={addBreak} className="w-auto self-start h-7 text-[10px] text-muted-foreground hover:text-foreground opacity-50 hover:opacity-100 mt-1">
-                                        + Another break
-                                    </Button>
-                                )}
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex items-center gap-2 px-1">
-                            <span className="bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground rounded-md uppercase tracking-wide">
-                                Off
-                            </span>
-                        </div>
-                    )}
-                </div>
-
-                {/* Save Button */}
-                <div className="w-full sm:w-[100px] flex justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {hasChanged && isActive && (
-                        <Button size="sm" onClick={handleApply} disabled={isSaving} className="h-9 w-full sm:w-auto shadow-sm transition-all animate-in fade-in zoom-in-95">
-                            {isSaving ? <IconLoader2 className="animate-spin w-4 h-4 mr-1.5" /> : null}
-                            Save
-                        </Button>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
+  return null;
 }

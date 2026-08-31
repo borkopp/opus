@@ -30,49 +30,65 @@ import { v } from "convex/values";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
-
   // ─────────────────────────────────────────────────────
   // ORGS
   // One row per business. Root of all multi-tenancy.
-  // Also drives the public opus.mk listing via listingStatus.
+  // Drives the dormant marketplace listing and public studio website through
+  // independent publication states.
   // ─────────────────────────────────────────────────────
   orgs: defineTable({
     // ── Core identity ──
-    name: v.string(),                        // "King Cuts Barbershop"
-    slug: v.string(),                        // "king-cuts" — used for subdomain
-    customDomain: v.optional(v.string()),    // "book.kingcuts.com"
+    name: v.string(), // "King Cuts Barbershop"
+    slug: v.string(), // "king-cuts" — used for subdomain
+    // Legacy storage only. Custom domains are no longer configurable or routed;
+    // keep the optional field temporarily so existing documents remain valid.
+    customDomain: v.optional(v.string()),
     logoUrl: v.optional(v.string()),
 
     // ── Vertical ──
-    industry: v.union(
-      v.literal("beauty_wellness"),
+    industry: v.union(v.literal("beauty_wellness"), v.literal("hospitality")),
+
+    // ── Dormant Hospitality fields (preserved backend foundations) ──
+    venueType: v.optional(
+      v.union(
+        v.literal("restaurant"),
+        v.literal("cafe"),
+        v.literal("bar"),
+        v.literal("club"),
+        v.literal("hotel"),
+      ),
     ),
+    cuisine: v.optional(v.array(v.string())),
 
     // ── Location ──
-    address: v.optional(v.string()),         // "Ul. Makedonija 12"
-    city: v.optional(v.string()),            // "Skopje"
-    neighborhood: v.optional(v.string()),   // "Centar", "Karpoš"
+    address: v.optional(v.string()), // "Ul. Makedonija 12"
+    city: v.optional(v.string()), // "Skopje"
+    neighborhood: v.optional(v.string()), // "Centar", "Karpoš"
     postalCode: v.optional(v.string()),
-    country: v.optional(v.string()),         // "MK"
-    coordinates: v.optional(v.object({
-      lat: v.number(),
-      lng: v.number(),
-    })),
+    country: v.optional(v.string()), // "MK"
+    coordinates: v.optional(
+      v.object({
+        lat: v.number(),
+        lng: v.number(),
+      }),
+    ),
 
     // ── Listing copy (consumer-facing, shown on opus.mk) ──
-    tagline: v.optional(v.string()),         // "Skopje's premier barber since 2012"
-    bio: v.optional(v.string()),             // Markdown, ~500 chars
+    tagline: v.optional(v.string()), // "Skopje's premier barber since 2012"
+    bio: v.optional(v.string()), // Markdown, ~500 chars
 
     // ── Discovery & search signals ──
-    tags: v.optional(v.array(v.string())),   // ["barber", "fade", "beard", "men's grooming"]
-    priceRange: v.optional(v.union(
-      v.literal("budget"),                   // < 500 MKD avg
-      v.literal("mid"),                      // 500–1500 MKD avg
-      v.literal("premium"),                  // > 1500 MKD avg
-    )),
+    tags: v.optional(v.array(v.string())), // ["barber", "fade", "beard", "men's grooming"]
+    priceRange: v.optional(
+      v.union(
+        v.literal("budget"), // < 500 MKD avg
+        v.literal("mid"), // 500–1500 MKD avg
+        v.literal("premium"), // > 1500 MKD avg
+      ),
+    ),
 
     // ── Contact & social ──
-    phone: v.optional(v.string()),           // "+38972xxxxxxx" E.164
+    phone: v.optional(v.string()), // "+38972xxxxxxx" E.164
     instagramHandle: v.optional(v.string()), // "kingcuts_sk"
     instagramPageId: v.optional(v.string()), // numeric Meta PSID e.g. "123456789012345"
     websiteUrl: v.optional(v.string()),
@@ -80,69 +96,79 @@ export default defineSchema({
     // ── Opening hours (display hours for opus.mk — separate from per-staff availability) ──
     // NOTE: dayOfWeek here uses ISO convention (0 = Mon … 6 = Sun),
     // whereas availability_rules and surgeRules use JS Date convention (0 = Sun … 6 = Sat).
-    openingHours: v.optional(v.array(v.object({
-      dayOfWeek: v.number(),                 // 0 = Mon … 6 = Sun (ISO)
-      open: v.string(),                      // "09:00"
-      close: v.string(),                     // "21:00"
-      isClosed: v.boolean(),
-    }))),
+    openingHours: v.optional(
+      v.array(
+        v.object({
+          dayOfWeek: v.number(), // 0 = Mon … 6 = Sun (ISO)
+          open: v.string(), // "09:00"
+          close: v.string(), // "21:00"
+          isClosed: v.boolean(),
+        }),
+      ),
+    ),
 
     // ── Beauty & Wellness category ──
     // Only populated when industry = "beauty_wellness"
-    beautyCategory: v.optional(v.union(
-      v.literal("barbershop"),
-      v.literal("hair_salon"),
-      v.literal("nail_salon"),
-      v.literal("spa"),
-      v.literal("beauty_salon"),
-      v.literal("lash_studio"),
-      v.literal("brow_bar"),
-      v.literal("tattoo_studio"),
-      v.literal("massage_therapy"),
-      v.literal("wellness_center"),
-      v.literal("personal_trainer"),
-    )),
-
+    beautyCategory: v.optional(
+      v.union(
+        v.literal("barbershop"),
+        v.literal("hair_salon"),
+        v.literal("nail_salon"),
+        v.literal("spa"),
+        v.literal("beauty_salon"),
+        v.literal("lash_studio"),
+        v.literal("brow_bar"),
+        v.literal("tattoo_studio"),
+        v.literal("massage_therapy"),
+        v.literal("wellness_center"),
+        v.literal("personal_trainer"),
+      ),
+    ),
 
     // ── opus.mk marketplace visibility ──
     listingStatus: v.union(
-      v.literal("unpublished"),              // default — owner has not attempted to publish
-      v.literal("published"),               // live on opus.mk
-      v.literal("suspended"),               // was published but a blocking condition broke
+      v.literal("unpublished"), // default — owner has not attempted to publish
+      v.literal("published"), // live on opus.mk
+      v.literal("suspended"), // was published but a blocking condition broke
     ),
-    publishedAt: v.optional(v.number()),     // timestamp of first publish
-    featuredUntil: v.optional(v.number()),   // paid featured placement
+    publishedAt: v.optional(v.number()), // timestamp of first publish
+    // Direct studio website state is independent from marketplace visibility.
+    websiteStatus: v.optional(
+      v.union(
+        v.literal("unpublished"),
+        v.literal("published"),
+        v.literal("suspended"),
+      ),
+    ),
+    websitePublishedAt: v.optional(v.number()),
+    featuredUntil: v.optional(v.number()), // featured placement expiration
 
     // ── Review aggregate (updated by scheduled action after review writes) ──
-    reviewCount: v.number(),                 // default 0
-    averageRating: v.number(),              // 0–5; stored as float (updated by cron)
+    reviewCount: v.number(), // default 0
+    averageRating: v.number(), // 0–5; stored as float (updated by cron)
 
-
-    // ── Subscription ──
+    // ── Product tier ──
     plan: v.union(
       v.literal("starter"),
       v.literal("growth"),
       v.literal("enterprise"),
     ),
-    planStatus: v.union(
-      v.literal("trialing"),
-      v.literal("active"),
-      v.literal("past_due"),
-      v.literal("canceled"),
-    ),
-    trialEndsAt: v.optional(v.number()),
 
     // ── Scraper / external data ──
     // Set on orgs imported by the Skopje scraper pipeline.
-    source: v.optional(v.union(
-      v.literal("customer"),   // onboarded paying business (default)
-      v.literal("scraped"),    // imported by the Skopje scraper
-    )),
-    claimStatus: v.optional(v.union(
-      v.literal("unclaimed"),
-      v.literal("claim_pending"),
-      v.literal("claimed"),
-    )),
+    source: v.optional(
+      v.union(
+        v.literal("customer"), // onboarded business (default)
+        v.literal("scraped"), // imported by the Skopje scraper
+      ),
+    ),
+    claimStatus: v.optional(
+      v.union(
+        v.literal("unclaimed"),
+        v.literal("claim_pending"),
+        v.literal("claimed"),
+      ),
+    ),
     googlePlaceId: v.optional(v.string()),
     woltSlug: v.optional(v.string()),
     glovoSlug: v.optional(v.string()),
@@ -152,11 +178,13 @@ export default defineSchema({
     menuText: v.optional(v.string()),
 
     // Review workflow for the scraper admin tool.
-    reviewStatus: v.optional(v.union(
-      v.literal("needs_review"),
-      v.literal("in_progress"),
-      v.literal("ready"),
-    )),
+    reviewStatus: v.optional(
+      v.union(
+        v.literal("needs_review"),
+        v.literal("in_progress"),
+        v.literal("ready"),
+      ),
+    ),
     reviewerNotes: v.optional(v.string()),
 
     // ── Soft delete ──
@@ -166,7 +194,6 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_slug", ["slug"])
-    .index("by_custom_domain", ["customDomain"])
     .index("by_listing_status", ["listingStatus"])
     .index("by_listing_status_deleted", ["listingStatus", "isDeleted"])
     .index("by_instagram_page_id", ["instagramPageId"])
@@ -176,9 +203,14 @@ export default defineSchema({
     .index("by_source_review", ["source", "reviewStatus"])
     .searchIndex("search_by_name", {
       searchField: "name",
-      filterFields: ["listingStatus", "isDeleted", "city", "industry", "beautyCategory"],
+      filterFields: [
+        "listingStatus",
+        "isDeleted",
+        "city",
+        "industry",
+        "beautyCategory",
+      ],
     }),
-
 
   // ─────────────────────────────────────────────────────
   // ORG MEDIA
@@ -189,9 +221,10 @@ export default defineSchema({
     orgId: v.id("orgs"),
     url: v.string(),
     type: v.union(
-      v.literal("cover"),      // hero banner — only one should be cover per org
-      v.literal("gallery"),    // general venue/service photos
-      v.literal("team"),       // photo of the team / individual staff
+      v.literal("cover"), // hero banner — only one should be cover per org
+      v.literal("gallery"), // general venue/service photos
+      v.literal("team"), // photo of the team / individual staff
+      v.literal("menu"), // dormant hospitality menu photos
     ),
     caption: v.optional(v.string()),
     sortOrder: v.number(),
@@ -205,7 +238,6 @@ export default defineSchema({
     .index("by_org_active", ["orgId", "isDeleted"])
     .index("by_org_type_active", ["orgId", "type", "isDeleted"]),
 
-
   // ─────────────────────────────────────────────────────
   // ORG SETTINGS
   // Operational config kept separate to avoid wide org rows.
@@ -214,32 +246,28 @@ export default defineSchema({
     orgId: v.id("orgs"),
 
     // Locale — defaults to MKD / Skopje for new orgs
-    timezone: v.string(),                    // "Europe/Belgrade" (covers MK)
-    currency: v.string(),                    // "MKD"
-    locale: v.string(),                      // "mk-MK"
+    timezone: v.string(), // "Europe/Belgrade" (covers MK)
+    currency: v.string(), // "MKD"
+    locale: v.string(), // "mk-MK"
 
     // Booking rules
-    slotDurationMins: v.number(),            // default 15 — smallest bookable unit
-    bookingWindowDays: v.number(),           // how far ahead clients can book (e.g. 60)
-    cancellationWindowHours: v.number(),     // min notice to cancel without charge
-    bufferTimeMins: v.number(),              // gap between appointments
-
-    // Deposits
-    depositRequired: v.boolean(),
-    depositType: v.union(
-      v.literal("fixed"),
-      v.literal("percentage"),
-    ),
-    depositValue: v.number(),                // minor units if fixed; 0–100 if percentage
+    slotDurationMins: v.number(), // default 15 — smallest bookable unit
+    bookingWindowDays: v.number(), // how far ahead clients can book (e.g. 60)
+    cancellationWindowHours: v.number(), // minimum notice required to cancel
+    bufferTimeMins: v.number(), // gap between appointments
 
     // Surge pricing
     surgePricingEnabled: v.boolean(),
-    surgeRules: v.optional(v.array(v.object({
-      dayOfWeek: v.number(),                 // 0 = Sun … 6 = Sat
-      startTime: v.string(),                 // "09:00"
-      endTime: v.string(),                   // "11:00"
-      multiplierPct: v.number(),             // e.g. 15 = +15%
-    }))),
+    surgeRules: v.optional(
+      v.array(
+        v.object({
+          dayOfWeek: v.number(), // 0 = Sun … 6 = Sat
+          startTime: v.string(), // "09:00"
+          endTime: v.string(), // "11:00"
+          multiplierPct: v.number(), // e.g. 15 = +15%
+        }),
+      ),
+    ),
 
     // Notifications
     reminderHoursBefore: v.array(v.number()), // e.g. [24, 2]
@@ -247,15 +275,23 @@ export default defineSchema({
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
 
+    // Transactional email preferences. Verification and booking confirmation
+    // emails are always sent; these fields control optional reminders and the
+    // internal team audience.
+    staffNewBookingEmailEnabled: v.optional(v.boolean()),
+    staffReminderEmailEnabled: v.optional(v.boolean()),
+    staffReminderHoursBefore: v.optional(v.array(v.number())),
+    staffEmailRecipientUserIds: v.optional(v.array(v.id("users"))),
+
     // Dashboard in-app notification preferences
-    dashboardNotificationsEnabled: v.optional(v.boolean()),  // master toggle for bell icon
-    dashboardSoundEnabled: v.optional(v.boolean()),          // chime sound on new notification
-    dashboardToastEnabled: v.optional(v.boolean()),          // inline toast popup on new notification
+    dashboardNotificationsEnabled: v.optional(v.boolean()), // master toggle for bell icon
+    dashboardSoundEnabled: v.optional(v.boolean()), // chime sound on new notification
+    dashboardToastEnabled: v.optional(v.boolean()), // inline toast popup on new notification
 
     // AI front desk
     aiEnabled: v.boolean(),
-    aiPersonaName: v.string(),               // "Aria" — shown to customers
-    aiConfidenceThreshold: v.number(),       // 0–1; below this → human handoff
+    aiPersonaName: v.string(), // "Aria" — shown to customers
+    aiConfidenceThreshold: v.number(), // 0–1; below this → human handoff
     aiHandoffPhoneNumber: v.optional(v.string()),
 
     // AI channel toggles
@@ -263,39 +299,45 @@ export default defineSchema({
     aiInstagramEnabled: v.optional(v.boolean()),
 
     // AI conversation style
-    aiSystemPrompt: v.optional(v.string()),       // custom instructions for the AI
-    aiGreetingMessage: v.optional(v.string()),    // first message when conversation starts
-    aiTone: v.optional(v.union(
-      v.literal("friendly"),
-      v.literal("professional"),
-      v.literal("casual"),
-      v.literal("formal"),
-    )),
+    aiSystemPrompt: v.optional(v.string()), // custom instructions for the AI
+    aiGreetingMessage: v.optional(v.string()), // first message when conversation starts
+    aiTone: v.optional(
+      v.union(
+        v.literal("friendly"),
+        v.literal("professional"),
+        v.literal("casual"),
+        v.literal("formal"),
+      ),
+    ),
 
     // AI working hours (uses JS Date convention: 0 = Sun … 6 = Sat, same as availability_rules)
     aiWorkingHoursEnabled: v.optional(v.boolean()),
-    aiWorkingHours: v.optional(v.array(v.object({
-      dayOfWeek: v.number(),    // 0 = Sun … 6 = Sat
-      startTime: v.string(),    // "09:00"
-      endTime: v.string(),      // "18:00"
-    }))),
-    aiAwayMessage: v.optional(v.string()),        // shown outside working hours
+    aiWorkingHours: v.optional(
+      v.array(
+        v.object({
+          dayOfWeek: v.number(), // 0 = Sun … 6 = Sat
+          startTime: v.string(), // "09:00"
+          endTime: v.string(), // "18:00"
+        }),
+      ),
+    ),
+    aiAwayMessage: v.optional(v.string()), // shown outside working hours
 
     // AI language
-    aiLanguage: v.optional(v.union(
-      v.literal("auto"),   // detect from customer message (default)
-      v.literal("en"),     // English only
-      v.literal("mk"),     // Macedonian only
-    )),
+    aiLanguage: v.optional(
+      v.union(
+        v.literal("auto"), // detect from customer message (default)
+        v.literal("en"), // English only
+        v.literal("mk"), // Macedonian only
+      ),
+    ),
 
     // AI Gap Optimizer
     gapOptimizerEnabled: v.optional(v.boolean()),
     gapOptimizerMinGapMins: v.optional(v.number()),
 
     updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"]),
-
+  }).index("by_org", ["orgId"]),
 
   // ─────────────────────────────────────────────────────
   // USERS
@@ -320,7 +362,6 @@ export default defineSchema({
     .index("by_auth_user_id", ["authUserId"])
     .index("by_clerk_id", ["clerkId"]),
 
-
   // ─────────────────────────────────────────────────────
   // OPUS USERS
   // Platform-wide end-consumer identity (opus.mk visitors).
@@ -329,29 +370,23 @@ export default defineSchema({
   // Scoped globally (no orgId) — they span multiple businesses.
   // ─────────────────────────────────────────────────────
   opus_users: defineTable({
-    authUserId: v.optional(v.string()),      // Better Auth user ID after sign-in
-    clerkId: v.optional(v.string()),         // Legacy Clerk subject retained during relinking
+    authUserId: v.optional(v.string()), // Better Auth user ID after sign-in
+    clerkId: v.optional(v.string()), // Legacy Clerk subject retained during relinking
     email: v.string(),
-    phone: v.optional(v.string()),           // E.164
+    phone: v.optional(v.string()), // E.164
     name: v.string(),
     avatarUrl: v.optional(v.string()),
 
-    preferredCity: v.optional(v.string()),   // "Skopje" — for personalised feed
+    preferredCity: v.optional(v.string()), // "Skopje" — for personalised feed
 
     // Loyalty (phase 2)
-    opusPoints: v.number(),                  // default 0
-    tier: v.union(
-      v.literal("bronze"),
-      v.literal("silver"),
-      v.literal("gold"),
-    ),
+    opusPoints: v.number(), // default 0
+    tier: v.union(v.literal("bronze"), v.literal("silver"), v.literal("gold")),
 
     // Preferences
-    preferredChannel: v.optional(v.union(
-      v.literal("whatsapp"),
-      v.literal("sms"),
-      v.literal("email"),
-    )),
+    preferredChannel: v.optional(
+      v.union(v.literal("whatsapp"), v.literal("sms"), v.literal("email")),
+    ),
 
     // GDPR
     marketingOptIn: v.boolean(),
@@ -367,14 +402,13 @@ export default defineSchema({
     .index("by_auth_user_id", ["authUserId"])
     .index("by_clerk_id", ["clerkId"]),
 
-
   // ─────────────────────────────────────────────────────
   // STAFF MEMBERS
   // Joins a user to an org with a role. Permission boundary.
   // ─────────────────────────────────────────────────────
   staff_members: defineTable({
     orgId: v.id("orgs"),
-    userId: v.optional(v.id("users")),       // null = placeholder / unnamed seat
+    userId: v.optional(v.id("users")), // null = placeholder / unnamed seat
 
     // Profile
     displayName: v.string(),
@@ -383,12 +417,7 @@ export default defineSchema({
     specialties: v.array(v.string()),
 
     // Role
-    role: v.union(
-      v.literal("owner"),
-      v.literal("manager"),
-      v.literal("staff"),
-    ),
-
+    role: v.union(v.literal("owner"), v.literal("manager"), v.literal("staff")),
 
     // No-show risk score
     noShowRiskScore: v.optional(v.number()), // 0–1
@@ -404,7 +433,6 @@ export default defineSchema({
     .index("by_org_user", ["orgId", "userId"])
     .index("by_org_role", ["orgId", "role"])
     .index("by_org_active", ["orgId", "isActive", "isDeleted"]),
-
 
   // ─────────────────────────────────────────────────────
   // STAFF INVITES
@@ -433,7 +461,6 @@ export default defineSchema({
     .index("by_staff", ["staffId"])
     .index("by_email", ["email"]),
 
-
   // ─────────────────────────────────────────────────────
   // SERVICE CATEGORIES
   // e.g. "Haircuts", "Beard", "Colour"
@@ -446,9 +473,7 @@ export default defineSchema({
     deletedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"]),
-
+  }).index("by_org", ["orgId"]),
 
   // ─────────────────────────────────────────────────────
   // SERVICES
@@ -459,17 +484,17 @@ export default defineSchema({
     categoryId: v.optional(v.id("service_categories")),
 
     // Internal (owner-written)
-    name: v.string(),                        // "Men's Haircut"
-    description: v.optional(v.string()),     // internal notes / ops copy
+    name: v.string(), // "Men's Haircut"
+    description: v.optional(v.string()), // internal notes / ops copy
 
     // Consumer-facing (shown on opus.mk)
     consumerDescription: v.optional(v.string()), // "Our signature fade, tailored to your face shape…"
     highlights: v.optional(v.array(v.string())), // ["Includes beard line-up", "Skin fade finish"]
-    photoUrl: v.optional(v.string()),        // hero image for this service on opus.mk
+    photoUrl: v.optional(v.string()), // hero image for this service on opus.mk
 
     durationMins: v.number(),
-    priceMinorUnits: v.number(),             // e.g. 1500 = 1500 MKD
-    currency: v.string(),                    // "MKD"
+    priceMinorUnits: v.number(), // e.g. 1500 = 1500 MKD
+    currency: v.string(), // "MKD"
 
     // Which staff can perform this service
     staffIds: v.array(v.id("staff_members")),
@@ -478,8 +503,8 @@ export default defineSchema({
     surgePricingOverride: v.optional(v.boolean()),
 
     // opus.mk visibility
-    isOpusVisible: v.boolean(),             // default true; allows hiding specific services
-    popularityScore: v.number(),            // updated by cron from booking count; drives ranking
+    isOpusVisible: v.boolean(), // default true; allows hiding specific services
+    popularityScore: v.number(), // updated by cron from booking count; drives ranking
 
     isActive: v.boolean(),
     isDeleted: v.boolean(),
@@ -493,8 +518,12 @@ export default defineSchema({
     .index("by_org_active", ["orgId", "isActive"])
     .index("by_org_opus", ["orgId", "isOpusVisible"])
     .index("by_org_active_deleted", ["orgId", "isActive", "isDeleted"])
-    .index("by_org_visible_active", ["orgId", "isOpusVisible", "isActive", "isDeleted"]),
-
+    .index("by_org_visible_active", [
+      "orgId",
+      "isOpusVisible",
+      "isActive",
+      "isDeleted",
+    ]),
 
   // ─────────────────────────────────────────────────────
   // AVAILABILITY RULES
@@ -502,13 +531,17 @@ export default defineSchema({
   availability_rules: defineTable({
     orgId: v.id("orgs"),
     staffId: v.id("staff_members"),
-    dayOfWeek: v.number(),                   // 0 = Sun … 6 = Sat
-    startTime: v.string(),                   // "09:00"
-    endTime: v.string(),                     // "18:00"
-    breaks: v.optional(v.array(v.object({
-      startTime: v.string(),
-      endTime: v.string(),
-    }))),
+    dayOfWeek: v.number(), // 0 = Sun … 6 = Sat
+    startTime: v.string(), // "09:00"
+    endTime: v.string(), // "18:00"
+    breaks: v.optional(
+      v.array(
+        v.object({
+          startTime: v.string(),
+          endTime: v.string(),
+        }),
+      ),
+    ),
     isActive: v.boolean(),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
@@ -518,10 +551,14 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_staff", ["staffId"])
     .index("by_staff_day", ["staffId", "dayOfWeek"])
-    .index("by_staff_day_active", ["staffId", "dayOfWeek", "isDeleted", "isActive"])
+    .index("by_staff_day_active", [
+      "staffId",
+      "dayOfWeek",
+      "isDeleted",
+      "isActive",
+    ])
     .index("by_org_active", ["orgId", "isActive", "isDeleted"])
     .index("by_staff_active", ["staffId", "isActive", "isDeleted"]),
-
 
   // ─────────────────────────────────────────────────────
   // AVAILABILITY OVERRIDES
@@ -529,11 +566,8 @@ export default defineSchema({
   availability_overrides: defineTable({
     orgId: v.id("orgs"),
     staffId: v.id("staff_members"),
-    date: v.string(),                        // "2026-08-25" ISO date
-    type: v.union(
-      v.literal("day_off"),
-      v.literal("custom_hours"),
-    ),
+    date: v.string(), // "2026-08-25" ISO date
+    type: v.union(v.literal("day_off"), v.literal("custom_hours")),
     startTime: v.optional(v.string()),
     endTime: v.optional(v.string()),
     note: v.optional(v.string()),
@@ -546,7 +580,6 @@ export default defineSchema({
     .index("by_staff_date", ["staffId", "date"])
     .index("by_staff_date_active", ["staffId", "date", "isDeleted"])
     .index("by_org_active", ["orgId", "isDeleted"]),
-
 
   // ─────────────────────────────────────────────────────
   // BOOKINGS
@@ -580,11 +613,10 @@ export default defineSchema({
       v.literal("no_show"),
     ),
 
-
     // Booking source — includes opus channels
     source: v.union(
-      v.literal("web"),          // business's own booking page
-      v.literal("opus_web"),     // opus.mk website
+      v.literal("web"), // business's own booking page
+      v.literal("opus_web"), // opus.mk website
       v.literal("ai_whatsapp"),
       v.literal("ai_instagram"),
       v.literal("ai_webchat"),
@@ -609,11 +641,10 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_status", ["orgId", "status"])
-    .index("by_staff_start", ["staffId", "startAt"])           // slot conflict check
+    .index("by_staff_start", ["staffId", "startAt"]) // slot conflict check
     .index("by_customer", ["customerId"])
-    .index("by_org_start", ["orgId", "startAt"])               // daily schedule view
+    .index("by_org_start", ["orgId", "startAt"]) // daily schedule view
     .index("by_opus_user", ["opusUserId"]),
-
 
   // ─────────────────────────────────────────────────────
   // CUSTOMERS
@@ -629,7 +660,7 @@ export default defineSchema({
 
     name: v.string(),
     email: v.optional(v.string()),
-    phone: v.optional(v.string()),           // E.164
+    phone: v.optional(v.string()), // E.164
     avatarUrl: v.optional(v.string()),
 
     // CRM signals
@@ -640,15 +671,12 @@ export default defineSchema({
 
     // No-show risk
     noShowCount: v.number(),
-    noShowRiskScore: v.number(),             // 0–1
-    requiresFullDeposit: v.boolean(),
-
+    noShowRiskScore: v.number(), // 0–1
+    requiresFullDeposit: v.optional(v.boolean()),
     // Channel preferences
-    preferredChannel: v.optional(v.union(
-      v.literal("whatsapp"),
-      v.literal("sms"),
-      v.literal("email"),
-    )),
+    preferredChannel: v.optional(
+      v.union(v.literal("whatsapp"), v.literal("sms"), v.literal("email")),
+    ),
     whatsappOptIn: v.boolean(),
     marketingOptIn: v.boolean(),
 
@@ -671,7 +699,6 @@ export default defineSchema({
       filterFields: ["orgId", "isDeleted"],
     }),
 
-
   // ─────────────────────────────────────────────────────
   // CUSTOMER NOTES
   // ─────────────────────────────────────────────────────
@@ -688,7 +715,6 @@ export default defineSchema({
     .index("by_customer", ["customerId"])
     .index("by_org", ["orgId"]),
 
-
   // ─────────────────────────────────────────────────────
   // REVIEWS
   // Consumer reviews of an org, gated on completed booking.
@@ -696,15 +722,15 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   reviews: defineTable({
     orgId: v.id("orgs"),
-    opusUserId: v.id("opus_users"),          // global consumer who left the review
-    customerId: v.id("customers"),           // their org-scoped CRM link (for verification)
+    opusUserId: v.id("opus_users"), // global consumer who left the review
+    customerId: v.id("customers"), // their org-scoped CRM link (for verification)
 
     // Must reference a completed booking — enforces verified-purchase gate
     bookingId: v.optional(v.id("bookings")),
     reservationId: v.optional(v.id("reservations")),
 
-    rating: v.number(),                      // 1–5 integer
-    body: v.optional(v.string()),            // review text
+    rating: v.number(), // 1–5 integer
+    body: v.optional(v.string()), // review text
 
     // Owner response
     reply: v.optional(v.string()),
@@ -712,7 +738,7 @@ export default defineSchema({
     repliedByStaffId: v.optional(v.id("staff_members")),
 
     // Moderation
-    isPublished: v.boolean(),               // default false; published after moderation or immediately
+    isPublished: v.boolean(), // default false; published after moderation or immediately
     publishedAt: v.optional(v.number()),
 
     isDeleted: v.boolean(),
@@ -725,7 +751,6 @@ export default defineSchema({
     .index("by_opus_user", ["opusUserId"])
     .index("by_booking", ["bookingId"])
     .index("by_reservation", ["reservationId"]),
-
 
   // ─────────────────────────────────────────────────────
   // AI CONVERSATIONS
@@ -765,7 +790,6 @@ export default defineSchema({
     .index("by_channel_thread", ["channel", "channelThreadId"])
     .index("by_customer", ["customerId"]),
 
-
   // ─────────────────────────────────────────────────────
   // AI MESSAGES
   // ─────────────────────────────────────────────────────
@@ -785,21 +809,21 @@ export default defineSchema({
     inputTokens: v.optional(v.number()),
     outputTokens: v.optional(v.number()),
 
-    actionType: v.optional(v.union(
-      v.literal("booking_created"),
-      v.literal("booking_cancelled"),
-      v.literal("booking_rescheduled"),
-      v.literal("payment_link_sent"),
-      v.literal("handoff_triggered"),
-      v.literal("gap_outreach_sent"),
-    )),
+    actionType: v.optional(
+      v.union(
+        v.literal("booking_created"),
+        v.literal("booking_cancelled"),
+        v.literal("booking_rescheduled"),
+        v.literal("handoff_triggered"),
+        v.literal("gap_outreach_sent"),
+      ),
+    ),
     actionReferenceId: v.optional(v.string()),
 
     createdAt: v.number(),
   })
     .index("by_conversation", ["conversationId"])
     .index("by_org", ["orgId"]),
-
 
   // ─────────────────────────────────────────────────────
   // NOTIFICATIONS
@@ -808,6 +832,7 @@ export default defineSchema({
     orgId: v.id("orgs"),
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
+    bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
 
     channel: v.union(
       v.literal("sms"),
@@ -816,11 +841,12 @@ export default defineSchema({
       v.literal("push"),
     ),
     type: v.union(
+      v.literal("booking_verification"),
       v.literal("booking_confirmation"),
       v.literal("booking_reminder"),
+      v.literal("staff_new_booking"),
+      v.literal("staff_booking_reminder"),
       v.literal("booking_cancelled"),
-      v.literal("deposit_request"),
-      v.literal("receipt"),
       v.literal("review_request"),
       v.literal("no_show_warning"),
       v.literal("gap_fill_offer"),
@@ -835,18 +861,50 @@ export default defineSchema({
       v.literal("sent"),
       v.literal("delivered"),
       v.literal("failed"),
+      v.literal("cancelled"),
     ),
     scheduledFor: v.number(),
     sentAt: v.optional(v.number()),
     failureReason: v.optional(v.string()),
     externalMessageId: v.optional(v.string()),
+    attemptCount: v.optional(v.number()),
+    lastAttemptAt: v.optional(v.number()),
+    dedupeKey: v.optional(v.string()),
 
     createdAt: v.number(),
   })
     .index("by_org", ["orgId"])
+    .index("by_org_dedupe", ["orgId", "dedupeKey"])
+    .index("by_org_status_scheduled", ["orgId", "status", "scheduledFor"])
     .index("by_status_scheduled", ["status", "scheduledFor"])
     .index("by_booking", ["bookingId"]),
 
+  // ─────────────────────────────────────────────────────
+  // PUBLIC BOOKING EMAIL VERIFICATIONS
+  // Short-lived, single-use challenges for unauthenticated tenant-site guests.
+  // The OTP is stored only as a keyed hash; the queued delivery payload keeps
+  // an encrypted copy until Resend accepts the message.
+  // ─────────────────────────────────────────────────────
+  booking_email_verifications: defineTable({
+    orgId: v.id("orgs"),
+    email: v.string(),
+    codeHash: v.string(),
+    attempts: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("consumed"),
+      v.literal("locked"),
+      v.literal("expired"),
+      v.literal("superseded"),
+      v.literal("delivery_failed"),
+    ),
+    expiresAt: v.number(),
+    consumedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_email", ["orgId", "email"]),
 
   // ─────────────────────────────────────────────────────
   // DASHBOARD NOTIFICATIONS
@@ -884,7 +942,7 @@ export default defineSchema({
       v.literal("ai"),
       v.literal("system"),
       v.literal("webhook"),
-      v.literal("opus_user"),              // end-consumer actions (book, cancel, review)
+      v.literal("opus_user"), // end-consumer actions (book, cancel, review)
     ),
     actorId: v.optional(v.string()),
 
@@ -904,14 +962,13 @@ export default defineSchema({
     .index("by_org_action", ["orgId", "action"])
     .index("by_resource", ["resourceType", "resourceId"]),
 
-
   // ─────────────────────────────────────────────────────
   // GAP SUGGESTIONS (AI GAP OPTIMIZER)
   // ─────────────────────────────────────────────────────
   gap_suggestions: defineTable({
     orgId: v.id("orgs"),
     staffId: v.id("staff_members"),
-    serviceDate: v.string(),                 // "YYYY-MM-DD"
+    serviceDate: v.string(), // "YYYY-MM-DD"
     gapStartAt: v.number(),
     gapEndAt: v.number(),
     durationMins: v.number(),
@@ -924,10 +981,7 @@ export default defineSchema({
       v.literal("expired"),
       v.literal("dismissed"),
     ),
-    detectedBy: v.union(
-      v.literal("manual_scan"),
-      v.literal("cancellation"),
-    ),
+    detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation")),
     triggeredByBookingId: v.optional(v.id("bookings")),
     outreachSentAt: v.optional(v.number()),
     filledByBookingId: v.optional(v.id("bookings")),
@@ -950,7 +1004,7 @@ export default defineSchema({
     score: v.number(),
     scoreRationale: v.string(),
     draftedMessage: v.string(),
-    confidenceScore: v.number(),             // 0–1
+    confidenceScore: v.number(), // 0–1
     channel: v.union(
       v.literal("sms"),
       v.literal("email"),
@@ -972,7 +1026,6 @@ export default defineSchema({
     .index("by_gap", ["gapSuggestionId"])
     .index("by_gap_rank", ["gapSuggestionId", "rank"])
     .index("by_customer", ["customerId"]),
-
 
   // ═══════════════════════════════════════════════════════
   // HOSPITALITY VERTICAL
@@ -999,7 +1052,6 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_active", ["orgId", "isActive"]),
-
 
   // ─────────────────────────────────────────────────────
   // TABLES
@@ -1044,7 +1096,6 @@ export default defineSchema({
     .index("by_org_status", ["orgId", "status"])
     .index("by_floor_plan_status", ["floorPlanId", "status"]),
 
-
   // ─────────────────────────────────────────────────────
   // RESERVATION SETTINGS
   // ─────────────────────────────────────────────────────
@@ -1064,26 +1115,25 @@ export default defineSchema({
 
     slotIntervalMins: v.number(),
 
-    servicePeriods: v.optional(v.array(v.object({
-      name: v.string(),
-      startTime: v.string(),
-      endTime: v.string(),
-      daysOfWeek: v.array(v.number()),
-    }))),
+    servicePeriods: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          startTime: v.string(),
+          endTime: v.string(),
+          daysOfWeek: v.array(v.number()),
+        }),
+      ),
+    ),
 
     walkInsAccepted: v.boolean(),
     walkInBufferMins: v.number(),
-
-    depositRequired: v.boolean(),
-    depositAmountMinorUnits: v.optional(v.number()),
 
     confirmationMessage: v.optional(v.string()),
     reminderHoursBefore: v.array(v.number()),
 
     updatedAt: v.number(),
-  })
-    .index("by_org", ["orgId"]),
-
+  }).index("by_org", ["orgId"]),
 
   // ─────────────────────────────────────────────────────
   // RESERVATIONS
@@ -1104,13 +1154,15 @@ export default defineSchema({
 
     partySize: v.number(),
     specialRequests: v.optional(v.string()),
-    occasion: v.optional(v.union(
-      v.literal("birthday"),
-      v.literal("anniversary"),
-      v.literal("business"),
-      v.literal("date"),
-      v.literal("other"),
-    )),
+    occasion: v.optional(
+      v.union(
+        v.literal("birthday"),
+        v.literal("anniversary"),
+        v.literal("business"),
+        v.literal("date"),
+        v.literal("other"),
+      ),
+    ),
 
     status: v.union(
       v.literal("pending"),
@@ -1123,18 +1175,14 @@ export default defineSchema({
 
     // Source — includes opus channels
     source: v.union(
-      v.literal("web"),          // venue's own booking page
+      v.literal("web"), // venue's own booking page
       v.literal("manual"),
       v.literal("walk_in"),
       v.literal("phone"),
-      v.literal("opus_web"),     // opus.mk website
-      v.literal("opus_app"),     // OPUS mobile app (future)
+      v.literal("opus_web"), // opus.mk website
+      v.literal("opus_app"), // OPUS mobile app (future)
       v.literal("ai"),
     ),
-
-    paymentIntentId: v.optional(v.id("payment_intents")),
-    depositPaidAt: v.optional(v.number()),
-    depositMinorUnits: v.optional(v.number()),
 
     cancelledAt: v.optional(v.number()),
     cancelledBy: v.optional(v.string()),
@@ -1152,13 +1200,11 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_status", ["orgId", "status"])
-    .index("by_table_start", ["tableId", "startAt"])           // conflict check
-    .index("by_org_start", ["orgId", "startAt"])               // daily schedule view
+    .index("by_table_start", ["tableId", "startAt"]) // conflict check
+    .index("by_org_start", ["orgId", "startAt"]) // daily schedule view
     .index("by_customer", ["customerId"])
     .index("by_floor_plan", ["floorPlanId"])
-    .index("by_payment_intent", ["paymentIntentId"])
     .index("by_opus_user", ["opusUserId"]),
-
 
   // ═══════════════════════════════════════════════════════
   // MARKETPLACE RAG (opus.mk discovery chat)
@@ -1175,15 +1221,17 @@ export default defineSchema({
   // ID alone.
   // ─────────────────────────────────────────────────────
   marketplace_conversations: defineTable({
-    sessionId: v.string(),                        // client-generated UUID (localStorage)
-    opusUserId: v.optional(v.id("opus_users")),   // null until sign-in
+    sessionId: v.string(), // client-generated UUID (localStorage)
+    opusUserId: v.optional(v.id("opus_users")), // null until sign-in
 
     initialCity: v.optional(v.string()),
-    initialCoords: v.optional(v.object({
-      lat: v.number(),
-      lng: v.number(),
-    })),
-    locale: v.optional(v.string()),               // "mk" | "en"
+    initialCoords: v.optional(
+      v.object({
+        lat: v.number(),
+        lng: v.number(),
+      }),
+    ),
+    locale: v.optional(v.string()), // "mk" | "en"
 
     totalInputTokens: v.number(),
     totalOutputTokens: v.number(),
@@ -1195,7 +1243,6 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_opus_user", ["opusUserId"]),
-
 
   // ─────────────────────────────────────────────────────
   // MARKETPLACE MESSAGES
@@ -1213,21 +1260,23 @@ export default defineSchema({
     ),
     content: v.string(),
 
-    recommendations: v.optional(v.array(v.object({
-      orgId: v.id("orgs"),
-      slug: v.string(),
-      reason: v.string(),
-      availabilityHint: v.optional(v.string()),
-    }))),
+    recommendations: v.optional(
+      v.array(
+        v.object({
+          orgId: v.id("orgs"),
+          slug: v.string(),
+          reason: v.string(),
+          availabilityHint: v.optional(v.string()),
+        }),
+      ),
+    ),
 
     model: v.optional(v.string()),
     inputTokens: v.optional(v.number()),
     outputTokens: v.optional(v.number()),
 
     createdAt: v.number(),
-  })
-    .index("by_conversation", ["conversationId"]),
-
+  }).index("by_conversation", ["conversationId"]),
 
   // ─────────────────────────────────────────────────────
   // MARKETPLACE EMBEDDINGS
@@ -1245,19 +1294,16 @@ export default defineSchema({
       v.literal("service"),
       v.literal("reputation"),
     ),
-    entityId: v.string(),                          // Id<"orgs"> | Id<"services"> stringified
-    orgId: v.id("orgs"),                           // always set — used for grouping/dedup
+    entityId: v.string(), // Id<"orgs"> | Id<"services"> stringified
+    orgId: v.id("orgs"), // always set — used for grouping/dedup
 
-    text: v.string(),                              // chunk text actually embedded
-    sourceHash: v.string(),                        // SHA-256(text) → skip re-embed if unchanged
-    embedding: v.array(v.float64()),               // 1536 dims (text-embedding-3-small)
+    text: v.string(), // chunk text actually embedded
+    sourceHash: v.string(), // SHA-256(text) → skip re-embed if unchanged
+    embedding: v.array(v.float64()), // 1536 dims (text-embedding-3-small)
 
     // Denormalised filter fields (vectorIndex filters are exact-match)
     city: v.optional(v.string()),
-    industry: v.union(
-      v.literal("beauty_wellness"),
-      v.literal("hospitality"),
-    ),
+    industry: v.union(v.literal("beauty_wellness"), v.literal("hospitality")),
     isPublished: v.boolean(),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
@@ -1273,5 +1319,4 @@ export default defineSchema({
       dimensions: 1536,
       filterFields: ["entityType", "city", "industry", "isPublished"],
     }),
-
 });

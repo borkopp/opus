@@ -1,13 +1,11 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Login | Simplistic",
-  description:
-    "Sign in to your Simplistic account. Access your dashboard, manage your projects, and stay productive.",
+  title: "Sign in | OPUS",
+  description: "Sign in to manage your beauty studio with OPUS.",
   openGraph: {
-    title: "Login | Simplistic",
-    description:
-      "Sign in to your Simplistic account. Access your dashboard, manage your projects, and stay productive.",
+    title: "Sign in | OPUS",
+    description: "Sign in to manage your beauty studio with OPUS.",
     type: "website",
   },
 };

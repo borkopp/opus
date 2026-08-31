@@ -6,17 +6,17 @@ OPUS is currently a beauty appointment SaaS for small beauty businesses in Maced
 
 > OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.
 
-The dashboard and web marketplace golden booking journey are the priority. Hospitality is dormant and must not appear as an active or supported product. Payments, autonomous AI features, loyalty, international expansion, and native consumer apps are deferred.
+The dashboard and automatic studio-website booking journey are the priority. Hospitality and the `opus-mk` marketplace are dormant and must not appear as active product surfaces. Autonomous AI features, loyalty, international expansion, and native consumer apps are deferred.
 
 Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scope, priorities, golden journey, and expansion rules.
 
 ## Active repository surfaces
 
-| Path              | Purpose                                                                                                                               | Local port             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `opus-dashboard/` | Beauty-business onboarding, services, staff, availability, customers, calendar, appointment management, and the shared Convex backend | `3000` / Convex `3210` |
-| `opus-mk/`        | Public beauty marketplace, studio profiles, and guest appointment booking                                                             | `3001`                 |
-| `opus-landing/`   | Truthful beauty-focused marketing website                                                                                             | `3000`                 |
+| Path              | Purpose                                                                                                      | Local port             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
+| `opus-dashboard/` | Beauty-business dashboard, automatic `{slug}.opus.mk` websites, guest booking, and the shared Convex backend | `3000` / Convex `3210` |
+| `opus-mk/`        | Dormant marketplace package retained for possible future work; do not modify by default                      | `3001`                 |
+| `opus-landing/`   | Truthful beauty-focused `opus.mk` marketing website                                                          | `3000`                 |
 
 `opus-dashboard/convex` is the backend source of truth. `opus-mk/convex` points to that shared backend.
 
@@ -57,9 +57,9 @@ npx convex env set AUTH_TRUSTED_ORIGINS http://localhost:3000,http://127.0.0.1:3
 
 Local sign-in codes are sent through Resend. The key command prompts for the value so it does not enter shell history. To use terminal delivery on an isolated local deployment instead, set `AUTH_EMAIL_MODE` to `console`; console delivery is rejected for non-local sites.
 
-### Marketplace
+### Dormant marketplace
 
-Start the shared backend first, then run:
+`opus-mk/` is retained but paused. Only run or change it when marketplace work is explicitly requested. If needed, start the shared backend first, then run:
 
 ```bash
 cd opus-mk
@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-The marketplace runs on `http://localhost:3001`.
+The retained marketplace runs on `http://localhost:3001`.
 
 ### Landing page
 
@@ -88,7 +88,7 @@ npm run typecheck
 npm test
 npm run build
 
-# opus-mk and opus-landing
+# opus-landing (and opus-mk only when explicitly affected)
 npm run lint
 npm run build
 ```
@@ -105,4 +105,4 @@ npm run build
 
 ## Deployment
 
-Production Docker images are built through GitHub Actions and deployed to the OPUS VPS. The dashboard is exposed internally on port `3006` and the marketplace on `3007`. Public `NEXT_PUBLIC_*` values are build-time variables; server secrets remain runtime-only.
+The target web topology is `opus-landing/` on Vercel at `opus.mk` and `opus-dashboard/` on a separate Vercel project at `studio.opus.mk` plus `*.opus.mk`. See [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md) for the environment, domain, and verification runbook. No per-business DNS change or VPS deployment is part of publishing a studio website.

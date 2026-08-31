@@ -117,8 +117,8 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
 
       {/* Handed-off notice */}
       {conversation.status === "handed_off" && conversation.handoffReason && (
-        <div className="px-5 py-3 border-t border-border/40 bg-orange-50 dark:bg-orange-900/10 shrink-0">
-          <p className="text-xs text-orange-700 dark:text-orange-400">
+        <div className="px-5 py-3 border-t border-border/40 bg-highlight/10 shrink-0">
+          <p className="text-xs text-warning">
             <span className="font-medium">Handed off:</span> {conversation.handoffReason}
           </p>
         </div>

@@ -116,31 +116,30 @@ export function DiscoverClient() {
   }, [rawItems, coords, isSearchActive, searchQuery, selectedCategory]);
 
   return (
-    <div className="dark min-h-screen bg-black flex flex-col">
+    <div className="dark min-h-screen bg-ink-surface flex flex-col">
       <DiscoverHeader city={city} isFallback={isFallback} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-0 md:px-8 pt-6 pb-28 md:pb-32">
         {/* Search Header Area */}
         <div className="px-4 md:px-0 mb-10">
           <p
-            className="text-[11px] font-bold font-sans tracking-[0.18em] uppercase mb-3"
-            style={{ color: "rgba(225,125,97,0.9)" }}
+            className="text-[11px] font-bold font-sans tracking-[0.18em] uppercase mb-3 text-highlight"
           >
             {dayLabel}
           </p>
           <h1
-            className="text-[2rem] sm:text-[2.25rem] mb-6 font-medium text-white leading-[1.1]"
+            className="text-[2rem] sm:text-[2.25rem] mb-6 font-medium text-primary-foreground leading-[1.1]"
             style={{ textWrap: "balance" } as React.CSSProperties}
           >
             Explore spots in{" "}
             <em
-              className="text-accent font-serif text-[2.3rem]"
+              className="text-accent-foreground font-display text-[2.3rem] italic"
             >
               {city}
             </em>
           </h1>
           {isFallback && city && (
-            <p className="mb-4 text-sm text-white/55">
+            <p className="mb-4 text-sm text-primary-foreground/55">
               Showing {city} while precise location is unavailable.
             </p>
           )}
@@ -165,14 +164,14 @@ export function DiscoverClient() {
               {!isSearchActive && (
                 <div className="flex gap-4 overflow-hidden">
                   {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="w-[220px] h-[275px] rounded-2xl flex-none bg-white/5" />
+                    <Skeleton key={i} className="w-[220px] h-[275px] rounded-2xl flex-none bg-primary-foreground/5" />
                   ))}
                 </div>
               )}
               {/* List Skeleton */}
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-[98px] rounded-2xl w-full bg-white/5" />
+                  <Skeleton key={i} className="h-[98px] rounded-2xl w-full bg-primary-foreground/5" />
                 ))}
               </div>
             </div>

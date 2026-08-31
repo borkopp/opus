@@ -1,227 +1,370 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Id } from "@/convex/_generated/dataModel";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ImagePlusIcon } from "lucide-react";
+import { toast } from "sonner";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { IconUpload, IconLoader2 } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { getErrorMessage, readStorageId, validateImageFile } from "@/lib/file-validation";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import {
+  getErrorMessage,
+  readStorageId,
+  validateImageFile,
+} from "@/lib/file-validation";
 
 type StaffRole = "owner" | "manager" | "staff";
 
 function isStaffRole(value: string): value is StaffRole {
-    return value === "owner" || value === "manager" || value === "staff";
+  return value === "owner" || value === "manager" || value === "staff";
 }
 
 export function StaffFormDialog({
-    orgId,
-    staffId,
-    open,
-    onOpenChange,
+  orgId,
+  staffId,
+  open,
+  onOpenChange,
 }: {
-    orgId: Id<"orgs">;
-    staffId?: Id<"staff_members">;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+  orgId: Id<"orgs">;
+  staffId?: Id<"staff_members">;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-    const isEdit = !!staffId;
-    const existingStaff = useQuery(
-        api.staff.getStaffMember,
-        staffId ? { orgId, staffId } : "skip"
-    );
+  const router = useRouter();
+  const isEdit = staffId !== undefined;
+  const existingStaff = useQuery(
+    api.staff.getStaffMember,
+    staffId ? { orgId, staffId } : "skip",
+  );
+  const createStaffMember = useMutation(api.staff.createStaffMember);
+  const updateStaffMember = useMutation(api.staff.updateStaffMember);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
-    const createStaffMember = useMutation(api.staff.createStaffMember);
-    const updateStaffMember = useMutation(api.staff.updateStaffMember);
-    const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const [displayName, setDisplayName] = useState("");
+  const [role, setRole] = useState<StaffRole>("staff");
+  const [bio, setBio] = useState("");
+  const [specialties, setSpecialties] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [displayName, setDisplayName] = useState("");
-    const [role, setRole] = useState<StaffRole>("staff");
-    const [bio, setBio] = useState("");
-    const [specialties, setSpecialties] = useState("");
-    const [avatarUrl, setAvatarUrl] = useState("");
-    const [isActive, setIsActive] = useState(true);
+  useEffect(() => {
+    if (!open) return;
 
-    const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [error, setError] = useState("");
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    setError("");
+    if (isEdit && existingStaff) {
+      setDisplayName(existingStaff.displayName);
+      setRole(existingStaff.role);
+      setBio(existingStaff.bio || "");
+      setSpecialties((existingStaff.specialties || []).join(", "));
+      setAvatarUrl(existingStaff.avatarUrl || "");
+      setIsActive(existingStaff.isActive ?? true);
+      return;
+    }
 
-    useEffect(() => {
-        if (isEdit && existingStaff) {
-            setDisplayName(existingStaff.displayName);
-            setRole(existingStaff.role);
-            setBio(existingStaff.bio || "");
-            setSpecialties((existingStaff.specialties || []).join(", "));
-            setAvatarUrl(existingStaff.avatarUrl || "");
-            setIsActive(existingStaff.isActive ?? true);
-        }
-    }, [isEdit, existingStaff]);
+    if (!isEdit) {
+      setDisplayName("");
+      setRole("staff");
+      setBio("");
+      setSpecialties("");
+      setAvatarUrl("");
+      setIsActive(true);
+    }
+  }, [existingStaff, isEdit, open]);
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const validationError = validateImageFile(file);
-        if (validationError) {
-            setError(validationError);
-            return;
-        }
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-        setIsUploading(true);
-        setError("");
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
-        try {
-            const postUrl = await generateUploadUrl({ orgId });
-            const result = await fetch(postUrl, {
-                method: "POST",
-                headers: { "Content-Type": file.type },
-                body: file,
-            });
+    setIsUploading(true);
+    setError("");
+    try {
+      const postUrl = await generateUploadUrl({ orgId });
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!result.ok) throw new Error("Upload failed");
 
-            if (!result.ok) throw new Error("Upload failed");
+      setAvatarUrl(readStorageId(await result.json()));
+    } catch (uploadError: unknown) {
+      setError(getErrorMessage(uploadError, "Failed to upload image"));
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
-            setAvatarUrl(readStorageId(await result.json()));
-        } catch (error: unknown) {
-            setError(getErrorMessage(error, "Failed to upload image"));
-        } finally {
-            setIsUploading(false);
-        }
-    };
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const name = displayName.trim();
+    if (!name) {
+      setError("Enter a display name.");
+      return;
+    }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setIsSaving(true);
+    setError("");
+    setIsSaving(true);
+    try {
+      const specialtyList = specialties
+        .split(",")
+        .map((specialty) => specialty.trim())
+        .filter(Boolean);
 
-        try {
-            const specArray = specialties.split(",").map(s => s.trim()).filter(Boolean);
-            if (isEdit && staffId) {
-                await updateStaffMember({
-                    orgId,
-                    staffId,
-                    displayName,
-                    role,
-                    bio,
-                    specialties: specArray,
-                    avatarUrl,
-                    isActive,
-                });
-            } else {
-                await createStaffMember({
-                    orgId,
-                    displayName,
-                    role,
-                    bio,
-                    specialties: specArray,
-                    avatarUrl,
-                });
-            }
-            onOpenChange(false);
-        } catch (error: unknown) {
-            setError(getErrorMessage(error, "Failed to save staff member"));
-        } finally {
-            setIsSaving(false);
-        }
-    };
+      if (isEdit && staffId) {
+        await updateStaffMember({
+          orgId,
+          staffId,
+          displayName: name,
+          role,
+          bio: bio.trim(),
+          specialties: specialtyList,
+          avatarUrl,
+          isActive,
+        });
+        toast.success("Staff details saved.");
+        onOpenChange(false);
+      } else {
+        const newStaffId = await createStaffMember({
+          orgId,
+          displayName: name,
+          role,
+          bio: bio.trim() || undefined,
+          specialties: specialtyList,
+          avatarUrl: avatarUrl || undefined,
+        });
+        toast.success("Staff member added. Set their working hours next.");
+        onOpenChange(false);
+        router.push(`/beauty/staff/${newStaffId}`);
+      }
+    } catch (saveError: unknown) {
+      setError(getErrorMessage(saveError, "Failed to save staff member"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    const getImageUrl = (urlOrId: string) => {
-        if (!urlOrId) return undefined;
-        if (urlOrId.startsWith("http")) return urlOrId;
-        return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split('//')[1]}/api/storage/${urlOrId}`;
-    };
+  const isLoadingStaff = isEdit && existingStaff === undefined;
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[550px]">
-                <DialogHeader>
-                    <DialogTitle>{isEdit ? "Edit Staff Member" : "Add Staff Member"}</DialogTitle>
-                    <DialogDescription>
-                        {isEdit ? "Make changes to this staff profile." : "Add a new member to your team."}
-                    </DialogDescription>
-                </DialogHeader>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {isEdit ? "Edit staff details" : "Add a staff member"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEdit
+              ? "Update the information customers and your team see."
+              : "Add the basic details first. You’ll set working hours next."}
+          </DialogDescription>
+        </DialogHeader>
 
-                <form id="staff-form" onSubmit={handleSubmit} className="flex flex-col gap-6 py-4">
-
-                    {/* Avatar row */}
-                    <div className="flex flex-col gap-3">
-                        <Label>Profile Photo</Label>
-                        <div className="flex items-center gap-4">
-                            <Avatar className="h-16 w-16 border bg-muted">
-                                <AvatarImage src={getImageUrl(avatarUrl)} alt="Avatar" className="object-cover" />
-                                <AvatarFallback className="text-muted-foreground"><IconUpload size={24} /></AvatarFallback>
-                            </Avatar>
-                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleUpload} />
-                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading} size="sm">
-                                {isUploading ? <IconLoader2 className="animate-spin w-4 h-4 mr-2" /> : "Upload Image"}
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="name">Display Name <span className="text-red-500">*</span></Label>
-                            <Input id="name" required value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="e.g. John Doe" />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="role">Role <span className="text-red-500">*</span></Label>
-                            <select
-                                id="role"
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                value={role}
-                                onChange={(event) => {
-                                    if (isStaffRole(event.target.value)) setRole(event.target.value);
-                                }}
-                            >
-                                <option value="staff">Staff (Standard)</option>
-                                <option value="manager">Manager</option>
-                                <option value="owner">Owner</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="bio">Bio</Label>
-                        <Textarea id="bio" className="min-h-[80px]" value={bio} onChange={e => setBio(e.target.value)} placeholder="A short bio for the booking page..." />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="specs">Specialties</Label>
-                        <Input id="specs" value={specialties} onChange={e => setSpecialties(e.target.value)} placeholder="Fades, Trims (comma separated)" />
-                    </div>
-
-                    {isEdit && (
-                        <div className="flex items-center space-x-2 rounded-lg border p-3 shadow-sm mt-2">
-                            <Checkbox id="isActive" checked={isActive} onCheckedChange={(c) => setIsActive(!!c)} />
-                            <Label htmlFor="isActive" className="font-medium cursor-pointer">
-                                Account is Active
-                            </Label>
-                        </div>
-                    )}
-
-                    {error && <p className="text-sm text-destructive font-medium">{error}</p>}
-                </form>
-
-                <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
-                    <Button type="submit" form="staff-form" disabled={isSaving || isUploading}>
-                        {isSaving && <IconLoader2 className="animate-spin w-4 h-4 mr-2" />}
-                        {isEdit ? "Save Changes" : "Add Staff"}
+        <div className="-mx-1 min-h-0 overflow-y-auto px-1">
+          {isLoadingStaff ? (
+            <div className="flex flex-col gap-5 py-2">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : (
+            <form id="staff-form" onSubmit={handleSubmit}>
+              <FieldGroup className="gap-5 py-2">
+                <Field>
+                  <FieldLabel>Profile photo</FieldLabel>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="size-14 border bg-muted">
+                      <AvatarImage
+                        src={getImageUrl(avatarUrl)}
+                        alt={displayName || "Staff profile"}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-muted-foreground">
+                        <ImagePlusIcon className="size-5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      aria-label="Choose profile photo"
+                      onChange={handleUpload}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : (
+                        <ImagePlusIcon data-icon="inline-start" />
+                      )}
+                      {isUploading ? "Uploading…" : "Choose photo"}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+                  </div>
+                </Field>
+
+                <FieldGroup className="grid gap-4 sm:grid-cols-2">
+                  <Field>
+                    <FieldLabel htmlFor="staff-name">Display name</FieldLabel>
+                    <Input
+                      id="staff-name"
+                      required
+                      value={displayName}
+                      onChange={(event) => setDisplayName(event.target.value)}
+                      placeholder="e.g. Ana Petrova"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="staff-role">Role</FieldLabel>
+                    <Select
+                      value={role}
+                      onValueChange={(value) => {
+                        if (isStaffRole(value)) setRole(value);
+                      }}
+                    >
+                      <SelectTrigger id="staff-role" className="w-full">
+                        <SelectValue placeholder="Choose a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="staff">Staff member</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="owner">Owner</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </FieldGroup>
+
+                <Field>
+                  <FieldLabel htmlFor="staff-specialties">
+                    Specialties{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </FieldLabel>
+                  <Input
+                    id="staff-specialties"
+                    value={specialties}
+                    onChange={(event) => setSpecialties(event.target.value)}
+                    placeholder="Nails, brows, makeup"
+                  />
+                  <FieldDescription>
+                    Separate multiple specialties with commas.
+                  </FieldDescription>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="staff-bio">
+                    Short bio{" "}
+                    <span className="text-muted-foreground">(optional)</span>
+                  </FieldLabel>
+                  <Textarea
+                    id="staff-bio"
+                    value={bio}
+                    onChange={(event) => setBio(event.target.value)}
+                    placeholder="A short introduction for the booking page."
+                    className="min-h-20"
+                  />
+                </Field>
+
+                {isEdit && (
+                  <Field orientation="horizontal" variant="surface">
+                    <FieldContent>
+                      <FieldTitle>Available for bookings</FieldTitle>
+                      <FieldDescription>
+                        Turn this off to hide this person from new bookings.
+                      </FieldDescription>
+                    </FieldContent>
+                    <Switch
+                      id="staff-active"
+                      checked={isActive}
+                      onCheckedChange={setIsActive}
+                      aria-label="Available for bookings"
+                    />
+                  </Field>
+                )}
+
+                {error && <FieldError>{error}</FieldError>}
+              </FieldGroup>
+            </form>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="staff-form"
+            disabled={isLoadingStaff || isSaving || isUploading}
+          >
+            {isSaving && <Spinner data-icon="inline-start" />}
+            {isEdit ? "Save details" : "Add & set hours"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function getImageUrl(urlOrId: string) {
+  if (!urlOrId) return undefined;
+  if (urlOrId.startsWith("http")) return urlOrId;
+
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(/\/$/, "");
+  return convexUrl ? `${convexUrl}/api/storage/${urlOrId}` : undefined;
 }

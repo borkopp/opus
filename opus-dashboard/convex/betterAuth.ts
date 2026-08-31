@@ -5,6 +5,7 @@ import { emailOTP } from "better-auth/plugins/email-otp";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
+import { renderAccountOtpEmail } from "./lib/emailTemplates";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -95,11 +96,9 @@ async function deliverOtp({
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from,
+      from: from.includes("<") ? from : `OPUS <${from}>`,
       to: [email],
-      subject: "Your OPUS sign-in code",
-      text: `Your OPUS sign-in code is ${otp}. It expires in 5 minutes.`,
-      html: `<p>Your OPUS sign-in code is <strong>${otp}</strong>.</p><p>It expires in 5 minutes.</p>`,
+      ...renderAccountOtpEmail({ otp, type }),
     }),
   });
 

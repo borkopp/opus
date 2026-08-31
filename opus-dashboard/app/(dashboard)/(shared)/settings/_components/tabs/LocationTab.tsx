@@ -142,160 +142,149 @@ export function LocationTab({ initialData }: LocationTabProps) {
     <TabsContent value="location" className="m-0">
       <SettingsCard
         title="Business location"
-        description="This confirmed address and map pin power onboarding, marketplace discovery, directions, and distance sorting."
+        description="This confirmed address and map pin appear on your studio website and keep booking setup complete."
         footer={
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
+          <Button type="button" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Spinner /> : <Save />}
             Save location
           </Button>
         }
       >
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="settings-address-search">
-                Find an address
-              </FieldLabel>
-              <div ref={searchContainerRef} className="relative">
-                <InputGroup>
-                  <InputGroupAddon>
-                    {isSearching ? <Spinner /> : <Search />}
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="settings-address-search">
+              Find an address
+            </FieldLabel>
+            <div ref={searchContainerRef} className="relative">
+              <InputGroup>
+                <InputGroupAddon>
+                  {isSearching ? <Spinner /> : <Search />}
+                </InputGroupAddon>
+                <InputGroupInput
+                  id="settings-address-search"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setIsSearchOpen(true);
+                  }}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setIsSearchOpen(false);
+                      event.currentTarget.blur();
+                    }
+                  }}
+                  placeholder="Search by street or venue"
+                  autoComplete="off"
+                  aria-autocomplete="list"
+                  aria-controls="settings-address-results"
+                  aria-expanded={isSearchOpen && results.length > 0}
+                />
+                {query && (
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      aria-label="Clear address search"
+                      onClick={clearSearch}
+                      size="icon-xs"
+                      variant="ghost"
+                    >
+                      <X />
+                    </InputGroupButton>
                   </InputGroupAddon>
-                  <InputGroupInput
-                    id="settings-address-search"
-                    value={query}
-                    onChange={(event) => {
-                      setQuery(event.target.value);
-                      setIsSearchOpen(true);
-                    }}
-                    onFocus={() => setIsSearchOpen(true)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        setIsSearchOpen(false);
-                        event.currentTarget.blur();
-                      }
-                    }}
-                    placeholder="Search by street or venue"
-                    autoComplete="off"
-                    aria-autocomplete="list"
-                    aria-controls="settings-address-results"
-                    aria-expanded={isSearchOpen && results.length > 0}
-                  />
-                  {query && (
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        aria-label="Clear address search"
-                        onClick={clearSearch}
-                        size="icon-xs"
-                        variant="ghost"
-                      >
-                        <X />
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  )}
-                </InputGroup>
-                {isSearchOpen && results.length > 0 && (
-                  <div
-                    id="settings-address-results"
-                    role="listbox"
-                    className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border bg-popover shadow-lg"
-                  >
-                    {results.map((feature) => (
-                      <button
-                        key={feature.id}
-                        type="button"
-                        role="option"
-                        aria-selected="false"
-                        className="flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-secondary"
-                        onClick={() =>
-                          applyLocation(parseMapboxFeature(feature))
-                        }
-                      >
-                        <span className="text-sm font-medium">
-                          {feature.text}
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {feature.place_name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
                 )}
-              </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
-            </Field>
+              </InputGroup>
+              {isSearchOpen && results.length > 0 && (
+                <div
+                  id="settings-address-results"
+                  role="listbox"
+                  className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border bg-popover shadow-lg"
+                >
+                  {results.map((feature) => (
+                    <button
+                      key={feature.id}
+                      type="button"
+                      role="option"
+                      aria-selected="false"
+                      className="flex w-full flex-col gap-1 px-4 py-3 text-left hover:bg-secondary"
+                      onClick={() => applyLocation(parseMapboxFeature(feature))}
+                    >
+                      <span className="text-sm font-medium">
+                        {feature.text}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {feature.place_name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </Field>
 
-            <Field>
-              <FieldLabel>Exact map pin</FieldLabel>
-              <LocationMapPicker
-                coords={location.coordinates}
-                onChange={handleMapChange}
+          <Field>
+            <FieldLabel>Exact map pin</FieldLabel>
+            <LocationMapPicker
+              coords={location.coordinates}
+              onChange={handleMapChange}
+            />
+          </Field>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field className="sm:col-span-2">
+              <FieldLabel htmlFor="settings-address">Street address</FieldLabel>
+              <Input
+                id="settings-address"
+                value={location.address}
+                onChange={(event) => update("address", event.target.value)}
               />
             </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-city">City</FieldLabel>
+              <Input
+                id="settings-city"
+                value={location.city}
+                onChange={(event) => update("city", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-neighborhood">
+                Neighborhood
+              </FieldLabel>
+              <Input
+                id="settings-neighborhood"
+                value={location.neighborhood}
+                onChange={(event) => update("neighborhood", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-postal">Postal code</FieldLabel>
+              <Input
+                id="settings-postal"
+                value={location.postalCode}
+                onChange={(event) => update("postalCode", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-country">Country code</FieldLabel>
+              <Input
+                id="settings-country"
+                maxLength={2}
+                className="uppercase"
+                value={location.country}
+                onChange={(event) => update("country", event.target.value)}
+              />
+            </Field>
+          </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field className="sm:col-span-2">
-                <FieldLabel htmlFor="settings-address">
-                  Street address
-                </FieldLabel>
-                <Input
-                  id="settings-address"
-                  value={location.address}
-                  onChange={(event) => update("address", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-city">City</FieldLabel>
-                <Input
-                  id="settings-city"
-                  value={location.city}
-                  onChange={(event) => update("city", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-neighborhood">
-                  Neighborhood
-                </FieldLabel>
-                <Input
-                  id="settings-neighborhood"
-                  value={location.neighborhood}
-                  onChange={(event) =>
-                    update("neighborhood", event.target.value)
-                  }
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-postal">Postal code</FieldLabel>
-                <Input
-                  id="settings-postal"
-                  value={location.postalCode}
-                  onChange={(event) => update("postalCode", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-country">Country code</FieldLabel>
-                <Input
-                  id="settings-country"
-                  maxLength={2}
-                  className="uppercase"
-                  value={location.country}
-                  onChange={(event) => update("country", event.target.value)}
-                />
-              </Field>
+          {location.coordinates && (
+            <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+              <MapPin />
+              {location.coordinates.lat.toFixed(5)},{" "}
+              {location.coordinates.lng.toFixed(5)}
             </div>
-
-            {location.coordinates && (
-              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin />
-                {location.coordinates.lat.toFixed(5)},{" "}
-                {location.coordinates.lng.toFixed(5)}
-              </div>
-            )}
-
-          </FieldGroup>
+          )}
+        </FieldGroup>
       </SettingsCard>
     </TabsContent>
   );

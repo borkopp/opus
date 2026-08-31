@@ -9,7 +9,7 @@ export const Sizes = () => (
 )
 
 export const InButton = () => (
-  <Button variant="terracotta" disabled>
+  <Button variant="default" disabled>
     <Spinner /> Saving…
   </Button>
 )

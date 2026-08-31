@@ -19,7 +19,7 @@ export function Testimonials() {
               <Heading>
                 Loved by thousands <br /> of happy customers
               </Heading>
-              <Subheading className="mx-auto mt-4 max-w-md text-base text-neutral-500 md:text-lg dark:text-neutral-400">
+              <Subheading className="mx-auto mt-4 max-w-md text-base text-muted-foreground md:text-lg">
                 Hear from our community of builders, designers, and creators who
                 trust us to power their projects.
               </Subheading>
@@ -55,13 +55,13 @@ export function Testimonials() {
 
 function TestimonialsMobile() {
   return (
-    <section className="bg-white py-16 dark:bg-neutral-950">
+    <section className="bg-card py-16 dark:bg-ink-surface">
       <div className="px-4">
         <div className="text-center">
           <Heading>
             Loved by thousands <br /> of happy customers
           </Heading>
-          <Subheading className="mx-auto mt-4 max-w-md text-base text-neutral-500 dark:text-neutral-400">
+          <Subheading className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
             Hear from our community of builders, designers, and creators who
             trust us to power their projects.
           </Subheading>
@@ -114,12 +114,12 @@ function MobileTestimonialCard({
       initial={{ opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.4, delay: index * 0.1 }}
-      className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
+      className="rounded-xl bg-card p-5 shadow-sm ring-1 ring-foreground/5 dark:bg-secondary dark:ring-primary-foreground/10"
     >
-      <p className="text-base leading-snug font-semibold text-neutral-800 dark:text-neutral-100">
+      <p className="text-base leading-snug font-semibold text-foreground">
         &ldquo;{testimonial.title}&rdquo;
       </p>
-      <p className="mt-3 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
         {testimonial.quote}
       </p>
       <div className="mt-4 flex items-center gap-3">
@@ -131,7 +131,7 @@ function MobileTestimonialCard({
           className="size-8 rounded-full object-cover"
           loading="lazy"
         />
-        <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <span className="text-sm font-medium text-muted-foreground">
           {testimonial.name}
         </span>
       </div>
@@ -888,7 +888,7 @@ export function TestimonialsCanvas({
     <div
       ref={containerRef}
       className={cn(
-        "relative isolate h-screen w-full overflow-hidden bg-neutral-50 dark:bg-neutral-950",
+        "relative isolate h-screen w-full overflow-hidden bg-background dark:bg-ink-surface",
         isDragging ? "cursor-grabbing" : "cursor-grab",
         className,
       )}
@@ -901,7 +901,7 @@ export function TestimonialsCanvas({
       onTouchEnd={handleTouchEnd}
     >
       {/* Dot grid background */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,rgba(0,0,0,0.08)_1px,transparent_1px)] bg-size-[24px_24px] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.08)_1px,transparent_1px)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,var(--border)_1px,transparent_1px)] bg-size-[24px_24px]" />
 
       {/* Scrollable content layer */}
       <div
@@ -926,7 +926,7 @@ export function TestimonialsCanvas({
               return (
                 <motion.div
                   key={card.id}
-                  className="absolute origin-center overflow-hidden rounded-xl bg-white p-5 shadow-lg ring-1 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
+                  className="absolute origin-center overflow-hidden rounded-xl bg-card p-5 shadow-lg ring-1 ring-foreground/5 dark:bg-secondary dark:ring-primary-foreground/10"
                   style={{
                     left: card.x,
                     top: card.y,
@@ -947,10 +947,10 @@ export function TestimonialsCanvas({
                   {/* Testimonial content */}
                   <div className="flex h-full flex-col justify-between">
                     <div>
-                      <p className="text-base leading-snug font-semibold text-neutral-800 dark:text-neutral-100">
+                      <p className="text-base leading-snug font-semibold text-foreground">
                         &ldquo;{card.testimonial.title}&rdquo;
                       </p>
-                      <p className="mt-3 text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                         {card.testimonial.quote}
                       </p>
                     </div>
@@ -964,7 +964,7 @@ export function TestimonialsCanvas({
                         loading="lazy"
                         draggable={false}
                       />
-                      <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm font-medium text-muted-foreground">
                         {card.testimonial.name}
                       </span>
                     </div>

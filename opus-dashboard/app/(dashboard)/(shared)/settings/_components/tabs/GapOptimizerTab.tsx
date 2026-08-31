@@ -1,17 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Save } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "convex/react";
+import { Save } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { TabsContent } from "@/components/ui/tabs";
 import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
 interface GapOptimizerTabProps {
@@ -27,11 +33,23 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
     enabled: initialData.gapOptimizerEnabled,
     minGapMins: initialData.gapOptimizerMinGapMins,
   });
+  const [error, setError] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
-
-  const updateSettings = useMutation(api.orgSettings.updateGapOptimizerSettings);
+  const updateSettings = useMutation(
+    api.orgSettings.updateGapOptimizerSettings,
+  );
 
   const handleSave = async () => {
+    if (
+      !Number.isInteger(optimizer.minGapMins) ||
+      optimizer.minGapMins < 15 ||
+      optimizer.minGapMins > 240
+    ) {
+      setError("Enter a whole number between 15 and 240 minutes.");
+      return;
+    }
+
+    setError(undefined);
     setIsSaving(true);
     try {
       await updateSettings({
@@ -39,66 +57,83 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
         gapOptimizerEnabled: optimizer.enabled,
         gapOptimizerMinGapMins: optimizer.minGapMins,
       });
-      toast.success("Gap Optimizer settings saved");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to save gap settings.");
+      toast.success("Gap optimizer settings saved");
+    } catch (caught) {
+      toast.error(
+        caught instanceof Error
+          ? caught.message
+          : "Failed to save gap optimizer settings.",
+      );
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   return (
-    <TabsContent
-      value="gaps"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
+    <TabsContent value="gaps" className="m-0">
       <SettingsCard
         title="Gap optimizer"
-        description="Find useful openings in the calendar and invite suitable customers to fill them."
+        description="Choose which openings are large enough for OPUS to consider in cancellation-recovery workflows."
         contentClassName="flex flex-col gap-6"
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
             {isSaving ? "Saving…" : "Save optimizer settings"}
           </Button>
         }
       >
-          <SettingsToggleRow
-            title="Enable gap optimizer"
-            description="Run a background scan whenever a cancellation creates a new opening."
-            control={<Switch
+        <SettingsToggleRow
+          title="Enable gap optimizer"
+          description="Scan for eligible openings when a cancellation creates space in the schedule."
+          control={
+            <Switch
               id="gap-enabled"
+              aria-label="Enable gap optimizer"
               checked={optimizer.enabled}
-              onCheckedChange={(c) =>
-                setOptimizer({ ...optimizer, enabled: c })
+              onCheckedChange={(checked) =>
+                setOptimizer((current) => ({
+                  ...current,
+                  enabled: checked,
+                }))
               }
-            />}
-          />
+            />
+          }
+        />
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-border/50 bg-background p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1">
-              <Label htmlFor="min-gap-mins" className="select-none font-medium">
-                Minimum gap duration
-              </Label>
-              <p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
-                Ignore openings shorter than this. A larger threshold keeps
-                outreach focused on slots worth filling.
-              </p>
-            </div>
-            <div className="flex w-36 items-center gap-2">
-              <Input
-                id="min-gap-mins"
-                type="number"
-                min={15}
-                max={240}
-                step={15}
-                value={optimizer.minGapMins}
-                onChange={(e) =>
-                  setOptimizer({ ...optimizer, minGapMins: parseInt(e.target.value) || 30 })
-                }
-              />
-              <span className="text-xs text-muted-foreground">min</span>
-            </div>
-          </div>
+        <FieldGroup className="max-w-xl">
+          <Field data-invalid={Boolean(error)}>
+            <FieldLabel htmlFor="min-gap-mins">
+              Minimum gap duration (minutes)
+            </FieldLabel>
+            <Input
+              id="min-gap-mins"
+              type="number"
+              min={15}
+              max={240}
+              step={15}
+              value={optimizer.minGapMins}
+              aria-describedby="min-gap-description"
+              aria-invalid={Boolean(error)}
+              disabled={!optimizer.enabled}
+              onChange={(event) => {
+                setOptimizer((current) => ({
+                  ...current,
+                  minGapMins: Number.parseInt(event.target.value, 10),
+                }));
+                if (error) setError(undefined);
+              }}
+            />
+            <FieldDescription id="min-gap-description">
+              Shorter openings are ignored so recovery stays focused on useful
+              appointment slots.
+            </FieldDescription>
+            <FieldError>{error}</FieldError>
+          </Field>
+        </FieldGroup>
       </SettingsCard>
     </TabsContent>
   );

@@ -9,7 +9,7 @@ import { Badge } from "./badge";
 
 export default function Hero() {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden  bg-white dark:bg-neutral-950">
+    <div className="bg-background relative min-h-screen w-full overflow-hidden">
       <LinesGradientShader
         className="absolute inset-0 bg-transparent dark:bg-transparent"
         bandSpacing={40}
@@ -19,21 +19,25 @@ export default function Hero() {
       />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-32">
         <div>
-          <Badge href="https://app.opus.mk">За мали студија за убавина во Македонија</Badge>
+          <Badge href="https://studio.opus.mk">
+            За мали студија за убавина во Македонија
+          </Badge>
         </div>
 
-        <h1 className="mt-4 max-w-3xl text-4xl font-normal tracking-tight text-neutral-700 md:text-6xl dark:text-neutral-300">
+        <h1 className="font-display mt-4 max-w-3xl text-4xl font-bold tracking-tight text-white md:text-6xl">
           Помалку празни термини.
           <br />
-          Повеќе <span className="text-brand-primary font-playfair italic md:text-7xl font-medium" > резервирани</span> клиенти.
+          Повеќе резервирани клиенти.
         </h1>
 
-        <p className="mt-4 max-w-2xl text-base text-neutral-700 md:text-xl dark:text-neutral-300">
-          OPUS им помага на малите студија за убавина да управуваат со термини и да ги претворат откажувањата и празните места во календарот во резервирани термини.
+        <p className="mt-4 max-w-2xl text-base text-white/90 md:text-xl">
+          OPUS им помага на малите студија за убавина да управуваат со термини и
+          да ги претворат откажувањата и празните места во календарот во
+          резервирани термини.
         </p>
 
         <div className="mt-8 flex items-center gap-4">
-          <Link href="https://app.opus.mk">
+          <Link href="https://studio.opus.mk">
             <Button>
               <span className="flex items-center gap-2">
                 Отворете OPUS <Arrow className="size-4" />
@@ -41,7 +45,9 @@ export default function Hero() {
             </Button>
           </Link>
           <Link href="/#product">
-            <Button className="hidden md:block" variant="outline">Дознајте повеќе</Button>
+            <Button className="hidden md:block" variant="outline">
+              Дознајте повеќе
+            </Button>
           </Link>
         </div>
 
@@ -49,17 +55,17 @@ export default function Hero() {
         <div className="mt-16 md:mt-24">
           <div className="relative mx-auto max-w-full">
             {/* Window Frame */}
-            <div className="overflow-hidden rounded-xl border border-neutral-300/50 bg-white/70 backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/70">
+            <div className="border-border/70 bg-card/80 overflow-hidden rounded-xl border backdrop-blur-sm">
               {/* Title Bar */}
-              <div className="flex items-center gap-2 border-b border-neutral-200/50 px-4 py-2 dark:border-neutral-700/50">
+              <div className="border-border/70 flex items-center gap-2 border-b px-4 py-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="size-3 rounded-full bg-red-500" />
-                  <div className="size-3 rounded-full bg-yellow-500" />
-                  <div className="size-3 rounded-full bg-green-500" />
+                  <div className="bg-danger size-3 rounded-full" />
+                  <div className="bg-highlight size-3 rounded-full" />
+                  <div className="bg-success size-3 rounded-full" />
                 </div>
                 <div className="flex-1 text-center">
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                    app.opus.mk
+                  <span className="text-muted-foreground text-xs">
+                    studio.opus.mk
                   </span>
                 </div>
                 <div className="w-12" />

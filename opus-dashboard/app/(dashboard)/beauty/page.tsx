@@ -23,7 +23,7 @@ import { RevenueChartWidget } from "@/components/dashboard/RevenueChartWidget";
 import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationWidget";
 import { CustomerInsightsWidget } from "@/components/dashboard/CustomerInsightsWidget";
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
-import { ListingBanner } from "@/components/dashboard/ListingBanner";
+import { WebsiteBanner } from "@/components/dashboard/WebsiteBanner";
 
 export default function DashboardHome() {
   const today = useMemo(() => new Date(), []);
@@ -147,34 +147,34 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-[1700px] mx-auto overflow-visible min-h-[calc(100vh-150px)]">
-      <ListingBanner orgId={orgId} />
+    <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto flex-1 min-h-full">
+      <WebsiteBanner orgId={orgId} />
       {/* ── Dashboard Grid ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6 flex-1 overflow-visible min-h-0"
+        className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 flex-1 min-h-0"
       >
         {/* ── Row 1: Schedule + AI Widgets + Staff ── */}
-        <div className="md:col-span-2 h-full max-h-[500px] min-h-0">
+        <div className="md:col-span-2 md:h-full md:min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
             onCheckIn={handleCheckIn}
             onComplete={handleComplete}
           />
         </div>
-        <div className="md:col-span-1 h-full min-h-0">
+        <div className="md:col-span-1 md:h-full md:min-h-0">
           <GapOptimizerWidget orgId={orgId} />
         </div>
-        <div className="md:col-span-1 h-full min-h-0">
+        <div className="md:col-span-1 md:h-full md:min-h-0">
           <StaffUtilisationWidget
             staffUtilisation={staffUtilisation}
           />
         </div>
 
         {/* ── Row 2: Insights + Revenue Chart + AI Performance ── */}
-        <div className="md:col-span-1 h-full min-h-0">
+        <div className="md:col-span-1 md:h-full md:min-h-0">
           <CustomerInsightsWidget
             insights={customerInsights}
             topCustomers={topCustomers}
@@ -184,13 +184,13 @@ export default function DashboardHome() {
             bookingsToday={dashboardMetrics.totalBookingsToday}
           />
         </div>
-        <div className="md:col-span-2 h-full min-h-0">
+        <div className="md:col-span-2 md:h-full md:min-h-0">
           <RevenueChartWidget
             revenueData={weeklyRevenueChart}
             formatMoney={formatMoney}
           />
         </div>
-        <div className="md:col-span-1 h-full min-h-0">
+        <div className="md:col-span-1 md:h-full md:min-h-0">
           <AIPerformanceWidget
             aiPerformance={aiPerformance}
           />

@@ -1,94 +1,131 @@
 "use client";
-import { Id } from "@/convex/_generated/dataModel";
-import { WeeklySchedule } from "./_components/WeeklySchedule";
-import { TimeOffSection } from "./_components/TimeOffSection";
+
+import { use, useState } from "react";
+import Link from "next/link";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeftIcon, PencilIcon } from "lucide-react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconArrowLeft } from "@tabler/icons-react";
-import Link from "next/link";
-import { use } from "react";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/convex/_generated/api";
+import { Doc, Id } from "@/convex/_generated/dataModel";
+import { StaffFormDialog } from "../_components/StaffFormDialog";
+import { TimeOffSection } from "./_components/TimeOffSection";
+import { WeeklySchedule } from "./_components/WeeklySchedule";
 
-export default function StaffMemberPage({ params }: { params: Promise<{ staffId: string }> }) {
-    const { staffId } = use(params);
+export default function StaffMemberPage({
+  params,
+}: {
+  params: Promise<{ staffId: string }>;
+}) {
+  const { staffId: staffIdParam } = use(params);
+  const staffId = staffIdParam as Id<"staff_members">;
+  const profile = useQuery(api.users.getMyProfile);
+  const orgId = profile?.orgId as Id<"orgs"> | undefined;
+  const staffMember = useQuery(
+    api.staff.getStaffMember,
+    orgId ? { orgId, staffId } : "skip",
+  );
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-    const profile = useQuery(api.users.getMyProfile);
-    const orgId = profile?.orgId as Id<"orgs"> | undefined;
-
-    const staffMemberResult = useQuery(api.staff.getStaffMember,
-        orgId ? { orgId, staffId: staffId as Id<"staff_members"> } : "skip"
-    );
-
-    if (profile === undefined || staffMemberResult === undefined) {
-        return (
-            <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-10">
-                <Skeleton className="h-20 w-full mb-2" />
-                <Skeleton className="h-[600px] w-full mt-4" />
-            </div>
-        );
-    }
-
-    if (!orgId || staffMemberResult === null) {
-        return <div>Staff member not found.</div>;
-    }
-
+  if (profile === undefined || staffMember === undefined) {
     return (
-        <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto pb-10">
-
-            {/* Header section */}
-            <div className="flex flex-col gap-6">
-                <Link href="/beauty/staff" className="flex items-center text-base font-medium text-muted-foreground hover:text-foreground w-fit transition-colors group">
-                    <IconArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to Team
-                </Link>
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border/60 p-6 md:p-8 rounded-2xl bg-card shadow-sm">
-                    <div className="flex items-center gap-5">
-                        <Avatar className="h-16 w-16 border bg-muted shadow-sm">
-                            <AvatarImage src={staffMemberResult.avatarUrl} alt={staffMemberResult.displayName} className="object-cover" />
-                            <AvatarFallback className="font-semibold text-xl">{staffMemberResult.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-
-                        <div className="flex flex-col">
-                            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">{staffMemberResult.displayName}</h1>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className={cn(
-                                    "text-sm font-semibold uppercase tracking-wider",
-                                    staffMemberResult.role === "owner" ? "text-terracotta-600 dark:text-terracotta-500" :
-                                        staffMemberResult.role === "manager" ? "text-amber-600 dark:text-amber-500" : "text-muted-foreground"
-                                )}>{staffMemberResult.role}</span>
-                                <span className="w-1 h-1 rounded-full bg-border"></span>
-                                <Badge variant={staffMemberResult.isActive ? "default" : "secondary"} className={staffMemberResult.isActive ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium border-emerald-200 dark:border-emerald-800" : "font-medium"}>
-                                    {staffMemberResult.isActive ? "Active" : "Inactive"}
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                        {/* Edit wrapper removed here - user edits inside Staff List dialog or we can link it later */}
-                        <Button variant="outline" size="sm" asChild className="hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-colors">
-                            <Link href="/beauty/staff">Manage Profile</Link>
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content Tabs / Sections */}
-            <div className="flex flex-col gap-10 mt-6">
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-display font-semibold tracking-tight text-foreground">Schedule Configuration</h2>
-                    <WeeklySchedule orgId={orgId} staffId={staffId as Id<"staff_members">} />
-                </div>
-
-                <div className="space-y-4 border-t pt-8">
-                    <TimeOffSection orgId={orgId} staffId={staffId as Id<"staff_members">} />
-                </div>
-            </div>
-
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <Skeleton className="h-5 w-24" />
+        <div className="flex items-center gap-4 border-b pb-6">
+          <Skeleton className="size-14 rounded-full" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-7 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
         </div>
+        <Skeleton className="h-[620px] w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
     );
+  }
+
+  if (!orgId || staffMember === null) {
+    return <div>Staff member not found.</div>;
+  }
+
+  return (
+    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6">
+      <Link
+        href="/beauty/staff"
+        className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+      >
+        <ArrowLeftIcon className="size-4" />
+        All staff
+      </Link>
+
+      <header className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-4">
+          <Avatar className="size-14 border bg-muted">
+            <AvatarImage
+              src={staffMember.avatarUrl}
+              alt={staffMember.displayName}
+              className="object-cover"
+            />
+            <AvatarFallback className="text-lg font-medium">
+              {getInitials(staffMember.displayName)}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-3xl font-semibold tracking-tight text-foreground">
+              {staffMember.displayName}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-2">
+              <Badge variant="outline">{formatRole(staffMember.role)}</Badge>
+              <Badge variant={staffMember.isActive ? "success" : "secondary"}>
+                {staffMember.isActive ? "Active" : "Inactive"}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {staffMember.isActive
+                  ? "Manage working hours and time off."
+                  : "Inactive staff cannot be booked."}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+          <PencilIcon data-icon="inline-start" />
+          Edit details
+        </Button>
+      </header>
+
+      <div className="flex flex-col gap-6">
+        <WeeklySchedule orgId={orgId} staffId={staffId} />
+        <TimeOffSection orgId={orgId} staffId={staffId} />
+      </div>
+
+      {isEditOpen && (
+        <StaffFormDialog
+          orgId={orgId}
+          staffId={staffId}
+          open
+          onOpenChange={setIsEditOpen}
+        />
+      )}
+    </div>
+  );
+}
+
+function formatRole(role: Doc<"staff_members">["role"]) {
+  if (role === "owner") return "Owner";
+  if (role === "manager") return "Manager";
+  return "Staff member";
+}
+
+function getInitials(displayName: string) {
+  return displayName
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
 }

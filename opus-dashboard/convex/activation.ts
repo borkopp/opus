@@ -5,6 +5,7 @@ import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
 import { requireActiveOrg, requireRole, requireUser } from "./lib/auth";
 import { buildPublicProfile } from "./lib/publicProfile";
+import { allocateUniqueTenantSlug } from "./lib/tenantSlug";
 
 const beautyCategory = v.union(
   v.literal("barbershop"),
@@ -27,38 +28,6 @@ const openingHour = v.object({
   isClosed: v.boolean(),
 });
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 60);
-}
-
-async function uniqueSlug(
-  ctx: Parameters<typeof requireUser>[0],
-  name: string,
-  currentOrgId?: Id<"orgs">,
-): Promise<string> {
-  const base = slugify(name) || "business";
-  let candidate = base;
-  let suffix = 2;
-
-  while (true) {
-    const existing = await ctx.db
-      .query("orgs")
-      .withIndex("by_slug", (q) => q.eq("slug", candidate))
-      .first();
-    if (!existing || existing._id === currentOrgId || existing.isDeleted) {
-      return candidate;
-    }
-    candidate = `${base}-${suffix}`;
-    suffix += 1;
-  }
-}
-
 function assertHours(
   hours: Array<{
     dayOfWeek: number;
@@ -67,7 +36,10 @@ function assertHours(
     isClosed: boolean;
   }>,
 ) {
-  if (hours.length !== 7 || new Set(hours.map((day) => day.dayOfWeek)).size !== 7) {
+  if (
+    hours.length !== 7 ||
+    new Set(hours.map((day) => day.dayOfWeek)).size !== 7
+  ) {
     throw new ConvexError("Opening hours must include every day of the week.");
   }
 
@@ -124,7 +96,10 @@ export const startBeautyBusiness = mutation({
         throw new ConvexError("Hospitality onboarding is coming soon.");
       }
 
-      const slug = await uniqueSlug(ctx, name, org._id);
+      const slug =
+        org.websitePublishedAt || org.publishedAt
+          ? org.slug
+          : await allocateUniqueTenantSlug(ctx, name, org._id);
       const now = Date.now();
       await ctx.db.patch(org._id, {
         name,
@@ -147,22 +122,22 @@ export const startBeautyBusiness = mutation({
         after: { name, slug, beautyCategory: args.category },
         createdAt: now,
       });
-      await ctx.runMutation(internal.listing.recomputeListingStatus, {
+      await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
         orgId: org._id,
       });
       return org._id;
     }
 
     const now = Date.now();
-    const slug = await uniqueSlug(ctx, name);
+    const slug = await allocateUniqueTenantSlug(ctx, name);
     const orgId = await ctx.db.insert("orgs", {
       name,
       slug,
       industry: "beauty_wellness",
       beautyCategory: args.category,
       plan: "starter",
-      planStatus: "trialing",
       listingStatus: "unpublished",
+      websiteStatus: "unpublished",
       reviewCount: 0,
       averageRating: 0,
       source: "customer",
@@ -180,14 +155,15 @@ export const startBeautyBusiness = mutation({
       bookingWindowDays: 60,
       cancellationWindowHours: 24,
       bufferTimeMins: 0,
-      depositRequired: false,
-      depositType: "fixed",
-      depositValue: 0,
       surgePricingEnabled: false,
       reminderHoursBefore: [24, 2],
       smsEnabled: false,
       emailEnabled: true,
       whatsappEnabled: false,
+      staffNewBookingEmailEnabled: true,
+      staffReminderEmailEnabled: true,
+      staffReminderHoursBefore: [24, 2],
+      staffEmailRecipientUserIds: [user._id],
       aiEnabled: false,
       aiPersonaName: "Assistant",
       aiConfidenceThreshold: 0.7,
@@ -284,7 +260,7 @@ export const saveLocation = mutation({
       after: updates,
       createdAt: now,
     });
-    await ctx.runMutation(internal.listing.recomputeListingStatus, {
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: org._id,
     });
     return org._id;
@@ -380,7 +356,7 @@ export const saveFirstService = mutation({
       after: serviceFields,
       createdAt: now,
     });
-    await ctx.runMutation(internal.listing.recomputeListingStatus, {
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: org._id,
     });
     await ctx.scheduler.runAfter(
@@ -444,7 +420,7 @@ export const saveHours = mutation({
       after: { openingHours: args.openingHours },
       createdAt: now,
     });
-    await ctx.runMutation(internal.listing.recomputeListingStatus, {
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: org._id,
     });
     return org._id;
@@ -527,7 +503,9 @@ export const saveStorefront = mutation({
           q.eq("orgId", org._id).eq("isDeleted", false),
         )
         .collect();
-      if (!existing.some((item) => item.type === "gallery" && item.url === url)) {
+      if (
+        !existing.some((item) => item.type === "gallery" && item.url === url)
+      ) {
         await ctx.db.insert("org_media", {
           orgId: org._id,
           url,
@@ -563,7 +541,7 @@ export const saveStorefront = mutation({
       },
       createdAt: now,
     });
-    await ctx.runMutation(internal.listing.recomputeListingStatus, {
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: org._id,
     });
     await ctx.scheduler.runAfter(

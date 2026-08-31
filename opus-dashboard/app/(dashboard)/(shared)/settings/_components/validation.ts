@@ -34,23 +34,6 @@ export function validLocale(locale: string): boolean {
   }
 }
 
-/** Returns true if the string is a syntactically valid hostname (e.g. book.mybiz.com). */
-export function validHostname(host: string): boolean {
-  if (!host.trim()) return false;
-  // RFC 1123 hostname regex
-  return /^(?=.{1,253}$)((?!-)[A-Za-z0-9-]{1,63}(?<!-)\.)+[A-Za-z]{2,}$/.test(host.trim());
-}
-
-/** Returns true if the value is a valid percentage (0–100). */
-export function validPercentage(value: number): boolean {
-  return !isNaN(value) && value >= 0 && value <= 100;
-}
-
-/** Returns true if the value is valid for a fixed deposit (> 0). */
-export function validFixedDeposit(value: number): boolean {
-  return !isNaN(value) && value > 0;
-}
-
 /** Returns true if the value is a valid AI confidence threshold (0–1, 2 dp max). */
 export function validConfidence(value: number): boolean {
   return !isNaN(value) && value >= 0 && value <= 1;
@@ -58,16 +41,18 @@ export function validConfidence(value: number): boolean {
 
 /** Parses a comma-separated list of positive integers. Returns null on failure. */
 export function parseReminderHours(raw: string): number[] | null {
-  const parts = raw.split(",").map((s) => parseInt(s.trim(), 10));
-  if (parts.some((n) => isNaN(n) || n <= 0)) return null;
-  return parts;
+  if (!raw.trim()) return [];
+  const values = raw.split(",").map((part) => part.trim());
+  if (values.some((value) => !/^\d+$/.test(value))) return null;
+  const hours = values.map(Number);
+  if (hours.length > 8 || hours.some((hour) => hour <= 0 || hour > 336)) {
+    return null;
+  }
+  return Array.from(new Set(hours)).sort((first, second) => second - first);
 }
 
 /** Validates a file for upload: type must be image/*, size must be under maxMb. */
-export function validateImageFile(
-  file: File,
-  maxMb = 5
-): string | null {
+export function validateImageFile(file: File, maxMb = 5): string | null {
   if (!file.type.startsWith("image/")) {
     return "Only image files are allowed (JPEG, PNG, WebP).";
   }

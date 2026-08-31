@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Bar, BarChart, XAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
 
 interface RevenueDataItem {
   day: string;
@@ -55,19 +56,19 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       animate="visible"
       className="h-full col-span-1 lg:col-span-2"
     >
-      <Card className="flex flex-col h-full bg-[#111111] dark:bg-card p-6 min-h-[300px] rounded-[32px] transition-all duration-300 border-border/10">
-        <motion.div variants={itemVars} className="flex justify-between items-center mb-8 w-full px-1">
-          <h2 className="text-xl font-semibold font-display text-white dark:text-primary leading-none"><span className="">Revenue</span></h2>
+      <Card className="flex min-h-0 h-full flex-col bg-card p-6 text-card-foreground transition-shadow duration-300 hover:shadow-md">
+        <motion.div variants={itemVars} className="flex justify-between items-center mb-6 w-full px-1">
+          <WidgetTitle>Revenue</WidgetTitle>
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 dark:bg-secondary border border-white/10 dark:border-border/40 text-[11px] font-bold text-white/70 dark:text-primary cursor-pointer hover:bg-white/10 transition-colors"
+            className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-secondary px-4 py-2 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Week <span className="text-[10px] opacity-40 ml-1">▼</span>
           </motion.div>
         </motion.div>
 
-        <motion.div variants={itemVars} className="flex-1 w-full h-[180px] mt-auto relative">
+        <motion.div variants={itemVars} className="flex-1 w-full min-h-[160px] mt-auto relative">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={revenueData}
@@ -84,7 +85,7 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                 tickLine={false}
                 axisLine={false}
                 fontSize={12}
-                tick={{ fill: 'rgba(255,255,255,0.4)', fontWeight: 500 }}
+                tick={{ fill: "var(--muted-foreground)", fontWeight: 500 }}
                 tickMargin={12}
               />
               <Tooltip
@@ -93,11 +94,11 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                   if (active && payload && payload.length > 0 && payload[0]?.value !== undefined) {
                     const data = payload[0].payload as RevenueDataItem;
                     return (
-                      <div className="bg-white rounded-2xl p-4 shadow-2xl border border-black/5 flex flex-col items-center animate-in fade-in zoom-in duration-200 -mt-12">
-                        <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest leading-none mb-1.5">
+                      <div className="bg-card rounded-lg p-3 shadow-m border border-border flex flex-col items-center animate-in fade-in zoom-in duration-200 -mt-12">
+                        <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
                           {data.dayFull || data.day}
                         </span>
-                        <span className="text-base font-black text-zinc-950 leading-none font-outfit">
+                        <span className="text-base font-black text-foreground leading-none font-display">
                           {formatMoney((payload[0].value as number) * 100)}
                         </span>
                       </div>
@@ -118,12 +119,11 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
                   // Logic: Highlight if hovered, ELSE highlight if it's today AND nothing is hovered.
                   const isHighlighted = activeBar !== null ? activeBar === index : index === todayIndex;
 
-                  // #FF725C is the primary terracotta/salmon color
-                  // #2A2A2A is a neutral gray that stands out on #111
+                  // Use brand cobalt for highlighted bars and muted border for others
                   return (
                     <Cell
                       key={`${entry.day}-${index}`}
-                      fill={isHighlighted ? "#FF725C" : "#2A2A2A"}
+                      fill={isHighlighted ? "var(--brand)" : "var(--border)"}
                       style={{ cursor: 'pointer', transition: 'fill 0.2s ease' }}
                     />
                   );

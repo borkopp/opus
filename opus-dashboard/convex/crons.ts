@@ -10,11 +10,13 @@ crons.interval(
   internal.notifications.processNotifications,
 );
 
-// Runs daily at 8am to queue booking reminders
-crons.cron(
-  "queue-daily-reminders",
-  "0 8 * * *",
-  internal.notifications.queueDailyReminders,
+// Hourly reconciliation is a recovery path for existing bookings after an
+// owner changes reminder settings. New bookings schedule their reminders
+// immediately at the exact configured offsets.
+crons.interval(
+  "reconcile-booking-reminders",
+  { hours: 1 },
+  internal.notifications.reconcileAllBookingReminders,
 );
 
 // Runs daily at 03:00 Europe/Skopje (01:00 UTC) to refresh per-org

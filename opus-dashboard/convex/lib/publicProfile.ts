@@ -3,11 +3,8 @@ import type { QueryCtx } from "../_generated/server";
 
 type ReadCtx = Pick<QueryCtx, "db">;
 
-export async function buildPublicProfile(
-  ctx: ReadCtx,
-  org: Doc<"orgs">,
-) {
-  const [media, services, orgSettings] = await Promise.all([
+export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
+  const [media, services, orgSettings, activeStaff] = await Promise.all([
     ctx.db
       .query("org_media")
       .withIndex("by_org_active", (q) =>
@@ -28,6 +25,12 @@ export async function buildPublicProfile(
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", org._id))
       .first(),
+    ctx.db
+      .query("staff_members")
+      .withIndex("by_org_active", (q) =>
+        q.eq("orgId", org._id).eq("isActive", true).eq("isDeleted", false),
+      )
+      .collect(),
   ]);
 
   const categoryIds = [
@@ -42,10 +45,32 @@ export async function buildPublicProfile(
       .map((category) => [category!._id, category!.name]),
   );
 
-  const staffIds = [...new Set(services.flatMap((service) => service.staffIds))];
-  const staff = await Promise.all(
-    staffIds.slice(0, 20).map((staffId) => ctx.db.get(staffId)),
+  const assignedStaffIds = new Set(
+    services.flatMap((service) => service.staffIds),
   );
+  const publicStaff = activeStaff.filter((member) =>
+    assignedStaffIds.has(member._id),
+  );
+  const publicStaffIds = new Set(publicStaff.map((member) => member._id));
+  const publicServices = services
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((service) => ({
+      _id: service._id,
+      name: service.name,
+      consumerDescription: service.consumerDescription,
+      highlights: service.highlights,
+      photoUrl: service.photoUrl,
+      durationMins: service.durationMins,
+      priceMinorUnits: service.priceMinorUnits,
+      currency: service.currency,
+      staffIds: service.staffIds.filter((staffId) =>
+        publicStaffIds.has(staffId),
+      ),
+      categoryName: service.categoryId
+        ? categoryMap.get(service.categoryId)
+        : undefined,
+    }))
+    .filter((service) => service.staffIds.length > 0);
 
   return {
     _id: org._id,
@@ -79,37 +104,23 @@ export async function buildPublicProfile(
         type: item.type,
         caption: item.caption,
       })),
-    services: services
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((service) => ({
-        _id: service._id,
-        name: service.name,
-        consumerDescription: service.consumerDescription,
-        highlights: service.highlights,
-        photoUrl: service.photoUrl,
-        durationMins: service.durationMins,
-        priceMinorUnits: service.priceMinorUnits,
-        currency: service.currency,
-        categoryName: service.categoryId
-          ? categoryMap.get(service.categoryId)
-          : undefined,
-      })),
+    services: publicServices,
+    bookingSettings: {
+      timezone: orgSettings?.timezone ?? "Europe/Belgrade",
+      locale: orgSettings?.locale ?? "mk-MK",
+      bookingWindowDays: orgSettings?.bookingWindowDays ?? 60,
+    },
     aiWebchatEnabled: Boolean(
       orgSettings?.aiEnabled && orgSettings.aiWebchatEnabled,
     ),
     aiPersonaName: orgSettings?.aiPersonaName ?? "Aria",
     aiGreetingMessage: orgSettings?.aiGreetingMessage ?? null,
-    staff: staff
-      .filter(
-        (member): member is Doc<"staff_members"> =>
-          Boolean(member && member.isActive && !member.isDeleted),
-      )
-      .map((member) => ({
-        _id: member._id,
-        displayName: member.displayName,
-        bio: member.bio,
-        avatarUrl: member.avatarUrl,
-        specialties: member.specialties,
-      })),
+    staff: publicStaff.map((member) => ({
+      _id: member._id,
+      displayName: member.displayName,
+      bio: member.bio,
+      avatarUrl: member.avatarUrl,
+      specialties: member.specialties,
+    })),
   };
 }

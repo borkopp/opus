@@ -185,18 +185,18 @@ export function MarketplaceChat({ city, coords, onFirstMessage }: Props) {
             <div className="px-6 md:text-center mb-8 md:mb-20">
               <div className="inline-block  px-4 py-2 bg-background/50 mb-6 rounded-full backdrop-blur-sm">
                 <p
-                  className="text-[10px] font-bold tracking-[0.18em] uppercase text-accent-2"
+                className="text-[10px] font-bold tracking-[0.18em] uppercase text-primary"
                 >
                   {dayLabel}
                 </p>
               </div>
               <h1
-                className="text-[2rem] sm:text-[2.25rem] font-medium text-white leading-[1.1] tracking-[-0.025em]"
+                className="text-[2rem] sm:text-[2.25rem] font-medium text-background leading-[1.1] tracking-[-0.025em]"
                 style={{ textWrap: "balance" } as React.CSSProperties}
               >
                 Where do you want to{" "}
                 <em
-                  className="text-accent font-serif lg:text-white lg:font-sans italic lg:not-italic"
+                  className="text-primary font-display lg:text-background lg:font-sans italic lg:not-italic"
                 >
                   {heroTail}
                 </em>
@@ -211,19 +211,7 @@ export function MarketplaceChat({ city, coords, onFirstMessage }: Props) {
                     key={s.label}
                     onClick={() => sendMessage(s.query)}
                     disabled={isLoading || !city}
-                    className="shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors disabled:opacity-50"
-                    style={{
-                      background: "rgba(255,255,255,0.10)",
-                      backdropFilter: "blur(12px)",
-                      border: "1px solid rgba(255,255,255,0.16)",
-                      color: "rgba(250,249,247,0.9)",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(255,255,255,0.18)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(255,255,255,0.10)")
-                    }
+                    className="shrink-0 rounded-full border border-background/15 bg-background/10 px-3.5 py-1.5 text-xs font-medium whitespace-nowrap text-background/90 backdrop-blur-md transition-colors hover:bg-background/15 disabled:opacity-50"
                   >
                     {s.label}
                   </button>
@@ -246,19 +234,7 @@ export function MarketplaceChat({ city, coords, onFirstMessage }: Props) {
                     key={s.label}
                     onClick={() => sendMessage(s.query)}
                     disabled={isLoading || !city}
-                    className="shrink-0 text-xs font-medium px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors disabled:opacity-50"
-                    style={{
-                      background: "rgba(255,255,255,0.10)",
-                      backdropFilter: "blur(12px)",
-                      border: "1px solid rgba(255,255,255,0.16)",
-                      color: "rgba(250,249,247,0.9)",
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = "rgba(255,255,255,0.18)")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = "rgba(255,255,255,0.10)")
-                    }
+                    className="shrink-0 rounded-full border border-background/15 bg-background/10 px-3.5 py-1.5 text-xs font-medium whitespace-nowrap text-background/90 backdrop-blur-md transition-colors hover:bg-background/15 disabled:opacity-50"
                   >
                     {s.label}
                   </button>

@@ -1,106 +1,192 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { CircleAlert, Save } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { TabsContent } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { DebouncedInput } from "@/components/ui/debounced-input";
-import { Separator } from "@/components/ui/separator";
-import { Spinner } from "@/components/ui/spinner";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "convex/react";
+import { MailCheck, Save, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DebouncedInput } from "@/components/ui/debounced-input";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { TabsContent } from "@/components/ui/tabs";
+import {
+  SettingsCard,
+  SettingsSection,
+  SettingsToggleRow,
+} from "../SettingsCard";
 import { parseReminderHours } from "../validation";
-import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
+
+type EmailRecipient = {
+  userId: Id<"users">;
+  staffId: Id<"staff_members">;
+  name: string;
+  email: string;
+  role: "owner" | "manager" | "staff";
+};
 
 interface NotificationsQueueTabProps {
   orgId: Id<"orgs">;
   initialData: {
-    smsEnabled: boolean;
     emailEnabled: boolean;
-    whatsappEnabled: boolean;
     reminderHoursBefore: number[];
+    staffNewBookingEmailEnabled: boolean;
+    staffReminderEmailEnabled: boolean;
+    staffReminderHoursBefore: number[];
+    staffEmailRecipientUserIds: Id<"users">[];
+    emailRecipients: EmailRecipient[];
     dashboardNotificationsEnabled: boolean;
     dashboardSoundEnabled: boolean;
     dashboardToastEnabled: boolean;
   };
 }
 
-export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueueTabProps) {
-  const isMounted = useRef(true);
-  useEffect(() => { return () => { isMounted.current = false; }; }, []);
+const DASHBOARD_OPTIONS = [
+  {
+    id: "dashboard-sound-enabled",
+    label: "Sound",
+    description: "Play a chime when a new notification arrives.",
+    key: "dashboardSoundEnabled",
+  },
+  {
+    id: "dashboard-toast-enabled",
+    label: "Toast preview",
+    description: "Show a brief notification card beneath the bell.",
+    key: "dashboardToastEnabled",
+  },
+] as const;
 
-  const [notifications, setNotifications] = useState({
-    smsEnabled: initialData.smsEnabled,
-    emailEnabled: initialData.emailEnabled,
-    whatsappEnabled: initialData.whatsappEnabled,
-    reminderHoursStr: initialData.reminderHoursBefore.join(","),
+const ROLE_LABELS: Record<EmailRecipient["role"], string> = {
+  owner: "Owner",
+  manager: "Manager",
+  staff: "Staff",
+};
+
+export function NotificationsQueueTab({
+  orgId,
+  initialData,
+}: NotificationsQueueTabProps) {
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const [email, setEmail] = useState({
+    customerReminderEmailEnabled: initialData.emailEnabled,
+    customerReminderHours: initialData.reminderHoursBefore.join(", "),
+    staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
+    staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
+    staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
+    staffEmailRecipientUserIds: initialData.staffEmailRecipientUserIds,
   });
-  const [dashboardNotifs, setDashboardNotifs] = useState({
+  const [dashboard, setDashboard] = useState({
     dashboardNotificationsEnabled: initialData.dashboardNotificationsEnabled,
     dashboardSoundEnabled: initialData.dashboardSoundEnabled,
     dashboardToastEnabled: initialData.dashboardToastEnabled,
   });
-  const [reminderError, setReminderError] = useState<string | undefined>();
+  const [customerReminderError, setCustomerReminderError] = useState<string>();
+  const [staffReminderError, setStaffReminderError] = useState<string>();
+  const [recipientError, setRecipientError] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setNotifications({
-      smsEnabled: initialData.smsEnabled,
-      emailEnabled: initialData.emailEnabled,
-      whatsappEnabled: initialData.whatsappEnabled,
-      reminderHoursStr: initialData.reminderHoursBefore.join(","),
+    setEmail({
+      customerReminderEmailEnabled: initialData.emailEnabled,
+      customerReminderHours: initialData.reminderHoursBefore.join(", "),
+      staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
+      staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
+      staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
+      staffEmailRecipientUserIds: initialData.staffEmailRecipientUserIds,
     });
-    setDashboardNotifs({
+    setDashboard({
       dashboardNotificationsEnabled: initialData.dashboardNotificationsEnabled,
       dashboardSoundEnabled: initialData.dashboardSoundEnabled,
       dashboardToastEnabled: initialData.dashboardToastEnabled,
     });
-  }, [
-    initialData.smsEnabled,
-    initialData.emailEnabled,
-    initialData.whatsappEnabled,
-    initialData.reminderHoursBefore,
-    initialData.dashboardNotificationsEnabled,
-    initialData.dashboardSoundEnabled,
-    initialData.dashboardToastEnabled,
-  ]);
+  }, [initialData]);
 
-  const updateNotificationSettings = useMutation(api.orgSettings.updateNotificationSettings);
+  const updateEmailNotificationSettings = useMutation(
+    api.orgSettings.updateEmailNotificationSettings,
+  );
   const updateDashboardNotificationSettings = useMutation(
     api.orgSettings.updateDashboardNotificationSettings,
   );
 
   const handleSave = async () => {
-    const arr = parseReminderHours(notifications.reminderHoursStr);
-    if (!arr) {
-      setReminderError("Enter one or more positive whole numbers separated by commas (e.g. 24, 2).");
-      return;
+    const customerReminderHours = parseReminderHours(
+      email.customerReminderHours,
+    );
+    const staffReminderHours = parseReminderHours(email.staffReminderHours);
+    let invalid = false;
+    if (
+      !customerReminderHours ||
+      (email.customerReminderEmailEnabled && customerReminderHours.length === 0)
+    ) {
+      setCustomerReminderError(
+        "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+      );
+      invalid = true;
+    } else {
+      setCustomerReminderError(undefined);
     }
-    setReminderError(undefined);
+    if (
+      !staffReminderHours ||
+      (email.staffReminderEmailEnabled && staffReminderHours.length === 0)
+    ) {
+      setStaffReminderError(
+        "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+      );
+      invalid = true;
+    } else {
+      setStaffReminderError(undefined);
+    }
+    if (
+      (email.staffNewBookingEmailEnabled || email.staffReminderEmailEnabled) &&
+      email.staffEmailRecipientUserIds.length === 0
+    ) {
+      setRecipientError("Choose at least one dashboard user.");
+      invalid = true;
+    } else {
+      setRecipientError(undefined);
+    }
+    if (invalid || !customerReminderHours || !staffReminderHours) return;
+
     setIsSaving(true);
     try {
-      await updateNotificationSettings({
+      await updateEmailNotificationSettings({
         orgId,
-        smsEnabled: notifications.smsEnabled,
-        emailEnabled: notifications.emailEnabled,
-        whatsappEnabled: notifications.whatsappEnabled,
-        reminderHoursBefore: arr,
+        customerReminderEmailEnabled: email.customerReminderEmailEnabled,
+        customerReminderHoursBefore: customerReminderHours,
+        staffNewBookingEmailEnabled: email.staffNewBookingEmailEnabled,
+        staffReminderEmailEnabled: email.staffReminderEmailEnabled,
+        staffReminderHoursBefore: staffReminderHours,
+        staffEmailRecipientUserIds: email.staffEmailRecipientUserIds,
       });
-      await updateDashboardNotificationSettings({
-        orgId,
-        dashboardNotificationsEnabled: dashboardNotifs.dashboardNotificationsEnabled,
-        dashboardSoundEnabled: dashboardNotifs.dashboardSoundEnabled,
-        dashboardToastEnabled: dashboardNotifs.dashboardToastEnabled,
-      });
-      if (isMounted.current) toast.success("Notification settings saved");
+      await updateDashboardNotificationSettings({ orgId, ...dashboard });
+      if (isMounted.current) toast.success("Email and alert settings saved");
     } catch (error) {
       if (isMounted.current) {
-        toast.error(error instanceof Error ? error.message : "Failed to save notification settings.");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to save email settings.",
+        );
       }
     } finally {
       if (isMounted.current) setIsSaving(false);
@@ -108,121 +194,281 @@ export function NotificationsQueueTab({ orgId, initialData }: NotificationsQueue
   };
 
   return (
-    <TabsContent
-      value="notifications"
-      className="m-0 focus-visible:outline-none focus-visible:ring-0"
-    >
+    <TabsContent value="notifications" className="m-0">
       <SettingsCard
-        title="Notifications"
-        description="Choose how customers receive booking updates and how your team is alerted inside OPUS."
+        title="Email & alerts"
+        description="Keep clients verified and informed, then decide exactly which dashboard users hear about new and upcoming appointments."
         contentClassName="flex flex-col gap-7"
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
-            {isSaving ? "Saving…" : "Save notification settings"}
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
+            {isSaving ? "Saving…" : "Save email settings"}
           </Button>
         }
       >
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold">Customer messages</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Confirmations and reminders sent before an appointment.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3">
-            {([
-              { id: "sms-enabled", label: "SMS", desc: "Send confirmations and reminder texts.", key: "smsEnabled" as const },
-              { id: "email-enabled", label: "Email", desc: "Deliver booking receipts and reminders by email.", key: "emailEnabled" as const },
-              { id: "whatsapp-enabled", label: "WhatsApp", desc: "Reach customers through WhatsApp Business.", key: "whatsappEnabled" as const },
-            ]).map(({ id, label, desc, key }) => (
-              <SettingsToggleRow
-                key={id}
-                title={label}
-                description={desc}
-                control={<Switch
-                  id={id}
-                  checked={notifications[key]}
-                  onCheckedChange={(c) => setNotifications({ ...notifications, [key]: c })}
-                />}
-              />
-            ))}
-            </div>
-          <div className="grid gap-2 max-w-xl">
-            <Label htmlFor="reminder-hours">
-              Send reminders before appointment{" "}
-              <span className="text-muted-foreground font-normal ml-1">
-                (hours, comma-separated)
-              </span>
-            </Label>
-            <DebouncedInput
-              id="reminder-hours"
-              value={notifications.reminderHoursStr}
-              maxLength={64}
-              aria-describedby={reminderError ? "reminder-hours-error" : "reminder-hours-hint"}
-              aria-invalid={!!reminderError}
-              onChange={(val) => {
-                setNotifications({ ...notifications, reminderHoursStr: val });
-                if (reminderError) setReminderError(undefined);
-              }}
-              placeholder="e.g. 24, 2"
-              className={cn(reminderError && "border-destructive")}
+        <SettingsSection
+          title="Client journey"
+          description="Verification and confirmation are transactional parts of online booking, so clients cannot switch them off."
+        >
+          <div className="flex flex-col gap-3">
+            <SettingsToggleRow
+              title="Email verification code"
+              description="Confirms that the client owns the email address before the appointment is created."
+              control={
+                <Badge variant="secondary">
+                  <ShieldCheck data-icon="inline-start" />
+                  Required
+                </Badge>
+              }
             />
-            {!reminderError && (
-              <p id="reminder-hours-hint" className="text-xs text-muted-foreground">
-                Enter one or more numbers, e.g. <span className="font-mono">24, 2</span> sends reminders 24 hours and 2 hours before the appointment.
-              </p>
-            )}
-            {reminderError && (
-              <p id="reminder-hours-error" role="alert" className="flex items-center gap-1.5 text-xs text-destructive mt-1">
-                <CircleAlert className="shrink-0" />
-                {reminderError}
-              </p>
-            )}
+            <SettingsToggleRow
+              title="Appointment confirmation"
+              description="Sends the appointment overview, calendar file, directions, and studio contact actions."
+              control={
+                <Badge variant="secondary">
+                  <MailCheck data-icon="inline-start" />
+                  Always on
+                </Badge>
+              }
+            />
+            <SettingsToggleRow
+              title="Client reminders"
+              description="Email clients before confirmed appointments using the schedule below."
+              control={
+                <Switch
+                  id="customer-reminder-email-enabled"
+                  aria-label="Client reminder emails"
+                  checked={email.customerReminderEmailEnabled}
+                  onCheckedChange={(checked) =>
+                    setEmail((current) => ({
+                      ...current,
+                      customerReminderEmailEnabled: checked,
+                    }))
+                  }
+                />
+              }
+            />
           </div>
-          </section>
 
-          <Separator />
+          {email.customerReminderEmailEnabled && (
+            <FieldGroup className="max-w-xl">
+              <Field data-invalid={Boolean(customerReminderError)}>
+                <FieldLabel htmlFor="customer-reminder-hours">
+                  Client reminder schedule (hours before)
+                </FieldLabel>
+                <DebouncedInput
+                  id="customer-reminder-hours"
+                  value={email.customerReminderHours}
+                  maxLength={64}
+                  aria-describedby="customer-reminder-description"
+                  aria-invalid={Boolean(customerReminderError)}
+                  onChange={(value) => {
+                    setEmail((current) => ({
+                      ...current,
+                      customerReminderHours: value,
+                    }));
+                    setCustomerReminderError(undefined);
+                  }}
+                  placeholder="24, 2"
+                />
+                <FieldDescription id="customer-reminder-description">
+                  For example, 24, 2 sends one email a day before and another
+                  two hours before.
+                </FieldDescription>
+                <FieldError>{customerReminderError}</FieldError>
+              </Field>
+            </FieldGroup>
+          )}
+        </SettingsSection>
 
-          <section className="flex flex-col gap-4">
-            <div>
-              <h3 className="text-sm font-semibold">Dashboard alerts</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Real-time feedback for the team working inside OPUS.
-              </p>
-            </div>
+        <Separator />
+
+        <SettingsSection
+          title="Team email"
+          description="Choose which appointment events leave the dashboard and who receives them."
+        >
+          <div className="flex flex-col gap-3">
+            <SettingsToggleRow
+              title="New online bookings"
+              description="Email the selected team as soon as a client confirms a booking."
+              control={
+                <Switch
+                  id="staff-new-booking-email-enabled"
+                  aria-label="New booking emails"
+                  checked={email.staffNewBookingEmailEnabled}
+                  onCheckedChange={(checked) =>
+                    setEmail((current) => ({
+                      ...current,
+                      staffNewBookingEmailEnabled: checked,
+                    }))
+                  }
+                />
+              }
+            />
+            <SettingsToggleRow
+              title="Upcoming appointment reminders"
+              description="Email the selected team before each confirmed appointment."
+              control={
+                <Switch
+                  id="staff-reminder-email-enabled"
+                  aria-label="Team appointment reminders"
+                  checked={email.staffReminderEmailEnabled}
+                  onCheckedChange={(checked) =>
+                    setEmail((current) => ({
+                      ...current,
+                      staffReminderEmailEnabled: checked,
+                    }))
+                  }
+                />
+              }
+            />
+          </div>
+
+          {email.staffReminderEmailEnabled && (
+            <FieldGroup className="max-w-xl">
+              <Field data-invalid={Boolean(staffReminderError)}>
+                <FieldLabel htmlFor="staff-reminder-hours">
+                  Team reminder schedule (hours before)
+                </FieldLabel>
+                <DebouncedInput
+                  id="staff-reminder-hours"
+                  value={email.staffReminderHours}
+                  maxLength={64}
+                  aria-describedby="staff-reminder-description"
+                  aria-invalid={Boolean(staffReminderError)}
+                  onChange={(value) => {
+                    setEmail((current) => ({
+                      ...current,
+                      staffReminderHours: value,
+                    }));
+                    setStaffReminderError(undefined);
+                  }}
+                  placeholder="24, 2"
+                />
+                <FieldDescription id="staff-reminder-description">
+                  This schedule is independent from the client reminder
+                  schedule.
+                </FieldDescription>
+                <FieldError>{staffReminderError}</FieldError>
+              </Field>
+            </FieldGroup>
+          )}
+
+          <FieldSet>
+            <FieldLegend variant="label">Team recipients</FieldLegend>
+            <FieldDescription>
+              Only active team members with dashboard accounts can receive these
+              emails.
+            </FieldDescription>
+            <FieldGroup data-slot="checkbox-group">
+              {initialData.emailRecipients.map((recipient) => {
+                const id = `email-recipient-${recipient.userId}`;
+                const checked = email.staffEmailRecipientUserIds.includes(
+                  recipient.userId,
+                );
+                return (
+                  <Field
+                    key={recipient.userId}
+                    orientation="horizontal"
+                    variant="surface"
+                  >
+                    <Checkbox
+                      id={id}
+                      checked={checked}
+                      aria-invalid={Boolean(recipientError)}
+                      onCheckedChange={(nextChecked) => {
+                        setEmail((current) => ({
+                          ...current,
+                          staffEmailRecipientUserIds: nextChecked
+                            ? Array.from(
+                                new Set([
+                                  ...current.staffEmailRecipientUserIds,
+                                  recipient.userId,
+                                ]),
+                              )
+                            : current.staffEmailRecipientUserIds.filter(
+                                (userId) => userId !== recipient.userId,
+                              ),
+                        }));
+                        setRecipientError(undefined);
+                      }}
+                    />
+                    <FieldContent>
+                      <FieldLabel htmlFor={id}>
+                        {recipient.name}
+                        <Badge variant="outline">
+                          {ROLE_LABELS[recipient.role]}
+                        </Badge>
+                      </FieldLabel>
+                      <FieldDescription>{recipient.email}</FieldDescription>
+                    </FieldContent>
+                  </Field>
+                );
+              })}
+            </FieldGroup>
+            {initialData.emailRecipients.length === 0 && (
+              <FieldDescription>
+                Link a team member to a dashboard account before enabling team
+                email.
+              </FieldDescription>
+            )}
+            <FieldError>{recipientError}</FieldError>
+          </FieldSet>
+        </SettingsSection>
+
+        <Separator />
+
+        <SettingsSection
+          title="Dashboard alerts"
+          description="Control real-time feedback for staff working inside OPUS."
+        >
           <SettingsToggleRow
             title="In-app notifications"
             description="Show new bookings, cancellations, and no-shows in the notification bell."
-            control={<Switch
-              id="dashboard-notifications-enabled"
-              checked={dashboardNotifs.dashboardNotificationsEnabled}
-              onCheckedChange={(c) =>
-                setDashboardNotifs({ ...dashboardNotifs, dashboardNotificationsEnabled: c })
-              }
-            />}
+            control={
+              <Switch
+                id="dashboard-notifications-enabled"
+                aria-label="In-app notifications"
+                checked={dashboard.dashboardNotificationsEnabled}
+                onCheckedChange={(checked) =>
+                  setDashboard((current) => ({
+                    ...current,
+                    dashboardNotificationsEnabled: checked,
+                  }))
+                }
+              />
+            }
           />
 
-          {dashboardNotifs.dashboardNotificationsEnabled && (
+          {dashboard.dashboardNotificationsEnabled && (
             <div className="flex flex-col gap-3">
-              {([
-                { id: "dashboard-sound-enabled", label: "Sound", desc: "Play a chime when a new notification arrives.", key: "dashboardSoundEnabled" as const },
-                { id: "dashboard-toast-enabled", label: "Toast preview", desc: "Show a brief notification card beneath the bell.", key: "dashboardToastEnabled" as const },
-              ]).map(({ id, label, desc, key }) => (
+              {DASHBOARD_OPTIONS.map(({ id, label, description, key }) => (
                 <SettingsToggleRow
                   key={id}
                   title={label}
-                  description={desc}
-                  control={<Switch
-                    id={id}
-                    checked={dashboardNotifs[key]}
-                    onCheckedChange={(c) => setDashboardNotifs({ ...dashboardNotifs, [key]: c })}
-                  />}
+                  description={description}
+                  control={
+                    <Switch
+                      id={id}
+                      aria-label={label}
+                      checked={dashboard[key]}
+                      onCheckedChange={(checked) =>
+                        setDashboard((current) => ({
+                          ...current,
+                          [key]: checked,
+                        }))
+                      }
+                    />
+                  }
                 />
               ))}
             </div>
           )}
-          </section>
+        </SettingsSection>
       </SettingsCard>
     </TabsContent>
   );

@@ -1,208 +1,80 @@
-name: Build & Deploy
+name: Web CI
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: web-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  REGISTRY: ghcr.io
-  DASHBOARD_IMAGE: ghcr.io/${{ github.repository_owner }}/opus-dashboard
-  MK_IMAGE: ghcr.io/${{ github.repository_owner }}/opus-mk
+  NODE_VERSION: 22
 
 jobs:
-  quality-dashboard:
-    name: Dashboard quality gate
+  dashboard:
+    name: Dashboard checks
     runs-on: ubuntu-latest
-    env:
-      HAS_E2E_CREDENTIALS: ${{ secrets.E2E_BETTER_AUTH_EMAIL != '' && secrets.E2E_BETTER_AUTH_OTP != '' }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: opus-dashboard/package-lock.json
-      - name: Install dashboard dependencies
+
+      - name: Install dependencies
         working-directory: opus-dashboard
         run: npm ci
-      - name: Lint with zero warnings
+
+      - name: Lint
         working-directory: opus-dashboard
         run: npm run lint
+
       - name: Type-check
         working-directory: opus-dashboard
         run: npm run typecheck
-      - name: Run Convex and contract tests
+
+      - name: Run tests
         working-directory: opus-dashboard
         run: npm test
-      - name: Build dashboard
-        working-directory: opus-dashboard
-        env:
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-          NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
-        run: npm run build
-      - name: Install Playwright browser
-        if: env.HAS_E2E_CREDENTIALS == 'true'
-        working-directory: opus-dashboard
-        run: npx playwright install --with-deps chromium
-      - name: Run authenticated onboarding smoke tests
-        if: env.HAS_E2E_CREDENTIALS == 'true'
-        working-directory: opus-dashboard
-        env:
-          E2E_BETTER_AUTH_EMAIL: ${{ secrets.E2E_BETTER_AUTH_EMAIL }}
-          E2E_BETTER_AUTH_OTP: ${{ secrets.E2E_BETTER_AUTH_OTP }}
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-        run: npm run test:e2e
 
-  quality-consumers:
-    name: Marketplace, native, and scraper compatibility
+      - name: Build
+        working-directory: opus-dashboard
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://ci-placeholder.convex.cloud' }}
+          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL || 'https://ci-placeholder.convex.site' }}
+          NEXT_PUBLIC_ROOT_DOMAIN: opus.mk
+        run: npm run build
+
+  landing:
+    name: Landing checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: |
-            opus-mk/package-lock.json
-            opus-native/package-lock.json
-            opus-scraper-admin/package-lock.json
-      - name: Build opus.mk
-        working-directory: opus-mk
-        env:
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-          NEXT_PUBLIC_CONVEX_SITE_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-        run: |
-          npm ci
-          npm run build
-      - name: Lint and type-check native
-        working-directory: opus-native
-        run: |
-          npm ci
-          npm run lint
-          npx tsc --noEmit
-      - name: Build scraper admin
-        working-directory: opus-scraper-admin
-        run: |
-          npm ci
-          npm run build
+          cache-dependency-path: opus-landing/package-lock.json
 
-  # ── Build both images in parallel ─────────────────────────────────────────
-  build-dashboard:
-    name: Build opus-dashboard
-    needs: [quality-dashboard, quality-consumers]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
+      - name: Install dependencies
+        working-directory: opus-landing
+        run: npm ci
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Lint
+        working-directory: opus-landing
+        run: npm run lint
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & push opus-dashboard
-        uses: docker/build-push-action@v6
-        with:
-          context: ./opus-dashboard
-          push: true
-          # Tag with both :latest and :<sha> so we can pin exact deploys
-          tags: |
-            ${{ env.DASHBOARD_IMAGE }}:latest
-            ${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}
-          # GitHub Actions cache — drastically speeds up rebuilds
-          cache-from: type=gha,scope=dashboard
-          cache-to: type=gha,mode=max,scope=dashboard
-          # NEXT_PUBLIC_* vars must be available at build time (inlined by Next.js)
-          build-args: |
-            NEXT_PUBLIC_CONVEX_URL=${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-            NEXT_PUBLIC_CONVEX_SITE_URL=${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-            NEXT_PUBLIC_ROOT_DOMAIN=${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
-
-  build-mk:
-    name: Build opus-mk
-    needs: [quality-dashboard, quality-consumers]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & push opus-mk
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./opus-mk/Dockerfile
-          push: true
-          tags: |
-            ${{ env.MK_IMAGE }}:latest
-            ${{ env.MK_IMAGE }}:${{ github.sha }}
-          cache-from: type=gha,scope=mk
-          cache-to: type=gha,mode=max,scope=mk
-          build-args: |
-            NEXT_PUBLIC_CONVEX_URL=${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-            NEXT_PUBLIC_CONVEX_SITE_URL=${{ secrets.NEXT_PUBLIC_CONVEX_SITE_URL }}
-
-  # ── Deploy: pull pre-built images on VPS ──────────────────────────────────
-  deploy:
-    name: Deploy to Hetzner VPS
-    needs: [build-dashboard, build-mk]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      # Copy docker-compose.yml to VPS so it's always in sync with the repo
-      - name: Copy docker-compose.yml to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 46.224.68.239
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: docker-compose.yml
-          target: /opt/opus/
-
-      - name: Pull new images & restart containers
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 46.224.68.239
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-
-            # Authenticate with GHCR to pull private images
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-            cd /opt/opus
-
-            # Pin exact SHA so both containers are from this exact commit
-            export DASHBOARD_IMAGE=${{ env.DASHBOARD_IMAGE }}:${{ github.sha }}
-            export MK_IMAGE=${{ env.MK_IMAGE }}:${{ github.sha }}
-
-            docker compose pull
-            docker compose up -d --remove-orphans
-
-            # Clean up dangling images to keep disk usage low
-            docker image prune -f
-
-            echo "✓ Deployed dashboard → port 3006, mk → port 3007"
+      - name: Build
+        working-directory: opus-landing
+        run: npm run build

@@ -67,10 +67,10 @@ export function BusinessCard({ rec }: { rec: Recommendation }) {
       <div
         className={`w-1 shrink-0 ${
           closingSoon
-            ? "bg-amber-500/70"
+            ? "bg-warning/70"
             : rec.isOpenNow
-            ? "bg-emerald-500/60"
-            : "bg-red-500/30"
+            ? "bg-success/60"
+            : "bg-danger/30"
         }`}
       />
 
@@ -84,10 +84,10 @@ export function BusinessCard({ rec }: { rec: Recommendation }) {
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                   closingSoon
-                    ? "bg-amber-500/15 text-amber-400"
+                    ? "bg-warning/15 text-warning"
                     : rec.isOpenNow
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-red-500/10 text-red-400/80"
+                    ? "bg-success/15 text-success"
+                    : "bg-danger/10 text-danger/80"
                 }`}
               >
                 {rec.isOpenNow ? "Open" : "Closed"}
@@ -111,7 +111,7 @@ export function BusinessCard({ rec }: { rec: Recommendation }) {
         <div className="flex items-center gap-3 mt-2 flex-wrap">
           {rec.averageRating != null && rec.averageRating > 0 && (
             <div className="flex items-center gap-1 text-[11px]">
-              <IconStarFilled size={10} className="text-yellow-500" />
+              <IconStarFilled size={10} className="text-rating" />
               <span className="font-semibold">{rec.averageRating.toFixed(1)}</span>
               {rec.reviewCount != null && (
                 <span className="text-muted-foreground">({rec.reviewCount})</span>
@@ -128,7 +128,7 @@ export function BusinessCard({ rec }: { rec: Recommendation }) {
           {rec.isOpenNow && rec.closesAt && (
             <span
               className={`text-[11px] font-medium ${
-                closingSoon ? "text-amber-400" : "text-muted-foreground"
+                closingSoon ? "text-warning" : "text-muted-foreground"
               }`}
             >
               Closes {formatCloseTime(rec.closesAt)}

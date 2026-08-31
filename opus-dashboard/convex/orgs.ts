@@ -54,19 +54,6 @@ export const getBySlug = query({
     },
 });
 
-export const getByCustomDomain = query({
-    args: { customDomain: v.string() },
-    returns: v.union(v.null(), v.id("orgs")),
-    handler: async (ctx, args) => {
-        const org = await ctx.db
-            .query("orgs")
-            .withIndex("by_custom_domain", (q) => q.eq("customDomain", args.customDomain))
-            .first();
-        if (!org || org.isDeleted) return null;
-        return org._id;
-    },
-});
-
 // Public query for Instagram webhook — look up org by Meta page ID
 // (instagramPageId is not a secret; it's the public Facebook page ID)
 export const getByInstagramPageId = query({

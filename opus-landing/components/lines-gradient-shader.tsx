@@ -14,7 +14,7 @@ interface LinesGradientShaderProps {
   bandThickness?: number;
   /** Wave amplitude as a fraction of container height (0-1) */
   waveAmplitude?: number;
-  /** Custom color stops for the gradient. Accepts hex colors, rgb(), or CSS variables like "var(--color-primary)" */
+  /** Custom color stops for the gradient. Accepts hex colors, rgb(), or CSS variables like "var(--brand)" */
   colors?: string[];
   /** Target frames per second (default: 30 for performance) */
   targetFps?: number;
@@ -137,14 +137,14 @@ const parseColorToRgba = (
 };
 
 const DEFAULT_COLORS = [
-  "rgba(206, 93, 69, 1)", // First - full opacity
-  "rgba(206, 93, 69, 0.85)", // 85% opacity
-  "rgba(206, 93, 69, 0.7)", // 70% opacity
-  "rgba(206, 93, 69, 0.55)", // 55% opacity
-  "rgba(206, 93, 69, 0.4)", // 40% opacity
-  "rgba(206, 93, 69, 0.25)", // 25% opacity
-  "rgba(206, 93, 69, 0.15)", // 15% opacity
-  "rgba(206, 93, 69, 0.05)", // 5% opacity
+  "var(--brand)",
+  "var(--brand-strong)",
+  "var(--brand)",
+  "var(--brand-strong)",
+  "var(--brand)",
+  "var(--brand-strong)",
+  "var(--brand)",
+  "var(--brand-strong)",
 ];
 
 export const LinesGradientShader: React.FC<LinesGradientShaderProps> = ({

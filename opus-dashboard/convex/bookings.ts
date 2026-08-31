@@ -1,9 +1,15 @@
 import { v, ConvexError } from "convex/values";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  mutation,
+  query,
+} from "./_generated/server";
 import { internal, api } from "./_generated/api";
 import { requireAuth, requireRole } from "./lib/auth";
 import type { Doc } from "./_generated/dataModel";
 import { computeSlotsForDate } from "./slots";
+import { queueBookingEmailNotifications } from "./lib/bookingEmailNotifications";
 
 function getPrimaryContact(
   customer: Doc<"customers">,
@@ -26,15 +32,21 @@ export const createBooking = mutation({
     startAt: v.number(), // Unix ms
     source: v.union(
       v.literal("web"),
-      v.literal("mobile"),
+      v.literal("opus_web"),
       v.literal("ai_whatsapp"),
       v.literal("ai_instagram"),
+      v.literal("ai_webchat"),
       v.literal("ai_voice"),
       v.literal("manual"),
     ),
     aiConversationId: v.optional(v.id("ai_conversations")),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, args.orgId, "staff");
+    if (args.source !== "manual") {
+      throw new ConvexError("Dashboard bookings must use the manual source.");
+    }
+
     // 1. Basic validation
     if (args.startAt <= Date.now()) {
       throw new ConvexError("Booking start time must be in the future.");
@@ -46,6 +58,9 @@ export const createBooking = mutation({
       .first();
 
     if (!orgSettings) throw new ConvexError("Organization settings not found.");
+
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new ConvexError("Organization not found.");
 
     const staff = await ctx.db.get(args.staffId);
     if (
@@ -156,13 +171,7 @@ export const createBooking = mutation({
       }
     }
 
-    // 4. Deposit / Status determination
-    let status: "pending_payment" | "confirmed" = "confirmed";
-    if (orgSettings.depositRequired || customer.requiresFullDeposit) {
-      status = "pending_payment";
-    }
-
-    // 5. Insert Booking
+    // 4. Insert Booking
     const bookingId = await ctx.db.insert("bookings", {
       orgId: args.orgId,
       staffId: args.staffId,
@@ -174,7 +183,7 @@ export const createBooking = mutation({
       currency: service.currency,
       surgePriceApplied,
       surgeMultiplierPct,
-      status,
+      status: "confirmed",
       source: args.source,
       aiConversationId: args.aiConversationId,
       isDeleted: false,
@@ -182,24 +191,19 @@ export const createBooking = mutation({
       updatedAt: Date.now(),
     });
 
-    // 6. Update Customer stats
+    // 5. Update Customer stats
     await ctx.db.patch(args.customerId, {
       totalVisits: (customer.totalVisits || 0) + 1,
       lastVisitAt: Date.now(), // Visited/Booked timestamp
       updatedAt: Date.now(),
     });
 
-    // 7. Audit Log
+    // 6. Audit Log
     const timestamp = Date.now();
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
-      actorType:
-        args.source === "manual"
-          ? "staff"
-          : args.source.startsWith("ai_")
-            ? "system"
-            : "user",
-      actorId: args.source === "manual" ? "dashboard" : "public", // In a real system you'd pass caller ID here if manual
+      actorType: "staff",
+      actorId: "dashboard",
       action: "booking.created",
       resourceType: "bookings",
       resourceId: bookingId,
@@ -208,32 +212,27 @@ export const createBooking = mutation({
         customerId: args.customerId,
         startAt: args.startAt,
         priceMinorUnits,
-        status,
+        status: "confirmed",
       },
       createdAt: timestamp,
     });
 
-    // 8. Notifications
-    const contact = getPrimaryContact(customer);
-    if (contact) {
-      await ctx.runMutation(internal.notifications.scheduleNotification, {
-        orgId: args.orgId,
-        customerId: args.customerId,
-        bookingId: bookingId,
-        channel: contact.channel,
-        type:
-          status === "confirmed" ? "booking_confirmation" : "deposit_request",
-        recipientAddress: contact.address,
-        templateData: {
-          customerName: customer.name,
-          serviceName: service.name,
-          staffName: staff.displayName,
-          startAt: args.startAt,
-        },
-      });
-    }
+    // 7. Transactional email confirmation and reminder schedule.
+    const booking = await ctx.db.get(bookingId);
+    if (!booking) throw new Error("Created booking was not found.");
+    await queueBookingEmailNotifications(ctx, {
+      org,
+      settings: orgSettings,
+      booking,
+      customer,
+      service,
+      staff,
+      sendCustomerConfirmation: true,
+      notifyTeamOfNewBooking: false,
+      scheduleReminders: true,
+    });
 
-    // 9. Dashboard notification — shows in navbar bell for the business owner
+    // 8. Dashboard notification — shows in navbar bell for the business owner
     const startDate = new Date(args.startAt);
     const timeLabel = `${String(startDate.getHours()).padStart(2, "0")}:${String(startDate.getMinutes()).padStart(2, "0")}`;
     await ctx.runMutation(internal.dashboardNotifications.create, {
@@ -246,82 +245,6 @@ export const createBooking = mutation({
     });
 
     return bookingId;
-  },
-});
-
-export const confirmBooking = internalMutation({
-  args: {
-    orgId: v.id("orgs"),
-    bookingId: v.id("bookings"),
-    paymentIntentId: v.id("payment_intents"),
-  },
-  handler: async (ctx, args) => {
-    const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
-      throw new ConvexError("Booking not found.");
-    }
-
-    if (booking.status !== "pending_payment") {
-      throw new ConvexError(
-        `Cannot confirm booking with status: ${booking.status}`,
-      );
-    }
-
-    const paymentIntent = await ctx.db.get(args.paymentIntentId);
-    if (
-      !paymentIntent ||
-      paymentIntent.bookingId !== args.bookingId ||
-      paymentIntent.status !== "succeeded"
-    ) {
-      throw new ConvexError(
-        "Valid succeeded payment intent not found for this booking.",
-      );
-    }
-
-    await ctx.db.patch(args.bookingId, {
-      status: "confirmed",
-      paymentIntentId: args.paymentIntentId,
-      depositPaidAt: paymentIntent.updatedAt,
-      depositMinorUnits: paymentIntent.amountMinorUnits,
-      updatedAt: Date.now(),
-    });
-
-    await ctx.db.insert("audit_log", {
-      orgId: args.orgId,
-      actorType: "system", // Usually webhook triggers this
-      actorId: "braintree_webhook",
-      action: "booking.confirmed",
-      resourceType: "bookings",
-      resourceId: args.bookingId,
-      before: { status: "pending_payment" },
-      after: { status: "confirmed", paymentIntentId: args.paymentIntentId },
-      createdAt: Date.now(),
-    });
-
-    const customer = await ctx.db.get(booking.customerId);
-    const service = await ctx.db.get(booking.serviceId);
-    const staff = await ctx.db.get(booking.staffId);
-    if (customer && service && staff) {
-      const contact = getPrimaryContact(customer);
-      if (contact) {
-        await ctx.runMutation(internal.notifications.scheduleNotification, {
-          orgId: args.orgId,
-          customerId: customer._id,
-          bookingId: booking._id,
-          channel: contact.channel,
-          type: "booking_confirmation",
-          recipientAddress: contact.address,
-          templateData: {
-            customerName: customer.name,
-            serviceName: service.name,
-            staffName: staff.displayName,
-            startAt: booking.startAt,
-          },
-        });
-      }
-    }
-
-    return true;
   },
 });
 
@@ -485,7 +408,7 @@ export const cancelBooking = mutation({
     if (customer && service && staff) {
       const orgSettings = await ctx.db
         .query("org_settings")
-        .withIndex("by_org", q => q.eq("orgId", args.orgId))
+        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
         .first();
       const contact = getPrimaryContact(customer);
       if (contact) {
@@ -509,7 +432,7 @@ export const cancelBooking = mutation({
       // Dashboard notification
       const cancelDate = new Date(booking.startAt);
       const cancelDateLabel = `${cancelDate.toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
-        await ctx.runMutation(internal.dashboardNotifications.create, {
+      await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "booking_cancelled",
         title: "Booking Cancelled",
@@ -517,20 +440,22 @@ export const cancelBooking = mutation({
         bookingId: booking._id,
         customerId: customer._id,
       });
-      
+
       const timeZone = orgSettings?.timezone || "Europe/Belgrade";
       const parts = new Intl.DateTimeFormat("en-US", {
-          timeZone,
-          year: "numeric", month: "2-digit", day: "2-digit"
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
       }).formatToParts(cancelDate);
-      
+
       let year, month, day;
       for (const p of parts) {
-          if (p.type === 'year') year = p.value;
-          if (p.type === 'month') month = p.value;
-          if (p.type === 'day') day = p.value;
+        if (p.type === "year") year = p.value;
+        if (p.type === "month") month = p.value;
+        if (p.type === "day") day = p.value;
       }
-      
+
       const serviceDate = `${year}-${month}-${day}`;
 
       if (orgSettings?.gapOptimizerEnabled) {
@@ -582,7 +507,6 @@ export const markNoShow = mutation({
       await ctx.db.patch(booking.customerId, {
         noShowCount: newNoShowCount,
         noShowRiskScore: riskScore,
-        requiresFullDeposit: riskScore >= 0.7,
         updatedAt: Date.now(),
       });
     }
@@ -705,7 +629,7 @@ export const rescheduleBooking = mutation({
       currency: oldBooking.currency,
       surgePriceApplied: oldBooking.surgePriceApplied,
       surgeMultiplierPct: oldBooking.surgeMultiplierPct,
-      status: oldBooking.status, // maintain deposit status
+      status: oldBooking.status, // preserve the current lifecycle status
       source: oldBooking.source,
       aiConversationId: oldBooking.aiConversationId,
       opusUserId: oldBooking.opusUserId,
@@ -726,6 +650,32 @@ export const rescheduleBooking = mutation({
       after: { newStartAt: args.newStartAt },
       createdAt: Date.now(),
     });
+
+    if (oldBooking.status === "confirmed") {
+      const [org, settings, customer, staff, newBooking] = await Promise.all([
+        ctx.db.get(args.orgId),
+        ctx.db
+          .query("org_settings")
+          .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
+          .first(),
+        ctx.db.get(oldBooking.customerId),
+        ctx.db.get(oldBooking.staffId),
+        ctx.db.get(newBookingId),
+      ]);
+      if (org && settings && customer && staff && newBooking) {
+        await queueBookingEmailNotifications(ctx, {
+          org,
+          settings,
+          booking: newBooking,
+          customer,
+          service,
+          staff,
+          sendCustomerConfirmation: true,
+          notifyTeamOfNewBooking: false,
+          scheduleReminders: true,
+        });
+      }
+    }
 
     return newBookingId;
   },
@@ -895,17 +845,27 @@ export const createBookingForAI = internalMutation({
 
     const orgSettings = await ctx.db
       .query("org_settings")
-      .withIndex("by_org", q => q.eq("orgId", args.orgId))
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
       .first();
     if (!orgSettings) throw new ConvexError("Organization settings not found.");
 
     const staff = await ctx.db.get(args.staffId);
-    if (!staff || staff.orgId !== args.orgId || staff.isDeleted || !staff.isActive) {
+    if (
+      !staff ||
+      staff.orgId !== args.orgId ||
+      staff.isDeleted ||
+      !staff.isActive
+    ) {
       throw new ConvexError("Staff member not available.");
     }
 
     const service = await ctx.db.get(args.serviceId);
-    if (!service || service.orgId !== args.orgId || service.isDeleted || !service.isActive) {
+    if (
+      !service ||
+      service.orgId !== args.orgId ||
+      service.isDeleted ||
+      !service.isActive
+    ) {
       throw new ConvexError("Service not available.");
     }
 
@@ -921,24 +881,36 @@ export const createBookingForAI = internalMutation({
     const endAt = args.startAt + service.durationMins * 60 * 1000;
 
     const midnightMs = new Date(
-      new Date(args.startAt).toISOString().split("T")[0] + "T00:00:00Z"
+      new Date(args.startAt).toISOString().split("T")[0] + "T00:00:00Z",
     ).getTime();
     const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
 
     const existingBookings = await ctx.db
       .query("bookings")
-      .withIndex("by_staff_start", q =>
-        q.eq("staffId", args.staffId).gte("startAt", midnightMs).lt("startAt", nextMidnightMs)
+      .withIndex("by_staff_start", (q) =>
+        q
+          .eq("staffId", args.staffId)
+          .gte("startAt", midnightMs)
+          .lt("startAt", nextMidnightMs),
       )
-      .filter(q => q.and(q.eq(q.field("isDeleted"), false), q.neq(q.field("status"), "cancelled")))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.neq(q.field("status"), "cancelled"),
+        ),
+      )
       .collect();
 
     const bufferMs = (orgSettings.bufferTimeMins || 0) * 60 * 1000;
-    const conflict = existingBookings.find(b => b.startAt < endAt && (b.endAt + bufferMs) > args.startAt);
-    if (conflict) throw new ConvexError("This slot is already booked or conflicts with buffer time.");
+    const conflict = existingBookings.find(
+      (b) => b.startAt < endAt && b.endAt + bufferMs > args.startAt,
+    );
+    if (conflict)
+      throw new ConvexError(
+        "This slot is already booked or conflicts with buffer time.",
+      );
 
-    const status: "pending_payment" | "confirmed" =
-      orgSettings.depositRequired || customer.requiresFullDeposit ? "pending_payment" : "confirmed";
+    const status = "confirmed" as const;
 
     const bookingId = await ctx.db.insert("bookings", {
       orgId: args.orgId,
@@ -971,7 +943,12 @@ export const createBookingForAI = internalMutation({
       action: "booking.created",
       resourceType: "bookings",
       resourceId: bookingId,
-      after: { staffId: args.staffId, customerId: args.customerId, startAt: args.startAt, status },
+      after: {
+        staffId: args.staffId,
+        customerId: args.customerId,
+        startAt: args.startAt,
+        status,
+      },
       createdAt: Date.now(),
     });
 
@@ -988,7 +965,9 @@ export const getCustomerBookingsForAI = internalQuery({
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
-      .withIndex("by_org_phone", q => q.eq("orgId", args.orgId).eq("phone", args.customerPhone))
+      .withIndex("by_org_phone", (q) =>
+        q.eq("orgId", args.orgId).eq("phone", args.customerPhone),
+      )
       .first();
 
     if (!customer) return [];
@@ -996,29 +975,39 @@ export const getCustomerBookingsForAI = internalQuery({
     const now = Date.now();
     const bookings = await ctx.db
       .query("bookings")
-      .withIndex("by_customer", q => q.eq("customerId", customer._id))
-      .filter(q =>
+      .withIndex("by_customer", (q) => q.eq("customerId", customer._id))
+      .filter((q) =>
         q.and(
           q.eq(q.field("isDeleted"), false),
           q.neq(q.field("status"), "cancelled"),
           q.gte(q.field("startAt"), now),
-        )
+        ),
       )
       .take(5);
 
     return await Promise.all(
-      bookings.map(async b => {
+      bookings.map(async (b) => {
         const service = await ctx.db.get(b.serviceId);
         const staff = await ctx.db.get(b.staffId);
         const d = new Date(b.startAt);
         return {
-          date: d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Skopje" }),
-          time: d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Europe/Skopje" }),
+          date: d.toLocaleDateString("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            timeZone: "Europe/Skopje",
+          }),
+          time: d.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+            timeZone: "Europe/Skopje",
+          }),
           service: service?.name ?? "Unknown service",
           staff: staff?.displayName ?? "Unknown staff",
           status: b.status,
         };
-      })
+      }),
     );
   },
 });

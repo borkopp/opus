@@ -154,7 +154,7 @@ export function ReviewForm({
         disabled={isSubmitting || rating === 0}
         className="w-full h-12 rounded-xl text-sm font-semibold bg-cta text-cta-foreground hover:bg-cta/90 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md hover:shadow-cta/20 mt-4"
       >
-        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+        <div className="absolute inset-0 bg-primary-foreground/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
         <span className="relative flex items-center justify-center gap-2">
           {isSubmitting ? (
             <>

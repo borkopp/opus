@@ -19,7 +19,7 @@ export const BookingSummary = () => (
       </div>
     </CardContent>
     <CardFooter style={{ gap: 8 }}>
-      <Button variant="terracotta">New booking</Button>
+      <Button variant="default">New booking</Button>
       <Button variant="outline">View schedule</Button>
     </CardFooter>
   </Card>
@@ -28,9 +28,9 @@ export const BookingSummary = () => (
 export const Simple = () => (
   <Card style={{ maxWidth: 320 }}>
     <CardHeader>
-      <CardTitle>Deposit required</CardTitle>
-      <CardDescription>A 20% deposit secures this appointment.</CardDescription>
+      <CardTitle>Booking confirmed</CardTitle>
+      <CardDescription>The appointment is saved in the studio calendar.</CardDescription>
     </CardHeader>
-    <CardContent>£5.00 due now · £20.00 on the day</CardContent>
+    <CardContent>Tuesday, 30 June · 10:30</CardContent>
   </Card>
 )

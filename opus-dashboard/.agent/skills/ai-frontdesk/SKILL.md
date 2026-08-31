@@ -23,7 +23,7 @@ Inbound message (Twilio / Meta webhook)
   Parse response + confidence score
         ↓
   confidence ≥ threshold?
-    YES → execute action (create booking, send payment link)
+    YES → execute the requested booking action
     NO  → flag as handed_off, notify staff
         ↓
   Write ai_messages row
@@ -66,9 +66,6 @@ ${ctx.availabilityText}
 CANCELLATION POLICY:
 ${ctx.cancellationPolicy}
 
-DEPOSIT POLICY:
-${ctx.depositPolicy}
-
 TONE:
 Be friendly, concise, and professional. Match the tone of the business.
 Never mention that you are an AI unless directly asked.
@@ -76,14 +73,13 @@ Never mention that you are an AI unless directly asked.
 AVAILABLE ACTIONS:
 - Check availability for a given date/time and staff member
 - Create a booking (respond with JSON action block)
-- Send a payment link for a deposit (respond with JSON action block)
 - Reschedule an existing booking (respond with JSON action block)
 - Cancel a booking (respond with JSON action block)
 
 When you intend to take an action, include a JSON block in your response:
 <action>
 {
-  "type": "create_booking" | "send_payment_link" | "reschedule" | "cancel",
+  "type": "create_booking" | "reschedule" | "cancel",
   "confidence": 0.0–1.0,
   "params": { ... }
 }
@@ -126,7 +122,7 @@ async function handleAiResponse(
 
 ## AI must never call booking mutations directly
 
-AI actions must go through the booking engine's standard mutation path. This ensures all rules (conflict checks, deposit checks, surge pricing, audit logging) are enforced identically regardless of source.
+AI actions must go through the booking engine's standard mutation path. This ensures all rules (conflict checks, surge pricing, audit logging) are enforced identically regardless of source.
 
 ```typescript
 // ✅ Correct — AI action calls the same mutation as the web UI

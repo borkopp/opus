@@ -32,9 +32,9 @@ export const HorizontalToggle = () => (
       <FieldSeparator />
       <Field orientation="horizontal">
         <FieldContent>
-          <FieldLabel htmlFor="f-deposit">Require deposit</FieldLabel>
+          <FieldLabel htmlFor="f-reminders">Send booking reminders</FieldLabel>
         </FieldContent>
-        <Switch id="f-deposit" />
+        <Switch id="f-reminders" />
       </Field>
     </FieldGroup>
   </FieldSet>

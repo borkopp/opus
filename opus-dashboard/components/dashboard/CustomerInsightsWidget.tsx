@@ -1,42 +1,23 @@
-import { Card } from "@/components/ui/card";
-import { TrendingUp, Calendar, Users, ArrowUpRight } from "lucide-react";
-import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { api } from "@/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-function NumberCounter({ value, prefix = "", suffix = "", decimals = 0 }: { value: number, prefix?: string, suffix?: string, decimals?: number }) {
-  const [displayValue, setDisplayValue] = useState(0);
+import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { api } from "@/convex/_generated/api";
 
-  useEffect(() => {
-    const start = 0;
-    const end = value;
-    const duration = 1000;
-    const startTime = performance.now();
-
-    const update = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Ease out expo
-      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-
-      const current = start + (end - start) * ease;
-      setDisplayValue(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(update);
-      }
-    };
-
-    requestAnimationFrame(update);
-  }, [value]);
-
-  return <>{prefix}{displayValue.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}</>;
-}
-
-type CustomerInsights = FunctionReturnType<typeof api.dashboard.getCustomerInsights>;
-type TopCustomer = FunctionReturnType<typeof api.dashboard.getTopCustomers>[number];
+type CustomerInsights = FunctionReturnType<
+  typeof api.dashboard.getCustomerInsights
+>;
+type TopCustomer = FunctionReturnType<
+  typeof api.dashboard.getTopCustomers
+>[number];
 type NoShowRisk = FunctionReturnType<typeof api.dashboard.getNoShowStats>;
 
 export function CustomerInsightsWidget({
@@ -54,150 +35,128 @@ export function CustomerInsightsWidget({
   revenueToday: number;
   bookingsToday: number;
 }) {
-  const containerVars = {
-    hidden: { opacity: 0, y: 10 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVars = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 }
-  };
+  const topCustomer = topCustomers.find(
+    (customer) => customer.totalSpendMinorUnits > 0,
+  );
+  const noShowRiskCount = noShowRisk?.customers?.length ?? 0;
+  const hasAttentionItems = insights.atRiskChurn > 0 || noShowRiskCount > 0;
 
   return (
-    <Card className="flex flex-col bg-card p-5 h-full overflow-hidden relative">
-      {/* <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" /> */}
+    <Card className="gap-0 overflow-hidden md:h-full">
+      <CardHeader className="shrink-0 pb-4">
+        <CardTitle>
+          <WidgetTitle>Customer insights</WidgetTitle>
+        </CardTitle>
+        <CardDescription>Today and this month</CardDescription>
+      </CardHeader>
 
-      <motion.div
-        variants={containerVars}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col h-full relative z-10"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold font-display text-primary tracking-tight">Insights & Today</h2>
-          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-pulse" />
-        </div>
-
-        {/* Today's Quick Stats */}
-        <motion.div variants={itemVars} className="grid grid-cols-2 gap-3 border-b border-border/20 pb-6 mb-6">
-          <div className="flex flex-col gap-1.5 group cursor-default">
-            <div className="flex items-center gap-1.5 micro-label text-muted-foreground">
-              <TrendingUp className="w-3 h-3 text-green-500 transition-transform group-hover:translate-y-[-2px]" /> Revenue
-            </div>
-            <span className="text-2xl font-bold font-outfit text-foreground leading-none">
-              <NumberCounter value={revenueToday / 100} prefix="$" decimals={2} />
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-5">
+        <section aria-labelledby="customer-growth-heading">
+          <h3 id="customer-growth-heading" className="sr-only">
+            Customer growth this month
+          </h3>
+          <div className="flex items-end gap-3">
+            <span className="font-display text-5xl font-semibold leading-none tracking-tight text-foreground">
+              {insights.newThisMonth.toLocaleString()}
             </span>
+            <p className="max-w-32 pb-0.5 text-sm font-medium leading-snug text-foreground">
+              new customer{insights.newThisMonth === 1 ? "" : "s"} joined this
+              month
+            </p>
           </div>
-          <div className="flex flex-col gap-1.5 border-l border-border/20 pl-4 group cursor-default">
-            <div className="flex items-center gap-1.5 micro-label text-muted-foreground">
-              <Calendar className="w-3 h-3 text-primary transition-transform group-hover:rotate-12" /> Bookings
+          <p className="mt-3 text-sm text-muted-foreground">
+            {formatReturningCustomers(insights.returningThisMonth)}
+          </p>
+        </section>
+
+        <Separator />
+
+        <section
+          aria-labelledby="today-heading"
+          className="flex flex-col gap-3"
+        >
+          <h3
+            id="today-heading"
+            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            Today
+          </h3>
+          <dl className="flex flex-col gap-3 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted-foreground">Appointments</dt>
+              <dd className="font-display text-base font-semibold tabular-nums text-foreground">
+                {bookingsToday.toLocaleString()}
+              </dd>
             </div>
-            <span className="text-2xl font-bold font-outfit text-foreground leading-none">
-              <NumberCounter value={bookingsToday} />
-            </span>
-          </div>
-        </motion.div>
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-muted-foreground">Revenue</dt>
+              <dd className="font-display text-base font-semibold tabular-nums text-foreground">
+                {formatMoney(revenueToday)}
+              </dd>
+            </div>
+          </dl>
+        </section>
 
-        <motion.div variants={itemVars} className="flex items-center gap-3 mb-6">
-          <motion.div
-            whileHover={{ scale: 1.02, translateY: -2 }}
-            className="group relative flex flex-col gap-0.5 items-center justify-center p-3.5 bg-secondary/20 rounded-[18px] flex-1 border border-border/30 transition-colors hover:bg-secondary/40 hover:border-primary/20 cursor-default"
-          >
-            <span className="font-outfit text-3xl font-black text-primary leading-none">
-              <NumberCounter value={insights.newThisMonth} />
-            </span>
-            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">New Visitors</span>
-          </motion.div>
-          <motion.div
-            whileHover={{ scale: 1.02, translateY: -2 }}
-            className="group relative flex flex-col gap-0.5 items-center justify-center p-3.5 bg-secondary/20 rounded-[18px] flex-1 border border-border/30 transition-colors hover:bg-secondary/40 hover:border-primary/20 cursor-default"
-          >
-            <span className="font-outfit text-3xl font-black text-primary leading-none">
-              <NumberCounter value={insights.returningThisMonth} />
-            </span>
-            <span className="micro-label text-muted-foreground group-hover:text-accent/70 transition-colors">Returning</span>
-          </motion.div>
-        </motion.div>
-
-        {(() => {
-          const validCustomers = topCustomers.filter((customer) => customer.totalSpendMinorUnits > 0);
-          if (validCustomers.length === 0) return null;
-          return (
-            <motion.div variants={itemVars} className="space-y-3">
-              <div className="flex items-center justify-between text-[11px] font-bold">
-                <span className="text-muted-foreground font-outfit uppercase tracking-widest flex items-center gap-1.5">
-                  <Users className="w-3 h-3" /> Top Performers
-                </span>
-                <ArrowUpRight className="w-3 h-3 text-muted-foreground/50" />
-              </div>
-              <div className="flex flex-col gap-2.5">
-                {validCustomers.slice(0, 3).map((customer, index) => (
-                  <motion.div
-                    key={customer.id}
-                    initial={{ opacity: 0, x: -5 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.5 + (index * 0.1) }}
-                    whileHover={{ x: 4 }}
-                    className="flex justify-between items-center text-[13px] font-outfit group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-[10px] font-black flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        {index + 1}
-                      </div>
-                      <span className="font-semibold text-foreground truncate max-w-[100px] group-hover:text-primary transition-colors">{customer.name}</span>
-                    </div>
-                    <span className="font-bold text-foreground">
-                      {formatMoney(customer.totalSpendMinorUnits)}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          );
-        })()}
-
-        {(insights.atRiskChurn > 0 || (noShowRisk?.customers && noShowRisk.customers.length > 0)) && (
-          <motion.div
-            variants={itemVars}
-            className="mt-auto pt-4 border-t border-border/20 space-y-1.5"
-          >
-            {insights.atRiskChurn > 0 && (
-              <motion.div
-                animate={{ scale: [1, 1.02, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                className="flex items-center justify-between p-2 rounded-xl bg-destructive/5 text-[11px] text-destructive font-bold font-outfit border border-destructive/10"
+        {topCustomer && (
+          <>
+            <Separator />
+            <section
+              aria-labelledby="top-customer-heading"
+              className="flex flex-col gap-2"
+            >
+              <h3
+                id="top-customer-heading"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-                  At Risk Customers
-                </div>
-                <span className="bg-destructive/10 px-2 py-0.5 rounded-md">{insights.atRiskChurn}</span>
-              </motion.div>
-            )}
-            {noShowRisk?.customers?.length > 0 && (
-              <motion.div
-                animate={{ scale: [1, 1.01, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="flex items-center justify-between p-2 rounded-xl bg-accent/5 text-[11px] text-accent font-bold font-outfit border border-accent/10"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  No-Show Risk
-                </div>
-                <span className="bg-accent/10 px-2 py-0.5 rounded-md">{noShowRisk.customers.length}</span>
-              </motion.div>
-            )}
-          </motion.div>
+                Top customer
+              </h3>
+              <div className="flex items-center justify-between gap-4 text-sm">
+                <p className="truncate font-medium text-foreground">
+                  {topCustomer.name}
+                </p>
+                <p className="shrink-0 font-display font-semibold tabular-nums text-foreground">
+                  {formatMoney(topCustomer.totalSpendMinorUnits)}
+                </p>
+              </div>
+            </section>
+          </>
         )}
-      </motion.div>
+
+        {hasAttentionItems && (
+          <>
+            <Separator />
+            <section
+              aria-labelledby="attention-heading"
+              className="flex flex-col gap-2"
+            >
+              <h3
+                id="attention-heading"
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
+                Needs attention
+              </h3>
+              {noShowRiskCount > 0 && (
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="text-foreground">Potential no-shows</span>
+                  <Badge variant="highlight">{noShowRiskCount}</Badge>
+                </div>
+              )}
+              {insights.atRiskChurn > 0 && (
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="text-foreground">At-risk customers</span>
+                  <Badge variant="danger">{insights.atRiskChurn}</Badge>
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </CardContent>
     </Card>
   );
+}
+
+function formatReturningCustomers(count: number) {
+  if (count === 0) return "No returning customers yet.";
+  if (count === 1) return "1 customer returned this month.";
+  return `${count.toLocaleString()} customers returned this month.`;
 }

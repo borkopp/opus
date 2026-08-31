@@ -53,7 +53,7 @@ export function BookingSidebar({
     if (!booking) {
         return (
             <div className="flex h-full flex-col items-center justify-center rounded-xl px-6 py-10 text-center">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                     <WandSparkles className="h-6 w-6" />
                 </div>
                 <h3 className="font-display text-xl font-semibold">Smart schedule</h3>
@@ -125,7 +125,7 @@ export function BookingSidebar({
                 )}
 
                 {isAiBooked && (
-                    <section className="flex gap-3 rounded-xl border border-violet-200 bg-violet-50 p-3 text-violet-950 dark:border-violet-500/20 dark:bg-violet-500/5 dark:text-violet-200">
+                    <section className="flex gap-3 rounded-lg border border-primary/20 bg-accent p-3 text-foreground">
                         <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
                         <div>
                             <p className="text-sm font-semibold">AI-assisted booking</p>
@@ -202,7 +202,7 @@ export function BookingSidebar({
                     </div>
                 )}
                 <Button
-                    variant={showReschedule ? "secondary" : "terracotta"}
+                    variant={showReschedule ? "secondary" : "default"}
                     className="w-full gap-2"
                     onClick={() => setShowReschedule((visible) => !visible)}
                     disabled={!onReschedule || isUpdating || isTerminal}
@@ -255,7 +255,7 @@ function ReschedulePanel({
         <div className="border-t border-border bg-background/70 px-4 py-3">
             <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold">
-                    <Clock className="h-4 w-4 text-accent" />
+                    <Clock className="size-4 text-muted-foreground" />
                     Choose a new time
                 </div>
                 <span className="text-xs text-muted-foreground">

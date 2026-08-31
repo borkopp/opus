@@ -1,101 +1,130 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
-import { CategoryList } from "./_components/CategoryList";
-import { ServiceList } from "./_components/ServiceList";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
+import { useQuery } from "convex/react";
+import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { IconSearch } from "@tabler/icons-react";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/convex/_generated/api";
+import { CategoryList } from "./_components/CategoryList";
+import { ServiceFormDialog } from "./_components/ServiceFormDialog";
+import { ServiceList } from "./_components/ServiceList";
 
 export default function ServicesPage() {
-    const profile = useQuery(api.users.getMyProfile);
-    const orgId = profile?.orgId;
-    const allServices = useQuery(api.services.listServices, orgId ? { orgId } : "skip");
+  const profile = useQuery(api.users.getMyProfile);
+  const orgId = profile?.orgId;
+  const services = useQuery(
+    api.services.listServices,
+    orgId ? { orgId } : "skip",
+  );
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedServiceIds, setSelectedServiceIds] = useState<Set<Id<"services">>>(new Set());
-    const deactivateService = useMutation(api.services.deactivateService);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
 
-    const handleBulkDeactivate = async () => {
-        if (!orgId || selectedServiceIds.size === 0) return;
-        if (window.confirm(`Are you sure you want to deactivate ${selectedServiceIds.size} service(s)?`)) {
-            for (const id of selectedServiceIds) {
-                await deactivateService({ orgId, serviceId: id });
-            }
-            setSelectedServiceIds(new Set());
-        }
-    };
-
-    if (profile === undefined || allServices === undefined) {
-        return (
-            <div className="flex flex-col gap-6 w-full max-w-[1600px] mx-auto pb-10">
-                <div className="flex flex-col gap-2">
-                    <Skeleton className="h-8 w-48 mb-2" />
-                    <Skeleton className="h-4 w-72" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <Skeleton className="h-[400px] w-full col-span-1 rounded-xl" />
-                    <Skeleton className="h-[400px] w-full col-span-1 md:col-span-2 rounded-xl" />
-                </div>
-            </div>
-        );
-    }
-
-    if (profile === null || !orgId) return <div>Not found</div>;
-
-    const activeCount = allServices?.filter(s => s.isActive).length || 0;
-
+  if (profile === undefined || services === undefined) {
     return (
-        <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto pb-10">
-            <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground flex items-baseline gap-3">
-                            Services
-                            <span className="text-base font-normal font-outfit text-muted-foreground tracking-normal">
-                                · {activeCount} active
-                            </span>
-                        </h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Manage your service categories and offerings.</p>
-                    </div>
-                    {(allServices && allServices.length > 0) && (
-                        <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-                            {selectedServiceIds.size > 0 && (
-                                <Button variant="outline" size="sm" onClick={handleBulkDeactivate} className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 whitespace-nowrap">
-                                    Deactivate {selectedServiceIds.size} selected
-                                </Button>
-                            )}
-                            <div className="relative w-full sm:w-64 shadow-s dark:shadow-l rounded-full">
-                                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                                <Input
-                                    placeholder="Search services..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 h-9 w-full rounded-full bg-background"
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="col-span-1">
-                    <CategoryList orgId={orgId as Id<"orgs">} />
-                </div>
-                <div className="col-span-1 md:col-span-2">
-                    <ServiceList
-                        orgId={orgId as Id<"orgs">}
-                        searchQuery={searchQuery}
-                        selectedServiceIds={selectedServiceIds}
-                        setSelectedServiceIds={setSelectedServiceIds}
-                    />
-                </div>
-            </div>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-28" />
         </div>
+        <div className="overflow-hidden rounded-xl border">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
+            >
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
+  }
+
+  if (profile === null || !orgId) return <div>Not found</div>;
+
+  const activeCount = services.filter((service) => service.isActive).length;
+  const serviceSummary =
+    services.length === 0
+      ? "Add the services customers can book."
+      : `${activeCount} ${activeCount === 1 ? "service" : "services"} available to book.`;
+
+  return (
+    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
+            Services
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">{serviceSummary}</p>
+        </div>
+
+        <div className="flex w-full gap-2 sm:w-auto">
+          <CategoryList orgId={orgId} />
+          <Button
+            className="flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
+            onClick={() => setIsAddServiceOpen(true)}
+          >
+            <PlusIcon data-icon="inline-start" />
+            Add service
+          </Button>
+        </div>
+      </header>
+
+      {(services.length > 6 || Boolean(searchQuery)) && (
+        <InputGroup className="w-full sm:max-w-xs">
+          <InputGroupInput
+            aria-label="Search services"
+            placeholder="Search services"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+          />
+          <InputGroupAddon align="inline-start">
+            <SearchIcon />
+          </InputGroupAddon>
+          {searchQuery && (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                aria-label="Clear search"
+                size="icon-xs"
+                onClick={() => setSearchQuery("")}
+              >
+                <XIcon />
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
+        </InputGroup>
+      )}
+
+      <ServiceList
+        orgId={orgId}
+        searchQuery={searchQuery}
+        onAddService={() => setIsAddServiceOpen(true)}
+        onClearSearch={() => setSearchQuery("")}
+      />
+
+      {isAddServiceOpen && (
+        <ServiceFormDialog
+          orgId={orgId}
+          open={isAddServiceOpen}
+          onOpenChange={setIsAddServiceOpen}
+        />
+      )}
+    </div>
+  );
 }

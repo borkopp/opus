@@ -11,8 +11,8 @@ import { ACTIVE_INDUSTRY, isActiveIndustry } from "./lib/productScope";
 // Next.js project (and eventually the OPUS mobile app).
 //
 // All business data returned here is limited to published orgs (listingStatus: "published")
-// and publicly-visible fields only. Internal ops data (payout splits, audit
-// logs, noShowRiskScore etc.) is NEVER returned from these queries.
+// and publicly-visible fields only. Internal ops data (audit logs,
+// noShowRiskScore etc.) is NEVER returned from these queries.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ─── List published orgs — paginated discovery feed ──────

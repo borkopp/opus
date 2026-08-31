@@ -26,8 +26,8 @@ const MAPBOX_HIDE_LOGO_CSS = `
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
-// Approximation of --cta: oklch(47% 0.20 30) — dark clay/terracotta
-const ROUTE_COLOR = "#8A3020";
+// Mapbox requires a resolved color string; this value mirrors the --brand token.
+const ROUTE_COLOR = "#2E52C7";
 const ROUTE_CASING_LIGHT = "rgba(255,255,255,0.6)";
 const ROUTE_CASING_DARK = "rgba(0,0,0,0.4)";
 
@@ -224,10 +224,10 @@ export default function BusinessMap({
             <Marker longitude={userPos.lng} latitude={userPos.lat} anchor="center">
               <span className="relative flex h-[42px] w-[42px] items-center justify-center">
                 <span
-                  className="absolute inset-0 rounded-full border-2 border-blue-500/50"
+                  className="absolute inset-0 rounded-full border-2 border-primary/50"
                   style={{ animation: "opus-user-pulse 2.2s ease-out infinite" }}
                 />
-                <span className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 shadow-md ring-2 ring-white" />
+                <span className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-primary shadow-md ring-2 ring-background" />
               </span>
             </Marker>
           )}
@@ -240,9 +240,6 @@ export default function BusinessMap({
           >
             <div
               className="flex h-11 w-11 cursor-pointer select-none items-center justify-center rounded-full border-[3px] border-background bg-cta font-display text-lg font-semibold text-cta-foreground transition-transform duration-150 hover:scale-110 active:scale-95"
-              style={{
-                boxShadow: "0 4px 20px rgba(138,48,32,0.45), 0 1px 4px rgba(0,0,0,0.12)",
-              }}
               aria-label={`${name} location`}
             >
               {name.charAt(0).toUpperCase()}
@@ -254,7 +251,7 @@ export default function BusinessMap({
         {route && (
           <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2">
             {/* ETA pill */}
-            <div className="flex items-center gap-2 rounded-full bg-background/92 px-4 py-2 shadow-lg backdrop-blur-md ring-1 ring-black/[0.06]">
+            <div className="flex items-center gap-2 rounded-full bg-background/92 px-4 py-2 shadow-lg backdrop-blur-md ring-1 ring-foreground/[0.06]">
               <span className="text-sm font-semibold tabular-nums">
                 {fmt_duration(route.duration)}
               </span>
@@ -265,7 +262,7 @@ export default function BusinessMap({
             </div>
 
             {/* Mode toggle */}
-            <div className="flex rounded-full bg-background/92 p-1 shadow-lg backdrop-blur-md ring-1 ring-black/[0.06]">
+            <div className="flex rounded-full bg-background/92 p-1 shadow-lg backdrop-blur-md ring-1 ring-foreground/[0.06]">
               <button
                 onClick={() => setMode("walking")}
                 className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 ${mode === "walking"
@@ -303,7 +300,7 @@ export default function BusinessMap({
         {locState === "denied" && (
           <button
             onClick={requestLocation}
-            className="absolute bottom-3 left-3 z-10 rounded-full bg-background/92 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-md ring-1 ring-black/[0.06] transition-colors hover:text-foreground"
+            className="absolute bottom-3 left-3 z-10 rounded-full bg-background/92 px-3 py-1.5 text-xs text-muted-foreground shadow-lg backdrop-blur-md ring-1 ring-foreground/[0.06] transition-colors hover:text-foreground"
           >
             Enable location for ETA
           </button>

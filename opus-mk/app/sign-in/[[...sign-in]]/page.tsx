@@ -1,4 +1,5 @@
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 
 export default async function SignInPage({
   searchParams,
@@ -10,12 +11,12 @@ export default async function SignInPage({
     typeof params.callbackUrl === "string" ? params.callbackUrl : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <AuthLayout>
       <EmailOtpForm
-        title="Welcome back"
-        description="Enter your email and we will send a one-time code for your OPUS bookings."
+        title="Your bookings are here"
+        description="Enter the email used for your bookings. We’ll send a six-digit code."
         callbackUrl={callbackUrl}
       />
-    </main>
+    </AuthLayout>
   );
 }

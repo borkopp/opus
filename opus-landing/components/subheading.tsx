@@ -17,7 +17,7 @@ export function Subheading({
   return (
     <Tag
       className={cn(
-        "text-sm text-neutral-600 md:text-base lg:text-lg dark:text-neutral-400",
+        "text-sm text-white/85 md:text-base lg:text-lg",
         className,
       )}
       {...props}

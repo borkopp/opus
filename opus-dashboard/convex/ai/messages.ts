@@ -16,7 +16,6 @@ export const saveMessage = internalMutation({
       v.literal("booking_created"),
       v.literal("booking_cancelled"),
       v.literal("booking_rescheduled"),
-      v.literal("payment_link_sent"),
       v.literal("handoff_triggered"),
     )),
     actionReferenceId: v.optional(v.string()),

@@ -84,7 +84,7 @@ await ctx.db
 
 ## Rule 6 — Write to `audit_log` on every significant mutation
 
-Bookings, cancellations, payments, AI-triggered actions — all must produce an `audit_log` entry. The log is append-only: never update or delete audit rows. Always include `before`/`after` snapshots.
+Bookings, cancellations, and AI-triggered actions must produce an `audit_log` entry. The log is append-only: never update or delete audit rows. Always include `before`/`after` snapshots.
 
 ```typescript
 await ctx.db.insert("audit_log", {
@@ -102,24 +102,24 @@ await ctx.db.insert("audit_log", {
 
 ## Rule 7 — External API calls go in Actions, not Mutations
 
-Mutations are for database writes only. Never call Stripe, Twilio, Resend, or any external service from inside a mutation. Use a Convex Action, which can call external APIs and then invoke mutations for the database side-effects.
+Mutations are for database writes only. Never call Twilio, Resend, Anthropic, or any external service from inside a mutation. Use a Convex Action, which can call external APIs and then invoke mutations for the database side-effects.
 
 ```typescript
-// ✅ Correct — Action calls Stripe, then calls mutation
-export const createPaymentIntent = action({
+// ✅ Correct — Action calls a provider, then records the result in a mutation
+export const sendNotification = action({
   handler: async (ctx, args) => {
-    const intent = await stripe.paymentIntents.create({ ... });
-    await ctx.runMutation(internal.payments.recordIntent, {
-      stripePaymentIntentId: intent.id,
+    const result = await resend.emails.send({ ... });
+    await ctx.runMutation(internal.notifications.recordDelivery, {
+      providerMessageId: result.id,
       ...
     });
   }
 });
 
-// ❌ Wrong — Stripe call inside a mutation
-export const createPaymentIntent = mutation({
+// ❌ Wrong — provider call inside a mutation
+export const sendNotification = mutation({
   handler: async (ctx, args) => {
-    const intent = await stripe.paymentIntents.create({ ... }); // will timeout / break retries
+    await resend.emails.send({ ... }); // will timeout / break retries
   }
 });
 ```

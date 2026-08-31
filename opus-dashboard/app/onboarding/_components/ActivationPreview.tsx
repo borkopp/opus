@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Clock3, MapPin, Scissors, Star } from "lucide-react";
+import { Clock3, MapPin, Scissors } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import { formatPrice } from "@/components/ui/price";
@@ -18,11 +18,11 @@ export function ActivationPreview({
       <div className="border-y border-border py-20 text-center">
         <Scissors className="mx-auto size-6 text-muted-foreground" />
         <p className="mt-5 font-display text-lg font-semibold">
-          Your listing takes shape here
+          Your website takes shape here
         </p>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
-          Add your business details and this preview will update from Convex in
-          real time.
+          Add your business details and this website preview will update in real
+          time.
         </p>
       </div>
     );
@@ -74,12 +74,6 @@ export function ActivationPreview({
               {preview.tagline || "Your tagline will appear here."}
             </p>
           </div>
-          <div className="flex items-center gap-1 text-sm">
-            <Star className="fill-accent text-accent" />
-            <span className="font-medium">
-              {preview.reviewCount ? preview.averageRating.toFixed(1) : "New"}
-            </span>
-          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
@@ -116,7 +110,7 @@ export function ActivationPreview({
                     {service.durationMins} min
                   </p>
                 </div>
-                <p className="font-outfit text-sm font-semibold">
+                <p className="font-display text-sm font-semibold">
                   {formatPrice(service.priceMinorUnits, service.currency)}
                 </p>
               </div>

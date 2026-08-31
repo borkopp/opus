@@ -11,18 +11,18 @@ export const GridLineHorizontal = ({
     <div
       style={
         {
-          "--background": "#ffffff",
-          "--color": "rgba(0, 0, 0, 0.2)",
+          "--background": "var(--card)",
+          "--color": "color-mix(in srgb, var(--foreground) 20%, transparent)",
           "--height": "1px",
           "--width": "5px",
           "--fade-stop": "90%",
           "--offset": offset || "200px", //-100px if you want to keep the line inside
-          "--color-dark": "rgba(255, 255, 255, 0.2)",
+          "--color-dark": "color-mix(in srgb, var(--foreground) 20%, transparent)",
           maskComposite: "exclude",
         } as React.CSSProperties
       }
       className={cn(
-        "[--background:var(--color-neutral-200)] [--color:var(--color-neutral-400)] dark:[--background:var(--color-neutral-800)] dark:[--color:var(--color-neutral-600)]",
+        "[--background:var(--card)] [--color:color-mix(in_srgb,var(--foreground)_20%,transparent)]",
         "absolute left-[calc(var(--offset)/2*-1)] h-(--height) w-[calc(100%+var(--offset))]",
         "bg-[linear-gradient(to_right,var(--color),var(--color)_50%,transparent_0,transparent)]",
         "bg-size-[var(--width)_var(--height)]",
@@ -47,13 +47,13 @@ export const GridLineVertical = ({
     <div
       style={
         {
-          "--background": "#ffffff",
-          "--color": "rgba(0, 0, 0, 0.2)",
+          "--background": "var(--card)",
+          "--color": "color-mix(in srgb, var(--foreground) 20%, transparent)",
           "--height": "5px",
           "--width": "1px",
           "--fade-stop": "90%",
           "--offset": offset || "150px", //-100px if you want to keep the line inside
-          "--color-dark": "rgba(255, 255, 255, 0.2)",
+          "--color-dark": "color-mix(in srgb, var(--foreground) 20%, transparent)",
           maskComposite: "exclude",
         } as React.CSSProperties
       }

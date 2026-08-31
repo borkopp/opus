@@ -1,4 +1,4 @@
-import { AuthLayout } from "@/components/login";
+import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
 
 export default async function Login({
@@ -14,7 +14,7 @@ export default async function Login({
     <AuthLayout>
       <EmailOtpForm
         title="Welcome back"
-        description="Use your studio email. We will send a one-time code—no password to remember."
+        description="Enter your studio email. We’ll send a six-digit code—no password needed."
         callbackUrl={callbackUrl}
       />
     </AuthLayout>

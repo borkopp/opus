@@ -17,7 +17,7 @@ Future agents must:
 5. Keep marketing claims aligned with behavior that is genuinely operational and configured.
 6. Ask for explicit user authorization before changing product scope or enabling another vertical.
 7. Keep this repository focused on the web applications; native clients were removed from the monorepo.
-7. Leave the Expo/React Native and SwiftUI applications until last; do not touch them during the current web stabilization phase unless the user explicitly requests native work.
+8. Keep `opus-mk/` dormant and untouched unless the user explicitly resumes marketplace work.
 
 ---
 
@@ -33,11 +33,11 @@ Canonical positioning: **OPUS helps small beauty studios manage appointments and
 
 Three independent Next.js applications sharing a single Convex backend:
 
-| App | Purpose | Dev port |
-|-----|---------|----------|
-| `opus-dashboard/` | Beauty-business dashboard — onboarding, services, staff, availability, calendar, customers, and bookings | 3000 (frontend), 3210 (Convex) |
-| `opus-mk/` | Public beauty marketplace and guest appointment booking | 3001 |
-| `opus-landing/` | Beauty-focused marketing site — no backend, no auth | 3000 |
+| App               | Purpose                                                                       | Dev port                       |
+| ----------------- | ----------------------------------------------------------------------------- | ------------------------------ |
+| `opus-dashboard/` | Beauty-business dashboard plus automatic tenant websites and guest booking    | 3000 (frontend), 3210 (Convex) |
+| `opus-mk/`        | Dormant beauty marketplace retained for future work; do not modify by default | 3001                           |
+| `opus-landing/`   | Beauty-focused `opus.mk` marketing site — no backend, no auth                 | 3000                           |
 
 `opus-mk/convex` is a symlink to `../opus-dashboard/convex`. Both apps share the same Convex deployment.
 
@@ -67,19 +67,19 @@ npm run build
 
 `opus-dashboard` has Vitest coverage through `npm test`; the marketplace and landing packages currently rely on lint and production builds.
 
-**Note on opus-mk:** This app uses Next.js 16.2.1 with breaking changes. Read `node_modules/next/dist/docs/` before writing any Next.js-specific code for it.
+**Note on opus-mk:** This package is paused. If the user explicitly resumes it, read its local Next.js documentation before writing Next.js-specific code.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Backend / DB | Convex (real-time DB, mutations, queries, actions, scheduled jobs) |
-| Frontend | Next.js 16 (App Router, PPR) |
-| Auth | Better Auth email OTP through Convex (`staff_members` is the permission boundary) |
-| Deferred foundations | Payments, AI actions, and provider-backed messaging; preserve code but do not present these as active without verification |
-| Styling | Tailwind CSS v4, shadcn/ui |
+| Layer                | Technology                                                                                                      |
+| -------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Backend / DB         | Convex (real-time DB, mutations, queries, actions, scheduled jobs)                                              |
+| Frontend             | Next.js 16 (App Router, PPR)                                                                                    |
+| Auth                 | Better Auth email OTP through Convex (`staff_members` is the permission boundary)                               |
+| Deferred foundations | AI actions and provider-backed messaging; preserve code but do not present these as active without verification |
+| Styling              | Tailwind CSS v4, shadcn/ui                                                                                      |
 
 ---
 
@@ -89,26 +89,25 @@ npm run build
 Browser / Customer
       │
       ▼
-proxy.ts (app/proxy.ts in opus-dashboard)
-      │  resolves hostname → orgId via Convex orgs table
-      │  (by_slug index for subdomains, by_custom_domain for custom domains)
+proxy.ts (opus-dashboard/proxy.ts)
+      │  parses `{slug}.opus.mk` and rewrites to `/sites/{slug}`
+      │  without fetching tenant data in the proxy
       ▼
 Next.js App Router
   ├── (dashboard)/   — authenticated owner/staff UI (Better Auth)
-  ├── (booking)/     — public white-labeled booking flow
-  └── api/           — integration endpoints, including deferred payment and AI foundations
+  ├── (website)/     — public studio website and guest booking flow
+  └── api/           — integration endpoints, including deferred AI foundations
       │
       ▼
 Convex Backend (convex/)
   ├── schema.ts      — single source of truth for all data shapes
   ├── bookings/      — booking mutations, slot conflict checks
-  ├── payments/      — deferred payment foundations
   ├── ai/            — deferred AI foundations
   ├── notifications/ — provider-backed queue; availability depends on configuration
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend for production OTP email plus optional/deferred Stripe, Twilio, and Anthropic integrations
+External APIs: Resend for production OTP email plus optional/deferred Twilio and Anthropic integrations
 ```
 
 ---
@@ -119,9 +118,9 @@ External APIs: Resend for production OTP email plus optional/deferred Stripe, Tw
 
 ```typescript
 // ✅
-ctx.db.query("bookings").withIndex("by_org", (q) => q.eq("orgId", orgId))
+ctx.db.query("bookings").withIndex("by_org", (q) => q.eq("orgId", orgId));
 // ❌ Never
-ctx.db.query("bookings").collect()
+ctx.db.query("bookings").collect();
 ```
 
 **2. Soft deletes only.** Set `isDeleted: true` + `deletedAt: Date.now()`. Never call `ctx.db.delete()`.
@@ -132,7 +131,7 @@ ctx.db.query("bookings").collect()
 
 **5. Booking writes use conflict checks inside mutations.** Check `by_staff_start` index before inserting — Convex mutations are serialised, use this guarantee.
 
-**6. Write to `audit_log` on every significant mutation.** Bookings, payments, cancellations, AI actions. The log is append-only — never update or delete audit rows.
+**6. Write to `audit_log` on every significant mutation.** Bookings, cancellations, and AI actions. The log is append-only — never update or delete audit rows.
 
 ---
 
@@ -147,7 +146,7 @@ ctx.db.query("bookings").collect()
 ## Convex Coding Rules
 
 - All mutation arguments must use `v.*` validators. No unvalidated input.
-- Never call Stripe, Twilio, or Resend from inside a mutation — use Convex **Actions** for all external API calls.
+- Never call Twilio or Resend from inside a mutation — use Convex **Actions** for all external API calls.
 - No business logic in React components — logic lives in Convex functions.
 - Always query via named indexes (`.withIndex(...)`). Never use `.filter()` as the primary access path — it's a full table scan.
 - `ConvexError` for user-facing errors; `throw new Error` for internal failures.
@@ -203,43 +202,24 @@ Never call Twilio or Resend directly from mutations. Write to the `notifications
 
 ---
 
-## Deferred Payment Foundations
-
-Payments are P2 and are not part of the active product promise. Preserve the implementation and its safety rules, but do not expose or market online payment as available without explicit authorization and end-to-end verification.
-
-- If payment work is explicitly reactivated, process it through Stripe Connect and never store card details.
-- On `payment_intent.succeeded` webhook: read `payout_splits`, create `payouts` rows, initiate Stripe transfers.
-- Always verify Stripe webhook signatures before processing.
-
----
-
 ## Deployment
 
 **Local:** Each app runs independently. `opus-dashboard` runs frontend + Convex backend together.
 
-**Production (Hetzner VPS):** Docker images built via GitHub Actions on push to `main`, pushed to GHCR, deployed via SSH + `docker compose up`.
-
-```
-Ports: opus-dashboard → 3006, opus-mk → 3007
-Env files on VPS: /opt/opus/.env.dashboard, /opt/opus/.env.mk
-```
-
-`NEXT_PUBLIC_*` vars are build-time ARGs (inlined into the Docker image). Server-side secrets live only in the VPS `.env` files, never baked into images.
+**Target production topology:** `opus-landing/` is deployed to Vercel at `opus.mk`; `opus-dashboard/` is deployed as a separate Vercel project at `studio.opus.mk` and `*.opus.mk`. A VPS is not required for those web surfaces once Vercel has provisioned the wildcard domain and certificate. Follow [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md); do not improvise per-tenant DNS records or reintroduce custom-domain settings.
 
 ---
 
 ## Key Domain Glossary
 
-| Term | Meaning |
-|------|---------|
-| `org` | A business on the platform |
-| `staff_member` | A user scoped to an org with a role |
-| `customer` | End-client of the business — not a platform user |
-| `service` | A bookable item (e.g. "Men's Haircut — 30 min — £25") |
-| `availability_rule` | Recurring weekly hours for a staff member |
-| `availability_override` | One-off date-specific exception |
-| `booking` | Confirmed appointment tying customer + staff + service + slot |
-| `payment_intent` | Mirrors a Stripe PaymentIntent, updated by webhooks |
-| `payout_split` | How a payment is divided between recipients |
-| `ai_conversation` | Thread of AI ↔ customer messages on a channel |
-| `handoff` | AI confidence drops below threshold, human takes over |
+| Term                    | Meaning                                                       |
+| ----------------------- | ------------------------------------------------------------- |
+| `org`                   | A business on the platform                                    |
+| `staff_member`          | A user scoped to an org with a role                           |
+| `customer`              | End-client of the business — not a platform user              |
+| `service`               | A bookable item (e.g. "Men's Haircut — 30 min — £25")         |
+| `availability_rule`     | Recurring weekly hours for a staff member                     |
+| `availability_override` | One-off date-specific exception                               |
+| `booking`               | Confirmed appointment tying customer + staff + service + slot |
+| `ai_conversation`       | Thread of AI ↔ customer messages on a channel                 |
+| `handoff`               | AI confidence drops below threshold, human takes over         |

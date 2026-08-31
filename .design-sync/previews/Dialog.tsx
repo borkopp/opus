@@ -10,7 +10,7 @@ export const CancelBooking = () => (
       <DialogHeader>
         <DialogTitle>Cancel this booking?</DialogTitle>
         <DialogDescription>
-          Sofia will be notified by SMS. If a deposit was paid you can choose to refund it.
+          Sofia will be notified by SMS and the time will become available again.
         </DialogDescription>
       </DialogHeader>
       <div style={{ display: 'grid', gap: 8 }}>

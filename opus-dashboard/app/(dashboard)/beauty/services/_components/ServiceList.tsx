@@ -1,264 +1,343 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { useState, useMemo } from "react";
-import { ServiceFormDialog } from "./ServiceFormDialog";
-import { IconEdit, IconTrash, IconArrowUp, IconArrowDown, IconClock, IconTag } from "@tabler/icons-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PlusIcon,
+  ScissorsIcon,
+  SearchXIcon,
+  Trash2Icon,
+} from "lucide-react";
+import { toast } from "sonner";
+
 import { Price } from "@/components/ui/price";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { IconUpload } from "@tabler/icons-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { api } from "@/convex/_generated/api";
+import { Doc, Id } from "@/convex/_generated/dataModel";
+import { getErrorMessage } from "@/lib/file-validation";
+import { cn } from "@/lib/utils";
+import { ServiceFormDialog } from "./ServiceFormDialog";
+
+type ServiceGroup = {
+  key: string;
+  name: string;
+  services: Doc<"services">[];
+};
 
 export function ServiceList({
-    orgId,
-    searchQuery,
-    selectedServiceIds,
-    setSelectedServiceIds,
+  orgId,
+  searchQuery,
+  onAddService,
+  onClearSearch,
 }: {
-    orgId: Id<"orgs">;
-    searchQuery: string;
-    selectedServiceIds: Set<Id<"services">>;
-    setSelectedServiceIds: React.Dispatch<React.SetStateAction<Set<Id<"services">>>>;
+  orgId: Id<"orgs">;
+  searchQuery: string;
+  onAddService: () => void;
+  onClearSearch: () => void;
 }) {
-    const categories = useQuery(api.serviceCategories.listCategories, { orgId });
-    const allServices = useQuery(api.services.listServices, { orgId });
-    const deactivateService = useMutation(api.services.deactivateService);
-    const reorderServices = useMutation(api.services.reorderServices);
+  const categories = useQuery(api.serviceCategories.listCategories, { orgId });
+  const services = useQuery(api.services.listServices, { orgId });
+  const deactivateService = useMutation(api.services.deactivateService);
+  const reorderServices = useMutation(api.services.reorderServices);
 
-    const [editingServiceId, setEditingServiceId] = useState<Id<"services"> | null>(null);
-    const [isAdding, setIsAdding] = useState<{ open: boolean; categoryId?: Id<"service_categories"> }>({ open: false });
+  const [editingServiceId, setEditingServiceId] =
+    useState<Id<"services"> | null>(null);
 
-    const filteredServices = useMemo(() => {
-        if (!allServices || !categories) return [];
-        if (!searchQuery.trim()) return allServices;
-        const query = searchQuery.toLowerCase();
-        return allServices.filter(s => {
-            const catName = categories.find(c => c._id === s.categoryId)?.name || "uncategorized";
-            return s.name.toLowerCase().includes(query) || catName.toLowerCase().includes(query);
-        });
-    }, [allServices, searchQuery, categories]);
+  const serviceGroups = useMemo<ServiceGroup[]>(() => {
+    if (!services || !categories) return [];
 
-    if (categories === undefined || allServices === undefined) {
-        return <Skeleton className="h-[600px] w-full rounded-xl" />;
+    const query = searchQuery.trim().toLocaleLowerCase();
+    const categoryNames = new Map(
+      categories.map((category) => [category._id, category.name]),
+    );
+    const visibleServices = query
+      ? services.filter((service) => {
+          const categoryName = service.categoryId
+            ? categoryNames.get(service.categoryId)
+            : undefined;
+
+          return (
+            service.name.toLocaleLowerCase().includes(query) ||
+            categoryName?.toLocaleLowerCase().includes(query)
+          );
+        })
+      : services;
+
+    const groups: ServiceGroup[] = categories
+      .map((category) => ({
+        key: category._id,
+        name: category.name,
+        services: visibleServices.filter(
+          (service) => service.categoryId === category._id,
+        ),
+      }))
+      .filter((group) => group.services.length > 0);
+
+    const uncategorized = visibleServices.filter(
+      (service) =>
+        !service.categoryId || !categoryNames.has(service.categoryId),
+    );
+
+    if (uncategorized.length > 0) {
+      groups.push({
+        key: "uncategorized",
+        name: "Other",
+        services: uncategorized,
+      });
     }
 
-    // We group services by category
-    // Services without category get grouped under "Uncategorized"
-    const servicesByCategory = new Map<string, typeof allServices>();
+    return groups;
+  }, [categories, searchQuery, services]);
 
-    // Initialize with known categories
-    categories.forEach(cat => {
-        servicesByCategory.set(cat._id, []);
-    });
-    servicesByCategory.set('uncategorized', []);
-
-    filteredServices.forEach(srv => {
-        if (srv.categoryId && servicesByCategory.has(srv.categoryId)) {
-            servicesByCategory.get(srv.categoryId)!.push(srv);
-        } else {
-            servicesByCategory.get('uncategorized')!.push(srv);
-        }
-    });
-
-    const handleDelete = async (serviceId: Id<"services">, name: string) => {
-        if (window.confirm(`Are you sure you want to deactivate the service "${name}"?`)) {
-            await deactivateService({ orgId, serviceId });
-        }
-    };
-
-    const toggleSelection = (id: Id<"services">) => {
-        const next = new Set(selectedServiceIds);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        setSelectedServiceIds(next);
-    };
-
-    const moveService = async (serviceArr: typeof allServices, index: number, direction: 'up' | 'down') => {
-        if (direction === 'up' && index === 0) return;
-        if (direction === 'down' && index === serviceArr.length - 1) return;
-
-        const newOrder = [...serviceArr];
-        const swapIndex = direction === 'up' ? index - 1 : index + 1;
-
-        [newOrder[index], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[index]];
-
-        const serviceIds = newOrder.map(c => c._id);
-        await reorderServices({ orgId, serviceIds });
-    };
-
-    const getImageUrl = (urlOrId: string) => {
-        if (!urlOrId) return undefined;
-        if (urlOrId.startsWith("http")) return urlOrId;
-        return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split('//')[1]}/api/storage/${urlOrId}`;
-    };
-
-    const renderServiceRows = (srvs: typeof allServices, catId?: Id<"service_categories">) => {
-        if (srvs.length === 0) {
-            return (
-                <div className="text-sm text-muted-foreground p-6 rounded-lg text-center border border-dashed bg-background">
-                    No services in this list yet.
-                    <div className="mt-3">
-                        <Button variant="outline" size="sm" onClick={() => setIsAdding({ open: true, categoryId: catId })}>Add Service</Button>
-                    </div>
-                </div>
-            );
-        }
-
-        return (
-            <div className="flex flex-col gap-2">
-                {srvs.map((service, index) => {
-                    const isInactive = !service.isActive;
-                    return (
-                        <div key={service._id} className={cn(
-                            "flex items-center gap-3 p-3 bg-background border rounded-xl shadow-sm group transition-all hover:border-border hover:shadow-md relative",
-                            isInactive && "opacity-75 bg-muted/30 grayscale hover:grayscale-0"
-                        )}>
-
-                            <div className="flex items-center justify-center pl-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                <Checkbox
-                                    checked={selectedServiceIds.has(service._id)}
-                                    onCheckedChange={() => toggleSelection(service._id)}
-                                />
-                            </div>
-
-                            {/* Reorder arrows */}
-                            <div className="flex flex-col items-center opacity-30 group-hover:opacity-100 transition-opacity ml-1">
-                                <button onClick={() => moveService(srvs, index, 'up')} disabled={index === 0 || searchQuery !== ""} className="hover:text-foreground disabled:opacity-30 cursor-pointer">
-                                    <IconArrowUp size={14} />
-                                </button>
-                                <button onClick={() => moveService(srvs, index, 'down')} disabled={index === srvs.length - 1 || searchQuery !== ""} className="hover:text-foreground disabled:opacity-30 cursor-pointer">
-                                    <IconArrowDown size={14} />
-                                </button>
-                            </div>
-
-                            {/* Service Image */}
-                            <Avatar className="h-10 w-14 rounded-lg border bg-muted shrink-0 overflow-hidden">
-                                <AvatarImage src={getImageUrl(service.photoUrl || "")} alt={service.name} className="object-cover" />
-                                <AvatarFallback className="rounded-none bg-muted/50 flex items-center justify-center">
-                                    <IconUpload size={14} className="text-muted-foreground/30" />
-                                </AvatarFallback>
-                            </Avatar>
-
-                            <div className="flex-1 flex flex-col justify-center min-w-0 py-0.5">
-                                <div className="flex items-center gap-2">
-                                    <span className={cn("font-semibold text-foreground truncate", isInactive && "line-through text-muted-foreground")}>{service.name}</span>
-                                    <Badge variant={isInactive ? "secondary" : "outline"} className={cn(
-                                        "font-medium",
-                                        !isInactive ? "border-foreground/20 text-foreground/80" : "bg-muted text-muted-foreground"
-                                    )}>
-                                        {isInactive ? "Inactive" : "Active"}
-                                    </Badge>
-                                </div>
-
-                                {/* {service.description && (
-                                    <p className="text-sm text-muted-foreground truncate max-w-lg mt-0.5">{service.description}</p>
-                                )} */}
-
-                                <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <IconClock size={14} />
-                                        <span>{service.durationMins} min</span>
-                                    </div>
-                                    <div className="w-1 h-1 rounded-full bg-border"></div>
-                                    <div className="flex items-center gap-1 font-medium text-foreground/80">
-                                        <IconTag size={14} className="text-muted-foreground" />
-                                        <span>
-                                            <Price amount={service.priceMinorUnits} />
-                                        </span>
-                                    </div>
-                                    {service.staffIds.length > 0 && (
-                                        <>
-                                            <div className="w-1 h-1 rounded-full bg-border"></div>
-                                            <span className="truncate max-w-[120px]">{service.staffIds.length} Staff</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Hover Actions */}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                    size="icon" variant="ghost"
-                                    onClick={() => setEditingServiceId(service._id)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                >
-                                    <IconEdit size={16} />
-                                </Button>
-                                <Button
-                                    size="icon" variant="ghost"
-                                    onClick={() => handleDelete(service._id, service.name)}
-                                    className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                >
-                                    <IconTrash size={16} />
-                                </Button>
-                            </div>
-                        </div>
-                    )
-                })}
-                <div className="mt-1">
-                    <Button variant="ghost" size="lg" onClick={() => setIsAdding({ open: true, categoryId: catId })} className="w-full border border-dashed mt-2">
-                        + Add Service here
-                    </Button>
-                </div>
-            </div>
-        );
-    };
-
+  if (categories === undefined || services === undefined) {
     return (
-        <Card className="h-full flex flex-col p-6">
-            <div className="flex flex-col gap-8">
-                {categories.map(category => {
-                    const srvs = servicesByCategory.get(category._id) || [];
-                    return (
-                        <div key={category._id} className="flex flex-col gap-3">
-                            <div className="flex items-center justify-between pb-2 border-b">
-                                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                    {category.name}
-                                    <Badge variant="secondary" className="px-1.5 font-normal rounded-md">{srvs.length}</Badge>
-                                </h3>
-                            </div>
-                            {renderServiceRows(srvs, category._id)}
-                        </div>
-                    );
-                })}
-
-                {/* Uncategorized */}
-                {(servicesByCategory.get('uncategorized') || []).length > 0 && (
-                    <div className="flex flex-col gap-3 opacity-80">
-                        <div className="flex items-center justify-between pb-2 border-b">
-                            <h3 className="text-lg font-semibold text-muted-foreground flex items-center gap-2">
-                                Uncategorized
-                                <Badge variant="secondary" className="px-1.5 font-normal rounded-md text-muted-foreground">
-                                    {(servicesByCategory.get('uncategorized') || []).length}
-                                </Badge>
-                            </h3>
-                        </div>
-                        {renderServiceRows(servicesByCategory.get('uncategorized') || [])}
-                    </div>
-                )}
+      <div className="overflow-hidden rounded-xl border">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
+          >
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-24" />
             </div>
-
-            {(isAdding.open || editingServiceId !== null) && (
-                <ServiceFormDialog
-                    orgId={orgId}
-                    serviceId={editingServiceId || undefined}
-                    initialCategoryId={isAdding.categoryId}
-                    open={isAdding.open || editingServiceId !== null}
-                    onOpenChange={(open) => {
-                        if (!open) {
-                            setIsAdding({ open: false });
-                            setEditingServiceId(null);
-                        }
-                    }}
-                />
-            )}
-        </Card>
+            <Skeleton className="h-4 w-16" />
+          </div>
+        ))}
+      </div>
     );
+  }
+
+  const handleRemove = async (
+    serviceId: Id<"services">,
+    serviceName: string,
+  ) => {
+    if (
+      !window.confirm(
+        `Remove “${serviceName}”? Customers will no longer be able to book it.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deactivateService({ orgId, serviceId });
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not remove service"));
+    }
+  };
+
+  const moveService = async (
+    groupServices: Doc<"services">[],
+    index: number,
+    direction: "up" | "down",
+  ) => {
+    const nextIndex = direction === "up" ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= groupServices.length) return;
+
+    const nextOrder = [...groupServices];
+    [nextOrder[index], nextOrder[nextIndex]] = [
+      nextOrder[nextIndex],
+      nextOrder[index],
+    ];
+
+    try {
+      await reorderServices({
+        orgId,
+        serviceIds: nextOrder.map((service) => service._id),
+      });
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "Could not reorder services"));
+    }
+  };
+
+  if (services.length === 0) {
+    return (
+      <Empty className="min-h-[360px] border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ScissorsIcon />
+          </EmptyMedia>
+          <EmptyTitle>No services yet</EmptyTitle>
+          <EmptyDescription>
+            Add your first service so customers can start booking.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button
+            onClick={onAddService}
+            className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
+          >
+            <PlusIcon data-icon="inline-start" />
+            Add service
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  if (serviceGroups.length === 0) {
+    return (
+      <Empty className="min-h-[280px] border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchXIcon />
+          </EmptyMedia>
+          <EmptyTitle>No matching services</EmptyTitle>
+          <EmptyDescription>Try a different name or category.</EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" onClick={onClearSearch}>
+            Clear search
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  return (
+    <>
+      <div className="overflow-hidden rounded-xl border bg-card shadow-s">
+        {serviceGroups.map((group, groupIndex) => (
+          <section key={group.key} className={cn(groupIndex > 0 && "border-t")}>
+            {(serviceGroups.length > 1 || group.key !== "uncategorized") && (
+              <div className="bg-muted/35 px-4 py-2.5 sm:px-5">
+                <h2 className="text-sm font-medium text-muted-foreground">
+                  {group.name}
+                </h2>
+              </div>
+            )}
+
+            <div className="divide-y">
+              {group.services.map((service, index) => (
+                <div
+                  key={service._id}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5",
+                    !service.isActive && "bg-muted/20",
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setEditingServiceId(service._id)}
+                    className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={cn(
+                          "truncate font-medium text-foreground",
+                          !service.isActive && "text-muted-foreground",
+                        )}
+                      >
+                        {service.name}
+                      </span>
+                      {!service.isActive && (
+                        <Badge variant="secondary">Inactive</Badge>
+                      )}
+                    </span>
+                    <span className="mt-1 block text-sm text-muted-foreground">
+                      {service.durationMins} min
+                    </span>
+                  </button>
+
+                  <div className="shrink-0 text-right text-sm font-medium tabular-nums text-foreground sm:text-base">
+                    <Price amount={service.priceMinorUnits} />
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Actions for ${service.name}`}
+                      >
+                        <MoreHorizontalIcon />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          onSelect={() => setEditingServiceId(service._id)}
+                        >
+                          <PencilIcon />
+                          Edit service
+                        </DropdownMenuItem>
+                        {!searchQuery.trim() && group.services.length > 1 && (
+                          <>
+                            <DropdownMenuItem
+                              disabled={index === 0}
+                              onSelect={() =>
+                                moveService(group.services, index, "up")
+                              }
+                            >
+                              <ArrowUpIcon />
+                              Move up
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={index === group.services.length - 1}
+                              onSelect={() =>
+                                moveService(group.services, index, "down")
+                              }
+                            >
+                              <ArrowDownIcon />
+                              Move down
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuGroup>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() =>
+                            handleRemove(service._id, service.name)
+                          }
+                        >
+                          <Trash2Icon />
+                          Remove service
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+
+      {editingServiceId !== null && (
+        <ServiceFormDialog
+          orgId={orgId}
+          serviceId={editingServiceId}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditingServiceId(null);
+          }}
+        />
+      )}
+    </>
+  );
 }

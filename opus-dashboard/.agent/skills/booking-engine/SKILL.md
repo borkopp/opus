@@ -1,6 +1,6 @@
 ---
 name: booking-engine
-description: Guides creation and modification of booking logic in the Omni-Service OS. Use when writing code that creates, reschedules, cancels, or queries bookings — or anything that touches availability, slot conflicts, surge pricing, or deposits.
+description: Guides creation and modification of booking logic in the Omni-Service OS. Use when writing code that creates, reschedules, cancels, or queries bookings — or anything that touches availability, slot conflicts, or surge pricing.
 ---
 
 # Booking Engine
@@ -51,7 +51,7 @@ export const createBooking = mutation({
       priceMinorUnits: service!.priceMinorUnits,
       currency: service!.currency,
       surgePriceApplied: false,
-      status: "pending_payment",
+      status: "confirmed",
       source: "web",
       isDeleted: false,
       createdAt: Date.now(),
@@ -80,9 +80,9 @@ export const createBooking = mutation({
 Bookings move through statuses in order. Never skip states or move backwards without an explicit reason.
 
 ```
-pending_payment → confirmed → checked_in → completed
-                ↘ cancelled
-                ↘ no_show (from confirmed or checked_in)
+confirmed → checked_in → completed
+    ↘ cancelled
+    ↘ no_show (from confirmed or checked_in)
 ```
 
 Always record `cancelledAt`, `cancelledBy`, and `cancellationReason` when moving to `cancelled`.
@@ -116,21 +116,13 @@ function calculatePrice(
 }
 ```
 
-## Deposits
-
-Before confirming a booking, check if a deposit is required:
-1. Check `org_settings.depositRequired`
-2. Check `customer.requiresFullDeposit` (set by no-show risk engine — overrides org setting)
-3. If deposit required → set status to `pending_payment` and trigger a `deposit_request` notification
-4. Only move to `confirmed` once `payment_intent` status is `succeeded`
-
 ## Availability resolution
 
 When computing available slots for a given staff member and date:
 1. Fetch `availability_rules` for that staff + day of week
 2. Fetch `availability_overrides` for that staff + specific date — these take precedence
 3. If override type is `day_off`, return no slots
-4. Subtract existing confirmed/pending bookings (with buffer time from `org_settings.bufferTimeMins`)
+4. Subtract existing active bookings (with buffer time from `org_settings.bufferTimeMins`)
 5. Return remaining slots in `org_settings.slotDurationMins` increments
 
 ## Price snapshot rule

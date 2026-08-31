@@ -4,7 +4,7 @@ import { Plus, CalendarDays, Trash2, Check } from 'lucide-react'
 export const Variants = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
     <Button variant="default">Save changes</Button>
-    <Button variant="terracotta">Book appointment</Button>
+    <Button variant="default">Book appointment</Button>
     <Button variant="secondary">Reschedule</Button>
     <Button variant="outline">Cancel</Button>
     <Button variant="ghost">Dismiss</Button>
@@ -15,7 +15,7 @@ export const Variants = () => (
 
 export const Sizes = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-    <Button size="xs" variant="terracotta">Extra small</Button>
+    <Button size="xs" variant="default">Extra small</Button>
     <Button size="sm">Small</Button>
     <Button size="default">Default</Button>
     <Button size="lg">Large</Button>
@@ -24,7 +24,7 @@ export const Sizes = () => (
 
 export const WithIcons = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-    <Button variant="terracotta"><Plus /> New booking</Button>
+    <Button variant="default"><Plus /> New booking</Button>
     <Button variant="outline"><CalendarDays /> Schedule</Button>
     <Button variant="secondary"><Check /> Confirm</Button>
     <Button size="icon" variant="ghost"><Trash2 /></Button>
@@ -33,7 +33,7 @@ export const WithIcons = () => (
 
 export const States = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-    <Button variant="terracotta">Enabled</Button>
-    <Button variant="terracotta" disabled>Disabled</Button>
+    <Button variant="default">Enabled</Button>
+    <Button variant="default" disabled>Disabled</Button>
   </div>
 )

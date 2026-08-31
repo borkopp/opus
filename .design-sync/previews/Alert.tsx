@@ -14,9 +14,9 @@ export const Default = () => (
 export const Destructive = () => (
   <Alert variant="destructive" style={{ maxWidth: 420 }}>
     <TriangleAlert />
-    <AlertTitle>Payment failed</AlertTitle>
+    <AlertTitle>Booking conflict</AlertTitle>
     <AlertDescription>
-      The deposit couldn't be charged. Ask the client to try another card.
+      The selected time is no longer available. Choose another slot.
     </AlertDescription>
   </Alert>
 )

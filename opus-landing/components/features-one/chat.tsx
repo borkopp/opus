@@ -49,8 +49,8 @@ export function ChatConversation({ className }: { className?: string }) {
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ duration: 0.3, delay: baseDelay }}
                 className={cn(
-                  "flex size-6 shrink-0 flex-col items-center justify-center overflow-hidden rounded-full shadow-sm ring-1 ring-black/5 dark:ring-white/10",
-                  message.avatar === "robot" ? "bg-brand-primary text-white" : "bg-white",
+                  "flex size-6 shrink-0 flex-col items-center justify-center overflow-hidden rounded-full shadow-sm ring-1 ring-border",
+                  message.avatar === "robot" ? "bg-primary text-primary-foreground" : "bg-card",
                 )}
               >
                 {message.avatar === "robot" ? (
@@ -66,8 +66,8 @@ export function ChatConversation({ className }: { className?: string }) {
                 className={cn(
                   "relative max-w-[85%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed shadow-sm ring-1",
                   message.isUser
-                    ? "rounded-br-sm bg-brand-primary text-white ring-brand-primary/20 dark:bg-brand-primary/90"
-                    : "rounded-bl-sm bg-white text-neutral-700 ring-black/5 dark:bg-neutral-800 dark:text-neutral-200 dark:ring-white/10"
+                    ? "rounded-br-sm bg-primary text-primary-foreground ring-primary/20"
+                    : "rounded-bl-sm bg-card text-foreground ring-border"
                 )}
               >
                 {message.text}

@@ -9,14 +9,6 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
   FieldDescription,
   FieldGroup,
@@ -27,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { validateImageFile } from "@/lib/file-validation";
+import { SettingsCard } from "../SettingsCard";
 
 interface IdentityProfileTabProps {
   orgId: Id<"orgs">;
@@ -176,224 +169,221 @@ export function IdentityProfileTab({
 
   return (
     <TabsContent value="branding" className="m-0">
-      <div className="flex max-w-5xl flex-col gap-6">
-        <Card className="overflow-hidden border border-border/60">
-          <CardHeader className="border-b border-border/50 pb-5">
-            <CardTitle>Storefront images</CardTitle>
-            <CardDescription>
-              Your logo and cover are shared by onboarding, Settings, and
-              opus.mk.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-5 pb-6 md:grid-cols-[180px_1fr]">
-            <div className="flex flex-col gap-3">
-              <FieldLabel>Logo</FieldLabel>
-              <button
-                type="button"
-                onClick={handleLogo}
-                className="relative flex aspect-square items-center justify-center overflow-hidden rounded-3xl border bg-secondary"
-              >
-                {branding.logoUrl ? (
-                  <Image
-                    src={branding.logoUrl}
-                    alt="Business logo"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                    sizes="180px"
-                  />
-                ) : (
-                  <Upload />
-                )}
-                {uploading === "logo" && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-background/80">
-                    <Spinner />
-                  </span>
-                )}
-              </button>
-            </div>
-            <div className="flex flex-col gap-3">
-              <FieldLabel>Cover photo</FieldLabel>
-              <div className="relative min-h-52 overflow-hidden rounded-3xl border bg-secondary">
-                {cover ? (
-                  <Image
-                    src={cover.url}
-                    alt="Business cover"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                    sizes="700px"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ImagePlus className="text-muted-foreground" />
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 flex justify-end gap-2 bg-gradient-to-t from-black/60 p-4 pt-10">
-                  {cover && (
-                    <Button
-                      type="button"
-                      size="icon-sm"
-                      variant="destructive"
-                      onClick={() => handleRemove(cover._id)}
-                      aria-label="Remove cover"
-                    >
-                      <Trash2 />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleMedia("cover")}
-                    disabled={uploading === "cover"}
-                  >
-                    {uploading === "cover" && <Spinner />}
-                    {cover ? "Replace" : "Upload cover"}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="overflow-hidden border border-border/60">
-          <CardHeader className="border-b border-border/50 pb-5">
-            <CardTitle>Identity and contact</CardTitle>
-            <CardDescription>
-              Customer-facing information used across the booking experience.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-6">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="settings-name">Business name</FieldLabel>
-                <Input
-                  id="settings-name"
-                  value={branding.name}
-                  onChange={(event) => update("name", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-tagline">Tagline</FieldLabel>
-                <Input
-                  id="settings-tagline"
-                  value={branding.tagline}
-                  onChange={(event) => update("tagline", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-bio">About</FieldLabel>
-                <Textarea
-                  id="settings-bio"
-                  value={branding.bio}
-                  onChange={(event) => update("bio", event.target.value)}
-                />
-              </Field>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="settings-phone">Phone</FieldLabel>
-                  <Input
-                    id="settings-phone"
-                    value={branding.phone}
-                    onChange={(event) => update("phone", event.target.value)}
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="settings-instagram">Instagram</FieldLabel>
-                  <Input
-                    id="settings-instagram"
-                    value={branding.instagramHandle}
-                    onChange={(event) =>
-                      update("instagramHandle", event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="settings-page-id">
-                    Instagram page ID
-                  </FieldLabel>
-                  <Input
-                    id="settings-page-id"
-                    value={branding.instagramPageId}
-                    onChange={(event) =>
-                      update("instagramPageId", event.target.value)
-                    }
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="settings-website">Website</FieldLabel>
-                  <Input
-                    id="settings-website"
-                    value={branding.websiteUrl}
-                    onChange={(event) => update("websiteUrl", event.target.value)}
-                  />
-                </Field>
-              </div>
-            </FieldGroup>
-          </CardContent>
-          <CardFooter className="justify-end border-t border-border/50 bg-card py-4">
-            <Button
+      <div className="flex flex-col gap-6">
+        <SettingsCard
+          title="Storefront images"
+          description="Your logo and cover are shared by onboarding, Settings, and opus.mk."
+          contentClassName="grid gap-6 md:grid-cols-[180px_1fr]"
+        >
+          <div className="flex flex-col gap-3">
+            <FieldLabel>Logo</FieldLabel>
+            <button
               type="button"
-              onClick={handleSave}
-              disabled={isSaving}
+              onClick={handleLogo}
+              aria-label="Upload business logo"
+              className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border bg-secondary outline-none transition-colors hover:bg-secondary/80 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              {isSaving ? <Spinner /> : <Save />}
-              Save profile
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <Card className="overflow-hidden border border-border/60">
-          <CardHeader className="border-b border-border/50 pb-5">
-            <CardTitle>Gallery</CardTitle>
-            <CardDescription>
-              Optional photos of your space, team, or work.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4 pb-6">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {gallery.map((item) => (
-                <div
-                  key={item._id}
-                  className="group relative aspect-square overflow-hidden rounded-2xl border"
-                >
-                  <Image
-                    src={item.url}
-                    alt=""
-                    fill
-                    unoptimized
-                    className="object-cover"
-                    sizes="180px"
-                  />
+              {branding.logoUrl ? (
+                <Image
+                  src={branding.logoUrl}
+                  alt="Business logo"
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  sizes="180px"
+                />
+              ) : (
+                <Upload />
+              )}
+              {uploading === "logo" && (
+                <span className="absolute inset-0 flex items-center justify-center bg-background/80">
+                  <Spinner />
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="flex flex-col gap-3">
+            <FieldLabel>Cover photo</FieldLabel>
+            <div className="relative min-h-52 overflow-hidden rounded-3xl border bg-secondary">
+              {cover ? (
+                <Image
+                  src={cover.url}
+                  alt="Business cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  sizes="700px"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ImagePlus className="text-muted-foreground" />
+                </div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 flex justify-end gap-2 bg-gradient-to-t from-black/60 p-4 pt-10">
+                {cover && (
                   <Button
                     type="button"
                     size="icon-sm"
                     variant="destructive"
-                    className="absolute right-2 top-2"
-                    onClick={() => handleRemove(item._id)}
-                    aria-label="Remove gallery photo"
+                    onClick={() => handleRemove(cover._id)}
+                    aria-label="Remove cover"
                   >
-                    <Trash2 />
+                    <Trash2 data-icon="inline-start" />
                   </Button>
-                </div>
-              ))}
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => handleMedia("cover")}
+                  disabled={uploading === "cover"}
+                >
+                  {uploading === "cover" && (
+                    <Spinner data-icon="inline-start" />
+                  )}
+                  {uploading === "cover"
+                    ? "Uploading…"
+                    : cover
+                      ? "Replace"
+                      : "Upload cover"}
+                </Button>
+              </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleMedia("gallery")}
-              disabled={uploading === "gallery"}
-              className="self-start"
-            >
-              {uploading === "gallery" ? <Spinner /> : <ImagePlus />}
-              Add gallery photos
+          </div>
+        </SettingsCard>
+
+        <SettingsCard
+          title="Identity and contact"
+          description="Customer-facing information used across the booking experience."
+          footer={
+            <Button type="button" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Save data-icon="inline-start" />
+              )}
+              {isSaving ? "Saving…" : "Save profile"}
             </Button>
-            <FieldDescription>
-              Images are soft-deleted so audit history remains intact.
-            </FieldDescription>
-          </CardContent>
-        </Card>
+          }
+        >
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="settings-name">Business name</FieldLabel>
+              <Input
+                id="settings-name"
+                value={branding.name}
+                onChange={(event) => update("name", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-tagline">Tagline</FieldLabel>
+              <Input
+                id="settings-tagline"
+                value={branding.tagline}
+                onChange={(event) => update("tagline", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="settings-bio">About</FieldLabel>
+              <Textarea
+                id="settings-bio"
+                value={branding.bio}
+                onChange={(event) => update("bio", event.target.value)}
+              />
+            </Field>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="settings-phone">Phone</FieldLabel>
+                <Input
+                  id="settings-phone"
+                  value={branding.phone}
+                  onChange={(event) => update("phone", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-instagram">Instagram</FieldLabel>
+                <Input
+                  id="settings-instagram"
+                  value={branding.instagramHandle}
+                  onChange={(event) =>
+                    update("instagramHandle", event.target.value)
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-page-id">
+                  Instagram page ID
+                </FieldLabel>
+                <Input
+                  id="settings-page-id"
+                  value={branding.instagramPageId}
+                  onChange={(event) =>
+                    update("instagramPageId", event.target.value)
+                  }
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="settings-website">Website</FieldLabel>
+                <Input
+                  id="settings-website"
+                  value={branding.websiteUrl}
+                  onChange={(event) => update("websiteUrl", event.target.value)}
+                />
+              </Field>
+            </div>
+          </FieldGroup>
+        </SettingsCard>
+
+        <SettingsCard
+          title="Gallery"
+          description="Optional photos of your space, team, or work."
+          contentClassName="flex flex-col gap-4"
+        >
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {gallery.map((item) => (
+              <div
+                key={item._id}
+                className="group relative aspect-square overflow-hidden rounded-2xl border"
+              >
+                <Image
+                  src={item.url}
+                  alt=""
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  sizes="180px"
+                />
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="destructive"
+                  className="absolute right-2 top-2"
+                  onClick={() => handleRemove(item._id)}
+                  aria-label="Remove gallery photo"
+                >
+                  <Trash2 data-icon="inline-start" />
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleMedia("gallery")}
+            disabled={uploading === "gallery"}
+            className="self-start"
+          >
+            {uploading === "gallery" ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <ImagePlus data-icon="inline-start" />
+            )}
+            {uploading === "gallery" ? "Uploading…" : "Add gallery photos"}
+          </Button>
+          <FieldDescription>
+            Images are soft-deleted so audit history remains intact.
+          </FieldDescription>
+        </SettingsCard>
       </div>
     </TabsContent>
   );

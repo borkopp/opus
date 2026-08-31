@@ -39,13 +39,23 @@ export async function computeSlotsForDate(
         const assignedStaff = service.staffIds;
         for (const id of assignedStaff) {
             const s = await ctx.db.get(id);
-            if (s && !s.isDeleted && s.isActive) {
+            if (s && s.orgId === orgId && !s.isDeleted && s.isActive) {
                 staffMembersToProcess.push(id);
             }
         }
         if (staffMembersToProcess.length === 0) return [];
     } else {
-        staffMembersToProcess.push(staffId as Id<"staff_members">);
+        const selectedStaff = await ctx.db.get(staffId);
+        if (
+            !selectedStaff ||
+            selectedStaff.orgId !== orgId ||
+            selectedStaff.isDeleted ||
+            !selectedStaff.isActive ||
+            !service.staffIds.includes(staffId)
+        ) {
+            return [];
+        }
+        staffMembersToProcess.push(staffId);
     }
 
     const dateObj = new Date(date + "T00:00:00");

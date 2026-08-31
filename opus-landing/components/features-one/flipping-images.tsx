@@ -36,27 +36,27 @@ const items = [
     message: "Термин кај Марко за 1 час",
     time: "14:30",
     icon: <Bell className="size-8" />,
-    color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-500",
+    color: "bg-highlight/15 text-warning",
   },
   {
     type: "Резервација",
     message: "Нов термин од Ана",
     time: "Закажано: 18:00",
     icon: <CalendarCheck className="size-8" />,
-    color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-500",
+    color: "bg-success/15 text-success",
   },
 ];
 
 const NotificationCard = ({ item, isGrayscale }: { item: typeof items[0], isGrayscale?: boolean }) => (
-  <div className={cn("flex h-full w-full flex-col justify-center items-center gap-4 bg-white p-6 dark:bg-neutral-800", isGrayscale ? "grayscale opacity-40 blur-[1px]" : "")}>
+  <div className={cn("flex h-full w-full flex-col justify-center items-center gap-4 bg-card p-6", isGrayscale ? "grayscale opacity-40 blur-[1px]" : "")}>
     <div className={cn("flex size-16 items-center justify-center rounded-full", item.color)}>
       {item.icon}
     </div>
     <div className="text-center">
-      <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{item.type}</div>
-      <div className="mt-1 px-2 text-xs text-balance text-neutral-500 dark:text-neutral-400">{item.message}</div>
+      <div className="text-sm font-semibold text-foreground">{item.type}</div>
+      <div className="mt-1 px-2 text-xs text-balance text-muted-foreground">{item.message}</div>
     </div>
-    <div className="mt-1 rounded-full bg-neutral-100 px-3 py-1 text-[10px] font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300">
+    <div className="mt-1 rounded-full bg-muted px-3 py-1 text-[10px] font-medium text-muted-foreground">
       {item.time}
     </div>
   </div>
@@ -124,12 +124,12 @@ export function FlippingImagesWithBar() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="relative h-60 w-52 rounded-lg bg-gray-200 p-4 dark:bg-neutral-800/50">
+      <div className="relative h-60 w-52 rounded-lg bg-muted p-4 dark:bg-secondary/50">
         <GridLineHorizontal className="top-0" offset="200px" />
         <GridLineHorizontal className="top-auto bottom-0" offset="200px" />
         <GridLineVertical className="left-0" offset="80px" />
         <GridLineVertical className="right-0 left-auto" offset="80px" />
-        <div className="relative h-full w-full overflow-hidden rounded-lg bg-white shadow-sm ring-1 shadow-black/10 ring-black/5 dark:bg-neutral-800">
+        <div className="relative h-full w-full overflow-hidden rounded-lg bg-card shadow-sm ring-1 shadow-foreground/10 ring-foreground/5 dark:bg-secondary">
           <AnimatePresence mode="popLayout">
             <motion.div
               key={currentIndex}
@@ -167,7 +167,7 @@ export function FlippingImagesWithBar() {
                   style={{
                     left: `${barProgress * 100}%`,
                     boxShadow:
-                      "0 0 20px rgba(206, 93, 69, 0.9), 0 0 40px rgba(206, 93, 69, 0.7), 0 0 60px rgba(206, 93, 69, 0.5)",
+                      "0 0 20px color-mix(in srgb, var(--brand) 90%, transparent), 0 0 40px color-mix(in srgb, var(--brand) 70%, transparent), 0 0 60px color-mix(in srgb, var(--brand) 50%, transparent)",
                   }}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

@@ -15,7 +15,6 @@ export function MessageBubble({ message }: { message: Message }) {
       booking_created: "Booking created",
       booking_cancelled: "Booking cancelled",
       booking_rescheduled: "Booking rescheduled",
-      payment_link_sent: "Payment link sent",
       handoff_triggered: "Handed off to human",
     };
     return (
@@ -47,8 +46,8 @@ export function MessageBubble({ message }: { message: Message }) {
           <span className={cn(
             "text-[10px] font-medium px-1.5 py-0.5 rounded",
             message.confidenceScore >= 0.7
-              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+              ? "bg-success/10 text-success"
+              : "bg-highlight/15 text-warning"
           )}>
             {Math.round(message.confidenceScore * 100)}% confident
           </span>

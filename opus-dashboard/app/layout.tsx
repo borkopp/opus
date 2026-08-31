@@ -1,53 +1,31 @@
 import type { Metadata } from "next";
-// import { Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import {
-  Syne,
-  DM_Sans,
-  DM_Mono,
-  Outfit,
-  Playfair_Display,
+  Commissioner,
+  Manrope,
+  IBM_Plex_Mono,
 } from "next/font/google";
 
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  variable: "--font-syne",
-});
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-dm-sans",
-});
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-dm-mono",
-});
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-outfit",
-});
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  style: "italic",
-  variable: "--font-playfair",
+const commissioner = Commissioner({
+  subsets: ["latin", "cyrillic"],
+  weight: ["500", "600", "700"],
+  variable: "--font-commissioner",
 });
 
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+const manrope = Manrope({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+});
 
-// const figtree = Figtree({
-//   variable: "--font-figtree",
-//   subsets: ["latin"],
-// });
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400", "500"],
+  variable: "--font-ibm-plex-mono",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -66,9 +44,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="mk" suppressHydrationWarning>
       <body
-        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable} ${outfit.variable} ${playfair.variable} font-sans antialiased`}
+        className={`${commissioner.variable} ${manrope.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

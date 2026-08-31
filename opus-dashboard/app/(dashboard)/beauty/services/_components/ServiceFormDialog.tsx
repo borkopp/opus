@@ -1,384 +1,635 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Id } from "@/convex/_generated/dataModel";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { IconLoader2, IconUpload, IconX } from "@tabler/icons-react";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+  AlertCircleIcon,
+  ChevronDownIcon,
+  ImageIcon,
+  UploadIcon,
+  XIcon,
+} from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRef } from "react";
-import { getErrorMessage, readStorageId, validateImageFile } from "@/lib/file-validation";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import {
+  getErrorMessage,
+  readStorageId,
+  validateImageFile,
+} from "@/lib/file-validation";
+import { cn } from "@/lib/utils";
 
 export function ServiceFormDialog({
-    orgId,
-    serviceId,
-    initialCategoryId,
-    open,
-    onOpenChange,
+  orgId,
+  serviceId,
+  initialCategoryId,
+  open,
+  onOpenChange,
 }: {
-    orgId: Id<"orgs">;
-    serviceId?: Id<"services">;
-    initialCategoryId?: Id<"service_categories">;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+  orgId: Id<"orgs">;
+  serviceId?: Id<"services">;
+  initialCategoryId?: Id<"service_categories">;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
-    const isEdit = !!serviceId;
+  const isEdit = Boolean(serviceId);
 
-    const existingService = useQuery(
-        api.services.getService,
-        serviceId ? { orgId, serviceId } : "skip"
-    );
-    const orgSettings = useQuery(api.services.getOrgSettings, { orgId });
-    const categories = useQuery(api.serviceCategories.listCategories, { orgId });
-    const staffMembers = useQuery(api.staff.listStaffMembers, { orgId });
+  const existingService = useQuery(
+    api.services.getService,
+    serviceId ? { orgId, serviceId } : "skip",
+  );
+  const orgSettings = useQuery(api.services.getOrgSettings, { orgId });
+  const categories = useQuery(api.serviceCategories.listCategories, { orgId });
+  const staffMembers = useQuery(api.staff.listStaffMembers, { orgId });
+  const allServices = useQuery(api.services.listServices, { orgId });
 
-    const createService = useMutation(api.services.createService);
-    const updateService = useMutation(api.services.updateService);
-    const generateUploadUrl = useMutation(api.files.generateUploadUrl);
-    const allServices = useQuery(api.services.listServices, { orgId });
+  const createService = useMutation(api.services.createService);
+  const updateService = useMutation(api.services.updateService);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
-    const [name, setName] = useState("");
-    const [description, setDescription] = useState("");
-    const [durationMins, setDurationMins] = useState("");
-    const [priceMinorUnits, setPriceMinorUnits] = useState(""); // Represented in string in form but converted
-    const [categoryId, setCategoryId] = useState<string>("uncategorized");
-    const [staffIds, setStaffIds] = useState<string[]>([]);
-    const [photoUrl, setPhotoUrl] = useState("");
-    const [isActive, setIsActive] = useState(true);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [durationMins, setDurationMins] = useState("");
+  const [price, setPrice] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("uncategorized");
+  const [staffIds, setStaffIds] = useState<string[]>([]);
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [isActive, setIsActive] = useState(true);
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const [showStaffOptions, setShowStaffOptions] = useState(false);
 
-    const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [error, setError] = useState("");
-    const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState("");
 
-    useEffect(() => {
-        if (!isEdit && initialCategoryId) {
-            setCategoryId(initialCategoryId);
-        }
-    }, [isEdit, initialCategoryId]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const initializedForOpenRef = useRef(false);
 
-    useEffect(() => {
-        if (isEdit && existingService) {
-            setName(existingService.name);
-            setDescription(existingService.description || "");
-            setDurationMins(existingService.durationMins.toString());
-            setPriceMinorUnits((existingService.priceMinorUnits / 100).toFixed(2));
-            setCategoryId(existingService.categoryId || "uncategorized");
-            setStaffIds(existingService.staffIds);
-            setPhotoUrl(existingService.photoUrl || "");
-            setIsActive(existingService.isActive ?? true);
-        } else if (!isEdit) {
-            // defaults
-            setDurationMins(orgSettings?.slotDurationMins?.toString() || "15");
-            if (staffMembers && staffIds.length === 0) {
-                // Auto-select all staff by default for a new service
-                setStaffIds(staffMembers.map(s => s._id));
-            }
-        }
-    }, [isEdit, existingService, orgSettings, staffMembers, open, staffIds.length]); // trigger on open so defaults apply
-
-    const toggleStaffId = (id: string, checked: boolean) => {
-        if (checked) setStaffIds(prev => [...prev, id]);
-        else setStaffIds(prev => prev.filter(s => s !== id));
-    };
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const validationError = validateImageFile(file, 2);
-        if (validationError) {
-            setError(validationError);
-            return;
-        }
-
-        setIsUploading(true);
-        setError("");
-
-        try {
-            const postUrl = await generateUploadUrl({ orgId });
-            const result = await fetch(postUrl, {
-                method: "POST",
-                headers: { "Content-Type": file.type },
-                body: file,
-            });
-
-            if (!result.ok) throw new Error("Upload failed");
-
-            setPhotoUrl(readStorageId(await result.json()));
-        } catch (error: unknown) {
-            setError(getErrorMessage(error, "Failed to upload image"));
-        } finally {
-            setIsUploading(false);
-        }
-    };
-
-    const getImageUrl = (urlOrId: string) => {
-        if (!urlOrId) return undefined;
-        if (urlOrId.startsWith("http")) return urlOrId;
-        return `https://${process.env.NEXT_PUBLIC_CONVEX_URL?.split('//')[1]}/api/storage/${urlOrId}`;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-
-        if (!name.trim()) return setError("Name is required");
-        if (!durationMins || parseInt(durationMins) <= 0) return setError("Duration must be greater than 0");
-        if (staffIds.length === 0) return setError("Select at least one staff member who can perform this service");
-
-        const priceNum = Math.round(parseFloat(priceMinorUnits) * 100);
-        if (isNaN(priceNum) || priceNum < 0) return setError("Invalid price");
-
-        setIsSaving(true);
-
-        try {
-            const catId = categoryId === "uncategorized" ? undefined : (categoryId as Id<"service_categories">);
-            const isStorageId = photoUrl && !photoUrl.startsWith("http");
-
-            if (isEdit && serviceId) {
-                await updateService({
-                    orgId,
-                    serviceId: serviceId as Id<"services">,
-                    name: name.trim(),
-                    description: description.trim() || undefined,
-                    durationMins: parseInt(durationMins),
-                    priceMinorUnits: priceNum,
-                    currency: orgSettings?.currency || "USD",
-                    categoryId: catId || null,
-                    staffIds: staffIds as Id<"staff_members">[],
-                    storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
-                    photoUrl: !isStorageId ? photoUrl : undefined,
-                    isActive,
-                });
-            } else {
-                // To safely get sort order, list logic:
-                const groupServices = allServices?.filter(s => s.categoryId === catId) || [];
-                const maxOrder = groupServices.length > 0 ? Math.max(...groupServices.map(s => s.sortOrder)) : 0;
-
-                await createService({
-                    orgId,
-                    name: name.trim(),
-                    description: description.trim() || undefined,
-                    durationMins: parseInt(durationMins),
-                    priceMinorUnits: priceNum,
-                    currency: orgSettings?.currency || "USD",
-                    categoryId: catId,
-                    staffIds: staffIds as Id<"staff_members">[],
-                    storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
-                    photoUrl: !isStorageId ? photoUrl : undefined,
-                    sortOrder: maxOrder + 1,
-                });
-            }
-            onOpenChange(false);
-        } catch (error: unknown) {
-            setError(getErrorMessage(error, "Failed to save service"));
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    if (orgSettings === undefined || orgSettings === null || categories === undefined || staffMembers === undefined || (isEdit && existingService === undefined)) {
-        return (
-            <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <div className="flex flex-col gap-4 py-8 items-center justify-center">
-                        <IconLoader2 className="animate-spin text-muted-foreground w-8 h-8" />
-                    </div>
-                </DialogContent>
-            </Dialog>
-        );
+  useEffect(() => {
+    if (!open) {
+      initializedForOpenRef.current = false;
+      return;
     }
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{isEdit ? "Edit Service" : "Add Service"}</DialogTitle>
-                    <DialogDescription>
-                        {isEdit ? "Update service details, pricing, and staff assignments." : "Create a new bookable service for your clients."}
-                    </DialogDescription>
-                </DialogHeader>
+    if (
+      initializedForOpenRef.current ||
+      orgSettings === undefined ||
+      categories === undefined ||
+      staffMembers === undefined ||
+      (isEdit && existingService === undefined)
+    ) {
+      return;
+    }
 
-                <form id="service-form" onSubmit={handleSubmit} className="flex flex-col gap-6 py-4">
+    if (isEdit && existingService) {
+      setName(existingService.name);
+      setDescription(existingService.description || "");
+      setDurationMins(existingService.durationMins.toString());
+      setPrice((existingService.priceMinorUnits / 100).toFixed(2));
+      setCategoryId(existingService.categoryId || "uncategorized");
+      setStaffIds(existingService.staffIds);
+      setPhotoUrl(existingService.photoUrl || "");
+      setIsActive(existingService.isActive ?? true);
+      setShowOptionalDetails(false);
+      setShowStaffOptions(existingService.staffIds.length === 0);
+    } else if (!isEdit) {
+      setName("");
+      setDescription("");
+      setDurationMins(orgSettings?.slotDurationMins?.toString() || "15");
+      setPrice("");
+      setCategoryId(initialCategoryId || "uncategorized");
+      setStaffIds(staffMembers.map((staffMember) => staffMember._id));
+      setPhotoUrl("");
+      setIsActive(true);
+      setShowOptionalDetails(false);
+      setShowStaffOptions(false);
+    }
 
-                    {/* Image Upload */}
-                    <div className="flex flex-col gap-3 p-4 rounded-xl border bg-muted/20">
-                        <Label>Service Photo (Optional)</Label>
-                        <div className="flex items-center gap-4">
-                            <div className="relative group">
-                                <Avatar className="h-20 w-32 rounded-lg border bg-background shadow-sm overflow-hidden">
-                                    <AvatarImage src={getImageUrl(photoUrl)} alt="Service Photo" className="object-cover" />
-                                    <AvatarFallback className="rounded-none bg-muted flex items-center justify-center">
-                                        <IconUpload size={24} className="text-muted-foreground/40" />
-                                    </AvatarFallback>
-                                </Avatar>
-                                {photoUrl && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setPhotoUrl("")}
-                                        className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <IconX size={12} />
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleUpload}
-                                />
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    className="rounded-lg"
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={isUploading}
-                                >
-                                    {isUploading ? (
-                                        <IconLoader2 className="animate-spin w-4 h-4 mr-2" />
-                                    ) : (
-                                        <IconUpload size={16} className="mr-2" />
-                                    )}
-                                    {photoUrl ? "Change Image" : "Upload Photo"}
-                                </Button>
-                                <p className="text-[10px] text-muted-foreground">
-                                    Recommended: 800x500px, max 2MB
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+    setError("");
+    initializedForOpenRef.current = true;
+  }, [
+    categories,
+    existingService,
+    initialCategoryId,
+    isEdit,
+    open,
+    orgSettings,
+    staffMembers,
+  ]);
 
-                    {/* Basic Details */}
-                    <div className="flex flex-col gap-4 p-4 rounded-xl border bg-muted/20">
-                        <h4 className="text-sm font-semibold text-foreground">Basic Details</h4>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="name">Service Name <span className="text-red-500">*</span></Label>
-                                <Input id="name" required value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Wash & Cut" />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="categoryId">Category</Label>
-                                <select
-                                    id="categoryId"
-                                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={categoryId}
-                                    onChange={e => setCategoryId(e.target.value)}
-                                >
-                                    <option value="uncategorized">No Category (Uncategorized)</option>
-                                    {categories.map(cat => (
-                                        <option key={cat._id} value={cat._id}>{cat.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <Label htmlFor="description">Description (Optional)</Label>
-                            <Textarea id="description" className="min-h-[60px]" value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description visible to customers..." />
-                        </div>
-                    </div>
-
-                    {/* Rules & Pricing */}
-                    <div className="flex flex-col gap-4 p-4 rounded-xl border bg-muted/20">
-                        <h4 className="text-sm font-semibold text-foreground">Pricing & Duration</h4>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="duration">Duration (minutes) <span className="text-red-500">*</span></Label>
-                                <div className="flex items-center gap-2">
-                                    <Input
-                                        id="duration"
-                                        type="number"
-                                        required
-                                        min={orgSettings.slotDurationMins}
-                                        step={orgSettings.slotDurationMins}
-                                        value={durationMins}
-                                        onChange={e => setDurationMins(e.target.value)}
-                                        placeholder={`e.g. ${orgSettings.slotDurationMins}`}
-                                    />
-                                    <span className="text-xs text-muted-foreground whitespace-nowrap">Step: {orgSettings.slotDurationMins}m</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <Label htmlFor="price">Price ({orgSettings.currency || 'USD'}) <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="price"
-                                    type="number"
-                                    required
-                                    min="0"
-                                    step="0.01"
-                                    value={priceMinorUnits}
-                                    onChange={e => setPriceMinorUnits(e.target.value)}
-                                    placeholder="e.g. 25.00"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Staff Assignments */}
-                    <div className="flex flex-col gap-3 p-4 rounded-xl border bg-muted/20">
-                        <h4 className="text-sm font-semibold text-foreground">Who can perform this service? <span className="text-red-500">*</span></h4>
-                        <p className="text-xs text-muted-foreground -mt-1 mb-1">Select all staff members qualified to offer this service.</p>
-
-                        {staffMembers.length === 0 ? (
-                            <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded-lg">You have no staff members yet. Please add staff before assigning services.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[140px] overflow-y-auto p-1">
-                                {staffMembers.map(staff => (
-                                    <div key={staff._id} className="flex items-center space-x-2 border rounded-lg p-2.5 bg-background shadow-sm">
-                                        <Checkbox
-                                            id={`staff-${staff._id}`}
-                                            checked={staffIds.includes(staff._id)}
-                                            onCheckedChange={(c) => toggleStaffId(staff._id, !!c)}
-                                        />
-                                        <Label htmlFor={`staff-${staff._id}`} className="flex-1 font-medium cursor-pointer truncate">
-                                            {staff.displayName} <span className="text-muted-foreground font-normal ml-1 capitalize">({staff.role})</span>
-                                        </Label>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Status (Edit Only) */}
-                    {isEdit && (
-                        <div className="flex items-center space-x-2 rounded-lg border p-3 shadow-sm bg-background">
-                            <Checkbox id="isActive" checked={isActive} onCheckedChange={(c) => setIsActive(!!c)} />
-                            <Label htmlFor="isActive" className="font-medium cursor-pointer">
-                                Service is Active (Available for booking)
-                            </Label>
-                        </div>
-                    )}
-
-                    {error && <p className="text-sm text-destructive font-medium bg-red-50 p-3 rounded-lg border border-red-200">{error}</p>}
-                </form>
-
-                <DialogFooter className="mt-4 border-t pt-4">
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSaving}>Cancel</Button>
-                    <Button type="submit" form="service-form" disabled={isSaving || isUploading}>
-                        {isSaving && <IconLoader2 className="animate-spin w-4 h-4 mr-2" />}
-                        {isEdit ? "Save Changes" : "Create Service"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+  const toggleStaffId = (id: string, checked: boolean) => {
+    setStaffIds((currentStaffIds) =>
+      checked
+        ? [...currentStaffIds, id]
+        : currentStaffIds.filter((staffId) => staffId !== id),
     );
+  };
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validationError = validateImageFile(file, 2);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsUploading(true);
+    setError("");
+
+    try {
+      const postUrl = await generateUploadUrl({ orgId });
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!result.ok) throw new Error("Upload failed");
+      setPhotoUrl(readStorageId(await result.json()));
+    } catch (uploadError: unknown) {
+      setError(getErrorMessage(uploadError, "Could not upload image"));
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  };
+
+  const getImageUrl = (urlOrId: string) => {
+    if (!urlOrId) return undefined;
+    if (urlOrId.startsWith("http")) return urlOrId;
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(/\/$/, "");
+    return convexUrl ? `${convexUrl}/api/storage/${urlOrId}` : undefined;
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+
+    if (!name.trim()) {
+      setError("Enter a service name.");
+      return;
+    }
+
+    const duration = Number.parseInt(durationMins, 10);
+    if (!duration || duration <= 0) {
+      setError("Enter a valid duration.");
+      return;
+    }
+
+    if (staffIds.length === 0) {
+      setShowStaffOptions(true);
+      setError("Choose at least one staff member.");
+      return;
+    }
+
+    const priceMinorUnits = Math.round(Number.parseFloat(price) * 100);
+    if (Number.isNaN(priceMinorUnits) || priceMinorUnits < 0) {
+      setError("Enter a valid price.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const selectedCategoryId =
+        categoryId === "uncategorized"
+          ? undefined
+          : (categoryId as Id<"service_categories">);
+      const isStorageId = photoUrl && !photoUrl.startsWith("http");
+
+      if (isEdit && serviceId) {
+        await updateService({
+          orgId,
+          serviceId,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          durationMins: duration,
+          priceMinorUnits,
+          currency: orgSettings?.currency || "USD",
+          categoryId: selectedCategoryId || null,
+          staffIds: staffIds as Id<"staff_members">[],
+          storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
+          photoUrl: !isStorageId ? photoUrl : undefined,
+          isActive,
+        });
+      } else {
+        const groupServices =
+          allServices?.filter(
+            (service) => service.categoryId === selectedCategoryId,
+          ) || [];
+        const maxOrder =
+          groupServices.length > 0
+            ? Math.max(...groupServices.map((service) => service.sortOrder))
+            : 0;
+
+        await createService({
+          orgId,
+          name: name.trim(),
+          description: description.trim() || undefined,
+          durationMins: duration,
+          priceMinorUnits,
+          currency: orgSettings?.currency || "USD",
+          categoryId: selectedCategoryId,
+          staffIds: staffIds as Id<"staff_members">[],
+          storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
+          photoUrl: !isStorageId ? photoUrl : undefined,
+          sortOrder: maxOrder + 1,
+        });
+      }
+
+      onOpenChange(false);
+    } catch (saveError: unknown) {
+      setError(getErrorMessage(saveError, "Could not save service"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const isLoading =
+    orgSettings === undefined ||
+    categories === undefined ||
+    staffMembers === undefined ||
+    (isEdit && existingService === undefined);
+
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Loading service</DialogTitle>
+            <DialogDescription className="sr-only">
+              Loading service details.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-12">
+            <Spinner />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (orgSettings === null || (isEdit && existingService === null)) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Service unavailable</DialogTitle>
+            <DialogDescription>
+              This service could not be loaded. Close this window and try again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => onOpenChange(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const allStaffSelected = staffIds.length === staffMembers.length;
+  const staffSummary =
+    staffMembers.length === 0
+      ? "Add a staff member before creating this service."
+      : allStaffSelected
+        ? staffMembers.length === 1
+          ? staffMembers[0].displayName
+          : `All ${staffMembers.length} staff members`
+        : staffIds.length === 0
+          ? "No staff selected"
+          : `${staffIds.length} of ${staffMembers.length} staff members`;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit service" : "Add service"}</DialogTitle>
+          <DialogDescription>
+            {isEdit
+              ? "Update what customers can book."
+              : "Set the name, time, price, and who can provide it."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form
+          id="service-form"
+          onSubmit={handleSubmit}
+          className="-mr-2 overflow-y-auto pr-2"
+        >
+          <FieldGroup className="gap-5 py-1">
+            <Field>
+              <FieldLabel htmlFor="service-name">Service name</FieldLabel>
+              <Input
+                id="service-name"
+                required
+                autoFocus={!isEdit}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="e.g. Gel manicure"
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field>
+                <FieldLabel htmlFor="service-duration">
+                  Duration (min)
+                </FieldLabel>
+                <Input
+                  id="service-duration"
+                  type="number"
+                  inputMode="numeric"
+                  required
+                  min={orgSettings.slotDurationMins}
+                  step={orgSettings.slotDurationMins}
+                  value={durationMins}
+                  onChange={(event) => setDurationMins(event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="service-price">
+                  Price ({orgSettings.currency || "USD"})
+                </FieldLabel>
+                <Input
+                  id="service-price"
+                  type="number"
+                  inputMode="decimal"
+                  required
+                  min="0"
+                  step="0.01"
+                  value={price}
+                  onChange={(event) => setPrice(event.target.value)}
+                  placeholder="0.00"
+                />
+              </Field>
+            </div>
+
+            {categories.length > 0 && (
+              <Field>
+                <FieldLabel htmlFor="service-category">Category</FieldLabel>
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger id="service-category" className="w-full">
+                    <SelectValue placeholder="Choose a category" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectGroup>
+                      <SelectItem value="uncategorized">No category</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category._id} value={category._id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            )}
+
+            <Field
+              orientation="horizontal"
+              variant="surface"
+              data-invalid={staffIds.length === 0}
+            >
+              <FieldContent>
+                <FieldTitle>Staff</FieldTitle>
+                <FieldDescription>{staffSummary}</FieldDescription>
+              </FieldContent>
+              {staffMembers.length > 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowStaffOptions((current) => !current)}
+                >
+                  {showStaffOptions ? "Done" : "Change"}
+                </Button>
+              )}
+            </Field>
+
+            {staffMembers.length === 0 ? (
+              <Alert>
+                <AlertCircleIcon />
+                <AlertTitle>No staff members</AlertTitle>
+                <AlertDescription>
+                  Add a staff member before creating a bookable service.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              showStaffOptions && (
+                <FieldSet>
+                  <FieldLegend variant="label" className="sr-only">
+                    Staff members
+                  </FieldLegend>
+                  <FieldGroup className="gap-2">
+                    {staffMembers.map((staffMember) => (
+                      <Field
+                        key={staffMember._id}
+                        orientation="horizontal"
+                        variant="surface"
+                      >
+                        <Checkbox
+                          id={`staff-${staffMember._id}`}
+                          checked={staffIds.includes(staffMember._id)}
+                          onCheckedChange={(checked) =>
+                            toggleStaffId(staffMember._id, checked === true)
+                          }
+                        />
+                        <FieldLabel
+                          htmlFor={`staff-${staffMember._id}`}
+                          className="font-normal"
+                        >
+                          {staffMember.displayName}
+                        </FieldLabel>
+                      </Field>
+                    ))}
+                  </FieldGroup>
+                  {staffIds.length === 0 && (
+                    <FieldError>Choose at least one staff member.</FieldError>
+                  )}
+                </FieldSet>
+              )
+            )}
+
+            {isEdit && (
+              <Field orientation="horizontal" variant="surface">
+                <FieldContent>
+                  <FieldLabel htmlFor="service-active">
+                    Available for booking
+                  </FieldLabel>
+                  <FieldDescription>
+                    Customers can choose this service.
+                  </FieldDescription>
+                </FieldContent>
+                <Switch
+                  id="service-active"
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                />
+              </Field>
+            )}
+
+            <div className="rounded-lg border">
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full justify-between border-0"
+                aria-expanded={showOptionalDetails}
+                onClick={() =>
+                  setShowOptionalDetails((currentValue) => !currentValue)
+                }
+              >
+                <ImageIcon data-icon="inline-start" />
+                <span className="mr-auto">Photo and description</span>
+                <ChevronDownIcon
+                  data-icon="inline-end"
+                  className={cn(
+                    "transition-transform duration-150",
+                    showOptionalDetails && "rotate-180",
+                  )}
+                />
+              </Button>
+
+              {showOptionalDetails && (
+                <FieldGroup className="gap-5 border-t p-4">
+                  <Field>
+                    <FieldLabel htmlFor="service-description">
+                      Description
+                    </FieldLabel>
+                    <Textarea
+                      id="service-description"
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="A short note customers will see"
+                      className="min-h-20 resize-none"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Photo</FieldLabel>
+                    <div className="flex items-center gap-4">
+                      <div className="relative shrink-0">
+                        <Avatar className="h-20 w-28 rounded-lg border">
+                          <AvatarImage
+                            src={getImageUrl(photoUrl)}
+                            alt={name || "Service preview"}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="rounded-lg">
+                            <ImageIcon />
+                          </AvatarFallback>
+                        </Avatar>
+                        {photoUrl && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon-xs"
+                            aria-label="Remove service photo"
+                            className="absolute -right-2 -top-2"
+                            onClick={() => setPhotoUrl("")}
+                          >
+                            <XIcon />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="flex min-w-0 flex-col items-start gap-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleUpload}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                        >
+                          {isUploading ? (
+                            <Spinner data-icon="inline-start" />
+                          ) : (
+                            <UploadIcon data-icon="inline-start" />
+                          )}
+                          {photoUrl ? "Change photo" : "Upload photo"}
+                        </Button>
+                        <FieldDescription>
+                          JPG or PNG, up to 2 MB.
+                        </FieldDescription>
+                      </div>
+                    </div>
+                  </Field>
+                </FieldGroup>
+              )}
+            </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertTitle>Check the service details</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+          </FieldGroup>
+        </form>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="service-form"
+            className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
+            disabled={isSaving || isUploading || staffMembers.length === 0}
+          >
+            {isSaving && <Spinner data-icon="inline-start" />}
+            {isSaving ? "Saving…" : isEdit ? "Save changes" : "Add service"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }

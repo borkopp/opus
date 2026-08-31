@@ -27,7 +27,7 @@ export function FolderWithFiles({ className }: { className?: string }) {
           {[0, 1, 2, 3, 4].map((i) => (
             <div key={i} className="relative h-px w-full">
               {/* Dashed line */}
-              <div className="absolute inset-0 border-t border-dashed border-neutral-200 dark:border-neutral-700" />
+              <div className="absolute inset-0 border-t border-dashed border-border" />
               {/* Pulse beam */}
               <motion.div
                 className="absolute top-0 h-px w-12 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
@@ -88,7 +88,7 @@ export function FolderWithFiles({ className }: { className?: string }) {
                 return (
                   <motion.div
                     key={index}
-                    className="absolute top-1.5 left-1/2 origin-bottom overflow-hidden rounded bg-white shadow-sm ring-1 shadow-black/10 ring-black/10 dark:bg-neutral-800"
+                    className="absolute top-1.5 left-1/2 origin-bottom overflow-hidden rounded bg-card shadow-sm ring-1 shadow-foreground/10 ring-foreground/10 dark:bg-secondary"
                     animate={{
                       x: `calc(-50% + ${isHovered ? hoverX : 0}px)`,
                       y: isHovered ? hoverY : teaseY,
@@ -136,16 +136,16 @@ export function FolderWithFiles({ className }: { className?: string }) {
             transition={{ duration: 0.4, delay: 0.4 }}
           >
             <div
-              className="relative rounded-lg bg-gradient-to-b from-gray-50 to-gray-50 shadow-sm dark:from-neutral-700 dark:to-neutral-800"
+              className="relative rounded-lg bg-gradient-to-b from-gray-50 to-gray-50 shadow-sm from-muted to-muted"
               style={{ width: 56, height: 72 }}
             >
               {/* Server top panel with vents */}
-              <div className="absolute inset-x-1.5 top-1.5 h-3 rounded-sm bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-900">
+              <div className="absolute inset-x-1.5 top-1.5 h-3 rounded-sm bg-card shadow-sm ring-1 shadow-foreground/5 ring-foreground/5 dark:bg-ink-surface">
                 <div className="flex h-full items-center justify-center gap-0.5">
                   {[0, 1, 2, 3, 4, 5].map((i) => (
                     <div
                       key={i}
-                      className="h-1.5 w-px bg-neutral-600 dark:bg-neutral-700"
+                      className="h-1.5 w-px bg-muted-foreground"
                     />
                   ))}
                 </div>
@@ -156,9 +156,9 @@ export function FolderWithFiles({ className }: { className?: string }) {
                 {[0, 1].map((i) => (
                   <div
                     key={i}
-                    className="h-4 rounded-sm bg-white shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
+                    className="h-4 rounded-sm bg-card shadow-sm ring-1 shadow-foreground/5 ring-foreground/5 dark:bg-secondary dark:ring-primary-foreground/10"
                   >
-                    <div className="mt-1 ml-1 h-0.5 w-3 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+                    <div className="mt-1 ml-1 h-0.5 w-3 rounded-full bg-border dark:bg-muted-foreground" />
                   </div>
                 ))}
               </div>

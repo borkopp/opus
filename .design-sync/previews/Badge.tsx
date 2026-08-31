@@ -14,8 +14,8 @@ export const Variants = () => (
 
 export const StatusWithIcons = () => (
   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
-    <Badge variant="default"><Check /> Paid</Badge>
-    <Badge variant="secondary"><Clock /> Awaiting deposit</Badge>
+    <Badge variant="default"><Check /> Confirmed</Badge>
+    <Badge variant="secondary"><Clock /> Upcoming</Badge>
     <Badge variant="destructive"><X /> No-show</Badge>
   </div>
 )

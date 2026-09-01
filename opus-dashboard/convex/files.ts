@@ -15,9 +15,13 @@ export const generateUploadUrl = mutation({
 });
 
 export const getFileUrl = query({
-    args: { storageId: v.id("_storage") },
+    args: {
+        orgId: v.id("orgs"),
+        storageId: v.id("_storage"),
+    },
     returns: v.union(v.string(), v.null()),
     handler: async (ctx, args) => {
+        await requireAuth(ctx, args.orgId);
         return await ctx.storage.getUrl(args.storageId);
     }
 });

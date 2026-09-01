@@ -44,7 +44,6 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { parseMapboxFeature, type BusinessLocation } from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
-import { ActivationPreview } from "./ActivationPreview";
 
 type ActivationState = FunctionReturnType<typeof api.activation.getState>;
 type BeautyCategory = (typeof beautyCategories)[number][0];
@@ -703,13 +702,11 @@ function HoursStep({
 
 function ReviewStep({
   state,
-  preview,
   canGoBack,
   onBack,
   onPublished,
 }: {
   state: NonNullable<ActivationState>;
-  preview: FunctionReturnType<typeof api.activation.getPreview> | undefined;
   canGoBack: boolean;
   onBack: () => void;
   onPublished: () => void;
@@ -739,11 +736,15 @@ function ReviewStep({
             ? "Your studio is live"
             : "A quick final check"
         }
-        description="Everything below is what customers will use to book on your studio website."
+        description={
+          state.operationalSetupComplete
+            ? "Your dashboard is ready. Complete every item below before you can publish your studio website."
+            : "Complete every item below before you can publish your studio website."
+        }
       >
         <div>
           <ul className="flex flex-col gap-2">
-            {state.requirements.map((requirement) => (
+            {state.websiteRequirements.map((requirement) => (
               <li
                 key={requirement.code}
                 className="flex items-start gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-s"
@@ -788,7 +789,7 @@ function ReviewStep({
               onBack={onBack}
               isSubmitting={isPublishing}
               disabled={
-                !state.allRequiredComplete ||
+                !state.allWebsiteRequirementsComplete ||
                 state.org.websiteStatus === "published"
               }
               label={
@@ -801,26 +802,16 @@ function ReviewStep({
         </div>
       </StepFrame>
 
-      <div className="mt-20 border-t border-border pt-12 text-left">
-        <div className="mb-7 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
-            Your studio website
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            This is the information customers will see on your opus.mk website.
-          </p>
+      {state.operationalSetupComplete && (
+        <div className="mt-8 text-center">
+          <Button asChild variant="link" className="shadow-none">
+            <Link href="/beauty">
+              <Store data-icon="inline-start" />
+              Open dashboard
+            </Link>
+          </Button>
         </div>
-        <ActivationPreview preview={preview} />
-      </div>
-
-      <div className="mt-8 text-center">
-        <Button asChild variant="link" className="shadow-none">
-          <Link href="/beauty">
-            <Store data-icon="inline-start" />
-            Open dashboard
-          </Link>
-        </Button>
-      </div>
+      )}
     </div>
   );
 }
@@ -834,10 +825,6 @@ export function OnboardingWizard() {
     isAuthenticated ? {} : "skip",
   );
   const state = useQuery(api.activation.getState, profile?.orgId ? {} : "skip");
-  const preview = useQuery(
-    api.activation.getPreview,
-    profile?.orgId ? {} : "skip",
-  );
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const requestedStep = searchParams.get("step");
   const [manualStep, setManualStep] = useState<WizardStep | null>(
@@ -1058,7 +1045,6 @@ export function OnboardingWizard() {
           {step === "review" && state && (
             <ReviewStep
               state={state}
-              preview={preview}
               canGoBack={canGoBack}
               onBack={goBack}
               onPublished={() => router.push("/beauty")}

@@ -52,6 +52,7 @@ export const updateOrgSettings = mutation({
     currency: v.string(),
     locale: v.string(),
     slotDurationMins: v.number(),
+    quickBookingDurationMins: v.optional(v.number()),
     bookingWindowDays: v.number(),
     cancellationWindowHours: v.number(),
     bufferTimeMins: v.number(),
@@ -59,11 +60,24 @@ export const updateOrgSettings = mutation({
   handler: async (ctx, args) => {
     const { staffMember } = await requireRole(ctx, args.orgId, "owner");
 
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+
+    if (!settings) throw new Error("Settings not found");
+
+    const quickBookingDurationMins =
+      args.quickBookingDurationMins ?? settings.quickBookingDurationMins;
+
     const updates = {
       timezone: args.timezone.trim(),
       currency: supportedCurrency(args.currency) ?? args.currency.trim(),
       locale: canonicalLocale(args.locale) ?? args.locale.trim(),
       slotDurationMins: args.slotDurationMins,
+      ...(quickBookingDurationMins !== undefined
+        ? { quickBookingDurationMins }
+        : {}),
       bookingWindowDays: args.bookingWindowDays,
       cancellationWindowHours: args.cancellationWindowHours,
       bufferTimeMins: args.bufferTimeMins,
@@ -71,13 +85,6 @@ export const updateOrgSettings = mutation({
     };
     const validationError = operationalSettingsError(updates);
     if (validationError) throw new ConvexError(validationError);
-
-    const settings = await ctx.db
-      .query("org_settings")
-      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
-      .first();
-
-    if (!settings) throw new Error("Settings not found");
 
     await ctx.db.patch(settings._id, updates);
     await ctx.db.insert("audit_log", {
@@ -92,6 +99,7 @@ export const updateOrgSettings = mutation({
         currency: settings.currency,
         locale: settings.locale,
         slotDurationMins: settings.slotDurationMins,
+        quickBookingDurationMins: settings.quickBookingDurationMins,
         bookingWindowDays: settings.bookingWindowDays,
         cancellationWindowHours: settings.cancellationWindowHours,
         bufferTimeMins: settings.bufferTimeMins,
@@ -220,13 +228,6 @@ export const updateEmailNotificationSettings = mutation({
         "One or more email recipients no longer have dashboard access.",
       );
     }
-    if (
-      (args.staffNewBookingEmailEnabled || args.staffReminderEmailEnabled) &&
-      recipientUserIds.length === 0
-    ) {
-      throw new ConvexError("Choose at least one team email recipient.");
-    }
-
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
@@ -486,6 +487,29 @@ export const updateLogo = mutation({
     });
 
     return logoUrl;
+  },
+});
+
+export const removeLogo = mutation({
+  args: {
+    orgId: v.id("orgs"),
+  },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, args.orgId, "owner");
+
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new Error("Org not found");
+
+    await ctx.db.patch(args.orgId, {
+      logoUrl: undefined,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
+      orgId: args.orgId,
+    });
+
+    return true;
   },
 });
 

@@ -17,7 +17,11 @@ export type ActivationRequirementCode =
   | "provider"
   | "service"
   | "availability"
-  | "booking_settings";
+  | "booking_settings"
+  | "website_logo"
+  | "website_banner"
+  | "website_tagline"
+  | "website_phone";
 
 export interface ActivationRequirement {
   code: ActivationRequirementCode;
@@ -35,7 +39,9 @@ export interface BeautyActivationState {
   settings: Doc<"org_settings"> | null;
   media: Doc<"org_media">[];
   requirements: ActivationRequirement[];
+  websiteRequirements: ActivationRequirement[];
   allRequiredComplete: boolean;
+  allWebsiteRequirementsComplete: boolean;
   operationalSetupComplete: boolean;
   nextStep: ActivationStep;
 }
@@ -150,6 +156,12 @@ export async function getBeautyActivationState(
     firstService &&
     firstService.durationMins % settings.slotDurationMins === 0,
   );
+  const logoComplete = hasText(org.logoUrl);
+  const bannerComplete = media.some(
+    (item) => item.type === "cover" && hasText(item.url),
+  );
+  const taglineComplete = hasText(org.tagline);
+  const phoneComplete = hasText(org.phone);
   const requirements = [
     requirement(
       "business_identity",
@@ -194,6 +206,37 @@ export async function getBeautyActivationState(
       "/settings?tab=booking",
     ),
   ];
+  const websiteRequirements = [
+    ...requirements,
+    requirement(
+      "website_logo",
+      "Website logo",
+      "Upload the logo customers will recognize.",
+      logoComplete,
+      "/settings?tab=branding",
+    ),
+    requirement(
+      "website_banner",
+      "Website cover photo",
+      "Upload a cover photo for the top of your website.",
+      bannerComplete,
+      "/settings?tab=branding",
+    ),
+    requirement(
+      "website_tagline",
+      "Studio tagline",
+      "Add a short tagline that introduces your studio.",
+      taglineComplete,
+      "/settings?tab=branding",
+    ),
+    requirement(
+      "website_phone",
+      "Contact phone",
+      "Add a phone number customers can use to contact you.",
+      phoneComplete,
+      "/settings?tab=branding",
+    ),
+  ];
 
   let nextStep: ActivationStep = "review";
   if (!identityComplete) nextStep = "business";
@@ -201,6 +244,8 @@ export async function getBeautyActivationState(
   else if (!serviceComplete) nextStep = "service";
   else if (!availabilityComplete || !bookingSettingsComplete)
     nextStep = "hours";
+
+  const allRequiredComplete = requirements.every((item) => item.complete);
 
   return {
     org,
@@ -210,14 +255,12 @@ export async function getBeautyActivationState(
     settings,
     media: media.sort((a, b) => a.sortOrder - b.sortOrder),
     requirements,
-    allRequiredComplete: requirements.every((item) => item.complete),
-    operationalSetupComplete:
-      identityComplete &&
-      locationComplete &&
-      providerComplete &&
-      serviceComplete &&
-      availabilityComplete &&
-      bookingSettingsComplete,
+    websiteRequirements,
+    allRequiredComplete,
+    allWebsiteRequirementsComplete: websiteRequirements.every(
+      (item) => item.complete,
+    ),
+    operationalSetupComplete: allRequiredComplete,
     nextStep,
   };
 }

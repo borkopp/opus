@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -44,9 +45,12 @@ export default function ServicesPage() {
               key={index}
               className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
             >
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-24" />
+              <div className="flex items-center gap-3.5 sm:gap-4">
+                <Skeleton className="size-12 rounded-lg sm:size-14" />
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
               </div>
               <Skeleton className="h-4 w-16" />
             </div>
@@ -65,7 +69,12 @@ export default function ServicesPage() {
       : `${activeCount} ${activeCount === 1 ? "service" : "services"} available to book.`;
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
+    >
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
@@ -125,6 +134,6 @@ export default function ServicesPage() {
           onOpenChange={setIsAddServiceOpen}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

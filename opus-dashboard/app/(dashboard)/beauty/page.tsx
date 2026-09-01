@@ -21,9 +21,8 @@ import { GapOptimizerWidget } from "@/components/dashboard/GapOptimizerWidget";
 import { LiveScheduleWidget } from "@/components/dashboard/LiveScheduleWidget";
 import { RevenueChartWidget } from "@/components/dashboard/RevenueChartWidget";
 import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationWidget";
-import { CustomerInsightsWidget } from "@/components/dashboard/CustomerInsightsWidget";
+import { LatestActivityWidget } from "@/components/dashboard/LatestActivityWidget";
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
-import { WebsiteBanner } from "@/components/dashboard/WebsiteBanner";
 
 export default function DashboardHome() {
   const today = useMemo(() => new Date(), []);
@@ -41,7 +40,6 @@ export default function DashboardHome() {
   const orgId = profile?.orgId;
 
   // Mutations
-  const checkIn = useMutation(api.bookings.checkInBooking);
   const complete = useMutation(api.bookings.completeBooking);
 
   // Queries — all hooks must be called unconditionally (Rules of Hooks)
@@ -62,11 +60,6 @@ export default function DashboardHome() {
     orgId ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs } : "skip",
   );
 
-  const customerInsights = useQuery(
-    api.dashboard.getCustomerInsights,
-    orgId ? { orgId, monthStartMs: startOfCurrentMonthMs, monthEndMs: endOfCurrentMonthMs } : "skip",
-  );
-
   const weeklyRevenueChart = useQuery(
     api.dashboard.getWeeklyRevenueChart,
     orgId ? {
@@ -77,10 +70,6 @@ export default function DashboardHome() {
       previousWeekEndMs: endOfPreviousWeekMs,
     } : "skip",
   );
-
-  const topCustomers = useQuery(api.dashboard.getTopCustomers, orgId ? { orgId } : "skip");
-
-  const noShowRiskCustomers = useQuery(api.dashboard.getNoShowStats, orgId ? { orgId } : "skip");
 
   const aiPerformance = useQuery(
     api.dashboard.getAIPerformance,
@@ -102,9 +91,6 @@ export default function DashboardHome() {
     dashboardMetrics === undefined ||
     dailySchedule === undefined ||
     staffUtilisation === undefined ||
-    customerInsights === undefined ||
-    topCustomers === undefined ||
-    noShowRiskCustomers === undefined ||
     weeklyRevenueChart === undefined ||
     aiPerformance === undefined ||
     orgSettingsData === undefined
@@ -128,15 +114,6 @@ export default function DashboardHome() {
     groupedByStaff[booking.staffName].push(booking);
   });
 
-  const handleCheckIn = async (bookingId: Id<"bookings">) => {
-    try {
-      await checkIn({ orgId, bookingId });
-      toast.success("Customer checked in");
-    } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Check-in failed");
-    }
-  };
-
   const handleComplete = async (bookingId: Id<"bookings">) => {
     try {
       await complete({ orgId, bookingId });
@@ -148,7 +125,6 @@ export default function DashboardHome() {
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto flex-1 min-h-full">
-      <WebsiteBanner orgId={orgId} />
       {/* ── Dashboard Grid ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -156,11 +132,10 @@ export default function DashboardHome() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 flex-1 min-h-0"
       >
-        {/* ── Row 1: Schedule + AI Widgets + Staff ── */}
+        {/* ── Row 1: Schedule + AI Gap Optimizer + Latest Activity ── */}
         <div className="md:col-span-2 md:h-full md:min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
-            onCheckIn={handleCheckIn}
             onComplete={handleComplete}
           />
         </div>
@@ -168,20 +143,13 @@ export default function DashboardHome() {
           <GapOptimizerWidget orgId={orgId} />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <StaffUtilisationWidget
-            staffUtilisation={staffUtilisation}
-          />
+          <LatestActivityWidget orgId={orgId} />
         </div>
 
-        {/* ── Row 2: Insights + Revenue Chart + AI Performance ── */}
+        {/* ── Row 2: Staff Capacity + Revenue Chart + AI Performance ── */}
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <CustomerInsightsWidget
-            insights={customerInsights}
-            topCustomers={topCustomers}
-            noShowRisk={noShowRiskCustomers}
-            formatMoney={formatMoney}
-            revenueToday={dashboardMetrics.revenueToday}
-            bookingsToday={dashboardMetrics.totalBookingsToday}
+          <StaffUtilisationWidget
+            staffUtilisation={staffUtilisation}
           />
         </div>
         <div className="md:col-span-2 md:h-full md:min-h-0">

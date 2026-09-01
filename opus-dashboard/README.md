@@ -31,3 +31,11 @@ npm run build
 ```
 
 The shared backend lives in `convex/`. Preserve tenant isolation, soft deletes, audit logging, integer minor-unit money values, and mutation-level booking conflict checks.
+
+## Vercel deployment
+
+Create the Vercel project with this directory (`opus-dashboard/`) as its **Root Directory**. The committed [`vercel.json`](vercel.json) selects Next.js, installs from the lockfile with `npm ci`, and runs the Convex-supported build command so the frontend and the matching Convex functions deploy together.
+
+Do not hardcode `NEXT_PUBLIC_CONVEX_URL` or `NEXT_PUBLIC_CONVEX_SITE_URL` in Vercel. The Convex deploy command injects the canonical URLs for the deployment selected by `CONVEX_DEPLOY_KEY`. Production and Preview must use separate deploy keys.
+
+See the repository-wide [tenant deployment runbook](../docs/TENANT_WEBSITES.md) for the complete Vercel, Convex, DNS, and release checklist.

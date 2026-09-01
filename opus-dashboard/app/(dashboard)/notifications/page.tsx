@@ -6,192 +6,269 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-    IconBell,
-    IconBellRinging,
-    IconCalendarPlus,
-    IconCalendarOff,
-    IconAlertTriangle,
-    IconCheck,
-    IconX,
+  IconBell,
+  IconBellRinging,
+  IconCalendarPlus,
+  IconCalendarOff,
+  IconAlertTriangle,
+  IconCheck,
+  IconX,
 } from "@tabler/icons-react";
 
-type FilterTab = "all" | "unread" | "new_booking" | "booking_cancelled" | "no_show";
+type FilterTab =
+  | "all"
+  | "unread"
+  | "new_booking"
+  | "booking_cancelled"
+  | "no_show";
 
 function getTypeConfig(type: string) {
-    switch (type) {
-        case "new_booking":
-            return {
-                icon: <IconCalendarPlus size={18} stroke={2} />,
-                iconBg: "bg-accent text-accent-foreground",
-                label: "New Booking",
-            };
-        case "booking_cancelled":
-            return {
-                icon: <IconCalendarOff size={18} stroke={2} />,
-                iconBg: "bg-destructive/10 text-destructive",
-                label: "Cancellation",
-            };
-        case "no_show":
-            return {
-                icon: <IconAlertTriangle size={18} stroke={2} />,
-                iconBg: "bg-highlight/15 text-warning",
-                label: "No-Show",
-            };
-        default:
-            return {
-                icon: <IconBell size={18} stroke={2} />,
-                iconBg: "bg-secondary text-muted-foreground",
-                label: "Notification",
-            };
-    }
+  switch (type) {
+    case "new_booking":
+      return {
+        icon: <IconCalendarPlus size={18} stroke={2} />,
+        iconBg: "bg-primary/10 text-primary",
+        label: "New Booking",
+      };
+    case "booking_cancelled":
+      return {
+        icon: <IconCalendarOff size={18} stroke={2} />,
+        iconBg: "bg-destructive/10 text-destructive",
+        label: "Cancellation",
+      };
+    case "no_show":
+      return {
+        icon: <IconAlertTriangle size={18} stroke={2} />,
+        iconBg: "bg-warning/15 text-warning",
+        label: "No-Show",
+      };
+    default:
+      return {
+        icon: <IconBell size={18} stroke={2} />,
+        iconBg: "bg-muted text-muted-foreground",
+        label: "Notification",
+      };
+  }
 }
 
 const TABS: { id: FilterTab; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "unread", label: "Unread" },
-    { id: "new_booking", label: "New Bookings" },
-    { id: "booking_cancelled", label: "Cancellations" },
-    { id: "no_show", label: "No-Shows" },
+  { id: "all", label: "All" },
+  { id: "unread", label: "Unread" },
+  { id: "new_booking", label: "New Bookings" },
+  { id: "booking_cancelled", label: "Cancellations" },
+  { id: "no_show", label: "No-Shows" },
 ];
 
 export default function NotificationsPage() {
-    const router = useRouter();
-    const profile = useQuery(api.users.getMyProfile);
-    const orgId = profile?.orgId as Id<"orgs"> | undefined;
+  const router = useRouter();
+  const profile = useQuery(api.users.getMyProfile);
+  const orgId = profile?.orgId as Id<"orgs"> | undefined;
 
-    const notifications = useQuery(
-        api.dashboardNotifications.list,
-        orgId ? { orgId } : "skip",
-    );
-    const unreadCount = useQuery(
-        api.dashboardNotifications.getUnreadCount,
-        orgId ? { orgId } : "skip",
-    );
+  const notifications = useQuery(
+    api.dashboardNotifications.list,
+    orgId ? { orgId } : "skip",
+  );
+  const unreadCount = useQuery(
+    api.dashboardNotifications.getUnreadCount,
+    orgId ? { orgId } : "skip",
+  );
 
-    const markRead = useMutation(api.dashboardNotifications.markRead);
-    const markAllRead = useMutation(api.dashboardNotifications.markAllRead);
-    const dismiss = useMutation(api.dashboardNotifications.dismiss);
+  const markRead = useMutation(api.dashboardNotifications.markRead);
+  const markAllRead = useMutation(api.dashboardNotifications.markAllRead);
+  const dismiss = useMutation(api.dashboardNotifications.dismiss);
 
-    const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
-    const filtered = (notifications ?? []).filter((n) => {
-        if (activeTab === "all") return true;
-        if (activeTab === "unread") return !n.isRead;
-        return n.type === activeTab;
-    });
-
-    const handleClick = (n: (typeof filtered)[0]) => {
-        if (!orgId) return;
-        if (!n.isRead) markRead({ orgId, notificationId: n._id });
-        if (n.bookingId) router.push("/beauty/bookings");
-    };
-
-    if (!orgId) return null;
-
+  if (profile === undefined || notifications === undefined) {
     return (
-        <div className="w-full max-w-2xl mx-auto flex flex-col flex-1 min-h-full">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold font-display text-primary">Notifications</h1>
-                    {(unreadCount ?? 0) > 0 && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
-                            {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
-                        </p>
-                    )}
-                </div>
-                {(unreadCount ?? 0) > 0 && (
-                    <button
-                        onClick={() => markAllRead({ orgId })}
-                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors border border-border/40 rounded-full px-3 py-1.5"
-                    >
-                        <IconCheck size={14} />
-                        Mark all read
-                    </button>
-                )}
-            </div>
-
-            {/* Filter tabs */}
-            <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={cn(
-                            "text-xs font-medium px-3 py-1.5 rounded-full transition-colors border",
-                            activeTab === tab.id
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-secondary text-muted-foreground border-border/40 hover:bg-secondary/80",
-                        )}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* List */}
-            <div className="bg-card border border-border/40 rounded-lg overflow-hidden divide-y divide-border/30">
-                {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                        <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center mb-3">
-                            {(unreadCount ?? 0) === 0
-                                ? <IconBell size={20} className="text-muted-foreground/50" />
-                                : <IconBellRinging size={20} className="text-muted-foreground/50" />
-                            }
-                        </div>
-                        <p className="text-sm font-medium text-foreground">Nothing here</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {activeTab === "unread" ? "You're all caught up." : "No notifications in this category yet."}
-                        </p>
-                    </div>
-                ) : (
-                    filtered.map((n) => {
-                        const { icon, iconBg } = getTypeConfig(n.type);
-                        return (
-                            <div
-                                key={n._id}
-                                className={cn(
-                                    "group relative flex items-start gap-4 px-5 py-4 transition-colors cursor-pointer",
-                                    "hover:bg-secondary/40",
-                                    !n.isRead && "bg-primary/[0.03] border-l-2 border-l-accent",
-                                    n.isRead && "border-l-2 border-l-transparent",
-                                )}
-                                onClick={() => handleClick(n)}
-                            >
-                                <div className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full", iconBg)}>
-                                    {icon}
-                                </div>
-                                <div className="flex-1 min-w-0 pr-8">
-                                    <p className={cn("text-sm leading-snug", !n.isRead ? "font-semibold text-foreground" : "font-medium text-foreground")}>
-                                        {n.title}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
-                                        {n.body}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground/60 mt-1 font-display">
-                                        {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
-                                    </p>
-                                </div>
-                                {!n.isRead && (
-                                    <div className="absolute right-10 top-4 h-2 w-2 rounded-full bg-primary" />
-                                )}
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        dismiss({ orgId, notificationId: n._id });
-                                    }}
-                                    className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
-                                >
-                                    <IconX size={14} />
-                                </button>
-                            </div>
-                        );
-                    })
-                )}
-            </div>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-44" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-32" />
         </div>
+        <Skeleton className="h-10 w-80" />
+        <div className="overflow-hidden rounded-2xl border border-border/70">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between gap-4 border-b border-border/40 px-5 py-4 last:border-b-0"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-9 rounded-xl" />
+                <div className="flex flex-col gap-1.5">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-72" />
+                </div>
+              </div>
+              <Skeleton className="h-3 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
     );
+  }
+
+  if (profile === null || !orgId) return <div>Not found</div>;
+
+  const filtered = (notifications ?? []).filter((n) => {
+    if (activeTab === "all") return true;
+    if (activeTab === "unread") return !n.isRead;
+    return n.type === activeTab;
+  });
+
+  const handleClick = (n: (typeof filtered)[0]) => {
+    if (!orgId) return;
+    if (!n.isRead) markRead({ orgId, notificationId: n._id });
+    if (n.bookingId) router.push("/beauty/bookings");
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
+    >
+      {/* Header */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
+            Notifications
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {(unreadCount ?? 0) > 0
+              ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}. Stay up to date with bookings and appointments.`
+              : "All caught up. Stay up to date with bookings and appointments."}
+          </p>
+        </div>
+
+        {(unreadCount ?? 0) > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => markAllRead({ orgId })}
+            className="w-full transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:w-auto cursor-pointer"
+          >
+            <IconCheck className="mr-1.5 h-4 w-4" />
+            Mark all read
+          </Button>
+        )}
+      </header>
+
+      {/* Filter tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as FilterTab)}
+        className="w-full"
+      >
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="h-9">
+            {TABS.map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className="cursor-pointer px-3 text-xs"
+              >
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+      </Tabs>
+
+      {/* List */}
+      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card divide-y divide-border/40 shadow-xs">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+            <div className="h-12 w-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-3 text-muted-foreground">
+              {(unreadCount ?? 0) === 0 ? (
+                <IconBell size={22} className="text-muted-foreground/70" />
+              ) : (
+                <IconBellRinging
+                  size={22}
+                  className="text-muted-foreground/70"
+                />
+              )}
+            </div>
+            <p className="font-display text-base font-semibold text-foreground">
+              Nothing here
+            </p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              {activeTab === "unread"
+                ? "You're all caught up on new notifications."
+                : "No notifications in this category yet."}
+            </p>
+          </div>
+        ) : (
+          filtered.map((n) => {
+            const { icon, iconBg } = getTypeConfig(n.type);
+            return (
+              <div
+                key={n._id}
+                className={cn(
+                  "group relative flex items-start gap-4 px-5 py-4 transition-colors cursor-pointer",
+                  "hover:bg-muted/40",
+                  !n.isRead && "bg-primary/[0.03] border-l-2 border-l-primary",
+                  n.isRead && "border-l-2 border-l-transparent",
+                )}
+                onClick={() => handleClick(n)}
+              >
+                <div
+                  className={cn(
+                    "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                    iconBg,
+                  )}
+                >
+                  {icon}
+                </div>
+                <div className="flex-1 min-w-0 pr-8">
+                  <p
+                    className={cn(
+                      "text-sm leading-snug",
+                      !n.isRead
+                        ? "font-semibold text-foreground"
+                        : "font-medium text-foreground",
+                    )}
+                  >
+                    {n.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                    {n.body}
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-1.5 font-sans">
+                    {formatDistanceToNow(new Date(n.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                </div>
+                {!n.isRead && (
+                  <div className="absolute right-10 top-5 h-2 w-2 rounded-full bg-primary" />
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    dismiss({ orgId, notificationId: n._id });
+                  }}
+                  className="absolute right-4 top-4.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 cursor-pointer"
+                  aria-label="Dismiss notification"
+                >
+                  <IconX size={15} />
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
+  );
 }

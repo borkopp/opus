@@ -4,9 +4,11 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
     Bell,
@@ -18,6 +20,16 @@ import {
     Check,
     ArrowRight,
 } from "lucide-react";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type DashboardNotification = FunctionReturnType<typeof api.dashboardNotifications.list>[number];
 
@@ -47,27 +59,31 @@ function playChime() {
 // ─────────────────────────────────────────────────────
 // Notification type metadata
 // ─────────────────────────────────────────────────────
-function getTypeConfig(type: string) {
+export function getNotificationTypeConfig(type: string) {
     switch (type) {
         case "new_booking":
             return {
                 icon: <CalendarPlus size={16} strokeWidth={2} />,
                 iconBg: "bg-accent text-accent-foreground",
+                label: "New Booking",
             };
         case "booking_cancelled":
             return {
                 icon: <CalendarX size={16} strokeWidth={2} />,
                 iconBg: "bg-destructive/10 text-destructive",
+                label: "Cancellation",
             };
         case "no_show":
             return {
                 icon: <TriangleAlert size={16} strokeWidth={2} />,
                 iconBg: "bg-highlight/15 text-warning",
+                label: "No-Show",
             };
         default:
             return {
                 icon: <Bell size={16} strokeWidth={2} />,
                 iconBg: "bg-secondary text-muted-foreground",
+                label: "Notification",
             };
     }
 }
@@ -85,7 +101,7 @@ function NotificationItem({
     onRead: (id: Id<"dashboard_notifications">) => void;
 }) {
     const router = useRouter();
-    const { icon, iconBg } = getTypeConfig(notification.type);
+    const { icon, iconBg } = getNotificationTypeConfig(notification.type);
 
     const handleClick = () => {
         onRead(notification._id);
@@ -135,6 +151,7 @@ function NotificationItem({
                     onDismiss(notification._id);
                 }}
                 className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
+                aria-label="Dismiss notification"
             >
                 <X size={13} />
             </button>
@@ -147,19 +164,20 @@ function NotificationItem({
 // ─────────────────────────────────────────────────────
 const TOAST_DURATION_MS = 5000;
 
+const emptySubscribe = () => () => {};
+
 function NotificationToast({
     notification,
     onDismiss,
     onClick,
-    placement = "header",
 }: {
     notification: DashboardNotification;
     onDismiss: () => void;
     onClick: () => void;
-    placement?: "header" | "sidebar";
 }) {
-    const { icon, iconBg } = getTypeConfig(notification.type);
+    const { icon, iconBg } = getNotificationTypeConfig(notification.type);
     const [exiting, setExiting] = useState(false);
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
     const handleDismiss = useCallback(() => {
         setExiting(true);
@@ -172,13 +190,12 @@ function NotificationToast({
         return () => clearTimeout(timer);
     }, [handleDismiss]);
 
-    return (
+    if (!mounted || typeof document === "undefined") return null;
+
+    return createPortal(
         <div
             className={cn(
-                "absolute z-[60] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border/50 bg-card shadow-xl overflow-hidden cursor-pointer",
-                placement === "sidebar"
-                    ? "left-0 bottom-full mb-3 md:left-full md:bottom-0 md:top-auto md:ml-3"
-                    : "right-0 top-12",
+                "fixed z-[100] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden cursor-pointer right-4 top-16",
                 "transition-all duration-250 ease-out",
                 exiting
                     ? "opacity-0 translate-y-[-8px] scale-95"
@@ -231,20 +248,30 @@ function NotificationToast({
                     }}
                 />
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
 // ─────────────────────────────────────────────────────
-// Bell + dropdown
+// Bell + popover dropdown
 // ─────────────────────────────────────────────────────
 export function NotificationBell({
     orgId,
     placement = "header",
+    collapsed = false,
+    enableToast,
+    enableSound,
 }: {
     orgId: Id<"orgs">;
-    placement?: "header" | "sidebar";
+    placement?: "header" | "sidebar" | "sidebar-nav" | "drawer-nav";
+    collapsed?: boolean;
+    enableToast?: boolean;
+    enableSound?: boolean;
 }) {
+    const showToast = enableToast ?? (placement === "header");
+    const showSound = enableSound ?? (placement === "header");
+
     const notifications = useQuery(api.dashboardNotifications.list, { orgId });
     const unreadCount = useQuery(api.dashboardNotifications.getUnreadCount, { orgId });
     const orgSettings = useQuery(api.orgSettings.getOrgSettings, { orgId });
@@ -261,7 +288,6 @@ export function NotificationBell({
     const [pulse, setPulse] = useState(false);
     const [toastNotification, setToastNotification] = useState<DashboardNotification | null>(null);
     const prevCountRef = useRef<number | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     // Sound + pulse + toast on new notification
@@ -272,14 +298,14 @@ export function NotificationBell({
             return;
         }
         if (unreadCount > prevCountRef.current && dashEnabled) {
-            if (soundEnabled && document.visibilityState === "visible") {
+            if (showSound && soundEnabled && document.visibilityState === "visible") {
                 playChime();
             }
             const pulseStartTimer = window.setTimeout(() => setPulse(true), 0);
             const pulseEndTimer = window.setTimeout(() => setPulse(false), 3000);
 
             // Show toast with the newest notification (only when dropdown is closed)
-            if (toastEnabled && !open && notifications.length > 0) {
+            if (showToast && toastEnabled && !open && notifications.length > 0) {
                 window.setTimeout(() => setToastNotification(notifications[0]), 0);
             }
             prevCountRef.current = unreadCount;
@@ -289,36 +315,158 @@ export function NotificationBell({
             };
         }
         prevCountRef.current = unreadCount;
-    }, [unreadCount, notifications, open, dashEnabled, soundEnabled, toastEnabled]);
-
-    // Close dropdown on outside click
-    useEffect(() => {
-        if (!open) return;
-        const handler = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, [open]);
+    }, [unreadCount, notifications, open, dashEnabled, soundEnabled, toastEnabled, showSound, showToast]);
 
     const hasUnread = dashEnabled && (unreadCount ?? 0) > 0;
 
-    return (
-        <div ref={containerRef} className="relative">
-            {/* Bell button */}
+    let triggerElement: React.ReactNode;
+
+    if (placement === "sidebar-nav") {
+        if (collapsed) {
+            triggerElement = (
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setToastNotification(null);
+                            }}
+                            className={cn(
+                                "group relative flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-10 mx-auto outline-none",
+                                open
+                                    ? "bg-secondary text-foreground font-semibold shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+                            )}
+                            aria-label="Notifications"
+                        >
+                            <div className="shrink-0 flex items-center justify-center relative">
+                                {hasUnread ? (
+                                    <BellRing className="h-5 w-5" />
+                                ) : (
+                                    <Bell className="h-5 w-5" />
+                                )}
+                                {hasUnread && (
+                                    <span
+                                        className={cn(
+                                            "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
+                                            pulse && "animate-pulse",
+                                        )}
+                                    >
+                                        {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
+                                    </span>
+                                )}
+                            </div>
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={12}>
+                        Notifications{hasUnread ? ` (${unreadCount})` : ""}
+                    </TooltipContent>
+                </Tooltip>
+            );
+        } else {
+            triggerElement = (
+                <button
+                    type="button"
+                    onClick={() => {
+                        setToastNotification(null);
+                    }}
+                    className={cn(
+                        "group relative flex items-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-full px-3 justify-start gap-3 outline-none",
+                        open
+                            ? "bg-secondary text-foreground font-semibold shadow-xs"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+                    )}
+                    aria-label="Notifications"
+                >
+                    <div
+                        className={cn(
+                            "shrink-0 flex items-center justify-center transition-colors",
+                            open
+                                ? "text-foreground"
+                                : "text-muted-foreground group-hover:text-foreground",
+                        )}
+                    >
+                        {hasUnread ? (
+                            <BellRing className="h-5 w-5" />
+                        ) : (
+                            <Bell className="h-5 w-5" />
+                        )}
+                    </div>
+
+                    <span className="text-sm font-medium whitespace-nowrap overflow-hidden truncate">
+                        Notifications
+                    </span>
+
+                    {hasUnread && (
+                        <span
+                            className={cn(
+                                "ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[11px] font-bold px-1.5 leading-none",
+                                pulse && "animate-pulse",
+                            )}
+                        >
+                            {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
+                        </span>
+                    )}
+                </button>
+            );
+        }
+    } else if (placement === "drawer-nav") {
+        triggerElement = (
             <button
+                type="button"
                 onClick={() => {
                     setToastNotification(null);
-                    setOpen((value) => !value);
                 }}
                 className={cn(
-                    "relative flex items-center justify-center h-10 w-10 rounded-full transition-colors border",
+                    "flex w-full items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98] cursor-pointer outline-none",
+                    open
+                        ? "bg-secondary text-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+                )}
+                aria-label="Notifications"
+            >
+                <div className="flex items-center gap-3">
+                    <div
+                        className={cn(
+                            "shrink-0",
+                            open ? "text-foreground" : "text-muted-foreground",
+                        )}
+                    >
+                        {hasUnread ? (
+                            <BellRing className="h-5 w-5" />
+                        ) : (
+                            <Bell className="h-5 w-5" />
+                        )}
+                    </div>
+                    <span>Notifications</span>
+                </div>
+
+                {hasUnread && (
+                    <span
+                        className={cn(
+                            "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[11px] font-bold px-1.5 leading-none",
+                            pulse && "animate-pulse",
+                        )}
+                    >
+                        {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
+                    </span>
+                )}
+            </button>
+        );
+    } else {
+        triggerElement = (
+            <button
+                type="button"
+                onClick={() => {
+                    setToastNotification(null);
+                }}
+                className={cn(
+                    "relative flex items-center justify-center h-10 w-10 rounded-full transition-colors border outline-none cursor-pointer",
                     open
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-secondary text-primary hover:bg-secondary/80 border-border/40",
                 )}
+                aria-label="Notifications"
             >
                 {hasUnread ? (
                     <BellRing className="h-5 w-5" />
@@ -328,53 +476,57 @@ export function NotificationBell({
 
                 {/* Count badge */}
                 {hasUnread && (
-                    <span className={cn(
-                        "absolute -top-1 -right-1 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
-                        pulse && "animate-pulse",
-                    )}>
+                    <span
+                        className={cn(
+                            "absolute -top-1 -right-1 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
+                            pulse && "animate-pulse",
+                        )}
+                    >
                         {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
                     </span>
                 )}
             </button>
+        );
+    }
 
-            {/* Inline toast — shows below bell when a new notification arrives */}
-            {toastNotification && !open && (
-                <NotificationToast
-                    notification={toastNotification}
-                    placement={placement}
-                    onDismiss={() => setToastNotification(null)}
-                    onClick={() => {
-                        if (toastNotification.bookingId) {
-                            router.push("/beauty/bookings");
-                        } else {
-                            setOpen(true);
-                        }
-                    }}
-                />
-            )}
+    return (
+        <>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    {triggerElement}
+                </PopoverTrigger>
 
-            {/* Dropdown */}
-            {open && (
-                <div className={cn(
-                    "absolute z-50 w-[380px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/40 bg-card shadow-xl overflow-hidden",
-                    placement === "sidebar"
-                        ? "left-0 bottom-full mb-3 md:left-full md:bottom-0 md:top-auto md:ml-3 animate-in fade-in-0 zoom-in-95 slide-in-from-left-2 duration-150"
-                        : "right-0 top-12 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150",
-                )}>
+                <PopoverContent
+                    side={
+                        placement === "header" || placement === "drawer-nav"
+                            ? "bottom"
+                            : "right"
+                    }
+                    align={
+                        placement === "header"
+                            ? "end"
+                            : placement === "sidebar-nav"
+                              ? "start"
+                              : "end"
+                    }
+                    sideOffset={12}
+                    className="w-[380px] max-w-[calc(100vw-2rem)] p-0 rounded-xl border border-border/40 bg-card shadow-2xl overflow-hidden z-50"
+                >
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold font-display text-primary">Notifications</span>
                             {hasUnread && (
-                                    <span className="text-[10px] font-bold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
+                                <span className="text-[10px] font-bold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
                                     {unreadCount} new
                                 </span>
                             )}
                         </div>
                         {hasUnread && (
                             <button
+                                type="button"
                                 onClick={() => markAllRead({ orgId })}
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                             >
                                 <Check size={12} />
                                 Mark all read
@@ -408,20 +560,33 @@ export function NotificationBell({
                     </div>
 
                     {/* Footer */}
-                    {notifications && notifications.length > 0 && (
-                        <div className="border-t border-border/40 px-4 py-2.5">
-                            <a
-                                href="/notifications"
-                                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                                onClick={() => setOpen(false)}
-                            >
-                                View all notifications
-                                <ArrowRight size={12} />
-                            </a>
-                        </div>
-                    )}
-                </div>
+                    <div className="border-t border-border/40 p-2 bg-muted/20">
+                        <Link
+                            href="/notifications"
+                            className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors"
+                            onClick={() => setOpen(false)}
+                        >
+                            <span>View all notifications</span>
+                            <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                    </div>
+                </PopoverContent>
+            </Popover>
+
+            {/* Inline toast — shows when a new notification arrives while popover is closed */}
+            {toastNotification && !open && (
+                <NotificationToast
+                    notification={toastNotification}
+                    onDismiss={() => setToastNotification(null)}
+                    onClick={() => {
+                        if (toastNotification.bookingId) {
+                            router.push("/beauty/bookings");
+                        } else {
+                            setOpen(true);
+                        }
+                    }}
+                />
             )}
-        </div>
+        </>
     );
 }

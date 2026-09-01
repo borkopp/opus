@@ -7,6 +7,7 @@ import { Subheading } from "@/components/subheading";
 import { cn } from "@/lib/utils";
 import { IconPlus } from "@tabler/icons-react";
 import { GridLineHorizontal, GridLineVertical } from "./grid-lines";
+import { useI18n } from "./i18n-provider";
 
 interface FAQItem {
   question: string;
@@ -18,41 +19,10 @@ interface FAQSection {
   items: FAQItem[];
 }
 
-const faqData: FAQSection[] = [
-  {
-    title: "Општи прашања",
-    items: [
-      {
-        question: "Што е OPUS?",
-        answer: "OPUS е платформа сè-во-едно дизајнирана за салони за убавина, берберници и ресторани. Таа ги обединува вашите резервации, вработени, услуги и наплата на едно место."
-      },
-      {
-        question: "Дали ми е потребна кредитна картичка за тест периодот?",
-        answer: "Не, можете да започнете со бесплатниот пробен период од 3 месеци без да внесувате податоци од кредитна картичка."
-      },
-      {
-        question: "Дали можам да откажам во секое време?",
-        answer: "Да, по истекот на трите бесплатни месеци, плаќате 20 евра месечно. Можете да ја откажете вашата претплата во било кое време, без обврски."
-      }
-    ]
-  },
-  {
-    title: "Можности и интеграции",
-    items: [
-      {
-        question: "Како функционира AI асистентот?",
-        answer: "AI асистентот може да комуницира со вашите клиенти преку веб-сајтот, одговарајќи на нивните прашања за вашите услуги, слободни термини и помага да го резервираат својот термин автоматски."
-      },
-      {
-        question: "Дали можам да примам плаќања онлајн?",
-        answer: "Да, OPUS е целосно интегриран со системи за плаќање што овозможува сигурна наплата на вашите услуги или задршка на депозит пред терминот."
-      }
-    ]
-  }
-];
-
-
 export function FAQs() {
+  const { messages } = useI18n();
+  const copy = messages.faq;
+  const faqData: FAQSection[] = copy.sections;
   const [activeId, setActiveId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -77,9 +47,15 @@ export function FAQs() {
   return (
     <div className="mx-auto max-w-4xl overflow-hidden px-4 py-20 md:px-8 md:py-32">
       <div className="text-center">
-        <Heading as="h2">Најчесто <span className="text-brand-primary font-playfair italic">поставувани</span> прашања</Heading>
+        <Heading as="h2">
+          {copy.heading}{" "}
+          <span className="text-brand-primary font-lora italic">
+            {copy.headingAccent}
+          </span>{" "}
+          {copy.headingEnd}
+        </Heading>
         <Subheading className="mx-auto mt-4 max-w-2xl">
-          Сè што треба да знаете за OPUS и како може да го подобри вашиот бизнис.
+          {copy.description}
         </Subheading>
       </div>
 

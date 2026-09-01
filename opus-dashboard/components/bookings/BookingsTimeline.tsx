@@ -8,440 +8,692 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Id } from "@/convex/_generated/dataModel";
 import { BookingView, StaffView } from "./types";
+import type { QuickBookingSelection } from "./QuickBookingProvider";
+import { bookingServiceLabel } from "./service-label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  bookingDateLabel,
+  bookingMinuteOfDay,
+  bookingTimeLabel,
+  bookingTimestampForDate,
+} from "@/lib/booking-wall-clock";
+import { getImageStorageUrl } from "@/lib/file-validation";
 
 const START_HOUR = 8;
 const END_HOUR = 20;
 const HOUR_HEIGHT = 90;
 const HEADER_HEIGHT = 56; // h-14 = 3.5rem = 56px — staff header row
-const SNAP_MINUTES = 15; // Snap to 15-minute intervals
 /** Convert a pixel offset (relative to the grid, not including header) to { hours, minutes } */
-function offsetToTime(offsetPx: number): { hours: number; minutes: number } {
-    const totalMinutes = (offsetPx / HOUR_HEIGHT) * 60 + START_HOUR * 60;
-    const snappedMinutes = Math.round(totalMinutes / SNAP_MINUTES) * SNAP_MINUTES;
-    const clamped = Math.max(START_HOUR * 60, Math.min(END_HOUR * 60, snappedMinutes));
-    return { hours: Math.floor(clamped / 60), minutes: clamped % 60 };
+function offsetToTime(
+  offsetPx: number,
+  snapMinutes: number,
+): { hours: number; minutes: number } {
+  const totalMinutes = (offsetPx / HOUR_HEIGHT) * 60 + START_HOUR * 60;
+  const snappedMinutes = Math.round(totalMinutes / snapMinutes) * snapMinutes;
+  const clamped = Math.max(
+    START_HOUR * 60,
+    Math.min((END_HOUR + 1) * 60, snappedMinutes),
+  );
+  return { hours: Math.floor(clamped / 60), minutes: clamped % 60 };
 }
 
 /** Convert { hours, minutes } to a pixel offset from grid top (not including header) */
 function timeToOffset(hours: number, minutes: number): number {
-    return ((hours - START_HOUR) + minutes / 60) * HOUR_HEIGHT;
+  return (hours - START_HOUR + minutes / 60) * HOUR_HEIGHT;
 }
 
 interface DragState {
-    bookingId: Id<"bookings">;
-    booking: BookingView;
-    staffId: Id<"staff_members">;
-    /** The Y offset where the user grabbed the card relative to the card's top */
-    grabOffsetY: number;
-    /** Current top position in the grid (px, not including header) */
-    currentGridTop: number;
-    /** The original grid top for visual comparison */
-    originalGridTop: number;
-    /** Duration of the booking in ms */
-    durationMs: number;
+  bookingId: Id<"bookings">;
+  booking: BookingView;
+  staffId: Id<"staff_members">;
+  /** The Y offset where the user grabbed the card relative to the card's top */
+  grabOffsetY: number;
+  /** Current top position in the grid (px, not including header) */
+  currentGridTop: number;
+  /** The original grid top for visual comparison */
+  originalGridTop: number;
+  /** Duration of the booking in ms */
+  durationMs: number;
+}
+
+interface PendingDragReschedule {
+  booking: BookingView;
+  newStartAt: number;
+  newEndAt: number;
 }
 
 export function BookingsTimeline({
-    bookings,
-    staffMembers,
-    selectedBookingId,
-    onSelectBooking,
-    onReschedule,
-    currentDate
+  bookings,
+  staffMembers,
+  selectedBookingId,
+  onSelectBooking,
+  onReschedule,
+  currentDate,
+  quickBookingSlots,
+  slotDurationMins,
+  onQuickBooking,
 }: {
-    bookings: BookingView[];
-    staffMembers: StaffView[];
-    selectedBookingId: Id<"bookings"> | null;
-    onSelectBooking: (id: Id<"bookings"> | null) => void;
-    onReschedule?: (bookingId: Id<"bookings">, newStartAt: number) => void;
-    currentDate: Date;
+  bookings: BookingView[];
+  staffMembers: StaffView[];
+  selectedBookingId: Id<"bookings"> | null;
+  onSelectBooking: (id: Id<"bookings"> | null) => void;
+  onReschedule?: (
+    bookingId: Id<"bookings">,
+    newStartAt: number,
+  ) => Promise<boolean>;
+  currentDate: Date;
+  quickBookingSlots: QuickBookingSelection[];
+  slotDurationMins: number;
+  onQuickBooking: (slot: QuickBookingSelection) => void;
 }) {
-    const hours = useMemo(() => Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i), []);
+  const hours = useMemo(
+    () =>
+      Array.from(
+        { length: END_HOUR - START_HOUR + 1 },
+        (_, i) => START_HOUR + i,
+      ),
+    [],
+  );
 
-    const [currentTimeOffset, setCurrentTimeOffset] = useState<number | null>(null);
-    const [drag, setDrag] = useState<DragState | null>(null);
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const hasScrolledRef = useRef(false);
-    const columnRefs = useRef<Map<Id<"staff_members">, HTMLDivElement>>(new Map());
-    const dragStartMouseY = useRef(0);
-    const isDragging = useRef(false);
-    const dragTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const pendingDragBooking = useRef<{ booking: BookingView; startY: number; grabOffsetY: number } | null>(null);
+  const [currentTimeOffset, setCurrentTimeOffset] = useState<number | null>(
+    null,
+  );
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [pendingDragReschedule, setPendingDragReschedule] =
+    useState<PendingDragReschedule | null>(null);
+  const [isConfirmingReschedule, setIsConfirmingReschedule] = useState(false);
+  const [hoveredQuickSlot, setHoveredQuickSlot] =
+    useState<QuickBookingSelection | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasScrolledRef = useRef(false);
+  const columnRefs = useRef<Map<Id<"staff_members">, HTMLDivElement>>(
+    new Map(),
+  );
+  const dragStartMouseY = useRef(0);
+  const isDragging = useRef(false);
+  const dragTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingDragBooking = useRef<{
+    booking: BookingView;
+    startY: number;
+    grabOffsetY: number;
+  } | null>(null);
+  const quickSlotsByStaffAndMinute = useMemo(() => {
+    const slots = new Map<string, QuickBookingSelection>();
+    for (const slot of quickBookingSlots) {
+      slots.set(`${slot.staffId}:${bookingMinuteOfDay(slot.startAt)}`, slot);
+    }
+    return slots;
+  }, [quickBookingSlots]);
 
-    // Update the red line for current time
-    useEffect(() => {
-        const updateOffset = () => {
-            const now = new Date();
-            if (isSameDay(now, currentDate)) {
-                if (now.getHours() >= START_HOUR && now.getHours() <= END_HOUR) {
-                    const offset = ((now.getHours() - START_HOUR) + (now.getMinutes() / 60)) * HOUR_HEIGHT;
-                    setCurrentTimeOffset(offset);
-                    return;
-                }
-            }
-            setCurrentTimeOffset(null);
-        };
-
-        updateOffset();
-        const interval = setInterval(updateOffset, 60000);
-        return () => clearInterval(interval);
-    }, [currentDate]);
-
-    // Auto-scroll to current time or first booking
-    useEffect(() => { hasScrolledRef.current = false; }, [currentDate]);
-
-    useEffect(() => {
-        if (hasScrolledRef.current) return;
-        const container = scrollContainerRef.current?.closest("[data-scroll-container]") as HTMLElement | null;
-        if (!container) return;
-
-        let scrollTarget: number;
-        if (currentTimeOffset !== null) {
-            scrollTarget = Math.max(0, currentTimeOffset - HOUR_HEIGHT);
-        } else if (bookings.length > 0) {
-            const earliest = bookings.reduce((min, b) => {
-                const t = new Date(b.startAt).getTime();
-                return t < min ? t : min;
-            }, Infinity);
-            const firstDate = new Date(earliest);
-            scrollTarget = Math.max(0, ((firstDate.getHours() - START_HOUR) + (firstDate.getMinutes() / 60)) * HOUR_HEIGHT - HOUR_HEIGHT);
-        } else {
-            scrollTarget = HOUR_HEIGHT;
+  // Update the red line for current time
+  useEffect(() => {
+    const updateOffset = () => {
+      const now = new Date();
+      if (isSameDay(now, currentDate)) {
+        if (now.getHours() >= START_HOUR && now.getHours() <= END_HOUR) {
+          const offset =
+            (now.getHours() - START_HOUR + now.getMinutes() / 60) * HOUR_HEIGHT;
+          setCurrentTimeOffset(offset);
+          return;
         }
+      }
+      setCurrentTimeOffset(null);
+    };
 
-        container.scrollTo({ top: scrollTarget, behavior: "smooth" });
-        hasScrolledRef.current = true;
-    }, [currentTimeOffset, bookings]);
+    updateOffset();
+    const interval = setInterval(updateOffset, 60000);
+    return () => clearInterval(interval);
+  }, [currentDate]);
 
-    // --- Drag to reschedule handlers ---
-    const handleDragStart = useCallback((e: React.MouseEvent, booking: BookingView) => {
-        if (!onReschedule) return;
-        // Don't allow dragging completed, cancelled, or no-show bookings
-        if (["completed", "cancelled", "no_show"].includes(booking.status)) return;
+  // Auto-scroll to current time or first booking
+  useEffect(() => {
+    hasScrolledRef.current = false;
+  }, [currentDate]);
 
-        e.preventDefault();
-        e.stopPropagation();
+  useEffect(() => {
+    if (hasScrolledRef.current) return;
+    const container = scrollContainerRef.current?.closest(
+      "[data-scroll-container]",
+    ) as HTMLElement | null;
+    if (!container) return;
 
-        const start = new Date(booking.startAt);
-        const originalGridTop = timeToOffset(start.getHours(), start.getMinutes());
+    let scrollTarget: number;
+    if (currentTimeOffset !== null) {
+      scrollTarget = Math.max(0, currentTimeOffset - HOUR_HEIGHT);
+    } else if (bookings.length > 0) {
+      const earliest = bookings.reduce((min, b) => {
+        const t = new Date(b.startAt).getTime();
+        return t < min ? t : min;
+      }, Infinity);
+      const firstMinute = bookingMinuteOfDay(earliest);
+      scrollTarget = Math.max(
+        0,
+        (firstMinute / 60 - START_HOUR) * HOUR_HEIGHT - HOUR_HEIGHT,
+      );
+    } else {
+      scrollTarget = HOUR_HEIGHT;
+    }
 
-        // Get the column element for this booking's staff
-        const columnEl = columnRefs.current.get(booking.staffId);
-        if (!columnEl) return;
+    container.scrollTo({ top: scrollTarget, behavior: "smooth" });
+    hasScrolledRef.current = true;
+  }, [currentTimeOffset, bookings]);
 
-        const columnRect = columnEl.getBoundingClientRect();
-        const grabOffsetY = e.clientY - (columnRect.top + HEADER_HEIGHT + originalGridTop);
+  // --- Drag to reschedule handlers ---
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent, booking: BookingView) => {
+      if (!onReschedule) return;
+      // Don't allow dragging completed, cancelled, or no-show bookings
+      if (["completed", "cancelled", "no_show"].includes(booking.status))
+        return;
 
-        // Set up a delayed drag start (150ms hold) to distinguish from clicks
-        pendingDragBooking.current = { booking, startY: e.clientY, grabOffsetY };
-        dragStartMouseY.current = e.clientY;
+      e.preventDefault();
+      e.stopPropagation();
 
-        dragTimeout.current = setTimeout(() => {
-            if (!pendingDragBooking.current) return;
-            isDragging.current = true;
+      const start = new Date(booking.startAt);
+      const startMinute = bookingMinuteOfDay(booking.startAt);
+      const originalGridTop = timeToOffset(
+        Math.floor(startMinute / 60),
+        startMinute % 60,
+      );
 
-            const end = new Date(booking.endAt);
-            setDrag({
-                bookingId: booking._id,
-                booking,
-                staffId: booking.staffId,
-                grabOffsetY: pendingDragBooking.current.grabOffsetY,
-                currentGridTop: originalGridTop,
-                originalGridTop,
-                durationMs: end.getTime() - start.getTime(),
-            });
-        }, 150);
-    }, [onReschedule]);
+      // Get the column element for this booking's staff
+      const columnEl = columnRefs.current.get(booking.staffId);
+      if (!columnEl) return;
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        // Cancel drag start if mouse moved significantly before timeout fires (it's a click)
-        if (pendingDragBooking.current && !isDragging.current) {
-            const dist = Math.abs(e.clientY - dragStartMouseY.current);
-            if (dist > 4) {
-                // Enough movement to treat as intentional drag - start drag immediately
-                const { booking, grabOffsetY } = pendingDragBooking.current;
-                if (dragTimeout.current) clearTimeout(dragTimeout.current);
+      const columnRect = columnEl.getBoundingClientRect();
+      const grabOffsetY =
+        e.clientY - (columnRect.top + HEADER_HEIGHT + originalGridTop);
 
-                isDragging.current = true;
-                const start = new Date(booking.startAt);
-                const end = new Date(booking.endAt);
-                const originalGridTop = timeToOffset(start.getHours(), start.getMinutes());
+      // Set up a delayed drag start (150ms hold) to distinguish from clicks
+      pendingDragBooking.current = { booking, startY: e.clientY, grabOffsetY };
+      dragStartMouseY.current = e.clientY;
 
-                setDrag({
-                    bookingId: booking._id,
-                    booking,
-                    staffId: booking.staffId,
-                    grabOffsetY,
-                    currentGridTop: originalGridTop,
-                    originalGridTop,
-                    durationMs: end.getTime() - start.getTime(),
-                });
-            }
+      dragTimeout.current = setTimeout(() => {
+        if (!pendingDragBooking.current) return;
+        isDragging.current = true;
+
+        const end = new Date(booking.endAt);
+        setDrag({
+          bookingId: booking._id,
+          booking,
+          staffId: booking.staffId,
+          grabOffsetY: pendingDragBooking.current.grabOffsetY,
+          currentGridTop: originalGridTop,
+          originalGridTop,
+          durationMs: end.getTime() - start.getTime(),
+        });
+      }, 150);
+    },
+    [onReschedule],
+  );
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      // Cancel drag start if mouse moved significantly before timeout fires (it's a click)
+      if (pendingDragBooking.current && !isDragging.current) {
+        const dist = Math.abs(e.clientY - dragStartMouseY.current);
+        if (dist > 4) {
+          // Enough movement to treat as intentional drag - start drag immediately
+          const { booking, grabOffsetY } = pendingDragBooking.current;
+          if (dragTimeout.current) clearTimeout(dragTimeout.current);
+
+          isDragging.current = true;
+          const start = new Date(booking.startAt);
+          const end = new Date(booking.endAt);
+          const startMinute = bookingMinuteOfDay(booking.startAt);
+          const originalGridTop = timeToOffset(
+            Math.floor(startMinute / 60),
+            startMinute % 60,
+          );
+
+          setDrag({
+            bookingId: booking._id,
+            booking,
+            staffId: booking.staffId,
+            grabOffsetY,
+            currentGridTop: originalGridTop,
+            originalGridTop,
+            durationMs: end.getTime() - start.getTime(),
+          });
         }
+      }
 
-        if (!isDragging.current || !drag) return;
+      if (!isDragging.current || !drag) return;
 
-        const columnEl = columnRefs.current.get(drag.staffId);
-        if (!columnEl) return;
+      const columnEl = columnRefs.current.get(drag.staffId);
+      if (!columnEl) return;
 
-        const columnRect = columnEl.getBoundingClientRect();
-        const relativeY = e.clientY - columnRect.top - HEADER_HEIGHT - drag.grabOffsetY;
+      const columnRect = columnEl.getBoundingClientRect();
+      const relativeY =
+        e.clientY - columnRect.top - HEADER_HEIGHT - drag.grabOffsetY;
 
-        // Snap to 15-minute intervals
-        const time = offsetToTime(relativeY);
-        const newGridTop = timeToOffset(time.hours, time.minutes);
+      // Snap to the organization's smallest booking interval.
+      const time = offsetToTime(relativeY, slotDurationMins);
+      const newGridTop = timeToOffset(time.hours, time.minutes);
 
-        // Clamp: don't let the booking overflow bottom
-        const durationHours = drag.durationMs / (1000 * 60 * 60);
-        const maxTop = ((END_HOUR + 1) - START_HOUR - durationHours) * HOUR_HEIGHT;
-        const clampedTop = Math.max(0, Math.min(newGridTop, maxTop));
+      // Clamp: don't let the booking overflow bottom
+      const durationHours = drag.durationMs / (1000 * 60 * 60);
+      const maxTop = (END_HOUR + 1 - START_HOUR - durationHours) * HOUR_HEIGHT;
+      const clampedTop = Math.max(0, Math.min(newGridTop, maxTop));
 
-        setDrag(prev => prev ? { ...prev, currentGridTop: clampedTop } : null);
-    }, [drag]);
+      setDrag((prev) =>
+        prev ? { ...prev, currentGridTop: clampedTop } : null,
+      );
+    },
+    [drag, slotDurationMins],
+  );
 
-    const handleMouseUp = useCallback(() => {
-        // Clear pending drag
-        if (dragTimeout.current) {
-            clearTimeout(dragTimeout.current);
-            dragTimeout.current = null;
-        }
-        pendingDragBooking.current = null;
+  const handleMouseUp = useCallback(() => {
+    // Clear pending drag
+    if (dragTimeout.current) {
+      clearTimeout(dragTimeout.current);
+      dragTimeout.current = null;
+    }
+    pendingDragBooking.current = null;
 
-        if (!isDragging.current || !drag) {
-            isDragging.current = false;
-            setDrag(null);
-            return;
-        }
+    if (!isDragging.current || !drag) {
+      isDragging.current = false;
+      setDrag(null);
+      return;
+    }
 
-        isDragging.current = false;
+    isDragging.current = false;
 
-        // Calculate the new start time
-        const newTime = offsetToTime(drag.currentGridTop);
+    // Calculate the new start time
+    const newTime = offsetToTime(drag.currentGridTop, slotDurationMins);
 
-        // Build the new startAt timestamp using the currentDate
-        const newStart = new Date(currentDate);
-        newStart.setHours(newTime.hours, newTime.minutes, 0, 0);
-        const newStartAt = newStart.getTime();
-
-        // Only trigger if time actually changed
-        const originalTime = offsetToTime(drag.originalGridTop);
-        if (newTime.hours !== originalTime.hours || newTime.minutes !== originalTime.minutes) {
-            onReschedule?.(drag.bookingId, newStartAt);
-        }
-
-        setDrag(null);
-    }, [drag, currentDate, onReschedule]);
-
-    // Attach global listeners while dragging
-    useEffect(() => {
-        if (drag) {
-            window.addEventListener("mousemove", handleMouseMove);
-            window.addEventListener("mouseup", handleMouseUp);
-            // Prevent text selection while dragging
-            document.body.style.userSelect = "none";
-            document.body.style.cursor = "grabbing";
-
-            return () => {
-                window.removeEventListener("mousemove", handleMouseMove);
-                window.removeEventListener("mouseup", handleMouseUp);
-                document.body.style.userSelect = "";
-                document.body.style.cursor = "";
-            };
-        }
-    }, [drag, handleMouseMove, handleMouseUp]);
-
-    // Cleanup on mouseup even without drag state (for cancelled drags)
-    useEffect(() => {
-        const cleanPending = () => {
-            if (dragTimeout.current) clearTimeout(dragTimeout.current);
-            pendingDragBooking.current = null;
-        };
-        window.addEventListener("mouseup", cleanPending);
-        return () => window.removeEventListener("mouseup", cleanPending);
-    }, []);
-
-    // Derive the drag preview time label
-    const dragTimeLabel = useMemo(() => {
-        if (!drag) return null;
-        const newTime = offsetToTime(drag.currentGridTop);
-        const endMs = drag.durationMs;
-        const endMinutes = newTime.hours * 60 + newTime.minutes + endMs / (1000 * 60);
-        const endH = Math.floor(endMinutes / 60);
-        const endM = Math.round(endMinutes % 60);
-        return {
-            start: `${String(newTime.hours).padStart(2, "0")}:${String(newTime.minutes).padStart(2, "0")}`,
-            end: `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`,
-            changed: drag.currentGridTop !== drag.originalGridTop,
-        };
-    }, [drag]);
-
-    return (
-        <div ref={scrollContainerRef} className={cn("flex relative min-w-max pb-10", drag && "select-none")}>
-            {/* Left Time Axis */}
-            <div className="w-12 shrink-0 border-r border-border/50 sticky left-0 bg-card z-20">
-                <div className="h-14 border-b border-border/50 bg-muted/10"></div>
-
-                {hours.map(h => (
-                    <div key={h} className="text-[10px] text-muted-foreground pr-1 relative" style={{ height: HOUR_HEIGHT }}>
-                        <span className="absolute -top-[7px] right-1 font-medium bg-card px-0.5 opacity-70">
-                            {format(new Date().setHours(h, 0), "HH:mm")}
-                        </span>
-                        <span className="absolute right-1 font-medium bg-card px-0.5 opacity-40 text-[9px]" style={{ top: HOUR_HEIGHT / 2 - 5 }}>
-                            {format(new Date().setHours(h, 30), "HH:mm")}
-                        </span>
-                    </div>
-                ))}
-            </div>
-
-            {/* Current Time Indicator */}
-            {currentTimeOffset !== null && (
-                <div
-                    className="absolute left-12 right-0 border-t-[1.5px] border-danger z-10 pointer-events-none"
-                    style={{ top: currentTimeOffset + HEADER_HEIGHT }}
-                >
-                    <div className="absolute -left-1.5 -top-[5px] w-[9px] h-[9px] rounded-full bg-danger animate-pulse" />
-                </div>
-            )}
-
-            {/* Staff Columns */}
-            <div className="flex-1 flex divide-x divide-border/40">
-                {staffMembers.map(staff => {
-                    const staffBookings = bookings.filter(b => b.staffId === staff._id);
-
-                    return (
-                        <div
-                            key={staff._id}
-                            className="flex-1 min-w-[220px] relative group/column"
-                            ref={(el) => { if (el) columnRefs.current.set(staff._id, el); }}
-                        >
-                            {/* Staff Header */}
-                            <div className="h-14 flex items-center justify-center font-medium text-sm border-b border-border/50 bg-card sticky top-0 z-20 transition-colors">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden">
-                                        {staff.avatarUrl ? (
-                                            <Image src={staff.avatarUrl} alt={staff.displayName} width={24} height={24} className="w-full h-full object-cover" />
-                                        ) : (
-                                            staff.displayName.charAt(0)
-                                        )}
-                                    </div>
-                                    <span>{staff.displayName}</span>
-                                    {staffBookings.length > 0 && (
-                                        <span className="text-[10px] font-semibold bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-full">
-                                            {staffBookings.length}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Grid Lines */}
-                            {hours.map(h => (
-                                <div
-                                    key={h}
-                                    className="border-b border-border/10 border-dashed relative group/slot transition-colors hover:bg-muted/5 cursor-pointer"
-                                    style={{ height: HOUR_HEIGHT }}
-                                    onClick={() => { /* open New Booking modal for this staff + slot */ }}
-                                >
-                                    <div
-                                        className="absolute left-0 right-0 border-b border-border/5 border-dotted pointer-events-none"
-                                        style={{ top: HOUR_HEIGHT / 2 }}
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/slot:opacity-100 transition-opacity pointer-events-none">
-                                        <div className="bg-background border border-border/50 shadow-sm rounded-md p-1.5 text-muted-foreground/50">
-                                            <IconPlus className="h-5 w-5" />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {/* Ghost guide: original position while dragging */}
-                            {drag && drag.staffId === staff._id && drag.currentGridTop !== drag.originalGridTop && (
-                                <div
-                                    className="absolute left-1 right-1 z-[5] rounded-[8px] border-2 border-dashed border-muted-foreground/20 bg-muted/10 pointer-events-none"
-                                    style={{
-                                        top: drag.originalGridTop + HEADER_HEIGHT,
-                                        height: Math.max((drag.durationMs / (1000 * 60 * 60)) * HOUR_HEIGHT, 24),
-                                    }}
-                                />
-                            )}
-
-                            {/* Bookings */}
-                            {staffBookings.map(booking => {
-                                const isDraggingThis = drag?.bookingId === booking._id;
-                                const start = new Date(booking.startAt);
-                                const end = new Date(booking.endAt);
-                                const startHour = start.getHours() + start.getMinutes() / 60;
-                                const endHour = end.getHours() + end.getMinutes() / 60;
-
-                                const clampedStart = Math.max(startHour, START_HOUR);
-                                const clampedEnd = Math.min(endHour, END_HOUR + 1);
-                                if (clampedEnd <= clampedStart) return null;
-
-                                const top = isDraggingThis
-                                    ? drag!.currentGridTop + HEADER_HEIGHT
-                                    : (clampedStart - START_HOUR) * HOUR_HEIGHT + HEADER_HEIGHT;
-
-                                const height = isDraggingThis
-                                    ? (drag!.durationMs / (1000 * 60 * 60)) * HOUR_HEIGHT
-                                    : (clampedEnd - clampedStart) * HOUR_HEIGHT;
-
-                                const canDrag = onReschedule && !["completed", "cancelled", "no_show"].includes(booking.status);
-
-                                return (
-                                    <div
-                                        key={booking._id}
-                                        className={cn(
-                                            "absolute left-1 right-1 z-10 p-[1px] group/booking",
-                                            isDraggingThis && "z-30 opacity-90",
-                                            isDraggingThis && "transition-none",
-                                            !isDraggingThis && drag && "opacity-40 transition-opacity duration-200",
-                                        )}
-                                        style={{
-                                            top,
-                                            height: Math.max(height, 24),
-                                            transition: isDraggingThis ? "none" : undefined,
-                                        }}
-                                    >
-                                        {/* Drag handle */}
-                                        {canDrag && !drag && (
-                                            <div
-                                                className="absolute -left-0 top-0 bottom-0 w-5 flex items-center justify-center opacity-0 group-hover/booking:opacity-100 transition-opacity cursor-grab z-20"
-                                                onMouseDown={(e) => handleDragStart(e, booking)}
-                                            >
-                                                <div className="bg-background/90 backdrop-blur border border-border/60 shadow-sm rounded-l-md px-0.5 py-2">
-                                                    <IconGripVertical className="h-3 w-3 text-muted-foreground" />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Drag time tooltip */}
-                                        {isDraggingThis && dragTimeLabel && (
-                                            <div className={cn(
-                                                "absolute -top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-md shadow-lg text-[11px] font-semibold whitespace-nowrap pointer-events-none",
-                                                dragTimeLabel.changed
-                                                    ? "bg-primary text-primary-foreground"
-                                                    : "bg-muted text-muted-foreground"
-                                            )}>
-                                                <IconClock className="h-3 w-3" />
-                                                {dragTimeLabel.start} – {dragTimeLabel.end}
-                                            </div>
-                                        )}
-
-                                        <BookingCard
-                                            booking={booking}
-                                            isSelected={selectedBookingId === booking._id}
-                                            onClick={() => {
-                                                if (!isDragging.current) {
-                                                    onSelectBooking(booking._id);
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
+    // Build the new startAt timestamp using the currentDate
+    const newStartAt = bookingTimestampForDate(
+      currentDate,
+      newTime.hours * 60 + newTime.minutes,
     );
+
+    // Only trigger if time actually changed
+    const originalTime = offsetToTime(drag.originalGridTop, slotDurationMins);
+    if (
+      newTime.hours !== originalTime.hours ||
+      newTime.minutes !== originalTime.minutes
+    ) {
+      setPendingDragReschedule({
+        booking: drag.booking,
+        newStartAt,
+        newEndAt: newStartAt + drag.durationMs,
+      });
+    }
+
+    setDrag(null);
+  }, [drag, currentDate, slotDurationMins]);
+
+  const confirmDragReschedule = useCallback(async () => {
+    if (!pendingDragReschedule || !onReschedule || isConfirmingReschedule) {
+      return;
+    }
+
+    setIsConfirmingReschedule(true);
+    try {
+      const changed = await onReschedule(
+        pendingDragReschedule.booking._id,
+        pendingDragReschedule.newStartAt,
+      );
+      if (changed) setPendingDragReschedule(null);
+    } finally {
+      setIsConfirmingReschedule(false);
+    }
+  }, [isConfirmingReschedule, onReschedule, pendingDragReschedule]);
+
+  // Attach global listeners while dragging
+  useEffect(() => {
+    if (drag) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      // Prevent text selection while dragging
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "grabbing";
+
+      return () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+        document.body.style.userSelect = "";
+        document.body.style.cursor = "";
+      };
+    }
+  }, [drag, handleMouseMove, handleMouseUp]);
+
+  // Cleanup on mouseup even without drag state (for cancelled drags)
+  useEffect(() => {
+    const cleanPending = () => {
+      if (dragTimeout.current) clearTimeout(dragTimeout.current);
+      pendingDragBooking.current = null;
+    };
+    window.addEventListener("mouseup", cleanPending);
+    return () => window.removeEventListener("mouseup", cleanPending);
+  }, []);
+
+  // Derive the drag preview time label
+  const dragTimeLabel = useMemo(() => {
+    if (!drag) return null;
+    const newTime = offsetToTime(drag.currentGridTop, slotDurationMins);
+    const endMs = drag.durationMs;
+    const endMinutes =
+      newTime.hours * 60 + newTime.minutes + endMs / (1000 * 60);
+    const endH = Math.floor(endMinutes / 60);
+    const endM = Math.round(endMinutes % 60);
+    return {
+      start: `${String(newTime.hours).padStart(2, "0")}:${String(newTime.minutes).padStart(2, "0")}`,
+      end: `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`,
+      changed: drag.currentGridTop !== drag.originalGridTop,
+    };
+  }, [drag, slotDurationMins]);
+
+  const handleQuickSlotHover = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>, staffId: Id<"staff_members">) => {
+      if (drag || slotDurationMins <= 0) {
+        setHoveredQuickSlot(null);
+        return;
+      }
+
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const gridOffset = event.clientY - bounds.top - HEADER_HEIGHT;
+      if (gridOffset < 0) {
+        setHoveredQuickSlot(null);
+        return;
+      }
+
+      const rawMinute = START_HOUR * 60 + (gridOffset / HOUR_HEIGHT) * 60;
+      const minute =
+        Math.floor(rawMinute / slotDurationMins) * slotDurationMins;
+      setHoveredQuickSlot(
+        quickSlotsByStaffAndMinute.get(`${staffId}:${minute}`) ?? null,
+      );
+    },
+    [drag, quickSlotsByStaffAndMinute, slotDurationMins],
+  );
+
+  return (
+    <>
+      <div
+        ref={scrollContainerRef}
+        className={cn("flex relative min-w-max pb-10", drag && "select-none")}
+      >
+        {/* Left Time Axis */}
+        <div className="w-12 shrink-0 border-r border-border/50 sticky left-0 bg-card z-20">
+          <div className="h-14 border-b border-border/50 bg-muted/10"></div>
+
+          {hours.map((h) => (
+            <div
+              key={h}
+              className="text-[10px] text-muted-foreground pr-1 relative"
+              style={{ height: HOUR_HEIGHT }}
+            >
+              <span className="absolute -top-[7px] right-1 font-medium bg-card px-0.5 opacity-70">
+                {format(new Date().setHours(h, 0), "HH:mm")}
+              </span>
+              <span
+                className="absolute right-1 font-medium bg-card px-0.5 opacity-40 text-[9px]"
+                style={{ top: HOUR_HEIGHT / 2 - 5 }}
+              >
+                {format(new Date().setHours(h, 30), "HH:mm")}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Current Time Indicator */}
+        {currentTimeOffset !== null && (
+          <div
+            className="absolute left-12 right-0 border-t-[1.5px] border-danger z-10 pointer-events-none"
+            style={{ top: currentTimeOffset + HEADER_HEIGHT }}
+          >
+            <div className="absolute -left-1.5 -top-[5px] w-[9px] h-[9px] rounded-full bg-danger animate-pulse" />
+          </div>
+        )}
+
+        {/* Staff Columns */}
+        <div className="flex-1 flex divide-x divide-border/40">
+          {staffMembers.map((staff) => {
+            const staffBookings = bookings.filter(
+              (b) => b.staffId === staff._id,
+            );
+            const staffAvatarUrl = getImageStorageUrl(staff.avatarUrl);
+            const staffQuickSlot =
+              hoveredQuickSlot?.staffId === staff._id ? hoveredQuickSlot : null;
+            const quickSlotStartMinute = staffQuickSlot
+              ? bookingMinuteOfDay(staffQuickSlot.startAt)
+              : null;
+
+            return (
+              <div
+                key={staff._id}
+                className="flex-1 min-w-[220px] relative group/column"
+                data-staff-calendar-column={staff._id}
+                aria-label={`${staff.displayName} calendar`}
+                ref={(el) => {
+                  if (el) columnRefs.current.set(staff._id, el);
+                }}
+                onMouseMove={(event) => handleQuickSlotHover(event, staff._id)}
+                onMouseLeave={() => {
+                  if (hoveredQuickSlot?.staffId === staff._id) {
+                    setHoveredQuickSlot(null);
+                  }
+                }}
+              >
+                {/* Staff Header */}
+                <div className="h-14 flex items-center justify-center font-medium text-sm border-b border-border/50 bg-card sticky top-0 z-20 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden">
+                      {staffAvatarUrl ? (
+                        <Image
+                          src={staffAvatarUrl}
+                          alt={staff.displayName}
+                          width={24}
+                          height={24}
+                          unoptimized
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        staff.displayName.charAt(0)
+                      )}
+                    </div>
+                    <span>{staff.displayName}</span>
+                    {staffBookings.length > 0 && (
+                      <span className="text-[10px] font-semibold bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                        {staffBookings.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Grid Lines */}
+                {hours.map((h) => (
+                  <div
+                    key={h}
+                    className="border-b border-border/10 border-dashed relative"
+                    style={{ height: HOUR_HEIGHT }}
+                  >
+                    <div
+                      className="absolute left-0 right-0 border-b border-border/5 border-dotted pointer-events-none"
+                      style={{ top: HOUR_HEIGHT / 2 }}
+                    />
+                  </div>
+                ))}
+
+                {staffQuickSlot && quickSlotStartMinute !== null && (
+                  <button
+                    type="button"
+                    data-slot="quick-booking-target"
+                    className="absolute left-1.5 right-1.5 z-10 flex items-center justify-center gap-1.5 overflow-hidden rounded-md border border-border/60 bg-muted/60 px-2 text-xs font-medium text-muted-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    style={{
+                      top:
+                        ((quickSlotStartMinute - START_HOUR * 60) / 60) *
+                          HOUR_HEIGHT +
+                        HEADER_HEIGHT,
+                      height: Math.max(
+                        (staffQuickSlot.durationMins / 60) * HOUR_HEIGHT,
+                        22,
+                      ),
+                    }}
+                    onClick={() => onQuickBooking(staffQuickSlot)}
+                    aria-label={`Create booking from ${bookingTimeLabel(staffQuickSlot.startAt)} to ${bookingTimeLabel(staffQuickSlot.endAt)} with ${staff.displayName}`}
+                  >
+                    <IconPlus className="size-3.5 shrink-0" />
+                    <span className="tabular-nums">
+                      {bookingTimeLabel(staffQuickSlot.startAt)} –{" "}
+                      {bookingTimeLabel(staffQuickSlot.endAt)}
+                    </span>
+                  </button>
+                )}
+
+                {/* Ghost guide: original position while dragging */}
+                {drag &&
+                  drag.staffId === staff._id &&
+                  drag.currentGridTop !== drag.originalGridTop && (
+                    <div
+                      className="absolute left-1 right-1 z-[5] rounded-[8px] border-2 border-dashed border-muted-foreground/20 bg-muted/10 pointer-events-none"
+                      style={{
+                        top: drag.originalGridTop + HEADER_HEIGHT,
+                        height: Math.max(
+                          (drag.durationMs / (1000 * 60 * 60)) * HOUR_HEIGHT,
+                          24,
+                        ),
+                      }}
+                    />
+                  )}
+
+                {/* Bookings */}
+                {staffBookings.map((booking) => {
+                  const isDraggingThis = drag?.bookingId === booking._id;
+                  const startMinute = bookingMinuteOfDay(booking.startAt);
+                  const durationMinutes =
+                    (booking.endAt - booking.startAt) / 60_000;
+                  const startHour = startMinute / 60;
+                  const endHour = (startMinute + durationMinutes) / 60;
+
+                  const clampedStart = Math.max(startHour, START_HOUR);
+                  const clampedEnd = Math.min(endHour, END_HOUR + 1);
+                  if (clampedEnd <= clampedStart) return null;
+
+                  const top = isDraggingThis
+                    ? drag!.currentGridTop + HEADER_HEIGHT
+                    : (clampedStart - START_HOUR) * HOUR_HEIGHT + HEADER_HEIGHT;
+
+                  const height = isDraggingThis
+                    ? (drag!.durationMs / (1000 * 60 * 60)) * HOUR_HEIGHT
+                    : (clampedEnd - clampedStart) * HOUR_HEIGHT;
+
+                  const canDrag =
+                    onReschedule &&
+                    !["completed", "cancelled", "no_show"].includes(
+                      booking.status,
+                    );
+
+                  return (
+                    <div
+                      key={booking._id}
+                      className={cn(
+                        "absolute left-1 right-1 z-10 p-[1px] group/booking",
+                        isDraggingThis && "z-30 opacity-90",
+                        isDraggingThis && "transition-none",
+                        !isDraggingThis &&
+                          drag &&
+                          "opacity-40 transition-opacity duration-200",
+                      )}
+                      style={{
+                        top,
+                        height: Math.max(height, 24),
+                        transition: isDraggingThis ? "none" : undefined,
+                      }}
+                    >
+                      {/* Drag handle */}
+                      {canDrag && !drag && (
+                        <div
+                          className="absolute -left-0 top-0 bottom-0 w-5 flex items-center justify-center opacity-0 group-hover/booking:opacity-100 transition-opacity cursor-grab z-20"
+                          onMouseDown={(e) => handleDragStart(e, booking)}
+                        >
+                          <div className="bg-background/90 backdrop-blur border border-border/60 shadow-sm rounded-l-md px-0.5 py-2">
+                            <IconGripVertical className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Drag time tooltip */}
+                      {isDraggingThis && dragTimeLabel && (
+                        <div
+                          className={cn(
+                            "absolute -top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 px-2.5 py-1 rounded-md shadow-lg text-[11px] font-semibold whitespace-nowrap pointer-events-none",
+                            dragTimeLabel.changed
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground",
+                          )}
+                        >
+                          <IconClock className="h-3 w-3" />
+                          {dragTimeLabel.start} – {dragTimeLabel.end}
+                        </div>
+                      )}
+
+                      <BookingCard
+                        booking={booking}
+                        isSelected={selectedBookingId === booking._id}
+                        onClick={() => {
+                          if (!isDragging.current) {
+                            onSelectBooking(booking._id);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <AlertDialog
+        open={pendingDragReschedule !== null}
+        onOpenChange={(open) => {
+          if (!open && !isConfirmingReschedule) {
+            setPendingDragReschedule(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm reschedule</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDragReschedule
+                ? `Move ${pendingDragReschedule.booking.customer?.name ?? "this client"}’s ${bookingServiceLabel(pendingDragReschedule.booking)} from ${bookingDateLabel(pendingDragReschedule.booking.startAt)}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} to ${bookingDateLabel(pendingDragReschedule.newStartAt)}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " The client will receive an email with the new time." : ""}`
+                : "Review the new appointment time before confirming."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isConfirmingReschedule}>
+              Keep original time
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isConfirmingReschedule}
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDragReschedule();
+              }}
+            >
+              {isConfirmingReschedule && <Spinner data-icon="inline-start" />}
+              {isConfirmingReschedule
+                ? "Rescheduling..."
+                : "Confirm reschedule"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }

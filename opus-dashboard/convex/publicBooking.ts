@@ -23,6 +23,7 @@ import {
   normalizeBookingEmail,
 } from "./lib/bookingEmailSecurity";
 import { queueBookingEmailNotifications } from "./lib/bookingEmailNotifications";
+import { formatBookingNotificationDateTime } from "./lib/bookingTime";
 
 const PUBLIC_BOOKING_ORG_LIMIT = 12;
 const PUBLIC_BOOKING_ORG_WINDOW_MS = 5 * 60 * 1_000;
@@ -42,7 +43,7 @@ type PublicBookingInput = {
   staffId: Id<"staff_members">;
   startAt: number;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
   customerEmail?: string;
   customerNote?: string;
 };
@@ -63,7 +64,7 @@ const publicBookingArgs = {
   staffId: v.id("staff_members"),
   startAt: v.number(),
   customerName: v.string(),
-  customerPhone: v.string(),
+  customerPhone: v.optional(v.string()),
   customerEmail: v.optional(v.string()),
   customerNote: v.optional(v.string()),
 };
@@ -127,8 +128,10 @@ async function createPublicBookingRecord(
       "Enter a customer name between 2 and 100 characters.",
     );
   }
-  const normalizedPhone = args.customerPhone.replace(/[^\d+]/g, "");
-  if (!/^\+?\d{7,15}$/.test(normalizedPhone)) {
+  const normalizedPhone = args.customerPhone?.trim()
+    ? args.customerPhone.trim().replace(/[^\d+]/g, "")
+    : undefined;
+  if (normalizedPhone && !/^\+?\d{7,15}$/.test(normalizedPhone)) {
     throw new ConvexError("Enter a valid phone number.");
   }
   const customerEmail = args.customerEmail
@@ -142,12 +145,14 @@ async function createPublicBookingRecord(
     throw new ConvexError("Booking notes must be 1,000 characters or fewer.");
   }
 
-  const matchingPhoneCustomers = await ctx.db
-    .query("customers")
-    .withIndex("by_org_phone", (q) =>
-      q.eq("orgId", args.orgId).eq("phone", normalizedPhone),
-    )
-    .collect();
+  const matchingPhoneCustomers = normalizedPhone
+    ? await ctx.db
+        .query("customers")
+        .withIndex("by_org_phone", (q) =>
+          q.eq("orgId", args.orgId).eq("phone", normalizedPhone),
+        )
+        .collect()
+    : [];
   const phoneCustomer = matchingPhoneCustomers.find((item) => !item.isDeleted);
   const matchingEmailCustomers = customerEmail
     ? await ctx.db
@@ -339,7 +344,7 @@ async function createPublicBookingRecord(
     customerId = customer._id;
     await ctx.db.patch(customerId, {
       name: customerName,
-      phone: normalizedPhone,
+      ...(normalizedPhone !== undefined ? { phone: normalizedPhone } : {}),
       ...(customerEmail ? { email: customerEmail } : {}),
       updatedAt: Date.now(),
     });
@@ -449,17 +454,17 @@ async function createPublicBookingRecord(
     staff,
     sendCustomerConfirmation: true,
     notifyTeamOfNewBooking: true,
+    notifyAssignedStaffOfNewBooking: true,
     scheduleReminders: true,
   });
 
   // ── Dashboard notification — shows in navbar bell for the business owner ──
-  const startDate = new Date(args.startAt);
-  const timeLabel = `${String(startDate.getUTCHours()).padStart(2, "0")}:${String(startDate.getUTCMinutes()).padStart(2, "0")}`;
+  const appointmentLabel = formatBookingNotificationDateTime(args.startAt);
   await ctx.runMutation(internal.dashboardNotifications.create, {
     orgId: args.orgId,
     type: "new_booking",
     title: "New Booking",
-    body: `${customerName} booked ${service.name} with ${staff.displayName} at ${timeLabel}`,
+    body: `${customerName} booked ${service.name} with ${staff.displayName} for ${appointmentLabel}`,
     bookingId,
     customerId,
   });

@@ -5,6 +5,7 @@ export interface OperationalSettings {
   currency: string;
   locale: string;
   slotDurationMins: number;
+  quickBookingDurationMins?: number;
   bookingWindowDays: number;
   cancellationWindowHours: number;
   bufferTimeMins: number;
@@ -12,6 +13,16 @@ export interface OperationalSettings {
 
 function isIntegerInRange(value: number, min: number, max: number): boolean {
   return Number.isInteger(value) && value >= min && value <= max;
+}
+
+export function defaultQuickBookingDurationMins(
+  slotDurationMins: number,
+): number {
+  if (!Number.isInteger(slotDurationMins) || slotDurationMins <= 0) return 30;
+  return Math.max(
+    slotDurationMins,
+    Math.ceil(30 / slotDurationMins) * slotDurationMins,
+  );
 }
 
 export function canonicalLocale(value: string): string | null {
@@ -54,6 +65,14 @@ export function operationalSettingsError(
   }
   if (!isIntegerInRange(settings.slotDurationMins, 1, 480)) {
     return "Slot duration must be a whole number between 1 and 480 minutes.";
+  }
+  if (
+    settings.quickBookingDurationMins !== undefined &&
+    (!isIntegerInRange(settings.quickBookingDurationMins, 1, 480) ||
+      settings.quickBookingDurationMins < settings.slotDurationMins ||
+      settings.quickBookingDurationMins % settings.slotDurationMins !== 0)
+  ) {
+    return `Quick booking duration must be a whole-number multiple of the ${settings.slotDurationMins} minute slot duration, up to 480 minutes.`;
   }
   if (!isIntegerInRange(settings.bookingWindowDays, 1, 730)) {
     return "Booking window must be a whole number between 1 and 730 days.";

@@ -26,6 +26,7 @@ const validSettings = {
   currency: "MKD",
   locale: "mk-MK",
   slotDurationMins: 15,
+  quickBookingDurationMins: 30,
   bookingWindowDays: 60,
   cancellationWindowHours: 24,
   bufferTimeMins: 0,
@@ -41,6 +42,21 @@ const invalidSettingsCases: Array<[string, Partial<SettingsInput>, string]> = [
   ["zero slot duration", { slotDurationMins: 0 }, "Slot duration"],
   ["fractional slot duration", { slotDurationMins: 15.5 }, "Slot duration"],
   ["excessive slot duration", { slotDurationMins: 481 }, "Slot duration"],
+  [
+    "zero quick booking duration",
+    { quickBookingDurationMins: 0 },
+    "Quick booking duration",
+  ],
+  [
+    "quick booking shorter than a slot",
+    { quickBookingDurationMins: 10 },
+    "Quick booking duration",
+  ],
+  [
+    "quick booking not aligned to the slot duration",
+    { quickBookingDurationMins: 20 },
+    "Quick booking duration",
+  ],
   ["zero booking window", { bookingWindowDays: 0 }, "Booking window"],
   ["fractional booking window", { bookingWindowDays: 1.5 }, "Booking window"],
   ["excessive booking window", { bookingWindowDays: 731 }, "Booking window"],
@@ -89,6 +105,25 @@ async function completePublishedWebsite(t: TestBackend) {
   });
   await owner.mutation(api.activation.saveHours, {
     openingHours: allDaysOpeningHours,
+  });
+  await owner.mutation(api.activation.saveStorefront, {
+    tagline: "Reliable care in central Skopje.",
+    phone: "+38970111222",
+  });
+  const logoStorageId = await t.run(async (ctx) => {
+    return await ctx.storage.store(
+      new Blob(["hardening-logo"], { type: "image/png" }),
+    );
+  });
+  await owner.mutation(api.orgSettings.updateLogo, {
+    orgId,
+    storageId: logoStorageId,
+  });
+  await owner.mutation(api.orgMedia.addMedia, {
+    orgId,
+    url: "https://images.example.com/hardening-cover.jpg",
+    type: "cover",
+    sortOrder: 0,
   });
   await owner.mutation(api.website.publish, { orgId });
   const service = await t.run(async (ctx) => await ctx.db.get(serviceId));
@@ -238,6 +273,7 @@ describe("operational settings hardening", () => {
         currency: " eur ",
         locale: " mk-mk ",
         slotDurationMins: 20,
+        quickBookingDurationMins: 40,
         bookingWindowDays: 90,
         cancellationWindowHours: 48,
         bufferTimeMins: 0,
@@ -252,6 +288,7 @@ describe("operational settings hardening", () => {
       currency: "EUR",
       locale: "mk-MK",
       slotDurationMins: 20,
+      quickBookingDurationMins: 40,
       bookingWindowDays: 90,
       cancellationWindowHours: 48,
       bufferTimeMins: 0,

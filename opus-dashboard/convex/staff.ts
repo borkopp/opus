@@ -1,7 +1,51 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { requireAuth, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
+import {
+  isValidBookingEmail,
+  normalizeBookingEmail,
+} from "./lib/bookingEmailSecurity";
+import { resolveStoredImageUrl } from "./lib/imageUrl";
+
+type StorageCtx = Pick<import("./_generated/server").QueryCtx, "storage">;
+
+async function visibleStaffMember(
+  ctx: StorageCtx,
+  staffMember: Doc<"staff_members">,
+  canManageAppointmentEmail: boolean,
+) {
+  const visible = { ...staffMember };
+  const avatarUrl = await resolveStoredImageUrl(ctx, visible.avatarUrl);
+  if (avatarUrl) {
+    visible.avatarUrl = avatarUrl;
+  } else {
+    delete visible.avatarUrl;
+  }
+  if (!canManageAppointmentEmail) delete visible.appointmentEmail;
+  return visible;
+}
+
+async function normalizeAvatarUrl(
+  ctx: StorageCtx,
+  value: string | null | undefined,
+) {
+  const avatarUrl = await resolveStoredImageUrl(ctx, value);
+  if (value?.trim() && !avatarUrl) {
+    throw new ConvexError("Profile photo could not be loaded. Upload it again.");
+  }
+  return avatarUrl;
+}
+
+function normalizeAppointmentEmail(value: string | null | undefined) {
+  if (!value?.trim()) return undefined;
+  const email = normalizeBookingEmail(value);
+  if (!isValidBookingEmail(email)) {
+    throw new ConvexError("Enter a valid appointment email address.");
+  }
+  return email;
+}
 
 export const listStaffMembers = query({
   args: {
@@ -9,7 +53,7 @@ export const listStaffMembers = query({
   },
   returns: v.array(v.any()), // Can be refined later with Document<"staff_members">
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const { staffMember: caller } = await requireAuth(ctx, args.orgId);
 
     const staff = await ctx.db
       .query("staff_members")
@@ -17,7 +61,13 @@ export const listStaffMembers = query({
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 
-    return staff.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    return await Promise.all(
+      staff
+        .sort((a, b) => a.displayName.localeCompare(b.displayName))
+        .map((staffMember) =>
+          visibleStaffMember(ctx, staffMember, caller.role === "owner"),
+        ),
+    );
   },
 });
 
@@ -28,7 +78,7 @@ export const getStaffMember = query({
   },
   returns: v.union(v.null(), v.any()),
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const { staffMember: caller } = await requireAuth(ctx, args.orgId);
 
     const staffMember = await ctx.db.get(args.staffId);
 
@@ -40,7 +90,11 @@ export const getStaffMember = query({
       return null;
     }
 
-    return staffMember;
+    return await visibleStaffMember(
+      ctx,
+      staffMember,
+      caller.role === "owner",
+    );
   },
 });
 
@@ -52,6 +106,7 @@ export const createStaffMember = mutation({
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     specialties: v.array(v.string()),
+    appointmentEmail: v.optional(v.string()),
   },
   returns: v.id("staff_members"),
   handler: async (ctx, args) => {
@@ -63,14 +118,22 @@ export const createStaffMember = mutation({
     if (args.role === "owner" && caller.role !== "owner") {
       throw new ConvexError("Only an owner can add another owner");
     }
+    if (args.appointmentEmail !== undefined && caller.role !== "owner") {
+      throw new ConvexError(
+        "Only an owner can manage staff appointment emails.",
+      );
+    }
+    const appointmentEmail = normalizeAppointmentEmail(args.appointmentEmail);
+    const avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
 
     const newStaffId = await ctx.db.insert("staff_members", {
       orgId: args.orgId,
       displayName: args.displayName,
       role: args.role,
       bio: args.bio,
-      avatarUrl: args.avatarUrl,
+      avatarUrl,
       specialties: args.specialties,
+      appointmentEmail,
       isActive: true,
       isDeleted: false,
       createdAt: Date.now(),
@@ -89,6 +152,7 @@ export const createStaffMember = mutation({
         displayName: args.displayName,
         role: args.role,
         specialties: args.specialties,
+        appointmentEmail,
       },
       createdAt: Date.now(),
     });
@@ -113,6 +177,7 @@ export const updateStaffMember = mutation({
       v.union(v.literal("owner"), v.literal("manager"), v.literal("staff")),
     ),
     isActive: v.optional(v.boolean()),
+    appointmentEmail: v.optional(v.union(v.string(), v.null())),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -126,6 +191,11 @@ export const updateStaffMember = mutation({
 
     if (args.role !== undefined && caller.role === "staff") {
       throw new ConvexError("Staff cannot change their own role");
+    }
+    if (args.appointmentEmail !== undefined && caller.role !== "owner") {
+      throw new ConvexError(
+        "Only an owner can manage staff appointment emails.",
+      );
     }
 
     const existingStaff = await ctx.db.get(args.staffId);
@@ -170,10 +240,17 @@ export const updateStaffMember = mutation({
     };
     if (args.displayName !== undefined) updates.displayName = args.displayName;
     if (args.bio !== undefined) updates.bio = args.bio;
-    if (args.avatarUrl !== undefined) updates.avatarUrl = args.avatarUrl;
+    if (args.avatarUrl !== undefined) {
+      updates.avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
+    }
     if (args.specialties !== undefined) updates.specialties = args.specialties;
     if (args.role !== undefined) updates.role = args.role;
     if (args.isActive !== undefined) updates.isActive = args.isActive;
+    if (args.appointmentEmail !== undefined) {
+      updates.appointmentEmail = normalizeAppointmentEmail(
+        args.appointmentEmail,
+      );
+    }
 
     await ctx.db.patch(args.staffId, updates);
 
@@ -194,6 +271,13 @@ export const updateStaffMember = mutation({
       await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
         orgId: args.orgId,
       });
+    }
+    if (args.appointmentEmail !== undefined) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.notifications.reconcileBookingRemindersForOrg,
+        { orgId: args.orgId },
+      );
     }
 
     return null;

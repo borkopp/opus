@@ -1,7 +1,8 @@
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import { resolveStoredImageUrl } from "./imageUrl";
 
-type ReadCtx = Pick<QueryCtx, "db">;
+type ReadCtx = Pick<QueryCtx, "db" | "storage">;
 
 export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
   const [media, services, orgSettings, activeStaff] = await Promise.all([
@@ -115,12 +116,14 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
     ),
     aiPersonaName: orgSettings?.aiPersonaName ?? "Aria",
     aiGreetingMessage: orgSettings?.aiGreetingMessage ?? null,
-    staff: publicStaff.map((member) => ({
-      _id: member._id,
-      displayName: member.displayName,
-      bio: member.bio,
-      avatarUrl: member.avatarUrl,
-      specialties: member.specialties,
-    })),
+    staff: await Promise.all(
+      publicStaff.map(async (member) => ({
+        _id: member._id,
+        displayName: member.displayName,
+        bio: member.bio,
+        avatarUrl: await resolveStoredImageUrl(ctx, member.avatarUrl),
+        specialties: member.specialties,
+      })),
+    ),
   };
 }

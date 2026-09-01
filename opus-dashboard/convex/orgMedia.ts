@@ -75,6 +75,18 @@ export const addMedia = mutation({
       }
     }
 
+    if (args.type === "gallery") {
+      const activeGallery = await ctx.db
+        .query("org_media")
+        .withIndex("by_org_type_active", (q) =>
+          q.eq("orgId", args.orgId).eq("type", "gallery").eq("isDeleted", false),
+        )
+        .collect();
+      if (activeGallery.length >= 3) {
+        throw new ConvexError("Maximum of 3 gallery photos allowed.");
+      }
+    }
+
     const mediaId = await ctx.db.insert("org_media", {
       orgId: args.orgId,
       url: finalUrl,

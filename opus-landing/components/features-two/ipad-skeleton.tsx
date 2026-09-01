@@ -2,6 +2,7 @@
 import React, { useRef, useImperativeHandle } from "react";
 import { Easing, motion, useAnimate } from "motion/react";
 import Image from "next/image";
+import { useI18n } from "../i18n-provider";
 
 interface DynamicIslandHandle {
   start: () => void;
@@ -15,6 +16,7 @@ const SPRING_OPTIONS = {
 };
 
 export function IPadSkeleton() {
+  const { messages } = useI18n();
   const dynamicIslandRef = useRef<DynamicIslandHandle>(null);
 
   const screenContentVariants = {
@@ -51,12 +53,15 @@ export function IPadSkeleton() {
             >
               <Image
                 src="/hero-dark.png"
-                alt="Screen"
+                alt={messages.demos.devices.screenAlt}
                 fill
                 className="object-cover object-left"
               />
               <div className="absolute inset-x-0 top-0 z-10">
-                <IPadDynamicIsland ref={dynamicIslandRef} />
+                <IPadDynamicIsland
+                  ref={dynamicIslandRef}
+                  connectedLabel={messages.demos.devices.connected}
+                />
               </div>
             </motion.div>
           </div>
@@ -66,7 +71,13 @@ export function IPadSkeleton() {
   );
 }
 
-function IPadDynamicIsland({ ref }: { ref: React.Ref<DynamicIslandHandle> }) {
+function IPadDynamicIsland({
+  ref,
+  connectedLabel,
+}: {
+  ref: React.Ref<DynamicIslandHandle>;
+  connectedLabel: string;
+}) {
   const [scope, animate] = useAnimate();
   const hasAnimatedRef = useRef(false);
 
@@ -135,7 +146,7 @@ function IPadDynamicIsland({ ref }: { ref: React.Ref<DynamicIslandHandle> }) {
           style={{ opacity: 0 }}
         >
           <span className="text-[3px] leading-none font-medium text-white">
-            Connected
+            {connectedLabel}
           </span>
         </div>
       </div>

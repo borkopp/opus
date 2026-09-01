@@ -2,6 +2,7 @@
 import React, { useRef, useImperativeHandle } from "react";
 import { Easing, motion, useAnimate } from "motion/react";
 import Image from "next/image";
+import { useI18n } from "../i18n-provider";
 
 interface DynamicIslandHandle {
   start: () => void;
@@ -15,6 +16,7 @@ const SPRING_OPTIONS = {
 };
 
 export function MacbookSkeleton() {
+  const { messages } = useI18n();
   const dynamicIslandRef = useRef<DynamicIslandHandle>(null);
 
   const lidVariants = {
@@ -58,12 +60,15 @@ export function MacbookSkeleton() {
             >
               <Image
                 src="/hero-dark.png"
-                alt="Screen"
+                alt={messages.demos.devices.screenAlt}
                 fill
                 className="object-cover"
               />
               <div className="absolute inset-x-0 top-0 z-10">
-                <MacbookDynamicIsland ref={dynamicIslandRef} />
+                <MacbookDynamicIsland
+                  ref={dynamicIslandRef}
+                  connectedLabel={messages.demos.devices.airpodsConnected}
+                />
               </div>
             </motion.div>
           </div>
@@ -78,8 +83,10 @@ export function MacbookSkeleton() {
 
 function MacbookDynamicIsland({
   ref,
+  connectedLabel,
 }: {
   ref: React.Ref<DynamicIslandHandle>;
+  connectedLabel: string;
 }) {
   const [scope, animate] = useAnimate();
   const hasAnimatedRef = useRef(false);
@@ -149,7 +156,7 @@ function MacbookDynamicIsland({
           style={{ opacity: 0 }}
         >
           <span className="text-[3px] leading-none font-medium text-white">
-            Airpods Connected
+            {connectedLabel}
           </span>
           <div className="ml-0.5 flex h-1 w-2 items-center rounded-xs border border-green-500">
             <div className="h-full w-[85%] bg-green-500" />

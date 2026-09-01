@@ -9,7 +9,7 @@ const inputVariants = cva(
     variants: {
       variant: {
         default:
-          "h-9 rounded-md bg-card px-3 py-1 text-base shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm",
+          "h-9 rounded-md bg-card dark:bg-input/30 px-3 py-1 text-base shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm",
         surface:
           "h-11 rounded-xl border-transparent bg-secondary px-4 py-2 text-sm shadow-none transition-[background-color,border-color,box-shadow] focus-visible:border-ring focus-visible:bg-card focus-visible:ring-3 focus-visible:ring-ring/20",
         prominent:

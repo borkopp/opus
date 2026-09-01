@@ -37,6 +37,8 @@ export type AppointmentEmailData = {
   dashboardUrl?: string;
   hoursBefore?: number;
   generatedAt?: number;
+  previousStartAt?: number;
+  previousEndAt?: number;
 };
 
 type ShellOptions = {
@@ -50,14 +52,16 @@ type ShellOptions = {
 };
 
 const EMAIL_COLORS = {
-  ink: "#18171a",
-  muted: "#68656d",
-  line: "#e6e2ea",
-  paper: "#f6f4f7",
+  ink: "#20211f",
+  muted: "#686a65",
+  line: "#dcddd7",
+  paper: "#f6f6f3",
   white: "#ffffff",
-  violet: "#6d4aff",
-  violetSoft: "#eeeaff",
+  brand: "#ff814a",
+  brandSoft: "#fff0ea",
 };
+
+const EMAIL_BRAND_LOGO_URL = "https://studio.opus.mk/opus-logo.png";
 
 function escapeHtml(value: string | number | undefined | null) {
   return String(value ?? "")
@@ -153,13 +157,15 @@ function renderShell(options: ShellOptions) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${EMAIL_COLORS.paper};">
       <tr>
         <td align="center" style="padding:32px 12px;">
-          <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;background:${EMAIL_COLORS.white};border:1px solid ${EMAIL_COLORS.line};border-radius:24px;overflow:hidden;box-shadow:0 16px 50px rgba(35,27,51,.08);">
-            <tr><td style="height:5px;background:${EMAIL_COLORS.violet};font-size:0;line-height:0;">&nbsp;</td></tr>
+          <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;background:${EMAIL_COLORS.white};border:1px solid ${EMAIL_COLORS.line};border-radius:24px;overflow:hidden;box-shadow:0 16px 50px rgba(32,33,31,.08);">
+            <tr><td style="height:5px;background:${EMAIL_COLORS.brand};font-size:0;line-height:0;">&nbsp;</td></tr>
             <tr>
               <td class="email-pad" style="padding:38px 42px 18px;">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                   <tr>
-                    <td style="font-size:15px;font-weight:800;letter-spacing:-.02em;color:${EMAIL_COLORS.ink};">OPUS</td>
+                    <td style="line-height:0;">
+                      <img src="${EMAIL_BRAND_LOGO_URL}" width="100" height="35" alt="OPUS" style="display:block;width:100px;height:35px;border:0;">
+                    </td>
                     <td align="right" style="font-size:12px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.studioName)}</td>
                   </tr>
                 </table>
@@ -167,16 +173,16 @@ function renderShell(options: ShellOptions) {
             </tr>
             <tr>
               <td class="email-pad" style="padding:18px 42px 6px;">
-                <div style="font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:${EMAIL_COLORS.violet};">${escapeHtml(options.eyebrow)}</div>
+                <div style="font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:${EMAIL_COLORS.brand};">${escapeHtml(options.eyebrow)}</div>
                 <h1 class="email-title" style="margin:12px 0 12px;font-size:38px;line-height:43px;letter-spacing:-.045em;font-weight:700;color:${EMAIL_COLORS.ink};">${escapeHtml(options.title)}</h1>
                 <p style="margin:0;font-size:16px;line-height:25px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.intro)}</p>
               </td>
             </tr>
             <tr><td class="email-pad" style="padding:26px 42px 40px;">${options.content}</td></tr>
             <tr>
-              <td class="email-pad" style="padding:22px 42px 28px;border-top:1px solid ${EMAIL_COLORS.line};background:#fbfafc;">
+              <td class="email-pad" style="padding:22px 42px 28px;border-top:1px solid ${EMAIL_COLORS.line};background:#fbfbf9;">
                 <p style="margin:0 0 6px;font-size:12px;line-height:18px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.finePrint ?? `Sent securely by OPUS for ${options.studioName}.`)}</p>
-                <p style="margin:0;font-size:11px;line-height:17px;color:#918d96;">Transactional appointment email · No marketing subscription</p>
+                <p style="margin:0;font-size:11px;line-height:17px;color:#85877f;">Transactional appointment email · No marketing subscription</p>
               </td>
             </tr>
           </table>
@@ -200,8 +206,8 @@ function appointmentCard(data: AppointmentEmailData) {
   const location = [data.address, data.city].filter(Boolean).join(", ");
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid ${EMAIL_COLORS.line};border-radius:18px;overflow:hidden;">
     <tr>
-      <td width="112" align="center" style="width:112px;padding:22px 12px;background:${EMAIL_COLORS.violetSoft};border-right:1px solid ${EMAIL_COLORS.line};">
-        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:${EMAIL_COLORS.violet};">${escapeHtml(formatShortMonth(data.startAt, locale))}</div>
+      <td width="112" align="center" style="width:112px;padding:22px 12px;background:${EMAIL_COLORS.brandSoft};border-right:1px solid ${EMAIL_COLORS.line};">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:${EMAIL_COLORS.brand};">${escapeHtml(formatShortMonth(data.startAt, locale))}</div>
         <div style="margin-top:4px;font-size:38px;line-height:40px;font-weight:750;letter-spacing:-.05em;color:${EMAIL_COLORS.ink};">${escapeHtml(formatDay(data.startAt))}</div>
         <div style="margin-top:6px;font-size:13px;font-weight:650;color:${EMAIL_COLORS.ink};">${escapeHtml(formatTime(data.startAt, locale))}</div>
       </td>
@@ -218,7 +224,7 @@ function appointmentCard(data: AppointmentEmailData) {
 }
 
 function button(href: string, label: string, primary = false) {
-  return `<a class="action" href="${escapeHtml(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 18px;border:1px solid ${primary ? EMAIL_COLORS.ink : EMAIL_COLORS.line};border-radius:12px;background:${primary ? EMAIL_COLORS.ink : EMAIL_COLORS.white};color:${primary ? EMAIL_COLORS.white : EMAIL_COLORS.ink};font-size:13px;font-weight:700;text-decoration:none;">${escapeHtml(label)}</a>`;
+  return `<a class="action" href="${escapeHtml(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 18px;border:1px solid ${primary ? EMAIL_COLORS.brand : EMAIL_COLORS.line};border-radius:12px;background:${primary ? EMAIL_COLORS.brand : EMAIL_COLORS.white};color:${primary ? EMAIL_COLORS.white : EMAIL_COLORS.ink};font-size:13px;font-weight:700;text-decoration:none;">${escapeHtml(label)}</a>`;
 }
 
 function directionsUrl(data: AppointmentEmailData) {
@@ -457,6 +463,64 @@ export function renderClientReminderEmail(
       content,
     }),
     text: `${mk ? "Потсетник за вашиот термин." : "Appointment reminder."}\n\n${appointmentText(data)}${maps ? `\n\n${maps}` : ""}`,
+    attachments: [calendarAttachment(data)],
+  };
+}
+
+export function renderClientRescheduledEmail(
+  data: AppointmentEmailData,
+): RenderedEmail {
+  const locale = data.locale ?? "mk-MK";
+  const mk = isMacedonian(locale);
+  const maps = directionsUrl(data);
+  const call = data.studioPhone
+    ? `tel:${data.studioPhone.replace(/[^+\d]/g, "")}`
+    : undefined;
+  const previousTime =
+    data.previousStartAt !== undefined
+      ? `<div style="margin:0 0 18px;padding:14px 16px;border-radius:14px;background:${EMAIL_COLORS.paper};">
+          <div style="font-size:11px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:${EMAIL_COLORS.muted};">${escapeHtml(mk ? "Претходен термин" : "Previous time")}</div>
+          <div style="margin-top:6px;font-size:13px;line-height:20px;color:${EMAIL_COLORS.ink};text-decoration:line-through;">${escapeHtml(`${formatDate(data.previousStartAt, locale)}, ${formatTime(data.previousStartAt, locale)}${data.previousEndAt !== undefined ? `–${formatTime(data.previousEndAt, locale)}` : ""}`)}</div>
+        </div>`
+      : "";
+  const actions = [
+    button(
+      calendarUrl(data),
+      mk ? "Додај нов термин" : "Add new time to calendar",
+      true,
+    ),
+    ...(maps ? [button(maps, mk ? "Насоки" : "Directions")] : []),
+    ...(call ? [button(call, mk ? "Јавете се" : "Call studio")] : []),
+  ].join("");
+  const content = `${previousTime}
+    <div style="margin:0 0 8px;font-size:11px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:${EMAIL_COLORS.brand};">${escapeHtml(mk ? "Нов термин" : "New time")}</div>
+    ${appointmentCard(data)}
+    <div style="padding-top:22px;">${actions}</div>
+    <p style="margin:10px 0 0;font-size:12px;line-height:19px;color:${EMAIL_COLORS.muted};">${escapeHtml(mk ? "Во прилог има ажурирана календарска датотека за Apple Calendar, Outlook и други апликации." : "An updated calendar file for Apple Calendar, Outlook, and other apps is attached.")}</p>`;
+  const previousText =
+    data.previousStartAt !== undefined
+      ? `${mk ? "Претходно" : "Previous"}: ${formatDate(data.previousStartAt, locale)}, ${formatTime(data.previousStartAt, locale)}${data.previousEndAt !== undefined ? `–${formatTime(data.previousEndAt, locale)}` : ""}\n\n`
+      : "";
+
+  return {
+    subject: cleanSubject(
+      mk
+        ? `Презакажан термин · ${data.studioName}`
+        : `Appointment rescheduled · ${data.studioName}`,
+    ),
+    html: renderShell({
+      preheader: `${data.serviceName} · ${formatDate(data.startAt, locale)} · ${formatTime(data.startAt, locale)}`,
+      eyebrow: mk ? "Терминот е презакажан" : "Appointment rescheduled",
+      title: mk
+        ? "Вашиот термин има ново време."
+        : "Your appointment has a new time.",
+      intro: mk
+        ? `${data.customerName}, ${data.studioName} го презакажа вашиот термин. Новите детали се подолу.`
+        : `${data.customerName}, ${data.studioName} rescheduled your appointment. The updated details are below.`,
+      studioName: data.studioName,
+      content,
+    }),
+    text: `${mk ? "Терминот е презакажан." : "Your appointment was rescheduled."}\n\n${previousText}${mk ? "Нов термин" : "New time"}:\n${appointmentText(data)}`,
     attachments: [calendarAttachment(data)],
   };
 }

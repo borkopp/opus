@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import {
   CalendarClockIcon,
+  MailIcon,
   MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
@@ -43,9 +44,11 @@ import { StaffFormDialog } from "./StaffFormDialog";
 export function StaffList({
   orgId,
   onAddClick,
+  canManageAppointmentEmail,
 }: {
   orgId: Id<"orgs">;
   onAddClick: () => void;
+  canManageAppointmentEmail: boolean;
 }) {
   const staff = useQuery(api.staff.listStaffMembers, { orgId });
   const deactivateStaffMember = useMutation(api.staff.deactivateStaffMember);
@@ -171,6 +174,14 @@ export function StaffList({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {formatRole(member.role)}
                 </p>
+                {canManageAppointmentEmail && (
+                  <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                    <MailIcon className="size-3.5 shrink-0" />
+                    <span className="truncate">
+                      {member.appointmentEmail || "No appointment email"}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -246,6 +257,7 @@ export function StaffList({
           orgId={orgId}
           staffId={editingStaffId}
           open
+          canManageAppointmentEmail={canManageAppointmentEmail}
           onOpenChange={(open) => {
             if (!open) setEditingStaffId(null);
           }}

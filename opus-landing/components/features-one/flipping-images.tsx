@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { GridLineHorizontal, GridLineVertical } from "../grid-lines";
 import { Bell, CalendarCheck } from "lucide-react";
+import { useI18n } from "../i18n-provider";
 
 interface Sparkle {
   id: number;
@@ -30,24 +31,15 @@ function generateSparkles(): Sparkle[] {
   }));
 }
 
-const items = [
-  {
-    type: "Потсетник",
-    message: "Термин кај Марко за 1 час",
-    time: "14:30",
-    icon: <Bell className="size-8" />,
-    color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-500",
-  },
-  {
-    type: "Резервација",
-    message: "Нов термин од Ана",
-    time: "Закажано: 18:00",
-    icon: <CalendarCheck className="size-8" />,
-    color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-500",
-  },
-];
+interface NotificationItem {
+  type: string;
+  message: string;
+  time: string;
+  icon: React.ReactNode;
+  color: string;
+}
 
-const NotificationCard = ({ item, isGrayscale }: { item: typeof items[0], isGrayscale?: boolean }) => (
+const NotificationCard = ({ item, isGrayscale }: { item: NotificationItem, isGrayscale?: boolean }) => (
   <div className={cn("flex h-full w-full flex-col justify-center items-center gap-4 bg-white p-6 dark:bg-neutral-800", isGrayscale ? "grayscale opacity-40 blur-[1px]" : "")}>
     <div className={cn("flex size-16 items-center justify-center rounded-full", item.color)}>
       {item.icon}
@@ -63,6 +55,23 @@ const NotificationCard = ({ item, isGrayscale }: { item: typeof items[0], isGray
 );
 
 export function FlippingImagesWithBar() {
+  const { messages } = useI18n();
+  const notificationCopy = messages.demos.notifications;
+  const items: NotificationItem[] = [
+    {
+      ...notificationCopy[0],
+      icon: <Bell className="size-8" />,
+      color:
+        "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-500",
+    },
+    {
+      ...notificationCopy[1],
+      icon: <CalendarCheck className="size-8" />,
+      color:
+        "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-500",
+    },
+  ];
+  const itemCount = items.length;
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<"appear" | "scanning" | "flipping">("appear");
   const [barProgress, setBarProgress] = useState(0);
@@ -112,13 +121,13 @@ export function FlippingImagesWithBar() {
   useEffect(() => {
     if (phase === "flipping") {
       const timer = setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % items.length);
+        setCurrentIndex((prev) => (prev + 1) % itemCount);
         setBarProgress(0);
         setPhase("appear");
       }, 600);
       return () => clearTimeout(timer);
     }
-  }, [phase]);
+  }, [phase, itemCount]);
 
   const currentItem = items[currentIndex];
 

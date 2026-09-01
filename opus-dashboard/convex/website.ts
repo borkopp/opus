@@ -13,12 +13,10 @@ export const getReadiness = query({
     if (!state) return null;
 
     const blocking = Object.fromEntries(
-      state.requirements.map((item) => [item.code, item.complete]),
+      state.websiteRequirements.map((item) => [item.code, item.complete]),
     );
     const recommended = {
-      tagline: Boolean(state.org.tagline?.trim()),
       bio: Boolean(state.org.bio?.trim()),
-      phone: Boolean(state.org.phone?.trim()),
       gallery: state.media.some((item) => item.type === "gallery"),
     };
 
@@ -26,10 +24,10 @@ export const getReadiness = query({
       slug: state.org.slug,
       websiteStatus: getWebsiteStatus(state.org),
       websitePublishedAt: state.org.websitePublishedAt,
-      requirements: state.requirements,
+      requirements: state.websiteRequirements,
       blocking,
       recommended,
-      allBlockingMet: state.allRequiredComplete,
+      allBlockingMet: state.allWebsiteRequirementsComplete,
       operationalSetupComplete: state.operationalSetupComplete,
       recommendedCount: Object.values(recommended).filter(Boolean).length,
       recommendedTotal: Object.keys(recommended).length,
@@ -52,7 +50,9 @@ export const publish = mutation({
 
     const state = await getBeautyActivationState(ctx, orgId);
     if (!state) throw new ConvexError("Business not found.");
-    const incomplete = state.requirements.filter((item) => !item.complete);
+    const incomplete = state.websiteRequirements.filter(
+      (item) => !item.complete,
+    );
     if (incomplete.length > 0) {
       throw new ConvexError(
         `Cannot publish website: ${incomplete.map((item) => item.label).join(", ")}.`,

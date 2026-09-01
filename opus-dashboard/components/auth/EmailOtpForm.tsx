@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useConvexAuth } from "convex/react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,29 @@ type EmailOtpFormProps = {
   title: string;
   description: string;
   callbackUrl?: string;
+};
+
+const stepVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 20 : direction < 0 ? -20 : 0,
+    opacity: 0,
+    filter: "blur(4px)",
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    filter: "blur(0px)",
+  },
+  exit: (direction: number) => ({
+    x: direction > 0 ? -20 : direction < 0 ? 20 : 0,
+    opacity: 0,
+    filter: "blur(4px)",
+  }),
+};
+
+const stepTransition = {
+  duration: 0.22,
+  ease: [0.23, 1, 0.32, 1] as const,
 };
 
 function safeCallbackUrl(value: string | undefined) {
@@ -49,6 +73,7 @@ export function EmailOtpForm({
   const { isAuthenticated } = useConvexAuth();
   const destination = safeCallbackUrl(callbackUrl);
   const [step, setStep] = useState<"email" | "code">("email");
+  const [direction, setDirection] = useState(0);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +109,7 @@ export function EmailOtpForm({
 
       setEmail(normalizedEmail);
       setCode("");
+      setDirection(1);
       setStep("code");
       setStatus("A fresh code was sent.");
     } catch (caught) {
@@ -131,126 +157,145 @@ export function EmailOtpForm({
   };
 
   return (
-    <section className="w-full">
-      <header className="text-center">
-        <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-4xl">
-          {step === "email" ? title : "Check your email"}
-        </h1>
-        <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
-          {step === "email"
-            ? description
-            : `Enter the six-digit code sent to ${email}.`}
-        </p>
-      </header>
+    <section className="w-full overflow-x-clip">
+      <AnimatePresence mode="wait" custom={direction} initial={false}>
+        <motion.div
+          key={step}
+          custom={direction}
+          variants={stepVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={stepTransition}
+          className="w-full"
+        >
+          <header className="text-center">
+            <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-4xl">
+              {step === "email" ? title : "Check your email"}
+            </h1>
+            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
+              {step === "email"
+                ? description
+                : `Enter the six-digit code sent to ${email}.`}
+            </p>
+          </header>
 
-      {step === "email" ? (
-        <form onSubmit={sendCode} className="mt-8">
-          <FieldGroup className="gap-5">
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="auth-email">Email address</FieldLabel>
-              <Input
-                id="auth-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="you@studio.mk"
-                autoComplete="email"
-                required
-                autoFocus
-                aria-invalid={Boolean(error)}
-                className="h-11"
-              />
-            </Field>
-            <Button
-              type="submit"
-              size="lg"
-              className="h-11 w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Sending code…
-                </>
-              ) : (
-                "Continue with email"
-              )}
-            </Button>
-          </FieldGroup>
-        </form>
-      ) : (
-        <form onSubmit={verifyCode} className="mt-8">
-          <FieldGroup className="gap-5">
-            <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="auth-code">Sign-in code</FieldLabel>
-              <InputOTP
-                id="auth-code"
-                value={code}
-                onChange={setCode}
-                maxLength={6}
-                pattern={REGEXP_ONLY_DIGITS}
-                autoComplete="one-time-code"
-                autoFocus
-                required
-                disabled={isSubmitting}
-                aria-invalid={Boolean(error)}
-                containerClassName="justify-center"
-              >
-                <InputOTPGroup className="*:data-[slot=input-otp-slot]:size-11 *:data-[slot=input-otp-slot]:text-base">
-                  {[0, 1, 2, 3, 4, 5].map((index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      aria-invalid={Boolean(error)}
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-            </Field>
-            <Button
-              type="submit"
-              size="lg"
-              className="h-11 w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Checking code…
-                </>
-              ) : (
-                "Verify and continue"
-              )}
-            </Button>
-            <div className="flex items-center justify-between gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="-ml-3"
-                onClick={() => {
-                  setStep("email");
-                  setCode("");
-                  setError(null);
-                  setStatus(null);
-                }}
-              >
-                Change email
-              </Button>
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="px-0"
-                onClick={() => void sendCode()}
-                disabled={isSubmitting}
-              >
-                Send again
-              </Button>
-            </div>
-          </FieldGroup>
-        </form>
-      )}
+          {step === "email" ? (
+            <form onSubmit={sendCode} className="mt-8">
+              <FieldGroup className="gap-5">
+                <Field data-invalid={Boolean(error)}>
+                  <FieldLabel htmlFor="auth-email">Email address</FieldLabel>
+                  <Input
+                    id="auth-email"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@studio.mk"
+                    autoComplete="email"
+                    required
+                    autoFocus
+                    aria-invalid={Boolean(error)}
+                    className="h-11"
+                  />
+                </Field>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-11 w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Sending code…
+                    </>
+                  ) : (
+                    "Continue with email"
+                  )}
+                </Button>
+              </FieldGroup>
+            </form>
+          ) : (
+            <form onSubmit={verifyCode} className="mt-8">
+              <FieldGroup className="gap-5">
+                <Field data-invalid={Boolean(error)}>
+                  <FieldLabel
+                    htmlFor="auth-code"
+                    className="w-full justify-center text-center"
+                  >
+                    Sign-in code
+                  </FieldLabel>
+                  <InputOTP
+                    id="auth-code"
+                    value={code}
+                    onChange={setCode}
+                    maxLength={6}
+                    pattern={REGEXP_ONLY_DIGITS}
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                    disabled={isSubmitting}
+                    aria-invalid={Boolean(error)}
+                    containerClassName="w-full"
+                  >
+                    <InputOTPGroup className="w-full">
+                      {[0, 1, 2, 3, 4, 5].map((index) => (
+                        <InputOTPSlot
+                          key={index}
+                          index={index}
+                          aria-invalid={Boolean(error)}
+                          className="h-12 flex-1 text-base"
+                        />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </Field>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-11 w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Checking code…
+                    </>
+                  ) : (
+                    "Verify and continue"
+                  )}
+                </Button>
+                <div className="flex items-center justify-between gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDirection(-1);
+                      setStep("email");
+                      setCode("");
+                      setError(null);
+                      setStatus(null);
+                    }}
+                  >
+                    Change email
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="px-0"
+                    onClick={() => void sendCode()}
+                    disabled={isSubmitting}
+                  >
+                    Send again
+                  </Button>
+                </div>
+              </FieldGroup>
+            </form>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       <div aria-live="polite" className="mt-5 min-h-5 text-center text-sm">
         {error ? <p className="text-destructive">{error}</p> : null}

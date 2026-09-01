@@ -130,53 +130,20 @@ export function GapOptimizerWidget({ orgId }: { orgId: Id<"orgs"> }) {
                         Est. Value: <span className="text-foreground font-display"><Price amount={summary.totalEstimatedRevenueMinorUnits} /></span>
                       </motion.div>
                     </div>
-
-                    <motion.div
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="flex flex-col gap-3 mt-5"
-                    >
-                      <div className="flex flex-col gap-2">
-                        <div className="flex justify-between items-end">
-                          <span className="micro-label text-muted-foreground">
-                            Auto-Sent
-                          </span>
-                          <span className="font-display text-sm font-black text-foreground">
-                            {summary.outreachSentCount}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-2">
-                        <div className="flex justify-between items-end">
-                          <span className="micro-label text-muted-foreground">
-                            Filled
-                          </span>
-                          <span className="text-sm font-black text-success font-display">
-                            {summary.filledCount}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            <div className="group/link relative z-10 mt-auto w-full border-t border-border pt-5">
+            <div className="relative z-10 mt-auto w-full border-t border-border pt-4 opacity-0 translate-y-3 pointer-events-none transition-all duration-300 ease-out group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto">
               <Button
                 asChild
                 variant="ghost"
-                className="h-11 w-full justify-between px-4 text-xs font-bold text-foreground transition-all duration-300 hover:bg-muted hover:text-foreground group-hover:translate-y-[-2px]"
+                className="h-11 w-full justify-between px-4 text-xs font-bold text-foreground transition-all duration-200 hover:bg-muted hover:text-foreground"
               >
                 <Link href="/gap-optimizer">
                   View AI Manager
-                  <span className="flex items-center gap-1">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">View</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                 </Link>
               </Button>
             </div>

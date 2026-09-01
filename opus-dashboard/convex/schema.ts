@@ -252,6 +252,7 @@ export default defineSchema({
 
     // Booking rules
     slotDurationMins: v.number(), // default 15 — smallest bookable unit
+    quickBookingDurationMins: v.optional(v.number()), // preferred calendar hover duration; legacy rows fall back at read time
     bookingWindowDays: v.number(), // how far ahead clients can book (e.g. 60)
     cancellationWindowHours: v.number(), // minimum notice required to cancel
     bufferTimeMins: v.number(), // gap between appointments
@@ -415,6 +416,9 @@ export default defineSchema({
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     specialties: v.array(v.string()),
+    // Owner-managed delivery address for this person's assigned appointments.
+    // This is intentionally separate from userId and does not grant dashboard access.
+    appointmentEmail: v.optional(v.string()),
 
     // Role
     role: v.union(v.literal("owner"), v.literal("manager"), v.literal("staff")),
@@ -590,6 +594,9 @@ export default defineSchema({
     customerId: v.id("customers"),
     staffId: v.id("staff_members"),
     serviceId: v.id("services"),
+    // Manual bookings can combine services. Keep serviceId as the primary
+    // service for backwards compatibility with existing records and consumers.
+    serviceIds: v.optional(v.array(v.id("services"))),
 
     // Link to opus.mk end-consumer (optional — set when booked via opus.mk)
     opusUserId: v.optional(v.id("opus_users")),
@@ -843,6 +850,7 @@ export default defineSchema({
     type: v.union(
       v.literal("booking_verification"),
       v.literal("booking_confirmation"),
+      v.literal("booking_rescheduled"),
       v.literal("booking_reminder"),
       v.literal("staff_new_booking"),
       v.literal("staff_booking_reminder"),

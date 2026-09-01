@@ -52,6 +52,15 @@ async function setupPublishedStudio(t: TestBackend) {
     bio: "A small beauty studio with thoughtful service.",
     phone: "+389 70 111 222",
   });
+  const logoStorageId = await t.run(async (ctx) => {
+    return await ctx.storage.store(
+      new Blob(["email-flow-logo"], { type: "image/png" }),
+    );
+  });
+  await owner.mutation(api.orgSettings.updateLogo, {
+    orgId,
+    storageId: logoStorageId,
+  });
   await owner.mutation(api.orgMedia.addMedia, {
     orgId,
     url: "https://images.example.com/atelier-email.jpg",
@@ -429,6 +438,269 @@ describe("public booking email flow", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  test("emails a linked staff address only for that person's appointments", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const appointmentEmail = "ana.artist@example.com";
+    const assignedStaffId = await fixture.owner.mutation(
+      api.staff.createStaffMember,
+      {
+        orgId: fixture.orgId,
+        displayName: "Ana Artist",
+        role: "staff",
+        specialties: ["Treatments"],
+        appointmentEmail: ` ${appointmentEmail.toUpperCase()} `,
+      },
+    );
+    await fixture.owner.mutation(api.services.updateService, {
+      orgId: fixture.orgId,
+      serviceId: fixture.serviceId,
+      staffIds: [fixture.staffId, assignedStaffId],
+    });
+    await fixture.owner.mutation(api.availability.setAvailabilityRule, {
+      orgId: fixture.orgId,
+      staffId: assignedStaffId,
+      dayOfWeek: 1,
+      startTime: "09:00",
+      endTime: "17:00",
+      isActive: true,
+    });
+    await fixture.owner.mutation(
+      api.orgSettings.updateEmailNotificationSettings,
+      {
+        orgId: fixture.orgId,
+        customerReminderEmailEnabled: false,
+        customerReminderHoursBefore: [24],
+        staffNewBookingEmailEnabled: true,
+        staffReminderEmailEnabled: true,
+        staffReminderHoursBefore: [2],
+        staffEmailRecipientUserIds: [],
+      },
+    );
+
+    const slots = await t.query(api.publicBooking.getPublicSlots, {
+      orgId: fixture.orgId,
+      serviceId: fixture.serviceId,
+      staffId: assignedStaffId,
+      date: nextMondayDate(),
+    });
+    const slot = slots[0];
+    if (!slot) throw new Error("Linked staff fixture has no public slot");
+    const args = {
+      orgId: fixture.orgId,
+      serviceId: fixture.serviceId,
+      staffId: assignedStaffId,
+      startAt: slot.startAt,
+      customerName: "Staff Email Client",
+      customerPhone: "+389 70 555 666",
+      customerEmail: "staff-email-client@example.com",
+    };
+    const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
+      orgId: fixture.orgId,
+      email: args.customerEmail,
+    });
+    const booking = await t.action(api.publicBooking.confirmPublicBooking, {
+      ...args,
+      challengeId: challenge.challengeId,
+      otp: TEST_OTP,
+    });
+
+    const state = await t.run(async (ctx) => ({
+      staff: await ctx.db.get(assignedStaffId),
+      notifications: await ctx.db
+        .query("notifications")
+        .withIndex("by_booking", (query) =>
+          query.eq("bookingId", booking.bookingId),
+        )
+        .collect(),
+    }));
+    expect(state.staff?.userId).toBeUndefined();
+    expect(state.staff?.appointmentEmail).toBe(appointmentEmail);
+    const staffEmails = state.notifications.filter((notification) =>
+      ["staff_new_booking", "staff_booking_reminder"].includes(
+        notification.type,
+      ),
+    );
+    expect(staffEmails).toHaveLength(2);
+    expect(
+      staffEmails.map((notification) => notification.recipientAddress),
+    ).toEqual([appointmentEmail, appointmentEmail]);
+    expect(
+      staffEmails.find(
+        (notification) => notification.type === "staff_booking_reminder",
+      ),
+    ).toMatchObject({
+      templateData: expect.objectContaining({
+        recipientName: "Ana Artist",
+        hoursBefore: 2,
+      }),
+    });
+
+    const immediate = staffEmails.find(
+      (notification) => notification.type === "staff_new_booking",
+    );
+    if (!immediate) throw new Error("Assigned staff email was not queued");
+    if (immediate.status === "pending") {
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId: immediate._id,
+        }),
+      ).resolves.toBe("sent");
+    } else {
+      expect(immediate.status).toBe("sent");
+    }
+
+    const manualSlot = slots.find(
+      (candidate) => candidate.startAt >= slot.endAt,
+    );
+    if (!manualSlot) throw new Error("Linked staff has no second test slot");
+    const manualBookingId = await fixture.owner.mutation(
+      api.bookings.createManualBooking,
+      {
+        orgId: fixture.orgId,
+        staffId: assignedStaffId,
+        serviceIds: [fixture.serviceId],
+        customerName: "Manual Staff Email Client",
+        startAt: manualSlot.startAt,
+      },
+    );
+    const manualNotifications = await t.run(async (ctx) =>
+      ctx.db
+        .query("notifications")
+        .withIndex("by_booking", (query) =>
+          query.eq("bookingId", manualBookingId),
+        )
+        .collect(),
+    );
+    expect(
+      manualNotifications.filter(
+        (notification) => notification.type === "staff_new_booking",
+      ),
+    ).toEqual([
+      expect.objectContaining({ recipientAddress: appointmentEmail }),
+    ]);
+
+    await fixture.owner.mutation(api.staff.updateStaffMember, {
+      orgId: fixture.orgId,
+      staffId: assignedStaffId,
+      appointmentEmail: null,
+    });
+    const reminder = staffEmails.find(
+      (notification) => notification.type === "staff_booking_reminder",
+    );
+    if (!reminder) throw new Error("Assigned staff reminder was not queued");
+    await expect(
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId: reminder._id,
+      }),
+    ).resolves.toBe("cancelled");
+  });
+
+  test("emails the client when the studio reschedules even with client reminders disabled", async () => {
+    const fixture = await setupPublishedStudio(t);
+    await fixture.owner.mutation(
+      api.orgSettings.updateEmailNotificationSettings,
+      {
+        orgId: fixture.orgId,
+        customerReminderEmailEnabled: false,
+        customerReminderHoursBefore: [24],
+        staffNewBookingEmailEnabled: false,
+        staffReminderEmailEnabled: false,
+        staffReminderHoursBefore: [2],
+        staffEmailRecipientUserIds: [],
+      },
+    );
+    const args = {
+      ...bookingArgs(fixture),
+      customerEmail: "rescheduled@example.com",
+    };
+    const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
+      orgId: fixture.orgId,
+      email: args.customerEmail,
+    });
+    const original = await t.action(api.publicBooking.confirmPublicBooking, {
+      ...args,
+      challengeId: challenge.challengeId,
+      otp: TEST_OTP,
+    });
+    const availableSlots = await t.query(api.publicBooking.getPublicSlots, {
+      orgId: fixture.orgId,
+      serviceId: fixture.serviceId,
+      staffId: fixture.staffId,
+      date: nextMondayDate(),
+    });
+    const newSlot = availableSlots.find(
+      (slot) => slot.startAt !== original.startAt,
+    );
+    if (!newSlot) throw new Error("No second slot available for rescheduling");
+
+    const newBookingId = await fixture.owner.mutation(
+      api.bookings.rescheduleBooking,
+      {
+        orgId: fixture.orgId,
+        bookingId: original.bookingId,
+        newStartAt: newSlot.startAt,
+      },
+    );
+
+    const notifications = await t.run(async (ctx) =>
+      ctx.db
+        .query("notifications")
+        .withIndex("by_booking", (query) => query.eq("bookingId", newBookingId))
+        .collect(),
+    );
+    const rescheduled = notifications.find(
+      (notification) => notification.type === "booking_rescheduled",
+    );
+    expect(rescheduled).toMatchObject({
+      recipientAddress: "rescheduled@example.com",
+      templateData: expect.objectContaining({
+        previousStartAt: original.startAt,
+        startAt: newSlot.startAt,
+      }),
+    });
+    expect(
+      notifications.some(
+        (notification) => notification.type === "booking_confirmation",
+      ),
+    ).toBe(false);
+    expect(
+      notifications.some(
+        (notification) => notification.type === "booking_reminder",
+      ),
+    ).toBe(false);
+    if (!rescheduled) throw new Error("Reschedule email was not queued");
+
+    if (rescheduled.status === "pending") {
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId: rescheduled._id,
+        }),
+      ).resolves.toBe("sent");
+    }
+    const delivered = await t.run(async (ctx) => ctx.db.get(rescheduled._id));
+    expect(delivered).toMatchObject({
+      status: "sent",
+      externalMessageId: "resend-message-id",
+    });
+
+    const sentBodies = fetchMock.mock.calls.map(
+      (call) =>
+        JSON.parse(String((call[1] as RequestInit).body)) as {
+          subject: string;
+          html: string;
+          to: string[];
+        },
+    );
+    const rescheduleBody = sentBodies.find((body) =>
+      body.html.includes("Терминот е презакажан"),
+    );
+    expect(rescheduleBody).toMatchObject({
+      subject: "Презакажан термин · Atelier Email",
+      to: ["rescheduled@example.com"],
+    });
+    expect(rescheduleBody?.html).toContain("#ff814a");
+  });
+
   test("locks a verification challenge after five incorrect codes", async () => {
     const fixture = await setupPublishedStudio(t);
     const args = {
@@ -470,5 +742,37 @@ describe("public booking email flow", () => {
     }));
     expect(state.challenge).toMatchObject({ status: "locked", attempts: 5 });
     expect(state.bookings).toHaveLength(0);
+  });
+
+  test("allows public booking when phone number is omitted", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const args = {
+      ...bookingArgs(fixture),
+      customerEmail: "no-phone@example.com",
+      customerPhone: undefined,
+    };
+    const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
+      orgId: fixture.orgId,
+      email: args.customerEmail,
+    });
+    const booking = await t.action(api.publicBooking.confirmPublicBooking, {
+      ...args,
+      challengeId: challenge.challengeId,
+      otp: TEST_OTP,
+    });
+    expect(booking).toMatchObject({
+      serviceName: "Signature Treatment",
+      staffName: "Ada Owner",
+      startAt: fixture.slot.startAt,
+    });
+
+    const savedCustomer = await t.run(async (ctx) => {
+      const b = await ctx.db.get(booking.bookingId);
+      return b ? await ctx.db.get(b.customerId) : null;
+    });
+    expect(savedCustomer).toMatchObject({
+      name: "Elena Client",
+      email: "no-phone@example.com",
+    });
   });
 });

@@ -32,11 +32,9 @@ type DailyBooking = FunctionReturnType<
 
 export function LiveScheduleWidget({
   groupedByStaff,
-  onCheckIn,
   onComplete,
 }: {
   groupedByStaff: Record<string, DailyBooking[]>;
-  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
   onComplete: (bookingId: Id<"bookings">) => Promise<void>;
 }) {
   const allBookings = Object.values(groupedByStaff)
@@ -78,7 +76,6 @@ export function LiveScheduleWidget({
                 <Fragment key={booking._id}>
                   <ScheduleRow
                     booking={booking}
-                    onCheckIn={onCheckIn}
                     onComplete={onComplete}
                   />
                   {index < allBookings.length - 1 && <Separator />}
@@ -94,11 +91,9 @@ export function LiveScheduleWidget({
 
 function ScheduleRow({
   booking,
-  onCheckIn,
   onComplete,
 }: {
   booking: DailyBooking;
-  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
   onComplete: (bookingId: Id<"bookings">) => Promise<void>;
 }) {
   const isTerminal = ["completed", "cancelled", "no_show"].includes(
@@ -117,7 +112,6 @@ function ScheduleRow({
           aria-hidden="true"
           className={cn(
             "h-8 w-0.5 shrink-0 rounded-full bg-border",
-            booking.status === "checked_in" && "bg-primary",
             booking.status === "completed" && "bg-success",
             ["cancelled", "no_show"].includes(booking.status) && "bg-danger/50",
           )}
@@ -142,7 +136,6 @@ function ScheduleRow({
       <div className="col-start-2 row-start-2 justify-self-start sm:col-start-3 sm:row-start-1 sm:justify-self-end">
         <BookingAction
           booking={booking}
-          onCheckIn={onCheckIn}
           onComplete={onComplete}
         />
       </div>
@@ -152,24 +145,13 @@ function ScheduleRow({
 
 function BookingAction({
   booking,
-  onCheckIn,
   onComplete,
 }: {
   booking: DailyBooking;
-  onCheckIn: (bookingId: Id<"bookings">) => Promise<void>;
   onComplete: (bookingId: Id<"bookings">) => Promise<void>;
 }) {
   switch (booking.status) {
     case "confirmed":
-      return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void onCheckIn(booking._id)}
-        >
-          Check in
-        </Button>
-      );
     case "checked_in":
       return (
         <Button size="sm" onClick={() => void onComplete(booking._id)}>

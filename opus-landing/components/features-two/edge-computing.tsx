@@ -3,12 +3,13 @@ import { useEffect, useState, useMemo } from "react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { createMap } from "svg-dotted-map";
+import { useI18n } from "../i18n-provider";
 
 const POSITIONS = [
-  { x: 15, y: 25, label: "North America" },
-  { x: 75, y: 20, label: "Europe" },
-  { x: 85, y: 60, label: "Asia Pacific" },
-  { x: 25, y: 70, label: "South America" },
+  { x: 15, y: 25 },
+  { x: 75, y: 20 },
+  { x: 85, y: 60 },
+  { x: 25, y: 70 },
 ];
 
 const IMAGES = [
@@ -19,6 +20,7 @@ const IMAGES = [
 ];
 
 export const EdgeComputing = () => {
+  const { messages } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -64,7 +66,7 @@ export const EdgeComputing = () => {
         <motion.div className="relative size-7 overflow-hidden rounded-full ring-2 ring-neutral-300 ring-offset-1 ring-offset-white dark:ring-offset-neutral-900">
           <Image
             src={IMAGES[activeIndex]}
-            alt={activePosition.label}
+            alt={messages.demos.devices.regions[activeIndex]}
             width={50}
             height={50}
             className="h-full w-full object-cover"

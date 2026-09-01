@@ -24,7 +24,8 @@ export async function generateMetadata({
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk";
   const canonical = tenantSiteUrl(site.slug, rootDomain);
   const cover = site.media.find((item) => item.type === "cover");
-  const description = site.tagline || `Book an appointment with ${site.name}.`;
+  const description =
+    site.tagline || `Резервирајте слободен термин во ${site.name}.`;
 
   return {
     title: site.name,

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { useMutation } from "convex/react";
-import { ImagePlus, Save, Trash2, Upload } from "lucide-react";
+import { ImagePlus, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -18,7 +18,11 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { validateImageFile } from "@/lib/file-validation";
+import {
+  type CompressImageOptions,
+  IMAGE_PRESETS,
+  uploadCompressedImage,
+} from "@/lib/image-compression";
 import { SettingsCard } from "../SettingsCard";
 
 interface IdentityProfileTabProps {
@@ -48,18 +52,16 @@ function message(error: unknown): string {
 async function upload(
   file: File,
   generateUploadUrl: () => Promise<string>,
+  preset?: CompressImageOptions,
 ): Promise<Id<"_storage">> {
-  const validation = validateImageFile(file);
-  if (validation) throw new Error(validation);
-  const url = await generateUploadUrl();
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": file.type },
-    body: file,
-  });
-  if (!response.ok) throw new Error("Image upload failed.");
-  return ((await response.json()) as { storageId: Id<"_storage"> }).storageId;
+  return (await uploadCompressedImage({
+    file,
+    getUploadUrl: generateUploadUrl,
+    options: preset,
+  })) as Id<"_storage">;
 }
+
+const MAX_GALLERY_PHOTOS = 3;
 
 export function IdentityProfileTab({
   orgId,
@@ -71,6 +73,7 @@ export function IdentityProfileTab({
   const [uploading, setUploading] = useState<string | null>(null);
   const updateBranding = useMutation(api.orgSettings.updateOrgBranding);
   const updateLogo = useMutation(api.orgSettings.updateLogo);
+  const removeLogo = useMutation(api.orgSettings.removeLogo);
   const generateUploadUrl = useMutation(api.activation.generateUploadUrl);
   const addMedia = useMutation(api.orgMedia.addMedia);
   const removeMedia = useMutation(api.orgMedia.removeMedia);
@@ -123,7 +126,11 @@ export function IdentityProfileTab({
     chooseFile(false, async ([file]) => {
       setUploading("logo");
       try {
-        const storageId = await upload(file, generateUploadUrl);
+        const storageId = await upload(
+          file,
+          generateUploadUrl,
+          IMAGE_PRESETS.logo,
+        );
         const logoUrl = await updateLogo({ orgId, storageId });
         setBranding((current) => ({ ...current, logoUrl }));
         toast.success("Logo updated");
@@ -134,12 +141,34 @@ export function IdentityProfileTab({
       }
     });
 
-  const handleMedia = (type: "cover" | "gallery") =>
-    chooseFile(type === "gallery", async (files) => {
+  const handleRemoveLogo = async () => {
+    try {
+      await removeLogo({ orgId });
+      setBranding((current) => ({ ...current, logoUrl: "" }));
+      toast.success("Logo removed");
+    } catch (error) {
+      toast.error(message(error));
+    }
+  };
+
+  const handleMedia = (type: "cover" | "gallery") => {
+    if (type === "gallery" && gallery.length >= MAX_GALLERY_PHOTOS) {
+      toast.error(`Maximum of ${MAX_GALLERY_PHOTOS} gallery photos reached.`);
+      return;
+    }
+    const remainingSlots = type === "gallery" ? MAX_GALLERY_PHOTOS - gallery.length : 1;
+    chooseFile(type === "gallery", async (rawFiles) => {
+      let files = rawFiles;
+      if (type === "gallery" && files.length > remainingSlots) {
+        toast.error(`You can only add up to ${remainingSlots} more gallery ${remainingSlots === 1 ? "photo" : "photos"} (maximum ${MAX_GALLERY_PHOTOS}).`);
+        files = files.slice(0, remainingSlots);
+      }
       setUploading(type);
       try {
+        const preset =
+          type === "cover" ? IMAGE_PRESETS.cover : IMAGE_PRESETS.gallery;
         for (const [index, file] of files.entries()) {
-          const storageId = await upload(file, generateUploadUrl);
+          const storageId = await upload(file, generateUploadUrl, preset);
           await addMedia({
             orgId,
             storageId,
@@ -154,6 +183,7 @@ export function IdentityProfileTab({
         setUploading(null);
       }
     });
+  };
 
   const handleRemove = async (mediaId: Id<"org_media">) => {
     try {
@@ -173,16 +203,11 @@ export function IdentityProfileTab({
         <SettingsCard
           title="Storefront images"
           description="Your logo and cover are shared by onboarding, Settings, and opus.mk."
-          contentClassName="grid gap-6 md:grid-cols-[180px_1fr]"
+          contentClassName="grid gap-6 md:grid-cols-[208px_1fr]"
         >
           <div className="flex flex-col gap-3">
             <FieldLabel>Logo</FieldLabel>
-            <button
-              type="button"
-              onClick={handleLogo}
-              aria-label="Upload business logo"
-              className="relative flex aspect-square items-center justify-center overflow-hidden rounded-2xl border bg-secondary outline-none transition-colors hover:bg-secondary/80 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
+            <div className="group relative flex h-52 w-52 max-w-full aspect-square flex-col justify-end overflow-hidden rounded-2xl border bg-secondary md:w-full">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
@@ -190,21 +215,53 @@ export function IdentityProfileTab({
                   fill
                   unoptimized
                   className="object-cover"
-                  sizes="180px"
+                  sizes="(min-width: 768px) 208px, 100vw"
                 />
               ) : (
-                <Upload />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ImagePlus className="text-muted-foreground" />
+                </div>
               )}
               {uploading === "logo" && (
-                <span className="absolute inset-0 flex items-center justify-center bg-background/80">
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 backdrop-blur-xs">
                   <Spinner />
-                </span>
+                </div>
               )}
-            </button>
+              <div className="relative z-10 flex justify-end gap-2 bg-gradient-to-t from-black/60 p-4 pt-10">
+                {branding.logoUrl && (
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="destructive"
+                    onClick={handleRemoveLogo}
+                    disabled={uploading === "logo"}
+                    aria-label="Remove logo"
+                  >
+                    <Trash2 data-icon="inline-start" />
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={handleLogo}
+                  disabled={uploading === "logo"}
+                >
+                  {uploading === "logo" && (
+                    <Spinner data-icon="inline-start" />
+                  )}
+                  {uploading === "logo"
+                    ? "Uploading…"
+                    : branding.logoUrl
+                      ? "Replace"
+                      : "Upload logo"}
+                </Button>
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-3">
             <FieldLabel>Cover photo</FieldLabel>
-            <div className="relative min-h-52 overflow-hidden rounded-3xl border bg-secondary">
+            <div className="group relative flex h-52 w-full flex-col justify-end overflow-hidden rounded-2xl border bg-secondary">
               {cover ? (
                 <Image
                   src={cover.url}
@@ -212,20 +269,26 @@ export function IdentityProfileTab({
                   fill
                   unoptimized
                   className="object-cover"
-                  sizes="700px"
+                  sizes="(min-width: 768px) 700px, 100vw"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <ImagePlus className="text-muted-foreground" />
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 flex justify-end gap-2 bg-gradient-to-t from-black/60 p-4 pt-10">
+              {uploading === "cover" && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/80 backdrop-blur-xs">
+                  <Spinner />
+                </div>
+              )}
+              <div className="relative z-10 flex justify-end gap-2 bg-gradient-to-t from-black/60 p-4 pt-10">
                 {cover && (
                   <Button
                     type="button"
                     size="icon-sm"
                     variant="destructive"
                     onClick={() => handleRemove(cover._id)}
+                    disabled={uploading === "cover"}
                     aria-label="Remove cover"
                   >
                     <Trash2 data-icon="inline-start" />
@@ -337,13 +400,18 @@ export function IdentityProfileTab({
         <SettingsCard
           title="Gallery"
           description="Optional photos of your space, team, or work."
+          action={
+            <span className="rounded-full border border-border/80 bg-secondary/80 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+              {gallery.length}/{MAX_GALLERY_PHOTOS}
+            </span>
+          }
           contentClassName="flex flex-col gap-4"
         >
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-3">
             {gallery.map((item) => (
               <div
                 key={item._id}
-                className="group relative aspect-square overflow-hidden rounded-2xl border"
+                className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted/20 shadow-xs"
               >
                 <Image
                   src={item.url}
@@ -365,21 +433,34 @@ export function IdentityProfileTab({
                 </Button>
               </div>
             ))}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleMedia("gallery")}
-            disabled={uploading === "gallery"}
-            className="self-start"
-          >
-            {uploading === "gallery" ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <ImagePlus data-icon="inline-start" />
+
+            {gallery.length < MAX_GALLERY_PHOTOS && (
+              <button
+                type="button"
+                onClick={() => handleMedia("gallery")}
+                disabled={uploading === "gallery"}
+                className="group relative flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dotted border-border/80 bg-muted/15 transition-all hover:border-primary/60 hover:bg-muted/35 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+              >
+                {uploading === "gallery" ? (
+                  <>
+                    <Spinner className="size-6 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Uploading…
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex size-9 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                      <Plus className="size-5" />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">
+                      Add photo
+                    </span>
+                  </>
+                )}
+              </button>
             )}
-            {uploading === "gallery" ? "Uploading…" : "Add gallery photos"}
-          </Button>
+          </div>
           <FieldDescription>
             Images are soft-deleted so audit history remains intact.
           </FieldDescription>

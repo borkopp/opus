@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -95,6 +96,12 @@ export default function SettingsPage() {
   }
 
   const { settings, org, media } = data;
+  const quickBookingDurationMins =
+    settings.quickBookingDurationMins ??
+    Math.max(
+      settings.slotDurationMins,
+      Math.ceil(30 / settings.slotDurationMins) * settings.slotDurationMins,
+    );
   const configuredAiHours = settings.aiWorkingHours;
   const aiWorkingHours = DEFAULT_AI_WORKING_HOURS.map(
     (fallback) =>
@@ -117,7 +124,12 @@ export default function SettingsPage() {
   ).filter((userId) => availableEmailRecipientIds.has(userId));
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-6xl flex-1 flex-col gap-7 pb-12">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex min-h-full w-full max-w-6xl flex-1 flex-col gap-7 pb-12"
+    >
       <header className="flex flex-col gap-2">
         <div>
           <p className="micro-label text-muted-foreground">Workspace</p>
@@ -140,13 +152,13 @@ export default function SettingsPage() {
           <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsList
               aria-label="Settings sections"
-              className="h-auto w-max min-w-full justify-start gap-1 rounded-xl bg-muted/70 p-1"
+              className="h-auto w-full min-w-full gap-1 rounded-xl bg-muted/70 p-1"
             >
               {SETTINGS_TABS.map(({ value, label, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-9 flex-none gap-2 rounded-lg px-3 text-muted-foreground data-[state=active]:font-semibold data-[state=active]:text-foreground"
+                  className="h-9 flex-1 min-w-fit gap-2 rounded-lg px-3 text-muted-foreground data-[state=active]:font-semibold data-[state=active]:text-foreground"
                 >
                   <Icon />
                   {label}
@@ -165,6 +177,7 @@ export default function SettingsPage() {
               currency: settings.currency,
               locale: settings.locale,
               slotDurationMins: settings.slotDurationMins,
+              quickBookingDurationMins,
               bookingWindowDays: settings.bookingWindowDays,
               cancellationWindowHours: settings.cancellationWindowHours,
               bufferTimeMins: settings.bufferTimeMins,
@@ -205,6 +218,7 @@ export default function SettingsPage() {
               currency: settings.currency,
               locale: settings.locale,
               slotDurationMins: settings.slotDurationMins,
+              quickBookingDurationMins,
               bookingWindowDays: settings.bookingWindowDays,
               cancellationWindowHours: settings.cancellationWindowHours,
               bufferTimeMins: settings.bufferTimeMins,
@@ -269,6 +283,6 @@ export default function SettingsPage() {
           />
         </div>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }

@@ -25,8 +25,8 @@ export async function generateMetadata({
   const canonical = `${tenantSiteUrl(site.slug, rootDomain)}/book`;
 
   return {
-    title: `Book at ${site.name}`,
-    description: `Choose a service and an available appointment at ${site.name}.`,
+    title: `Резервирај термин во ${site.name}`,
+    description: `Изберете услуга и слободен термин во ${site.name}.`,
     robots: { index: true, follow: true },
     alternates: { canonical },
   };
@@ -46,10 +46,17 @@ export default async function PublicBookingPage({
   const requestedService = Array.isArray(query.service)
     ? query.service[0]
     : query.service;
+  const requestedStaff = Array.isArray(query.staff)
+    ? query.staff[0]
+    : query.staff;
 
   return (
-    <PublicSiteFrame site={site}>
-      <BookingForm site={site} initialServiceId={requestedService} />
+    <PublicSiteFrame site={site} mode="booking">
+      <BookingForm
+        site={site}
+        initialServiceId={requestedService}
+        initialStaffId={requestedStaff}
+      />
     </PublicSiteFrame>
   );
 }

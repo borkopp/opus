@@ -6,10 +6,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { LinesGradientShader } from "./lines-gradient-shader";
 import { Badge } from "./badge";
+import { useI18n } from "./i18n-provider";
 
 export default function Hero() {
+  const { messages } = useI18n();
+  const copy = messages.hero;
+
   return (
-    <div className="relative min-h-screen w-full overflow-hidden  bg-white dark:bg-neutral-950">
+    <div className="relative min-h-screen w-full overflow-hidden bg-white dark:bg-neutral-950">
       <LinesGradientShader
         className="absolute inset-0 bg-transparent dark:bg-transparent"
         bandSpacing={40}
@@ -19,29 +23,36 @@ export default function Hero() {
       />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-32">
         <div>
-          <Badge href="https://app.opus.mk">Запознајте го вашиот нов дигитален асистент</Badge>
+          <Badge href="https://studio.opus.mk">
+            {copy.badge}
+          </Badge>
         </div>
 
-        <h1 className="mt-4 max-w-3xl text-4xl font-normal tracking-tight text-neutral-700 md:text-6xl dark:text-neutral-300">
-          Вашиот бизнис работи.
+        <h1 className="mt-4 max-w-4xl text-4xl font-normal tracking-tight text-neutral-700 md:text-6xl dark:text-neutral-300">
+          {copy.titleFirst}
           <br />
-          Вие <span className="text-brand-primary font-playfair italic md:text-7xl font-medium" > владеете</span> со него.
+          {copy.titleSecond}{" "}
+          <span className="text-brand-primary font-lora text-5xl font-medium italic md:text-7xl">
+            {copy.titleAccent}
+          </span>
         </h1>
 
         <p className="mt-4 max-w-2xl text-base text-neutral-700 md:text-xl dark:text-neutral-300">
-          OPUS го автоматизира закажувањето, плаќањата и комуникацијата со клиенти. Од салони за убавина до ресторани. Сè на едно место.
+          {copy.description}
         </p>
 
         <div className="mt-8 flex items-center gap-4">
-          <Link href="https://app.opus.mk">
+          <Link href="https://studio.opus.mk">
             <Button>
               <span className="flex items-center gap-2">
-                Започнете бесплатно <Arrow className="size-4" />
+                {copy.startFree}
               </span>
             </Button>
           </Link>
           <Link href="/#product">
-            <Button className="hidden md:block" variant="outline">Дознајте повеќе</Button>
+            <Button className="hidden md:block" variant="outline">
+              {copy.learnMore}
+            </Button>
           </Link>
         </div>
 
@@ -59,7 +70,7 @@ export default function Hero() {
                 </div>
                 <div className="flex-1 text-center">
                   <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                    app.opus.mk
+                    studio.opus.mk
                   </span>
                 </div>
                 <div className="w-12" />
@@ -72,7 +83,7 @@ export default function Hero() {
                   height={1080}
                   priority
                   quality={100}
-                  alt="Dashboard Preview"
+                  alt={copy.dashboardAlt}
                   className="block h-full w-full object-fill object-top dark:hidden"
                 />
                 <Image
@@ -81,7 +92,7 @@ export default function Hero() {
                   height={1080}
                   priority
                   quality={100}
-                  alt="Dashboard Preview Dark"
+                  alt={copy.dashboardDarkAlt}
                   className="hidden h-full w-full object-fill object-top dark:block"
                 />
               </div>

@@ -59,13 +59,13 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       <Card className="flex min-h-0 h-full flex-col bg-card p-6 text-card-foreground transition-shadow duration-300 hover:shadow-md">
         <motion.div variants={itemVars} className="flex justify-between items-center mb-6 w-full px-1">
           <WidgetTitle>Revenue</WidgetTitle>
-          <motion.div
+          {/* <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-secondary px-4 py-2 text-[11px] font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Week <span className="text-[10px] opacity-40 ml-1">▼</span>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
 
         <motion.div variants={itemVars} className="flex-1 w-full min-h-[160px] mt-auto relative">

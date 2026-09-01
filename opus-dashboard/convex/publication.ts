@@ -11,11 +11,14 @@ export const recomputeWebsiteStatus = internalMutation({
 
     const currentWebsiteStatus = getWebsiteStatus(state.org);
     let nextWebsiteStatus = currentWebsiteStatus;
-    if (currentWebsiteStatus === "published" && !state.allRequiredComplete) {
+    if (
+      currentWebsiteStatus === "published" &&
+      !state.allWebsiteRequirementsComplete
+    ) {
       nextWebsiteStatus = "suspended";
     } else if (
       currentWebsiteStatus === "suspended" &&
-      state.allRequiredComplete
+      state.allWebsiteRequirementsComplete
     ) {
       nextWebsiteStatus = "published";
     }
@@ -29,7 +32,7 @@ export const recomputeWebsiteStatus = internalMutation({
       updatedAt: now,
     });
 
-    const incompleteRequirements = state.requirements
+    const incompleteRequirements = state.websiteRequirements
       .filter((item) => !item.complete)
       .map((item) => item.code);
 

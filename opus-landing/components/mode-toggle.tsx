@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
+import { useI18n } from "./i18n-provider";
 
 export function ModeToggle({ className }: { className?: string }) {
+  const { messages } = useI18n();
   const { setTheme, resolvedTheme } = useTheme();
 
   return (
@@ -17,11 +19,11 @@ export function ModeToggle({ className }: { className?: string }) {
       }}
       suppressHydrationWarning
       className={`flex cursor-pointer items-center justify-center text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white ${className}`}
-      aria-label="Toggle theme"
+      aria-label={messages.accessibility.toggleTheme}
     >
       <SunIcon className="hidden h-5 w-5 dark:block" />
       <MoonIcon className="block h-5 w-5 dark:hidden" />
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{messages.accessibility.toggleTheme}</span>
     </button>
   );
 }

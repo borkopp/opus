@@ -82,3 +82,23 @@ export function compactInstantDateTime(timestamp: number) {
     .replace(/[-:]/g, "")
     .replace(/\.\d{3}Z$/, "Z");
 }
+
+export function formatBookingNotificationDateTime(
+  timestamp: number,
+  locale = "en-GB",
+) {
+  const date = new Date(timestamp);
+  const datePart = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(date);
+  const timePart = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "UTC",
+  }).format(date);
+  return `${datePart} at ${timePart}`;
+}

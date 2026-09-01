@@ -8,6 +8,7 @@ import { StaffFormDialog } from "./_components/StaffFormDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function StaffPage() {
   const profile = useQuery(api.users.getMyProfile);
@@ -31,7 +32,12 @@ export default function StaffPage() {
   if (profile === null || !profile.orgId) return <div>Not found</div>;
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
+    >
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
@@ -54,15 +60,17 @@ export default function StaffPage() {
       <StaffList
         orgId={profile.orgId}
         onAddClick={() => setIsAddStaffOpen(true)}
+        canManageAppointmentEmail={profile.role === "owner"}
       />
 
       {isAddStaffOpen && (
         <StaffFormDialog
           orgId={profile.orgId}
           open={isAddStaffOpen}
+          canManageAppointmentEmail={profile.role === "owner"}
           onOpenChange={(open) => !open && setIsAddStaffOpen(false)}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

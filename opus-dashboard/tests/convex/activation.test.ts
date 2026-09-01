@@ -112,7 +112,7 @@ async function createVerifiedGuestBooking(
   return result.booking;
 }
 
-async function completeBeautySetup(t: TestBackend) {
+async function completeOperationalSetup(t: TestBackend) {
   const owner = await createOwner(t);
   const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
     name: "Atelier One",
@@ -133,10 +133,25 @@ async function completeBeautySetup(t: TestBackend) {
     priceMinorUnits: 1800,
   });
   await owner.mutation(api.activation.saveHours, { openingHours });
+  return { owner, orgId, serviceId };
+}
+
+async function completeBeautySetup(t: TestBackend) {
+  const setup = await completeOperationalSetup(t);
+  const { owner, orgId } = setup;
   await owner.mutation(api.activation.saveStorefront, {
     tagline: "Calm craft in the centre of Skopje.",
     bio: "A modern studio focused on thoughtful, wearable hair.",
     phone: "+38970111222",
+  });
+  const logoStorageId = await t.run(async (ctx) => {
+    return await ctx.storage.store(
+      new Blob(["fixture-logo"], { type: "image/png" }),
+    );
+  });
+  await owner.mutation(api.orgSettings.updateLogo, {
+    orgId,
+    storageId: logoStorageId,
   });
   await owner.mutation(api.orgMedia.addMedia, {
     orgId,
@@ -144,7 +159,7 @@ async function completeBeautySetup(t: TestBackend) {
     type: "cover",
     sortOrder: 0,
   });
-  return { owner, orgId, serviceId };
+  return setup;
 }
 
 describe("beauty activation engine", () => {
@@ -259,6 +274,67 @@ describe("beauty activation engine", () => {
       isActive: true,
       isDeleted: false,
     });
+  });
+
+  test("lets only owners link a normalized appointment email to staff", async () => {
+    const { owner, orgId } = await completeBeautySetup(t);
+    const { authenticated: manager } = await createAuthenticatedStaff(
+      t,
+      orgId,
+      "manager-email",
+      "manager",
+    );
+    const staffId = await owner.mutation(api.staff.createStaffMember, {
+      orgId,
+      displayName: "Ana Artist",
+      role: "staff",
+      specialties: ["Nails"],
+      appointmentEmail: " ANA.ARTIST@EXAMPLE.COM ",
+    });
+
+    expect(
+      await owner.query(api.staff.getStaffMember, { orgId, staffId }),
+    ).toMatchObject({
+      appointmentEmail: "ana.artist@example.com",
+    });
+    expect(
+      await manager.query(api.staff.getStaffMember, { orgId, staffId }),
+    ).not.toHaveProperty("appointmentEmail");
+
+    await expect(
+      manager.mutation(api.staff.updateStaffMember, {
+        orgId,
+        staffId,
+        appointmentEmail: "manager-change@example.com",
+      }),
+    ).rejects.toThrow("Only an owner can manage staff appointment emails");
+    await expect(
+      owner.mutation(api.staff.updateStaffMember, {
+        orgId,
+        staffId,
+        appointmentEmail: "not-an-email",
+      }),
+    ).rejects.toThrow("Enter a valid appointment email address");
+
+    await owner.mutation(api.staff.updateStaffMember, {
+      orgId,
+      staffId,
+      appointmentEmail: null,
+    });
+    const persisted = await t.run(async (ctx) => ({
+      staff: await ctx.db.get(staffId),
+      audit: await ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (query) => query.eq("orgId", orgId))
+        .collect(),
+    }));
+    expect(persisted.staff).not.toHaveProperty("appointmentEmail");
+    expect(
+      persisted.audit.filter(
+        (entry) =>
+          entry.resourceId === staffId && entry.action === "staff.updated",
+      ),
+    ).toHaveLength(1);
   });
 
   test("keeps the last active owner from being demoted or deactivated", async () => {
@@ -400,6 +476,34 @@ describe("beauty activation engine", () => {
         "activation.location_saved",
         "activation.hours_saved",
       ]),
+    );
+  });
+
+  test("unlocks the dashboard after operational setup but blocks website publishing until the public profile is complete", async () => {
+    const { owner, orgId } = await completeOperationalSetup(t);
+
+    const state = await owner.query(api.activation.getState, {});
+    expect(state?.operationalSetupComplete).toBe(true);
+    expect(state?.nextStep).toBe("review");
+    expect(state?.allWebsiteRequirementsComplete).toBe(false);
+    expect(
+      state?.websiteRequirements
+        .filter((requirement) => !requirement.complete)
+        .map((requirement) => requirement.code),
+    ).toEqual([
+      "website_logo",
+      "website_banner",
+      "website_tagline",
+      "website_phone",
+    ]);
+
+    const readiness = await owner.query(api.website.getReadiness, { orgId });
+    expect(readiness?.allBlockingMet).toBe(false);
+    expect(readiness?.requirements).toHaveLength(10);
+    await expect(
+      owner.mutation(api.website.publish, { orgId }),
+    ).rejects.toThrow(
+      "Cannot publish website: Website logo, Website banner, Studio tagline, Contact phone.",
     );
   });
 
@@ -1211,10 +1315,6 @@ describe("beauty activation engine", () => {
       await t.run(async (ctx) => (await ctx.db.get(created.bookingId))?.status),
     ).toBe("confirmed");
 
-    await owner.mutation(api.bookings.checkInBooking, {
-      orgId,
-      bookingId: created.bookingId,
-    });
     await owner.mutation(api.bookings.completeBooking, {
       orgId,
       bookingId: created.bookingId,
@@ -1222,5 +1322,33 @@ describe("beauty activation engine", () => {
     expect(
       await t.run(async (ctx) => (await ctx.db.get(created.bookingId))?.status),
     ).toBe("completed");
+  });
+
+  test("allows owner to update and remove business logo", async () => {
+    const t = createBackend();
+    const { owner, orgId } = await completeBeautySetup(t);
+
+    const storageId = await t.run(async (ctx) => {
+      return await ctx.storage.store(
+        new Blob(["logo-data"], { type: "image/png" }),
+      );
+    });
+
+    const logoUrl = await owner.mutation(api.orgSettings.updateLogo, {
+      orgId,
+      storageId,
+    });
+    expect(logoUrl).toBeTruthy();
+
+    await owner.mutation(api.website.publish, { orgId });
+
+    const orgWithLogo = await t.run(async (ctx) => await ctx.db.get(orgId));
+    expect(orgWithLogo?.logoUrl).toBe(logoUrl);
+
+    await owner.mutation(api.orgSettings.removeLogo, { orgId });
+
+    const orgWithoutLogo = await t.run(async (ctx) => await ctx.db.get(orgId));
+    expect(orgWithoutLogo?.logoUrl).toBeUndefined();
+    expect(orgWithoutLogo?.websiteStatus).toBe("suspended");
   });
 });

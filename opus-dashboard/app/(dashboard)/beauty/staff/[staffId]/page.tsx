@@ -4,6 +4,7 @@ import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { ArrowLeftIcon, PencilIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +53,12 @@ export default function StaffMemberPage({
   }
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
+    >
       <Link
         href="/beauty/staff"
         className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
@@ -108,10 +114,11 @@ export default function StaffMemberPage({
           orgId={orgId}
           staffId={staffId}
           open
+          canManageAppointmentEmail={profile?.role === "owner"}
           onOpenChange={setIsEditOpen}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
 

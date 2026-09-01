@@ -47,11 +47,12 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
+import { getErrorMessage } from "@/lib/file-validation";
 import {
-  getErrorMessage,
-  readStorageId,
-  validateImageFile,
-} from "@/lib/file-validation";
+  IMAGE_PRESETS,
+  uploadCompressedImage,
+} from "@/lib/image-compression";
 import { cn } from "@/lib/utils";
 
 export function ServiceFormDialog({
@@ -89,6 +90,7 @@ export function ServiceFormDialog({
   const [categoryId, setCategoryId] = useState<string>("uncategorized");
   const [staffIds, setStaffIds] = useState<string[]>([]);
   const [photoUrl, setPhotoUrl] = useState("");
+  const photoPreviewUrl = useStorageImageUrl(orgId, photoUrl);
   const [isActive, setIsActive] = useState(true);
   const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const [showStaffOptions, setShowStaffOptions] = useState(false);
@@ -164,38 +166,22 @@ export function ServiceFormDialog({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const validationError = validateImageFile(file, 2);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setIsUploading(true);
     setError("");
 
     try {
-      const postUrl = await generateUploadUrl({ orgId });
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+      const storageId = await uploadCompressedImage({
+        file,
+        getUploadUrl: () => generateUploadUrl({ orgId }),
+        options: IMAGE_PRESETS.service,
       });
-
-      if (!result.ok) throw new Error("Upload failed");
-      setPhotoUrl(readStorageId(await result.json()));
+      setPhotoUrl(storageId);
     } catch (uploadError: unknown) {
       setError(getErrorMessage(uploadError, "Could not upload image"));
     } finally {
       setIsUploading(false);
       event.target.value = "";
     }
-  };
-
-  const getImageUrl = (urlOrId: string) => {
-    if (!urlOrId) return undefined;
-    if (urlOrId.startsWith("http")) return urlOrId;
-    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(/\/$/, "");
-    return convexUrl ? `${convexUrl}/api/storage/${urlOrId}` : undefined;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -546,7 +532,7 @@ export function ServiceFormDialog({
                       <div className="relative shrink-0">
                         <Avatar className="h-20 w-28 rounded-lg border">
                           <AvatarImage
-                            src={getImageUrl(photoUrl)}
+                            src={photoPreviewUrl}
                             alt={name || "Service preview"}
                             className="object-cover"
                           />
@@ -591,7 +577,7 @@ export function ServiceFormDialog({
                           {photoUrl ? "Change photo" : "Upload photo"}
                         </Button>
                         <FieldDescription>
-                          JPG or PNG, up to 2 MB.
+                          JPEG, PNG, or WebP. Automatically compressed.
                         </FieldDescription>
                       </div>
                     </div>

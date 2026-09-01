@@ -1,21 +1,26 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { LanguageToggle } from "./language-toggle";
 import { ModeToggle } from "./mode-toggle";
 import { Logo } from "./logo";
+import { useI18n } from "./i18n-provider";
 
 export function Footer() {
+  const { messages } = useI18n();
   const pages = [
     {
-      title: "Платформа",
+      title: messages.nav.platform,
       href: "/#product",
     },
     {
-      title: "Цени",
+      title: messages.nav.pricing,
       href: "/pricing",
     },
     {
-      title: "Контакт",
+      title: messages.nav.contact,
       href: "/contact",
     },
   ];
@@ -32,27 +37,27 @@ export function Footer() {
   ];
   const legals = [
     {
-      title: "Политика за приватност",
+      title: messages.footer.privacy,
       href: "#",
     },
     {
-      title: "Услови за користење",
+      title: messages.footer.terms,
       href: "#",
     },
     {
-      title: "Политика за колачиња",
+      title: messages.footer.cookies,
       href: "#",
     },
   ];
 
   const signups = [
     {
-      title: "Започнете бесплатно",
-      href: "https://app.opus.mk",
+      title: messages.nav.startFree,
+      href: "https://studio.opus.mk",
     },
     {
-      title: "Најава",
-      href: "https://app.opus.mk",
+      title: messages.footer.signIn,
+      href: "https://studio.opus.mk",
     },
   ];
 
@@ -61,10 +66,10 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between text-sm text-neutral-500 sm:flex-row md:px-8">
         <div>
           <Link href="/" className="mr-0 mb-4 md:mr-4 md:flex">
-            <Logo className="text-6xl" />
+            <Logo className="text-4xl md:text-5xl" />
           </Link>
 
-          <div className="mt-4 ml-2 flex items-center gap-4">
+          <div className="mt-4 ml-2 flex items-center gap-3">
             {/* <Link
               href="https://twitter.com"
               target="_blank"
@@ -83,17 +88,18 @@ export function Footer() {
             >
               <LinkedInIcon className="size-5" />
             </Link> */}
+            <LanguageToggle />
             <ModeToggle />
           </div>
 
           <div className="mt-4 ml-2 text-neutral-500 dark:text-neutral-400">
-            &copy; Copyright OPUS 2026. Сите права задржани.
+            &copy; {messages.footer.copyright}
           </div>
         </div>
         <div className="mt-10 grid grid-cols-2 items-start gap-10 sm:mt-0 md:mt-0 lg:grid-cols-4">
           <div className="flex w-full flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
-              Страници
+            <p className="text-[10px] font-bold tracking-widest text-neutral-600 uppercase transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
+              {messages.footer.pagesTitle}
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {pages.map((page, idx) => (
@@ -128,8 +134,8 @@ export function Footer() {
           </div> */}
 
           <div className="flex flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
-              Правно
+            <p className="text-[10px] font-bold tracking-widest text-neutral-600 uppercase transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
+              {messages.footer.legalTitle}
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {legals.map((legal, idx) => (
@@ -145,8 +151,8 @@ export function Footer() {
             </ul>
           </div>
           <div className="flex flex-col justify-center gap-4">
-            <p className="font-bold text-neutral-600 transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white uppercase tracking-widest text-[10px]">
-              Најава
+            <p className="text-[10px] font-bold tracking-widest text-neutral-600 uppercase transition-colors hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-white">
+              {messages.footer.accountTitle}
             </p>
             <ul className="flex list-none flex-col gap-4 text-neutral-600 transition-colors dark:text-neutral-300">
               {signups.map((auth, idx) => (
@@ -188,8 +194,6 @@ export function Footer() {
     </div>
   );
 }
-
-
 
 const TwitterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

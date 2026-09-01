@@ -9,6 +9,7 @@ import { ConversationDetail } from "@/components/ai-inbox/ConversationDetail";
 import { BotMessageSquare } from "lucide-react";
 import { redirect } from "next/navigation";
 import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
+import { motion } from "framer-motion";
 
 type StatusFilter = "all" | "active" | "handed_off" | "resolved";
 
@@ -33,7 +34,12 @@ function DormantAIInboxPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-full">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="flex flex-col flex-1 min-h-full"
+    >
       {/* Page header */}
       <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0">
         <BotMessageSquare size={20} className="text-muted-foreground" />
@@ -71,7 +77,7 @@ function DormantAIInboxPage() {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

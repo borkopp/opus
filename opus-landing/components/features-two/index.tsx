@@ -10,17 +10,23 @@ import { MacbookSkeleton } from "./macbook-skeleton";
 import { IPhoneSkeleton } from "./iphone-skeleton";
 import { IPadSkeleton } from "./ipad-skeleton";
 import { EdgeComputing } from "./edge-computing";
-import { Compliance } from "./compliance";
+import { useI18n } from "../i18n-provider";
 
 export function FeaturesTwo() {
+  const { messages } = useI18n();
+  const copy = messages.featuresTwo;
+
   return (
     <Container className="px-4 py-10 md:py-20 lg:py-32">
       <div className="mx-auto mb-16 max-w-2xl text-center">
         <Heading as="h2" className="mb-4">
-          Управувајте од <span className="text-brand-primary font-playfair italic">било кој </span> уред
+          {copy.heading}{" "}
+          <span className="text-brand-primary font-lora italic">
+            {copy.headingAccent}
+          </span>
         </Heading>
         <Subheading className="text-balance">
-          OPUS работи беспрекорно на телефон, таблет и компјутер. Водете го вашиот бизнис од каде сакате.
+          {copy.description}
         </Subheading>
       </div>
 
@@ -48,25 +54,25 @@ export function FeaturesTwo() {
       <div className="mx-auto grid w-full grid-cols-1 items-center gap-10 overflow-hidden py-4 md:grid-cols-3 md:flex-row md:items-end md:justify-center md:py-10">
         <FeatureItem>
           <IPhoneSkeleton />
-          <FeatureTitle>Бизнисот во вашиот џеб</FeatureTitle>
+          <FeatureTitle>{copy.devices[0].title}</FeatureTitle>
           <FeatureDescription>
-            Добивајте известувања за нови резервации во реално време.
+            {copy.devices[0].description}
           </FeatureDescription>
         </FeatureItem>
 
         <FeatureItem>
           <MacbookSkeleton />
-          <FeatureTitle>Целосна контрола на компјутер</FeatureTitle>
+          <FeatureTitle>{copy.devices[1].title}</FeatureTitle>
           <FeatureDescription>
-            Напредни алатки за уредување на услуги, вработени и распоред.
+            {copy.devices[1].description}
           </FeatureDescription>
         </FeatureItem>
 
         <FeatureItem>
           <IPadSkeleton />
-          <FeatureTitle>Организирајте од било каде</FeatureTitle>
+          <FeatureTitle>{copy.devices[2].title}</FeatureTitle>
           <FeatureDescription>
-            Пристапете до вашиот дашборд преку уред прилагоден за допир.
+            {copy.devices[2].description}
           </FeatureDescription>
         </FeatureItem>
       </div>
@@ -75,13 +81,13 @@ export function FeaturesTwo() {
       <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2">
         <FeatureBlock
           icon={<SecuritySkeleton />}
-          title="Безбедност на податоци"
-          description="Вашите податоци и податоците на вашите клиенти се целосно заштитени според највисоките стандарди."
+          title={copy.blocks[0].title}
+          description={copy.blocks[0].description}
         />
         <FeatureBlock
           icon={<EdgeComputing />}
-          title="Брзо и сигурно"
-          description="Платформата е секогаш онлајн, овозможувајќи непречено работење на вашиот бизнис 24 часа."
+          title={copy.blocks[1].title}
+          description={copy.blocks[1].description}
         />
         {/* <FeatureBlock
           icon={<Compliance />}

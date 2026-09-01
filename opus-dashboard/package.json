@@ -31,6 +31,7 @@
     "convex": "^1.31.7",
     "date-fns": "^4.1.0",
     "input-otp": "^1.5.0",
+    "jose": "^6.2.10",
     "konva": "^10.2.3",
     "lucide-react": "^0.575.0",
     "mapbox-gl": "^3.21.0",
@@ -48,6 +49,7 @@
     "recharts": "^2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
+    "vaul": "^1.1.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

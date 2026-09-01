@@ -300,3 +300,16 @@ export const clearMockData = mutation({
     return result;
   },
 });
+
+export const clearAllStorage = mutation({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    assertDevelopmentDeployment();
+    const files = await ctx.db.system.query("_storage").collect();
+    for (const file of files) {
+      await ctx.storage.delete(file._id);
+    }
+    return files.length;
+  },
+});

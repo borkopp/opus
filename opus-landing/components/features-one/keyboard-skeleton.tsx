@@ -3,18 +3,21 @@ import React from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { IconScissors, IconClock, IconTag } from "@tabler/icons-react";
+import { useI18n } from "../i18n-provider";
 
 export function TeamServiceSkeleton({ className }: { className?: string }) {
+   const { messages } = useI18n();
+   const copy = messages.demos.team;
    const services = [
-      { id: 1, name: "Машко шишање", price: "600 ден.", duration: "30 мин.", icon: <IconScissors className="size-3" />, type: 'item' },
-      { id: 3, name: "Нова услуга", price: "", duration: "", icon: null, type: 'placeholder' },
+      { id: 1, name: copy.service, price: copy.price, duration: copy.duration, icon: <IconScissors className="size-3" />, type: 'item' },
+      { id: 3, name: copy.newService, price: "", duration: "", icon: null, type: 'placeholder' },
    ];
 
    return (
       <div className={cn("relative w-full aspect-[16/10] rounded-3xl bg-neutral-50/50 p-6 dark:bg-neutral-900/40 flex flex-col gap-4", className)}>
          {/* Services List */}
          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider pl-1">Услуги</span>
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider pl-1">{copy.services}</span>
             <div className="space-y-2">
                {services.map((service, i) => (
                   <motion.div
@@ -57,7 +60,7 @@ export function TeamServiceSkeleton({ className }: { className?: string }) {
 
          {/* Team Section */}
          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-1">Тим</span>
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest pl-1">{copy.team}</span>
             <div className="flex gap-2">
                {[1, 2, 3, 4].map((staff, i) => (
                   <motion.div
@@ -84,8 +87,8 @@ export function TeamServiceSkeleton({ className }: { className?: string }) {
             className="absolute right-6 bottom-4 p-3 rounded-2xl bg-brand-primary text-white shadow-xl z-10 flex flex-col gap-0.5"
          >
             <IconTag className="size-4 mb-1" />
-            <span className="text-[8px] font-bold uppercase tracking-widest opacity-80">20% Попуст</span>
-            <span className="text-xs font-black">Среќен роденден!</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest opacity-80">{copy.discount}</span>
+            <span className="text-xs font-black">{copy.birthday}</span>
          </motion.div>
       </div>
    );

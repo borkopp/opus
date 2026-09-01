@@ -152,6 +152,7 @@ export const startBeautyBusiness = mutation({
       currency: "MKD",
       locale: "mk-MK",
       slotDurationMins: 15,
+      quickBookingDurationMins: 30,
       bookingWindowDays: 60,
       cancellationWindowHours: 24,
       bufferTimeMins: 0,
@@ -495,14 +496,16 @@ export const saveStorefront = mutation({
     }
 
     for (const [index, storageId] of (args.galleryStorageIds ?? []).entries()) {
-      const url = await ctx.storage.getUrl(storageId);
-      if (!url) throw new ConvexError("Gallery upload could not be found.");
       const existing = await ctx.db
         .query("org_media")
-        .withIndex("by_org_active", (q) =>
-          q.eq("orgId", org._id).eq("isDeleted", false),
+        .withIndex("by_org_type_active", (q) =>
+          q.eq("orgId", org._id).eq("type", "gallery").eq("isDeleted", false),
         )
         .collect();
+      if (existing.length >= 3) break;
+
+      const url = await ctx.storage.getUrl(storageId);
+      if (!url) throw new ConvexError("Gallery upload could not be found.");
       if (
         !existing.some((item) => item.type === "gallery" && item.url === url)
       ) {

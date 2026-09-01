@@ -27,6 +27,7 @@ interface BookingOperationsTabProps {
     currency: string;
     locale: string;
     slotDurationMins: number;
+    quickBookingDurationMins: number;
     bookingWindowDays: number;
     cancellationWindowHours: number;
     bufferTimeMins: number;
@@ -35,6 +36,7 @@ interface BookingOperationsTabProps {
 
 type Fields =
   | "slotDurationMins"
+  | "quickBookingDurationMins"
   | "bookingWindowDays"
   | "cancellationWindowHours"
   | "bufferTimeMins";
@@ -56,6 +58,16 @@ const FIELD_CONFIG: Array<{
     min: 1,
     max: 480,
     description: "The smallest interval customers can book.",
+  },
+  {
+    id: "quick-booking-duration",
+    label: "Quick booking",
+    unit: "minutes",
+    field: "quickBookingDurationMins",
+    min: 1,
+    max: 480,
+    description:
+      "Preferred duration shown when you hover an available calendar slot.",
   },
   {
     id: "buffer-time",
@@ -100,6 +112,7 @@ export function BookingOperationsTab({
 
   const [bookingRules, setBookingRules] = useState({
     slotDurationMins: initialData.slotDurationMins,
+    quickBookingDurationMins: initialData.quickBookingDurationMins,
     bookingWindowDays: initialData.bookingWindowDays,
     cancellationWindowHours: initialData.cancellationWindowHours,
     bufferTimeMins: initialData.bufferTimeMins,
@@ -110,6 +123,7 @@ export function BookingOperationsTab({
   useEffect(() => {
     setBookingRules({
       slotDurationMins: initialData.slotDurationMins,
+      quickBookingDurationMins: initialData.quickBookingDurationMins,
       bookingWindowDays: initialData.bookingWindowDays,
       cancellationWindowHours: initialData.cancellationWindowHours,
       bufferTimeMins: initialData.bufferTimeMins,
@@ -118,6 +132,7 @@ export function BookingOperationsTab({
     initialData.bookingWindowDays,
     initialData.bufferTimeMins,
     initialData.cancellationWindowHours,
+    initialData.quickBookingDurationMins,
     initialData.slotDurationMins,
   ]);
 
@@ -130,6 +145,15 @@ export function BookingOperationsTab({
       bookingRules.slotDurationMins > 480
     ) {
       nextErrors.slotDurationMins = "Enter a whole number between 1 and 480.";
+    }
+    if (
+      !posInt(bookingRules.quickBookingDurationMins) ||
+      bookingRules.quickBookingDurationMins > 480 ||
+      bookingRules.quickBookingDurationMins < bookingRules.slotDurationMins ||
+      bookingRules.quickBookingDurationMins % bookingRules.slotDurationMins !==
+        0
+    ) {
+      nextErrors.quickBookingDurationMins = `Use a whole-number multiple of the ${bookingRules.slotDurationMins} minute slot duration, up to 480 minutes.`;
     }
     if (
       !posInt(bookingRules.bookingWindowDays) ||
@@ -194,7 +218,7 @@ export function BookingOperationsTab({
     <TabsContent value="booking" className="m-0">
       <SettingsCard
         title="Booking rules"
-        description="Control appointment intervals, lead time, cancellation notice, and breathing room between bookings."
+        description="Control calendar quick booking, appointment intervals, cancellation notice, and breathing room between bookings."
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (

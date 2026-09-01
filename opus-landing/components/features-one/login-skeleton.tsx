@@ -1,8 +1,12 @@
 "use client";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { useI18n } from "../i18n-provider";
 
 export function CalendarSkeleton({ className }: { className?: string }) {
+  const { messages } = useI18n();
+  const copy = messages.demos.calendar;
+
   return (
     <div className={cn("h-full w-full mask-b-from-50% p-4 md:p-6", className)}>
       <div className="h-[500px] w-full rounded-xl bg-white border border-neutral-200 shadow-sm dark:bg-neutral-900/50 dark:border-neutral-800 flex flex-col overflow-hidden">
@@ -21,14 +25,14 @@ export function CalendarSkeleton({ className }: { className?: string }) {
           <div className="w-12 shrink-0 border-r border-neutral-200 dark:border-neutral-800 h-8" />
           <div className="flex-1 flex justify-center py-2 border-r border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center gap-1.5 grayscale opacity-80">
-              <img src="https://assets.aceternity.com/avatars/1.webp" className="size-4 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10" alt="Марко" />
-              <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">Марко</span>
+              <img src="https://assets.aceternity.com/avatars/1.webp" className="size-4 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10" alt={copy.staff[0]} />
+              <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">{copy.staff[0]}</span>
             </div>
           </div>
           <div className="flex-1 flex justify-center py-2">
             <div className="flex items-center gap-1.5 grayscale opacity-80">
-              <img src="https://assets.aceternity.com/avatars/2.webp" className="size-4 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10" alt="Ана" />
-              <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">Ана</span>
+              <img src="https://assets.aceternity.com/avatars/2.webp" className="size-4 shrink-0 rounded-full object-cover shadow-sm ring-1 ring-black/5 dark:ring-white/10" alt={copy.staff[1]} />
+              <span className="text-[10px] font-medium text-neutral-600 dark:text-neutral-300">{copy.staff[1]}</span>
             </div>
           </div>
         </div>
@@ -68,52 +72,52 @@ export function CalendarSkeleton({ className }: { className?: string }) {
 
             {/* Completed booking */}
             <div className="absolute top-[12px] left-[3%] w-[44%] h-[56px] rounded-md bg-neutral-200/40 border border-neutral-300 dark:bg-neutral-800/70 dark:border-neutral-700/70 p-1.5 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-neutral-600 dark:text-neutral-300">Потстрижување</p>
-              <p className="text-[8px] text-neutral-500 dark:text-neutral-400 mt-0.5">Петар • Платено</p>
+              <p className="text-[9px] font-semibold text-neutral-600 dark:text-neutral-300">{copy.bookings[0].title}</p>
+              <p className="text-[8px] text-neutral-500 dark:text-neutral-400 mt-0.5">{copy.bookings[0].details}</p>
             </div>
 
             {/* Upcoming booking - currently active */}
             <div className="absolute top-[75px] left-[3%] w-[44%] h-[68px] rounded-md border border-brand-primary/40 bg-brand-primary/10 dark:bg-brand-primary/20 p-2 z-10 shadow-sm transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-brand-primary dark:text-white">Фејд + Брада</p>
-              <p className="text-[8px] font-medium text-brand-primary/80 dark:text-neutral-300 mt-1">Иван • 11:30</p>
+              <p className="text-[9px] font-semibold text-brand-primary dark:text-white">{copy.bookings[1].title}</p>
+              <p className="text-[8px] font-medium text-brand-primary/80 dark:text-neutral-300 mt-1">{copy.bookings[1].details}</p>
             </div>
 
             {/* Later booking */}
             <div className="absolute top-[180px] left-[3%] w-[44%] h-[48px] rounded-md border border-blue-500/30 bg-blue-50/80 dark:bg-blue-500/10 p-2 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-blue-700 dark:text-blue-400">Шишање деца</p>
-              <p className="text-[8px] font-medium text-blue-600/80 dark:text-blue-400/80 mt-1">Матеј • Неплатено</p>
+              <p className="text-[9px] font-semibold text-blue-700 dark:text-blue-400">{copy.bookings[2].title}</p>
+              <p className="text-[8px] font-medium text-blue-600/80 dark:text-blue-400/80 mt-1">{copy.bookings[2].details}</p>
             </div>
 
             {/* Evening booking */}
             <div className="absolute top-[260px] left-[3%] w-[44%] h-[80px] rounded-md bg-neutral-200/40 border border-neutral-300 dark:bg-neutral-800/70 dark:border-neutral-700/70 p-2 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-neutral-600 dark:text-neutral-300">Седење</p>
-              <p className="text-[8px] text-neutral-500 dark:text-neutral-400 mt-1">Никола • Целосен третман</p>
+              <p className="text-[9px] font-semibold text-neutral-600 dark:text-neutral-300">{copy.bookings[3].title}</p>
+              <p className="text-[8px] text-neutral-500 dark:text-neutral-400 mt-1">{copy.bookings[3].details}</p>
             </div>
 
             {/* Ana's column: offset 50% to 100% */}
 
             {/* Unpaid / Deposit booking */}
             <div className="absolute top-[36px] left-[53%] w-[44%] h-[84px] rounded-md border border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 p-2 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-amber-700 dark:text-amber-500">Фарбање</p>
-              <p className="text-[8px] font-medium text-amber-600/80 dark:text-amber-500/80 mt-1">Елена • Депозит</p>
+              <p className="text-[9px] font-semibold text-amber-700 dark:text-amber-500">{copy.bookings[4].title}</p>
+              <p className="text-[8px] font-medium text-amber-600/80 dark:text-amber-500/80 mt-1">{copy.bookings[4].details}</p>
             </div>
 
             {/* Future booking */}
             <div className="absolute top-[136px] left-[53%] w-[44%] h-[60px] rounded-md border border-blue-500/30 bg-blue-50/80 dark:bg-blue-500/10 p-2 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-blue-700 dark:text-blue-400">Шминка</p>
-              <p className="text-[8px] font-medium text-blue-600/80 dark:text-blue-400/80 mt-1">Сара • Неплатено</p>
+              <p className="text-[9px] font-semibold text-blue-700 dark:text-blue-400">{copy.bookings[5].title}</p>
+              <p className="text-[8px] font-medium text-blue-600/80 dark:text-blue-400/80 mt-1">{copy.bookings[5].details}</p>
             </div>
 
             {/* Completed/Paid booking */}
             <div className="absolute top-[230px] left-[53%] w-[44%] h-[90px] rounded-md border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-2 z-10 shadow-sm transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-500">Маникир + Педикир</p>
-              <p className="text-[8px] font-medium text-emerald-600/80 dark:text-emerald-500/80 mt-1">Јована • Платено</p>
+              <p className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-500">{copy.bookings[6].title}</p>
+              <p className="text-[8px] font-medium text-emerald-600/80 dark:text-emerald-500/80 mt-1">{copy.bookings[6].details}</p>
             </div>
 
             {/* Very late booking */}
             <div className="absolute top-[340px] left-[53%] w-[44%] h-[60px] rounded-md border border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 p-2 z-10 transition-transform duration-300 hover:scale-[1.02]">
-              <p className="text-[9px] font-semibold text-purple-700 dark:text-purple-400">Стил на коса</p>
-              <p className="text-[8px] font-medium text-purple-600/80 dark:text-purple-400/80 mt-1">Кристина</p>
+              <p className="text-[9px] font-semibold text-purple-700 dark:text-purple-400">{copy.bookings[7].title}</p>
+              <p className="text-[8px] font-medium text-purple-600/80 dark:text-purple-400/80 mt-1">{copy.bookings[7].details}</p>
             </div>
 
           </div>

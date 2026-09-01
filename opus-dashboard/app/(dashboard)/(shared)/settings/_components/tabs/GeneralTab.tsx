@@ -28,6 +28,7 @@ interface GeneralTabProps {
     currency: string;
     locale: string;
     slotDurationMins: number;
+    quickBookingDurationMins: number;
     bookingWindowDays: number;
     cancellationWindowHours: number;
     bufferTimeMins: number;
@@ -59,6 +60,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
   });
   const [bookingRules] = useState({
     slotDurationMins: initialData.slotDurationMins,
+    quickBookingDurationMins: initialData.quickBookingDurationMins,
     bookingWindowDays: initialData.bookingWindowDays,
     cancellationWindowHours: initialData.cancellationWindowHours,
     bufferTimeMins: initialData.bufferTimeMins,

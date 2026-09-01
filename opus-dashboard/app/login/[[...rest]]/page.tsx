@@ -14,7 +14,7 @@ export default async function Login({
     <AuthLayout>
       <EmailOtpForm
         title="Welcome back"
-        description="Enter your studio email. We’ll send a six-digit code—no password needed."
+        description="Enter your studio email. We’ll send a six-digit code."
         callbackUrl={callbackUrl}
       />
     </AuthLayout>

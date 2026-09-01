@@ -3,8 +3,12 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "motion/react";
 import { IconSparkles, IconTrendingUp, IconSend } from "@tabler/icons-react";
+import { useI18n } from "../i18n-provider";
 
 export function GapOptimizerSkeleton({ className }: { className?: string }) {
+  const { messages } = useI18n();
+  const copy = messages.demos.gap;
+
   return (
     <div className={cn("relative flex h-full w-full items-center justify-center p-4", className)}>
       <div className="relative h-[340px] w-full max-w-[450px] rounded-2xl border border-neutral-200 bg-white shadow-xl dark:border-neutral-800 dark:bg-neutral-900">
@@ -13,7 +17,7 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
         <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800/50 rounded-t-2xl">
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-brand-primary animate-pulse" />
-            <span className="text-[9px] font-semibold text-neutral-500 uppercase tracking-wider">AI Оптимизатор Активен</span>
+            <span className="text-[9px] font-semibold text-neutral-500 uppercase tracking-wider">{copy.active}</span>
           </div>
           <div className="flex gap-1">
             <div className="h-4 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
@@ -51,7 +55,7 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
 
                   <div className="flex flex-col items-center gap-1 z-20">
                     <IconSparkles className="size-5 text-brand-primary animate-bounce" />
-                    <span className="text-[10px] font-bold text-brand-primary">Пронајдена дупка: 60 мин</span>
+                    <span className="text-[10px] font-bold text-brand-primary">{copy.found}</span>
                   </div>
                 </div>
 
@@ -65,14 +69,14 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
                   {/* Revenue Card */}
                   <div className="rounded-lg bg-emerald-500 p-2 text-white shadow-lg flex items-center gap-2 w-40">
                     <IconTrendingUp className="size-3" />
-                    <span className="text-[9px] font-bold">+1,200 ден.</span>
+                    <span className="text-[9px] font-bold">{copy.revenue}</span>
                   </div>
 
                   {/* Candidate Card */}
                   <div className="rounded-lg bg-white border border-neutral-200 p-2 shadow-lg dark:bg-neutral-800 dark:border-neutral-700 w-40">
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <img src="https://assets.aceternity.com/avatars/3.webp" className="size-4 object-cover rounded-full" alt="" />
-                      <span className="text-[9px] font-bold">Ана К.</span>
+                      <span className="text-[9px] font-bold">{copy.candidate}</span>
                     </div>
                     <div className="h-1 w-full bg-neutral-100 dark:bg-neutral-700 rounded-full mb-1">
                       <motion.div
@@ -82,7 +86,7 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
                         className="h-full bg-brand-primary rounded-full"
                       />
                     </div>
-                    <span className="text-[8px] text-neutral-500">Идеален кандидат</span>
+                    <span className="text-[8px] text-neutral-500">{copy.idealCandidate}</span>
                   </div>
 
                   {/* Message Bubble */}
@@ -92,7 +96,7 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
                     transition={{ type: "spring", delay: 1.5 }}
                     className="rounded-xl rounded-tr-none bg-brand-primary p-2 text-white shadow-lg w-40"
                   >
-                    <p className="text-[8px] italic leading-tight">"Здраво Ана! Имаме слободен термин во 11:00 кај Марко. Сакаш ли да го резервираш?"</p>
+                    <p className="text-[8px] italic leading-tight">{copy.message}</p>
                     <div className="flex justify-end mt-1">
                       <IconSend className="size-3 opacity-80" />
                     </div>
@@ -115,7 +119,7 @@ export function GapOptimizerSkeleton({ className }: { className?: string }) {
 
         {/* Bottom Status Bar */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-neutral-100 bg-neutral-50 px-4 py-2 dark:border-neutral-800 dark:bg-neutral-800 flex justify-between items-center rounded-b-2xl">
-          <span className="text-[9px] font-medium text-emerald-600">Скенирањето е завршено</span>
+          <span className="text-[9px] font-medium text-emerald-600">{copy.complete}</span>
 
         </div>
       </div>

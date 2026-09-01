@@ -11,8 +11,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "./logo";
+import { useI18n } from "./i18n-provider";
 
 export const Navbar = () => {
+  const { messages } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -99,10 +101,11 @@ export const Navbar = () => {
           backdropFilter: hasScrolled ? "blur(12px)" : "blur(0px)",
         }}
         transition={{ duration: 0.3 }}
-        className={`flex h-14 items-center justify-between px-4 transition-colors duration-300 sm:h-16 md:px-8 ${hasScrolled
-          ? "bg-white/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] dark:bg-neutral-900/80 dark:shadow-[0_1px_3px_0_rgba(0,0,0,0.3),0_1px_2px_-1px_rgba(0,0,0,0.3)]"
-          : "bg-transparent shadow-none"
-          }`}
+        className={`flex h-14 items-center justify-between px-4 transition-colors duration-300 sm:h-16 md:px-8 ${
+          hasScrolled
+            ? "bg-white/80 shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] dark:bg-neutral-900/80 dark:shadow-[0_1px_3px_0_rgba(0,0,0,0.3),0_1px_2px_-1px_rgba(0,0,0,0.3)]"
+            : "bg-transparent shadow-none"
+        }`}
         data-scrolled={hasScrolled}
       >
         {/* Logo */}
@@ -116,14 +119,14 @@ export const Navbar = () => {
             href="/#product"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
-            Платформа
+            {messages.nav.platform}
           </Link>
 
           <Link
             href="/pricing"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
-            Цени
+            {messages.nav.pricing}
           </Link>
 
           {/* Ресурси Navigation Menu
@@ -183,7 +186,7 @@ export const Navbar = () => {
             href="/contact"
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
-            Контакт
+            {messages.nav.contact}
           </Link>
         </div>
 
@@ -195,8 +198,10 @@ export const Navbar = () => {
           >
             Најава
           </Link> */}
-          <Link href="https://app.opus.mk">
-            <Button className="px-4 py-2 text-sm">Започнете бесплатно</Button>
+          <Link href="https://studio.opus.mk">
+            <Button className="px-4 py-2 text-sm">
+              {messages.nav.startFree}
+            </Button>
           </Link>
         </div>
 
@@ -204,7 +209,11 @@ export const Navbar = () => {
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="flex size-10 items-center justify-center rounded-md lg:hidden"
-          aria-label="Toggle menu"
+          aria-label={
+            mobileMenuOpen
+              ? messages.accessibility.closeMenu
+              : messages.accessibility.openMenu
+          }
         >
           {mobileMenuOpen ? (
             <CloseIcon className="size-5 text-neutral-900 dark:text-white" />
@@ -222,17 +231,18 @@ export const Navbar = () => {
           y: mobileMenuOpen ? 0 : -20,
         }}
         transition={{ duration: 0.2, ease: "easeOut" }}
-        className={`fixed inset-0 top-14 z-40 flex flex-col bg-white sm:top-16 lg:hidden dark:bg-neutral-900 ${mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
-          }`}
+        className={`fixed inset-0 top-14 z-40 flex flex-col bg-white sm:top-16 lg:hidden dark:bg-neutral-900 ${
+          mobileMenuOpen ? "pointer-events-auto" : "pointer-events-none"
+        }`}
       >
         <div className="flex flex-1 flex-col overflow-y-auto px-6 py-6">
           <div className="flex flex-col gap-2">
             <Link
-              href="#"
+              href="/#product"
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
             >
-              Платформа
+              {messages.nav.platform}
             </Link>
 
             <Link
@@ -240,7 +250,7 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
             >
-              Цени
+              {messages.nav.pricing}
             </Link>
 
             {/* Mobile Resources Accordion
@@ -289,7 +299,7 @@ export const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="rounded-xl px-4 py-3.5 text-base font-medium text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-white dark:hover:bg-neutral-800"
             >
-              Контакт
+              {messages.nav.contact}
             </Link>
           </div>
 
@@ -306,11 +316,12 @@ export const Navbar = () => {
             >
               Најава
             </Link> */}
-            <Link href="https://app.opus.mk" onClick={() => setMobileMenuOpen(false)}>
-              <Button
-                className="mt-3 w-full rounded-xl px-4 py-3.5 text-base"
-              >
-                Започнете бесплатно
+            <Link
+              href="https://studio.opus.mk"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Button className="mt-3 w-full rounded-xl px-4 py-3.5 text-base">
+                {messages.nav.startFree}
               </Button>
             </Link>
           </div>
@@ -436,18 +447,6 @@ const ChevronDownIcon = (props: React.SVGProps<SVGSVGElement>) => {
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
-  );
-};
-
-const LogoIcon = ({ className }: { className: string }) => {
-  return (
-    <Image
-      src="https://assets.aceternity.com/logo.png"
-      alt="Logo"
-      width={66}
-      height={65}
-      className={className}
-    />
   );
 };
 

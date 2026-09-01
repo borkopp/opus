@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Globe2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -12,7 +13,14 @@ import {
 
 export default function PublicSiteNotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4 py-12">
+      <Link
+        href="https://opus.mk"
+        aria-label="OPUS"
+        className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Logo className="text-2xl" />
+      </Link>
       <Empty className="max-w-xl border border-border bg-card">
         <EmptyHeader>
           <EmptyMedia variant="icon">

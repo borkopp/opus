@@ -9,6 +9,7 @@ import {
 import {
   normalizeReminderHours,
   queueBookingEmailNotifications,
+  resolveAssignedStaffEmailRecipient,
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
 import { decryptBookingOtp } from "./lib/bookingEmailSecurity";
@@ -20,6 +21,7 @@ import {
   renderBookingVerificationEmail,
   renderClientConfirmationEmail,
   renderClientReminderEmail,
+  renderClientRescheduledEmail,
   renderSimpleAppointmentEmail,
   renderStaffInviteEmail,
   renderStaffNewBookingEmail,
@@ -29,6 +31,7 @@ import {
 const notificationType = v.union(
   v.literal("booking_verification"),
   v.literal("booking_confirmation"),
+  v.literal("booking_rescheduled"),
   v.literal("booking_reminder"),
   v.literal("staff_new_booking"),
   v.literal("staff_booking_reminder"),
@@ -210,6 +213,15 @@ export const getNotificationDeliveryContext = internalQuery({
           settings.staffEmailRecipientUserIds,
         )
       : [];
+    const assignedStaffRecipient = staff
+      ? resolveAssignedStaffEmailRecipient(staff)
+      : null;
+    const staffRecipientEmails = Array.from(
+      new Set([
+        ...staffRecipients.map((recipient) => recipient.email),
+        ...(assignedStaffRecipient ? [assignedStaffRecipient.email] : []),
+      ]),
+    );
 
     return {
       notification,
@@ -220,7 +232,7 @@ export const getNotificationDeliveryContext = internalQuery({
       service,
       staff,
       verification,
-      staffRecipientEmails: staffRecipients.map((recipient) => recipient.email),
+      staffRecipientEmails,
     };
   },
 });
@@ -285,6 +297,7 @@ function deliverySkipReason(context: DeliveryContext) {
     if (
       [
         "booking_confirmation",
+        "booking_rescheduled",
         "booking_reminder",
         "staff_new_booking",
         "staff_booking_reminder",
@@ -376,6 +389,8 @@ function appointmentData(context: DeliveryContext): AppointmentEmailData {
     ),
     hoursBefore: numberValue(data.hoursBefore),
     generatedAt: context.notification.createdAt,
+    previousStartAt: numberValue(data.previousStartAt),
+    previousEndAt: numberValue(data.previousEndAt),
   };
 }
 
@@ -408,6 +423,8 @@ async function renderNotificationEmail(
   switch (notification.type) {
     case "booking_confirmation":
       return renderClientConfirmationEmail(appointment);
+    case "booking_rescheduled":
+      return renderClientRescheduledEmail(appointment);
     case "booking_reminder":
       return renderClientReminderEmail(appointment);
     case "staff_new_booking":
@@ -742,6 +759,7 @@ export const reconcileBookingRemindersForOrg = internalMutation({
         staff,
         sendCustomerConfirmation: false,
         notifyTeamOfNewBooking: false,
+        notifyAssignedStaffOfNewBooking: false,
         scheduleReminders: true,
       });
       reconciled += 1;

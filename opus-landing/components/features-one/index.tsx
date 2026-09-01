@@ -10,22 +10,31 @@ import { FlippingImagesWithBar } from "./flipping-images";
 import { Heading } from "../heading";
 import { Subheading } from "../subheading";
 import { Container } from "../container";
-import { CalendarCheck, Clock, Smartphone } from "lucide-react";
+import { CalendarCheck, MailCheck, Smartphone } from "lucide-react";
+import { useI18n } from "../i18n-provider";
 
 export function FeaturesOne() {
+  const { messages } = useI18n();
+  const copy = messages.featuresOne;
+
   return (
     <Container as="section" id="product" className="py-10 md:py-20 lg:py-32">
-      <Heading>Алатки кои <span className="text-brand-primary font-playfair italic">навистина</span> ги користите</Heading>
+      <Heading>
+        {copy.heading}{" "}
+        <span className="text-brand-primary font-lora italic">
+          {copy.headingAccent}
+        </span>
+      </Heading>
       <Subheading className="mt-2">
-        Не уште еден CRM за кој ви треба обука. OPUS е направен за луѓе кои работат со раце и имаат 3 минути меѓу клиенти.
+        {copy.description}
       </Subheading>
       <div className="mx-auto mt-8 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-3 md:grid-rows-2">
         <Card className="md:row-span-2">
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Резервации без конфузија</CardTitle>
+              <CardTitle>{copy.cards.calendar.title}</CardTitle>
               <CardDescription>
-                Еден поглед на денот, неделата, персоналот. Без двојни резервации, без пропуштени термини.
+                {copy.cards.calendar.description}
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 items-center justify-center overflow-hidden pt-4">
@@ -37,9 +46,9 @@ export function FeaturesOne() {
         <Card>
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Ваш личен веб-сајт за резервации</CardTitle>
+              <CardTitle>{copy.cards.website.title}</CardTitle>
               <CardDescription>
-                Добијте сопствена веб-страница на ваш линк каде клиентите можат лесно да прегледуваат услуги и сами да резервираат термин.
+                {copy.cards.website.description}
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 items-center justify-center p-4 pt-0">
@@ -51,9 +60,9 @@ export function FeaturesOne() {
         <Card className="md:row-span-2">
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>AI асистент</CardTitle>
+              <CardTitle>{copy.cards.ai.title}</CardTitle>
               <CardDescription>
-                Одговара на клиенти, закажува, испраќа потсетници — автоматски, на македонски, 24/7.
+                {copy.cards.ai.description}
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 flex-col items-center justify-between gap-2 overflow-hidden pt-4">
@@ -69,12 +78,12 @@ export function FeaturesOne() {
         <Card>
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Управување со тим и услуги</CardTitle>
+              <CardTitle>{copy.cards.operations.title}</CardTitle>
               <CardDescription>
-                Едноставно организирајте ги услугите, цените и распоредот на вашите вработени.
+                {copy.cards.operations.description}
               </CardDescription>
             </CardHeader>
-            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center -mt-4">
+            <CardSkeleton className="-mt-4 mt-auto flex flex-1 items-center justify-center">
               <TeamServiceSkeleton />
             </CardSkeleton>
           </CardContent>
@@ -83,19 +92,25 @@ export function FeaturesOne() {
 
       <div className="mx-auto mt-4 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-3">
         <FeatureCard
-          icon={<CalendarCheck className="group-hover:text-brand-primary size-5 transition-colors" />}
-          title="Календар без преклопувања"
-          description="Прегледен дневен и неделен распоред на целиот тим, со автоматска заштита од двојно резервирање на термини."
+          icon={
+            <CalendarCheck className="group-hover:text-brand-primary size-5 transition-colors" />
+          }
+          title={copy.highlights.calendar.title}
+          description={copy.highlights.calendar.description}
         />
         <FeatureCard
-          icon={<Clock className="group-hover:text-brand-primary size-5 transition-colors" />}
-          title="Флексибилно работно време"
-          description="Лесно подесете индивидуални смени, слободни денови, паузи и исклучоци за секој член од вашиот тим."
+          icon={
+            <MailCheck className="group-hover:text-brand-primary size-5 transition-colors" />
+          }
+          title={copy.highlights.email.title}
+          description={copy.highlights.email.description}
         />
         <FeatureCard
-          icon={<Smartphone className="group-hover:text-brand-primary size-5 transition-colors" />}
-          title="Брзо закажување без регистрација"
-          description="Клиентите го отвораат вашиот линк од Instagram или порака и закажуваат термин за помалку од една минута."
+          icon={
+            <Smartphone className="group-hover:text-brand-primary size-5 transition-colors" />
+          }
+          title={copy.highlights.guest.title}
+          description={copy.highlights.guest.description}
         />
       </div>
     </Container>

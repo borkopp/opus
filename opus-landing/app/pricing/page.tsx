@@ -1,25 +1,29 @@
-import { CTA } from "@/components/cta";
 import { FAQs } from "@/components/faqs";
+import { LaunchBanner } from "@/components/cta";
 import { Pricing } from "@/components/pricing";
 import { Metadata } from "next";
+import { getMessages } from "@/lib/i18n/messages";
+import { getRequestLocale } from "@/lib/i18n/server";
 
-export const metadata: Metadata = {
-  title: "Pricing - Simplistic",
-  description:
-    "Simple, transparent pricing for AI agent deployment. Choose a plan that works best for you and your team. No hidden fees.",
-  openGraph: {
-    title: "Pricing - Simplistic",
-    description:
-      "Simple, transparent pricing for AI agent deployment. Choose a plan that works best for you and your team.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Pricing - Simplistic",
-    description:
-      "Simple, transparent pricing for AI agent deployment. Choose a plan that works best for you and your team.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const pricing = getMessages(locale).metadata.pricing;
+
+  return {
+    title: pricing.title,
+    description: pricing.description,
+    openGraph: {
+      title: pricing.title,
+      description: pricing.socialDescription,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: pricing.title,
+      description: pricing.socialDescription,
+    },
+  };
+}
 
 export default function PricingPage() {
   return (
@@ -28,7 +32,7 @@ export default function PricingPage() {
         <Pricing />
       </div>
       <FAQs />
-      <CTA />
+      <LaunchBanner />
     </main>
   );
 }

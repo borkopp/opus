@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Playfair_Display } from "next/font/google";
+import { Geist_Mono, Lora, Commissioner } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+import { I18nProvider } from "@/components/i18n-provider";
+import { getMessages } from "@/lib/i18n/messages";
+import { getRequestLocale } from "@/lib/i18n/server";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
+const manrope = Commissioner({
+  variable: "--font-manrope-family",
+  subsets: ["cyrillic", "latin"],
   weight: ["400", "500", "700"],
 });
 
@@ -16,36 +19,49 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
+const lora = Lora({
+  variable: "--font-lora-family",
+  subsets: ["cyrillic", "latin"],
+  style: "italic",
+  weight: "500",
 });
 
-export const metadata: Metadata = {
-  title: "OPUS - AI Платформа за вашиот бизнис",
-  description:
-    "All-in-one AI платформа за салони за убавина, берберници и ресторани.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  const { home } = getMessages(locale).metadata;
 
-export default function RootLayout({
+  return {
+    title: home.title,
+    description: home.description,
+    icons: {
+      icon: "/opus-mark.svg",
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+  const messages = getMessages(locale);
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
+        className={`${manrope.variable} ${geistMono.variable} ${lora.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
           disableTransitionOnChange
         >
-          <Navbar />
-          {children}
-          <Footer />
+          <I18nProvider locale={locale} messages={messages}>
+            <Navbar />
+            {children}
+            <Footer />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

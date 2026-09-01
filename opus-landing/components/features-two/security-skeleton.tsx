@@ -5,9 +5,12 @@ import { Lock } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Scales from "../ui/scales";
-import { Logo } from "../logo";
+import { LogoMark } from "../logo";
+import { useI18n } from "../i18n-provider";
 
 export function SecuritySkeleton({ className }: { className?: string }) {
+  const { messages } = useI18n();
+
   return (
     <div
       className={cn(
@@ -24,7 +27,7 @@ export function SecuritySkeleton({ className }: { className?: string }) {
               width={48}
               height={48}
               src="https://assets.aceternity.com/avatars/1.webp"
-              alt="User avatar"
+              alt={messages.demos.devices.userAvatarAlt}
               className="size-full object-cover blur-[2px]"
             />
           </div>
@@ -54,8 +57,8 @@ export function SecuritySkeleton({ className }: { className?: string }) {
 
         {/* Right Avatar - Unblurred */}
         <div className="relative z-10 shrink-0">
-          <div className="size-6 overflow-visible ">
-            <Logo />
+          <div className="flex size-6 items-center justify-center overflow-visible">
+            <LogoMark className="h-6 w-auto text-brand-primary" />
           </div>
         </div>
       </div>

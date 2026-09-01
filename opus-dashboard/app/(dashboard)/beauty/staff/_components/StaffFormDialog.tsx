@@ -40,11 +40,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import {
-  getErrorMessage,
-  readStorageId,
-  validateImageFile,
-} from "@/lib/file-validation";
+import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
+import { getErrorMessage } from "@/lib/file-validation";
+import { IMAGE_PRESETS, uploadCompressedImage } from "@/lib/image-compression";
 
 type StaffRole = "owner" | "manager" | "staff";
 
@@ -57,11 +55,13 @@ export function StaffFormDialog({
   staffId,
   open,
   onOpenChange,
+  canManageAppointmentEmail,
 }: {
   orgId: Id<"orgs">;
   staffId?: Id<"staff_members">;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canManageAppointmentEmail: boolean;
 }) {
   const router = useRouter();
   const isEdit = staffId !== undefined;
@@ -74,6 +74,7 @@ export function StaffFormDialog({
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const [displayName, setDisplayName] = useState("");
+  const [appointmentEmail, setAppointmentEmail] = useState("");
   const [role, setRole] = useState<StaffRole>("staff");
   const [bio, setBio] = useState("");
   const [specialties, setSpecialties] = useState("");
@@ -83,6 +84,7 @@ export function StaffFormDialog({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarPreviewUrl = useStorageImageUrl(orgId, avatarUrl);
 
   useEffect(() => {
     if (!open) return;
@@ -90,6 +92,7 @@ export function StaffFormDialog({
     setError("");
     if (isEdit && existingStaff) {
       setDisplayName(existingStaff.displayName);
+      setAppointmentEmail(existingStaff.appointmentEmail || "");
       setRole(existingStaff.role);
       setBio(existingStaff.bio || "");
       setSpecialties((existingStaff.specialties || []).join(", "));
@@ -100,6 +103,7 @@ export function StaffFormDialog({
 
     if (!isEdit) {
       setDisplayName("");
+      setAppointmentEmail("");
       setRole("staff");
       setBio("");
       setSpecialties("");
@@ -112,28 +116,20 @@ export function StaffFormDialog({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const validationError = validateImageFile(file);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
     setIsUploading(true);
     setError("");
     try {
-      const postUrl = await generateUploadUrl({ orgId });
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": file.type },
-        body: file,
+      const storageId = await uploadCompressedImage({
+        file,
+        getUploadUrl: () => generateUploadUrl({ orgId }),
+        options: IMAGE_PRESETS.avatar,
       });
-      if (!result.ok) throw new Error("Upload failed");
-
-      setAvatarUrl(readStorageId(await result.json()));
+      setAvatarUrl(storageId);
     } catch (uploadError: unknown) {
       setError(getErrorMessage(uploadError, "Failed to upload image"));
     } finally {
       setIsUploading(false);
+      event.target.value = "";
     }
   };
 
@@ -163,6 +159,9 @@ export function StaffFormDialog({
           specialties: specialtyList,
           avatarUrl,
           isActive,
+          ...(canManageAppointmentEmail
+            ? { appointmentEmail: appointmentEmail.trim() || null }
+            : {}),
         });
         toast.success("Staff details saved.");
         onOpenChange(false);
@@ -174,6 +173,9 @@ export function StaffFormDialog({
           bio: bio.trim() || undefined,
           specialties: specialtyList,
           avatarUrl: avatarUrl || undefined,
+          ...(canManageAppointmentEmail && appointmentEmail.trim()
+            ? { appointmentEmail: appointmentEmail.trim() }
+            : {}),
         });
         toast.success("Staff member added. Set their working hours next.");
         onOpenChange(false);
@@ -218,7 +220,7 @@ export function StaffFormDialog({
                   <div className="flex items-center gap-4">
                     <Avatar className="size-14 border bg-muted">
                       <AvatarImage
-                        src={getImageUrl(avatarUrl)}
+                        src={avatarPreviewUrl}
                         alt={displayName || "Staff profile"}
                         className="object-cover"
                       />
@@ -284,6 +286,30 @@ export function StaffFormDialog({
                     </Select>
                   </Field>
                 </FieldGroup>
+
+                {canManageAppointmentEmail && (
+                  <Field>
+                    <FieldLabel htmlFor="staff-appointment-email">
+                      Appointment email{" "}
+                      <span className="text-muted-foreground">(optional)</span>
+                    </FieldLabel>
+                    <Input
+                      id="staff-appointment-email"
+                      type="email"
+                      autoComplete="email"
+                      value={appointmentEmail}
+                      onChange={(event) =>
+                        setAppointmentEmail(event.target.value)
+                      }
+                      placeholder="ana@studio.mk"
+                    />
+                    <FieldDescription>
+                      Receives new appointment and reminder emails only for
+                      bookings assigned to this person. This does not grant
+                      dashboard access.
+                    </FieldDescription>
+                  </Field>
+                )}
 
                 <Field>
                   <FieldLabel htmlFor="staff-specialties">
@@ -359,12 +385,4 @@ export function StaffFormDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function getImageUrl(urlOrId: string) {
-  if (!urlOrId) return undefined;
-  if (urlOrId.startsWith("http")) return urlOrId;
-
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL?.replace(/\/$/, "");
-  return convexUrl ? `${convexUrl}/api/storage/${urlOrId}` : undefined;
 }

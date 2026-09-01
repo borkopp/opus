@@ -4,8 +4,12 @@ import React from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Lock, Star, Sparkles, Clock, ArrowRight, Check } from "lucide-react";
+import { useI18n } from "../i18n-provider";
 
 export function WebsiteBookingSkeleton({ className }: { className?: string }) {
+  const { messages } = useI18n();
+  const copy = messages.demos.website;
+
   return (
     <div
       className={cn(
@@ -77,13 +81,13 @@ export function WebsiteBookingSkeleton({ className }: { className?: string }) {
                 <span className="font-semibold text-neutral-700 dark:text-neutral-200">4.9</span>
                 <span>(128)</span>
                 <span>•</span>
-                <span className="truncate">Скопје, Центар</span>
+                <span className="truncate">{copy.location}</span>
               </div>
             </div>
           </div>
 
           <div className="shrink-0 rounded-full bg-brand-primary/10 px-2 py-0.5 text-[9px] font-semibold text-brand-primary dark:bg-brand-primary/20">
-            Отворено
+            {copy.open}
           </div>
         </motion.div>
 
@@ -100,16 +104,16 @@ export function WebsiteBookingSkeleton({ className }: { className?: string }) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[11px] font-semibold text-neutral-900 dark:text-white">
-                Маникир со гел-лак
+                {copy.service}
               </p>
               <div className="flex items-center gap-1 text-[9px] text-neutral-500 dark:text-neutral-400">
                 <Clock className="size-2.5" />
-                <span>45 мин.</span>
+                <span>{copy.duration}</span>
               </div>
             </div>
           </div>
           <span className="text-xs font-bold text-brand-primary">
-            800 ден.
+            {copy.price}
           </span>
         </motion.div>
 
@@ -122,7 +126,7 @@ export function WebsiteBookingSkeleton({ className }: { className?: string }) {
         >
           <div className="flex items-center gap-1.5 overflow-hidden">
             <span className="rounded-lg bg-brand-primary px-2.5 py-1 text-[10px] font-semibold text-white shadow-xs">
-              Утре, 14:30
+              {copy.tomorrow}
             </span>
             <span className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-[10px] font-medium text-neutral-600 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
               15:30
@@ -133,7 +137,7 @@ export function WebsiteBookingSkeleton({ className }: { className?: string }) {
           </div>
 
           <div className="flex items-center gap-1 rounded-lg bg-neutral-900 px-2.5 py-1 text-[10px] font-semibold text-white shadow-xs dark:bg-white dark:text-neutral-900 shrink-0">
-            <span>Закажи</span>
+            <span>{copy.book}</span>
             <ArrowRight className="size-2.5" />
           </div>
         </motion.div>
@@ -151,10 +155,10 @@ export function WebsiteBookingSkeleton({ className }: { className?: string }) {
         </div>
         <div className="flex flex-col">
           <span className="text-[8px] font-bold uppercase tracking-wider text-brand-primary">
-            Нова резервација
+            {copy.newBooking}
           </span>
           <span className="text-[10px] font-semibold">
-            Сара П. • Утре во 14:30
+            {copy.bookingDetails}
           </span>
         </div>
       </motion.div>

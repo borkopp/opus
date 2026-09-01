@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { format, isSameDay, startOfDay, addDays, subDays } from "date-fns";
+import { format, startOfDay, addDays, subDays } from "date-fns";
 import {
   IconPlus,
   IconChevronLeft,
@@ -22,7 +22,8 @@ import { BookingsList } from "./BookingsList";
 import { cn } from "@/lib/utils";
 import { Price } from "@/components/ui/price";
 import { BookingView, StaffView } from "./types";
-import Link from "next/link";
+import { useQuickBooking } from "./QuickBookingProvider";
+import { dateKey, isBookingOnDate } from "@/lib/booking-wall-clock";
 
 export function BookingsSplitView({
   bookings,
@@ -35,9 +36,9 @@ export function BookingsSplitView({
 }) {
   const rescheduleBooking = useMutation(api.bookings.rescheduleBooking);
   const cancelBooking = useMutation(api.bookings.cancelBooking);
-  const checkInBooking = useMutation(api.bookings.checkInBooking);
   const completeBooking = useMutation(api.bookings.completeBooking);
   const markNoShow = useMutation(api.bookings.markNoShow);
+  const { openQuickBooking } = useQuickBooking();
   const [selectedBookingId, setSelectedBookingId] =
     useState<Id<"bookings"> | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -46,12 +47,16 @@ export function BookingsSplitView({
   const [statusFilter, setStatusFilter] = useState<
     "all" | "upcoming" | "completed" | "no-show"
   >("all");
+  const quickBookingSlots = useQuery(api.slots.getQuickBookingSlots, {
+    orgId,
+    date: dateKey(currentDate),
+  });
 
   // Exclude bookings that were cancelled as part of a reschedule — they are history
   // artifacts (the new booking is shown instead) and should not appear on the calendar.
   const todayBookings = bookings.filter(
     (b) =>
-      isSameDay(new Date(b.startAt), currentDate) &&
+      isBookingOnDate(b.startAt, currentDate) &&
       !(b.status === "cancelled" && b.cancellationReason === "Rescheduled"),
   );
 
@@ -117,7 +122,7 @@ export function BookingsSplitView({
 
   const runBookingAction = useCallback(
     async (
-      action: "cancel" | "check-in" | "complete" | "no-show",
+      action: "cancel" | "complete" | "no-show",
       bookingId: Id<"bookings">,
     ) => {
       setPendingAction(action);
@@ -128,8 +133,6 @@ export function BookingsSplitView({
             bookingId,
             reason: "Cancelled by business",
           });
-        } else if (action === "check-in") {
-          await checkInBooking({ orgId, bookingId });
         } else if (action === "complete") {
           await completeBooking({ orgId, bookingId });
         } else {
@@ -138,7 +141,6 @@ export function BookingsSplitView({
         toast.success(
           {
             cancel: "Booking cancelled",
-            "check-in": "Customer checked in",
             complete: "Booking completed",
             "no-show": "Booking marked as no-show",
           }[action],
@@ -153,7 +155,7 @@ export function BookingsSplitView({
         setPendingAction(null);
       }
     },
-    [cancelBooking, checkInBooking, completeBooking, markNoShow, orgId],
+    [cancelBooking, completeBooking, markNoShow, orgId],
   );
 
   return (
@@ -197,11 +199,12 @@ export function BookingsSplitView({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button asChild variant="default">
-            <Link href="/beauty/bookings/new">
-              <IconPlus className="mr-2 h-4 w-4" />
-              New Booking
-            </Link>
+          <Button
+            variant="default"
+            onClick={() => openQuickBooking({ date: currentDate })}
+          >
+            <IconPlus data-icon="inline-start" />
+            New Booking
           </Button>
         </div>
       </div>
@@ -219,6 +222,7 @@ export function BookingsSplitView({
                 size="icon"
                 className="h-7 w-7 border-none rounded-l-sm rounded-r-[2px]"
                 onClick={() => setCurrentDate(subDays(currentDate, 1))}
+                aria-label="Previous day"
               >
                 <IconChevronLeft className="h-4 w-4" />
               </Button>
@@ -230,6 +234,7 @@ export function BookingsSplitView({
                 size="icon"
                 className="h-7 w-7 border-none rounded-l-none rounded-r-sm"
                 onClick={() => setCurrentDate(addDays(currentDate, 1))}
+                aria-label="Next day"
               >
                 <IconChevronRight className="h-4 w-4" />
               </Button>
@@ -342,12 +347,6 @@ export function BookingsSplitView({
                   No staff members found
                 </p>
               </div>
-            ) : filteredBookings.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
-                <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
-                <p className="font-medium text-foreground">No bookings found</p>
-                <p className="text-sm">Try a different filter or date.</p>
-              </div>
             ) : viewMode === "calendar" ? (
               <BookingsTimeline
                 bookings={filteredBookings}
@@ -358,7 +357,16 @@ export function BookingsSplitView({
                 }
                 onReschedule={handleReschedule}
                 currentDate={currentDate}
+                quickBookingSlots={quickBookingSlots?.slots ?? []}
+                slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
+                onQuickBooking={(slot) => openQuickBooking({ slot })}
               />
+            ) : filteredBookings.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
+                <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
+                <p className="font-medium text-foreground">No bookings found</p>
+                <p className="text-sm">Try a different filter or date.</p>
+              </div>
             ) : (
               <BookingsList
                 bookings={filteredBookings}
@@ -379,7 +387,6 @@ export function BookingsSplitView({
             onClose={() => setSelectedBookingId(null)}
             onReschedule={handleReschedule}
             onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-            onCheckIn={(bookingId) => runBookingAction("check-in", bookingId)}
             onComplete={(bookingId) => runBookingAction("complete", bookingId)}
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
             isUpdating={pendingAction !== null}

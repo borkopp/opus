@@ -8,8 +8,16 @@ import {
 import { internal, api } from "./_generated/api";
 import { requireAuth, requireRole } from "./lib/auth";
 import type { Doc } from "./_generated/dataModel";
-import { computeSlotsForDate } from "./slots";
-import { queueBookingEmailNotifications } from "./lib/bookingEmailNotifications";
+import { computeFreeIntervalsForStaffDate } from "./slots";
+import {
+  queueBookingEmailNotifications,
+  queueBookingRescheduledEmail,
+} from "./lib/bookingEmailNotifications";
+import {
+  formatBookingNotificationDateTime,
+  wallClockNow,
+} from "./lib/bookingTime";
+import { rangeFitsFreeInterval } from "./lib/quickBooking";
 
 function getPrimaryContact(
   customer: Doc<"customers">,
@@ -229,17 +237,17 @@ export const createBooking = mutation({
       staff,
       sendCustomerConfirmation: true,
       notifyTeamOfNewBooking: false,
+      notifyAssignedStaffOfNewBooking: true,
       scheduleReminders: true,
     });
 
     // 8. Dashboard notification — shows in navbar bell for the business owner
-    const startDate = new Date(args.startAt);
-    const timeLabel = `${String(startDate.getHours()).padStart(2, "0")}:${String(startDate.getMinutes()).padStart(2, "0")}`;
+    const appointmentLabel = formatBookingNotificationDateTime(args.startAt);
     await ctx.runMutation(internal.dashboardNotifications.create, {
       orgId: args.orgId,
       type: "new_booking",
       title: "New Booking",
-      body: `${customer.name} booked ${service.name} with ${staff.displayName} at ${timeLabel}`,
+      body: `${customer.name} booked ${service.name} with ${staff.displayName} for ${appointmentLabel}`,
       bookingId,
       customerId: args.customerId,
     });
@@ -248,43 +256,310 @@ export const createBooking = mutation({
   },
 });
 
-export const checkInBooking = mutation({
+export const createManualBooking = mutation({
   args: {
     orgId: v.id("orgs"),
-    bookingId: v.id("bookings"),
+    staffId: v.id("staff_members"),
+    serviceIds: v.array(v.id("services")),
+    customerName: v.string(),
+    customerEmail: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    startAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const { staffMember: actor } = await requireRole(ctx, args.orgId, "staff");
 
-    const booking = await ctx.db.get(args.bookingId);
-    if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
-      throw new ConvexError("Booking not found.");
+    const customerName = args.customerName.trim();
+    const customerEmail = args.customerEmail?.trim().toLowerCase() || undefined;
+    const customerPhone = args.customerPhone?.trim() || undefined;
+    if (!customerName || customerName.length > 120) {
+      throw new ConvexError("Enter a customer name up to 120 characters.");
+    }
+    if (
+      customerEmail &&
+      (!customerEmail.includes("@") || customerEmail.length > 254)
+    ) {
+      throw new ConvexError("Enter a valid email address.");
+    }
+    if (customerPhone && customerPhone.length > 40) {
+      throw new ConvexError("Enter a valid phone number.");
     }
 
-    if (booking.status !== "confirmed") {
+    const uniqueServiceIds = Array.from(new Set(args.serviceIds));
+    if (uniqueServiceIds.length === 0 || uniqueServiceIds.length > 20) {
+      throw new ConvexError("Select between 1 and 20 services.");
+    }
+
+    const [org, settings, staff] = await Promise.all([
+      ctx.db.get(args.orgId),
+      ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
+        .first(),
+      ctx.db.get(args.staffId),
+    ]);
+    if (!org || org.isDeleted) throw new ConvexError("Organization not found.");
+    if (!settings) throw new ConvexError("Organization settings not found.");
+    if (
+      !staff ||
+      staff.orgId !== args.orgId ||
+      staff.isDeleted ||
+      !staff.isActive
+    ) {
+      throw new ConvexError("Staff member not available.");
+    }
+
+    const services: Doc<"services">[] = [];
+    for (const serviceId of uniqueServiceIds) {
+      const service = await ctx.db.get(serviceId);
+      if (
+        !service ||
+        service.orgId !== args.orgId ||
+        service.isDeleted ||
+        !service.isActive
+      ) {
+        throw new ConvexError("One of the selected services is unavailable.");
+      }
+      if (!service.staffIds.includes(args.staffId)) {
+        throw new ConvexError(
+          `${staff.displayName} cannot perform ${service.name}.`,
+        );
+      }
+      services.push(service);
+    }
+
+    const currency = services[0].currency;
+    if (services.some((service) => service.currency !== currency)) {
+      throw new ConvexError("Selected services must use the same currency.");
+    }
+
+    const durationMins = services.reduce(
+      (total, service) => total + service.durationMins,
+      0,
+    );
+    if (
+      !Number.isInteger(durationMins) ||
+      durationMins <= 0 ||
+      durationMins > 1_440
+    ) {
       throw new ConvexError(
-        `Cannot check in booking with status: ${booking.status}`,
+        "Selected services have an invalid total duration.",
       );
     }
 
-    await ctx.db.patch(args.bookingId, {
-      status: "checked_in",
-      updatedAt: Date.now(),
+    const startDate = new Date(args.startAt);
+    const startMins = startDate.getUTCHours() * 60 + startDate.getUTCMinutes();
+    if (startMins % settings.slotDurationMins !== 0) {
+      throw new ConvexError(
+        `Booking must align to ${settings.slotDurationMins} minute intervals.`,
+      );
+    }
+    if (args.startAt <= wallClockNow(settings.timezone)) {
+      throw new ConvexError("Booking start time must be in the future.");
+    }
+
+    const serviceDate = startDate.toISOString().slice(0, 10);
+    const availability = await computeFreeIntervalsForStaffDate(
+      ctx,
+      args.orgId,
+      args.staffId,
+      serviceDate,
+    );
+    if (
+      !rangeFitsFreeInterval(
+        availability.freeIntervals,
+        args.startAt,
+        durationMins,
+        settings.bufferTimeMins,
+      )
+    ) {
+      throw new ConvexError(
+        "The selected services no longer fit this time or conflict with another booking.",
+      );
+    }
+
+    let customer: Doc<"customers"> | null = null;
+    if (customerPhone) {
+      customer = await ctx.db
+        .query("customers")
+        .withIndex("by_org_phone", (query) =>
+          query.eq("orgId", args.orgId).eq("phone", customerPhone),
+        )
+        .first();
+    }
+    if ((!customer || customer.isDeleted) && customerEmail) {
+      customer = await ctx.db
+        .query("customers")
+        .withIndex("by_org_email", (query) =>
+          query.eq("orgId", args.orgId).eq("email", customerEmail),
+        )
+        .first();
+    }
+    if (customer?.isDeleted) customer = null;
+
+    const now = Date.now();
+    let customerId: Doc<"customers">["_id"];
+    if (customer) {
+      const customerBefore = customer;
+      await ctx.db.patch(customer._id, {
+        name: customerName,
+        email: customerEmail ?? customer.email,
+        phone: customerPhone ?? customer.phone,
+        updatedAt: now,
+      });
+      customerId = customer._id;
+      await ctx.db.insert("audit_log", {
+        orgId: args.orgId,
+        actorType: "staff",
+        actorId: actor._id,
+        action: "customer.updated",
+        resourceType: "customers",
+        resourceId: customerId,
+        before: {
+          name: customerBefore.name,
+          email: customerBefore.email,
+          phone: customerBefore.phone,
+        },
+        after: {
+          name: customerName,
+          email: customerEmail ?? customerBefore.email,
+          phone: customerPhone ?? customerBefore.phone,
+        },
+        createdAt: now,
+      });
+      customer = await ctx.db.get(customerId);
+    } else {
+      customerId = await ctx.db.insert("customers", {
+        orgId: args.orgId,
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        totalVisits: 0,
+        totalSpendMinorUnits: 0,
+        noShowCount: 0,
+        noShowRiskScore: 0,
+        whatsappOptIn: false,
+        marketingOptIn: false,
+        isDeleted: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      await ctx.db.insert("audit_log", {
+        orgId: args.orgId,
+        actorType: "staff",
+        actorId: actor._id,
+        action: "customer.created",
+        resourceType: "customers",
+        resourceId: customerId,
+        after: {
+          name: customerName,
+          hasEmail: Boolean(customerEmail),
+          hasPhone: Boolean(customerPhone),
+        },
+        createdAt: now,
+      });
+      customer = await ctx.db.get(customerId);
+    }
+    if (!customer) throw new Error("Manual booking customer was not found.");
+
+    let priceMinorUnits = services.reduce(
+      (total, service) => total + service.priceMinorUnits,
+      0,
+    );
+    let surgePriceApplied = false;
+    let surgeMultiplierPct: number | undefined;
+    const timeStr = `${String(startDate.getUTCHours()).padStart(2, "0")}:${String(startDate.getUTCMinutes()).padStart(2, "0")}`;
+    const matchingRule = settings.surgeRules?.find(
+      (rule) =>
+        rule.dayOfWeek === startDate.getUTCDay() &&
+        timeStr >= rule.startTime &&
+        timeStr < rule.endTime,
+    );
+    if (matchingRule) {
+      surgePriceApplied = true;
+      surgeMultiplierPct = matchingRule.multiplierPct;
+      priceMinorUnits = Math.round(
+        priceMinorUnits * (1 + matchingRule.multiplierPct / 100),
+      );
+    }
+
+    const endAt = args.startAt + durationMins * 60_000;
+    const primaryService = services[0];
+    const bookingId = await ctx.db.insert("bookings", {
+      orgId: args.orgId,
+      staffId: args.staffId,
+      serviceId: primaryService._id,
+      serviceIds: services.map((service) => service._id),
+      customerId,
+      startAt: args.startAt,
+      endAt,
+      priceMinorUnits,
+      currency,
+      surgePriceApplied,
+      surgeMultiplierPct,
+      status: "confirmed",
+      source: "manual",
+      isDeleted: false,
+      createdAt: now,
+      updatedAt: now,
     });
 
+    await ctx.db.patch(customerId, {
+      totalVisits: (customer.totalVisits || 0) + 1,
+      lastVisitAt: now,
+      updatedAt: now,
+    });
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
       actorType: "staff",
-      actorId: staffMember._id,
-      action: "booking.checked_in",
+      actorId: actor._id,
+      action: "booking.created",
       resourceType: "bookings",
-      resourceId: args.bookingId,
-      before: { status: "confirmed" },
-      after: { status: "checked_in" },
-      createdAt: Date.now(),
+      resourceId: bookingId,
+      after: {
+        staffId: args.staffId,
+        customerId,
+        serviceIds: services.map((service) => service._id),
+        startAt: args.startAt,
+        endAt,
+        priceMinorUnits,
+        status: "confirmed",
+      },
+      createdAt: now,
     });
 
-    return true;
+    const booking = await ctx.db.get(bookingId);
+    if (!booking) throw new Error("Created booking was not found.");
+    const combinedService: Doc<"services"> = {
+      ...primaryService,
+      name: services.map((service) => service.name).join(" + "),
+      durationMins,
+      priceMinorUnits,
+    };
+    await queueBookingEmailNotifications(ctx, {
+      org,
+      settings,
+      booking,
+      customer,
+      service: combinedService,
+      staff,
+      sendCustomerConfirmation: true,
+      notifyTeamOfNewBooking: false,
+      notifyAssignedStaffOfNewBooking: true,
+      scheduleReminders: true,
+    });
+
+    const appointmentLabel = formatBookingNotificationDateTime(args.startAt);
+    await ctx.runMutation(internal.dashboardNotifications.create, {
+      orgId: args.orgId,
+      type: "new_booking",
+      title: "New Booking",
+      body: `${customerName} booked ${combinedService.name} with ${staff.displayName} for ${appointmentLabel}`,
+      bookingId,
+      customerId,
+    });
+
+    return bookingId;
   },
 });
 
@@ -430,8 +705,7 @@ export const cancelBooking = mutation({
       }
 
       // Dashboard notification
-      const cancelDate = new Date(booking.startAt);
-      const cancelDateLabel = `${cancelDate.toLocaleDateString("en-GB", { month: "short", day: "numeric" })}`;
+      const cancelDateLabel = formatBookingNotificationDateTime(booking.startAt);
       await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "booking_cancelled",
@@ -447,7 +721,7 @@ export const cancelBooking = mutation({
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-      }).formatToParts(cancelDate);
+      }).formatToParts(new Date(booking.startAt));
 
       let year, month, day;
       for (const p of parts) {
@@ -549,13 +823,12 @@ export const markNoShow = mutation({
       }
 
       // Dashboard notification
-      const nsDate = new Date(booking.startAt);
-      const nsTime = `${String(nsDate.getHours()).padStart(2, "0")}:${String(nsDate.getMinutes()).padStart(2, "0")}`;
+      const noShowLabel = formatBookingNotificationDateTime(booking.startAt);
       await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "no_show",
         title: "No-Show",
-        body: `${customer.name} didn't show up for ${service.name} at ${nsTime}`,
+        body: `${customer.name} didn't show up for ${service.name} on ${noShowLabel}`,
         bookingId: booking._id,
         customerId: customer._id,
       });
@@ -599,20 +872,52 @@ export const rescheduleBooking = mutation({
     // Normally we'd invoke the same logic inside `createBooking`, but since JS mutation calling internally doesn't exist natively,
     // we copy the safety locks for the new booking inline:
 
-    const service = await ctx.db.get(oldBooking.serviceId);
-    if (!service) throw new ConvexError("Service not found");
+    const serviceIds = oldBooking.serviceIds ?? [oldBooking.serviceId];
+    const services: Doc<"services">[] = [];
+    for (const serviceId of serviceIds) {
+      const service = await ctx.db.get(serviceId);
+      if (!service || service.orgId !== args.orgId || service.isDeleted) {
+        throw new ConvexError("Service not found");
+      }
+      services.push(service);
+    }
+    const service = services[0];
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
+      .first();
+    if (!settings) throw new ConvexError("Organization settings not found.");
 
-    const endAt = args.newStartAt + service.durationMins * 60 * 1000;
+    const durationMins = Math.round(
+      (oldBooking.endAt - oldBooking.startAt) / 60_000,
+    );
+    const endAt = args.newStartAt + durationMins * 60_000;
+    const newStart = new Date(args.newStartAt);
+    const startMins = newStart.getUTCHours() * 60 + newStart.getUTCMinutes();
+    if (
+      args.newStartAt <= wallClockNow(settings.timezone) ||
+      startMins % settings.slotDurationMins !== 0
+    ) {
+      throw new ConvexError(
+        "Choose a future time aligned to the booking grid.",
+      );
+    }
 
-    const date = new Date(args.newStartAt).toISOString().slice(0, 10);
-    const availableSlots = await computeSlotsForDate(
+    const date = newStart.toISOString().slice(0, 10);
+    const availability = await computeFreeIntervalsForStaffDate(
       ctx,
       args.orgId,
       oldBooking.staffId,
-      oldBooking.serviceId,
       date,
     );
-    if (!availableSlots.some((slot) => slot.startAt === args.newStartAt)) {
+    if (
+      !rangeFitsFreeInterval(
+        availability.freeIntervals,
+        args.newStartAt,
+        durationMins,
+        settings.bufferTimeMins,
+      )
+    ) {
       throw new ConvexError(
         "The new time is outside working hours or no longer available.",
       );
@@ -622,6 +927,7 @@ export const rescheduleBooking = mutation({
       orgId: args.orgId,
       staffId: oldBooking.staffId,
       serviceId: oldBooking.serviceId,
+      serviceIds: oldBooking.serviceIds,
       customerId: oldBooking.customerId,
       startAt: args.newStartAt,
       endAt,
@@ -651,30 +957,54 @@ export const rescheduleBooking = mutation({
       createdAt: Date.now(),
     });
 
-    if (oldBooking.status === "confirmed") {
-      const [org, settings, customer, staff, newBooking] = await Promise.all([
-        ctx.db.get(args.orgId),
-        ctx.db
-          .query("org_settings")
-          .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
-          .first(),
-        ctx.db.get(oldBooking.customerId),
-        ctx.db.get(oldBooking.staffId),
-        ctx.db.get(newBookingId),
-      ]);
-      if (org && settings && customer && staff && newBooking) {
+    const [org, customer, staff, newBooking] = await Promise.all([
+      ctx.db.get(args.orgId),
+      ctx.db.get(oldBooking.customerId),
+      ctx.db.get(oldBooking.staffId),
+      ctx.db.get(newBookingId),
+    ]);
+    if (org && customer && staff && newBooking) {
+      const combinedService: Doc<"services"> = {
+        ...service,
+        name: services.map((item) => item.name).join(" + "),
+        durationMins,
+        priceMinorUnits: newBooking.priceMinorUnits,
+      };
+      await queueBookingRescheduledEmail(ctx, {
+        org,
+        settings,
+        booking: newBooking,
+        customer,
+        service: combinedService,
+        staff,
+        previousStartAt: oldBooking.startAt,
+        previousEndAt: oldBooking.endAt,
+      });
+
+      if (newBooking.status === "confirmed") {
         await queueBookingEmailNotifications(ctx, {
           org,
           settings,
           booking: newBooking,
           customer,
-          service,
+          service: combinedService,
           staff,
-          sendCustomerConfirmation: true,
+          sendCustomerConfirmation: false,
           notifyTeamOfNewBooking: false,
+          notifyAssignedStaffOfNewBooking: false,
           scheduleReminders: true,
         });
       }
+
+      const newAppointmentLabel = formatBookingNotificationDateTime(args.newStartAt);
+      await ctx.runMutation(internal.dashboardNotifications.create, {
+        orgId: args.orgId,
+        type: "new_booking",
+        title: "Booking Rescheduled",
+        body: `${customer.name}'s ${combinedService.name} with ${staff.displayName} was rescheduled to ${newAppointmentLabel}`,
+        bookingId: newBookingId,
+        customerId: oldBooking.customerId,
+      });
     }
 
     return newBookingId;
@@ -745,12 +1075,32 @@ export const listBookingsByOrg = query({
     // Enrich with related entities
     const enrichedBookings = await Promise.all(
       bookings.map(async (booking) => {
-        const service = await ctx.db.get(booking.serviceId);
-        const staff = await ctx.db.get(booking.staffId);
-        const customer = await ctx.db.get(booking.customerId);
+        const serviceIds = booking.serviceIds ?? [booking.serviceId];
+        const [serviceResults, staffResult, customerResult] = await Promise.all(
+          [
+            Promise.all(serviceIds.map((serviceId) => ctx.db.get(serviceId))),
+            ctx.db.get(booking.staffId),
+            ctx.db.get(booking.customerId),
+          ],
+        );
+        const services = serviceResults.filter(
+          (service): service is Doc<"services"> =>
+            Boolean(
+              service && service.orgId === args.orgId && !service.isDeleted,
+            ),
+        );
+        const staff =
+          staffResult?.orgId === args.orgId && !staffResult.isDeleted
+            ? staffResult
+            : null;
+        const customer =
+          customerResult?.orgId === args.orgId && !customerResult.isDeleted
+            ? customerResult
+            : null;
         return {
           ...booking,
-          service,
+          service: services[0] ?? null,
+          services,
           staff,
           customer,
         };

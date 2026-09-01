@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 
 import { Price } from "@/components/ui/price";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +37,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { getErrorMessage } from "@/lib/file-validation";
+import { getErrorMessage, getImageStorageUrl } from "@/lib/file-validation";
 import { cn } from "@/lib/utils";
 import { ServiceFormDialog } from "./ServiceFormDialog";
 
@@ -119,9 +120,12 @@ export function ServiceList({
             key={index}
             className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
           >
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-24" />
+            <div className="flex items-center gap-3.5 sm:gap-4">
+              <Skeleton className="size-12 rounded-lg sm:size-14" />
+              <div className="flex flex-col gap-2">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
             </div>
             <Skeleton className="h-4 w-16" />
           </div>
@@ -242,24 +246,37 @@ export function ServiceList({
                   <button
                     type="button"
                     onClick={() => setEditingServiceId(service._id)}
-                    className="min-w-0 flex-1 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
+                    className="flex min-w-0 flex-1 items-center gap-3.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 sm:gap-4"
                   >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span
-                        className={cn(
-                          "truncate font-medium text-foreground",
-                          !service.isActive && "text-muted-foreground",
+                    <Avatar className="size-12 shrink-0 rounded-lg border bg-muted sm:size-14">
+                      <AvatarImage
+                        src={getImageStorageUrl(service.photoUrl)}
+                        alt={service.name}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="rounded-lg text-muted-foreground">
+                        <ScissorsIcon className="size-5" />
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0 flex-1">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span
+                          className={cn(
+                            "truncate font-medium text-foreground",
+                            !service.isActive && "text-muted-foreground",
+                          )}
+                        >
+                          {service.name}
+                        </span>
+                        {!service.isActive && (
+                          <Badge variant="secondary">Inactive</Badge>
                         )}
-                      >
-                        {service.name}
                       </span>
-                      {!service.isActive && (
-                        <Badge variant="secondary">Inactive</Badge>
-                      )}
-                    </span>
-                    <span className="mt-1 block text-sm text-muted-foreground">
-                      {service.durationMins} min
-                    </span>
+                      <span className="mt-1 block text-sm text-muted-foreground">
+                        {service.durationMins} min
+                      </span>
+                    </div>
                   </button>
 
                   <div className="shrink-0 text-right text-sm font-medium tabular-nums text-foreground sm:text-base">

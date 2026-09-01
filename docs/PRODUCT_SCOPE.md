@@ -44,7 +44,7 @@ Reliability of this path takes priority over optional features:
 7. The customer enters their details and confirms the appointment.
 8. The appointment appears in the business calendar and dashboard.
 9. Conflicting or duplicate appointments are rejected inside the booking mutation.
-10. Authorized staff can check in, reschedule, cancel, complete, or mark the appointment as a no-show.
+10. Authorized staff can reschedule, cancel, complete, or mark the appointment as a no-show.
 11. Customer-facing confirmation, unavailable, empty, loading, and error states resolve clearly.
 
 ## Priorities

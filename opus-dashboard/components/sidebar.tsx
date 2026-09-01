@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState } from "react";
 import Link from "next/link";
-import { Audiowide } from "next/font/google";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useTheme } from "next-themes";
@@ -10,15 +9,15 @@ import {
   IconMenu2,
   IconX,
   IconLayoutSidebarLeftCollapse,
-  IconLayoutSidebarLeftExpand,
   IconSun,
   IconMoon,
+  IconDeviceDesktop,
   IconSettings,
   IconLogout,
   IconChevronRight,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { Logo as OpusLogo } from "@/components/Logo";
+import { Logo, LogoMark, LogoWordmark } from "@/components/Logo";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   DropdownMenu,
@@ -26,7 +25,12 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,12 +42,7 @@ import {
 } from "@/components/ui/tooltip";
 import { authClient } from "@/lib/auth-client";
 import type { Id } from "@/convex/_generated/dataModel";
-import { DevDataControls } from "@/components/dev-data-controls";
-
-const audiowide = Audiowide({
-  weight: "400",
-  subsets: ["latin"],
-});
+import { WebsiteBanner } from "@/components/dashboard/WebsiteBanner";
 
 export interface NavLinkItem {
   label: string;
@@ -77,31 +76,6 @@ export function useSidebar() {
   }
   return context;
 }
-
-export const LogoMark = ({ className }: { className?: string }) => (
-  <svg
-    viewBox="0 0 40 48"
-    aria-hidden="true"
-    className={cn("h-7 w-auto fill-current shrink-0 text-primary", className)}
-  >
-    <path d="m40 32v-16c0-6.62742-5.3726-12-12-12h-16l-12 12h22c3.3137 0 6 2.6863 6 6v22z" opacity=".3" />
-    <path d="m.0000014 16-.0000014 16c-.00000058 6.6274 5.37258 12 12 12h16l12-12h-20c-4.4183 0-8-3.5817-8-8v-20z" />
-  </svg>
-);
-
-export const Logo = () => {
-  return (
-    <Link href="/" className="relative z-20 flex items-center gap-2 py-1">
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="text-primary"
-      >
-        <OpusLogo className="text-2xl" />
-      </motion.span>
-    </Link>
-  );
-};
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsedState] = useState(() => {
@@ -177,51 +151,58 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
         )}
       >
         {/* Sidebar Header: Logo & Toggle */}
-        <div className="flex h-16 items-center justify-between px-3.5 border-b border-sidebar-border/60 shrink-0">
-          <div className="flex items-center gap-3 overflow-hidden">
-            <Link
-              href={industryBase}
-              className="flex items-center gap-2.5 outline-none rounded-lg p-1 hover:opacity-90 transition-opacity"
-            >
-              <LogoMark className="h-7 w-auto" />
-              <AnimatePresence initial={false}>
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-                    className={cn(
-                      audiowide.className,
-                      "text-xl uppercase tracking-wider text-primary whitespace-nowrap overflow-hidden leading-none",
-                    )}
-                  >
-                    OPUS
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
-          </div>
+        <div
+          className={cn(
+            "flex h-16 items-center border-b border-sidebar-border/60 shrink-0",
+            isCollapsed ? "justify-center px-0" : "justify-between px-3.5"
+          )}
+        >
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsCollapsed(false)}
+                  className="flex items-center justify-center outline-none rounded-xl p-2 hover:bg-sidebar-accent/60 transition-colors active:scale-95 cursor-pointer"
+                  aria-label="Expand sidebar"
+                >
+                  <LogoMark className="h-7 w-auto text-primary" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={12}>
+                Expand sidebar
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <Link
+                  href={industryBase}
+                  aria-label="OPUS dashboard"
+                  className="flex items-center gap-2.5 outline-none rounded-lg p-1 hover:opacity-90 transition-opacity"
+                >
+                  <LogoMark className="h-7 w-auto text-primary" />
+                  <LogoWordmark className="text-xl text-primary" />
+                </Link>
+              </div>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => setIsCollapsed((prev) => !prev)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors active:scale-95 shrink-0"
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                {isCollapsed ? (
-                  <IconLayoutSidebarLeftExpand className="h-4.5 w-4.5" />
-                ) : (
-                  <IconLayoutSidebarLeftCollapse className="h-4.5 w-4.5" />
-                )}
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10}>
-              {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            </TooltipContent>
-          </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setIsCollapsed(true)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors active:scale-95 shrink-0"
+                    aria-label="Collapse sidebar"
+                  >
+                    <IconLayoutSidebarLeftCollapse className="h-4.5 w-4.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={10}>
+                  Collapse sidebar
+                </TooltipContent>
+              </Tooltip>
+            </>
+          )}
         </div>
 
         {/* Navigation Links */}
@@ -230,13 +211,13 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
             const isActive =
               pathname === link.href ||
               (link.href !== industryBase && link.href !== "/settings" && pathname.startsWith(link.href));
+            const isSettings = link.href === "/settings";
 
             const linkContent = (
               <Link
-                key={link.href}
                 href={link.href}
                 className={cn(
-                  "group relative flex items-center rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.98]",
+                  "group relative flex items-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98]",
                   isCollapsed
                     ? "h-10 w-10 mx-auto justify-center"
                     : "h-10 w-full px-3 justify-start gap-3",
@@ -270,71 +251,49 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               </Link>
             );
 
-            if (isCollapsed) {
-              return (
-                <Tooltip key={link.href}>
-                  <TooltipTrigger asChild>
-                    {linkContent}
-                  </TooltipTrigger>
-                  <TooltipContent side="right" sideOffset={12}>
-                    {link.label}
-                  </TooltipContent>
-                </Tooltip>
-              );
-            }
-
-            return linkContent;
+            return (
+              <React.Fragment key={link.href}>
+                {isSettings && profile?.orgId && (
+                  <NotificationBell
+                    orgId={profile.orgId}
+                    placement="sidebar-nav"
+                    collapsed={isCollapsed}
+                  />
+                )}
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {linkContent}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={12}>
+                      {link.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  linkContent
+                )}
+              </React.Fragment>
+            );
           })}
         </div>
 
-        {/* Bottom Section: Theme & Notifications & User */}
-        <div className="p-2.5 border-t border-sidebar-border/60 space-y-1.5 shrink-0 bg-sidebar">
-          {profile?.orgId && (
-            <DevDataControls orgId={profile.orgId} collapsed={isCollapsed} />
-          )}
-
-          {/* Quick Actions (Theme + Notifications) */}
-          <div
-            className={cn(
-              "flex items-center gap-1.5",
-              isCollapsed ? "flex-col justify-center" : "justify-between px-1"
-            )}
-          >
-            {/* Theme Toggle */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                  className={cn(
-                    "flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors border border-border/40 active:scale-95",
-                    isCollapsed ? "h-10 w-10" : "h-9 w-9"
-                  )}
-                  aria-label="Toggle theme"
-                >
-                  <IconMoon className="h-4.5 w-4.5 dark:hidden" />
-                  <IconSun className="hidden h-4.5 w-4.5 dark:block" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side={isCollapsed ? "right" : "top"} sideOffset={10}>
-                {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* Notification Bell */}
-            {profile?.orgId && (
-              <NotificationBell orgId={profile.orgId} placement="sidebar" />
-            )}
+        {/* Studio Website Compact Banner */}
+        {profile?.orgId && (
+          <div className="px-2.5 pb-2.5 shrink-0">
+            <WebsiteBanner orgId={profile.orgId} collapsed={isCollapsed} />
           </div>
+        )}
 
+        {/* Bottom Section: User Account */}
+        <div className="p-2.5 border-t border-sidebar-border/60 shrink-0 bg-sidebar">
           {/* User Account / Profile Row */}
-          <div className="pt-1.5">
+          <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   className={cn(
-                    "group flex items-center rounded-xl transition-colors hover:bg-secondary/70 outline-none w-full text-left active:scale-[0.98]",
+                    "group flex items-center rounded-lg transition-colors hover:bg-secondary/70 outline-none w-full text-left active:scale-[0.98] cursor-pointer",
                     isCollapsed ? "p-1 justify-center" : "p-2 gap-3"
                   )}
                 >
@@ -385,10 +344,33 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
                     <IconSettings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="cursor-pointer">
+                      <IconSun className="mr-2 h-4 w-4 dark:hidden" />
+                      <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
+                      <span>Theme</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-36">
+                      <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+                        <DropdownMenuRadioItem value="light" className="cursor-pointer">
+                          <IconSun className="mr-2 h-4 w-4" />
+                          <span>Light</span>
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="dark" className="cursor-pointer">
+                          <IconMoon className="mr-2 h-4 w-4" />
+                          <span>Dark</span>
+                        </DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="system" className="cursor-pointer">
+                          <IconDeviceDesktop className="mr-2 h-4 w-4" />
+                          <span>System</span>
+                        </DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -412,39 +394,26 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
           <button
             type="button"
             onClick={() => setIsMobileOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors border border-border/40 active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors border border-border/40 active:scale-95 cursor-pointer"
             aria-label="Open menu"
           >
             <IconMenu2 className="h-5 w-5" />
           </button>
-          <Link href={industryBase} className="flex items-center gap-2">
-            <LogoMark className="h-6 w-auto" />
-            <span
-              className={cn(
-                audiowide.className,
-                "text-lg uppercase tracking-wider text-primary",
-              )}
-            >
-              OPUS
-            </span>
+          <Link
+            href={industryBase}
+            aria-label="OPUS dashboard"
+            className="flex items-center gap-2"
+          >
+            <Logo className="text-lg" markClassName="h-6" />
           </Link>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-primary hover:bg-secondary/80 transition-colors border border-border/40 active:scale-95"
-            aria-label="Toggle theme"
-          >
-            <IconMoon className="h-4.5 w-4.5 dark:hidden" />
-            <IconSun className="hidden h-4.5 w-4.5 dark:block" />
-          </button>
           {profile?.orgId && <NotificationBell orgId={profile.orgId} placement="header" />}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="outline-none active:scale-95">
+              <button className="outline-none active:scale-95 cursor-pointer">
                 <Avatar className="h-9 w-9 border border-border/60 shadow-xs">
                   <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
                   <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
@@ -456,7 +425,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
             <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-semibold leading-none">{profile?.user?.name}</p>
+                  <p className="text-sm font-semibold leading-none">{profile?.user?.name ?? "Account"}</p>
                   <p className="text-xs leading-none text-muted-foreground truncate">
                     {profile?.user?.email}
                   </p>
@@ -464,17 +433,40 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
                   <IconSettings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    <IconSun className="mr-2 h-4 w-4 dark:hidden" />
+                    <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
+                    <span>Theme</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-36">
+                    <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+                      <DropdownMenuRadioItem value="light" className="cursor-pointer">
+                        <IconSun className="mr-2 h-4 w-4" />
+                        <span>Light</span>
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="dark" className="cursor-pointer">
+                        <IconMoon className="mr-2 h-4 w-4" />
+                        <span>Dark</span>
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="system" className="cursor-pointer">
+                        <IconDeviceDesktop className="mr-2 h-4 w-4" />
+                        <span>System</span>
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   void authClient.signOut().then(() => router.replace("/login"));
                 }}
-                className="text-destructive focus:bg-destructive/10"
+                className="text-destructive focus:bg-destructive/10 cursor-pointer"
               >
                 <IconLogout className="mr-2 h-4 w-4" />
                 <span>Log out</span>
@@ -511,17 +503,10 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 <Link
                   href={industryBase}
                   onClick={() => setIsMobileOpen(false)}
+                  aria-label="OPUS dashboard"
                   className="flex items-center gap-2.5"
                 >
-                  <LogoMark className="h-7 w-auto" />
-                  <span
-                    className={cn(
-                      audiowide.className,
-                      "text-xl uppercase tracking-wider text-primary",
-                    )}
-                  >
-                    OPUS
-                  </span>
+                  <Logo className="text-xl" markClassName="h-7" />
                 </Link>
                 <button
                   type="button"
@@ -539,31 +524,39 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                   const isActive =
                     pathname === link.href ||
                     (link.href !== industryBase && link.href !== "/settings" && pathname.startsWith(link.href));
+                  const isSettings = link.href === "/settings";
 
                   return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsMobileOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.98]",
-                        isActive
-                          ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                    <React.Fragment key={link.href}>
+                      {isSettings && profile?.orgId && (
+                        <NotificationBell
+                          orgId={profile.orgId}
+                          placement="drawer-nav"
+                        />
                       )}
-                    >
-                      <div className={cn("shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground")}>
-                        {link.icon}
-                      </div>
-                      <span>{link.label}</span>
-                    </Link>
+                      <Link
+                        href={link.href}
+                        onClick={() => setIsMobileOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98]",
+                          isActive
+                            ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                        )}
+                      >
+                        <div className={cn("shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground")}>
+                          {link.icon}
+                        </div>
+                        <span>{link.label}</span>
+                      </Link>
+                    </React.Fragment>
                   );
                 })}
               </div>
 
               {/* Drawer Footer */}
               <div className="pt-4 border-t border-sidebar-border/60 space-y-3">
-                {profile?.orgId && <DevDataControls orgId={profile.orgId} />}
+                {profile?.orgId && <WebsiteBanner orgId={profile.orgId} />}
 
                 <div className="flex items-center gap-3 px-1">
                   <Avatar className="h-10 w-10 border border-border/60">
@@ -585,7 +578,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                       setIsMobileOpen(false);
                       router.push("/settings");
                     }}
-                    className="flex items-center justify-center gap-1.5 h-9 rounded-xl bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
+                    className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
                   >
                     <IconSettings className="h-4 w-4" />
                     <span>Settings</span>
@@ -596,7 +589,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                       setIsMobileOpen(false);
                       void authClient.signOut().then(() => router.replace("/login"));
                     }}
-                    className="flex items-center justify-center gap-1.5 h-9 rounded-xl bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
+                    className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
                   >
                     <IconLogout className="h-4 w-4" />
                     <span>Log out</span>

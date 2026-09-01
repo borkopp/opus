@@ -2,6 +2,7 @@ import {
   IconBrandTabler,
   IconCalendarEvent,
   IconUsers,
+  IconScissors,
   IconSettings,
 } from "@tabler/icons-react";
 import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
@@ -45,7 +46,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       { label: "Dashboard", href: "{base}", icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" /> },
       { label: "Bookings",  href: "{base}/bookings",  icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" /> },
       { label: "Staff",     href: "{base}/staff",      icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Services",  href: "{base}/services",   icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
+      { label: "Services",  href: "{base}/services",   icon: <IconScissors className="h-5 w-5 flex-shrink-0" /> },
       { label: "Settings",  href: "/settings",         icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
     ],
   },

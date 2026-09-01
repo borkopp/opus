@@ -1,6 +1,10 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import { internal } from "../_generated/api";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import {
+  isValidBookingEmail,
+  normalizeBookingEmail,
+} from "./bookingEmailSecurity";
 import { wallClockTimestampToInstant } from "./bookingTime";
 
 const MAX_REMINDER_HOURS = 14 * 24;
@@ -13,6 +17,38 @@ export type StaffEmailRecipient = {
   email: string;
   role: "owner" | "manager" | "staff";
 };
+
+type BookingEmailRecipient = Omit<StaffEmailRecipient, "userId">;
+
+function uniqueEmailRecipients(
+  recipients: readonly BookingEmailRecipient[],
+): BookingEmailRecipient[] {
+  const unique = new Map<string, BookingEmailRecipient>();
+  for (const recipient of recipients) {
+    if (!unique.has(recipient.email)) unique.set(recipient.email, recipient);
+  }
+  return [...unique.values()];
+}
+
+export function resolveAssignedStaffEmailRecipient(
+  staffMember: Doc<"staff_members">,
+): BookingEmailRecipient | null {
+  if (
+    staffMember.isDeleted ||
+    !staffMember.isActive ||
+    !staffMember.appointmentEmail
+  ) {
+    return null;
+  }
+  const email = normalizeBookingEmail(staffMember.appointmentEmail);
+  if (!isValidBookingEmail(email)) return null;
+  return {
+    staffId: staffMember._id,
+    name: staffMember.displayName,
+    email,
+    role: staffMember.role,
+  };
+}
 
 export function normalizeReminderHours(values: readonly number[] | undefined) {
   if (!values) return [];
@@ -96,7 +132,19 @@ type QueueBookingEmailsArgs = {
   staff: Doc<"staff_members">;
   sendCustomerConfirmation?: boolean;
   notifyTeamOfNewBooking?: boolean;
+  notifyAssignedStaffOfNewBooking?: boolean;
   scheduleReminders?: boolean;
+};
+
+type QueueBookingRescheduledEmailArgs = Omit<
+  QueueBookingEmailsArgs,
+  | "sendCustomerConfirmation"
+  | "notifyTeamOfNewBooking"
+  | "notifyAssignedStaffOfNewBooking"
+  | "scheduleReminders"
+> & {
+  previousStartAt: number;
+  previousEndAt: number;
 };
 
 function dashboardBookingUrl(bookingId: Id<"bookings">) {
@@ -139,6 +187,7 @@ async function scheduleEmail(
     bookingId: Id<"bookings">;
     type:
       | "booking_confirmation"
+      | "booking_rescheduled"
       | "booking_reminder"
       | "staff_new_booking"
       | "staff_booking_reminder";
@@ -151,6 +200,30 @@ async function scheduleEmail(
   await ctx.runMutation(internal.notifications.scheduleNotification, {
     ...args,
     channel: "email",
+  });
+}
+
+export async function queueBookingRescheduledEmail(
+  ctx: Pick<MutationCtx, "runMutation">,
+  args: QueueBookingRescheduledEmailArgs,
+) {
+  const customerEmail = args.customer.email?.trim().toLowerCase();
+  if (!customerEmail) return;
+
+  // This is an immediate transactional update, not an optional reminder.
+  // Deliberately do not gate it on org_settings.emailEnabled.
+  await scheduleEmail(ctx, {
+    orgId: args.org._id,
+    customerId: args.customer._id,
+    bookingId: args.booking._id,
+    type: "booking_rescheduled",
+    recipientAddress: customerEmail,
+    templateData: {
+      ...appointmentTemplateData(args),
+      previousStartAt: args.previousStartAt,
+      previousEndAt: args.previousEndAt,
+    },
+    dedupeKey: `customer-rescheduled:${args.booking._id}:${customerEmail}`,
   });
 }
 
@@ -178,17 +251,28 @@ export async function queueBookingEmailNotifications(
     });
   }
 
-  const teamRecipients = await resolveStaffEmailRecipients(
+  const selectedTeamRecipients = await resolveStaffEmailRecipients(
     ctx,
     args.org._id,
     args.settings.staffEmailRecipientUserIds,
   );
+  const assignedStaffRecipient = resolveAssignedStaffEmailRecipient(args.staff);
+  const assignedStaffRecipients = assignedStaffRecipient
+    ? [assignedStaffRecipient]
+    : [];
+  const reminderRecipients = uniqueEmailRecipients([
+    ...selectedTeamRecipients,
+    ...assignedStaffRecipients,
+  ]);
 
-  if (
-    (args.notifyTeamOfNewBooking ?? true) &&
-    (args.settings.staffNewBookingEmailEnabled ?? true)
-  ) {
-    for (const recipient of teamRecipients) {
+  if (args.settings.staffNewBookingEmailEnabled ?? true) {
+    const newBookingRecipients = uniqueEmailRecipients([
+      ...((args.notifyTeamOfNewBooking ?? true) ? selectedTeamRecipients : []),
+      ...((args.notifyAssignedStaffOfNewBooking ?? true)
+        ? assignedStaffRecipients
+        : []),
+    ]);
+    for (const recipient of newBookingRecipients) {
       await scheduleEmail(ctx, {
         orgId: args.org._id,
         customerId: args.customer._id,
@@ -230,7 +314,7 @@ export async function queueBookingEmailNotifications(
       args.settings.staffReminderHoursBefore ??
         args.settings.reminderHoursBefore,
     );
-    for (const recipient of teamRecipients) {
+    for (const recipient of reminderRecipients) {
       for (const hoursBefore of staffReminderHours) {
         const scheduledFor = appointmentInstant - hoursBefore * 60 * 60 * 1_000;
         if (scheduledFor <= now) continue;

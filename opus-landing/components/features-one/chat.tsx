@@ -3,31 +3,33 @@ import { useRef } from "react";
 import { motion, useInView } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Bot } from "lucide-react";
+import { useI18n } from "../i18n-provider";
 
 export function ChatConversation({ className }: { className?: string }) {
+  const { messages: translations } = useI18n();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   const messages = [
     {
       id: 1,
-      name: "Клиент",
+      name: translations.demos.chat[0].name,
       avatar: "https://assets.aceternity.com/avatars/2.webp",
-      text: "Здраво, имате ли слободен термин за денес?",
+      text: translations.demos.chat[0].text,
       isUser: false,
     },
     {
       id: 2,
-      name: "AI Асистент",
+      name: translations.demos.chat[1].name,
       avatar: "robot",
-      text: "Здраво! Имаме слободно во 16:30. Да го резервирам?",
+      text: translations.demos.chat[1].text,
       isUser: true,
     },
     {
       id: 3,
-      name: "Клиент",
+      name: translations.demos.chat[2].name,
       avatar: "https://assets.aceternity.com/avatars/2.webp",
-      text: "Одлично, може. Фала!",
+      text: translations.demos.chat[2].text,
       isUser: false,
     },
   ];

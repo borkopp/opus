@@ -102,7 +102,6 @@ export function NotificationsQueueTab({
   });
   const [customerReminderError, setCustomerReminderError] = useState<string>();
   const [staffReminderError, setStaffReminderError] = useState<string>();
-  const [recipientError, setRecipientError] = useState<string>();
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -155,15 +154,6 @@ export function NotificationsQueueTab({
       invalid = true;
     } else {
       setStaffReminderError(undefined);
-    }
-    if (
-      (email.staffNewBookingEmailEnabled || email.staffReminderEmailEnabled) &&
-      email.staffEmailRecipientUserIds.length === 0
-    ) {
-      setRecipientError("Choose at least one dashboard user.");
-      invalid = true;
-    } else {
-      setRecipientError(undefined);
     }
     if (invalid || !customerReminderHours || !staffReminderHours) return;
 
@@ -289,12 +279,12 @@ export function NotificationsQueueTab({
 
         <SettingsSection
           title="Team email"
-          description="Choose which appointment events leave the dashboard and who receives them."
+          description="Choose which appointment events are emailed to assigned staff and additional dashboard recipients."
         >
           <div className="flex flex-col gap-3">
             <SettingsToggleRow
-              title="New online bookings"
-              description="Email the selected team as soon as a client confirms a booking."
+              title="New appointments"
+              description="Email the assigned staff when an appointment is added. Selected dashboard recipients also receive new online bookings."
               control={
                 <Switch
                   id="staff-new-booking-email-enabled"
@@ -311,7 +301,7 @@ export function NotificationsQueueTab({
             />
             <SettingsToggleRow
               title="Upcoming appointment reminders"
-              description="Email the selected team before each confirmed appointment."
+              description="Email assigned staff and selected dashboard recipients before confirmed appointments."
               control={
                 <Switch
                   id="staff-reminder-email-enabled"
@@ -359,10 +349,13 @@ export function NotificationsQueueTab({
           )}
 
           <FieldSet>
-            <FieldLegend variant="label">Team recipients</FieldLegend>
+            <FieldLegend variant="label">
+              Additional dashboard recipients
+            </FieldLegend>
             <FieldDescription>
-              Only active team members with dashboard accounts can receive these
-              emails.
+              Staff with an appointment email receive only their assigned
+              appointments. Select dashboard users here if they should also
+              receive studio-wide team emails.
             </FieldDescription>
             <FieldGroup data-slot="checkbox-group">
               {initialData.emailRecipients.map((recipient) => {
@@ -379,7 +372,6 @@ export function NotificationsQueueTab({
                     <Checkbox
                       id={id}
                       checked={checked}
-                      aria-invalid={Boolean(recipientError)}
                       onCheckedChange={(nextChecked) => {
                         setEmail((current) => ({
                           ...current,
@@ -394,7 +386,6 @@ export function NotificationsQueueTab({
                                 (userId) => userId !== recipient.userId,
                               ),
                         }));
-                        setRecipientError(undefined);
                       }}
                     />
                     <FieldContent>
@@ -412,11 +403,10 @@ export function NotificationsQueueTab({
             </FieldGroup>
             {initialData.emailRecipients.length === 0 && (
               <FieldDescription>
-                Link a team member to a dashboard account before enabling team
-                email.
+                There are no active dashboard users to add. Appointment emails
+                are linked from the Staff page.
               </FieldDescription>
             )}
-            <FieldError>{recipientError}</FieldError>
           </FieldSet>
         </SettingsSection>
 

@@ -78,6 +78,7 @@ import {
 } from "@/lib/booking-wall-clock";
 import { formatPrice } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
+import posthog from "posthog-js";
 
 export type QuickBookingSelection = {
   staffId: Id<"staff_members">;
@@ -534,6 +535,13 @@ function QuickBookingForm({
         customerEmail: customerEmail.trim() || undefined,
         customerPhone: customerPhone.trim() || undefined,
         startAt: selection.startAt,
+      });
+      posthog.capture("manual_booking_created", {
+        service_count: selectedServiceIds.length,
+        total_duration_mins: totalDurationMins,
+        total_price_minor_units: totalPriceMinorUnits,
+        currency: selectedCurrency,
+        used_fallback_slot: selection.isFallback,
       });
       toast.success("Booking created");
       onBooked();

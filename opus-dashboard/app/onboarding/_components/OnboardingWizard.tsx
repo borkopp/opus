@@ -52,6 +52,7 @@ import {
   type MapboxFeature,
 } from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
+import posthog from "posthog-js";
 
 const LocationMapPicker = dynamic(
   () => import("@/components/dashboard/LocationMapPicker"),
@@ -882,6 +883,7 @@ function ReviewStep({
     setIsPublishing(true);
     try {
       await publish({});
+      posthog.capture("website_published");
       toast.success("Website published");
       onPublished();
     } catch (caught) {
@@ -1035,6 +1037,7 @@ export function OnboardingWizard() {
 
   const handleCategorySaved = async (category: BeautyCategory) => {
     await startBusiness({ name: currentDraft.name, category });
+    posthog.capture("onboarding_business_configured", { category });
     updateDraft({ category });
     goNext();
   };
@@ -1047,6 +1050,10 @@ export function OnboardingWizard() {
       postalCode: location.postalCode || undefined,
       country: location.country,
       coordinates: location.coordinates,
+    });
+    posthog.capture("onboarding_location_configured", {
+      country: location.country,
+      has_neighborhood: Boolean(location.neighborhood),
     });
     updateDraft({ location });
     goNext();
@@ -1071,6 +1078,12 @@ export function OnboardingWizard() {
           Number(service.price.replace(",", ".")) * 100,
         ),
       });
+      posthog.capture("onboarding_first_service_configured", {
+        duration_mins: service.durationMins,
+        price_minor_units: Math.round(
+          Number(service.price.replace(",", ".")) * 100,
+        ),
+      });
       toast.success("First service saved");
     }
     goNext();
@@ -1078,6 +1091,9 @@ export function OnboardingWizard() {
 
   const handleHoursSaved = async (hours: OpeningHour[]) => {
     await saveHours({ openingHours: hours });
+    posthog.capture("onboarding_hours_configured", {
+      open_day_count: hours.filter((day) => !day.isClosed).length,
+    });
     updateDraft({ hours });
     toast.success("Opening hours saved");
     goNext();

@@ -15,6 +15,7 @@ import { OtpVerificationStep } from "./OtpVerificationStep";
 import { ServiceSelectionStep } from "./ServiceSelectionStep";
 import { StaffSelectionStep } from "./StaffSelectionStep";
 import type { PublicSite } from "./types";
+import posthog from "posthog-js";
 
 interface BookingFormProps {
   site: PublicSite;
@@ -274,6 +275,11 @@ export function BookingForm({
         otp,
       });
 
+      posthog.capture("public_booking_confirmed", {
+        duration_mins: selectedService?.durationMins,
+        price_minor_units: result.priceMinorUnits,
+        currency: result.currency,
+      });
       setBookingResult(result);
       setPendingBooking(null);
       scrollToFlowStart();

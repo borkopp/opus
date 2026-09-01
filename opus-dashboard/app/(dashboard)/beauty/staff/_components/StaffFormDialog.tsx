@@ -43,6 +43,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
 import { getErrorMessage } from "@/lib/file-validation";
 import { IMAGE_PRESETS, uploadCompressedImage } from "@/lib/image-compression";
+import posthog from "posthog-js";
 
 type StaffRole = "owner" | "manager" | "staff";
 
@@ -163,6 +164,12 @@ export function StaffFormDialog({
             ? { appointmentEmail: appointmentEmail.trim() || null }
             : {}),
         });
+        posthog.capture("staff_member_updated", {
+          role,
+          specialty_count: specialtyList.length,
+          has_appointment_email: Boolean(appointmentEmail.trim()),
+          is_active: isActive,
+        });
         toast.success("Staff details saved.");
         onOpenChange(false);
       } else {
@@ -176,6 +183,11 @@ export function StaffFormDialog({
           ...(canManageAppointmentEmail && appointmentEmail.trim()
             ? { appointmentEmail: appointmentEmail.trim() }
             : {}),
+        });
+        posthog.capture("staff_member_created", {
+          role,
+          specialty_count: specialtyList.length,
+          has_appointment_email: Boolean(appointmentEmail.trim()),
         });
         toast.success("Staff member added. Set their working hours next.");
         onOpenChange(false);

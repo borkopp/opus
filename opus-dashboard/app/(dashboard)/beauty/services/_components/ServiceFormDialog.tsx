@@ -54,6 +54,7 @@ import {
   uploadCompressedImage,
 } from "@/lib/image-compression";
 import { cn } from "@/lib/utils";
+import posthog from "posthog-js";
 
 export function ServiceFormDialog({
   orgId,
@@ -235,6 +236,14 @@ export function ServiceFormDialog({
           photoUrl: !isStorageId ? photoUrl : undefined,
           isActive,
         });
+        posthog.capture("service_updated", {
+          duration_mins: duration,
+          price_minor_units: priceMinorUnits,
+          currency: orgSettings?.currency || "USD",
+          staff_count: staffIds.length,
+          has_category: Boolean(selectedCategoryId),
+          is_active: isActive,
+        });
       } else {
         const groupServices =
           allServices?.filter(
@@ -257,6 +266,13 @@ export function ServiceFormDialog({
           storageId: isStorageId ? (photoUrl as Id<"_storage">) : undefined,
           photoUrl: !isStorageId ? photoUrl : undefined,
           sortOrder: maxOrder + 1,
+        });
+        posthog.capture("service_created", {
+          duration_mins: duration,
+          price_minor_units: priceMinorUnits,
+          currency: orgSettings?.currency || "USD",
+          staff_count: staffIds.length,
+          has_category: Boolean(selectedCategoryId),
         });
       }
 

@@ -10,6 +10,7 @@ import { ConversationStatusBadge } from "./ConversationStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Instagram, BotMessageSquare, MessageSquareOff, User } from "lucide-react";
 import { format } from "date-fns";
+import posthog from "posthog-js";
 
 interface Props {
   orgId: Id<"orgs">;
@@ -40,6 +41,10 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   const handleResolve = async () => {
     try {
       await resolveConversation({ orgId, conversationId });
+      posthog.capture("ai_conversation_resolved", {
+        channel: conversation.channel,
+        booking_count: conversation.bookingIds.length,
+      });
       toast.success("Conversation resolved");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to resolve conversation");
@@ -49,6 +54,10 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   const handleTakeOver = async () => {
     try {
       await handoffConversation({ orgId, conversationId, reason: "Staff takeover" });
+      posthog.capture("ai_conversation_taken_over", {
+        channel: conversation.channel,
+        booking_count: conversation.bookingIds.length,
+      });
       toast.success("Conversation taken over — AI is no longer responding");
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Failed to take over conversation");

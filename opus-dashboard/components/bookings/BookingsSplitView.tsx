@@ -380,7 +380,7 @@ export function BookingsSplitView({
         </div>
 
         {/* 30% Right: Sidebar */}
-        {/* <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 bg-card rounded-xl flex flex-col">
+        <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 bg-card rounded-xl flex flex-col">
           <BookingSidebar
             key={selectedBookingId ?? "empty"}
             booking={selectedBooking ?? null}
@@ -391,7 +391,7 @@ export function BookingsSplitView({
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
             isUpdating={pendingAction !== null}
           />
-        </div> */}
+        </div>
       </div>
     </div>
   );

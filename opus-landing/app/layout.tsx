@@ -1,26 +1,31 @@
 import type { Metadata } from "next";
-import { Manrope, IBM_Plex_Mono } from "next/font/google";
+import { DM_Sans, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600", "700"],
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500"],
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
-  title: "OPUS - Термини за студија за убавина",
+  title: "OPUS - AI Платформа за вашиот бизнис",
   description:
-    "OPUS им помага на малите студија за убавина во Македонија да управуваат со термини и да ги пополнат празните места во календарот.",
-  icons: { icon: "/opus-mark.svg" },
+    "All-in-one AI платформа за салони за убавина, берберници и ресторани.",
 };
 
 export default function RootLayout({
@@ -29,13 +34,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="mk" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${manrope.variable} ${ibmPlexMono.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
       >
-        <Navbar />
-        {children}
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+        >
+          <Navbar />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

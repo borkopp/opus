@@ -12,7 +12,7 @@ export function FloorPlanSkeleton({ className }: { className?: string }) {
   ];
 
   return (
-    <div className={cn("relative w-full aspect-[16/10] rounded-xl bg-muted/40 p-6 overflow-hidden", className)}>
+    <div className={cn("relative w-full aspect-[16/10] rounded-3xl bg-neutral-50/50 p-6 dark:bg-neutral-900/40 overflow-hidden", className)}>
         {/* Subtle Grid Pattern */}
         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07]" 
              style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} 
@@ -34,13 +34,13 @@ export function FloorPlanSkeleton({ className }: { className?: string }) {
                     table.type === "circle" ? "rounded-full" : "rounded-xl",
                     
                     // Reserved State (Premium Highlight)
-                    table.status === "reserved" && "bg-card border-2 border-primary shadow-sm z-10",
+                    table.status === "reserved" && "bg-white dark:bg-neutral-800 border-2 border-brand-primary shadow-[0_8px_30px_rgb(var(--brand-primary-rgb),0.12)] z-10",
                     
                     // Occupied State (Quiet)
-                    table.status === "occupied" && "bg-muted border border-border",
+                    table.status === "occupied" && "bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700",
                     
                     // Available State (Clean)
-                    table.status === "available" && "bg-card border border-border shadow-sm"
+                    table.status === "available" && "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm"
                 )}
                 style={{
                     left: table.x,
@@ -52,7 +52,7 @@ export function FloorPlanSkeleton({ className }: { className?: string }) {
                 {/* Minimalist Label */}
                 <span className={cn(
                     "text-[10px] font-bold tracking-tighter",
-                    table.status === "reserved" ? "text-primary" : "text-muted-foreground"
+                    table.status === "reserved" ? "text-brand-primary" : "text-neutral-400"
                 )}>
                     {table.id}
                 </span>
@@ -61,7 +61,7 @@ export function FloorPlanSkeleton({ className }: { className?: string }) {
                 {table.status === "reserved" && (
                   <motion.div 
                     layoutId="active-indicator"
-                    className="absolute -top-1 -right-1 size-3 rounded-full bg-primary border-2 border-card shadow-sm"
+                    className="absolute -top-1 -right-1 size-3 rounded-full bg-brand-primary border-2 border-white dark:border-neutral-800 shadow-sm"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: i * 0.15 + 0.3 }}
@@ -77,7 +77,7 @@ export function FloorPlanSkeleton({ className }: { className?: string }) {
           initial={{ opacity: 0, scale: 0.8, x: 10 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           transition={{ delay: 1, duration: 0.5 }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-foreground text-background shadow-lg z-20 flex flex-col gap-0.5"
+          className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xl z-20 flex flex-col gap-0.5"
         >
            <span className="text-[8px] font-bold uppercase tracking-widest opacity-60">Резервирано</span>
            <span className="text-[10px] font-bold">19:30 • 4 лица</span>

@@ -35,16 +35,16 @@ export function IPhoneSkeleton() {
     >
       <div className="relative mx-auto w-24">
         <div className="absolute top-10 -left-[2px] flex flex-col gap-1.5">
-          <div className="h-2.5 w-[2px] rounded-l-sm bg-border dark:bg-muted-foreground" />
-          <div className="h-4 w-[2px] rounded-l-sm bg-border dark:bg-muted-foreground" />
-          <div className="h-4 w-[2px] rounded-l-sm bg-border dark:bg-muted-foreground" />
+          <div className="h-2.5 w-[2px] rounded-l-sm bg-neutral-300 dark:bg-neutral-600" />
+          <div className="h-4 w-[2px] rounded-l-sm bg-neutral-300 dark:bg-neutral-600" />
+          <div className="h-4 w-[2px] rounded-l-sm bg-neutral-300 dark:bg-neutral-600" />
         </div>
         <div className="absolute top-14 -right-[2px]">
-          <div className="h-6 w-[2px] rounded-r-sm bg-border dark:bg-muted-foreground" />
+          <div className="h-6 w-[2px] rounded-r-sm bg-neutral-300 dark:bg-neutral-600" />
         </div>
 
-        <div className="rounded-[1.25rem] bg-muted p-1 shadow-sm ring-1 shadow-foreground/5 ring-foreground/5 dark:bg-muted-foreground dark:shadow-primary-foreground/5 dark:ring-primary-foreground/10">
-          <div className="relative h-40 w-full overflow-hidden rounded-[1rem] bg-card dark:bg-ink-surface">
+        <div className="rounded-[1.25rem] bg-neutral-200 p-1 shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-700 dark:shadow-white/5 dark:ring-white/10">
+          <div className="relative h-40 w-full overflow-hidden rounded-[1rem] bg-white dark:bg-neutral-900">
             <motion.div
               variants={screenContentVariants}
               transition={CONTENT_TRANSITION}
@@ -62,7 +62,7 @@ export function IPhoneSkeleton() {
             </motion.div>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-1.5 mx-auto h-0.5 w-8 rounded-full bg-muted-foreground" />
+        <div className="absolute inset-x-0 bottom-1.5 mx-auto h-0.5 w-8 rounded-full bg-neutral-400 dark:bg-neutral-500" />
       </div>
     </motion.div>
   );
@@ -115,7 +115,7 @@ function IPhoneDynamicIsland({ ref }: { ref: React.Ref<DynamicIslandHandle> }) {
     <div className="flex w-full items-start justify-center pt-1.5">
       <div
         ref={scope}
-        className="relative overflow-hidden bg-ink-surface"
+        className="relative overflow-hidden bg-black"
         style={{ width: 28, height: 10, borderRadius: 5 }}
       >
         <div
@@ -124,8 +124,8 @@ function IPhoneDynamicIsland({ ref }: { ref: React.Ref<DynamicIslandHandle> }) {
           style={{ opacity: 1 }}
         >
           <div className="flex items-center gap-0.5">
-            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
-            <div className="h-0.5 w-0.5 rounded-full bg-muted-foreground" />
+            <div className="h-1 w-1 rounded-full bg-neutral-700" />
+            <div className="h-0.5 w-0.5 rounded-full bg-neutral-600" />
           </div>
         </div>
         <div
@@ -140,7 +140,7 @@ function IPhoneDynamicIsland({ ref }: { ref: React.Ref<DynamicIslandHandle> }) {
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: 0 }}
         >
-          <span className="text-[3px] leading-none font-medium text-primary-foreground">
+          <span className="text-[3px] leading-none font-medium text-white">
             Connected
           </span>
         </div>
@@ -162,7 +162,7 @@ function MiniLoadingDots() {
 function MiniLoadingDot({ delay }: { delay: number }) {
   return (
     <motion.div
-      className="h-0.5 w-0.5 rounded-full bg-card"
+      className="h-0.5 w-0.5 rounded-full bg-white"
       animate={{ opacity: [0.3, 1, 0.3] }}
       transition={{
         duration: 0.6,

@@ -42,11 +42,11 @@ const css = `
 .candy-pattern {
     background-image: linear-gradient(
       135deg,
-      color-mix(in srgb, var(--brand) 4%, transparent) 25%,
+      rgba(206,93,69,0.04) 25%,
       transparent 25.5%,
       transparent 50%,
-      color-mix(in srgb, var(--brand) 4%, transparent) 50.5%,
-      color-mix(in srgb, var(--brand) 4%, transparent) 75%,
+      rgba(206,93,69,0.04) 50.5%,
+      rgba(206,93,69,0.04) 75%,
       transparent 75.5%,
       transparent
     );
@@ -61,7 +61,7 @@ const Stats = () => {
       <Container>
         <div className="mx-auto max-w-2xl text-center">
           <Heading as="h2" className="mb-4">
-            Резултати кои зборуваат сами за себе
+            Резултати кои <span className="text-brand-primary font-playfair italic">зборуваат</span> сами за себе
           </Heading>
           <Subheading>
             Не веруваме во празни зборови. Нашата мисија е да ви помогнеме да растете побрзо и паметно преку автоматизација.
@@ -75,7 +75,7 @@ const Stats = () => {
       </Container>
 
       {/* Subtle background glow */}
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[600px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[600px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-primary/5 blur-[120px]" />
     </section>
   );
 };
@@ -120,7 +120,7 @@ const StatCard = ({
   isActive: boolean;
 }) => {
   return (
-    <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-lg border border-border bg-card p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+    <div className="group relative flex h-full flex-col justify-between overflow-hidden rounded-[32px] border border-neutral-200/60 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-primary/5 dark:border-neutral-800/60 dark:bg-neutral-900">
       {/* Ambient hover pattern */}
       <div className="candy-pattern absolute inset-0 -z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
@@ -128,21 +128,21 @@ const StatCard = ({
         <div className="relative inline-flex items-baseline justify-start gap-1 pb-1">
           <NumberFlow
             value={isActive ? value : 0}
-            className="text-5xl font-bold tracking-tight text-foreground md:text-6xl"
+            className="text-5xl font-bold tracking-tight text-neutral-900 dark:text-white md:text-6xl"
           />
-          <span className="text-2xl font-semibold text-primary md:text-3xl">
+          <span className="text-2xl font-semibold text-brand-primary md:text-3xl">
             {suffix}
           </span>
         </div>
         {/* Decorative dynamic line */}
-        <div className="mt-6 h-1 w-12 rounded-full bg-muted transition-all duration-500 group-hover:w-full group-hover:bg-primary/40" />
+        <div className="mt-6 h-1 w-12 rounded-full bg-neutral-100 transition-all duration-500 group-hover:w-full group-hover:bg-brand-primary/40 dark:bg-neutral-800" />
       </div>
 
       <div>
-        <h3 className="mb-2 text-xl font-bold text-foreground">
+        <h3 className="mb-2 text-xl font-bold text-neutral-900 dark:text-neutral-100">
           {label}
         </h3>
-        <p className="text-sm leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-neutral-500 dark:text-neutral-400">
           {description}
         </p>
       </div>

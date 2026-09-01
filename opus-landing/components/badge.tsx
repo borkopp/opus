@@ -17,7 +17,7 @@ export const Badge = ({
   return (
     <MotionLink
       href={href}
-      className="ring-none flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground transition duration-200 hover:bg-muted active:scale-98"
+      className="ring-none flex w-fit items-center gap-2 rounded-full bg-white px-2 py-1 text-xs text-neutral-700 transition duration-200 hover:bg-neutral-50 active:scale-98 dark:bg-neutral-800 dark:text-neutral-300"
       whileHover="animate"
       initial="initial"
     >

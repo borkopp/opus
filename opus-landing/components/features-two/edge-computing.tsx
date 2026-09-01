@@ -50,7 +50,7 @@ export const EdgeComputing = () => {
         }}
       >
         <motion.div
-          className="absolute size-8 rounded-full bg-muted dark:bg-muted-foreground"
+          className="absolute size-8 rounded-full bg-neutral-200 dark:bg-neutral-700"
           animate={{
             scale: [1, 1.5, 1],
             opacity: [0.5, 0.2, 0.5],
@@ -112,7 +112,7 @@ function DottedWorldMap() {
   return (
     <svg
       viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-      className="h-full w-full text-muted-foreground"
+      className="h-full w-full text-neutral-300 dark:text-neutral-600"
       preserveAspectRatio="xMidYMid slice"
     >
       {points.map((point, index) => {

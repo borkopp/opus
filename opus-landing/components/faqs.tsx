@@ -24,37 +24,33 @@ const faqData: FAQSection[] = [
     items: [
       {
         question: "Што е OPUS?",
-        answer:
-          "OPUS е платформа за мали студија за убавина во Македонија. Ги обединува услугите, тимот, работното време, веб-страницата за резервации и календарот со термини.",
+        answer: "OPUS е платформа сè-во-едно дизајнирана за салони за убавина, берберници и ресторани. Таа ги обединува вашите резервации, вработени, услуги и наплата на едно место."
       },
       {
-        question: "Како клиентите резервираат?",
-        answer:
-          "Клиентот ја отвора веб-страницата на студиото, на пример vashe-studio.opus.mk, избира услуга, член од тимот и слободен термин, па внесува контакт податоци. Не е потребен кориснички профил.",
+        question: "Дали ми е потребна кредитна картичка за тест периодот?",
+        answer: "Не, можете да започнете со бесплатниот пробен период од 3 месеци без да внесувате податоци од кредитна картичка."
       },
       {
-        question: "Како OPUS спречува двојни резервации?",
-        answer:
-          "Секој нов или презакажан термин повторно се проверува со работното време и постојните резервации пред да биде зачуван.",
-      },
-    ],
+        question: "Дали можам да откажам во секое време?",
+        answer: "Да, по истекот на трите бесплатни месеци, плаќате 20 евра месечно. Можете да ја откажете вашата претплата во било кое време, без обврски."
+      }
+    ]
   },
   {
-    title: "Тековен опсег",
+    title: "Можности и интеграции",
     items: [
       {
-        question: "Дали онлајн плаќањата се активни?",
-        answer:
-          "Не. OPUS не обработува онлајн плаќања. Клиентите го резервираат терминот преку OPUS, а начинот на плаќање го договараат директно со студиото.",
+        question: "Како функционира AI асистентот?",
+        answer: "AI асистентот може да комуницира со вашите клиенти преку веб-сајтот, одговарајќи на нивните прашања за вашите услуги, слободни термини и помага да го резервираат својот термин автоматски."
       },
       {
-        question: "Дали OPUS моментално поддржува ресторани?",
-        answer:
-          "Не. Тековниот производ е фокусиран на студија за убавина. Постоечките угостителски основи се зачувани за можен иден развој, но не се достапни во интерфејсот.",
-      },
-    ],
-  },
+        question: "Дали можам да примам плаќања онлајн?",
+        answer: "Да, OPUS е целосно интегриран со системи за плаќање што овозможува сигурна наплата на вашите услуги или задршка на депозит пред терминот."
+      }
+    ]
+  }
 ];
+
 
 export function FAQs() {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -81,10 +77,9 @@ export function FAQs() {
   return (
     <div className="mx-auto max-w-4xl overflow-hidden px-4 py-20 md:px-8 md:py-32">
       <div className="text-center">
-        <Heading as="h2">Најчесто поставувани прашања</Heading>
+        <Heading as="h2">Најчесто <span className="text-brand-primary font-playfair italic">поставувани</span> прашања</Heading>
         <Subheading className="mx-auto mt-4 max-w-2xl">
-          Сè што треба да знаете за OPUS и како може да го подобри вашиот
-          бизнис.
+          Сè што треба да знаете за OPUS и како може да го подобри вашиот бизнис.
         </Subheading>
       </div>
 
@@ -94,7 +89,7 @@ export function FAQs() {
       >
         {faqData.map((section) => (
           <div key={section.title}>
-            <h3 className="mb-6 text-lg font-semibold text-white">
+            <h3 className="mb-6 text-lg font-medium text-neutral-800 dark:text-neutral-200">
               {section.title}
             </h3>
             <div className="flex flex-col gap-3">
@@ -108,8 +103,8 @@ export function FAQs() {
                     className={cn(
                       "relative rounded-lg transition-all duration-200",
                       isActive
-                        ? "bg-card ring-border shadow-sm ring-1"
-                        : "hover:bg-muted/60",
+                        ? "bg-white shadow-sm ring-1 shadow-black/10 ring-black/10 dark:bg-neutral-900 dark:shadow-white/5 dark:ring-white/10"
+                        : "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                     )}
                   >
                     {isActive && (
@@ -136,7 +131,7 @@ export function FAQs() {
                       onClick={() => toggleQuestion(id)}
                       className="flex w-full items-center justify-between px-4 py-4 text-left"
                     >
-                      <span className="text-foreground text-sm font-medium md:text-base">
+                      <span className="text-sm font-medium text-neutral-700 md:text-base dark:text-neutral-300">
                         {item.question}
                       </span>
                       <motion.div
@@ -144,7 +139,7 @@ export function FAQs() {
                         transition={{ duration: 0.2 }}
                         className="ml-4 shrink-0"
                       >
-                        <IconPlus className="text-muted-foreground size-5" />
+                        <IconPlus className="size-5 text-neutral-500 dark:text-neutral-400" />
                       </motion.div>
                     </button>
                     <AnimatePresence initial={false}>
@@ -156,7 +151,7 @@ export function FAQs() {
                           transition={{ duration: 0.15, ease: "easeInOut" }}
                           className="relative"
                         >
-                          <p className="text-muted-foreground max-w-[90%] px-4 pb-4 text-sm">
+                          <p className="max-w-[90%] px-4 pb-4 text-sm text-neutral-600 dark:text-neutral-400">
                             {item.answer}
                           </p>
                         </motion.div>

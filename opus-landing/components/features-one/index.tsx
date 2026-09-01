@@ -1,20 +1,23 @@
 "use client";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { WebsiteBookingSkeleton } from "./website-booking-skeleton";
 import { TeamServiceSkeleton } from "./keyboard-skeleton";
 import { CalendarSkeleton } from "./login-skeleton";
+import { ChatConversation } from "./chat";
+import { VerticalPulseLines } from "./vertical-pulse-lines";
+import { FlippingImagesWithBar } from "./flipping-images";
 import { Heading } from "../heading";
 import { Subheading } from "../subheading";
 import { Container } from "../container";
-import { CalendarCheck, Link2, Scissors } from "lucide-react";
+import { CalendarCheck, Clock, Smartphone } from "lucide-react";
 
 export function FeaturesOne() {
   return (
     <Container as="section" id="product" className="py-10 md:py-20 lg:py-32">
-      <Heading>Алатки кои навистина ги користите</Heading>
+      <Heading>Алатки кои <span className="text-brand-primary font-playfair italic">навистина</span> ги користите</Heading>
       <Subheading className="mt-2">
-        Поставете ги услугите, тимот и работното време, објавете ја вашата
-        веб-страница и управувајте со секој термин од еден календар.
+        Не уште еден CRM за кој ви треба обука. OPUS е направен за луѓе кои работат со раце и имаат 3 минути меѓу клиенти.
       </Subheading>
       <div className="mx-auto mt-8 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-3 md:grid-rows-2">
         <Card className="md:row-span-2">
@@ -22,8 +25,7 @@ export function FeaturesOne() {
             <CardHeader>
               <CardTitle>Резервации без конфузија</CardTitle>
               <CardDescription>
-                Еден поглед на денот, неделата и персоналот, со заштита од
-                двојно резервирање на истиот термин.
+                Еден поглед на денот, неделата, персоналот. Без двојни резервации, без пропуштени термини.
               </CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 items-center justify-center overflow-hidden pt-4">
@@ -35,14 +37,13 @@ export function FeaturesOne() {
         <Card>
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Јавен линк за резервации</CardTitle>
+              <CardTitle>Ваш личен веб-сајт за резервации</CardTitle>
               <CardDescription>
-                Клиентите избираат услуга, член од тимот и слободен термин без
-                да отвораат профил.
+                Добијте сопствена веб-страница на ваш линк каде клиентите можат лесно да прегледуваат услуги и сами да резервираат термин.
               </CardDescription>
             </CardHeader>
-            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center p-6 pt-2">
-              <BookingLinkPreview />
+            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center p-4 pt-0">
+              <WebsiteBookingSkeleton />
             </CardSkeleton>
           </CardContent>
         </Card>
@@ -50,14 +51,17 @@ export function FeaturesOne() {
         <Card className="md:row-span-2">
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Услуги, цени и тим</CardTitle>
+              <CardTitle>AI асистент</CardTitle>
               <CardDescription>
-                Јасно поставете што нудите, колку трае, колку чини и кој член од
-                тимот ја извршува услугата.
+                Одговара на клиенти, закажува, испраќа потсетници — автоматски, на македонски, 24/7.
               </CardDescription>
             </CardHeader>
-            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center overflow-hidden pt-4">
-              <TeamServiceSkeleton />
+            <CardSkeleton className="mt-auto flex flex-1 flex-col items-center justify-between gap-2 overflow-hidden pt-4">
+              <ChatConversation className="min-h-0 shrink p-2 px-4" />
+              <VerticalPulseLines className="h-24 shrink-0" />
+              <div className="shrink-0 scale-75">
+                <FlippingImagesWithBar />
+              </div>
             </CardSkeleton>
           </CardContent>
         </Card>
@@ -65,14 +69,13 @@ export function FeaturesOne() {
         <Card>
           <CardContent className="flex h-full flex-col">
             <CardHeader>
-              <CardTitle>Статуси на термини</CardTitle>
+              <CardTitle>Управување со тим и услуги</CardTitle>
               <CardDescription>
-                Потврдете пристигнување, завршете, презакажете, откажете или
-                означете недоаѓање од деталите за терминот.
+                Едноставно организирајте ги услугите, цените и распоредот на вашите вработени.
               </CardDescription>
             </CardHeader>
-            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center p-6 pt-2">
-              <BookingStatusPreview />
+            <CardSkeleton className="mt-auto flex flex-1 items-center justify-center -mt-4">
+              <TeamServiceSkeleton />
             </CardSkeleton>
           </CardContent>
         </Card>
@@ -80,60 +83,22 @@ export function FeaturesOne() {
 
       <div className="mx-auto mt-4 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-3">
         <FeatureCard
-          icon={<CalendarCheck className="group-hover:text-primary size-5" />}
-          title="Календар за секојдневна работа"
-          description="Прегледувајте ги термините по датум и член од тимот, со јасни состојби за секоја посета."
+          icon={<CalendarCheck className="group-hover:text-brand-primary size-5 transition-colors" />}
+          title="Календар без преклопувања"
+          description="Прегледен дневен и неделен распоред на целиот тим, со автоматска заштита од двојно резервирање на термини."
         />
         <FeatureCard
-          icon={<Scissors className="group-hover:text-primary size-5" />}
-          title="Поставување за студија за убавина"
-          description="Внесете локација, услуги, цени, тим и работно време преку воден почетен процес."
+          icon={<Clock className="group-hover:text-brand-primary size-5 transition-colors" />}
+          title="Флексибилно работно време"
+          description="Лесно подесете индивидуални смени, слободни денови, паузи и исклучоци за секој член од вашиот тим."
         />
         <FeatureCard
-          icon={<Link2 className="group-hover:text-primary size-5" />}
-          title="Ваша веб-страница"
-          description="Со едно објавување добивате адреса како vashe-studio.opus.mk, од која клиентите резервираат директно."
+          icon={<Smartphone className="group-hover:text-brand-primary size-5 transition-colors" />}
+          title="Брзо закажување без регистрација"
+          description="Клиентите го отвораат вашиот линк од Instagram или порака и закажуваат термин за помалку од една минута."
         />
       </div>
     </Container>
-  );
-}
-
-function BookingLinkPreview() {
-  return (
-    <div className="border-border bg-muted/40 w-full rounded-lg border p-4">
-      <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
-        Ваш линк
-      </p>
-      <div className="border-border bg-card mt-3 flex items-center gap-2 rounded-md border px-3 py-2">
-        <Link2 className="text-primary size-4" />
-        <span className="text-foreground truncate text-xs">
-          vashe-studio.opus.mk
-        </span>
-      </div>
-      <div className="bg-primary text-primary-foreground mt-3 rounded-md px-3 py-2 text-center text-xs font-semibold">
-        Резервирај термин
-      </div>
-    </div>
-  );
-}
-
-function BookingStatusPreview() {
-  return (
-    <div className="border-border bg-muted/40 w-full rounded-lg border p-4">
-      <p className="text-foreground text-sm font-semibold">Ана · Маникир</p>
-      <p className="text-muted-foreground mt-1 text-xs">
-        Денес, 14:30 · 45 мин.
-      </p>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <span className="bg-success/10 text-success rounded-md px-2 py-2 text-center text-[10px] font-semibold">
-          Пристигнат
-        </span>
-        <span className="bg-muted text-muted-foreground rounded-md px-2 py-2 text-center text-[10px] font-semibold">
-          Презакажи
-        </span>
-      </div>
-    </div>
   );
 }
 
@@ -147,7 +112,7 @@ function Card({
   return (
     <div
       className={cn(
-        "border-border bg-card rounded-lg border shadow-sm",
+        "rounded-2xl bg-white shadow-sm ring-1 shadow-black/10 ring-black/10 dark:bg-neutral-900 dark:shadow-white/5 dark:ring-white/10",
         className,
       )}
     >
@@ -186,7 +151,12 @@ function CardTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn("text-foreground text-sm font-semibold", className)}>
+    <h3
+      className={cn(
+        "text-sm font-semibold text-neutral-900 dark:text-white",
+        className,
+      )}
+    >
       {children}
     </h3>
   );
@@ -200,7 +170,12 @@ function CardDescription({
   className?: string;
 }) {
   return (
-    <p className={cn("text-muted-foreground text-sm text-balance", className)}>
+    <p
+      className={cn(
+        "text-sm text-balance text-neutral-600 dark:text-neutral-400",
+        className,
+      )}
+    >
       {children}
     </p>
   );
@@ -226,10 +201,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="group border-border bg-card rounded-lg border p-6">
+    <div className="group rounded-2xl bg-white p-6 dark:bg-neutral-900">
       {icon}
-      <h3 className="text-foreground mt-4 text-sm font-semibold">{title}</h3>
-      <p className="text-muted-foreground mt-2 text-sm text-balance">
+      <h3 className="mt-4 text-sm font-semibold text-neutral-900 dark:text-white">
+        {title}
+      </h3>
+      <p className="mt-2 text-sm text-balance text-neutral-600 dark:text-neutral-400">
         {description}
       </p>
     </div>

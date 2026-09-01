@@ -48,9 +48,9 @@ export function MacbookSkeleton() {
           style={{ transformOrigin: "bottom" }}
           variants={lidVariants}
           transition={TRANSITION}
-        className="mx-auto h-44 w-[90%] rounded-tl-lg rounded-tr-lg bg-muted p-1.5 shadow-sm ring-1 shadow-foreground/5 ring-foreground/5 dark:bg-muted-foreground dark:shadow-primary-foreground/5 dark:ring-primary-foreground/10"
+          className="mx-auto h-44 w-[90%] rounded-tl-lg rounded-tr-lg bg-neutral-200 p-1.5 shadow-sm ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-700 dark:shadow-white/5 dark:ring-white/10"
         >
-          <div className="relative h-full w-full overflow-hidden rounded-tl rounded-tr-lg rounded-br-sm rounded-bl-sm bg-card dark:bg-ink-surface">
+          <div className="relative h-full w-full overflow-hidden rounded-tl rounded-tr-lg rounded-br-sm rounded-bl-sm bg-white dark:bg-neutral-900">
             <motion.div
               variants={screenContentVariants}
               transition={CONTENT_TRANSITION}
@@ -68,8 +68,8 @@ export function MacbookSkeleton() {
             </motion.div>
           </div>
         </motion.div>
-        <div className="relative h-3.5 w-full rounded-tl-md rounded-tr-md rounded-br-3xl rounded-bl-3xl bg-linear-to-b from-muted to-muted shadow-[0px_1px_0px_0px_color-mix(in_srgb,var(--foreground)_5%,transparent)_inset]">
-        <div className="absolute inset-x-0 top-0 mx-auto h-1.5 w-12 rounded-br-sm rounded-bl-sm bg-muted-foreground" />
+        <div className="relative h-3.5 w-full rounded-tl-md rounded-tr-md rounded-br-3xl rounded-bl-3xl bg-linear-to-b from-neutral-200 to-neutral-300 shadow-[0px_1px_0px_0px_rgba(0,0,0,0.05)_inset] dark:from-neutral-600 dark:to-neutral-800">
+          <div className="absolute inset-x-0 top-0 mx-auto h-1.5 w-12 rounded-br-sm rounded-bl-sm bg-neutral-400 dark:bg-neutral-500" />
         </div>
       </div>
     </motion.div>
@@ -123,7 +123,7 @@ function MacbookDynamicIsland({
     <div className="flex w-full items-start justify-center pt-1.5">
       <div
         ref={scope}
-        className="relative overflow-hidden bg-ink-surface"
+        className="relative overflow-hidden bg-black"
         style={{ width: 28, height: 10, borderRadius: 5 }}
       >
         <div
@@ -132,8 +132,8 @@ function MacbookDynamicIsland({
           style={{ opacity: 1 }}
         >
           <div className="flex items-center gap-0.5">
-            <div className="h-1 w-1 rounded-full bg-muted-foreground" />
-            <div className="h-0.5 w-0.5 rounded-full bg-muted-foreground" />
+            <div className="h-1 w-1 rounded-full bg-neutral-700" />
+            <div className="h-0.5 w-0.5 rounded-full bg-neutral-600" />
           </div>
         </div>
         <div
@@ -148,7 +148,7 @@ function MacbookDynamicIsland({
           className="absolute inset-0 flex items-center justify-center"
           style={{ opacity: 0 }}
         >
-          <span className="text-[3px] leading-none font-medium text-primary-foreground">
+          <span className="text-[3px] leading-none font-medium text-white">
             Airpods Connected
           </span>
           <div className="ml-0.5 flex h-1 w-2 items-center rounded-xs border border-green-500">
@@ -173,7 +173,7 @@ function MiniLoadingDots() {
 function MiniLoadingDot({ delay }: { delay: number }) {
   return (
     <motion.div
-      className="h-0.5 w-0.5 rounded-full bg-card"
+      className="h-0.5 w-0.5 rounded-full bg-white"
       animate={{ opacity: [0.3, 1, 0.3] }}
       transition={{
         duration: 0.6,

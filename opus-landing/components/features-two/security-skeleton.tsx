@@ -19,7 +19,7 @@ export function SecuritySkeleton({ className }: { className?: string }) {
       <div className="flex items-center gap-0">
         {/* Left Avatar - Blurred */}
         <div className="relative z-10 shrink-0">
-          <div className="size-7 overflow-hidden rounded-full ring-2 ring-primary-foreground/50 dark:ring-secondary/50">
+          <div className="size-7 overflow-hidden rounded-full ring-2 ring-white/50 dark:ring-neutral-800/50">
             <Image
               width={48}
               height={48}
@@ -41,8 +41,8 @@ export function SecuritySkeleton({ className }: { className?: string }) {
 
           {/* Lock Icon Container */}
           <div className="relative z-10 shrink-0">
-            <div className="flex size-10 items-center justify-center rounded-xl bg-card shadow-sm ring-1 ring-foreground/5 dark:bg-ink-surface dark:ring-primary-foreground/10">
-              <Lock className="size-4 text-muted-foreground" />
+            <div className="flex size-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10">
+              <Lock className="size-4 text-neutral-600" />
             </div>
           </div>
 
@@ -67,7 +67,7 @@ function SecurityBeam({ delay = 0 }: { delay?: number }) {
   return (
     <div className="relative h-px w-full overflow-hidden">
       {/* Dotted line background */}
-      <div className="absolute inset-0 border-t border-dotted border-border" />
+      <div className="absolute inset-0 border-t border-dotted border-neutral-300 dark:border-neutral-600" />
       {/* Animated dotted pulse with fade */}
       <motion.div
         className="absolute top-0 h-px w-10"

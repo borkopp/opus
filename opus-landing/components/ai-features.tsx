@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { ChatConversation } from "./features-one/chat";
 import { GapOptimizerSkeleton } from "./features-one/gap-optimizer-skeleton";
@@ -23,9 +24,9 @@ const InternalAiSkeleton = () => {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
-        className="self-end max-w-[80%] p-3 rounded-2xl rounded-tr-none bg-primary/10 border border-primary/20"
+        className="self-end max-w-[80%] p-3 rounded-2xl rounded-tr-none bg-brand-primary/10 border border-brand-primary/20"
       >
-        <p className="text-xs text-background">Кој е мојот најслаб ден овој месец?</p>
+        <p className="text-xs text-white">Кој е мојот најслаб ден овој месец?</p>
       </motion.div>
 
       {/* Thinking State */}
@@ -35,9 +36,9 @@ const InternalAiSkeleton = () => {
         transition={{ delay: 1.5, duration: 2, repeat: Infinity }}
         className="flex items-center gap-2"
       >
-        <div className="size-1.5 rounded-full bg-primary/40 animate-bounce" />
-        <div className="size-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:0.2s]" />
-        <div className="size-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:0.4s]" />
+        <div className="size-1.5 rounded-full bg-brand-primary/40 animate-bounce" />
+        <div className="size-1.5 rounded-full bg-brand-primary/40 animate-bounce [animation-delay:0.2s]" />
+        <div className="size-1.5 rounded-full bg-brand-primary/40 animate-bounce [animation-delay:0.4s]" />
       </motion.div>
 
       {/* AI Answer Card */}
@@ -48,51 +49,51 @@ const InternalAiSkeleton = () => {
         className="self-start max-w-[95%] w-full space-y-4"
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="size-6 rounded-full bg-primary flex items-center justify-center">
-            <span className="text-[10px] text-primary-foreground font-bold tracking-tighter">AI</span>
+          <div className="size-6 rounded-full bg-brand-primary flex items-center justify-center">
+            <span className="text-[10px] text-white font-bold tracking-tighter">AI</span>
           </div>
-          <span className="text-[10px] text-background/60 font-medium uppercase tracking-widest">Анализа на податоци</span>
+          <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-widest">Анализа на податоци</span>
         </div>
 
-        <div className="p-4 rounded-xl bg-background/5 border border-background/10 backdrop-blur-md space-y-4">
-          <p className="text-xs text-background/85 leading-relaxed font-medium">
-            Врз основа на вашите 420 резервации овој месец, <span className="text-primary font-bold">Вторник</span> е вашиот најслаб ден со само 12% пополнетост.
+        <div className="p-4 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md space-y-4">
+          <p className="text-xs text-neutral-200 leading-relaxed font-medium">
+            Врз основа на вашите 420 резервации овој месец, <span className="text-brand-primary font-bold">Вторник</span> е вашиот најслаб ден со само 12% пополнетост.
           </p>
           
           <div className="space-y-3">
              <div className="space-y-1">
-               <div className="flex justify-between text-[10px] text-background/55">
+               <div className="flex justify-between text-[10px] text-neutral-500">
                  <span>Вторник (12%)</span>
-                 <span className="text-primary">-65% vs просек</span>
+                 <span className="text-brand-primary">-65% vs просек</span>
                </div>
-               <div className="h-1.5 w-full bg-background/10 rounded-full overflow-hidden">
+               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                  <motion.div 
                    initial={{ width: 0 }}
                    animate={{ width: "12%" }}
                    transition={{ delay: 3.8, duration: 1 }}
-                   className="h-full bg-primary"
+                   className="h-full bg-brand-primary" 
                  />
                </div>
              </div>
 
              <div className="space-y-1">
-               <div className="flex justify-between text-[10px] text-background/55">
+               <div className="flex justify-between text-[10px] text-neutral-500">
                  <span>Викенд просек (88%)</span>
                </div>
-               <div className="h-1.5 w-full bg-background/10 rounded-full overflow-hidden">
+               <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                  <motion.div 
                    initial={{ width: 0 }}
                    animate={{ width: "88%" }}
                    transition={{ delay: 4, duration: 1 }}
-                   className="h-full bg-background/25"
+                   className="h-full bg-white/20" 
                  />
                </div>
              </div>
           </div>
 
-          <div className="pt-2 border-t border-background/10">
-            <p className="text-[10px] text-background/60 italic">
-              Совет: Пробајте со &apos;Happy Hour&apos; попуст од 20% помеѓу 14:00 и 17:00.
+          <div className="pt-2 border-t border-white/5">
+            <p className="text-[10px] text-neutral-400 italic">
+              Совет: Пробајте со 'Happy Hour' попуст од 20% помеѓу 14:00 и 17:00.
             </p>
           </div>
         </div>
@@ -100,12 +101,12 @@ const InternalAiSkeleton = () => {
 
       {/* Input bar placeholder */}
       <div className="mt-auto pt-4 relative">
-        <div className="h-11 w-full bg-foreground/50 border border-background/10 rounded-lg px-4 flex items-center justify-between">
-          <div className="h-2 w-32 bg-background/10 rounded" />
+        <div className="h-11 w-full bg-neutral-950/50 border border-white/5 rounded-2xl px-4 flex items-center justify-between">
+          <div className="h-2 w-32 bg-white/10 rounded" />
           <div className="flex gap-2">
-            <div className="size-6 rounded-lg bg-background/5 border border-background/10" />
-            <div className="size-6 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center">
-               <div className="size-2.5 border-r-2 border-t-2 border-primary rotate-45 -translate-x-0.5" />
+            <div className="size-6 rounded-lg bg-white/5 border border-white/10" />
+            <div className="size-6 rounded-lg bg-brand-primary/20 border border-brand-primary/40 flex items-center justify-center">
+               <div className="size-2.5 border-r-2 border-t-2 border-brand-primary rotate-45 -translate-x-0.5" />
             </div>
           </div>
         </div>
@@ -169,17 +170,28 @@ export function FeatureSectionWithTerminal() {
   return (
     <div className="relative mx-auto w-full max-w-7xl px-4 py-20 md:px-8">
       <div className="mb-12 w-full text-left">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-white md:text-5xl">
-          Моќна вештачка интелигенција
+        <h2 className="text-3xl font-medium tracking-tight text-neutral-700 md:text-5xl dark:text-white">
+          Моќна <span className="text-brand-primary font-playfair italic"> вештачка</span> интелигенција
         </h2>
-        <p className="mt-4 max-w-3xl text-lg text-white/85">
+        <p className="mt-4 max-w-3xl text-lg text-neutral-500 dark:text-neutral-400">
           OPUS користи најнапредна AI технологија за да го автоматизира вашето работење.
           Фокусирајте се на работата, а нашите AI агенти се грижат за администрацијата.
         </p>
       </div>
 
-      <div className="grid rounded-xl border border-border bg-card shadow-sm lg:grid-cols-2 transition-all">
-        <div className="relative order-2 flex min-h-[400px] h-full items-center justify-center bg-foreground p-4 md:p-8 lg:order-1 rounded-b-xl lg:rounded-l-xl lg:rounded-r-none overflow-hidden">
+      <div className="grid rounded-3xl bg-gray-100 shadow-sm ring-1 shadow-black/10 ring-black/10 lg:grid-cols-2 dark:bg-neutral-900 transition-all">
+        <div className="relative order-2 flex min-h-[400px] h-full items-center justify-center bg-neutral-900 p-4 md:p-8 lg:order-1 rounded-b-3xl lg:rounded-l-3xl lg:rounded-r-none overflow-hidden">
+          {/* Background Image & Overlay */}
+          <div className="absolute inset-0 z-0">
+            <Image
+              src="/bg.jpg"
+              alt="Background"
+              fill
+              className="object-cover opacity-60"
+            />
+            <div className="absolute inset-0 bg-neutral-900/60" />
+          </div>
+
           <AnimatePresence mode="wait">
             <motion.div
               key={activeFeature}
@@ -194,7 +206,7 @@ export function FeatureSectionWithTerminal() {
           </AnimatePresence>
         </div>
 
-        <div className="order-1 space-y-3 p-4 md:p-8 lg:order-2 bg-muted/30 rounded-t-xl lg:rounded-r-xl lg:rounded-l-none">
+        <div className="order-1 space-y-3 p-4 md:p-8 lg:order-2 bg-gray-50 dark:bg-neutral-950/20 rounded-t-3xl lg:rounded-r-3xl lg:rounded-l-none">
           {features.map((feature) => (
             <FeatureCard
               key={feature.id}
@@ -224,8 +236,8 @@ function FeatureCard({
       className={cn(
         "cursor-pointer rounded-xl transition-all duration-300",
         isActive
-          ? "bg-card shadow-md ring-1 ring-border"
-          : "hover:bg-muted/70",
+          ? "bg-white shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-800"
+          : "hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30",
       )}
       layout
     >
@@ -234,14 +246,14 @@ function FeatureCard({
         <div className="flex-1">
           <h3
             className={cn(
-              "font-semibold text-foreground transition-colors",
-              isActive && "text-primary"
+              "font-semibold text-neutral-700 transition-colors dark:text-neutral-200",
+              isActive && "text-brand-primary dark:text-white"
             )}
           >
             {feature.title}
           </h3>
           <p className={cn(
-            "text-xs mt-1 text-muted-foreground transition-opacity",
+            "text-xs mt-1 text-neutral-500 dark:text-neutral-400 transition-opacity",
             !isActive && "opacity-60"
           )}>
             {feature.description}

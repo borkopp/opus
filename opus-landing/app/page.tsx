@@ -1,15 +1,24 @@
-import { CTA } from "@/components/cta";
-import CloudShaderHero from "@/components/cloud-shader-hero-demo";
+import { FeatureSectionWithTerminal } from "@/components/ai-features";
+import { CountdownBanner, CTA } from "@/components/cta";
 import { FAQs } from "@/components/faqs";
 import { FeaturesOne } from "@/components/features-one";
+import { FeaturesTwo } from "@/components/features-two";
+import Hero from "@/components/hero";
+import { Pricing } from "@/components/pricing";
+import { Stats } from "@/components/stats";
+
 
 export default function Home() {
   return (
-    <main>
-      <CloudShaderHero />
+    <main className="">
+      <Hero />
       <FeaturesOne />
+      <FeatureSectionWithTerminal />
+      <Stats />
+      <FeaturesTwo />
+      <Pricing />
       <FAQs />
-      <CTA />
+      <CountdownBanner />
     </main>
   );
 }

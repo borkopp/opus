@@ -8,10 +8,19 @@ import Map, {
 import type { MarkerDragEvent, MapMouseEvent } from "react-map-gl/mapbox";
 import { MapPin } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  isCoordinateInNorthMacedonia,
+  NORTH_MACEDONIA_MAP_BOUNDS,
+} from "@/lib/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 const DEFAULT_CENTER = { lng: 21.4254, lat: 41.9965 };
+const NORTH_MACEDONIA_BOUNDS: [[number, number], [number, number]] = [
+  [NORTH_MACEDONIA_MAP_BOUNDS.west, NORTH_MACEDONIA_MAP_BOUNDS.south],
+  [NORTH_MACEDONIA_MAP_BOUNDS.east, NORTH_MACEDONIA_MAP_BOUNDS.north],
+];
 
 interface LocationMapPickerProps {
   coords?: { lat: number; lng: number } | null;
@@ -23,19 +32,39 @@ export default function LocationMapPicker({
   onChange,
 }: LocationMapPickerProps) {
   const { resolvedTheme } = useTheme();
-  const center = coords ?? {
+  const hasValidCoords = Boolean(
+    coords && isCoordinateInNorthMacedonia(coords),
+  );
+  const confirmedCoords = hasValidCoords ? coords : null;
+  const center = confirmedCoords ?? {
     lat: DEFAULT_CENTER.lat,
     lng: DEFAULT_CENTER.lng,
   };
   const mapKey = `${center.lat.toFixed(5)}:${center.lng.toFixed(5)}`;
 
   const placePin = (event: MapMouseEvent | MarkerDragEvent) => {
-    onChange({ lat: event.lngLat.lat, lng: event.lngLat.lng });
+    const next = { lat: event.lngLat.lat, lng: event.lngLat.lng };
+    if (isCoordinateInNorthMacedonia(next)) {
+      onChange(next);
+    }
   };
+
+  if (!TOKEN) {
+    return (
+      <Alert variant="destructive">
+        <MapPin />
+        <AlertTitle>Map is unavailable</AlertTitle>
+        <AlertDescription>
+          Mapbox is not configured for this deployment. Search and pinning are
+          temporarily unavailable.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative h-80 w-full overflow-hidden rounded-2xl rounded-br-2xl border bg-muted">
+      <div className="relative h-80 w-full overflow-hidden rounded-2xl border bg-muted">
         <Map
           key={mapKey}
           mapboxAccessToken={TOKEN}
@@ -47,8 +76,9 @@ export default function LocationMapPicker({
           initialViewState={{
             longitude: center.lng,
             latitude: center.lat,
-            zoom: coords ? 15 : 12,
+            zoom: confirmedCoords ? 15 : 12,
           }}
+          maxBounds={NORTH_MACEDONIA_BOUNDS}
           projection="mercator"
           onClick={placePin}
           cursor="crosshair"
@@ -59,10 +89,10 @@ export default function LocationMapPicker({
         >
           <AttributionControl compact position="bottom-left" />
           <NavigationControl showCompass={false} position="top-right" />
-          {coords && (
+          {confirmedCoords && (
             <Marker
-              longitude={coords.lng}
-              latitude={coords.lat}
+              longitude={confirmedCoords.lng}
+              latitude={confirmedCoords.lat}
               anchor="bottom"
               draggable
               onDragEnd={placePin}
@@ -76,7 +106,7 @@ export default function LocationMapPicker({
             </Marker>
           )}
         </Map>
-        {!coords && (
+        {!confirmedCoords && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="rounded-full bg-background/90 px-4 py-2 text-sm text-muted-foreground shadow-lg backdrop-blur">
               Click the map to pin your location
@@ -85,8 +115,8 @@ export default function LocationMapPicker({
         )}
       </div>
       <p className="px-1 text-xs text-muted-foreground">
-        {coords
-          ? `${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)} — drag the pin or click the map to adjust`
+        {confirmedCoords
+          ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — drag the pin or click the map to adjust`
           : "No coordinates confirmed"}
       </p>
     </div>

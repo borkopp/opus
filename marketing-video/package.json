@@ -1,0 +1,29 @@
+{
+  "name": "opus-marketing-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "High-quality Remotion ads for OPUS",
+  "scripts": {
+    "predev": "npm run audio",
+    "dev": "remotion studio src/index.ts",
+    "audio": "node scripts/generate-soundtrack.mjs",
+    "typecheck": "tsc --noEmit",
+    "render:draft": "npm run audio && remotion render src/index.ts OpusAdVertical out/opus-ad-dark-draft.mp4 --codec=h264 --crf=18 --pixel-format=yuv420p --audio-bitrate=192k --scale=0.5",
+    "render": "npm run audio && remotion render src/index.ts OpusAdVertical out/opus-ad-dark-vertical-hq.mp4 --codec=h264 --crf=12 --pixel-format=yuv420p --audio-bitrate=320k",
+    "render:master": "npm run audio && remotion render src/index.ts OpusAdVertical4K out/opus-ad-dark-vertical-4k-master.mp4 --codec=h264 --crf=10 --pixel-format=yuv420p --audio-bitrate=320k",
+    "poster": "remotion still src/index.ts OpusAdVertical out/opus-ad-dark-poster.png --frame=554"
+  },
+  "dependencies": {
+    "@remotion/google-fonts": "4.0.520",
+    "@remotion/media": "4.0.520",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.520"
+  },
+  "devDependencies": {
+    "@remotion/cli": "4.0.520",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "typescript": "5.9.3"
+  }
+}

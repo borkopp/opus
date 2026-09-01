@@ -24,14 +24,18 @@ export function useMapboxSearch(query: string, enabled = true) {
     }
 
     const controller = new AbortController();
+    setResults([]);
     const timer = window.setTimeout(async () => {
       setIsSearching(true);
       setError(null);
       try {
         setResults(await searchMapbox(normalized, controller.signal));
       } catch (caught) {
-        if (caught instanceof DOMException && caught.name === "AbortError") return;
-        setError(caught instanceof Error ? caught.message : "Address search failed.");
+        if (caught instanceof DOMException && caught.name === "AbortError")
+          return;
+        setError(
+          caught instanceof Error ? caught.message : "Address search failed.",
+        );
       } finally {
         if (!controller.signal.aborted) setIsSearching(false);
       }

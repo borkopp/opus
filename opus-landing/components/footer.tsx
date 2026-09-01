@@ -38,15 +38,15 @@ export function Footer() {
   const legals = [
     {
       title: messages.footer.privacy,
-      href: "#",
+      href: "/privacy",
     },
     {
       title: messages.footer.terms,
-      href: "#",
+      href: "/terms",
     },
     {
       title: messages.footer.cookies,
-      href: "#",
+      href: "/privacy#cookies",
     },
   ];
 

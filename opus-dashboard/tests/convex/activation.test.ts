@@ -479,6 +479,74 @@ describe("beauty activation engine", () => {
     );
   });
 
+  test("rejects incomplete, foreign, oversized, and invalid locations before writing", async () => {
+    const owner = await createOwner(t);
+    const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "Hardened Location Studio",
+      category: "beauty_salon",
+    });
+    const validCoordinates = { lat: 41.9981, lng: 21.4254 };
+
+    await expect(
+      owner.mutation(api.activation.saveLocation, {
+        address: "Macedonia Street 12",
+        city: " ",
+        country: "mk",
+        coordinates: validCoordinates,
+      }),
+    ).rejects.toThrow("Address, city, and country are required");
+
+    await expect(
+      owner.mutation(api.activation.saveLocation, {
+        address: "Foreign Street 1",
+        city: "Sofia",
+        country: "bg",
+        coordinates: { lat: 42.6977, lng: 23.3219 },
+      }),
+    ).rejects.toThrow("Location must be in North Macedonia");
+
+    await expect(
+      owner.mutation(api.activation.saveLocation, {
+        address: "Foreign Street 1",
+        city: "Sofia",
+        country: "mk",
+        coordinates: { lat: 42.6977, lng: 23.3219 },
+      }),
+    ).rejects.toThrow("Location must be in North Macedonia");
+
+    await expect(
+      owner.mutation(api.activation.saveLocation, {
+        address: "A".repeat(201),
+        city: "Skopje",
+        country: "mk",
+        coordinates: validCoordinates,
+      }),
+    ).rejects.toThrow("Location details are too long");
+
+    await expect(
+      owner.mutation(api.activation.saveLocation, {
+        address: "Macedonia Street 12",
+        city: "Skopje",
+        country: "mk",
+        coordinates: { lat: 91, lng: 21.4254 },
+      }),
+    ).rejects.toThrow("Map coordinates are invalid");
+
+    const persisted = await t.run(async (ctx) => ({
+      org: await ctx.db.get(orgId),
+      audits: await ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (query) => query.eq("orgId", orgId))
+        .collect(),
+    }));
+    expect(persisted.org?.address).toBeUndefined();
+    expect(
+      persisted.audits.filter(
+        (event) => event.action === "activation.location_saved",
+      ),
+    ).toHaveLength(0);
+  });
+
   test("unlocks the dashboard after operational setup but blocks website publishing until the public profile is complete", async () => {
     const { owner, orgId } = await completeOperationalSetup(t);
 
@@ -503,7 +571,7 @@ describe("beauty activation engine", () => {
     await expect(
       owner.mutation(api.website.publish, { orgId }),
     ).rejects.toThrow(
-      "Cannot publish website: Website logo, Website banner, Studio tagline, Contact phone.",
+      "Cannot publish website: Website logo, Website cover photo, Studio tagline, Contact phone.",
     );
   });
 

@@ -444,6 +444,13 @@ const mkMessages = {
     message: "Вашата порака",
     messagePlaceholder: "Напишете ја вашата порака тука...",
     submit: "Испрати порака",
+    submitting: "Се испраќа...",
+    successTitle: "Пораката е успешно испратена!",
+    successDescription:
+      "Ви благодариме што нè контактиравте. Нашиот тим ќе ве контактира во најбрз можен рок.",
+    sendAnother: "Испрати нова порака",
+    errorMessage:
+      "Се случи грешка при испраќањето на пораката. Ве молиме обидете се повторно или контактирајте нè директно.",
   },
 };
 
@@ -884,6 +891,13 @@ const enMessages = {
     message: "Your message",
     messagePlaceholder: "Write your message here...",
     submit: "Send message",
+    submitting: "Sending...",
+    successTitle: "Message sent successfully!",
+    successDescription:
+      "Thank you for contacting us. Our team will get back to you as soon as possible.",
+    sendAnother: "Send another message",
+    errorMessage:
+      "Something went wrong while sending your message. Please try again or contact us directly.",
   },
 } satisfies Messages;
 

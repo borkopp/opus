@@ -161,7 +161,7 @@ export function BookingsSplitView({
   return (
     <div className="flex flex-col h-full gap-4">
       {/* Header / Live View */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2 sm:gap-4">
           <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Bookings
@@ -380,7 +380,7 @@ export function BookingsSplitView({
         </div>
 
         {/* 30% Right: Sidebar */}
-        <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 bg-card rounded-xl flex flex-col">
+        {/* <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 bg-card rounded-xl flex flex-col">
           <BookingSidebar
             key={selectedBookingId ?? "empty"}
             booking={selectedBooking ?? null}
@@ -391,7 +391,7 @@ export function BookingsSplitView({
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
             isUpdating={pendingAction !== null}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -28,6 +28,19 @@ const openingHour = v.object({
   isClosed: v.boolean(),
 });
 
+const LOCATION_LIMITS = {
+  address: 200,
+  city: 100,
+  neighborhood: 100,
+  postalCode: 20,
+} as const;
+const NORTH_MACEDONIA_BOUNDS = {
+  west: 20.3,
+  south: 40.7,
+  east: 23.2,
+  north: 42.5,
+} as const;
+
 function assertHours(
   hours: Array<{
     dayOfWeek: number;
@@ -221,23 +234,46 @@ export const saveLocation = mutation({
     const { org, staffMember } = await requireRole(ctx, undefined, "owner");
     const address = args.address.trim();
     const city = args.city.trim();
+    const neighborhood = args.neighborhood?.trim() || undefined;
+    const postalCode = args.postalCode?.trim() || undefined;
     const country = args.country.trim().toUpperCase();
     if (!address || !city || !country) {
       throw new ConvexError("Address, city, and country are required.");
     }
     if (
+      address.length > LOCATION_LIMITS.address ||
+      city.length > LOCATION_LIMITS.city ||
+      (neighborhood?.length ?? 0) > LOCATION_LIMITS.neighborhood ||
+      (postalCode?.length ?? 0) > LOCATION_LIMITS.postalCode
+    ) {
+      throw new ConvexError("Location details are too long.");
+    }
+    if (country !== "MK") {
+      throw new ConvexError("Location must be in North Macedonia.");
+    }
+    if (
+      !Number.isFinite(args.coordinates.lat) ||
+      !Number.isFinite(args.coordinates.lng) ||
       Math.abs(args.coordinates.lat) > 90 ||
       Math.abs(args.coordinates.lng) > 180
     ) {
       throw new ConvexError("Map coordinates are invalid.");
+    }
+    if (
+      args.coordinates.lat < NORTH_MACEDONIA_BOUNDS.south ||
+      args.coordinates.lat > NORTH_MACEDONIA_BOUNDS.north ||
+      args.coordinates.lng < NORTH_MACEDONIA_BOUNDS.west ||
+      args.coordinates.lng > NORTH_MACEDONIA_BOUNDS.east
+    ) {
+      throw new ConvexError("Location must be in North Macedonia.");
     }
 
     const now = Date.now();
     const updates = {
       address,
       city,
-      neighborhood: args.neighborhood?.trim() || undefined,
-      postalCode: args.postalCode?.trim() || undefined,
+      neighborhood,
+      postalCode,
       country,
       coordinates: args.coordinates,
       updatedAt: now,

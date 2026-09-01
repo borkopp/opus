@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes } from "react";
 import type { FunctionReturnType } from "convex/server";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -40,10 +41,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { parseMapboxFeature, type BusinessLocation } from "@/lib/mapbox";
+import {
+  getBusinessLocationError,
+  parseMapboxFeature,
+  reverseGeocodeMapbox,
+  type BusinessLocation,
+  type MapboxFeature,
+} from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
+
+const LocationMapPicker = dynamic(
+  () => import("@/components/dashboard/LocationMapPicker"),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-80 rounded-2xl" />,
+  },
+);
 
 type ActivationState = FunctionReturnType<typeof api.activation.getState>;
 type BeautyCategory = (typeof beautyCategories)[number][0];
@@ -440,7 +456,12 @@ function LocationStep({
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedLocation, setSelectedLocation] =
     useState<BusinessLocation | null>(value);
-  const [error, setError] = useState<string | null>(null);
+  const confirmedLocationRef = useRef<BusinessLocation | null>(value);
+  const reverseGeocodeControllerRef = useRef<AbortController | null>(null);
+  const [selectionError, setSelectionError] = useState<string | null>(null);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [isResolvingPin, setIsResolvingPin] = useState(false);
+  const [activeResultIndex, setActiveResultIndex] = useState(-1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     results,
@@ -449,14 +470,91 @@ function LocationStep({
     clearResults,
   } = useMapboxSearch(searchQuery, !selectedLocation);
 
+  useEffect(() => {
+    return () => reverseGeocodeControllerRef.current?.abort();
+  }, []);
+
+  const selectFeature = (feature: MapboxFeature) => {
+    try {
+      const location = parseMapboxFeature(feature);
+      const validationError = getBusinessLocationError(location);
+      if (validationError) {
+        setSelectionError(validationError);
+        return;
+      }
+
+      reverseGeocodeControllerRef.current?.abort();
+      confirmedLocationRef.current = location;
+      setSelectedLocation(location);
+      setSearchQuery(location.displayName);
+      clearResults();
+      setActiveResultIndex(-1);
+      setSelectionError(null);
+      setPinError(null);
+    } catch (caught) {
+      setSelectionError(errorMessage(caught));
+    }
+  };
+
+  const updatePin = async (coordinates: { lat: number; lng: number }) => {
+    const previousLocation = confirmedLocationRef.current;
+    if (!previousLocation) return;
+
+    reverseGeocodeControllerRef.current?.abort();
+    const controller = new AbortController();
+    reverseGeocodeControllerRef.current = controller;
+    setSelectedLocation({ ...previousLocation, coordinates });
+    setIsResolvingPin(true);
+    setPinError(null);
+
+    try {
+      const resolved = await reverseGeocodeMapbox(
+        coordinates,
+        controller.signal,
+      );
+      if (!resolved) {
+        throw new Error(
+          "No usable address was found at this pin. Choose another point.",
+        );
+      }
+
+      const validationError = getBusinessLocationError(resolved);
+      if (validationError) throw new Error(validationError);
+
+      confirmedLocationRef.current = resolved;
+      setSelectedLocation(resolved);
+      setSearchQuery(resolved.displayName);
+      setPinError(null);
+    } catch (caught) {
+      if (caught instanceof DOMException && caught.name === "AbortError")
+        return;
+      setSelectedLocation(previousLocation);
+      setPinError(errorMessage(caught));
+    } finally {
+      if (reverseGeocodeControllerRef.current === controller) {
+        reverseGeocodeControllerRef.current = null;
+        setIsResolvingPin(false);
+      }
+    }
+  };
+
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedLocation) {
-      setError("Choose an address from the suggestions.");
+    if (isResolvingPin) {
+      setPinError("Wait for the map pin to finish updating.");
+      return;
+    }
+    if (pinError) return;
+
+    const validationError = getBusinessLocationError(selectedLocation);
+    if (!selectedLocation || validationError) {
+      setSelectionError(
+        validationError ?? "Choose an address from the suggestions.",
+      );
       return;
     }
 
-    setError(null);
+    setSelectionError(null);
     setIsSubmitting(true);
     try {
       await onSaved(selectedLocation);
@@ -471,16 +569,16 @@ function LocationStep({
     <form className="w-full" onSubmit={submit}>
       <StepFrame
         title="Where is your studio?"
-        description="Search for the address customers should use, then choose the matching place."
+        description="Choose the matching address, then confirm the exact entrance on the map."
       >
-        <Field data-invalid={Boolean(error || searchError)}>
+        <Field data-invalid={Boolean(selectionError || searchError)}>
           <FieldLabel className="sr-only" htmlFor="location-search">
             Studio address
           </FieldLabel>
           <div className="relative">
             <InputGroup variant="prominent">
               <InputGroupAddon>
-                <Search />
+                {isSearching ? <Spinner /> : <Search />}
               </InputGroupAddon>
               <InputGroupInput
                 id="location-search"
@@ -488,28 +586,71 @@ function LocationStep({
                 value={searchQuery}
                 autoComplete="off"
                 placeholder="Start typing your address"
-                aria-invalid={Boolean(error || searchError)}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="onboarding-address-results"
+                aria-expanded={results.length > 0}
+                aria-activedescendant={
+                  activeResultIndex >= 0
+                    ? `onboarding-address-result-${activeResultIndex}`
+                    : undefined
+                }
+                aria-invalid={Boolean(selectionError || searchError)}
                 onChange={(event) => {
+                  reverseGeocodeControllerRef.current?.abort();
+                  confirmedLocationRef.current = null;
                   setSearchQuery(event.target.value);
                   setSelectedLocation(null);
-                  setError(null);
+                  setSelectionError(null);
+                  setPinError(null);
+                  setIsResolvingPin(false);
+                  setActiveResultIndex(-1);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowDown" && results.length > 0) {
+                    event.preventDefault();
+                    setActiveResultIndex((current) =>
+                      Math.min(current + 1, results.length - 1),
+                    );
+                  } else if (event.key === "ArrowUp" && results.length > 0) {
+                    event.preventDefault();
+                    setActiveResultIndex((current) =>
+                      current <= 0 ? results.length - 1 : current - 1,
+                    );
+                  } else if (
+                    event.key === "Enter" &&
+                    activeResultIndex >= 0 &&
+                    results[activeResultIndex]
+                  ) {
+                    event.preventDefault();
+                    selectFeature(results[activeResultIndex]);
+                  } else if (event.key === "Escape" && results.length > 0) {
+                    event.preventDefault();
+                    clearResults();
+                    setActiveResultIndex(-1);
+                  }
                 }}
               />
             </InputGroup>
             {results.length > 0 && (
-              <div className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-l">
-                {results.map((feature) => (
+              <div
+                id="onboarding-address-results"
+                role="listbox"
+                className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-lg"
+              >
+                {results.map((feature, index) => (
                   <button
                     key={feature.id}
+                    id={`onboarding-address-result-${index}`}
                     type="button"
-                    className="flex w-full flex-col gap-1 rounded-xl px-4 py-3 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
-                    onClick={() => {
-                      const location = parseMapboxFeature(feature);
-                      setSelectedLocation(location);
-                      setSearchQuery(location.displayName);
-                      clearResults();
-                      setError(null);
-                    }}
+                    role="option"
+                    aria-selected={index === activeResultIndex}
+                    className={cn(
+                      "flex w-full flex-col gap-1 rounded-xl px-4 py-3 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none",
+                      index === activeResultIndex && "bg-secondary",
+                    )}
+                    onMouseEnter={() => setActiveResultIndex(index)}
+                    onClick={() => selectFeature(feature)}
                   >
                     <span className="text-sm font-medium">{feature.text}</span>
                     <span className="truncate text-xs text-muted-foreground">
@@ -521,25 +662,47 @@ function LocationStep({
             )}
           </div>
           <div className="min-h-5 text-center">
-            {error || searchError ? (
-              <FieldError aria-live="polite">{error ?? searchError}</FieldError>
+            {selectionError || searchError ? (
+              <FieldError aria-live="polite">
+                {selectionError ?? searchError}
+              </FieldError>
             ) : selectedLocation ? (
               <FieldDescription className="text-success">
-                Address selected
+                Address selected. Confirm the pin below.
               </FieldDescription>
             ) : null}
           </div>
         </Field>
+        {selectedLocation && (
+          <Field className="mt-2" data-invalid={Boolean(pinError)}>
+            <FieldLabel>Exact map pin</FieldLabel>
+            <LocationMapPicker
+              coords={selectedLocation.coordinates}
+              onChange={updatePin}
+            />
+            <div className="min-h-5">
+              {pinError ? (
+                <FieldError aria-live="polite">{pinError}</FieldError>
+              ) : (
+                <FieldDescription aria-live="polite">
+                  {isResolvingPin
+                    ? "Checking the updated pin…"
+                    : "Drag the pin or click the map if the entrance is not exact."}
+                </FieldDescription>
+              )}
+            </div>
+          </Field>
+        )}
         <WizardActions
           canGoBack={canGoBack}
           onBack={onBack}
           isSubmitting={isSubmitting}
-          disabled={isSearching}
+          disabled={isSearching || isResolvingPin}
         />
         <p className="mt-5 text-center text-xs text-muted-foreground">
           {state.org.address
-            ? "You can search again to update this location."
-            : "You can adjust details later in Settings."}
+            ? "You can search again or adjust the pin to update this location."
+            : "You can adjust this address and pin later in Settings."}
         </p>
       </StepFrame>
     </form>

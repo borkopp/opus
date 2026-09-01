@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Scissors } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { PublicSite } from "./types";
 
 export function PublicSiteFrame({
@@ -43,7 +44,7 @@ export function PublicSiteFrame({
 
           {mode === "site" ? (
             <nav
-              className="flex items-center gap-2 sm:gap-5"
+              className="flex items-center gap-2 sm:gap-4"
               aria-label="Главна навигација"
             >
               <div className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
@@ -68,6 +69,7 @@ export function PublicSiteFrame({
                   Информации
                 </Link>
               </div>
+              <ThemeToggle />
               <Button asChild size="sm">
                 <Link href="/book">
                   <CalendarDays data-icon="inline-start" />
@@ -76,9 +78,12 @@ export function PublicSiteFrame({
               </Button>
             </nav>
           ) : (
-            <span className="micro-label hidden text-muted-foreground sm:inline">
-              Онлајн резервација
-            </span>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="micro-label hidden text-muted-foreground sm:inline">
+                Онлајн резервација
+              </span>
+              <ThemeToggle />
+            </div>
           )}
         </div>
       </header>

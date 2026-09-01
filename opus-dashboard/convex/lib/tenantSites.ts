@@ -40,6 +40,7 @@ export const RESERVED_TENANT_SUBDOMAINS = new Set([
   "auth",
   "book",
   "booking",
+  "bookings",
   "cdn",
   "dashboard",
   "docs",

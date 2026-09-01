@@ -54,10 +54,20 @@ Configure the production Convex deployment, not the Vercel browser/runtime envir
 SITE_URL=https://studio.opus.mk
 BETTER_AUTH_SECRET=<long-random-secret>
 BOOKING_OTP_SECRET=<separate-long-random-secret>
-AUTH_EMAIL_MODE=resend
+AUTH_EMAIL_MODE=providers
 AUTH_TRUSTED_ORIGINS=https://studio.opus.mk
 RESEND_API_KEY=<resend-api-key>
-AUTH_EMAIL_FROM=noreply@opus.mk
+RESEND_WEBHOOK_SECRET=<resend-webhook-signing-secret>
+AUTH_EMAIL_PROVIDERS=resend,sender
+BOOKING_EMAIL_PROVIDERS=sender,resend
+REMINDER_EMAIL_PROVIDERS=sender
+SENDER_API_TOKEN=<sender-api-token>
+SENDER_SMTP_HOST=smtp.sender.net
+SENDER_SMTP_PORT=587
+SENDER_SMTP_USER=<sender-smtp-user>
+SENDER_SMTP_PASSWORD=<sender-smtp-password>
+AUTH_EMAIL_FROM='OPUS <login@auth.opus.mk>'
+BOOKING_EMAIL_FROM='OPUS <bookings@bookings.opus.mk>'
 ```
 
 From `opus-dashboard/`, non-secret values can be set explicitly against production:
@@ -65,7 +75,7 @@ From `opus-dashboard/`, non-secret values can be set explicitly against producti
 ```bash
 npx convex env set --prod SITE_URL https://studio.opus.mk
 npx convex env set --prod AUTH_TRUSTED_ORIGINS https://studio.opus.mk
-npx convex env set --prod AUTH_EMAIL_MODE resend
+npx convex env set --prod AUTH_EMAIL_MODE providers
 ```
 
 For secret values, omit the value and enter it interactively so it does not enter shell history:
@@ -74,9 +84,13 @@ For secret values, omit the value and enter it interactively so it does not ente
 npx convex env set --prod BETTER_AUTH_SECRET
 npx convex env set --prod BOOKING_OTP_SECRET
 npx convex env set --prod RESEND_API_KEY
+npx convex env set --prod RESEND_WEBHOOK_SECRET
+npx convex env set --prod SENDER_API_TOKEN
+npx convex env set --prod SENDER_SMTP_USER
+npx convex env set --prod SENDER_SMTP_PASSWORD
 ```
 
-`AUTH_TEST_OTP` and `ALLOW_DEV_DATA` must be absent from production. The public tenant websites do not run Better Auth and do not need to be trusted auth origins. Keep optional/deferred provider secrets out of production unless the corresponding feature is explicitly activated and verified.
+Do not enable the multi-provider order until both sending domains pass SPF, DKIM, and DMARC checks in both provider dashboards. The complete sequence and final sender-address commands live in [`EMAIL_PROVIDERS.md`](EMAIL_PROVIDERS.md). `AUTH_TEST_OTP` and `ALLOW_DEV_DATA` must be absent from production. The public tenant websites do not run Better Auth and do not need to be trusted auth origins.
 
 ## Vercel and Cloudflare
 
@@ -105,7 +119,7 @@ Vercel also advises against placing Cloudflare's reverse proxy in front of Verce
 2. Confirm the production Convex environment contains every required variable above and does not contain either development-only variable.
 3. Deploy `opus-landing/` and confirm `https://opus.mk` serves the landing page.
 4. Deploy `opus-dashboard/` with the production deploy key and confirm `https://studio.opus.mk/login`.
-5. Sign in through the real Resend OTP path and confirm the dashboard loads for an authorized staff member.
+5. Sign in through the real provider-routed OTP path and confirm the dashboard loads for an authorized staff member.
 6. Attach `*.opus.mk` to the dashboard project, complete Vercel nameserver setup, and confirm the wildcard certificate was issued.
 7. Confirm a random, unpublished subdomain returns the safe unavailable page rather than dashboard content.
 8. Publish one real test studio from the dashboard and open its `{slug}.opus.mk` homepage.

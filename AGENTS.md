@@ -107,7 +107,7 @@ Convex Backend (convex/)
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend for production OTP email plus optional/deferred Twilio and Anthropic integrations
+External APIs: Resend plus Sender for production transactional email, with optional/deferred Twilio and Anthropic integrations
 ```
 
 ---
@@ -146,7 +146,7 @@ ctx.db.query("bookings").collect();
 ## Convex Coding Rules
 
 - All mutation arguments must use `v.*` validators. No unvalidated input.
-- Never call Twilio or Resend from inside a mutation — use Convex **Actions** for all external API calls.
+- Never call Twilio, Resend, or Sender from inside a mutation — use Convex **Actions** for all external API calls.
 - No business logic in React components — logic lives in Convex functions.
 - Always query via named indexes (`.withIndex(...)`). Never use `.filter()` as the primary access path — it's a full table scan.
 - `ConvexError` for user-facing errors; `throw new Error` for internal failures.
@@ -198,7 +198,7 @@ The dormant AI front-desk foundation is designed to handle inbound WhatsApp, Ins
 
 ## Notifications
 
-Never call Twilio or Resend directly from mutations. Write to the `notifications` queue table; a scheduled Convex Action handles delivery and retries.
+Never call Twilio, Resend, or Sender directly from mutations. Write to the `notifications` queue table; a scheduled Convex Action handles delivery and retries.
 
 ---
 

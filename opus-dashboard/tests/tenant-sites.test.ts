@@ -42,6 +42,8 @@ describe("tenant site helpers", () => {
     expect(tenantSlugFromHost("opus.mk", "opus.mk")).toBeNull();
     expect(tenantSlugFromHost("www.opus.mk", "opus.mk")).toBeNull();
     expect(tenantSlugFromHost("studio.opus.mk", "opus.mk")).toBeNull();
+    expect(tenantSlugFromHost("auth.opus.mk", "opus.mk")).toBeNull();
+    expect(tenantSlugFromHost("bookings.opus.mk", "opus.mk")).toBeNull();
     expect(tenantSlugFromHost("nested.atelier.opus.mk", "opus.mk")).toBeNull();
     expect(tenantSlugFromHost("-atelier.opus.mk", "opus.mk")).toBeNull();
     expect(tenantSlugFromHost("atelier.example.com", "opus.mk")).toBeNull();

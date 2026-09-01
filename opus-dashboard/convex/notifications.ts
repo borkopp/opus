@@ -14,6 +14,19 @@ import {
 } from "./lib/bookingEmailNotifications";
 import { decryptBookingOtp } from "./lib/bookingEmailSecurity";
 import { wallClockNow } from "./lib/bookingTime";
+import {
+  deliverEmail,
+  emailFromForRoute,
+  EmailDeliveryFailure,
+  emailRouteForNotificationType,
+  providerOrderForRoute,
+} from "./lib/emailDelivery";
+import {
+  emailDeliveryStatusValidator,
+  emailProviderAttemptValidator,
+  emailProviderValidator,
+  type EmailProviderAttempt,
+} from "./lib/emailDeliveryTypes";
 import { isActiveIndustry } from "./lib/productScope";
 import {
   type AppointmentEmailData,
@@ -79,19 +92,13 @@ function configuredSiteUrl() {
   return (process.env.SITE_URL || "https://studio.opus.mk").replace(/\/$/, "");
 }
 
-function senderAddress() {
-  const configured = process.env.AUTH_EMAIL_FROM?.trim();
-  if (!configured) throw new Error("Email delivery requires AUTH_EMAIL_FROM.");
-  return configured.includes("<") ? configured : `OPUS <${configured}>`;
-}
+const NOTIFICATION_PROCESSING_LEASE_MS = 2 * 60 * 1_000;
 
-class DeliveryError extends Error {
-  constructor(
-    message: string,
-    readonly retryable: boolean,
-  ) {
-    super(message);
-  }
+function appendProviderAttempts(
+  existing: EmailProviderAttempt[] | undefined,
+  incoming: EmailProviderAttempt[] | undefined,
+) {
+  return [...(existing ?? []), ...(incoming ?? [])].slice(-12);
 }
 
 export const scheduleNotification = internalMutation({
@@ -139,7 +146,7 @@ export const scheduleNotification = internalMutation({
     });
 
     // Booking OTP delivery is awaited by the requesting action so the browser
-    // only advances after Resend accepts it. Scheduling it here as well would
+    // only advances after a configured provider accepts it. Scheduling it here as well would
     // create a race between two workers for the same one-time challenge.
     if (args.channel === "email" && args.type !== "booking_verification") {
       await ctx.scheduler.runAfter(
@@ -341,7 +348,7 @@ function deliverySkipReason(context: DeliveryContext) {
 
 function appointmentData(context: DeliveryContext): AppointmentEmailData {
   const data = asRecord(context.notification.templateData);
-  // Prefer the immutable queue snapshot so a retry with the same Resend
+  // Prefer the immutable queue snapshot so a retry with the same delivery
   // idempotency key always has the same payload. Current records remain the
   // fallback for older queued notification shapes.
   const startAt = numberValue(data.startAt) ?? context.booking?.startAt;
@@ -457,61 +464,31 @@ async function renderNotificationEmail(
   }
 }
 
-async function sendResendEmail(
-  notification: Doc<"notifications">,
-  email: RenderedEmail,
-) {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
-  if (!apiKey)
-    throw new DeliveryError("RESEND_API_KEY is not configured.", false);
-
-  let response: Response;
-  try {
-    response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": `opus-notification/${notification._id}`,
-      },
-      body: JSON.stringify({
-        from: senderAddress(),
-        to: [notification.recipientAddress],
-        subject: email.subject,
-        html: email.html,
-        text: email.text,
-        ...(email.attachments?.length
-          ? { attachments: email.attachments }
-          : {}),
-      }),
-    });
-  } catch (error) {
-    throw new DeliveryError(
-      error instanceof Error ? error.message : "Resend network request failed.",
-      true,
-    );
-  }
-
-  const responseBody = await response.text();
-  if (!response.ok) {
-    const retryable =
-      response.status === 408 ||
-      response.status === 409 ||
-      response.status === 429 ||
-      response.status >= 500;
-    throw new DeliveryError(
-      `Resend returned ${response.status}: ${responseBody.slice(0, 300)}`,
-      retryable,
-    );
-  }
-
-  try {
-    const parsed = JSON.parse(responseBody) as { id?: unknown };
-    return typeof parsed.id === "string" ? parsed.id : undefined;
-  } catch {
-    return undefined;
-  }
-}
+export const claimNotificationForProcessing = internalMutation({
+  args: {
+    notificationId: v.id("notifications"),
+    orgId: v.id("orgs"),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db.get(args.notificationId);
+    if (
+      !existing ||
+      existing.orgId !== args.orgId ||
+      existing.status !== "pending"
+    ) {
+      return false;
+    }
+    const now = Date.now();
+    if (
+      existing.processingStartedAt !== undefined &&
+      existing.processingStartedAt > now - NOTIFICATION_PROCESSING_LEASE_MS
+    ) {
+      return false;
+    }
+    await ctx.db.patch(args.notificationId, { processingStartedAt: now });
+    return true;
+  },
+});
 
 export const updateNotificationStatus = internalMutation({
   args: {
@@ -524,6 +501,9 @@ export const updateNotificationStatus = internalMutation({
     ),
     sentAt: v.optional(v.number()),
     externalMessageId: v.optional(v.string()),
+    deliveryProvider: v.optional(emailProviderValidator),
+    deliveryStatus: v.optional(emailDeliveryStatusValidator),
+    providerAttempts: v.optional(v.array(emailProviderAttemptValidator)),
     failureReason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -544,12 +524,22 @@ export const updateNotificationStatus = internalMutation({
       ...existing,
       templateData: redactedTemplateData,
     };
+    const now = Date.now();
     await ctx.db.patch(args.notificationId, {
       status: args.status,
       sentAt: args.sentAt,
       externalMessageId: args.externalMessageId,
+      deliveryProvider: args.deliveryProvider,
+      ...(args.deliveryStatus
+        ? { deliveryStatus: args.deliveryStatus, deliveryUpdatedAt: now }
+        : {}),
+      providerAttempts: appendProviderAttempts(
+        existing.providerAttempts,
+        args.providerAttempts,
+      ),
       failureReason: args.failureReason,
-      lastAttemptAt: Date.now(),
+      lastAttemptAt: now,
+      processingStartedAt: undefined,
       attemptCount: (existing.attemptCount ?? 0) + 1,
       ...(isBookingVerification ? { templateData: redactedTemplateData } : {}),
     });
@@ -574,6 +564,7 @@ export const recordNotificationFailure = internalMutation({
     orgId: v.id("orgs"),
     failureReason: v.string(),
     retryable: v.boolean(),
+    providerAttempts: v.optional(v.array(emailProviderAttemptValidator)),
   },
   handler: async (ctx, args): Promise<"retrying" | "failed"> => {
     const existing = await ctx.db.get(args.notificationId);
@@ -586,6 +577,10 @@ export const recordNotificationFailure = internalMutation({
     }
 
     const attemptCount = (existing.attemptCount ?? 0) + 1;
+    const providerAttempts = appendProviderAttempts(
+      existing.providerAttempts,
+      args.providerAttempts,
+    );
     const mayRetry =
       args.retryable &&
       existing.type !== "booking_verification" &&
@@ -598,8 +593,12 @@ export const recordNotificationFailure = internalMutation({
       await ctx.db.patch(args.notificationId, {
         status: "failed",
         failureReason: args.failureReason,
+        deliveryStatus: "failed",
+        deliveryUpdatedAt: Date.now(),
+        providerAttempts,
         attemptCount,
         lastAttemptAt: Date.now(),
+        processingStartedAt: undefined,
         ...(isBookingVerification
           ? { templateData: redactedTemplateData }
           : {}),
@@ -628,9 +627,11 @@ export const recordNotificationFailure = internalMutation({
     const scheduledFor = Date.now() + retryDelay;
     await ctx.db.patch(args.notificationId, {
       failureReason: args.failureReason,
+      providerAttempts,
       attemptCount,
       lastAttemptAt: Date.now(),
       scheduledFor,
+      processingStartedAt: undefined,
     });
     await ctx.scheduler.runAfter(
       retryDelay,
@@ -647,13 +648,32 @@ export const processIndividualNotification = internalAction({
     ctx,
     args,
   ): Promise<"sent" | "failed" | "retrying" | "cancelled" | "ignored"> => {
-    const context = await ctx.runQuery(
+    let context = await ctx.runQuery(
       internal.notifications.getNotificationDeliveryContext,
       args,
     );
     if (!context) return "ignored";
-    if (context.notification.status === "sent") return "sent";
+    if (
+      context.notification.status === "sent" ||
+      context.notification.status === "delivered"
+    ) {
+      return "sent";
+    }
     if (context.notification.status !== "pending") return "ignored";
+
+    const claimed = await ctx.runMutation(
+      internal.notifications.claimNotificationForProcessing,
+      {
+        notificationId: args.notificationId,
+        orgId: context.notification.orgId,
+      },
+    );
+    if (!claimed) return "ignored";
+    context = await ctx.runQuery(
+      internal.notifications.getNotificationDeliveryContext,
+      args,
+    );
+    if (!context || context.notification.status !== "pending") return "ignored";
 
     const skipReason = deliverySkipReason(context);
     if (skipReason) {
@@ -678,16 +698,46 @@ export const processIndividualNotification = internalAction({
 
     try {
       const email = await renderNotificationEmail(context);
-      const externalMessageId = await sendResendEmail(
-        context.notification,
-        email,
+      const route = emailRouteForNotificationType(context.notification.type);
+      const delivery = await deliverEmail(
+        {
+          from: emailFromForRoute(route),
+          to: context.notification.recipientAddress,
+          ...email,
+          idempotencyKey: `opus-notification/${context.notification._id}`,
+          tags: [
+            { name: "org_id", value: String(context.notification.orgId) },
+            {
+              name: "notification_id",
+              value: String(context.notification._id),
+            },
+            { name: "category", value: context.notification.type },
+          ],
+        },
+        {
+          providers: providerOrderForRoute(route),
+          route,
+          senderSmtp: async (message) =>
+            await ctx.runAction(internal.emailProviderNode.sendSenderSmtp, {
+              from: message.from,
+              to: message.to,
+              subject: message.subject,
+              html: message.html,
+              text: message.text,
+              attachments: message.attachments,
+              idempotencyKey: message.idempotencyKey,
+            }),
+        },
       );
       await ctx.runMutation(internal.notifications.updateNotificationStatus, {
         notificationId: args.notificationId,
         orgId: context.notification.orgId,
         status: "sent",
         sentAt: Date.now(),
-        externalMessageId,
+        externalMessageId: delivery.externalMessageId,
+        deliveryProvider: delivery.provider,
+        deliveryStatus: "accepted",
+        providerAttempts: delivery.attempts,
       });
       return "sent";
     } catch (error) {
@@ -699,7 +749,10 @@ export const processIndividualNotification = internalAction({
           notificationId: args.notificationId,
           orgId: context.notification.orgId,
           failureReason,
-          retryable: error instanceof DeliveryError ? error.retryable : false,
+          retryable:
+            error instanceof EmailDeliveryFailure ? error.retryable : false,
+          providerAttempts:
+            error instanceof EmailDeliveryFailure ? error.attempts : undefined,
         },
       );
     }

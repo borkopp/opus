@@ -24,7 +24,7 @@ export const LogoMark = ({ className }: LogoMarkProps) => (
   <svg
     viewBox="0 0 40 48"
     aria-hidden="true"
-    className={cn("h-[1.35em] w-auto shrink-0 fill-current", className)}
+    className={cn("h-[1.1em] w-auto shrink-0 fill-current", className)}
   >
     <path
       d="m40 32v-16c0-6.62742-5.3726-12-12-12h-16l-12 12h22c3.3137 0 6 2.6863 6 6v22z"
@@ -56,7 +56,7 @@ export const Logo = ({
       className={cn("inline-flex items-center gap-2", className)}
       aria-label="OPUS"
     >
-      <LogoMark className={"text-brand-primary"} />
+      <LogoMark className={cn("text-brand-primary", markClassName)} />
       <LogoWordmark className={wordmarkClassName} />
     </span>
   );

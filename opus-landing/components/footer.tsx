@@ -66,7 +66,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col items-start justify-between text-sm text-neutral-500 sm:flex-row md:px-8">
         <div>
           <Link href="/" className="mr-0 mb-4 md:mr-4 md:flex">
-            <Logo className="text-4xl md:text-5xl" />
+            <Logo className="text-4xl md:text-5xl" markClassName="h-[1.1em]" />
           </Link>
 
           <div className="mt-4 ml-2 flex items-center gap-3">

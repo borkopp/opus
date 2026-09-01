@@ -5,6 +5,11 @@ import { emailOTP } from "better-auth/plugins/email-otp";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
+import {
+  deliverEmail,
+  emailFromForRoute,
+  providerOrderForRoute,
+} from "./lib/emailDelivery";
 import { renderAccountOtpEmail } from "./lib/emailTemplates";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -81,32 +86,17 @@ async function deliverOtp({
     return;
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.AUTH_EMAIL_FROM;
-  if (!apiKey || !from) {
-    throw new Error(
-      "Email OTP delivery is not configured. Set RESEND_API_KEY and AUTH_EMAIL_FROM.",
-    );
-  }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
+  const rendered = renderAccountOtpEmail({ otp, type });
+  await deliverEmail(
+    {
+      from: emailFromForRoute("auth"),
+      to: email,
+      ...rendered,
+      idempotencyKey: `opus-auth/${crypto.randomUUID()}`,
+      tags: [{ name: "category", value: "auth_otp" }],
     },
-    body: JSON.stringify({
-      from: from.includes("<") ? from : `OPUS <${from}>`,
-      to: [email],
-      ...renderAccountOtpEmail({ otp, type }),
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Email OTP delivery failed with status ${response.status}.`,
-    );
-  }
+    { providers: providerOrderForRoute("auth"), route: "auth" },
+  );
 }
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => {

@@ -298,6 +298,34 @@ describe("public booking email flow", () => {
     expect(finalState.confirmation).toMatchObject({
       status: "sent",
       externalMessageId: "resend-message-id",
+      deliveryProvider: "resend",
+      deliveryStatus: "accepted",
+      providerAttempts: [
+        expect.objectContaining({
+          provider: "resend",
+          transport: "api",
+          status: "accepted",
+          externalMessageId: "resend-message-id",
+        }),
+      ],
+    });
+
+    const deliveredAt = Date.now();
+    await expect(
+      t.mutation(internal.emailWebhooks.recordResendDeliveryEvent, {
+        orgId: String(fixture.orgId),
+        notificationId: String(confirmation._id),
+        emailId: "resend-message-id",
+        eventType: "email.delivered",
+        eventAt: deliveredAt,
+      }),
+    ).resolves.toBe("recorded");
+    await expect(
+      t.run(async (ctx) => ctx.db.get(confirmation._id)),
+    ).resolves.toMatchObject({
+      status: "delivered",
+      deliveryStatus: "delivered",
+      deliveredAt,
     });
   });
 

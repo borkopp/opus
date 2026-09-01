@@ -49,13 +49,13 @@ Configure the local Convex deployment once before signing in:
 ```bash
 npx convex env set SITE_URL http://localhost:3000
 npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
-npx convex env set AUTH_EMAIL_MODE resend
+npx convex env set AUTH_EMAIL_MODE providers
 npx convex env set RESEND_API_KEY
-npx convex env set AUTH_EMAIL_FROM 'noreply@opus.mk'
+npx convex env set AUTH_EMAIL_FROM 'login@auth.opus.mk'
 npx convex env set AUTH_TRUSTED_ORIGINS http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001
 ```
 
-Local sign-in codes are sent through Resend. The key command prompts for the value so it does not enter shell history. To use terminal delivery on an isolated local deployment instead, set `AUTH_EMAIL_MODE` to `console`; console delivery is rejected for non-local sites.
+Local sign-in codes use the configured provider order; when no provider-order variables are set, Resend remains the safe default. The key command prompts for the value so it does not enter shell history. To use terminal delivery on an isolated local deployment instead, set `AUTH_EMAIL_MODE` to `console`; console delivery is rejected for non-local sites. See [`docs/EMAIL_PROVIDERS.md`](docs/EMAIL_PROVIDERS.md) before enabling Sender or changing production sender domains.
 
 ### Dormant marketplace
 

@@ -23,16 +23,14 @@ export default function Hero() {
       />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-32">
         <div>
-          <Badge href="https://studio.opus.mk">
-            {copy.badge}
-          </Badge>
+          <Badge href="https://studio.opus.mk">{copy.badge}</Badge>
         </div>
 
         <h1 className="mt-4 max-w-4xl text-4xl font-normal tracking-tight text-neutral-700 md:text-6xl dark:text-neutral-300">
           {copy.titleFirst}
           <br />
           {copy.titleSecond}{" "}
-          <span className="text-brand-primary font-lora text-5xl font-medium italic md:text-7xl">
+          <span className="text-brand-primary font-lora text-4xl font-medium italic md:text-6xl">
             {copy.titleAccent}
           </span>
         </h1>
@@ -44,9 +42,7 @@ export default function Hero() {
         <div className="mt-8 flex items-center gap-4">
           <Link href="https://studio.opus.mk">
             <Button>
-              <span className="flex items-center gap-2">
-                {copy.startFree}
-              </span>
+              <span className="flex items-center gap-2">{copy.startFree}</span>
             </Button>
           </Link>
           <Link href="/#product">

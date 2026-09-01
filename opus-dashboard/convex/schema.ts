@@ -1,5 +1,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  emailDeliveryStatusValidator,
+  emailProviderAttemptValidator,
+  emailProviderValidator,
+} from "./lib/emailDeliveryTypes";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OMNI-SERVICE OS — Convex Schema
@@ -873,10 +878,16 @@ export default defineSchema({
     ),
     scheduledFor: v.number(),
     sentAt: v.optional(v.number()),
+    deliveredAt: v.optional(v.number()),
     failureReason: v.optional(v.string()),
     externalMessageId: v.optional(v.string()),
+    deliveryProvider: v.optional(emailProviderValidator),
+    deliveryStatus: v.optional(emailDeliveryStatusValidator),
+    deliveryUpdatedAt: v.optional(v.number()),
+    providerAttempts: v.optional(v.array(emailProviderAttemptValidator)),
     attemptCount: v.optional(v.number()),
     lastAttemptAt: v.optional(v.number()),
+    processingStartedAt: v.optional(v.number()),
     dedupeKey: v.optional(v.string()),
 
     createdAt: v.number(),
@@ -891,7 +902,7 @@ export default defineSchema({
   // PUBLIC BOOKING EMAIL VERIFICATIONS
   // Short-lived, single-use challenges for unauthenticated tenant-site guests.
   // The OTP is stored only as a keyed hash; the queued delivery payload keeps
-  // an encrypted copy until Resend accepts the message.
+  // an encrypted copy until a configured provider accepts the message.
   // ─────────────────────────────────────────────────────
   booking_email_verifications: defineTable({
     orgId: v.id("orgs"),

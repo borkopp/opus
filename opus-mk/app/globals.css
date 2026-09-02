@@ -61,103 +61,103 @@
   --radius: 1rem;
 
   /* Canvas & Ink */
-  --background: #F6F6F3;
-  --foreground: #20211F;
-  --ink-surface: #20211F;
+  --background: #f6f6f3;
+  --foreground: #20211f;
+  --ink-surface: #20211f;
 
   /* Surface */
-  --card: #FFFFFF;
-  --card-foreground: #20211F;
+  --card: #ffffff;
+  --card-foreground: #20211f;
 
-  --popover: #FFFFFF;
-  --popover-foreground: #20211F;
+  --popover: #ffffff;
+  --popover-foreground: #20211f;
 
-  /* Brand Cobalt */
-  --brand: #2E52C7;
+  /* Brand Coral Primary */
+  --brand: #ff814a;
   --primary: var(--brand);
-  --primary-foreground: #FFFFFF;
+  --primary-foreground: #ffffff;
 
-  --secondary: #F0F0EC;
-  --secondary-foreground: #20211F;
+  --secondary: #f0f0ec;
+  --secondary-foreground: #20211f;
 
-  --muted: #EAEAE5;
-  --muted-foreground: #686A65;
+  --muted: #eaeae5;
+  --muted-foreground: #686a65;
 
-  --accent: #E6EBFF;
-  --accent-foreground: #2E52C7;
+  --accent: #fff0ea;
+  --accent-foreground: #d4561d;
 
-  --destructive: #B54742;
-  --destructive-foreground: #FFFFFF;
-  --warning: #A7643F;
-  --info: #2E52C7;
+  --destructive: #b54742;
+  --destructive-foreground: #ffffff;
+  --warning: #a7643f;
+  --info: #ff814a;
 
-  --border: #DCDDD7;
-  --input: #DCDDD7;
-  --ring: #2E52C7;
+  --border: #dcddd7;
+  --input: #dcddd7;
+  --ring: #ff814a;
 
   /* Semantic tokens */
-  --highlight: #F2B08C;
-  --brand-soft: #E6EBFF;
-  --rating: #F2B08C;
-  --success: #2F765F;
-  --danger: #B54742;
-  --online: #2F765F;
-  --surface-elevated: #FFFFFF;
+  --highlight: #f2b08c;
+  --brand-soft: #fff0ea;
+  --rating: #f2b08c;
+  --success: #2f765f;
+  --danger: #b54742;
+  --online: #2f765f;
+  --surface-elevated: #ffffff;
 
-  --chart-1: #2E52C7;
-  --chart-2: #20211F;
-  --chart-3: #F2B08C;
-  --chart-4: #2F765F;
-  --chart-5: #E6EBFF;
+  --chart-1: #ff814a;
+  --chart-2: #20211f;
+  --chart-3: #f2b08c;
+  --chart-4: #2f765f;
+  --chart-5: #fff0ea;
 }
 
-/* ─── OPUS Design System — Dark Mode (Ink-based Adaptation) ─── */
+/* ─── OPUS Design System — Dark Mode (Neutral Charcoal) ─── */
 .dark {
   --background: #181917;
-  --foreground: #F3F3EF;
+  --foreground: #f3f3ef;
   --ink-surface: #111210;
 
-  --card: #21211F;
-  --card-foreground: #F3F3EF;
+  --card: #21211f;
+  --card-foreground: #f3f3ef;
 
   --popover: #282926;
-  --popover-foreground: #F3F3EF;
+  --popover-foreground: #f3f3ef;
 
-  --brand: #486EEA;
+  --brand: #ff814a;
   --primary: var(--brand);
-  --primary-foreground: #FFFFFF;
+  --primary-foreground: #ffffff;
 
-  --secondary: #2B2C29;
-  --secondary-foreground: #F3F3EF;
+  --secondary: #2b2c29;
+  --secondary-foreground: #f3f3ef;
 
   --muted: #242522;
-  --muted-foreground: #A4A59F;
+  --muted-foreground: #a4a59f;
 
-  --accent: rgba(72, 110, 234, 0.18);
-  --accent-foreground: #F3F3EF;
+  --accent: rgba(255, 129, 74, 0.16);
+  --accent-foreground: #ff814a;
 
-  --destructive: #D45B56;
-  --destructive-foreground: #FFFFFF;
-  --warning: #F2B08C;
-  --info: #87A1FF;
+  --destructive: #d45b56;
+  --destructive-foreground: #ffffff;
+  --warning: #f2b08c;
+  --info: #ff9b6a;
 
   --border: rgba(220, 221, 215, 0.14);
   --input: rgba(220, 221, 215, 0.2);
-  --ring: #486EEA;
+  --ring: #ff814a;
 
-  --highlight: #F2B08C;
-  --brand-soft: rgba(72, 110, 234, 0.2);
-  --rating: #F2B08C;
-  --success: #3DA182;
-  --danger: #D45B56;
-  --online: #3DA182;
-  --surface-elevated: #21211F;
+  --highlight: #f2b08c;
+  --brand-soft: rgba(255, 129, 74, 0.16);
+  --rating: #f2b08c;
+  --success: #3da182;
+  --danger: #d45b56;
+  --online: #3da182;
+  --surface-elevated: #21211f;
 
-  --chart-1: #486EEA;
-  --chart-2: #F3F3EF;
-  --chart-3: #F2B08C;
-  --chart-4: #3DA182;
-  --chart-5: rgba(72, 110, 234, 0.3);
+  --chart-1: #ff814a;
+  --chart-2: #f3f3ef;
+  --chart-3: #f2b08c;
+  --chart-4: #3da182;
+  --chart-5: rgba(255, 129, 74, 0.25);
 }
 
 @layer base {

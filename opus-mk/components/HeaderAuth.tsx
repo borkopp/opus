@@ -19,7 +19,7 @@ export function HeaderAuth() {
   const router = useRouter();
 
   if (isLoading) {
-    return <div className="w-7 h-7 rounded-full bg-secondary animate-pulse" />;
+    return <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse border border-white/10" />;
   }
 
   if (!isAuthenticated) {
@@ -27,7 +27,7 @@ export function HeaderAuth() {
     return (
       <Link
         href={`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-        className="rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-secondary/80"
+        className="rounded-full bg-black/40 px-3.5 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-md border border-white/10 transition-colors hover:bg-black/60 hover:text-white"
       >
         Sign in
       </Link>
@@ -38,7 +38,7 @@ export function HeaderAuth() {
     <div className="flex items-center gap-1.5">
       <Link
         href="/my-bookings"
-        className="flex h-8 items-center gap-1.5 rounded-full bg-secondary px-2.5 text-xs font-semibold text-primary transition-colors hover:bg-secondary/80"
+        className="flex h-8 items-center gap-1.5 rounded-full bg-black/40 px-3 text-xs font-semibold text-white/90 backdrop-blur-md border border-white/10 transition-colors hover:bg-black/60 hover:text-white"
         aria-label="My bookings"
       >
         <IconCalendarEvent size={15} aria-hidden="true" />
@@ -54,7 +54,7 @@ export function HeaderAuth() {
             router.refresh();
           });
         }}
-        className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        className="flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition-colors hover:bg-white/10 hover:text-white"
         aria-label="Sign out"
         title="Sign out"
       >

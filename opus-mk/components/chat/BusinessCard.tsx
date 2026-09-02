@@ -1,23 +1,34 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { IconStarFilled, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconStarFilled,
+  IconMapPin,
+  IconClock,
+  IconArrowRight,
+} from "@tabler/icons-react";
 
 export type Recommendation = {
   orgId: string;
   slug: string;
-  reason: string;
-  availabilityHint?: string;
   name?: string;
+  reason?: string;
+  availabilityHint?: string;
+  availableSlot?: string;
+  coverImageUrl?: string;
   logoUrl?: string;
   averageRating?: number;
   reviewCount?: number;
   city?: string;
+  neighborhood?: string;
+  services?: Array<{ name: string; price: string }>;
   distanceM?: number;
   isOpenNow?: boolean;
   closesAt?: string | null;
   opensAt?: string | null;
   bookingUrl?: string;
+  tags?: string[];
 };
 
 function formatDistance(m: number): string {
@@ -25,124 +36,132 @@ function formatDistance(m: number): string {
   return `${(m / 1000).toFixed(1)}km`;
 }
 
-// Returns minutes remaining until closesAt (HH:MM), accounting for overnight spans.
-function minutesUntilClose(closesAt: string): number {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Belgrade",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(new Date());
-  const h = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-  const m = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
-  const nowMins = h * 60 + m;
-
-  const [ch, cm] = closesAt.split(":").map(Number);
-  const closeMins = ch * 60 + cm;
-
-  const diff = closeMins > nowMins ? closeMins - nowMins : closeMins + 1440 - nowMins;
-  return diff;
-}
-
-function formatCloseTime(closesAt: string): string {
-  const [h, m] = closesAt.split(":").map(Number);
-  const period = h >= 12 ? "pm" : "am";
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return m === 0 ? `${h12}${period}` : `${h12}:${m.toString().padStart(2, "0")}${period}`;
-}
-
 export function BusinessCard({ rec }: { rec: Recommendation }) {
   const displayName = rec.name ?? rec.slug;
-
-  const minsLeft = rec.isOpenNow && rec.closesAt ? minutesUntilClose(rec.closesAt) : null;
-  const closingSoon = minsLeft !== null && minsLeft <= 60;
+  const locationLabel =
+    [rec.neighborhood, rec.city].filter(Boolean).join(", ") ||
+    rec.city ||
+    "Skopje";
+  const targetUrl = rec.bookingUrl || `/${rec.slug}`;
 
   return (
-    <Link
-      href={`/${rec.slug}`}
-      className="group flex gap-0 rounded-2xl overflow-hidden border border-border/40 hover:border-border hover:shadow-sm transition-[border-color,box-shadow] duration-150 active:scale-[0.98] bg-card"
-    >
-      {/* Open/closed accent bar */}
-      <div
-        className={`w-1 shrink-0 ${
-          closingSoon
-            ? "bg-warning/70"
-            : rec.isOpenNow
-            ? "bg-success/60"
-            : "bg-danger/30"
-        }`}
-      />
-
-      {/* Body */}
-      <div className="flex-1 min-w-0 px-3.5 py-3">
-        {/* Name + status row */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold text-[14px] truncate">{displayName}</span>
-          <div className="flex items-center gap-2 shrink-0">
-            {rec.isOpenNow !== undefined && (
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  closingSoon
-                    ? "bg-warning/15 text-warning"
-                    : rec.isOpenNow
-                    ? "bg-success/15 text-success"
-                    : "bg-danger/10 text-danger/80"
-                }`}
-              >
-                {rec.isOpenNow ? "Open" : "Closed"}
-              </span>
+    <div className="group rounded-2xl bg-card border border-border/50 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-lg overflow-hidden">
+      <div className="p-3.5 sm:p-4 flex flex-col gap-3">
+        {/* Top row: Image + Info */}
+        <div className="flex gap-3.5 items-start">
+          {/* Cover Thumbnail */}
+          <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-xl overflow-hidden bg-secondary shrink-0 border border-border/40">
+            {rec.coverImageUrl ? (
+              <Image
+                src={rec.coverImageUrl}
+                alt={displayName}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 80px, 96px"
+              />
+            ) : rec.logoUrl ? (
+              <Image
+                src={rec.logoUrl}
+                alt={displayName}
+                fill
+                className="object-cover"
+                sizes="80px"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center font-bold text-lg text-primary bg-primary/10">
+                {displayName.charAt(0)}
+              </div>
             )}
-            <IconChevronRight
-              size={14}
-              className="text-muted-foreground/30 group-hover:text-muted-foreground transition-colors"
-            />
+          </div>
+
+          {/* Core Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <Link href={targetUrl} className="block min-w-0">
+                <h3 className="font-bold text-[15px] sm:text-[16px] text-foreground hover:text-primary transition-colors truncate">
+                  {displayName}
+                </h3>
+              </Link>
+
+              {rec.averageRating != null && rec.averageRating > 0 && (
+                <div className="flex items-center gap-1 shrink-0 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                  <IconStarFilled size={11} className="text-[#f2b08c]" />
+                  <span className="text-xs font-bold text-foreground">
+                    {rec.averageRating.toFixed(1)}
+                  </span>
+                  {rec.reviewCount != null && (
+                    <span className="text-[10px] text-muted-foreground">
+                      ({rec.reviewCount})
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Location & Distance */}
+            <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground truncate">
+              <div className="flex items-center gap-1 truncate">
+                <IconMapPin size={13} className="shrink-0 text-muted-foreground/70" />
+                <span className="truncate">{locationLabel}</span>
+              </div>
+              {rec.distanceM != null && (
+                <span className="shrink-0">• {formatDistance(rec.distanceM)}</span>
+              )}
+            </div>
+
+            {/* Availability / Slot Pill */}
+            {(rec.availableSlot || rec.availabilityHint) && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                <IconClock size={13} className="shrink-0 animate-pulse" />
+                <span>{rec.availableSlot || rec.availabilityHint}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Reason — only when there's actual descriptive text */}
+        {/* Reason / Context */}
         {rec.reason && (
-          <p className="text-[12px] text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-foreground/85 leading-relaxed bg-secondary/60 rounded-xl p-2.5 border border-border/30">
             {rec.reason}
           </p>
         )}
 
-        {/* Meta row */}
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
-          {rec.averageRating != null && rec.averageRating > 0 && (
-            <div className="flex items-center gap-1 text-[11px]">
-              <IconStarFilled size={10} className="text-rating" />
-              <span className="font-semibold">{rec.averageRating.toFixed(1)}</span>
-              {rec.reviewCount != null && (
-                <span className="text-muted-foreground">({rec.reviewCount})</span>
-              )}
-            </div>
-          )}
+        {/* Popular Services Chips */}
+        {rec.services && rec.services.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {rec.services.map((svc, idx) => (
+              <span
+                key={idx}
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-secondary text-foreground/85 border border-border/40"
+              >
+                {svc.name} · <strong className="text-primary">{svc.price}</strong>
+              </span>
+            ))}
+          </div>
+        )}
 
-          {rec.distanceM != null && (
-            <span className="text-[11px] text-muted-foreground">
-              {formatDistance(rec.distanceM)} away
-            </span>
-          )}
+        {/* Action Footer */}
+        <div className="pt-2 border-t border-border/30 flex items-center justify-between gap-3">
+          <div className="text-[11px] text-muted-foreground">
+            {rec.isOpenNow ? (
+              <span className="text-emerald-500 font-medium">● Open now</span>
+            ) : rec.closesAt ? (
+              <span>Closes {rec.closesAt}</span>
+            ) : (
+              <span>Instant Confirmation</span>
+            )}
+          </div>
 
-          {rec.isOpenNow && rec.closesAt && (
-            <span
-              className={`text-[11px] font-medium ${
-                closingSoon ? "text-warning" : "text-muted-foreground"
-              }`}
-            >
-              Closes {formatCloseTime(rec.closesAt)}
-              {closingSoon && minsLeft != null && ` · ${minsLeft}m`}
-            </span>
-          )}
-
-          {!rec.isOpenNow && rec.opensAt && (
-            <span className="text-[11px] text-muted-foreground">
-              Opens {rec.opensAt}
-            </span>
-          )}
+          <Link
+            href={targetUrl}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+          >
+            <span>Book Appointment</span>
+            <IconArrowRight size={13} />
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
+

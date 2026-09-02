@@ -1,35 +1,85 @@
-import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { Audiowide } from "next/font/google";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const audiowide = Audiowide({
   weight: "400",
   subsets: ["latin"],
 });
 
-export const Logo = ({ className }: { className?: string }) => {
+type LogoMarkProps = {
+  className?: string;
+};
+
+type LogoWordmarkProps = {
+  className?: string;
+};
+
+type LogoProps = {
+  className?: string;
+  markClassName?: string;
+  wordmarkClassName?: string;
+  href?: string;
+};
+
+export const LogoMark = ({ className }: LogoMarkProps) => (
+  <svg
+    viewBox="0 0 40 48"
+    aria-hidden="true"
+    className={cn("h-[1.35em] w-auto shrink-0 fill-current", className)}
+  >
+    <path
+      d="m40 32v-16c0-6.62742-5.3726-12-12-12h-16l-12 12h22c3.3137 0 6 2.6863 6 6v22z"
+      opacity=".3"
+    />
+    <path d="m.0000014 16-.0000014 16c-.00000058 6.6274 5.37258 12 12 12h16l12-12h-20c-4.4183 0-8-3.5817-8-8v-20z" />
+  </svg>
+);
+
+export const LogoWordmark = ({ className }: LogoWordmarkProps) => (
+  <span
+    className={cn(
+      audiowide.className,
+      "uppercase leading-none tracking-wider text-current",
+      className,
+    )}
+  >
+    OPUS
+  </span>
+);
+
+export const Logo = ({
+  className,
+  markClassName,
+  wordmarkClassName,
+  href = "/",
+}: LogoProps) => {
+  const content = (
+    <>
+      <LogoMark className={markClassName} />
+      <LogoWordmark className={wordmarkClassName} />
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={cn("inline-flex items-center gap-2 text-[#ff814a]", className)}
+        aria-label="OPUS"
+      >
+        {content}
+      </Link>
+    );
+  }
+
   return (
-    <Link
-      href="/"
+    <span
+      className={cn("inline-flex items-center gap-2 text-[#ff814a]", className)}
       aria-label="OPUS"
-      className={cn("inline-flex items-center gap-2 text-[#CE5D45]", className)}
     >
-      <svg
-        viewBox="0 0 38 48"
-        aria-hidden="true"
-        className="h-[1.35em] w-auto shrink-0 fill-current"
-      >
-        <path d="M0 24c0-4.0995 1.29832-7.8957 3.50621-11h9.49379v1.7789c-3.01021 1.9627-5 5.3595-5 9.2211 0 6.0751 4.9249 11 11 11v8c-10.49341 0-19-8.5066-19-19z" />
-        <path d="m34.4938 35c2.2079-3.1043 3.5062-6.9005 3.5062-11 0-10.4934-8.5066-19-19-19v8c6.0751 0 11 4.9249 11 11 0 3.8616-1.9898 7.2584-5 9.2211v1.7789z" />
-      </svg>
-      <span
-        className={cn(
-          audiowide.className,
-          "uppercase tracking-wider text-current",
-        )}
-      >
-        OPUS
-      </span>
-    </Link>
+      {content}
+    </span>
   );
 };
+

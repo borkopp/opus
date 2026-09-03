@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 import { motion } from "framer-motion";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 
 type StatusFilter = "all" | "active" | "handed_off" | "resolved";
 
@@ -18,6 +19,7 @@ function DormantAIInboxPage() {
   const { t } = useDashboardI18n();
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId as Id<"orgs"> | undefined;
+  const isPaid = profile?.plan === "paid";
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedId, setSelectedId] = useState<Id<"ai_conversations"> | null>(
@@ -26,12 +28,16 @@ function DormantAIInboxPage() {
 
   const conversations = useQuery(
     api.ai.conversations.listConversations,
-    orgId
+    orgId && isPaid
       ? { orgId, status: statusFilter === "all" ? undefined : statusFilter }
       : "skip",
   );
 
-  if (!orgId || profile === undefined || conversations === undefined) {
+  if (
+    !orgId ||
+    profile === undefined ||
+    (isPaid && conversations === undefined)
+  ) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
@@ -40,6 +46,15 @@ function DormantAIInboxPage() {
   }
 
   return (
+    <PaidFeatureOverlay
+      locked={!isPaid}
+      featureLabel={t(
+        "AI inbox requires OPUS Pro",
+        "AI сандачето бара OPUS Pro",
+      )}
+      className="flex min-h-full flex-1"
+      contentClassName="flex min-h-full flex-1"
+    >
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -70,7 +85,7 @@ function DormantAIInboxPage() {
         {/* Left: conversation list */}
         <div className="w-80 shrink-0">
           <ConversationList
-            conversations={conversations}
+            conversations={conversations ?? []}
             selectedId={selectedId}
             onSelect={setSelectedId}
             statusFilter={statusFilter}
@@ -99,6 +114,7 @@ function DormantAIInboxPage() {
         </div>
       </div>
     </motion.div>
+    </PaidFeatureOverlay>
   );
 }
 

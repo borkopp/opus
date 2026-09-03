@@ -7,18 +7,25 @@ import { GapList } from "./_components/GapList";
 import { redirect } from "next/navigation";
 import { ACTIVE_CAPABILITIES } from "@/lib/product-scope";
 import { motion } from "framer-motion";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 function GapOptimizerContent() {
+    const { t } = useDashboardI18n();
     const { isAuthenticated, isLoading } = useConvexAuth();
     const profile = useQuery(
         api.users.getMyProfile,
         isAuthenticated ? {} : "skip",
     );
     const orgId = profile?.orgId;
+    const isPaid = profile?.plan === "paid";
 
-    const openGaps = useQuery(api.ai.gapOptimizerHelpers.getOpenGapsForOrg, orgId ? { orgId } : "skip");
+    const openGaps = useQuery(
+        api.ai.gapOptimizerHelpers.getOpenGapsForOrg,
+        orgId && isPaid ? { orgId } : "skip",
+    );
 
-    if (isLoading || profile === undefined || openGaps === undefined) {
+    if (isLoading || profile === undefined || (isPaid && openGaps === undefined)) {
         return (
             <div className="flex h-[400px] w-full items-center justify-center">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
@@ -29,6 +36,15 @@ function GapOptimizerContent() {
     if (!orgId) return null;
 
     return (
+        <PaidFeatureOverlay
+            locked={!isPaid}
+            featureLabel={t(
+                "Gap optimizer requires OPUS Pro",
+                "Оптимизаторот на празни термини бара OPUS Pro",
+            )}
+            className="mx-auto flex min-h-full w-full max-w-5xl flex-1"
+            contentClassName="flex min-h-full w-full flex-1"
+        >
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -37,9 +53,10 @@ function GapOptimizerContent() {
         >
             <GapOptimizerHeader orgId={orgId} />
             <div className="flex-1 overflow-y-auto">
-                <GapList gaps={openGaps} orgId={orgId} />
+                <GapList gaps={openGaps ?? []} orgId={orgId} />
             </div>
         </motion.div>
+        </PaidFeatureOverlay>
     );
 }
 

@@ -1,7 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { internalQuery, internalMutation, query, mutation } from "../_generated/server";
 import { Doc } from "../_generated/dataModel";
-import { requireAuth, requireRole } from "../lib/auth";
+import { requireAuth, requirePaidPlan, requireRole } from "../lib/auth";
 
 export const MIN_TOTAL_VISITS = 3;
 export const RECENCY_WINDOW_DAYS = 180;
@@ -14,6 +14,9 @@ export const rankCandidatesForGap = internalQuery({
     },
     handler: async (ctx, args) => {
         const { orgId, staffId } = args;
+        const org = await ctx.db.get(orgId);
+        if (!org || org.isDeleted) throw new ConvexError("Business not found");
+        requirePaidPlan(org, "Gap optimizer");
 
         const allOrgCustomers = await ctx.db
             .query("customers")
@@ -99,20 +102,26 @@ export const approveAndSendCandidate = mutation({
         candidateId: v.id("gap_outreach_candidates"),
     },
     handler: async (ctx, args) => {
-        await requireRole(ctx, args.orgId, "manager");
+        const { org } = await requireRole(ctx, args.orgId, "manager");
+        requirePaidPlan(org, "Gap optimizer");
 
         const candidate = await ctx.db.get(args.candidateId);
-        if (!candidate) throw new ConvexError("Candidate not found");
+        if (!candidate || candidate.orgId !== args.orgId) {
+            throw new ConvexError("Candidate not found");
+        }
 
         const gap = await ctx.db.get(candidate.gapSuggestionId);
-        if (!gap) throw new ConvexError("Gap not found");
+        if (!gap || gap.orgId !== args.orgId) throw new ConvexError("Gap not found");
 
         const customer = await ctx.db.get(candidate.customerId);
-        if (!customer) throw new ConvexError("Customer not found");
+        if (!customer || customer.orgId !== args.orgId) {
+            throw new ConvexError("Customer not found");
+        }
 
         const staff = await ctx.db.get(gap.staffId);
-        const org = await ctx.db.get(args.orgId);
-        if (!org || org.isDeleted) throw new ConvexError("Business not found");
+        if (!staff || staff.orgId !== args.orgId) {
+            throw new ConvexError("Staff member not found");
+        }
 
         const bookingLink = `https://opus.mk/${org.slug}/book`;
 
@@ -168,7 +177,12 @@ export const dismissGap = mutation({
         gapId: v.id("gap_suggestions")
     },
     handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
+        const { org } = await requireAuth(ctx, args.orgId);
+        requirePaidPlan(org, "Gap optimizer");
+        const gap = await ctx.db.get(args.gapId);
+        if (!gap || gap.orgId !== args.orgId) {
+            throw new ConvexError("Gap not found");
+        }
         await ctx.db.patch(args.gapId, { status: "dismissed", updatedAt: Date.now() });
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
@@ -187,7 +201,12 @@ export const dismissCandidate = mutation({
         candidateId: v.id("gap_outreach_candidates")
     },
     handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
+        const { org } = await requireAuth(ctx, args.orgId);
+        requirePaidPlan(org, "Gap optimizer");
+        const candidate = await ctx.db.get(args.candidateId);
+        if (!candidate || candidate.orgId !== args.orgId) {
+            throw new ConvexError("Candidate not found");
+        }
         await ctx.db.patch(args.candidateId, { status: "skipped", updatedAt: Date.now() });
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
@@ -203,7 +222,8 @@ export const dismissCandidate = mutation({
 export const getOpenGapsForOrg = query({
     args: { orgId: v.id("orgs") },
     handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
+        const { org } = await requireAuth(ctx, args.orgId);
+        requirePaidPlan(org, "Gap optimizer");
         
         const gaps = await ctx.db
             .query("gap_suggestions")
@@ -247,7 +267,8 @@ export const getOpenGapsForOrg = query({
 export const getTodaySummary = query({
     args: { orgId: v.id("orgs") },
     handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
+        const { org } = await requireAuth(ctx, args.orgId);
+        requirePaidPlan(org, "Gap optimizer");
         
         // Find gaps for today
         const dateStr = new Date().toISOString().split("T")[0]; // Also rough
@@ -295,6 +316,9 @@ export const getTodaySummary = query({
 export const getOrgSettingsAndStaff = internalQuery({
     args: { orgId: v.id("orgs"), staffIds: v.optional(v.array(v.id("staff_members"))) },
     handler: async (ctx, args) => {
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new ConvexError("Business not found");
+        requirePaidPlan(org, "Gap optimizer");
         const orgSettings = await ctx.db
             .query("org_settings")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))
@@ -304,7 +328,9 @@ export const getOrgSettingsAndStaff = internalQuery({
         if (args.staffIds && args.staffIds.length > 0) {
             for (const sid of args.staffIds) {
                 const s = await ctx.db.get(sid);
-                if (s && s.isActive && !s.isDeleted) activeStaff.push(s);
+                if (s && s.orgId === args.orgId && s.isActive && !s.isDeleted) {
+                    activeStaff.push(s);
+                }
             }
         } else {
             activeStaff = await ctx.db
@@ -350,6 +376,9 @@ export const persistGapAndCandidates = internalMutation({
         }))
     },
     handler: async (ctx, args) => {
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new ConvexError("Business not found");
+        requirePaidPlan(org, "Gap optimizer");
         // Check for duplicates
         const existingGaps = await ctx.db
             .query("gap_suggestions")
@@ -406,6 +435,9 @@ export const logScanCompleted = internalMutation({
         gapsFound: v.number()
     },
     handler: async (ctx, args) => {
+        const org = await ctx.db.get(args.orgId);
+        if (!org || org.isDeleted) throw new ConvexError("Business not found");
+        requirePaidPlan(org, "Gap optimizer");
         await ctx.db.insert("audit_log", {
             orgId: args.orgId,
             actorType: "ai",

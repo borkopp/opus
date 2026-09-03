@@ -287,6 +287,7 @@ export default function SettingsPage() {
           <GapOptimizerTab
             key={`gaps-${settings.updatedAt}`}
             orgId={orgId}
+            isPaid={org.plan === "paid"}
             initialData={{
               gapOptimizerEnabled: settings.gapOptimizerEnabled ?? false,
               gapOptimizerMinGapMins: settings.gapOptimizerMinGapMins ?? 30,
@@ -303,6 +304,7 @@ export default function SettingsPage() {
           <AiOperatorTab
             key={`ai-${settings.updatedAt}`}
             orgId={orgId}
+            isPaid={org.plan === "paid"}
             initialData={{
               aiEnabled: settings.aiEnabled,
               aiPersonaName: settings.aiPersonaName,

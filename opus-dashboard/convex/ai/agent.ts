@@ -314,6 +314,11 @@ export const processMessage = internalAction({
     channel: v.union(v.literal("instagram"), v.literal("webchat")),
   },
   handler: async (ctx, args): Promise<{ reply: string; confidence: number; handedOff: boolean }> => {
+    await ctx.runQuery(internal.auth.assertPaidOrg, {
+      orgId: args.orgId,
+      feature: "AI front desk",
+    });
+
     const settings = await ctx.runQuery(internal.orgSettings.getOrgSettingsInternal, {
       orgId: args.orgId,
     });
@@ -495,6 +500,11 @@ export const processMessagePublic = action({
     channel: v.union(v.literal("instagram"), v.literal("webchat")),
   },
   handler: async (ctx, args): Promise<{ reply: string; confidence: number; handedOff: boolean }> => {
+    await ctx.runQuery(internal.auth.assertPaidOrg, {
+      orgId: args.orgId,
+      feature: "AI front desk",
+    });
+
     // Validate AI is enabled
     const settings = await ctx.runQuery(internal.orgSettings.getOrgSettingsInternal, {
       orgId: args.orgId,

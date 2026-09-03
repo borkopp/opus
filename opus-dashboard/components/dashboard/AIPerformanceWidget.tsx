@@ -11,6 +11,7 @@ import { api } from "@/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 
 function StatCounter({
   value,
@@ -55,12 +56,22 @@ function StatCounter({
 }
 
 interface AIPerformanceProps {
-  aiPerformance: FunctionReturnType<typeof api.dashboard.getAIPerformance>;
+  aiPerformance: FunctionReturnType<typeof api.dashboard.getAIPerformance> | null;
+  isPaid: boolean;
 }
 
-export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
+export function AIPerformanceWidget({
+  aiPerformance,
+  isPaid,
+}: AIPerformanceProps) {
   const { locale, t } = useDashboardI18n();
-  const enabled = aiPerformance?.aiEnabled ?? false;
+  const performance = aiPerformance ?? {
+    aiEnabled: false,
+    totalConversations: 0,
+    handoffRate: 0,
+    bookingRate: 0,
+  };
+  const enabled = performance.aiEnabled;
 
   const containerVars = {
     hidden: { opacity: 0, y: 15 },
@@ -92,6 +103,15 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
       animate="visible"
       className="h-full"
     >
+      <PaidFeatureOverlay
+        locked={!isPaid}
+        featureLabel={t(
+          "AI front desk requires OPUS Pro",
+          "AI рецепцијата бара OPUS Pro",
+        )}
+        compact
+        className="h-full"
+      >
       <Card className="flex flex-col h-full p-6 col-span-1 lg:col-span-1 relative overflow-hidden group">
         <div className="flex justify-between items-start mb-6 relative z-10">
           <div className="flex items-center gap-4">
@@ -138,7 +158,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                 <div className="flex items-baseline gap-2">
                   <motion.span className="text-5xl font-display font-black text-foreground tracking-tight">
                     <StatCounter
-                      value={aiPerformance.totalConversations}
+                      value={performance.totalConversations}
                       locale={locale}
                     />
                   </motion.span>
@@ -157,7 +177,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                     </span>
                     <span className="text-sm font-black text-accent-foreground font-display">
                       <StatCounter
-                        value={aiPerformance.bookingRate}
+                        value={performance.bookingRate}
                         locale={locale}
                         suffix="%"
                         decimals={1}
@@ -167,7 +187,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                   <div className="h-3.5 w-full bg-muted/30 rounded-full border border-foreground/[0.03] p-0.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.25)] flex items-center overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${aiPerformance.bookingRate}%` }}
+                      animate={{ width: `${performance.bookingRate}%` }}
                       transition={{
                         duration: 1.5,
                         ease: [0.25, 1, 0.5, 1],
@@ -185,7 +205,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                     </span>
                     <span className="text-sm font-black text-muted-foreground font-display">
                       <StatCounter
-                        value={aiPerformance.handoffRate}
+                        value={performance.handoffRate}
                         locale={locale}
                         suffix="%"
                         decimals={1}
@@ -195,7 +215,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
                   <div className="h-3.5 w-full bg-muted/30 rounded-full border border-foreground/[0.03] p-0.5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.25)] flex items-center overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${aiPerformance.handoffRate}%` }}
+                      animate={{ width: `${performance.handoffRate}%` }}
                       transition={{
                         duration: 1.5,
                         ease: [0.25, 1, 0.5, 1],
@@ -262,6 +282,7 @@ export function AIPerformanceWidget({ aiPerformance }: AIPerformanceProps) {
           </div>
         )}
       </Card>
+      </PaidFeatureOverlay>
     </motion.div>
   );
 }

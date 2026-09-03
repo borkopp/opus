@@ -148,7 +148,7 @@ export const startBeautyBusiness = mutation({
       slug,
       industry: "beauty_wellness",
       beautyCategory: args.category,
-      plan: "starter",
+      plan: "free",
       listingStatus: "unpublished",
       websiteStatus: "unpublished",
       reviewCount: 0,

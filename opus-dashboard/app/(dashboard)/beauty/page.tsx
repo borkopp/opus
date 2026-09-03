@@ -52,6 +52,7 @@ export default function DashboardHome() {
     api.orgSettings.getOrgSettings,
     orgId ? { orgId } : "skip",
   );
+  const isPaid = orgSettingsData?.org.plan === "paid";
 
   const dashboardMetrics = useQuery(
     api.dashboard.getDashboardMetrics,
@@ -89,7 +90,7 @@ export default function DashboardHome() {
 
   const aiPerformance = useQuery(
     api.dashboard.getAIPerformance,
-    orgId
+    orgId && isPaid
       ? { orgId, startMs: startOfCurrentMonthMs, endMs: endOfCurrentMonthMs }
       : "skip",
   );
@@ -110,7 +111,7 @@ export default function DashboardHome() {
     dailySchedule === undefined ||
     staffUtilisation === undefined ||
     weeklyRevenueChart === undefined ||
-    aiPerformance === undefined ||
+    (isPaid && aiPerformance === undefined) ||
     orgSettingsData === undefined
   ) {
     return (
@@ -172,7 +173,7 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <GapOptimizerWidget orgId={orgId} />
+          <GapOptimizerWidget orgId={orgId} isPaid={isPaid} />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
           <LatestActivityWidget orgId={orgId} />
@@ -189,7 +190,10 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <AIPerformanceWidget aiPerformance={aiPerformance} />
+          <AIPerformanceWidget
+            aiPerformance={aiPerformance ?? null}
+            isPaid={isPaid}
+          />
         </div>
       </motion.div>
     </div>

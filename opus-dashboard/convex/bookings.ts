@@ -5,8 +5,8 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { internal, api } from "./_generated/api";
-import { requireAuth, requireRole } from "./lib/auth";
+import { internal } from "./_generated/api";
+import { normalizeProductPlan, requireAuth, requireRole } from "./lib/auth";
 import type { Doc } from "./_generated/dataModel";
 import { computeFreeIntervalsForStaffDate } from "./slots";
 import {
@@ -645,7 +645,7 @@ export const cancelBooking = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const { staffMember, org } = await requireRole(ctx, args.orgId, "staff");
     const booking = await ctx.db.get(args.bookingId);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
@@ -732,14 +732,21 @@ export const cancelBooking = mutation({
 
       const serviceDate = `${year}-${month}-${day}`;
 
-      if (orgSettings?.gapOptimizerEnabled) {
-        await ctx.scheduler.runAfter(0, api.ai.gapOptimizer.scanDayForOrg, {
-          orgId: args.orgId,
-          serviceDate,
-          staffIds: [booking.staffId],
-          detectedBy: "cancellation",
-          triggeredByBookingId: booking._id,
-        });
+      if (
+        orgSettings?.gapOptimizerEnabled &&
+        normalizeProductPlan(org.plan) === "paid"
+      ) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.ai.gapOptimizer.scanDayAfterCancellation,
+          {
+            orgId: args.orgId,
+            serviceDate,
+            staffIds: [booking.staffId],
+            detectedBy: "cancellation",
+            triggeredByBookingId: booking._id,
+          },
+        );
       }
     }
 

@@ -19,6 +19,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
@@ -101,6 +102,7 @@ function ConfidenceMeter({ value }: { value: number }) {
 
 interface AiOperatorTabProps {
   orgId: Id<"orgs">;
+  isPaid: boolean;
   initialData: {
     aiEnabled: boolean;
     aiPersonaName: string;
@@ -123,7 +125,11 @@ interface AiOperatorTabProps {
   };
 }
 
-export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
+export function AiOperatorTab({
+  orgId,
+  isPaid,
+  initialData,
+}: AiOperatorTabProps) {
   const { t } = useDashboardI18n();
   const [ai, setAi] = useState(initialData);
   const [personaError, setPersonaError] = useState<string>();
@@ -208,6 +214,13 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
 
   return (
     <TabsContent value="ai" className="m-0">
+      <PaidFeatureOverlay
+        locked={!isPaid}
+        featureLabel={t(
+          "AI front desk requires OPUS Pro",
+          "AI рецепцијата бара OPUS Pro",
+        )}
+      >
       <SettingsCard
         title={t("AI front desk", "AI рецепција")}
         description={t(
@@ -652,6 +665,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
           </>
         )}
       </SettingsCard>
+      </PaidFeatureOverlay>
     </TabsContent>
   );
 }

@@ -1,6 +1,30 @@
 import { ConvexError } from "convex/values";
-import { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
+
+export type ProductPlan = "free" | "paid";
+export type PaidFeature = "Gap optimizer" | "AI front desk";
+
+/**
+ * Legacy growth and enterprise records retain paid access until they are
+ * migrated to the two-plan model. Starter records become free.
+ */
+export function normalizeProductPlan(
+    plan: Doc<"orgs">["plan"],
+): ProductPlan {
+    return plan === "paid" || plan === "growth" || plan === "enterprise"
+        ? "paid"
+        : "free";
+}
+
+export function requirePaidPlan(
+    org: Pick<Doc<"orgs">, "plan">,
+    feature: PaidFeature,
+): void {
+    if (normalizeProductPlan(org.plan) !== "paid") {
+        throw new ConvexError(`${feature} requires the paid plan.`);
+    }
+}
 
 export async function requireUser(ctx: QueryCtx) {
     const identity = await ctx.auth.getUserIdentity();

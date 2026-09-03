@@ -144,7 +144,7 @@ export const upsertScrapedOrg = mutation({
         claimStatus: "unclaimed",
         reviewStatus: "needs_review",
         listingStatus: "unpublished",
-        plan: "starter",
+        plan: "free",
         reviewCount: 0,
         averageRating: 0,
         isDeleted: false,

@@ -14,12 +14,20 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 
-export function GapOptimizerWidget({ orgId }: { orgId: Id<"orgs"> }) {
+export function GapOptimizerWidget({
+  orgId,
+  isPaid,
+}: {
+  orgId: Id<"orgs">;
+  isPaid: boolean;
+}) {
   const { t } = useDashboardI18n();
-  const summary = useQuery(api.ai.gapOptimizerHelpers.getTodaySummary, {
-    orgId,
-  });
+  const summary = useQuery(
+    api.ai.gapOptimizerHelpers.getTodaySummary,
+    isPaid ? { orgId } : "skip",
+  );
   const scan = useAction(api.ai.gapOptimizer.scanDayForOrg);
   const [manualScanning, setManualScanning] = useState(false);
 
@@ -53,6 +61,15 @@ export function GapOptimizerWidget({ orgId }: { orgId: Id<"orgs"> }) {
       transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
       className="h-full"
     >
+      <PaidFeatureOverlay
+        locked={!isPaid}
+        featureLabel={t(
+          "Fill Gaps requires OPUS Pro",
+          "Пополни празнини бара OPUS Pro",
+        )}
+        compact
+        className="h-full"
+      >
       <Card className="group relative flex flex-col h-full p-6 col-span-1 lg:col-span-1 overflow-hidden">
         <div className="flex justify-between items-start mb-6 relative z-10">
           <div className="flex items-center gap-4">
@@ -201,6 +218,7 @@ export function GapOptimizerWidget({ orgId }: { orgId: Id<"orgs"> }) {
           </div>
         )}
       </Card>
+      </PaidFeatureOverlay>
     </motion.div>
   );
 }

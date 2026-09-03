@@ -1,6 +1,6 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internalMutation, internalQuery, query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { requireAuth, requirePaidPlan } from "../lib/auth";
 
 export const saveMessage = internalMutation({
   args: {
@@ -21,6 +21,14 @@ export const saveMessage = internalMutation({
     actionReferenceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new ConvexError("Business not found");
+    requirePaidPlan(org, "AI front desk");
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation || conversation.orgId !== args.orgId) {
+      throw new ConvexError("Conversation not found");
+    }
+
     const messageId = await ctx.db.insert("ai_messages", {
       orgId: args.orgId,
       conversationId: args.conversationId,
@@ -47,7 +55,10 @@ export const listMessages = query({
     conversationId: v.id("ai_conversations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const { org } = await requireAuth(ctx, args.orgId);
+    requirePaidPlan(org, "AI front desk");
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation || conversation.orgId !== args.orgId) return [];
 
     return await ctx.db
       .query("ai_messages")
@@ -65,6 +76,10 @@ export const listMessagesForWebchat = query({
     conversationId: v.id("ai_conversations"),
   },
   handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) return [];
+    requirePaidPlan(org, "AI front desk");
+
     // Security: verify the conversation belongs to the claimed org before returning messages
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation || conversation.orgId !== args.orgId) return [];
@@ -85,6 +100,12 @@ export const listMessagesInternal = internalQuery({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation) return [];
+    const org = await ctx.db.get(conversation.orgId);
+    if (!org || org.isDeleted) return [];
+    requirePaidPlan(org, "AI front desk");
+
     const all = await ctx.db
       .query("ai_messages")
       .withIndex("by_conversation", q => q.eq("conversationId", args.conversationId))

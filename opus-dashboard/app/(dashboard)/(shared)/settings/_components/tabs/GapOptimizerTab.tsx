@@ -15,6 +15,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TabsContent } from "@/components/ui/tabs";
@@ -23,13 +24,18 @@ import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
 
 interface GapOptimizerTabProps {
   orgId: Id<"orgs">;
+  isPaid: boolean;
   initialData: {
     gapOptimizerEnabled: boolean;
     gapOptimizerMinGapMins: number;
   };
 }
 
-export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
+export function GapOptimizerTab({
+  orgId,
+  isPaid,
+  initialData,
+}: GapOptimizerTabProps) {
   const { t } = useDashboardI18n();
   const [optimizer, setOptimizer] = useState({
     enabled: initialData.gapOptimizerEnabled,
@@ -86,6 +92,13 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
 
   return (
     <TabsContent value="gaps" className="m-0">
+      <PaidFeatureOverlay
+        locked={!isPaid}
+        featureLabel={t(
+          "Gap optimizer requires OPUS Pro",
+          "Оптимизаторот на празни термини бара OPUS Pro",
+        )}
+      >
       <SettingsCard
         title={t("Gap optimizer", "Оптимизатор на празни термини")}
         description={t(
@@ -169,6 +182,7 @@ export function GapOptimizerTab({ orgId, initialData }: GapOptimizerTabProps) {
           </Field>
         </FieldGroup>
       </SettingsCard>
+      </PaidFeatureOverlay>
     </TabsContent>
   );
 }

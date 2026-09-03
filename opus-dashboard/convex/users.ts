@@ -1,6 +1,5 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
-import { normalizeProductPlan } from "./lib/auth";
 
 export const ensureUser = mutation({
     args: {},
@@ -140,7 +139,7 @@ export const getMyProfile = query({
             orgId: activeStaff?.orgId,
             role: activeStaff?.role,
             industry: activeOrg?.industry,
-            plan: activeOrg ? normalizeProductPlan(activeOrg.plan) : undefined,
+            plan: activeOrg?.plan,
         };
     },
 });

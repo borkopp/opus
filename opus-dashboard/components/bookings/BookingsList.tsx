@@ -9,6 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { BookingView } from "./types";
 import { bookingServiceLabel } from "./service-label";
 import { bookingTimeLabel } from "@/lib/booking-wall-clock";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 export function BookingsList({
   bookings,
@@ -19,6 +20,8 @@ export function BookingsList({
   selectedBookingId: Id<"bookings"> | null;
   onSelectBooking: (id: Id<"bookings"> | null) => void;
 }) {
+  const { t } = useDashboardI18n();
+
   const sortedBookings = useMemo(() => {
     return [...bookings].sort((a, b) => a.startAt - b.startAt);
   }, [bookings]);
@@ -33,7 +36,7 @@ export function BookingsList({
       return (
         <div
           className="h-2.5 w-2.5 rounded-full bg-success shadow-sm"
-          title="Completed"
+          title={t("Completed", "Завршен")}
         />
       );
     }
@@ -41,7 +44,7 @@ export function BookingsList({
       return (
         <div
           className="h-2.5 w-2.5 rounded-full bg-danger shadow-sm"
-          title="No Show"
+          title={t("No Show", "Не се појави")}
         />
       );
     }
@@ -49,13 +52,16 @@ export function BookingsList({
       return (
         <div
           className="h-2.5 w-2.5 rounded-full bg-danger/50 shadow-sm"
-          title="Cancelled"
+          title={t("Cancelled", "Откажан")}
         />
       );
     }
     if (isAi) {
       return (
-        <IconSparkles className="h-3.5 w-3.5 text-primary" title="AI Booked" />
+        <IconSparkles
+          className="h-3.5 w-3.5 text-primary"
+          title={t("AI Booked", "Закажано преку AI")}
+        />
       );
     }
     return (
@@ -64,7 +70,7 @@ export function BookingsList({
           "h-2.5 w-2.5 rounded-full shadow-sm",
           isSelected ? "bg-primary" : "bg-warning",
         )}
-        title="Upcoming"
+        title={t("Upcoming", "Претстоен")}
       />
     );
   };
@@ -98,7 +104,7 @@ export function BookingsList({
 
               {/* Name */}
               <div className="w-36 font-semibold text-foreground truncate shrink-0">
-                {booking.customer?.name || "Unknown"}
+                {booking.customer?.name || t("Unknown", "Непознат")}
               </div>
 
               {/* Service · Duration · Staff */}
@@ -109,13 +115,16 @@ export function BookingsList({
                     isSelected ? "text-foreground" : "",
                   )}
                 >
-                  {bookingServiceLabel(booking)}
+                  {bookingServiceLabel(booking, t("Service", "Услуга"))}
                 </span>
                 <span>·</span>
-                <span>{duration}m</span>
+                <span>
+                  {duration}
+                  {t("m", " мин")}
+                </span>
                 <span>·</span>
                 <span className="truncate max-w-[120px]">
-                  {booking.staff?.displayName || "Staff"}
+                  {booking.staff?.displayName || t("Staff", "Член на тим")}
                 </span>
               </div>
             </div>

@@ -23,11 +23,26 @@ import { Price } from "@/components/ui/price";
 import { cn } from "@/lib/utils";
 import { BookingView } from "./types";
 import { bookingServiceLabel } from "./service-label";
-import {
-  bookingDateKey,
-  bookingDateLabel,
-  bookingTimeLabel,
-} from "@/lib/booking-wall-clock";
+import { bookingDateKey, bookingTimeLabel } from "@/lib/booking-wall-clock";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+
+function formatBookingDate(timestamp: number, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(timestamp));
+}
+
+function formatRescheduleDate(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
 
 type RescheduleHandler = (
   bookingId: Id<"bookings">,
@@ -52,6 +67,7 @@ export function BookingSidebar({
   onMarkNoShow?: BookingActionHandler;
   isUpdating?: boolean;
 }) {
+  const { locale, t } = useDashboardI18n();
   const [showReschedule, setShowReschedule] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState<Date | null>(null);
   const [confirmingCancel, setConfirmingCancel] = useState(false);
@@ -62,10 +78,14 @@ export function BookingSidebar({
         <div className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
           <WandSparkles className="h-6 w-6" />
         </div>
-        <h3 className="font-display text-xl font-semibold">Smart schedule</h3>
+        <h3 className="font-display text-xl font-semibold">
+          {t("Smart schedule", "Паметен распоред")}
+        </h3>
         <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-muted-foreground">
-          Select a booking to see the customer, service, status, and appointment
-          actions.
+          {t(
+            "Select a booking to see the customer, service, status, and appointment actions.",
+            "Изберете термин за да ги видите клиентот, услугата, статусот и акциите за закажување.",
+          )}
         </p>
       </div>
     );
@@ -75,6 +95,23 @@ export function BookingSidebar({
   const totalVisits = customer?.totalVisits ?? 0;
   const isAiBooked = source?.startsWith("ai_") ?? false;
   const isTerminal = ["completed", "cancelled", "no_show"].includes(status);
+
+  const getStatusLabel = (s: string) => {
+    switch (s) {
+      case "confirmed":
+        return t("Confirmed", "Потврден");
+      case "pending":
+        return t("Pending", "На чекање");
+      case "completed":
+        return t("Completed", "Завршен");
+      case "cancelled":
+        return t("Cancelled", "Откажан");
+      case "no_show":
+        return t("No show", "Не се појави");
+      default:
+        return s.replace("_", " ");
+    }
+  };
 
   return (
     <div className="flex h-full w-full flex-col rounded-xl bg-card/80 text-foreground backdrop-blur-3xl">
@@ -97,12 +134,15 @@ export function BookingSidebar({
           </div>
           <div className="min-w-0">
             <h2 className="truncate font-semibold">
-              {customer?.name ?? "Unknown customer"}
+              {customer?.name ?? t("Unknown customer", "Непознат клиент")}
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {totalVisits > 0
-                ? `${totalVisits} previous ${totalVisits === 1 ? "visit" : "visits"}`
-                : "New customer"}
+                ? t(
+                    `${totalVisits} previous ${totalVisits === 1 ? "visit" : "visits"}`,
+                    `${totalVisits} ${totalVisits === 1 ? "претходна посета" : "претходни посети"}`,
+                  )
+                : t("New customer", "Нов клиент")}
             </p>
           </div>
         </div>
@@ -110,6 +150,7 @@ export function BookingSidebar({
           variant="ghost"
           size="icon"
           onClick={onClose}
+          aria-label={t("Close booking details", "Затвори детали за термин")}
           className="h-8 w-8 shrink-0 rounded-full"
         >
           <X className="h-4 w-4" />
@@ -118,19 +159,28 @@ export function BookingSidebar({
 
       <div className="flex-1 space-y-5 overflow-y-auto p-5">
         <section className="grid grid-cols-2 gap-3">
-          <Detail label="Date" value={bookingDateLabel(startAt)} />
           <Detail
-            label="Time"
+            label={t("Date", "Датум")}
+            value={formatBookingDate(startAt, locale)}
+          />
+          <Detail
+            label={t("Time", "Време")}
             value={`${bookingTimeLabel(startAt)}–${bookingTimeLabel(endAt)}`}
           />
-          <Detail label="Service" value={bookingServiceLabel(booking)} />
-          <Detail label="Professional" value={staff?.displayName ?? "Staff"} />
+          <Detail
+            label={t("Service", "Услуга")}
+            value={bookingServiceLabel(booking, t("Service", "Услуга"))}
+          />
+          <Detail
+            label={t("Professional", "Специјалист")}
+            value={staff?.displayName ?? t("Staff", "Член на тим")}
+          />
         </section>
 
         <section className="flex items-center justify-between rounded-xl border border-border bg-muted/20 px-4 py-3">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Booking value
+              {t("Booking value", "Вредност на термин")}
             </p>
             <p className="mt-1 font-semibold">
               <Price amount={booking.priceMinorUnits} />
@@ -138,10 +188,10 @@ export function BookingSidebar({
           </div>
           <div className="text-right">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Status
+              {t("Status", "Статус")}
             </p>
             <p className="mt-1 text-sm font-semibold capitalize">
-              {status.replace("_", " ")}
+              {getStatusLabel(status)}
             </p>
           </div>
         </section>
@@ -149,7 +199,7 @@ export function BookingSidebar({
         {booking.customerNote && (
           <section className="rounded-xl border border-border bg-muted/20 px-4 py-3">
             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-              Customer note
+              {t("Customer note", "Белешка од клиент")}
             </p>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
               {booking.customerNote}
@@ -161,10 +211,14 @@ export function BookingSidebar({
           <section className="flex gap-3 rounded-lg border border-primary/20 bg-accent p-3 text-foreground">
             <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="text-sm font-semibold">AI-assisted booking</p>
+              <p className="text-sm font-semibold">
+                {t("AI-assisted booking", "Закажано преку AI")}
+              </p>
               <p className="mt-1 text-xs leading-relaxed opacity-75">
-                The front desk created this appointment from a customer
-                conversation.
+                {t(
+                  "The front desk created this appointment from a customer conversation.",
+                  "Рецепцијата го креираше овој термин од разговор со клиентот.",
+                )}
               </p>
             </div>
           </section>
@@ -196,7 +250,7 @@ export function BookingSidebar({
               disabled={!onComplete || isUpdating}
             >
               <CheckCircle2 data-icon="inline-start" />
-              Complete booking
+              {t("Complete booking", "Заврши термин")}
             </Button>
             <Button
               variant="outline"
@@ -204,7 +258,7 @@ export function BookingSidebar({
               disabled={!onMarkNoShow || isUpdating}
             >
               <UserX data-icon="inline-start" />
-              No-show
+              {t("No-show", "Не се појави")}
             </Button>
             <Button
               variant="destructive"
@@ -218,7 +272,9 @@ export function BookingSidebar({
               }}
               disabled={!onCancel || isUpdating}
             >
-              {confirmingCancel ? "Confirm cancel" : "Cancel booking"}
+              {confirmingCancel
+                ? t("Confirm cancel", "Потврди откажување")
+                : t("Cancel booking", "Откажи термин")}
             </Button>
           </div>
         )}
@@ -229,7 +285,9 @@ export function BookingSidebar({
           disabled={!onReschedule || isUpdating || isTerminal}
         >
           <CalendarClock className="h-4 w-4" />
-          {showReschedule ? "Close rescheduler" : "Reschedule booking"}
+          {showReschedule
+            ? t("Close rescheduler", "Затвори презакажување")
+            : t("Reschedule booking", "Презакажи термин")}
         </Button>
       </div>
     </div>
@@ -258,6 +316,7 @@ function ReschedulePanel({
   onDateChange: (date: Date | null) => void;
   onConfirm: (newStartAt: number) => Promise<void>;
 }) {
+  const { locale, t } = useDashboardI18n();
   const [selectedStartAt, setSelectedStartAt] = useState<number | null>(null);
   const bookingStart = new Date(`${bookingDateKey(booking.startAt)}T12:00:00`);
   const bookingDate = rescheduleDate ?? startOfDay(bookingStart);
@@ -279,10 +338,11 @@ function ReschedulePanel({
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Clock className="size-4 text-muted-foreground" />
-          Choose a new time
+          {t("Choose a new time", "Изберете ново време")}
         </div>
         <span className="text-xs text-muted-foreground">
-          {Math.round((booking.endAt - booking.startAt) / 60_000)} min
+          {Math.round((booking.endAt - booking.startAt) / 60_000)}{" "}
+          {t("min", "мин")}
         </span>
       </div>
 
@@ -291,6 +351,7 @@ function ReschedulePanel({
           variant="ghost"
           size="icon"
           className="h-8 w-8"
+          aria-label={t("Previous day", "Претходен ден")}
           onClick={() => {
             const previousDate = addDays(bookingDate, -1);
             if (!isBefore(previousDate, startOfDay(new Date()))) {
@@ -302,12 +363,13 @@ function ReschedulePanel({
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <span className="flex-1 text-center text-sm font-semibold">
-          {format(bookingDate, "EEE, MMM d")}
+          {formatRescheduleDate(bookingDate, locale)}
         </span>
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8"
+          aria-label={t("Next day", "Следен ден")}
           onClick={() => {
             onDateChange(addDays(bookingDate, 1));
             setSelectedStartAt(null);
@@ -324,6 +386,10 @@ function ReschedulePanel({
               key={slot.startAt}
               type="button"
               onClick={() => setSelectedStartAt(slot.startAt)}
+              aria-label={t(
+                `Select ${bookingTimeLabel(slot.startAt)}`,
+                `Избери ${bookingTimeLabel(slot.startAt)}`,
+              )}
               className={cn(
                 "rounded-md border px-1 py-1.5 text-[11px] font-medium transition-colors",
                 selectedStartAt === slot.startAt
@@ -337,12 +403,15 @@ function ReschedulePanel({
         </div>
         {availableSlots === undefined && (
           <p className="py-4 text-center text-xs text-muted-foreground">
-            Loading available times…
+            {t("Loading available times…", "Вчитување слободни термини…")}
           </p>
         )}
         {availableSlots?.length === 0 && (
           <p className="py-4 text-center text-xs text-muted-foreground">
-            No available times on this date.
+            {t(
+              "No available times on this date.",
+              "Нема слободни термини на овој датум.",
+            )}
           </p>
         )}
       </div>
@@ -353,7 +422,7 @@ function ReschedulePanel({
         disabled={!selectedStartAt}
         onClick={handleConfirm}
       >
-        Confirm new time
+        {t("Confirm new time", "Потврди ново време")}
       </Button>
     </div>
   );

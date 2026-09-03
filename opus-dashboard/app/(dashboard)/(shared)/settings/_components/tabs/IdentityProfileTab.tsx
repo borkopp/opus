@@ -23,6 +23,7 @@ import {
   IMAGE_PRESETS,
   uploadCompressedImage,
 } from "@/lib/image-compression";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { SettingsCard } from "../SettingsCard";
 
 interface IdentityProfileTabProps {
@@ -45,8 +46,8 @@ interface IdentityProfileTabProps {
   }>;
 }
 
-function message(error: unknown): string {
-  return error instanceof Error ? error.message : "Changes could not be saved.";
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 async function upload(
@@ -68,6 +69,7 @@ export function IdentityProfileTab({
   initialData,
   media,
 }: IdentityProfileTabProps) {
+  const { t } = useDashboardI18n();
   const [branding, setBranding] = useState(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -83,7 +85,9 @@ export function IdentityProfileTab({
 
   const handleSave = async () => {
     if (!branding.name.trim()) {
-      toast.error("Business name is required.");
+      toast.error(
+        t("Business name is required.", "Името на бизнисот е задолжително."),
+      );
       return;
     }
     setIsSaving(true);
@@ -99,9 +103,16 @@ export function IdentityProfileTab({
         instagramPageId: branding.instagramPageId.trim() || undefined,
         websiteUrl: branding.websiteUrl.trim() || undefined,
       });
-      toast.success("Business profile saved");
+      toast.success(
+        t("Business profile saved", "Профилот на бизнисот е зачуван"),
+      );
     } catch (error) {
-      toast.error(message(error));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -133,9 +144,17 @@ export function IdentityProfileTab({
         );
         const logoUrl = await updateLogo({ orgId, storageId });
         setBranding((current) => ({ ...current, logoUrl }));
-        toast.success("Logo updated");
+        toast.success(t("Logo updated", "Логото е ажурирано"));
       } catch (error) {
-        toast.error(message(error));
+        toast.error(
+          getErrorMessage(
+            error,
+            t(
+              "Changes could not be saved.",
+              "Промените не може да се зачуваат.",
+            ),
+          ),
+        );
       } finally {
         setUploading(null);
       }
@@ -145,22 +164,43 @@ export function IdentityProfileTab({
     try {
       await removeLogo({ orgId });
       setBranding((current) => ({ ...current, logoUrl: "" }));
-      toast.success("Logo removed");
+      toast.success(t("Logo removed", "Логото е отстрането"));
     } catch (error) {
-      toast.error(message(error));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+        ),
+      );
     }
   };
 
   const handleMedia = (type: "cover" | "gallery") => {
     if (type === "gallery" && gallery.length >= MAX_GALLERY_PHOTOS) {
-      toast.error(`Maximum of ${MAX_GALLERY_PHOTOS} gallery photos reached.`);
+      toast.error(
+        t(
+          `Maximum of ${MAX_GALLERY_PHOTOS} gallery photos reached.`,
+          `Достигнат е максимумот од ${MAX_GALLERY_PHOTOS} фотографии во галеријата.`,
+        ),
+      );
       return;
     }
-    const remainingSlots = type === "gallery" ? MAX_GALLERY_PHOTOS - gallery.length : 1;
+    const remainingSlots =
+      type === "gallery" ? MAX_GALLERY_PHOTOS - gallery.length : 1;
     chooseFile(type === "gallery", async (rawFiles) => {
       let files = rawFiles;
       if (type === "gallery" && files.length > remainingSlots) {
-        toast.error(`You can only add up to ${remainingSlots} more gallery ${remainingSlots === 1 ? "photo" : "photos"} (maximum ${MAX_GALLERY_PHOTOS}).`);
+        toast.error(
+          remainingSlots === 1
+            ? t(
+                "You can only add up to 1 more gallery photo (maximum 3).",
+                "Може да додадете уште најмногу 1 фотографија во галеријата (максимум 3).",
+              )
+            : t(
+                `You can only add up to ${remainingSlots} more gallery photos (maximum ${MAX_GALLERY_PHOTOS}).`,
+                `Може да додадете уште најмногу ${remainingSlots} фотографии во галеријата (максимум ${MAX_GALLERY_PHOTOS}).`,
+              ),
+        );
         files = files.slice(0, remainingSlots);
       }
       setUploading(type);
@@ -176,9 +216,21 @@ export function IdentityProfileTab({
             sortOrder: type === "cover" ? 0 : gallery.length + index + 1,
           });
         }
-        toast.success(type === "cover" ? "Cover updated" : "Gallery updated");
+        toast.success(
+          type === "cover"
+            ? t("Cover updated", "Насловната слика е ажурирана")
+            : t("Gallery updated", "Галеријата е ажурирана"),
+        );
       } catch (error) {
-        toast.error(message(error));
+        toast.error(
+          getErrorMessage(
+            error,
+            t(
+              "Changes could not be saved.",
+              "Промените не може да се зачуваат.",
+            ),
+          ),
+        );
       } finally {
         setUploading(null);
       }
@@ -188,9 +240,14 @@ export function IdentityProfileTab({
   const handleRemove = async (mediaId: Id<"org_media">) => {
     try {
       await removeMedia({ orgId, mediaId });
-      toast.success("Photo removed");
+      toast.success(t("Photo removed", "Фотографијата е отстранета"));
     } catch (error) {
-      toast.error(message(error));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+        ),
+      );
     }
   };
 
@@ -201,17 +258,20 @@ export function IdentityProfileTab({
     <TabsContent value="branding" className="m-0">
       <div className="flex flex-col gap-6">
         <SettingsCard
-          title="Storefront images"
-          description="Your logo and cover are shared by onboarding, Settings, and opus.mk."
+          title={t("Storefront images", "Слики за страницата")}
+          description={t(
+            "Your logo and cover are shared by onboarding, Settings, and opus.mk.",
+            "Вашето лого и насловна слика се користат при воведот, во Поставки и на opus.mk.",
+          )}
           contentClassName="grid gap-6 md:grid-cols-[208px_1fr]"
         >
           <div className="flex flex-col gap-3">
-            <FieldLabel>Logo</FieldLabel>
+            <FieldLabel>{t("Logo", "Лого")}</FieldLabel>
             <div className="group relative flex h-52 w-52 max-w-full aspect-square flex-col justify-end overflow-hidden rounded-2xl border bg-secondary md:w-full">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
-                  alt="Business logo"
+                  alt={t("Business logo", "Лого на бизнисот")}
                   fill
                   unoptimized
                   className="object-cover"
@@ -235,7 +295,7 @@ export function IdentityProfileTab({
                     variant="destructive"
                     onClick={handleRemoveLogo}
                     disabled={uploading === "logo"}
-                    aria-label="Remove logo"
+                    aria-label={t("Remove logo", "Отстрани лого")}
                   >
                     <Trash2 data-icon="inline-start" />
                   </Button>
@@ -247,25 +307,23 @@ export function IdentityProfileTab({
                   onClick={handleLogo}
                   disabled={uploading === "logo"}
                 >
-                  {uploading === "logo" && (
-                    <Spinner data-icon="inline-start" />
-                  )}
+                  {uploading === "logo" && <Spinner data-icon="inline-start" />}
                   {uploading === "logo"
-                    ? "Uploading…"
+                    ? t("Uploading…", "Се прикачува…")
                     : branding.logoUrl
-                      ? "Replace"
-                      : "Upload logo"}
+                      ? t("Replace", "Замени")
+                      : t("Upload logo", "Прикачи лого")}
                 </Button>
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <FieldLabel>Cover photo</FieldLabel>
+            <FieldLabel>{t("Cover photo", "Насловна слика")}</FieldLabel>
             <div className="group relative flex h-52 w-full flex-col justify-end overflow-hidden rounded-2xl border bg-secondary">
               {cover ? (
                 <Image
                   src={cover.url}
-                  alt="Business cover"
+                  alt={t("Business cover", "Насловна слика на бизнисот")}
                   fill
                   unoptimized
                   className="object-cover"
@@ -289,7 +347,7 @@ export function IdentityProfileTab({
                     variant="destructive"
                     onClick={() => handleRemove(cover._id)}
                     disabled={uploading === "cover"}
-                    aria-label="Remove cover"
+                    aria-label={t("Remove cover", "Отстрани насловна слика")}
                   >
                     <Trash2 data-icon="inline-start" />
                   </Button>
@@ -305,10 +363,10 @@ export function IdentityProfileTab({
                     <Spinner data-icon="inline-start" />
                   )}
                   {uploading === "cover"
-                    ? "Uploading…"
+                    ? t("Uploading…", "Се прикачува…")
                     : cover
-                      ? "Replace"
-                      : "Upload cover"}
+                      ? t("Replace", "Замени")
+                      : t("Upload cover", "Прикачи насловна слика")}
                 </Button>
               </div>
             </div>
@@ -316,8 +374,11 @@ export function IdentityProfileTab({
         </SettingsCard>
 
         <SettingsCard
-          title="Identity and contact"
-          description="Customer-facing information used across the booking experience."
+          title={t("Identity and contact", "Идентитет и контакт")}
+          description={t(
+            "Customer-facing information used across the booking experience.",
+            "Информации видливи за клиентите при процесот на закажување.",
+          )}
           footer={
             <Button type="button" onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
@@ -325,13 +386,17 @@ export function IdentityProfileTab({
               ) : (
                 <Save data-icon="inline-start" />
               )}
-              {isSaving ? "Saving…" : "Save profile"}
+              {isSaving
+                ? t("Saving…", "Се зачувува…")
+                : t("Save profile", "Зачувај профил")}
             </Button>
           }
         >
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="settings-name">Business name</FieldLabel>
+              <FieldLabel htmlFor="settings-name">
+                {t("Business name", "Име на бизнис")}
+              </FieldLabel>
               <Input
                 id="settings-name"
                 value={branding.name}
@@ -339,7 +404,9 @@ export function IdentityProfileTab({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-tagline">Tagline</FieldLabel>
+              <FieldLabel htmlFor="settings-tagline">
+                {t("Tagline", "Краток опис")}
+              </FieldLabel>
               <Input
                 id="settings-tagline"
                 value={branding.tagline}
@@ -347,7 +414,9 @@ export function IdentityProfileTab({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-bio">About</FieldLabel>
+              <FieldLabel htmlFor="settings-bio">
+                {t("About", "За нас")}
+              </FieldLabel>
               <Textarea
                 id="settings-bio"
                 value={branding.bio}
@@ -356,7 +425,9 @@ export function IdentityProfileTab({
             </Field>
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="settings-phone">Phone</FieldLabel>
+                <FieldLabel htmlFor="settings-phone">
+                  {t("Phone", "Телефон")}
+                </FieldLabel>
                 <Input
                   id="settings-phone"
                   value={branding.phone}
@@ -364,7 +435,9 @@ export function IdentityProfileTab({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="settings-instagram">Instagram</FieldLabel>
+                <FieldLabel htmlFor="settings-instagram">
+                  {t("Instagram", "Instagram")}
+                </FieldLabel>
                 <Input
                   id="settings-instagram"
                   value={branding.instagramHandle}
@@ -375,7 +448,7 @@ export function IdentityProfileTab({
               </Field>
               <Field>
                 <FieldLabel htmlFor="settings-page-id">
-                  Instagram page ID
+                  {t("Instagram page ID", "ID на Instagram страница")}
                 </FieldLabel>
                 <Input
                   id="settings-page-id"
@@ -386,7 +459,9 @@ export function IdentityProfileTab({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="settings-website">Website</FieldLabel>
+                <FieldLabel htmlFor="settings-website">
+                  {t("Website", "Веб-страница")}
+                </FieldLabel>
                 <Input
                   id="settings-website"
                   value={branding.websiteUrl}
@@ -398,8 +473,11 @@ export function IdentityProfileTab({
         </SettingsCard>
 
         <SettingsCard
-          title="Gallery"
-          description="Optional photos of your space, team, or work."
+          title={t("Gallery", "Галерија")}
+          description={t(
+            "Optional photos of your space, team, or work.",
+            "Изборни фотографии од вашиот простор, тим или изработени третмани.",
+          )}
           action={
             <span className="rounded-full border border-border/80 bg-secondary/80 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
               {gallery.length}/{MAX_GALLERY_PHOTOS}
@@ -427,7 +505,10 @@ export function IdentityProfileTab({
                   variant="destructive"
                   className="absolute right-2 top-2"
                   onClick={() => handleRemove(item._id)}
-                  aria-label="Remove gallery photo"
+                  aria-label={t(
+                    "Remove gallery photo",
+                    "Отстрани фотографија од галерија",
+                  )}
                 >
                   <Trash2 data-icon="inline-start" />
                 </Button>
@@ -445,7 +526,7 @@ export function IdentityProfileTab({
                   <>
                     <Spinner className="size-6 text-primary" />
                     <span className="text-xs font-medium text-muted-foreground">
-                      Uploading…
+                      {t("Uploading…", "Се прикачува…")}
                     </span>
                   </>
                 ) : (
@@ -454,7 +535,7 @@ export function IdentityProfileTab({
                       <Plus className="size-5" />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">
-                      Add photo
+                      {t("Add photo", "Додај фотографија")}
                     </span>
                   </>
                 )}
@@ -462,7 +543,10 @@ export function IdentityProfileTab({
             )}
           </div>
           <FieldDescription>
-            Images are soft-deleted so audit history remains intact.
+            {t(
+              "Images are soft-deleted so audit history remains intact.",
+              "Сликите се бришат со меко бришење за историјата на ревизија да остане непроменета.",
+            )}
           </FieldDescription>
         </SettingsCard>
       </div>

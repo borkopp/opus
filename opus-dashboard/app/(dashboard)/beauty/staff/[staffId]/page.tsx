@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { StaffFormDialog } from "../_components/StaffFormDialog";
@@ -21,6 +22,7 @@ export default function StaffMemberPage({
 }: {
   params: Promise<{ staffId: string }>;
 }) {
+  const { t } = useDashboardI18n();
   const { staffId: staffIdParam } = use(params);
   const staffId = staffIdParam as Id<"staff_members">;
   const profile = useQuery(api.users.getMyProfile);
@@ -49,7 +51,9 @@ export default function StaffMemberPage({
   }
 
   if (!orgId || staffMember === null) {
-    return <div>Staff member not found.</div>;
+    return (
+      <div>{t("Staff member not found.", "Вработениот не е пронајден.")}</div>
+    );
   }
 
   return (
@@ -64,7 +68,7 @@ export default function StaffMemberPage({
         className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
       >
         <ArrowLeftIcon className="size-4" />
-        All staff
+        {t("All staff", "Сите вработени")}
       </Link>
 
       <header className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -85,14 +89,22 @@ export default function StaffMemberPage({
               {staffMember.displayName}
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{formatRole(staffMember.role)}</Badge>
+              <Badge variant="outline">{formatRole(staffMember.role, t)}</Badge>
               <Badge variant={staffMember.isActive ? "success" : "secondary"}>
-                {staffMember.isActive ? "Active" : "Inactive"}
+                {staffMember.isActive
+                  ? t("Active", "Активен")
+                  : t("Inactive", "Неактивен")}
               </Badge>
               <span className="text-sm text-muted-foreground">
                 {staffMember.isActive
-                  ? "Manage working hours and time off."
-                  : "Inactive staff cannot be booked."}
+                  ? t(
+                      "Manage working hours and time off.",
+                      "Управувајте со работното време и отсуствата.",
+                    )
+                  : t(
+                      "Inactive staff cannot be booked.",
+                      "Неактивните вработени не можат да бидат закажани.",
+                    )}
               </span>
             </div>
           </div>
@@ -100,7 +112,7 @@ export default function StaffMemberPage({
 
         <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
           <PencilIcon data-icon="inline-start" />
-          Edit details
+          {t("Edit details", "Уреди детали")}
         </Button>
       </header>
 
@@ -122,10 +134,13 @@ export default function StaffMemberPage({
   );
 }
 
-function formatRole(role: Doc<"staff_members">["role"]) {
-  if (role === "owner") return "Owner";
-  if (role === "manager") return "Manager";
-  return "Staff member";
+function formatRole(
+  role: Doc<"staff_members">["role"],
+  t: (en: string, mk: string) => string,
+) {
+  if (role === "owner") return t("Owner", "Сопственик");
+  if (role === "manager") return t("Manager", "Менаџер");
+  return t("Staff member", "Вработен");
 }
 
 function getInitials(displayName: string) {

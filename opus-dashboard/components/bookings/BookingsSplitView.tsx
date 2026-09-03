@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { format, startOfDay, addDays, subDays } from "date-fns";
+import { startOfDay, addDays, subDays } from "date-fns";
 import {
   IconPlus,
   IconChevronLeft,
@@ -24,6 +24,15 @@ import { Price } from "@/components/ui/price";
 import { BookingView, StaffView } from "./types";
 import { useQuickBooking } from "./QuickBookingProvider";
 import { dateKey, isBookingOnDate } from "@/lib/booking-wall-clock";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+
+function formatHeaderDate(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
 
 export function BookingsSplitView({
   bookings,
@@ -34,6 +43,7 @@ export function BookingsSplitView({
   staffMembers: StaffView[];
   orgId: Id<"orgs">;
 }) {
+  const { locale, t } = useDashboardI18n();
   const rescheduleBooking = useMutation(api.bookings.rescheduleBooking);
   const cancelBooking = useMutation(api.bookings.cancelBooking);
   const completeBooking = useMutation(api.bookings.completeBooking);
@@ -103,21 +113,24 @@ export function BookingsSplitView({
         });
         // After rescheduling, deselect the old booking (it was cancelled + new one created)
         setSelectedBookingId(null);
-        toast.success("Booking rescheduled");
+        toast.success(t("Booking rescheduled", "Терминот е презакажан"));
         return true;
       } catch (error: unknown) {
         console.error("Reschedule failed:", error);
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to reschedule. The slot may conflict with another booking.",
+            : t(
+                "Failed to reschedule. The slot may conflict with another booking.",
+                "Не успеа презакажувањето. Терминот може да се преклопува со друго закажување.",
+              ),
         );
         return false;
       } finally {
         setPendingAction(null);
       }
     },
-    [rescheduleBooking, orgId],
+    [rescheduleBooking, orgId, t],
   );
 
   const runBookingAction = useCallback(
@@ -138,24 +151,29 @@ export function BookingsSplitView({
         } else {
           await markNoShow({ orgId, bookingId });
         }
-        toast.success(
-          {
-            cancel: "Booking cancelled",
-            complete: "Booking completed",
-            "no-show": "Booking marked as no-show",
-          }[action],
-        );
+        const actionMessages = {
+          cancel: t("Booking cancelled", "Терминот е откажан"),
+          complete: t("Booking completed", "Терминот е завршен"),
+          "no-show": t(
+            "Booking marked as no-show",
+            "Терминот е означен како неостварен",
+          ),
+        };
+        toast.success(actionMessages[action]);
       } catch (error: unknown) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Could not update the booking.",
+            : t(
+                "Could not update the booking.",
+                "Не може да се ажурира терминот.",
+              ),
         );
       } finally {
         setPendingAction(null);
       }
     },
-    [cancelBooking, completeBooking, markNoShow, orgId],
+    [cancelBooking, completeBooking, markNoShow, orgId, t],
   );
 
   return (
@@ -164,7 +182,7 @@ export function BookingsSplitView({
       <div className="flex flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2 sm:gap-4">
           <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
-            Bookings
+            {t("Bookings", "Термини")}
           </h1>
 
           <div className="hidden sm:flex h-8 w-[1px] bg-border mx-1"></div>
@@ -175,7 +193,7 @@ export function BookingsSplitView({
                 {totalBookingsCount}
               </span>
               <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">
-                Bookings
+                {t("Bookings", "Термини")}
               </span>
             </div>
 
@@ -187,12 +205,12 @@ export function BookingsSplitView({
               </span>
               <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">
                 <span className="lowercase font-normal opacity-70">
-                  completed /{" "}
+                  {t("completed", "завршени")} /{" "}
                   <Price
                     amount={projectedRevenueMinorUnits}
                     showDecimals={false}
                   />{" "}
-                  scheduled
+                  {t("scheduled", "закажани")}
                 </span>
               </span>
             </div>
@@ -204,7 +222,7 @@ export function BookingsSplitView({
             onClick={() => openQuickBooking({ date: currentDate })}
           >
             <IconPlus data-icon="inline-start" />
-            New Booking
+            {t("New Booking", "Нов термин")}
           </Button>
         </div>
       </div>
@@ -222,19 +240,19 @@ export function BookingsSplitView({
                 size="icon"
                 className="h-7 w-7 border-none rounded-l-sm rounded-r-[2px]"
                 onClick={() => setCurrentDate(subDays(currentDate, 1))}
-                aria-label="Previous day"
+                aria-label={t("Previous day", "Претходен ден")}
               >
                 <IconChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-semibold w-36 text-center select-none tracking-tight">
-                {format(currentDate, "EEE, MMM d")}
+                {formatHeaderDate(currentDate, locale)}
               </span>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 border-none rounded-l-none rounded-r-sm"
                 onClick={() => setCurrentDate(addDays(currentDate, 1))}
-                aria-label="Next day"
+                aria-label={t("Next day", "Следен ден")}
               >
                 <IconChevronRight className="h-4 w-4" />
               </Button>
@@ -253,7 +271,7 @@ export function BookingsSplitView({
                       : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
                   )}
                 >
-                  All
+                  {t("All", "Сите")}
                 </button>
                 <button
                   onClick={() => setStatusFilter("upcoming")}
@@ -264,7 +282,7 @@ export function BookingsSplitView({
                       : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
                   )}
                 >
-                  Upcoming
+                  {t("Upcoming", "Претстојни")}
                 </button>
                 <button
                   onClick={() => setStatusFilter("completed")}
@@ -275,7 +293,7 @@ export function BookingsSplitView({
                       : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
                   )}
                 >
-                  Completed
+                  {t("Completed", "Завршени")}
                 </button>
                 <button
                   onClick={() => setStatusFilter("no-show")}
@@ -286,7 +304,7 @@ export function BookingsSplitView({
                       : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
                   )}
                 >
-                  No-Show
+                  {t("No-Show", "Не се појави")}
                 </button>
               </div>
 
@@ -294,6 +312,7 @@ export function BookingsSplitView({
               <Button
                 variant="outline"
                 size="icon"
+                aria-label={t("Filter bookings", "Филтрирај термини")}
                 className="h-9 w-9 lg:hidden text-muted-foreground"
               >
                 <IconFilter className="h-4 w-4" />
@@ -315,7 +334,7 @@ export function BookingsSplitView({
                   onClick={() => setViewMode("list")}
                 >
                   <IconLayoutList className="h-4 w-4 mr-1.5" />
-                  List
+                  {t("List", "Листа")}
                 </Button>
                 <Button
                   variant={viewMode === "calendar" ? "secondary" : "ghost"}
@@ -329,7 +348,7 @@ export function BookingsSplitView({
                   onClick={() => setViewMode("calendar")}
                 >
                   <IconCalendarEvent className="h-4 w-4 mr-1.5" />
-                  Calendar
+                  {t("Calendar", "Календар")}
                 </Button>
               </div>
             </div>
@@ -344,7 +363,10 @@ export function BookingsSplitView({
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
                 <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
                 <p className="font-medium text-foreground">
-                  No staff members found
+                  {t(
+                    "No staff members found",
+                    "Не се пронајдени членови на тимот",
+                  )}
                 </p>
               </div>
             ) : viewMode === "calendar" ? (
@@ -364,8 +386,15 @@ export function BookingsSplitView({
             ) : filteredBookings.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
                 <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
-                <p className="font-medium text-foreground">No bookings found</p>
-                <p className="text-sm">Try a different filter or date.</p>
+                <p className="font-medium text-foreground">
+                  {t("No bookings found", "Нема пронајдени термини")}
+                </p>
+                <p className="text-sm">
+                  {t(
+                    "Try a different filter or date.",
+                    "Обидете се со друг филтер или датум.",
+                  )}
+                </p>
               </div>
             ) : (
               <BookingsList

@@ -5,12 +5,15 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { mk } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { getDashboardNotificationCopy } from "@/lib/i18n/dashboard-notifications";
 import {
   IconBell,
   IconBellRinging,
@@ -28,44 +31,37 @@ type FilterTab =
   | "booking_cancelled"
   | "no_show";
 
-function getTypeConfig(type: string) {
+function getTypeConfig(type: string, t: (en: string, mk: string) => string) {
   switch (type) {
     case "new_booking":
       return {
         icon: <IconCalendarPlus size={18} stroke={2} />,
         iconBg: "bg-primary/10 text-primary",
-        label: "New Booking",
+        label: t("New Booking", "Нов термин"),
       };
     case "booking_cancelled":
       return {
         icon: <IconCalendarOff size={18} stroke={2} />,
         iconBg: "bg-destructive/10 text-destructive",
-        label: "Cancellation",
+        label: t("Cancellation", "Откажан термин"),
       };
     case "no_show":
       return {
         icon: <IconAlertTriangle size={18} stroke={2} />,
         iconBg: "bg-warning/15 text-warning",
-        label: "No-Show",
+        label: t("No-Show", "Непојавување"),
       };
     default:
       return {
         icon: <IconBell size={18} stroke={2} />,
         iconBg: "bg-muted text-muted-foreground",
-        label: "Notification",
+        label: t("Notification", "Известување"),
       };
   }
 }
 
-const TABS: { id: FilterTab; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "unread", label: "Unread" },
-  { id: "new_booking", label: "New Bookings" },
-  { id: "booking_cancelled", label: "Cancellations" },
-  { id: "no_show", label: "No-Shows" },
-];
-
 export default function NotificationsPage() {
+  const { language, t } = useDashboardI18n();
   const router = useRouter();
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId as Id<"orgs"> | undefined;
@@ -84,6 +80,14 @@ export default function NotificationsPage() {
   const dismiss = useMutation(api.dashboardNotifications.dismiss);
 
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
+
+  const tabs: { id: FilterTab; label: string }[] = [
+    { id: "all", label: t("All", "Сите") },
+    { id: "unread", label: t("Unread", "Непрочитани") },
+    { id: "new_booking", label: t("New Bookings", "Нови термини") },
+    { id: "booking_cancelled", label: t("Cancellations", "Откажани") },
+    { id: "no_show", label: t("No-Shows", "Непојавувања") },
+  ];
 
   if (profile === undefined || notifications === undefined) {
     return (
@@ -117,7 +121,8 @@ export default function NotificationsPage() {
     );
   }
 
-  if (profile === null || !orgId) return <div>Not found</div>;
+  if (profile === null || !orgId)
+    return <div>{t("Not found", "Не е пронајдено")}</div>;
 
   const filtered = (notifications ?? []).filter((n) => {
     if (activeTab === "all") return true;
@@ -142,12 +147,17 @@ export default function NotificationsPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-            Notifications
+            {t("Notifications", "Известувања")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {(unreadCount ?? 0) > 0
-              ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}. Stay up to date with bookings and appointments.`
-              : "All caught up. Stay up to date with bookings and appointments."}
+              ? language === "mk"
+                ? `${unreadCount} ${unreadCount === 1 ? "непрочитано известување" : "непрочитани известувања"}. Бидете во тек со закажувањата и термините.`
+                : `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}. Stay up to date with bookings and appointments.`
+              : t(
+                  "All caught up. Stay up to date with bookings and appointments.",
+                  "Сè е прочитано. Бидете во тек со закажувањата и термините.",
+                )}
           </p>
         </div>
 
@@ -159,7 +169,7 @@ export default function NotificationsPage() {
             className="w-full transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:w-auto cursor-pointer"
           >
             <IconCheck className="mr-1.5 h-4 w-4" />
-            Mark all read
+            {t("Mark all read", "Означи ги сите како прочитани")}
           </Button>
         )}
       </header>
@@ -172,7 +182,7 @@ export default function NotificationsPage() {
       >
         <div className="overflow-x-auto pb-1">
           <TabsList className="h-9">
-            {TABS.map((tab) => (
+            {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
@@ -200,17 +210,24 @@ export default function NotificationsPage() {
               )}
             </div>
             <p className="font-display text-base font-semibold text-foreground">
-              Nothing here
+              {t("Nothing here", "Нема ништо тука")}
             </p>
             <p className="text-sm text-muted-foreground mt-1 max-w-sm">
               {activeTab === "unread"
-                ? "You're all caught up on new notifications."
-                : "No notifications in this category yet."}
+                ? t(
+                    "You're all caught up on new notifications.",
+                    "Ги прочитавте сите нови известувања.",
+                  )
+                : t(
+                    "No notifications in this category yet.",
+                    "Сè уште нема известувања во оваа категорија.",
+                  )}
             </p>
           </div>
         ) : (
           filtered.map((n) => {
-            const { icon, iconBg } = getTypeConfig(n.type);
+            const { icon, iconBg } = getTypeConfig(n.type, t);
+            const copy = getDashboardNotificationCopy(language, n);
             return (
               <div
                 key={n._id}
@@ -239,14 +256,15 @@ export default function NotificationsPage() {
                         : "font-medium text-foreground",
                     )}
                   >
-                    {n.title}
+                    {copy.title}
                   </p>
                   <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
-                    {n.body}
+                    {copy.body}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-1.5 font-sans">
                     {formatDistanceToNow(new Date(n.createdAt), {
                       addSuffix: true,
+                      locale: language === "mk" ? mk : undefined,
                     })}
                   </p>
                 </div>
@@ -260,7 +278,7 @@ export default function NotificationsPage() {
                     dismiss({ orgId, notificationId: n._id });
                   }}
                   className="absolute right-4 top-4.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 cursor-pointer"
-                  aria-label="Dismiss notification"
+                  aria-label={t("Dismiss notification", "Отфрли известување")}
                 >
                   <IconX size={15} />
                 </button>

@@ -22,17 +22,28 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  bookingDateLabel,
   bookingMinuteOfDay,
   bookingTimeLabel,
   bookingTimestampForDate,
 } from "@/lib/booking-wall-clock";
 import { getImageStorageUrl } from "@/lib/file-validation";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 const START_HOUR = 8;
 const END_HOUR = 20;
 const HOUR_HEIGHT = 90;
 const HEADER_HEIGHT = 56; // h-14 = 3.5rem = 56px — staff header row
+
+function formatBookingDate(timestamp: number, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(timestamp));
+}
+
 /** Convert a pixel offset (relative to the grid, not including header) to { hours, minutes } */
 function offsetToTime(
   offsetPx: number,
@@ -96,6 +107,7 @@ export function BookingsTimeline({
   slotDurationMins: number;
   onQuickBooking: (slot: QuickBookingSelection) => void;
 }) {
+  const { t } = useDashboardI18n();
   const hours = useMemo(
     () =>
       Array.from(
@@ -476,7 +488,10 @@ export function BookingsTimeline({
                 key={staff._id}
                 className="flex-1 min-w-[220px] relative group/column"
                 data-staff-calendar-column={staff._id}
-                aria-label={`${staff.displayName} calendar`}
+                aria-label={t(
+                  `${staff.displayName} calendar`,
+                  `Календар за ${staff.displayName}`,
+                )}
                 ref={(el) => {
                   if (el) columnRefs.current.set(staff._id, el);
                 }}
@@ -543,7 +558,10 @@ export function BookingsTimeline({
                       ),
                     }}
                     onClick={() => onQuickBooking(staffQuickSlot)}
-                    aria-label={`Create booking from ${bookingTimeLabel(staffQuickSlot.startAt)} to ${bookingTimeLabel(staffQuickSlot.endAt)} with ${staff.displayName}`}
+                    aria-label={t(
+                      `Create booking from ${bookingTimeLabel(staffQuickSlot.startAt)} to ${bookingTimeLabel(staffQuickSlot.endAt)} with ${staff.displayName}`,
+                      `Креирај термин од ${bookingTimeLabel(staffQuickSlot.startAt)} до ${bookingTimeLabel(staffQuickSlot.endAt)} со ${staff.displayName}`,
+                    )}
                   >
                     <IconPlus className="size-3.5 shrink-0" />
                     <span className="tabular-nums">
@@ -668,16 +686,24 @@ export function BookingsTimeline({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm reschedule</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("Confirm reschedule", "Потврди презакажување")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingDragReschedule
-                ? `Move ${pendingDragReschedule.booking.customer?.name ?? "this client"}’s ${bookingServiceLabel(pendingDragReschedule.booking)} from ${bookingDateLabel(pendingDragReschedule.booking.startAt)}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} to ${bookingDateLabel(pendingDragReschedule.newStartAt)}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " The client will receive an email with the new time." : ""}`
-                : "Review the new appointment time before confirming."}
+                ? t(
+                    `Move ${pendingDragReschedule.booking.customer?.name ?? "this client"}’s ${bookingServiceLabel(pendingDragReschedule.booking)} from ${formatBookingDate(pendingDragReschedule.booking.startAt, "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} to ${formatBookingDate(pendingDragReschedule.newStartAt, "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " The client will receive an email with the new time." : ""}`,
+                    `Дали сакате да го преместите терминот (${bookingServiceLabel(pendingDragReschedule.booking, "Услуга")}) за ${pendingDragReschedule.booking.customer?.name ?? "клиентот"} од ${formatBookingDate(pendingDragReschedule.booking.startAt, "mk-MK")}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} на ${formatBookingDate(pendingDragReschedule.newStartAt, "mk-MK")}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " Клиентот ќе добие е-порака со новото време." : ""}`,
+                  )
+                : t(
+                    "Review the new appointment time before confirming.",
+                    "Прегледајте го новото време на терминот пред да потврдите.",
+                  )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isConfirmingReschedule}>
-              Keep original time
+              {t("Keep original time", "Задржи го оригиналното време")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isConfirmingReschedule}
@@ -688,8 +714,8 @@ export function BookingsTimeline({
             >
               {isConfirmingReschedule && <Spinner data-icon="inline-start" />}
               {isConfirmingReschedule
-                ? "Rescheduling..."
-                : "Confirm reschedule"}
+                ? t("Rescheduling...", "Презакажување...")
+                : t("Confirm reschedule", "Потврди презакажување")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

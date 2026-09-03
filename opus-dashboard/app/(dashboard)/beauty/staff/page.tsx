@@ -1,16 +1,19 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { StaffList } from "./_components/StaffList";
 import { useState } from "react";
-import { StaffFormDialog } from "./_components/StaffFormDialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "convex/react";
 import { PlusIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { api } from "@/convex/_generated/api";
+import { StaffFormDialog } from "./_components/StaffFormDialog";
+import { StaffList } from "./_components/StaffList";
+
 export default function StaffPage() {
+  const { t } = useDashboardI18n();
   const profile = useQuery(api.users.getMyProfile);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
 
@@ -29,7 +32,8 @@ export default function StaffPage() {
     );
   }
 
-  if (profile === null || !profile.orgId) return <div>Not found</div>;
+  if (profile === null || !profile.orgId)
+    return <div>{t("Not found", "Не е пронајдено")}</div>;
 
   return (
     <motion.div
@@ -41,10 +45,13 @@ export default function StaffPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-            Staff
+            {t("Staff", "Вработени")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add team members and manage when customers can book them.
+            {t(
+              "Add team members and manage when customers can book them.",
+              "Додајте членови на тимот и управувајте со нивното работно време за закажување.",
+            )}
           </p>
         </div>
 
@@ -53,7 +60,7 @@ export default function StaffPage() {
           className="w-full transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:w-auto"
         >
           <PlusIcon data-icon="inline-start" />
-          Add staff member
+          {t("Add staff member", "Додај вработен")}
         </Button>
       </header>
 

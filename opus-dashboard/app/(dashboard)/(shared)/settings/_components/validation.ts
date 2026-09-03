@@ -52,12 +52,23 @@ export function parseReminderHours(raw: string): number[] | null {
 }
 
 /** Validates a file for upload: type must be image/*, size must be under maxMb. */
-export function validateImageFile(file: File, maxMb = 5): string | null {
+export function validateImageFile(
+  file: File,
+  maxMb = 5,
+  t?: (english: string, macedonian: string) => string,
+): string | null {
+  const translate = t ?? ((english: string) => english);
   if (!file.type.startsWith("image/")) {
-    return "Only image files are allowed (JPEG, PNG, WebP).";
+    return translate(
+      "Only image files are allowed (JPEG, PNG, WebP).",
+      "Дозволени се само датотеки со слики (JPEG, PNG, WebP).",
+    );
   }
   if (file.size > maxMb * 1024 * 1024) {
-    return `File is too large. Maximum size is ${maxMb} MB.`;
+    return translate(
+      `File is too large. Maximum size is ${maxMb} MB.`,
+      `Датотеката е преголема. Максималната големина е ${maxMb} MB.`,
+    );
   }
   return null;
 }

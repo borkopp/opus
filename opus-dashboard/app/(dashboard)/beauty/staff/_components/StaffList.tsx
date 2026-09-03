@@ -35,6 +35,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
@@ -50,6 +51,7 @@ export function StaffList({
   onAddClick: () => void;
   canManageAppointmentEmail: boolean;
 }) {
+  const { t } = useDashboardI18n();
   const staff = useQuery(api.staff.listStaffMembers, { orgId });
   const deactivateStaffMember = useMutation(api.staff.deactivateStaffMember);
   const updateStaffMember = useMutation(api.staff.updateStaffMember);
@@ -89,9 +91,12 @@ export function StaffList({
           <EmptyMedia variant="icon">
             <UsersIcon />
           </EmptyMedia>
-          <EmptyTitle>No staff yet</EmptyTitle>
+          <EmptyTitle>{t("No staff yet", "Сè уште нема вработени")}</EmptyTitle>
           <EmptyDescription>
-            Add your first team member, then set the hours customers can book.
+            {t(
+              "Add your first team member, then set the hours customers can book.",
+              "Додајте го вашиот прв член на тимот, па поставете го работното време за закажување.",
+            )}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -100,7 +105,7 @@ export function StaffList({
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
             <PlusIcon data-icon="inline-start" />
-            Add staff member
+            {t("Add staff member", "Додај вработен")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -113,7 +118,10 @@ export function StaffList({
   ) => {
     if (
       !window.confirm(
-        `Remove ${displayName} from the team? They will no longer be available for bookings.`,
+        t(
+          `Remove ${displayName} from the team? They will no longer be available for bookings.`,
+          `Дали сакате да го отстраните ${displayName} од тимот? Повеќе нема да биде достапен за закажување.`,
+        ),
       )
     ) {
       return;
@@ -121,9 +129,22 @@ export function StaffList({
 
     try {
       await deactivateStaffMember({ orgId, staffId });
-      toast.success(`${displayName} was removed from the team.`);
+      toast.success(
+        t(
+          `${displayName} was removed from the team.`,
+          `${displayName} беше отстранет од тимот.`,
+        ),
+      );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not remove staff member"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not remove staff member",
+            "Не може да се отстрани вработениот",
+          ),
+        ),
+      );
     }
   };
 
@@ -133,9 +154,22 @@ export function StaffList({
   ) => {
     try {
       await updateStaffMember({ orgId, staffId, isActive: true });
-      toast.success(`${displayName} is available for bookings again.`);
+      toast.success(
+        t(
+          `${displayName} is available for bookings again.`,
+          `${displayName} е повторно достапен за закажување.`,
+        ),
+      );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not reactivate staff member"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not reactivate staff member",
+            "Не може повторно да се активира вработениот",
+          ),
+        ),
+      );
     }
   };
 
@@ -168,17 +202,20 @@ export function StaffList({
                     {member.displayName}
                   </p>
                   {!member.isActive && (
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge variant="secondary">
+                      {t("Inactive", "Неактивен")}
+                    </Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {formatRole(member.role)}
+                  {formatRole(member.role, t)}
                 </p>
                 {canManageAppointmentEmail && (
                   <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                     <MailIcon className="size-3.5 shrink-0" />
                     <span className="truncate">
-                      {member.appointmentEmail || "No appointment email"}
+                      {member.appointmentEmail ||
+                        t("No appointment email", "Нема е-пошта за термини")}
                     </span>
                   </p>
                 )}
@@ -196,7 +233,7 @@ export function StaffList({
               >
                 <Link href={`/beauty/staff/${member._id}`}>
                   <CalendarClockIcon data-icon="inline-start" />
-                  Manage hours
+                  {t("Manage hours", "Управувај со часови")}
                 </Link>
               </Button>
 
@@ -205,7 +242,10 @@ export function StaffList({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Actions for ${member.displayName}`}
+                    aria-label={t(
+                      `Actions for ${member.displayName}`,
+                      `Опции за ${member.displayName}`,
+                    )}
                   >
                     <MoreHorizontalIcon />
                   </Button>
@@ -216,7 +256,7 @@ export function StaffList({
                       onSelect={() => setEditingStaffId(member._id)}
                     >
                       <PencilIcon />
-                      Edit details
+                      {t("Edit details", "Уреди детали")}
                     </DropdownMenuItem>
                     {!member.isActive && (
                       <DropdownMenuItem
@@ -225,7 +265,7 @@ export function StaffList({
                         }
                       >
                         <RotateCcwIcon />
-                        Mark as active
+                        {t("Mark as active", "Означи како активен")}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuGroup>
@@ -240,7 +280,7 @@ export function StaffList({
                           }
                         >
                           <Trash2Icon />
-                          Remove from team
+                          {t("Remove from team", "Отстрани од тимот")}
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </>
@@ -274,6 +314,7 @@ function ScheduleSummary({
   orgId: Id<"orgs">;
   staffId: Id<"staff_members">;
 }) {
+  const { t } = useDashboardI18n();
   const schedule = useQuery(api.availability.getWeeklySchedule, {
     orgId,
     staffId,
@@ -294,14 +335,29 @@ function ScheduleSummary({
   );
   const hoursLabel =
     activeDays.length === 0
-      ? "No working hours set"
+      ? t("No working hours set", "Нема поставено работно време")
       : uniqueHours.size === 1
-        ? `${activeDays.length} ${activeDays.length === 1 ? "day" : "days"} · ${activeDays[0].startTime}–${activeDays[0].endTime}`
-        : `${activeDays.length} ${activeDays.length === 1 ? "day" : "days"} · Hours vary`;
+        ? activeDays.length === 1
+          ? t(
+              `1 day · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+              `1 ден · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+            )
+          : t(
+              `${activeDays.length} days · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+              `${activeDays.length} дена · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+            )
+        : activeDays.length === 1
+          ? t("1 day · Hours vary", "1 ден · Различно време")
+          : t(
+              `${activeDays.length} days · Hours vary`,
+              `${activeDays.length} дена · Различно време`,
+            );
 
   return (
     <div className="min-w-0">
-      <p className="text-xs font-medium text-muted-foreground">Regular hours</p>
+      <p className="text-xs font-medium text-muted-foreground">
+        {t("Regular hours", "Редовно работно време")}
+      </p>
       <p
         className={cn(
           "mt-1 truncate text-sm font-medium",
@@ -314,10 +370,13 @@ function ScheduleSummary({
   );
 }
 
-function formatRole(role: Doc<"staff_members">["role"]) {
-  if (role === "owner") return "Owner";
-  if (role === "manager") return "Manager";
-  return "Staff member";
+function formatRole(
+  role: Doc<"staff_members">["role"],
+  t: (en: string, mk: string) => string,
+) {
+  if (role === "owner") return t("Owner", "Сопственик");
+  if (role === "manager") return t("Manager", "Менаџер");
+  return t("Staff member", "Вработен");
 }
 
 function getInitials(displayName: string) {

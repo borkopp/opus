@@ -38,6 +38,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
@@ -64,6 +65,7 @@ export function StaffFormDialog({
   onOpenChange: (open: boolean) => void;
   canManageAppointmentEmail: boolean;
 }) {
+  const { t } = useDashboardI18n();
   const router = useRouter();
   const isEdit = staffId !== undefined;
   const existingStaff = useQuery(
@@ -127,7 +129,12 @@ export function StaffFormDialog({
       });
       setAvatarUrl(storageId);
     } catch (uploadError: unknown) {
-      setError(getErrorMessage(uploadError, "Failed to upload image"));
+      setError(
+        getErrorMessage(
+          uploadError,
+          t("Failed to upload image", "Неуспешно прикачување слика"),
+        ),
+      );
     } finally {
       setIsUploading(false);
       event.target.value = "";
@@ -138,7 +145,7 @@ export function StaffFormDialog({
     event.preventDefault();
     const name = displayName.trim();
     if (!name) {
-      setError("Enter a display name.");
+      setError(t("Enter a display name.", "Внесете име за приказ."));
       return;
     }
 
@@ -170,7 +177,9 @@ export function StaffFormDialog({
           has_appointment_email: Boolean(appointmentEmail.trim()),
           is_active: isActive,
         });
-        toast.success("Staff details saved.");
+        toast.success(
+          t("Staff details saved.", "Деталите за вработениот се зачувани."),
+        );
         onOpenChange(false);
       } else {
         const newStaffId = await createStaffMember({
@@ -189,12 +198,25 @@ export function StaffFormDialog({
           specialty_count: specialtyList.length,
           has_appointment_email: Boolean(appointmentEmail.trim()),
         });
-        toast.success("Staff member added. Set their working hours next.");
+        toast.success(
+          t(
+            "Staff member added. Set their working hours next.",
+            "Вработениот е додаден. Следно, поставете го работното време.",
+          ),
+        );
         onOpenChange(false);
         router.push(`/beauty/staff/${newStaffId}`);
       }
     } catch (saveError: unknown) {
-      setError(getErrorMessage(saveError, "Failed to save staff member"));
+      setError(
+        getErrorMessage(
+          saveError,
+          t(
+            "Failed to save staff member",
+            "Неуспешно зачувување на вработениот",
+          ),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -207,12 +229,20 @@ export function StaffFormDialog({
       <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {isEdit ? "Edit staff details" : "Add a staff member"}
+            {isEdit
+              ? t("Edit staff details", "Уреди детали за вработен")
+              : t("Add a staff member", "Додај вработен")}
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update the information customers and your team see."
-              : "Add the basic details first. You’ll set working hours next."}
+              ? t(
+                  "Update the information customers and your team see.",
+                  "Ажурирајте ги информациите што ги гледаат клиентите и вашиот тим.",
+                )
+              : t(
+                  "Add the basic details first. You’ll set working hours next.",
+                  "Прво додајте ги основните детали. Следно ќе поставите работно време.",
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -228,12 +258,17 @@ export function StaffFormDialog({
             <form id="staff-form" onSubmit={handleSubmit}>
               <FieldGroup className="gap-5 py-2">
                 <Field>
-                  <FieldLabel>Profile photo</FieldLabel>
+                  <FieldLabel>
+                    {t("Profile photo", "Профилна слика")}
+                  </FieldLabel>
                   <div className="flex items-center gap-4">
                     <Avatar className="size-14 border bg-muted">
                       <AvatarImage
                         src={avatarPreviewUrl}
-                        alt={displayName || "Staff profile"}
+                        alt={
+                          displayName ||
+                          t("Staff profile", "Профил на вработен")
+                        }
                         className="object-cover"
                       />
                       <AvatarFallback className="text-muted-foreground">
@@ -245,7 +280,10 @@ export function StaffFormDialog({
                       type="file"
                       className="hidden"
                       accept="image/*"
-                      aria-label="Choose profile photo"
+                      aria-label={t(
+                        "Choose profile photo",
+                        "Изберете профилна слика",
+                      )}
                       onChange={handleUpload}
                     />
                     <Button
@@ -260,25 +298,31 @@ export function StaffFormDialog({
                       ) : (
                         <ImagePlusIcon data-icon="inline-start" />
                       )}
-                      {isUploading ? "Uploading…" : "Choose photo"}
+                      {isUploading
+                        ? t("Uploading…", "Се прикачува…")
+                        : t("Choose photo", "Избери слика")}
                     </Button>
                   </div>
                 </Field>
 
                 <FieldGroup className="grid gap-4 sm:grid-cols-2">
                   <Field>
-                    <FieldLabel htmlFor="staff-name">Display name</FieldLabel>
+                    <FieldLabel htmlFor="staff-name">
+                      {t("Display name", "Име за приказ")}
+                    </FieldLabel>
                     <Input
                       id="staff-name"
                       required
                       value={displayName}
                       onChange={(event) => setDisplayName(event.target.value)}
-                      placeholder="e.g. Ana Petrova"
+                      placeholder={t("e.g. Ana Petrova", "пр. Ана Петрова")}
                     />
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="staff-role">Role</FieldLabel>
+                    <FieldLabel htmlFor="staff-role">
+                      {t("Role", "Улога")}
+                    </FieldLabel>
                     <Select
                       value={role}
                       onValueChange={(value) => {
@@ -286,13 +330,21 @@ export function StaffFormDialog({
                       }}
                     >
                       <SelectTrigger id="staff-role" className="w-full">
-                        <SelectValue placeholder="Choose a role" />
+                        <SelectValue
+                          placeholder={t("Choose a role", "Изберете улога")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="staff">Staff member</SelectItem>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="owner">Owner</SelectItem>
+                          <SelectItem value="staff">
+                            {t("Staff member", "Вработен")}
+                          </SelectItem>
+                          <SelectItem value="manager">
+                            {t("Manager", "Менаџер")}
+                          </SelectItem>
+                          <SelectItem value="owner">
+                            {t("Owner", "Сопственик")}
+                          </SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -302,8 +354,10 @@ export function StaffFormDialog({
                 {canManageAppointmentEmail && (
                   <Field>
                     <FieldLabel htmlFor="staff-appointment-email">
-                      Appointment email{" "}
-                      <span className="text-muted-foreground">(optional)</span>
+                      {t("Appointment email", "Е-пошта за термини")}{" "}
+                      <span className="text-muted-foreground">
+                        ({t("optional", "опционално")})
+                      </span>
                     </FieldLabel>
                     <Input
                       id="staff-appointment-email"
@@ -316,39 +370,53 @@ export function StaffFormDialog({
                       placeholder="ana@studio.mk"
                     />
                     <FieldDescription>
-                      Receives new appointment and reminder emails only for
-                      bookings assigned to this person. This does not grant
-                      dashboard access.
+                      {t(
+                        "Receives new appointment and reminder emails only for bookings assigned to this person. This does not grant dashboard access.",
+                        "Прима пораки за нови термини и потсетници само за закажувања доделени на ова лице. Ова не дава пристап до контролната табла.",
+                      )}
                     </FieldDescription>
                   </Field>
                 )}
 
                 <Field>
                   <FieldLabel htmlFor="staff-specialties">
-                    Specialties{" "}
-                    <span className="text-muted-foreground">(optional)</span>
+                    {t("Specialties", "Специјалности")}{" "}
+                    <span className="text-muted-foreground">
+                      ({t("optional", "опционално")})
+                    </span>
                   </FieldLabel>
                   <Input
                     id="staff-specialties"
                     value={specialties}
                     onChange={(event) => setSpecialties(event.target.value)}
-                    placeholder="Nails, brows, makeup"
+                    placeholder={t(
+                      "Nails, brows, makeup",
+                      "Нокти, веѓи, шминка",
+                    )}
                   />
                   <FieldDescription>
-                    Separate multiple specialties with commas.
+                    {t(
+                      "Separate multiple specialties with commas.",
+                      "Одделете повеќе специјалности со запирки.",
+                    )}
                   </FieldDescription>
                 </Field>
 
                 <Field>
                   <FieldLabel htmlFor="staff-bio">
-                    Short bio{" "}
-                    <span className="text-muted-foreground">(optional)</span>
+                    {t("Short bio", "Кратка биографија")}{" "}
+                    <span className="text-muted-foreground">
+                      ({t("optional", "опционално")})
+                    </span>
                   </FieldLabel>
                   <Textarea
                     id="staff-bio"
                     value={bio}
                     onChange={(event) => setBio(event.target.value)}
-                    placeholder="A short introduction for the booking page."
+                    placeholder={t(
+                      "A short introduction for the booking page.",
+                      "Краток вовед за страницата за закажување.",
+                    )}
                     className="min-h-20"
                   />
                 </Field>
@@ -356,16 +424,24 @@ export function StaffFormDialog({
                 {isEdit && (
                   <Field orientation="horizontal" variant="surface">
                     <FieldContent>
-                      <FieldTitle>Available for bookings</FieldTitle>
+                      <FieldTitle>
+                        {t("Available for bookings", "Достапен за закажувања")}
+                      </FieldTitle>
                       <FieldDescription>
-                        Turn this off to hide this person from new bookings.
+                        {t(
+                          "Turn this off to hide this person from new bookings.",
+                          "Исклучете го ова за да го сокриете ова лице од нови закажувања.",
+                        )}
                       </FieldDescription>
                     </FieldContent>
                     <Switch
                       id="staff-active"
                       checked={isActive}
                       onCheckedChange={setIsActive}
-                      aria-label="Available for bookings"
+                      aria-label={t(
+                        "Available for bookings",
+                        "Достапен за закажувања",
+                      )}
                     />
                   </Field>
                 )}
@@ -383,7 +459,7 @@ export function StaffFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancel
+            {t("Cancel", "Откажи")}
           </Button>
           <Button
             type="submit"
@@ -391,7 +467,9 @@ export function StaffFormDialog({
             disabled={isLoadingStaff || isSaving || isUploading}
           >
             {isSaving && <Spinner data-icon="inline-start" />}
-            {isEdit ? "Save details" : "Add & set hours"}
+            {isEdit
+              ? t("Save details", "Зачувај детали")
+              : t("Add & set hours", "Додај и постави часови")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { formatPrice } from "@/components/ui/price";
 import { motion } from "framer-motion";
 
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+
 // Widgets
 import { GapOptimizerWidget } from "@/components/dashboard/GapOptimizerWidget";
 import { LiveScheduleWidget } from "@/components/dashboard/LiveScheduleWidget";
@@ -25,11 +27,14 @@ import { LatestActivityWidget } from "@/components/dashboard/LatestActivityWidge
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
 
 export default function DashboardHome() {
+  const { t } = useDashboardI18n();
   const today = useMemo(() => new Date(), []);
   const startOfTodayMs = startOfDay(today).getTime();
   const endOfTodayMs = startOfTodayMs + 24 * 60 * 60 * 1000;
 
-  const startOfCurrentWeekMs = startOfWeek(today, { weekStartsOn: 1 }).getTime();
+  const startOfCurrentWeekMs = startOfWeek(today, {
+    weekStartsOn: 1,
+  }).getTime();
   const endOfCurrentWeekMs = endOfWeek(today, { weekStartsOn: 1 }).getTime();
   const startOfPreviousWeekMs = startOfCurrentWeekMs - 7 * 24 * 60 * 60 * 1000;
   const endOfPreviousWeekMs = startOfCurrentWeekMs - 1;
@@ -43,37 +48,50 @@ export default function DashboardHome() {
   const complete = useMutation(api.bookings.completeBooking);
 
   // Queries — all hooks must be called unconditionally (Rules of Hooks)
-  const orgSettingsData = useQuery(api.orgSettings.getOrgSettings, orgId ? { orgId } : "skip");
+  const orgSettingsData = useQuery(
+    api.orgSettings.getOrgSettings,
+    orgId ? { orgId } : "skip",
+  );
 
   const dashboardMetrics = useQuery(
     api.dashboard.getDashboardMetrics,
-    orgId ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs } : "skip",
+    orgId
+      ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs }
+      : "skip",
   );
 
   const dailySchedule = useQuery(
     api.dashboard.getDailySchedule,
-    orgId ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs } : "skip",
+    orgId
+      ? { orgId, startOfDayMs: startOfTodayMs, endOfDayMs: endOfTodayMs }
+      : "skip",
   );
 
   const staffUtilisation = useQuery(
     api.dashboard.getStaffUtilisation,
-    orgId ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs } : "skip",
+    orgId
+      ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs }
+      : "skip",
   );
 
   const weeklyRevenueChart = useQuery(
     api.dashboard.getWeeklyRevenueChart,
-    orgId ? {
-      orgId,
-      currentWeekStartMs: startOfCurrentWeekMs,
-      currentWeekEndMs: endOfCurrentWeekMs,
-      previousWeekStartMs: startOfPreviousWeekMs,
-      previousWeekEndMs: endOfPreviousWeekMs,
-    } : "skip",
+    orgId
+      ? {
+          orgId,
+          currentWeekStartMs: startOfCurrentWeekMs,
+          currentWeekEndMs: endOfCurrentWeekMs,
+          previousWeekStartMs: startOfPreviousWeekMs,
+          previousWeekEndMs: endOfPreviousWeekMs,
+        }
+      : "skip",
   );
 
   const aiPerformance = useQuery(
     api.dashboard.getAIPerformance,
-    orgId ? { orgId, startMs: startOfCurrentMonthMs, endMs: endOfCurrentMonthMs } : "skip",
+    orgId
+      ? { orgId, startMs: startOfCurrentMonthMs, endMs: endOfCurrentMonthMs }
+      : "skip",
   );
 
   if (profile === undefined) {
@@ -103,9 +121,16 @@ export default function DashboardHome() {
   }
 
   // Derived calculations for UI
-  const formatMoney = (minorUnits: number) => formatPrice(minorUnits, orgSettingsData?.settings?.currency, orgSettingsData?.settings?.locale);
+  const formatMoney = (minorUnits: number) =>
+    formatPrice(
+      minorUnits,
+      orgSettingsData?.settings?.currency,
+      orgSettingsData?.settings?.locale,
+    );
 
-  type DailyBooking = FunctionReturnType<typeof api.dashboard.getDailySchedule>[number];
+  type DailyBooking = FunctionReturnType<
+    typeof api.dashboard.getDailySchedule
+  >[number];
   const groupedByStaff: Record<string, DailyBooking[]> = {};
   dailySchedule.forEach((booking) => {
     if (!groupedByStaff[booking.staffName]) {
@@ -117,9 +142,16 @@ export default function DashboardHome() {
   const handleComplete = async (bookingId: Id<"bookings">) => {
     try {
       await complete({ orgId, bookingId });
-      toast.success("Booking completed");
+      toast.success(t("Booking completed", "Терминот е завршен"));
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Could not complete booking");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(
+              "Could not complete booking",
+              "Терминот не може да се заврши",
+            ),
+      );
     }
   };
 
@@ -148,9 +180,7 @@ export default function DashboardHome() {
 
         {/* ── Row 2: Staff Capacity + Revenue Chart + AI Performance ── */}
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <StaffUtilisationWidget
-            staffUtilisation={staffUtilisation}
-          />
+          <StaffUtilisationWidget staffUtilisation={staffUtilisation} />
         </div>
         <div className="md:col-span-2 md:h-full md:min-h-0">
           <RevenueChartWidget
@@ -159,9 +189,7 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <AIPerformanceWidget
-            aiPerformance={aiPerformance}
-          />
+          <AIPerformanceWidget aiPerformance={aiPerformance} />
         </div>
       </motion.div>
     </div>

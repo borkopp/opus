@@ -11,8 +11,8 @@ import {
 import { cn } from "@/lib/utils";
 
 interface SettingsCardProps {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   action?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -58,8 +58,8 @@ export function SettingsCard({
 }
 
 interface SettingsToggleRowProps {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
   control: ReactNode;
   className?: string;
 }
@@ -89,8 +89,8 @@ export function SettingsToggleRow({
 }
 
 interface SettingsSectionProps {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   children: ReactNode;
   className?: string;
 }

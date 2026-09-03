@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TabsContent } from "@/components/ui/tabs";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import {
   SettingsCard,
   SettingsSection,
@@ -58,28 +59,34 @@ interface NotificationsQueueTabProps {
 const DASHBOARD_OPTIONS = [
   {
     id: "dashboard-sound-enabled",
-    label: "Sound",
-    description: "Play a chime when a new notification arrives.",
+    labelEn: "Sound",
+    labelMk: "Звук",
+    descriptionEn: "Play a chime when a new notification arrives.",
+    descriptionMk: "Пушти звучен сигнал кога ќе пристигне ново известување.",
     key: "dashboardSoundEnabled",
   },
   {
     id: "dashboard-toast-enabled",
-    label: "Toast preview",
-    description: "Show a brief notification card beneath the bell.",
+    labelEn: "Toast preview",
+    labelMk: "Преглед на известување",
+    descriptionEn: "Show a brief notification card beneath the bell.",
+    descriptionMk: "Прикажи кратка картичка со известување под ѕвончето.",
     key: "dashboardToastEnabled",
   },
 ] as const;
 
-const ROLE_LABELS: Record<EmailRecipient["role"], string> = {
-  owner: "Owner",
-  manager: "Manager",
-  staff: "Staff",
-};
+const ROLE_LABELS: Record<EmailRecipient["role"], { en: string; mk: string }> =
+  {
+    owner: { en: "Owner", mk: "Сопственик" },
+    manager: { en: "Manager", mk: "Менаџер" },
+    staff: { en: "Staff", mk: "Вработен" },
+  };
 
 export function NotificationsQueueTab({
   orgId,
   initialData,
 }: NotificationsQueueTabProps) {
+  const { t } = useDashboardI18n();
   const isMounted = useRef(true);
   useEffect(() => {
     return () => {
@@ -138,7 +145,10 @@ export function NotificationsQueueTab({
       (email.customerReminderEmailEnabled && customerReminderHours.length === 0)
     ) {
       setCustomerReminderError(
-        "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+        t(
+          "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+          "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
+        ),
       );
       invalid = true;
     } else {
@@ -149,7 +159,10 @@ export function NotificationsQueueTab({
       (email.staffReminderEmailEnabled && staffReminderHours.length === 0)
     ) {
       setStaffReminderError(
-        "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+        t(
+          "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
+          "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
+        ),
       );
       invalid = true;
     } else {
@@ -169,13 +182,23 @@ export function NotificationsQueueTab({
         staffEmailRecipientUserIds: email.staffEmailRecipientUserIds,
       });
       await updateDashboardNotificationSettings({ orgId, ...dashboard });
-      if (isMounted.current) toast.success("Email and alert settings saved");
+      if (isMounted.current) {
+        toast.success(
+          t(
+            "Email and alert settings saved",
+            "Поставките за е-пошта и известувања се зачувани",
+          ),
+        );
+      }
     } catch (error) {
       if (isMounted.current) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to save email settings.",
+            : t(
+                "Failed to save email settings.",
+                "Не успеа зачувувањето на поставките за е-пошта.",
+              ),
         );
       }
     } finally {
@@ -186,8 +209,11 @@ export function NotificationsQueueTab({
   return (
     <TabsContent value="notifications" className="m-0">
       <SettingsCard
-        title="Email & alerts"
-        description="Keep clients verified and informed, then decide exactly which dashboard users hear about new and upcoming appointments."
+        title={t("Email & alerts", "Е-пошта и известувања")}
+        description={t(
+          "Keep clients verified and informed, then decide exactly which dashboard users hear about new and upcoming appointments.",
+          "Осигурете верификација и информираност на клиентите, и изберете кои корисници на контролната табла добиваат известувања за нови и претстојни термини.",
+        )}
         contentClassName="flex flex-col gap-7"
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
@@ -196,42 +222,62 @@ export function NotificationsQueueTab({
             ) : (
               <Save data-icon="inline-start" />
             )}
-            {isSaving ? "Saving…" : "Save email settings"}
+            {isSaving
+              ? t("Saving…", "Се зачувува…")
+              : t("Save email settings", "Зачувај поставки за е-пошта")}
           </Button>
         }
       >
         <SettingsSection
-          title="Client journey"
-          description="Verification and confirmation are transactional parts of online booking, so clients cannot switch them off."
+          title={t("Client journey", "Патување на клиентот")}
+          description={t(
+            "Verification and confirmation are transactional parts of online booking, so clients cannot switch them off.",
+            "Верификацијата и потврдата се трансакциски дел од онлајн закажувањето, па клиентите не можат да ги исклучат.",
+          )}
         >
           <div className="flex flex-col gap-3">
             <SettingsToggleRow
-              title="Email verification code"
-              description="Confirms that the client owns the email address before the appointment is created."
+              title={t(
+                "Email verification code",
+                "Код за верификација на е-пошта",
+              )}
+              description={t(
+                "Confirms that the client owns the email address before the appointment is created.",
+                "Потврдува дека клиентот е сопственик на е-адресата пред да се креира терминот.",
+              )}
               control={
                 <Badge variant="secondary">
                   <ShieldCheck data-icon="inline-start" />
-                  Required
+                  {t("Required", "Задолжително")}
                 </Badge>
               }
             />
             <SettingsToggleRow
-              title="Appointment confirmation"
-              description="Sends the appointment overview, calendar file, directions, and studio contact actions."
+              title={t("Appointment confirmation", "Потврда за термин")}
+              description={t(
+                "Sends the appointment overview, calendar file, directions, and studio contact actions.",
+                "Испраќа преглед на терминот, датотека за календар, насоки и контакт информации за студиото.",
+              )}
               control={
                 <Badge variant="secondary">
                   <MailCheck data-icon="inline-start" />
-                  Always on
+                  {t("Always on", "Секогаш вклучено")}
                 </Badge>
               }
             />
             <SettingsToggleRow
-              title="Client reminders"
-              description="Email clients before confirmed appointments using the schedule below."
+              title={t("Client reminders", "Потсетници за клиенти")}
+              description={t(
+                "Email clients before confirmed appointments using the schedule below.",
+                "Испраќа е-пошта на клиентите пред потврдените термини според распоредот подолу.",
+              )}
               control={
                 <Switch
                   id="customer-reminder-email-enabled"
-                  aria-label="Client reminder emails"
+                  aria-label={t(
+                    "Client reminder emails",
+                    "Е-пораки за потсетување на клиенти",
+                  )}
                   checked={email.customerReminderEmailEnabled}
                   onCheckedChange={(checked) =>
                     setEmail((current) => ({
@@ -248,7 +294,10 @@ export function NotificationsQueueTab({
             <FieldGroup className="max-w-xl">
               <Field data-invalid={Boolean(customerReminderError)}>
                 <FieldLabel htmlFor="customer-reminder-hours">
-                  Client reminder schedule (hours before)
+                  {t(
+                    "Client reminder schedule (hours before)",
+                    "Распоред за потсетување на клиенти (часови однапред)",
+                  )}
                 </FieldLabel>
                 <DebouncedInput
                   id="customer-reminder-hours"
@@ -266,8 +315,10 @@ export function NotificationsQueueTab({
                   placeholder="24, 2"
                 />
                 <FieldDescription id="customer-reminder-description">
-                  For example, 24, 2 sends one email a day before and another
-                  two hours before.
+                  {t(
+                    "For example, 24, 2 sends one email a day before and another two hours before.",
+                    "На пример, 24, 2 испраќа една порака еден ден однапред и друга два часа однапред.",
+                  )}
                 </FieldDescription>
                 <FieldError>{customerReminderError}</FieldError>
               </Field>
@@ -278,17 +329,26 @@ export function NotificationsQueueTab({
         <Separator />
 
         <SettingsSection
-          title="Team email"
-          description="Choose which appointment events are emailed to assigned staff and additional dashboard recipients."
+          title={t("Team email", "Тимска е-пошта")}
+          description={t(
+            "Choose which appointment events are emailed to assigned staff and additional dashboard recipients.",
+            "Изберете кои настани за термини се испраќаат по е-пошта на доделениот персонал и дополнителни корисници.",
+          )}
         >
           <div className="flex flex-col gap-3">
             <SettingsToggleRow
-              title="New appointments"
-              description="Email the assigned staff when an appointment is added. Selected dashboard recipients also receive new online bookings."
+              title={t("New appointments", "Нови термини")}
+              description={t(
+                "Email the assigned staff when an appointment is added. Selected dashboard recipients also receive new online bookings.",
+                "Испраќа е-пошта на доделениот вработен при додавање нов термин. Избраните корисници на контролната табла исто така добиваат известувања за нови онлајн закажувања.",
+              )}
               control={
                 <Switch
                   id="staff-new-booking-email-enabled"
-                  aria-label="New booking emails"
+                  aria-label={t(
+                    "New booking emails",
+                    "Е-пораки за нови закажувања",
+                  )}
                   checked={email.staffNewBookingEmailEnabled}
                   onCheckedChange={(checked) =>
                     setEmail((current) => ({
@@ -300,12 +360,21 @@ export function NotificationsQueueTab({
               }
             />
             <SettingsToggleRow
-              title="Upcoming appointment reminders"
-              description="Email assigned staff and selected dashboard recipients before confirmed appointments."
+              title={t(
+                "Upcoming appointment reminders",
+                "Потсетници за претстојни термини",
+              )}
+              description={t(
+                "Email assigned staff and selected dashboard recipients before confirmed appointments.",
+                "Испраќа е-пошта на доделениот вработен и избраните корисници пред потврдените термини.",
+              )}
               control={
                 <Switch
                   id="staff-reminder-email-enabled"
-                  aria-label="Team appointment reminders"
+                  aria-label={t(
+                    "Team appointment reminders",
+                    "Тимски потсетници за термини",
+                  )}
                   checked={email.staffReminderEmailEnabled}
                   onCheckedChange={(checked) =>
                     setEmail((current) => ({
@@ -322,7 +391,10 @@ export function NotificationsQueueTab({
             <FieldGroup className="max-w-xl">
               <Field data-invalid={Boolean(staffReminderError)}>
                 <FieldLabel htmlFor="staff-reminder-hours">
-                  Team reminder schedule (hours before)
+                  {t(
+                    "Team reminder schedule (hours before)",
+                    "Распоред за тимски потсетници (часови однапред)",
+                  )}
                 </FieldLabel>
                 <DebouncedInput
                   id="staff-reminder-hours"
@@ -340,8 +412,10 @@ export function NotificationsQueueTab({
                   placeholder="24, 2"
                 />
                 <FieldDescription id="staff-reminder-description">
-                  This schedule is independent from the client reminder
-                  schedule.
+                  {t(
+                    "This schedule is independent from the client reminder schedule.",
+                    "Овој распоред е независен од распоредот за потсетување на клиенти.",
+                  )}
                 </FieldDescription>
                 <FieldError>{staffReminderError}</FieldError>
               </Field>
@@ -350,12 +424,16 @@ export function NotificationsQueueTab({
 
           <FieldSet>
             <FieldLegend variant="label">
-              Additional dashboard recipients
+              {t(
+                "Additional dashboard recipients",
+                "Дополнителни примачи од контролната табла",
+              )}
             </FieldLegend>
             <FieldDescription>
-              Staff with an appointment email receive only their assigned
-              appointments. Select dashboard users here if they should also
-              receive studio-wide team emails.
+              {t(
+                "Staff with an appointment email receive only their assigned appointments. Select dashboard users here if they should also receive studio-wide team emails.",
+                "Вработените со е-пошта за термини ги добиваат само своите доделени термини. Изберете корисници тука доколку треба да добиваат е-пораки за целото студио.",
+              )}
             </FieldDescription>
             <FieldGroup data-slot="checkbox-group">
               {initialData.emailRecipients.map((recipient) => {
@@ -392,7 +470,10 @@ export function NotificationsQueueTab({
                       <FieldLabel htmlFor={id}>
                         {recipient.name}
                         <Badge variant="outline">
-                          {ROLE_LABELS[recipient.role]}
+                          {t(
+                            ROLE_LABELS[recipient.role].en,
+                            ROLE_LABELS[recipient.role].mk,
+                          )}
                         </Badge>
                       </FieldLabel>
                       <FieldDescription>{recipient.email}</FieldDescription>
@@ -403,8 +484,10 @@ export function NotificationsQueueTab({
             </FieldGroup>
             {initialData.emailRecipients.length === 0 && (
               <FieldDescription>
-                There are no active dashboard users to add. Appointment emails
-                are linked from the Staff page.
+                {t(
+                  "There are no active dashboard users to add. Appointment emails are linked from the Staff page.",
+                  "Нема активни корисници за додавање. Е-поштата за термини се поврзува на страницата Тим.",
+                )}
               </FieldDescription>
             )}
           </FieldSet>
@@ -413,16 +496,25 @@ export function NotificationsQueueTab({
         <Separator />
 
         <SettingsSection
-          title="Dashboard alerts"
-          description="Control real-time feedback for staff working inside OPUS."
+          title={t("Dashboard alerts", "Известувања на контролната табла")}
+          description={t(
+            "Control real-time feedback for staff working inside OPUS.",
+            "Контролирајте ги известувањата во реално време за персоналот во OPUS.",
+          )}
         >
           <SettingsToggleRow
-            title="In-app notifications"
-            description="Show new bookings, cancellations, and no-shows in the notification bell."
+            title={t("In-app notifications", "Известувања во апликацијата")}
+            description={t(
+              "Show new bookings, cancellations, and no-shows in the notification bell.",
+              "Прикажувај нови закажувања, откажувања и пропуштени термини во ѕвончето за известувања.",
+            )}
             control={
               <Switch
                 id="dashboard-notifications-enabled"
-                aria-label="In-app notifications"
+                aria-label={t(
+                  "In-app notifications",
+                  "Известувања во апликацијата",
+                )}
                 checked={dashboard.dashboardNotificationsEnabled}
                 onCheckedChange={(checked) =>
                   setDashboard((current) => ({
@@ -436,26 +528,35 @@ export function NotificationsQueueTab({
 
           {dashboard.dashboardNotificationsEnabled && (
             <div className="flex flex-col gap-3">
-              {DASHBOARD_OPTIONS.map(({ id, label, description, key }) => (
-                <SettingsToggleRow
-                  key={id}
-                  title={label}
-                  description={description}
-                  control={
-                    <Switch
-                      id={id}
-                      aria-label={label}
-                      checked={dashboard[key]}
-                      onCheckedChange={(checked) =>
-                        setDashboard((current) => ({
-                          ...current,
-                          [key]: checked,
-                        }))
-                      }
-                    />
-                  }
-                />
-              ))}
+              {DASHBOARD_OPTIONS.map(
+                ({
+                  id,
+                  labelEn,
+                  labelMk,
+                  descriptionEn,
+                  descriptionMk,
+                  key,
+                }) => (
+                  <SettingsToggleRow
+                    key={id}
+                    title={t(labelEn, labelMk)}
+                    description={t(descriptionEn, descriptionMk)}
+                    control={
+                      <Switch
+                        id={id}
+                        aria-label={t(labelEn, labelMk)}
+                        checked={dashboard[key]}
+                        onCheckedChange={(checked) =>
+                          setDashboard((current) => ({
+                            ...current,
+                            [key]: checked,
+                          }))
+                        }
+                      />
+                    }
+                  />
+                ),
+              )}
             </div>
           )}
         </SettingsSection>

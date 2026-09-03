@@ -1,12 +1,7 @@
 import { cn } from "@/lib/utils";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 type Status = "active" | "handed_off" | "resolved";
-
-const labels: Record<Status, string> = {
-  active: "Active",
-  handed_off: "Handed Off",
-  resolved: "Resolved",
-};
 
 const styles: Record<Status, string> = {
   active: "bg-success/10 text-success border border-success/20",
@@ -15,8 +10,21 @@ const styles: Record<Status, string> = {
 };
 
 export function ConversationStatusBadge({ status }: { status: Status }) {
+  const { t } = useDashboardI18n();
+
+  const labels: Record<Status, string> = {
+    active: t("Active", "Активен"),
+    handed_off: t("Handed Off", "Преземен"),
+    resolved: t("Resolved", "Решен"),
+  };
+
   return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", styles[status])}>
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+        styles[status],
+      )}
+    >
       {labels[status]}
     </span>
   );

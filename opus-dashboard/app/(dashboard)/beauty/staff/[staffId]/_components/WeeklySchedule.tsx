@@ -32,20 +32,34 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
 import { cn } from "@/lib/utils";
 
-const DAYS = [
-  { dayOfWeek: 1, label: "Monday" },
-  { dayOfWeek: 2, label: "Tuesday" },
-  { dayOfWeek: 3, label: "Wednesday" },
-  { dayOfWeek: 4, label: "Thursday" },
-  { dayOfWeek: 5, label: "Friday" },
-  { dayOfWeek: 6, label: "Saturday" },
-  { dayOfWeek: 0, label: "Sunday" },
-] as const;
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
+
+function getDayLabel(dayOfWeek: number, t: (en: string, mk: string) => string) {
+  switch (dayOfWeek) {
+    case 1:
+      return t("Monday", "Понеделник");
+    case 2:
+      return t("Tuesday", "Вторник");
+    case 3:
+      return t("Wednesday", "Среда");
+    case 4:
+      return t("Thursday", "Четврток");
+    case 5:
+      return t("Friday", "Петок");
+    case 6:
+      return t("Saturday", "Сабота");
+    case 0:
+      return t("Sunday", "Недела");
+    default:
+      return t("Day", "Ден");
+  }
+}
 
 type BreakTime = {
   startTime: string;
@@ -73,6 +87,7 @@ export function WeeklySchedule({
   orgId: Id<"orgs">;
   staffId: Id<"staff_members">;
 }) {
+  const { t } = useDashboardI18n();
   const weeklySchedule = useQuery(api.availability.getWeeklySchedule, {
     orgId,
     staffId,
@@ -126,7 +141,7 @@ export function WeeklySchedule({
     scheduleState.baseline,
     scheduleState.draft,
   );
-  const orderedDraft = DAYS.map(({ dayOfWeek }) =>
+  const orderedDraft = DAY_ORDER.map((dayOfWeek) =>
     scheduleState.draft.find((day) => day.dayOfWeek === dayOfWeek),
   ).filter((day): day is DraftDay => day !== undefined);
 
@@ -147,7 +162,7 @@ export function WeeklySchedule({
   };
 
   const handleSave = async () => {
-    const validationError = getScheduleValidationError(scheduleState.draft);
+    const validationError = getScheduleValidationError(scheduleState.draft, t);
     if (validationError) {
       toast.error(validationError);
       return;
@@ -182,9 +197,19 @@ export function WeeklySchedule({
           ? { ...current, baseline: cloneSchedule(current.draft) }
           : current,
       );
-      toast.success("Regular hours saved.");
+      toast.success(
+        t("Regular hours saved.", "Редовното работно време е зачувано."),
+      );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not save regular hours"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not save regular hours",
+            "Не може да се зачува редовното работно време",
+          ),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -192,13 +217,21 @@ export function WeeklySchedule({
 
   const handleCopyToAll = async () => {
     if (hasChanges) {
-      toast.error("Save these hours before applying them to the team.");
+      toast.error(
+        t(
+          "Save these hours before applying them to the team.",
+          "Зачувајте ги овие часови пред да ги примените на тимот.",
+        ),
+      );
       return;
     }
 
     if (
       !window.confirm(
-        "Apply these regular hours to every other staff member? Their current regular hours will be replaced.",
+        t(
+          "Apply these regular hours to every other staff member? Their current regular hours will be replaced.",
+          "Дали сакате да го примените ова редовно работно време на сите останати вработени? Нивното тековно работно време ќе биде заменето.",
+        ),
       )
     ) {
       return;
@@ -207,9 +240,22 @@ export function WeeklySchedule({
     setIsCopying(true);
     try {
       await copyScheduleToAllStaff({ orgId, sourceStaffId: staffId });
-      toast.success("Regular hours applied to the whole team.");
+      toast.success(
+        t(
+          "Regular hours applied to the whole team.",
+          "Редовното работно време е применето на целиот тим.",
+        ),
+      );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not apply hours to the team"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not apply hours to the team",
+            "Не може да се примени работното време на тимот",
+          ),
+        ),
+      );
     } finally {
       setIsCopying(false);
     }
@@ -220,9 +266,12 @@ export function WeeklySchedule({
       <CardHeader className="border-b">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>Regular hours</CardTitle>
+            <CardTitle>{t("Regular hours", "Редовно работно време")}</CardTitle>
             <CardDescription className="mt-1.5">
-              Customers can only book this team member during these hours.
+              {t(
+                "Customers can only book this team member during these hours.",
+                "Клиентите можат да закажуваат кај овој член на тимот само во ова работно време.",
+              )}
             </CardDescription>
           </div>
 
@@ -233,7 +282,10 @@ export function WeeklySchedule({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label="More schedule actions"
+                    aria-label={t(
+                      "More schedule actions",
+                      "Повеќе опции за распоредот",
+                    )}
                   >
                     <MoreHorizontalIcon />
                   </Button>
@@ -245,7 +297,10 @@ export function WeeklySchedule({
                       onSelect={() => void handleCopyToAll()}
                     >
                       {isCopying ? <Spinner /> : <CopyIcon />}
-                      Apply saved hours to all staff
+                      {t(
+                        "Apply saved hours to all staff",
+                        "Примени зачувано работно време на сите вработени",
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
@@ -262,7 +317,9 @@ export function WeeklySchedule({
               ) : (
                 <SaveIcon data-icon="inline-start" />
               )}
-              Save changes
+              {isSaving
+                ? t("Saving…", "Се зачувува…")
+                : t("Save changes", "Зачувај промени")}
             </Button>
           </div>
         </div>
@@ -271,9 +328,7 @@ export function WeeklySchedule({
       <CardContent className="p-0">
         <div className="divide-y">
           {orderedDraft.map((day) => {
-            const dayLabel =
-              DAYS.find((item) => item.dayOfWeek === day.dayOfWeek)?.label ??
-              "Day";
+            const dayLabel = getDayLabel(day.dayOfWeek, t);
 
             return (
               <DayRow
@@ -299,6 +354,8 @@ function DayRow({
   dayLabel: string;
   onChange: (updates: Partial<Omit<DraftDay, "dayOfWeek">>) => void;
 }) {
+  const { t } = useDashboardI18n();
+
   const updateBreak = (
     index: number,
     field: "startTime" | "endTime",
@@ -335,7 +392,10 @@ function DayRow({
           id={`working-${day.dayOfWeek}`}
           checked={day.isActive}
           onCheckedChange={(isActive) => onChange({ isActive })}
-          aria-label={`Set ${dayLabel} as a working day`}
+          aria-label={t(
+            `Set ${dayLabel} as a working day`,
+            `Постави го ${dayLabel} како работен ден`,
+          )}
         />
         <Label htmlFor={`working-${day.dayOfWeek}`} className="font-medium">
           {dayLabel}
@@ -346,7 +406,7 @@ function DayRow({
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Label htmlFor={`start-${day.dayOfWeek}`} className="sr-only">
-              {dayLabel} start time
+              {t(`${dayLabel} start time`, `Почетно време за ${dayLabel}`)}
             </Label>
             <Input
               id={`start-${day.dayOfWeek}`}
@@ -355,9 +415,11 @@ function DayRow({
               onChange={(event) => onChange({ startTime: event.target.value })}
               className="w-[8.5rem] tabular-nums"
             />
-            <span className="text-sm text-muted-foreground">to</span>
+            <span className="text-sm text-muted-foreground">
+              {t("to", "до")}
+            </span>
             <Label htmlFor={`end-${day.dayOfWeek}`} className="sr-only">
-              {dayLabel} end time
+              {t(`${dayLabel} end time`, `Крајно време за ${dayLabel}`)}
             </Label>
             <Input
               id={`end-${day.dayOfWeek}`}
@@ -374,7 +436,7 @@ function DayRow({
               disabled={day.breaks.length >= 3}
             >
               <PlusIcon data-icon="inline-start" />
-              Add break
+              {t("Add break", "Додај пауза")}
             </Button>
           </div>
 
@@ -387,13 +449,16 @@ function DayRow({
                 >
                   <CoffeeIcon className="size-4 shrink-0 text-muted-foreground" />
                   <span className="mr-1 text-xs font-medium text-muted-foreground">
-                    Break
+                    {t("Break", "Пауза")}
                   </span>
                   <Label
                     htmlFor={`break-start-${day.dayOfWeek}-${index}`}
                     className="sr-only"
                   >
-                    {dayLabel} break start time
+                    {t(
+                      `${dayLabel} break start time`,
+                      `Почетно време на пауза за ${dayLabel}`,
+                    )}
                   </Label>
                   <Input
                     id={`break-start-${day.dayOfWeek}-${index}`}
@@ -404,12 +469,17 @@ function DayRow({
                     }
                     className="w-[8.5rem] bg-card tabular-nums"
                   />
-                  <span className="text-sm text-muted-foreground">to</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("to", "до")}
+                  </span>
                   <Label
                     htmlFor={`break-end-${day.dayOfWeek}-${index}`}
                     className="sr-only"
                   >
-                    {dayLabel} break end time
+                    {t(
+                      `${dayLabel} break end time`,
+                      `Крајно време на пауза за ${dayLabel}`,
+                    )}
                   </Label>
                   <Input
                     id={`break-end-${day.dayOfWeek}-${index}`}
@@ -424,7 +494,10 @@ function DayRow({
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Remove ${dayLabel} break ${index + 1}`}
+                    aria-label={t(
+                      `Remove ${dayLabel} break ${index + 1}`,
+                      `Отстрани ја паузата ${index + 1} за ${dayLabel}`,
+                    )}
                     onClick={() => removeBreak(index)}
                   >
                     <Trash2Icon />
@@ -436,7 +509,7 @@ function DayRow({
         </div>
       ) : (
         <p className="self-center text-sm text-muted-foreground">
-          Not available for bookings
+          {t("Not available for bookings", "Не е достапен за закажувања")}
         </p>
       )}
     </div>
@@ -475,14 +548,19 @@ function schedulesMatch(first: DraftDay[], second: DraftDay[]) {
   );
 }
 
-function getScheduleValidationError(schedule: DraftDay[]) {
+function getScheduleValidationError(
+  schedule: DraftDay[],
+  t: (en: string, mk: string) => string,
+) {
   for (const day of schedule) {
     if (!day.isActive) continue;
 
-    const dayLabel =
-      DAYS.find((item) => item.dayOfWeek === day.dayOfWeek)?.label ?? "A day";
+    const dayLabel = getDayLabel(day.dayOfWeek, t);
     if (!day.startTime || !day.endTime || day.startTime >= day.endTime) {
-      return `${dayLabel}'s end time must be later than its start time.`;
+      return t(
+        `${dayLabel}'s end time must be later than its start time.`,
+        `Крајното време за ${dayLabel} мора да биде после почетното време.`,
+      );
     }
 
     for (const breakItem of day.breaks) {
@@ -491,14 +569,20 @@ function getScheduleValidationError(schedule: DraftDay[]) {
         !breakItem.endTime ||
         breakItem.startTime >= breakItem.endTime
       ) {
-        return `${dayLabel} has a break with invalid times.`;
+        return t(
+          `${dayLabel} has a break with invalid times.`,
+          `${dayLabel} има пауза со невалидно време.`,
+        );
       }
 
       if (
         breakItem.startTime < day.startTime ||
         breakItem.endTime > day.endTime
       ) {
-        return `${dayLabel}'s breaks must be inside its working hours.`;
+        return t(
+          `${dayLabel}'s breaks must be inside its working hours.`,
+          `Паузите за ${dayLabel} мора да бидат во рамките на работното време.`,
+        );
       }
     }
   }

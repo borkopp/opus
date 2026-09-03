@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { SettingsCard } from "../SettingsCard";
 import { nonNegInt, posInt, type FieldErrors } from "../validation";
 
@@ -43,58 +44,77 @@ type Fields =
 
 const FIELD_CONFIG: Array<{
   id: string;
-  label: string;
-  unit: string;
+  labelEn: string;
+  labelMk: string;
+  unitEn: string;
+  unitMk: string;
   field: Fields;
   min: number;
   max: number;
-  description: string;
+  descriptionEn: string;
+  descriptionMk: string;
 }> = [
   {
     id: "slot-duration",
-    label: "Slot duration",
-    unit: "minutes",
+    labelEn: "Slot duration",
+    labelMk: "Времетраење на термин",
+    unitEn: "minutes",
+    unitMk: "минути",
     field: "slotDurationMins",
     min: 1,
     max: 480,
-    description: "The smallest interval customers can book.",
+    descriptionEn: "The smallest interval customers can book.",
+    descriptionMk: "Најмалиот интервал што клиентите можат да го закажат.",
   },
   {
     id: "quick-booking-duration",
-    label: "Quick booking",
-    unit: "minutes",
+    labelEn: "Quick booking",
+    labelMk: "Брзо закажување",
+    unitEn: "minutes",
+    unitMk: "минути",
     field: "quickBookingDurationMins",
     min: 1,
     max: 480,
-    description:
+    descriptionEn:
       "Preferred duration shown when you hover an available calendar slot.",
+    descriptionMk:
+      "Претпочитано времетраење што се прикажува при посочување на слободен термин во календарот.",
   },
   {
     id: "buffer-time",
-    label: "Buffer time",
-    unit: "minutes",
+    labelEn: "Buffer time",
+    labelMk: "Пауза меѓу термини",
+    unitEn: "minutes",
+    unitMk: "минути",
     field: "bufferTimeMins",
     min: 0,
     max: 240,
-    description: "Time kept free after every appointment.",
+    descriptionEn: "Time kept free after every appointment.",
+    descriptionMk: "Слободно време по секој термин за подготовка.",
   },
   {
     id: "booking-window",
-    label: "Advance booking limit",
-    unit: "days",
+    labelEn: "Advance booking limit",
+    labelMk: "Ограничување за закажување однапред",
+    unitEn: "days",
+    unitMk: "денови",
     field: "bookingWindowDays",
     min: 1,
     max: 730,
-    description: "How far ahead customers may book.",
+    descriptionEn: "How far ahead customers may book.",
+    descriptionMk: "Колку однапред клиентите можат да закажат термин.",
   },
   {
     id: "cancellation-window",
-    label: "Cancellation notice",
-    unit: "hours",
+    labelEn: "Cancellation notice",
+    labelMk: "Рок за откажување",
+    unitEn: "hours",
+    unitMk: "часови",
     field: "cancellationWindowHours",
     min: 1,
     max: 8760,
-    description: "Minimum notice required for a customer cancellation.",
+    descriptionEn: "Minimum notice required for a customer cancellation.",
+    descriptionMk: "Минимален рок за најава за откажување од страна на клиент.",
   },
 ];
 
@@ -102,6 +122,7 @@ export function BookingOperationsTab({
   orgId,
   initialData,
 }: BookingOperationsTabProps) {
+  const { t } = useDashboardI18n();
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -144,7 +165,10 @@ export function BookingOperationsTab({
       !posInt(bookingRules.slotDurationMins) ||
       bookingRules.slotDurationMins > 480
     ) {
-      nextErrors.slotDurationMins = "Enter a whole number between 1 and 480.";
+      nextErrors.slotDurationMins = t(
+        "Enter a whole number between 1 and 480.",
+        "Внесете цел број помеѓу 1 и 480.",
+      );
     }
     if (
       !posInt(bookingRules.quickBookingDurationMins) ||
@@ -153,26 +177,37 @@ export function BookingOperationsTab({
       bookingRules.quickBookingDurationMins % bookingRules.slotDurationMins !==
         0
     ) {
-      nextErrors.quickBookingDurationMins = `Use a whole-number multiple of the ${bookingRules.slotDurationMins} minute slot duration, up to 480 minutes.`;
+      nextErrors.quickBookingDurationMins = t(
+        `Use a whole-number multiple of the ${bookingRules.slotDurationMins} minute slot duration, up to 480 minutes.`,
+        `Користете цел број што е содржател на времетраењето на терминот од ${bookingRules.slotDurationMins} минути, до 480 минути.`,
+      );
     }
     if (
       !posInt(bookingRules.bookingWindowDays) ||
       bookingRules.bookingWindowDays > 730
     ) {
-      nextErrors.bookingWindowDays = "Enter a whole number between 1 and 730.";
+      nextErrors.bookingWindowDays = t(
+        "Enter a whole number between 1 and 730.",
+        "Внесете цел број помеѓу 1 и 730.",
+      );
     }
     if (
       !posInt(bookingRules.cancellationWindowHours) ||
       bookingRules.cancellationWindowHours > 8760
     ) {
-      nextErrors.cancellationWindowHours =
-        "Enter a whole number between 1 and 8,760.";
+      nextErrors.cancellationWindowHours = t(
+        "Enter a whole number between 1 and 8,760.",
+        "Внесете цел број помеѓу 1 и 8.760.",
+      );
     }
     if (
       !nonNegInt(bookingRules.bufferTimeMins) ||
       bookingRules.bufferTimeMins > 240
     ) {
-      nextErrors.bufferTimeMins = "Enter 0 or a whole number up to 240.";
+      nextErrors.bufferTimeMins = t(
+        "Enter 0 or a whole number up to 240.",
+        "Внесете 0 или цел број до 240.",
+      );
     }
     return nextErrors;
   }
@@ -200,13 +235,20 @@ export function BookingOperationsTab({
         currency: initialData.currency,
         locale: initialData.locale,
       });
-      if (isMounted.current) toast.success("Booking rules saved");
+      if (isMounted.current) {
+        toast.success(
+          t("Booking rules saved", "Правилата за закажување се зачувани"),
+        );
+      }
     } catch (error) {
       if (isMounted.current) {
         toast.error(
           error instanceof Error
             ? error.message
-            : "Failed to save booking rules.",
+            : t(
+                "Failed to save booking rules.",
+                "Не успеа зачувувањето на правилата за закажување.",
+              ),
         );
       }
     } finally {
@@ -217,8 +259,11 @@ export function BookingOperationsTab({
   return (
     <TabsContent value="booking" className="m-0">
       <SettingsCard
-        title="Booking rules"
-        description="Control calendar quick booking, appointment intervals, cancellation notice, and breathing room between bookings."
+        title={t("Booking rules", "Правила за закажување")}
+        description={t(
+          "Control calendar quick booking, appointment intervals, cancellation notice, and breathing room between bookings.",
+          "Управувајте со брзото закажување во календарот, интервалите на термини, рокот за откажување и паузите меѓу третмани.",
+        )}
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? (
@@ -226,7 +271,9 @@ export function BookingOperationsTab({
             ) : (
               <Save data-icon="inline-start" />
             )}
-            {isSaving ? "Saving…" : "Save booking rules"}
+            {isSaving
+              ? t("Saving…", "Се зачувува…")
+              : t("Save booking rules", "Зачувај правила за закажување")}
           </Button>
         }
       >
@@ -237,7 +284,8 @@ export function BookingOperationsTab({
               data-invalid={Boolean(errors[config.field])}
             >
               <FieldLabel htmlFor={config.id}>
-                {config.label} ({config.unit})
+                {t(config.labelEn, config.labelMk)} (
+                {t(config.unitEn, config.unitMk)})
               </FieldLabel>
               <DebouncedInput
                 id={config.id}
@@ -256,7 +304,7 @@ export function BookingOperationsTab({
                 }}
               />
               <FieldDescription id={`${config.id}-description`}>
-                {config.description}
+                {t(config.descriptionEn, config.descriptionMk)}
               </FieldDescription>
               <FieldError>{errors[config.field]}</FieldError>
             </Field>

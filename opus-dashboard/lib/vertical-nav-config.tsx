@@ -6,6 +6,10 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
+import {
+  resolveDashboardLanguage,
+  type DashboardLanguage,
+} from "@/lib/i18n/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Vertical Navigation Config
@@ -17,8 +21,10 @@ import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface NavItem {
-  label: string;
-  /** Use "{base}" as placeholder — gets replaced with the industry base path */
+  label: {
+    en: string;
+    mk: string;
+  };
   href: string;
   icon: React.ReactNode;
 }
@@ -27,7 +33,7 @@ export interface VerticalNavConfig {
   /** URL base path, e.g. "/beauty" */
   basePath: string;
   /** Human label for the vertical */
-  label: string;
+  label: { en: string; mk: string };
   /** Primary nav items shown in the top bar */
   primaryLinks: NavItem[];
 }
@@ -37,34 +43,67 @@ export const industryRoutes: Record<string, string> = {
   [ACTIVE_INDUSTRY]: ACTIVE_DASHBOARD_PATH,
 };
 
-// ── Per-vertical nav configs ─────────────────────────────────────────────────
 export const verticalNavConfig: Record<string, VerticalNavConfig> = {
   [ACTIVE_INDUSTRY]: {
     basePath: ACTIVE_DASHBOARD_PATH,
-    label: "Beauty & Wellness",
+    label: {
+      en: "Beauty & Wellness",
+      mk: "Убавина и велнес",
+    },
     primaryLinks: [
-      { label: "Dashboard", href: "{base}", icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Bookings",  href: "{base}/bookings",  icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Staff",     href: "{base}/staff",      icon: <IconUsers className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Services",  href: "{base}/services",   icon: <IconScissors className="h-5 w-5 flex-shrink-0" /> },
-      { label: "Settings",  href: "/settings",         icon: <IconSettings className="h-5 w-5 flex-shrink-0" /> },
+      {
+        label: { en: "Dashboard", mk: "Контролна табла" },
+        href: "{base}",
+        icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: { en: "Bookings", mk: "Термини" },
+        href: "{base}/bookings",
+        icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: { en: "Staff", mk: "Тим" },
+        href: "{base}/staff",
+        icon: <IconUsers className="h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: { en: "Services", mk: "Услуги" },
+        href: "{base}/services",
+        icon: <IconScissors className="h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: { en: "Settings", mk: "Поставки" },
+        href: "/settings",
+        icon: <IconSettings className="h-5 w-5 flex-shrink-0" />,
+      },
     ],
   },
 };
 
 /**
- * Resolve nav items for a given industry.
+ * Resolve nav items for a given industry and language/locale.
  * Replaces `{base}` placeholder with the actual base path.
  */
-export function getNavLinks(industry: string): { basePath: string; links: Array<{ label: string; href: string; icon: React.ReactNode }> } {
-  const config = verticalNavConfig[industry] ?? verticalNavConfig[ACTIVE_INDUSTRY];
+export function getNavLinks(
+  industry: string,
+  languageOrLocale: DashboardLanguage | string = "en",
+): {
+  basePath: string;
+  label: string;
+  links: Array<{ label: string; href: string; icon: React.ReactNode }>;
+} {
+  const language = resolveDashboardLanguage(languageOrLocale);
+  const config =
+    verticalNavConfig[industry] ?? verticalNavConfig[ACTIVE_INDUSTRY];
   const base = config.basePath;
 
   return {
     basePath: base,
+    label: config.label[language],
     links: config.primaryLinks.map((item) => ({
-      ...item,
+      label: item.label[language],
       href: item.href.replace("{base}", base),
+      icon: item.icon,
     })),
   };
 }

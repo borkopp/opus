@@ -19,11 +19,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
+import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TabsContent } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { cn } from "@/lib/utils";
 import {
   SettingsCard,
@@ -33,21 +35,34 @@ import {
 import { validConfidence } from "../validation";
 
 const TONES = [
-  { value: "friendly", label: "Friendly" },
-  { value: "professional", label: "Professional" },
-  { value: "casual", label: "Casual" },
-  { value: "formal", label: "Formal" },
+  { value: "friendly", labelEn: "Friendly", labelMk: "Пријателски" },
+  {
+    value: "professional",
+    labelEn: "Professional",
+    labelMk: "Професионален",
+  },
+  { value: "casual", labelEn: "Casual", labelMk: "Опуштен" },
+  { value: "formal", labelEn: "Formal", labelMk: "Формален" },
 ] as const;
 
 const LANGUAGES = [
-  { value: "auto", label: "Auto-detect" },
-  { value: "en", label: "English" },
-  { value: "mk", label: "Македонски" },
+  { value: "auto", labelEn: "Auto-detect", labelMk: "Автоматски" },
+  { value: "en", labelEn: "English", labelMk: "English" },
+  { value: "mk", labelEn: "Македонски", labelMk: "Македонски" },
 ] as const;
 
-const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAYS = [
+  { en: "Sun", mk: "Нед" },
+  { en: "Mon", mk: "Пон" },
+  { en: "Tue", mk: "Вто" },
+  { en: "Wed", mk: "Сре" },
+  { en: "Thu", mk: "Чет" },
+  { en: "Fri", mk: "Пет" },
+  { en: "Sat", mk: "Саб" },
+] as const;
 
 function ConfidenceMeter({ value }: { value: number }) {
+  const { t } = useDashboardI18n();
   const percentage =
     Math.max(0, Math.min(1, Number.isNaN(value) ? 0 : value)) * 100;
   const color =
@@ -58,10 +73,19 @@ function ConfidenceMeter({ value }: { value: number }) {
         : "bg-danger";
   const label =
     percentage >= 70
-      ? "Higher confidence, fewer automatic replies"
+      ? t(
+          "Higher confidence, fewer automatic replies",
+          "Повисока сигурност, помалку автоматски одговори",
+        )
       : percentage >= 40
-        ? "Balanced confidence and escalation"
-        : "Lower confidence, more automatic replies";
+        ? t(
+            "Balanced confidence and escalation",
+            "Балансирана сигурност и пренасочување кон човек",
+          )
+        : t(
+            "Lower confidence, more automatic replies",
+            "Пониска сигурност, повеќе автоматски одговори",
+          );
 
   return (
     <div className="flex flex-col gap-2">
@@ -78,6 +102,7 @@ function ConfidenceMeter({ value }: { value: number }) {
 
 interface AiOperatorTabProps {
   orgId: Id<"orgs">;
+  isPaid: boolean;
   initialData: {
     aiEnabled: boolean;
     aiPersonaName: string;
@@ -100,7 +125,12 @@ interface AiOperatorTabProps {
   };
 }
 
-export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
+export function AiOperatorTab({
+  orgId,
+  isPaid,
+  initialData,
+}: AiOperatorTabProps) {
+  const { t } = useDashboardI18n();
   const [ai, setAi] = useState(initialData);
   const [personaError, setPersonaError] = useState<string>();
   const [confidenceError, setConfidenceError] = useState<string>();
@@ -110,11 +140,18 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
   const handleSave = async () => {
     let hasErrors = false;
     if (!ai.aiPersonaName.trim()) {
-      setPersonaError("Enter the name shown to customers.");
+      setPersonaError(
+        t(
+          "Enter the name shown to customers.",
+          "Внесете го името што ќе им се прикажува на клиентите.",
+        ),
+      );
       hasErrors = true;
     }
     if (!validConfidence(ai.aiConfidenceThreshold)) {
-      setConfidenceError("Enter a number between 0 and 1.");
+      setConfidenceError(
+        t("Enter a number between 0 and 1.", "Внесете број помеѓу 0 и 1."),
+      );
       hasErrors = true;
     }
     if (hasErrors) return;
@@ -142,12 +179,20 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
         aiWorkingHours: activeHours,
         aiAwayMessage: ai.aiAwayMessage || undefined,
       });
-      toast.success("AI front-desk settings saved");
+      toast.success(
+        t(
+          "AI front-desk settings saved",
+          "Поставките за AI рецепција се зачувани",
+        ),
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to save AI front-desk settings.",
+          : t(
+              "Failed to save AI front-desk settings.",
+              "Не успеа зачувувањето на поставките за AI рецепција.",
+            ),
       );
     } finally {
       setIsSaving(false);
@@ -169,12 +214,22 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
 
   return (
     <TabsContent value="ai" className="m-0">
+      <PaidFeatureOverlay
+        locked={!isPaid}
+        featureLabel={t(
+          "AI front desk requires OPUS Pro",
+          "AI рецепцијата бара OPUS Pro",
+        )}
+      >
       <SettingsCard
-        title="AI front desk"
-        description="Configure assistant behavior and handoff rules. Automated channels work only when their provider connection is configured."
+        title={t("AI front desk", "AI рецепција")}
+        description={t(
+          "Configure assistant behavior and handoff rules. Automated channels work only when their provider connection is configured.",
+          "Конфигурирајте го однесувањето на асистентот и правилата за пренасочување. Автоматизираните канали работат само кога нивниот провајдер е конфигуриран.",
+        )}
         action={
           <Badge variant={ai.aiEnabled ? "success" : "secondary"}>
-            {ai.aiEnabled ? "Enabled" : "Off"}
+            {ai.aiEnabled ? t("Enabled", "Овозможено") : t("Off", "Исклучено")}
           </Badge>
         }
         contentClassName="flex flex-col gap-7"
@@ -185,17 +240,22 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
             ) : (
               <Save data-icon="inline-start" />
             )}
-            {isSaving ? "Saving…" : "Save AI settings"}
+            {isSaving
+              ? t("Saving…", "Се зачувува…")
+              : t("Save AI settings", "Зачувај AI поставки")}
           </Button>
         }
       >
         <SettingsToggleRow
-          title="Enable AI front desk"
-          description="Use this configuration on connected and enabled customer channels."
+          title={t("Enable AI front desk", "Овозможи AI рецепција")}
+          description={t(
+            "Use this configuration on connected and enabled customer channels.",
+            "Користете ја оваа конфигурација на поврзаните и овозможени канали за клиенти.",
+          )}
           control={
             <Switch
               id="ai-enabled"
-              aria-label="Enable AI front desk"
+              aria-label={t("Enable AI front desk", "Овозможи AI рецепција")}
               checked={ai.aiEnabled}
               onCheckedChange={(checked) =>
                 setAi((current) => ({ ...current, aiEnabled: checked }))
@@ -209,12 +269,17 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
             <Separator />
 
             <SettingsSection
-              title="Assistant identity"
-              description="Set the customer-facing name, confidence threshold, and handoff route."
+              title={t("Assistant identity", "Идентитет на асистент")}
+              description={t(
+                "Set the customer-facing name, confidence threshold, and handoff route.",
+                "Поставете го името за клиенти, прагот на сигурност и контактот за пренасочување.",
+              )}
             >
               <FieldGroup className="max-w-2xl">
                 <Field data-invalid={Boolean(personaError)}>
-                  <FieldLabel htmlFor="persona-name">Assistant name</FieldLabel>
+                  <FieldLabel htmlFor="persona-name">
+                    {t("Assistant name", "Име на асистент")}
+                  </FieldLabel>
                   <DebouncedInput
                     id="persona-name"
                     value={ai.aiPersonaName}
@@ -230,14 +295,17 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }}
                   />
                   <FieldDescription id="persona-name-description">
-                    The name customers see in automated conversations.
+                    {t(
+                      "The name customers see in automated conversations.",
+                      "Името што клиентите го гледаат во автоматските разговори.",
+                    )}
                   </FieldDescription>
                   <FieldError>{personaError}</FieldError>
                 </Field>
 
                 <Field data-invalid={Boolean(confidenceError)}>
                   <FieldLabel htmlFor="confidence-threshold">
-                    Confidence threshold
+                    {t("Confidence threshold", "Праг на сигурност")}
                   </FieldLabel>
                   <DebouncedInput
                     id="confidence-threshold"
@@ -258,14 +326,20 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   />
                   <ConfidenceMeter value={ai.aiConfidenceThreshold} />
                   <FieldDescription id="confidence-description">
-                    Below this score, the conversation is handed to a person.
+                    {t(
+                      "Below this score, the conversation is handed to a person.",
+                      "Под оваа оцена, разговорот се пренасочува кон вработен.",
+                    )}
                   </FieldDescription>
                   <FieldError>{confidenceError}</FieldError>
                 </Field>
 
                 <Field>
                   <FieldLabel htmlFor="handoff-phone">
-                    Handoff phone number
+                    {t(
+                      "Handoff phone number",
+                      "Телефонски број за пренасочување",
+                    )}
                   </FieldLabel>
                   <DebouncedInput
                     id="handoff-phone"
@@ -279,8 +353,10 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }
                   />
                   <FieldDescription>
-                    Customers can be directed here when the assistant cannot
-                    help.
+                    {t(
+                      "Customers can be directed here when the assistant cannot help.",
+                      "Клиентите може да бидат пренасочени тука кога асистентот не може да помогне.",
+                    )}
                   </FieldDescription>
                 </Field>
               </FieldGroup>
@@ -289,17 +365,23 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
             <Separator />
 
             <SettingsSection
-              title="Channels"
-              description="These switches permit an existing channel connection; they do not configure the provider itself."
+              title={t("Channels", "Канали")}
+              description={t(
+                "These switches permit an existing channel connection; they do not configure the provider itself.",
+                "Овие прекинувачи овозможуваат постоечка врска со канал; тие не го конфигурираат самиот провајдер.",
+              )}
             >
               <div className="flex flex-col gap-3">
                 <SettingsToggleRow
-                  title="Web chat"
-                  description="Allow the assistant on the configured booking-page chat."
+                  title={t("Web chat", "Веб-чат")}
+                  description={t(
+                    "Allow the assistant on the configured booking-page chat.",
+                    "Дозволи го асистентот на конфигурираниот чат на страницата за закажување.",
+                  )}
                   control={
                     <Switch
                       id="webchat-enabled"
-                      aria-label="Enable web chat"
+                      aria-label={t("Enable web chat", "Овозможи веб-чат")}
                       checked={ai.aiWebchatEnabled}
                       onCheckedChange={(checked) =>
                         setAi((current) => ({
@@ -311,12 +393,18 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   }
                 />
                 <SettingsToggleRow
-                  title="Instagram DM"
-                  description="Allow the assistant on the configured Instagram connection."
+                  title={t("Instagram DM", "Instagram пораки")}
+                  description={t(
+                    "Allow the assistant on the configured Instagram connection.",
+                    "Дозволи го асистентот на конфигурираната Instagram сметка.",
+                  )}
                   control={
                     <Switch
                       id="instagram-enabled"
-                      aria-label="Enable Instagram DM"
+                      aria-label={t(
+                        "Enable Instagram DM",
+                        "Овозможи Instagram пораки",
+                      )}
                       checked={ai.aiInstagramEnabled}
                       onCheckedChange={(checked) =>
                         setAi((current) => ({
@@ -333,12 +421,15 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
             <Separator />
 
             <SettingsSection
-              title="Conversation style"
-              description="Choose how the assistant speaks and opens a conversation."
+              title={t("Conversation style", "Стил на разговор")}
+              description={t(
+                "Choose how the assistant speaks and opens a conversation.",
+                "Изберете како асистентот зборува и започнува разговор.",
+              )}
             >
               <FieldGroup className="max-w-2xl">
                 <Field>
-                  <FieldLabel>Tone</FieldLabel>
+                  <FieldLabel>{t("Tone", "Тон на обраќање")}</FieldLabel>
                   <ToggleGroup
                     type="single"
                     value={ai.aiTone}
@@ -352,19 +443,19 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }}
                     variant="outline"
                     spacing={2}
-                    aria-label="Assistant tone"
+                    aria-label={t("Assistant tone", "Тон на асистентот")}
                     className="flex flex-wrap"
                   >
                     {TONES.map((tone) => (
                       <ToggleGroupItem key={tone.value} value={tone.value}>
-                        {tone.label}
+                        {t(tone.labelEn, tone.labelMk)}
                       </ToggleGroupItem>
                     ))}
                   </ToggleGroup>
                 </Field>
 
                 <Field>
-                  <FieldLabel>Language</FieldLabel>
+                  <FieldLabel>{t("Language", "Јазик")}</FieldLabel>
                   <ToggleGroup
                     type="single"
                     value={ai.aiLanguage}
@@ -378,7 +469,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }}
                     variant="outline"
                     spacing={2}
-                    aria-label="Assistant language"
+                    aria-label={t("Assistant language", "Јазик на асистентот")}
                     className="flex flex-wrap"
                   >
                     {LANGUAGES.map((language) => (
@@ -386,24 +477,29 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                         key={language.value}
                         value={language.value}
                       >
-                        {language.label}
+                        {t(language.labelEn, language.labelMk)}
                       </ToggleGroupItem>
                     ))}
                   </ToggleGroup>
                   <FieldDescription>
-                    Auto-detect replies in English or Macedonian based on the
-                    customer&apos;s message.
+                    {t(
+                      "Auto-detect replies in English or Macedonian based on the customer's message.",
+                      "Автоматско одговарање на англиски или македонски јазик во зависност од пораката на клиентот.",
+                    )}
                   </FieldDescription>
                 </Field>
 
                 <Field>
                   <FieldLabel htmlFor="greeting-message">
-                    Greeting message
+                    {t("Greeting message", "Поздрава порака")}
                   </FieldLabel>
                   <DebouncedInput
                     id="greeting-message"
                     value={ai.aiGreetingMessage}
-                    placeholder="Hi! How can I help with your appointment?"
+                    placeholder={t(
+                      "Hi! How can I help with your appointment?",
+                      "Здраво! Како можам да ви помогнам со вашиот термин?",
+                    )}
                     onChange={(value) =>
                       setAi((current) => ({
                         ...current,
@@ -412,19 +508,25 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }
                   />
                   <FieldDescription>
-                    Sent when a new automated conversation starts.
+                    {t(
+                      "Sent when a new automated conversation starts.",
+                      "Се испраќа кога започнува нов автоматски разговор.",
+                    )}
                   </FieldDescription>
                 </Field>
 
                 <Field>
                   <FieldLabel htmlFor="custom-instructions">
-                    Custom instructions
+                    {t("Custom instructions", "Прилагодени упатства")}
                   </FieldLabel>
                   <DebouncedTextarea
                     id="custom-instructions"
                     value={ai.aiSystemPrompt}
                     rows={4}
-                    placeholder="Add studio-specific rules and context."
+                    placeholder={t(
+                      "Add studio-specific rules and context.",
+                      "Додајте специфични правила и контекст за студиото.",
+                    )}
                     onChange={(value) =>
                       setAi((current) => ({
                         ...current,
@@ -433,7 +535,10 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                     }
                   />
                   <FieldDescription>
-                    Add boundaries, special policies, or preferred wording.
+                    {t(
+                      "Add boundaries, special policies, or preferred wording.",
+                      "Додајте ограничувања, посебни правила или претпочитани формулации.",
+                    )}
                   </FieldDescription>
                 </Field>
               </FieldGroup>
@@ -442,16 +547,25 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
             <Separator />
 
             <SettingsSection
-              title="Working hours"
-              description="Optionally limit automated replies to a weekly schedule."
+              title={t("Working hours", "Работно време")}
+              description={t(
+                "Optionally limit automated replies to a weekly schedule.",
+                "Изборно ограничете ги автоматските одговори на неделен распоред.",
+              )}
             >
               <SettingsToggleRow
-                title="Use working hours"
-                description="Send the away message outside the selected times."
+                title={t("Use working hours", "Користи работно време")}
+                description={t(
+                  "Send the away message outside the selected times.",
+                  "Испраќај порака за отсутност надвор од избраното време.",
+                )}
                 control={
                   <Switch
                     id="working-hours-enabled"
-                    aria-label="Use AI working hours"
+                    aria-label={t(
+                      "Use AI working hours",
+                      "Користи AI работно време",
+                    )}
                     checked={ai.aiWorkingHoursEnabled}
                     onCheckedChange={(checked) =>
                       setAi((current) => ({
@@ -474,7 +588,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
 
                     return (
                       <div
-                        key={day}
+                        key={day.en}
                         className="grid grid-cols-[auto_2.5rem_minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-xl border border-border/50 bg-muted/20 p-3"
                       >
                         <Checkbox
@@ -491,10 +605,15 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                             }));
                           }}
                         />
-                        <Label htmlFor={`ai-day-${dayOfWeek}`}>{day}</Label>
+                        <Label htmlFor={`ai-day-${dayOfWeek}`}>
+                          {t(day.en, day.mk)}
+                        </Label>
                         <DebouncedInput
                           type="time"
-                          aria-label={`${day} start time`}
+                          aria-label={t(
+                            `${day.en} start time`,
+                            `${day.mk} време на почеток`,
+                          )}
                           disabled={!enabled}
                           value={hours?.startTime ?? "09:00"}
                           onChange={(value) =>
@@ -502,11 +621,14 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                           }
                         />
                         <span className="text-xs text-muted-foreground">
-                          to
+                          {t("to", "до")}
                         </span>
                         <DebouncedInput
                           type="time"
-                          aria-label={`${day} end time`}
+                          aria-label={t(
+                            `${day.en} end time`,
+                            `${day.mk} време на крај`,
+                          )}
                           disabled={!enabled}
                           value={hours?.endTime ?? "18:00"}
                           onChange={(value) =>
@@ -518,12 +640,17 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
                   })}
 
                   <Field>
-                    <FieldLabel htmlFor="away-message">Away message</FieldLabel>
+                    <FieldLabel htmlFor="away-message">
+                      {t("Away message", "Порака за отсутност")}
+                    </FieldLabel>
                     <DebouncedTextarea
                       id="away-message"
                       value={ai.aiAwayMessage}
                       rows={3}
-                      placeholder="We are currently outside business hours."
+                      placeholder={t(
+                        "We are currently outside business hours.",
+                        "Моментално сме надвор од работното време.",
+                      )}
                       onChange={(value) =>
                         setAi((current) => ({
                           ...current,
@@ -538,6 +665,7 @@ export function AiOperatorTab({ orgId, initialData }: AiOperatorTabProps) {
           </>
         )}
       </SettingsCard>
+      </PaidFeatureOverlay>
     </TabsContent>
   );
 }

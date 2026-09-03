@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { cn } from "@/lib/utils";
 
 interface DevDataControlsProps {
@@ -19,10 +20,16 @@ interface DevDataControlsProps {
   collapsed?: boolean;
 }
 
-export function DevDataControls({ orgId, collapsed = false }: DevDataControlsProps) {
+export function DevDataControls({
+  orgId,
+  collapsed = false,
+}: DevDataControlsProps) {
+  const { t } = useDashboardI18n();
   const seedMockData = useMutation(api.dev.seedMockData);
   const clearMockData = useMutation(api.dev.clearMockData);
-  const [pendingAction, setPendingAction] = useState<"seed" | "clear" | null>(null);
+  const [pendingAction, setPendingAction] = useState<"seed" | "clear" | null>(
+    null,
+  );
 
   if (process.env.NODE_ENV !== "development") return null;
 
@@ -31,10 +38,20 @@ export function DevDataControls({ orgId, collapsed = false }: DevDataControlsPro
     try {
       const result = await seedMockData({ orgId, targetDateMs: Date.now() });
       toast.success(
-        `Added ${result.totalBookings} bookings and ${result.totalCustomers} customers.`,
+        t(
+          `Added ${result.totalBookings} bookings and ${result.totalCustomers} customers.`,
+          `Додадени се ${result.totalBookings} термини и ${result.totalCustomers} клиенти.`,
+        ),
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to add mock data.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(
+              "Failed to add mock data.",
+              "Не успеа додавањето на тест податоци.",
+            ),
+      );
     } finally {
       setPendingAction(null);
     }
@@ -45,10 +62,20 @@ export function DevDataControls({ orgId, collapsed = false }: DevDataControlsPro
     try {
       const result = await clearMockData({ orgId });
       toast.success(
-        `Cleared ${result.deletedBookingsCount} bookings and ${result.deletedCustomersCount} customers.`,
+        t(
+          `Cleared ${result.deletedBookingsCount} bookings and ${result.deletedCustomersCount} customers.`,
+          `Избришани се ${result.deletedBookingsCount} термини и ${result.deletedCustomersCount} клиенти.`,
+        ),
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to clear mock data.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(
+              "Failed to clear mock data.",
+              "Не успеа бришењето на тест податоци.",
+            ),
+      );
     } finally {
       setPendingAction(null);
     }
@@ -56,14 +83,16 @@ export function DevDataControls({ orgId, collapsed = false }: DevDataControlsPro
 
   const controls = [
     {
-      label: "Add mock data",
+      id: "seed",
+      label: t("Add mock data", "Додај тест податоци"),
       icon: IconDatabasePlus,
       action: handleSeed,
       pending: pendingAction === "seed",
       variant: "outline" as const,
     },
     {
-      label: "Clear mock data",
+      id: "clear",
+      label: t("Clear mock data", "Избриши тест податоци"),
       icon: IconTrash,
       action: handleClear,
       pending: pendingAction === "clear",
@@ -72,11 +101,13 @@ export function DevDataControls({ orgId, collapsed = false }: DevDataControlsPro
   ];
 
   return (
-    <div className={cn("flex gap-1.5", collapsed ? "flex-col" : "flex-col px-1")}>
-      {controls.map(({ label, icon: Icon, action, pending, variant }) => {
+    <div
+      className={cn("flex gap-1.5", collapsed ? "flex-col" : "flex-col px-1")}
+    >
+      {controls.map(({ id, label, icon: Icon, action, pending, variant }) => {
         const button = (
           <Button
-            key={label}
+            key={id}
             type="button"
             variant={variant}
             size={collapsed ? "icon-lg" : "sm"}
@@ -93,9 +124,11 @@ export function DevDataControls({ orgId, collapsed = false }: DevDataControlsPro
         if (!collapsed) return button;
 
         return (
-          <Tooltip key={label}>
+          <Tooltip key={id}>
             <TooltipTrigger asChild>{button}</TooltipTrigger>
-            <TooltipContent side="right" sideOffset={10}>{label}</TooltipContent>
+            <TooltipContent side="right" sideOffset={10}>
+              {label}
+            </TooltipContent>
           </Tooltip>
         );
       })}

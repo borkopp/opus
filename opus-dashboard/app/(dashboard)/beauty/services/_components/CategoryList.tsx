@@ -42,11 +42,13 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
 
 export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
+  const { t } = useDashboardI18n();
   const categories = useQuery(api.serviceCategories.listCategories, { orgId });
   const createCategory = useMutation(api.serviceCategories.createCategory);
   const updateCategory = useMutation(api.serviceCategories.updateCategory);
@@ -87,7 +89,12 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       setNewName("");
       setIsAdding(false);
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not add category"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Could not add category", "Не може да се додаде категоријата"),
+        ),
+      );
     }
   };
 
@@ -103,7 +110,15 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       setEditingId(null);
       setEditName("");
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not rename category"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not rename category",
+            "Не може да се преименува категоријата",
+          ),
+        ),
+      );
     }
   };
 
@@ -113,7 +128,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
   ) => {
     if (
       !window.confirm(
-        `Delete “${categoryName}”? Move its services to another category first.`,
+        t(
+          `Delete “${categoryName}”? Move its services to another category first.`,
+          `Дали сакате да ја избришете „${categoryName}“? Прво преместете ги нејзините услуги во друга категорија.`,
+        ),
       )
     ) {
       return;
@@ -122,7 +140,12 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
     try {
       await deleteCategory({ orgId, categoryId });
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not delete category"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Could not delete category", "Не може да се избрише категоријата"),
+        ),
+      );
     }
   };
 
@@ -144,7 +167,15 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
         categoryIds: nextOrder.map((category) => category._id),
       });
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not reorder categories"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not reorder categories",
+            "Не може да се промени редоследот на категориите",
+          ),
+        ),
+      );
     }
   };
 
@@ -162,14 +193,17 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
           className="flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
         >
           <FolderTreeIcon data-icon="inline-start" />
-          Categories
+          {t("Categories", "Категории")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Categories</DialogTitle>
+          <DialogTitle>{t("Categories", "Категории")}</DialogTitle>
           <DialogDescription>
-            Group related services on your booking page.
+            {t(
+              "Group related services on your booking page.",
+              "Групирајте сродни услуги на вашата страница за закажување.",
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -187,10 +221,14 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                   <EmptyMedia variant="icon">
                     <FolderTreeIcon />
                   </EmptyMedia>
-                  <EmptyTitle>No categories</EmptyTitle>
+                  <EmptyTitle>
+                    {t("No categories", "Нема категории")}
+                  </EmptyTitle>
                   <EmptyDescription>
-                    Categories are optional. Add one when you want to group
-                    similar services.
+                    {t(
+                      "Categories are optional. Add one when you want to group similar services.",
+                      "Категориите се опционални. Додајте категорија кога сакате да групирате слични услуги.",
+                    )}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -211,7 +249,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           htmlFor={`category-${category._id}`}
                           className="sr-only"
                         >
-                          Category name
+                          {t("Category name", "Име на категорија")}
                         </FieldLabel>
                         <Input
                           id={`category-${category._id}`}
@@ -229,7 +267,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           type="submit"
                           variant="ghost"
                           size="icon-sm"
-                          aria-label="Save category name"
+                          aria-label={t(
+                            "Save category name",
+                            "Зачувај име на категорија",
+                          )}
                           disabled={!editName.trim()}
                         >
                           <CheckIcon />
@@ -238,7 +279,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          aria-label="Cancel renaming"
+                          aria-label={t(
+                            "Cancel renaming",
+                            "Откажи преименување",
+                          )}
                           onClick={() => {
                             setEditingId(null);
                             setEditName("");
@@ -261,7 +305,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Actions for ${category.name}`}
+                            aria-label={t(
+                              `Actions for ${category.name}`,
+                              `Опции за ${category.name}`,
+                            )}
                           >
                             <MoreHorizontalIcon />
                           </Button>
@@ -275,7 +322,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                               }}
                             >
                               <PencilIcon />
-                              Rename
+                              {t("Rename", "Преименувај")}
                             </DropdownMenuItem>
                             {categories.length > 1 && (
                               <>
@@ -284,14 +331,14 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                                   onSelect={() => moveCategory(index, "up")}
                                 >
                                   <ArrowUpIcon />
-                                  Move up
+                                  {t("Move up", "Помести нагоре")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={index === categories.length - 1}
                                   onSelect={() => moveCategory(index, "down")}
                                 >
                                   <ArrowDownIcon />
-                                  Move down
+                                  {t("Move down", "Помести надолу")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -305,7 +352,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                               }
                             >
                               <Trash2Icon />
-                              Delete
+                              {t("Delete", "Избриши")}
                             </DropdownMenuItem>
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
@@ -326,12 +373,12 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
               >
                 <Field orientation="horizontal">
                   <FieldLabel htmlFor="new-category" className="sr-only">
-                    Category name
+                    {t("Category name", "Име на категорија")}
                   </FieldLabel>
                   <Input
                     id="new-category"
                     autoFocus
-                    placeholder="Category name"
+                    placeholder={t("Category name", "Име на категорија")}
                     value={newName}
                     onChange={(event) => setNewName(event.target.value)}
                     onKeyDown={(event) => {
@@ -345,7 +392,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     type="submit"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label="Add category"
+                    aria-label={t("Add category", "Додај категорија")}
                     disabled={!newName.trim()}
                   >
                     <CheckIcon />
@@ -354,7 +401,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     type="button"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label="Cancel adding category"
+                    aria-label={t(
+                      "Cancel adding category",
+                      "Откажи додавање категорија",
+                    )}
                     onClick={() => {
                       setIsAdding(false);
                       setNewName("");
@@ -374,7 +424,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                 }}
               >
                 <PlusIcon data-icon="inline-start" />
-                Add category
+                {t("Add category", "Додај категорија")}
               </Button>
             )}
           </div>

@@ -69,7 +69,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   bookingDateKey,
-  bookingDateLabel,
   bookingTimeLabel,
   dateFromKey,
   dateKey,
@@ -79,6 +78,7 @@ import {
 import { formatPrice } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
 import posthog from "posthog-js";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 export type QuickBookingSelection = {
   staffId: Id<"staff_members">;
@@ -108,15 +108,25 @@ type QuickBookingSlots = FunctionReturnType<
   typeof api.slots.getQuickBookingSlots
 >["slots"];
 
-function datePickerLabel(value: string) {
+function datePickerLabel(value: string, locale: string, placeholder: string) {
   const date = dateFromKey(value);
-  if (!date) return "Choose an available date";
-  return new Intl.DateTimeFormat("en-GB", {
+  if (!date) return placeholder;
+  return new Intl.DateTimeFormat(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function formatBookingDate(timestamp: number, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(timestamp));
 }
 
 function quickSlotValue(slot: QuickBookingSelection) {
@@ -144,6 +154,7 @@ export function QuickBookingProvider({
   orgId: Id<"orgs">;
   children: ReactNode;
 }) {
+  const { t } = useDashboardI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [requestDate, setRequestDate] = useState(() => dateKey(new Date()));
   const [pickerMonth, setPickerMonth] = useState(() => monthKey(new Date()));
@@ -226,17 +237,23 @@ export function QuickBookingProvider({
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 flex-col gap-1">
                 <DrawerTitle className="font-display text-xl">
-                  New booking
+                  {t("New booking", "Нов термин")}
                 </DrawerTitle>
                 <DrawerDescription>
-                  Add the customer and choose the services for this time.
+                  {t(
+                    "Add the customer and choose the services for this time.",
+                    "Внесете клиент и изберете услуги за овој термин.",
+                  )}
                 </DrawerDescription>
               </div>
               <DrawerClose asChild>
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label="Close booking drawer"
+                  aria-label={t(
+                    "Close booking drawer",
+                    "Затвори го панелот за закажување",
+                  )}
                 >
                   <X />
                 </Button>
@@ -297,6 +314,7 @@ function QuickBookingSchedulePicker({
   onDateSelect: (date: Date) => void;
   onSlotSelect: (slot: QuickBookingSelection) => void;
 }) {
+  const { locale, t } = useDashboardI18n();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const availableDateSet = useMemo(
     () => new Set(availableDates ?? []),
@@ -307,25 +325,34 @@ function QuickBookingSchedulePicker({
   const showStaffNames =
     new Set(availableSlots?.map((slot) => slot.staffId) ?? []).size > 1;
 
+  const dateLabel = datePickerLabel(
+    requestDate,
+    locale,
+    t("Choose an available date", "Изберете слободен датум"),
+  );
+
   return (
     <FieldSet>
-      <FieldLegend variant="label">Appointment</FieldLegend>
+      <FieldLegend variant="label">{t("Appointment", "Термин")}</FieldLegend>
       <FieldDescription>
-        Choose an available date and start time.
+        {t(
+          "Choose an available date and start time.",
+          "Изберете слободен датум и почетно време.",
+        )}
       </FieldDescription>
       <FieldGroup className="gap-4">
         <Field>
-          <FieldLabel>Booking date</FieldLabel>
+          <FieldLabel>{t("Booking date", "Датум на термин")}</FieldLabel>
           <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
             <PopoverTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
                 className="w-full justify-start font-normal"
-                aria-label={`Booking date: ${datePickerLabel(requestDate)}`}
+                aria-label={`${t("Booking date", "Датум на термин")}: ${dateLabel}`}
               >
                 <CalendarDays data-icon="inline-start" />
-                {datePickerLabel(requestDate)}
+                {dateLabel}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -348,29 +375,45 @@ function QuickBookingSchedulePicker({
                   !availableDateSet.has(dateKey(date))
                 }
                 showOutsideDays={false}
-                aria-label="Available booking dates"
+                aria-label={t(
+                  "Available booking dates",
+                  "Слободни датуми за закажување",
+                )}
               />
               <Separator />
               <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
                 {isLoadingAvailableDates && <Spinner />}
                 {isLoadingAvailableDates
-                  ? "Checking date availability…"
-                  : "Dates without an available time are disabled."}
+                  ? t(
+                      "Checking date availability…",
+                      "Проверка на достапност на датуми…",
+                    )
+                  : t(
+                      "Dates without an available time are disabled.",
+                      "Датумите без слободен термин се оневозможени.",
+                    )}
               </div>
             </PopoverContent>
           </Popover>
         </Field>
 
         <Field>
-          <FieldLabel id="quick-booking-time-label">Available times</FieldLabel>
-          <FieldDescription>Only free start times are shown.</FieldDescription>
+          <FieldLabel id="quick-booking-time-label">
+            {t("Available times", "Слободни термини")}
+          </FieldLabel>
+          <FieldDescription>
+            {t(
+              "Only free start times are shown.",
+              "Се прикажуваат само слободните почетни времиња.",
+            )}
+          </FieldDescription>
           {isLoadingSlots ? (
             <div
               className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
               role="status"
             >
               <Spinner />
-              Checking available times…
+              {t("Checking available times…", "Проверка на слободни термини…")}
             </div>
           ) : availableSlots && availableSlots.length > 0 ? (
             <ScrollArea className="h-44">
@@ -397,7 +440,10 @@ function QuickBookingSchedulePicker({
                       key={quickSlotValue(slot)}
                       value={quickSlotValue(slot)}
                       className="h-auto min-h-10 w-full flex-col gap-0.5 py-2"
-                      aria-label={`${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`}
+                      aria-label={t(
+                        `${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`,
+                        `${bookingTimeLabel(slot.startAt)} до ${bookingTimeLabel(slot.endAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
+                      )}
                     >
                       <span className="tabular-nums">
                         {bookingTimeLabel(slot.startAt)}–
@@ -419,9 +465,14 @@ function QuickBookingSchedulePicker({
                 <EmptyMedia variant="icon">
                   <Clock />
                 </EmptyMedia>
-                <EmptyTitle>No times available</EmptyTitle>
+                <EmptyTitle>
+                  {t("No times available", "Нема слободни термини")}
+                </EmptyTitle>
                 <EmptyDescription>
-                  Choose another enabled date in the calendar.
+                  {t(
+                    "Choose another enabled date in the calendar.",
+                    "Изберете друг овозможен датум во календарот.",
+                  )}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -465,6 +516,7 @@ function QuickBookingForm({
   onSlotSelect: (slot: QuickBookingSelection) => void;
   onBooked: () => void;
 }) {
+  const { locale, t } = useDashboardI18n();
   const createManualBooking = useMutation(api.bookings.createManualBooking);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -543,13 +595,16 @@ function QuickBookingForm({
         currency: selectedCurrency,
         used_fallback_slot: selection.isFallback,
       });
-      toast.success("Booking created");
+      toast.success(t("Booking created", "Терминот е креиран"));
       onBooked();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Could not create the booking.",
+          : t(
+              "Could not create the booking.",
+              "Не може да се креира терминот.",
+            ),
       );
     } finally {
       setIsSubmitting(false);
@@ -581,7 +636,7 @@ function QuickBookingForm({
               <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">
-                  {bookingDateLabel(selection.startAt)}
+                  {formatBookingDate(selection.startAt, locale)}
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
                   {bookingTimeLabel(selection.startAt)}–
@@ -592,41 +647,59 @@ function QuickBookingForm({
             </div>
             {selection.isFallback && (
               <p className="text-xs leading-relaxed text-muted-foreground">
-                The preferred quick-booking duration does not fit here, so the
-                smallest available slot is selected.
+                {t(
+                  "The preferred quick-booking duration does not fit here, so the smallest available slot is selected.",
+                  "Претпочитаното времетраење за брзо закажување не одговара тука, па затоа е избран најмалиот слободен термин.",
+                )}
               </p>
             )}
           </section>
         ) : !isScheduleEditable && isLoadingAutomaticSlot ? (
           <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
             <Spinner />
-            Finding the next available time…
+            {t(
+              "Finding the next available time…",
+              "Пронаоѓање на следниот слободен термин…",
+            )}
           </div>
         ) : !isScheduleEditable ? (
           <Alert>
             <Clock />
-            <AlertTitle>No quick-booking time available</AlertTitle>
+            <AlertTitle>
+              {t(
+                "No quick-booking time available",
+                "Нема слободен термин за брзо закажување",
+              )}
+            </AlertTitle>
             <AlertDescription>
-              There is no available slot on {requestDate}. Choose another day or
-              click an available time in the calendar.
+              {t(
+                `There is no available slot on ${requestDate}. Choose another day or click an available time in the calendar.`,
+                `Нема слободен термин на ${requestDate}. Изберете друг ден или кликнете на слободно време во календарот.`,
+              )}
             </AlertDescription>
           </Alert>
         ) : null}
 
         <FieldSet>
-          <FieldLegend variant="label">Services</FieldLegend>
+          <FieldLegend variant="label">{t("Services", "Услуги")}</FieldLegend>
           <FieldDescription>
-            Select one or more services. Their durations are combined.
+            {t(
+              "Select one or more services. Their durations are combined.",
+              "Изберете една или повеќе услуги. Нивното времетраење се комбинира.",
+            )}
           </FieldDescription>
           <FieldGroup data-slot="checkbox-group" className="gap-2">
             {services === undefined ? (
               <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
                 <Spinner />
-                Loading services…
+                {t("Loading services…", "Вчитување услуги…")}
               </div>
             ) : services.length === 0 ? (
               <p className="py-3 text-sm text-muted-foreground">
-                Add an active service before creating a booking.
+                {t(
+                  "Add an active service before creating a booking.",
+                  "Додајте активна услуга пред да креирате термин.",
+                )}
               </p>
             ) : (
               services.map((service) => {
@@ -673,14 +746,20 @@ function QuickBookingForm({
                             {formatPrice(
                               service.priceMinorUnits,
                               service.currency,
-                              "mk-MK",
+                              locale,
                             )}
                           </span>
                         </div>
                         <FieldDescription>
                           {isAvailableForStaff
-                            ? `${service.durationMins} minutes`
-                            : `Not available with ${selectedStaff?.displayName ?? "this staff member"}`}
+                            ? t(
+                                `${service.durationMins} minutes`,
+                                `${service.durationMins} минути`,
+                              )
+                            : t(
+                                `Not available with ${selectedStaff?.displayName ?? "this staff member"}`,
+                                `Не е достапно со ${selectedStaff?.displayName ?? "овој член на тим"}`,
+                              )}
                         </FieldDescription>
                       </FieldContent>
                     </Field>
@@ -691,9 +770,12 @@ function QuickBookingForm({
           </FieldGroup>
           <FieldError>
             {servicesError
-              ? "Select at least one service."
+              ? t("Select at least one service.", "Изберете барем една услуга.")
               : totalDurationMins > 0 && !servicesFit
-                ? `These services need ${totalDurationMins} minutes, but only ${selection?.availableDurationMins ?? 0} minutes are available from this time.`
+                ? t(
+                    `These services need ${totalDurationMins} minutes, but only ${selection?.availableDurationMins ?? 0} minutes are available from this time.`,
+                    `За овие услуги се потребни ${totalDurationMins} минути, но од ова време се достапни само ${selection?.availableDurationMins ?? 0} минути.`,
+                  )
                 : undefined}
           </FieldError>
         </FieldSet>
@@ -702,7 +784,9 @@ function QuickBookingForm({
 
         <FieldGroup className="gap-4">
           <Field data-invalid={nameError}>
-            <FieldLabel htmlFor="quick-customer-name">Customer name</FieldLabel>
+            <FieldLabel htmlFor="quick-customer-name">
+              {t("Customer name", "Име на клиент")}
+            </FieldLabel>
             <InputGroup>
               <InputGroupAddon>
                 <UserRound />
@@ -711,23 +795,25 @@ function QuickBookingForm({
                 id="quick-customer-name"
                 value={customerName}
                 onChange={(event) => setCustomerName(event.target.value)}
-                placeholder="Customer name"
+                placeholder={t("Customer name", "Име на клиент")}
                 maxLength={120}
                 autoComplete="name"
                 aria-invalid={nameError}
               />
             </InputGroup>
             <FieldError>
-              {nameError ? "Enter the customer name." : undefined}
+              {nameError
+                ? t("Enter the customer name.", "Внесете го името на клиентот.")
+                : undefined}
             </FieldError>
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="quick-customer-phone">
-                Phone{" "}
+                {t("Phone", "Телефон")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  Optional
+                  {t("Optional", "Опционално")}
                 </span>
               </FieldLabel>
               <InputGroup>
@@ -746,9 +832,9 @@ function QuickBookingForm({
             </Field>
             <Field>
               <FieldLabel htmlFor="quick-customer-email">
-                Email{" "}
+                {t("Email", "Е-пошта")}{" "}
                 <span className="font-normal text-muted-foreground">
-                  Optional
+                  {t("Optional", "Опционално")}
                 </span>
               </FieldLabel>
               <InputGroup>
@@ -774,18 +860,20 @@ function QuickBookingForm({
         <div className="flex items-center justify-between gap-4 text-sm">
           <span className="text-muted-foreground">
             {totalDurationMins > 0
-              ? `${totalDurationMins} min`
-              : "No services selected"}
+              ? `${totalDurationMins} ${t("min", "мин")}`
+              : t("No services selected", "Нема избрано услуги")}
           </span>
           <span className="font-semibold">
             {selectedCurrency && totalPriceMinorUnits > 0
-              ? formatPrice(totalPriceMinorUnits, selectedCurrency, "mk-MK")
+              ? formatPrice(totalPriceMinorUnits, selectedCurrency, locale)
               : "—"}
           </span>
         </div>
         <Button type="submit" disabled={submitDisabled} size="lg">
           {isSubmitting && <Spinner data-icon="inline-start" />}
-          {isSubmitting ? "Creating…" : "Create booking"}
+          {isSubmitting
+            ? t("Creating…", "Креирање…")
+            : t("Create booking", "Креирај термин")}
         </Button>
       </DrawerFooter>
     </form>

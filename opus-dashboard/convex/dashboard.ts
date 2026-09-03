@@ -1,7 +1,7 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requirePaidPlan } from "./lib/auth";
 
 export const getDailySchedule = query({
     args: {
@@ -508,7 +508,8 @@ export const getAIPerformance = query({
         endMs: v.number()
     },
     handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
+        const { org } = await requireAuth(ctx, args.orgId);
+        requirePaidPlan(org, "AI front desk");
         const settings = await ctx.db
             .query("org_settings")
             .withIndex("by_org", q => q.eq("orgId", args.orgId))

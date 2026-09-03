@@ -13,12 +13,14 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { CategoryList } from "./_components/CategoryList";
 import { ServiceFormDialog } from "./_components/ServiceFormDialog";
 import { ServiceList } from "./_components/ServiceList";
 
 export default function ServicesPage() {
+  const { t } = useDashboardI18n();
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
   const services = useQuery(
@@ -60,13 +62,22 @@ export default function ServicesPage() {
     );
   }
 
-  if (profile === null || !orgId) return <div>Not found</div>;
+  if (profile === null || !orgId)
+    return <div>{t("Not found", "Не е пронајдено")}</div>;
 
   const activeCount = services.filter((service) => service.isActive).length;
   const serviceSummary =
     services.length === 0
-      ? "Add the services customers can book."
-      : `${activeCount} ${activeCount === 1 ? "service" : "services"} available to book.`;
+      ? t(
+          "Add the services customers can book.",
+          "Додајте ги услугите што клиентите можат да ги закажат.",
+        )
+      : activeCount === 1
+        ? t("1 service available to book.", "1 достапна услуга за закажување.")
+        : t(
+            `${activeCount} services available to book.`,
+            `${activeCount} достапни услуги за закажување.`,
+          );
 
   return (
     <motion.div
@@ -78,7 +89,7 @@ export default function ServicesPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-            Services
+            {t("Services", "Услуги")}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">{serviceSummary}</p>
         </div>
@@ -90,7 +101,7 @@ export default function ServicesPage() {
             onClick={() => setIsAddServiceOpen(true)}
           >
             <PlusIcon data-icon="inline-start" />
-            Add service
+            {t("Add service", "Додај услуга")}
           </Button>
         </div>
       </header>
@@ -98,8 +109,8 @@ export default function ServicesPage() {
       {(services.length > 6 || Boolean(searchQuery)) && (
         <InputGroup className="w-full sm:max-w-xs">
           <InputGroupInput
-            aria-label="Search services"
-            placeholder="Search services"
+            aria-label={t("Search services", "Пребарај услуги")}
+            placeholder={t("Search services", "Пребарај услуги")}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
@@ -109,7 +120,7 @@ export default function ServicesPage() {
           {searchQuery && (
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                aria-label="Clear search"
+                aria-label={t("Clear search", "Исчисти пребарување")}
                 size="icon-xs"
                 onClick={() => setSearchQuery("")}
               >

@@ -9,6 +9,7 @@ import type { MarkerDragEvent, MapMouseEvent } from "react-map-gl/mapbox";
 import { MapPin } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import {
   isCoordinateInNorthMacedonia,
   NORTH_MACEDONIA_MAP_BOUNDS,
@@ -31,6 +32,7 @@ export default function LocationMapPicker({
   coords,
   onChange,
 }: LocationMapPickerProps) {
+  const { t } = useDashboardI18n();
   const { resolvedTheme } = useTheme();
   const hasValidCoords = Boolean(
     coords && isCoordinateInNorthMacedonia(coords),
@@ -53,10 +55,14 @@ export default function LocationMapPicker({
     return (
       <Alert variant="destructive">
         <MapPin />
-        <AlertTitle>Map is unavailable</AlertTitle>
+        <AlertTitle>
+          {t("Map is unavailable", "Мапата не е достапна")}
+        </AlertTitle>
         <AlertDescription>
-          Mapbox is not configured for this deployment. Search and pinning are
-          temporarily unavailable.
+          {t(
+            "Mapbox is not configured for this deployment. Search and pinning are temporarily unavailable.",
+            "Mapbox не е конфигуриран за оваа инсталација. Пребарувањето и означувањето се привремено недостапни.",
+          )}
         </AlertDescription>
       </Alert>
     );
@@ -109,15 +115,18 @@ export default function LocationMapPicker({
         {!confirmedCoords && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="rounded-full bg-background/90 px-4 py-2 text-sm text-muted-foreground shadow-lg backdrop-blur">
-              Click the map to pin your location
+              {t(
+                "Click the map to pin your location",
+                "Кликнете на мапата за да ја означите вашата локација",
+              )}
             </div>
           </div>
         )}
       </div>
       <p className="px-1 text-xs text-muted-foreground">
         {confirmedCoords
-          ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — drag the pin or click the map to adjust`
-          : "No coordinates confirmed"}
+          ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — ${t("drag the pin or click the map to adjust", "повлечете го пинот или кликнете на мапата за прилагодување")}`
+          : t("No coordinates confirmed", "Нема потврдени координати")}
       </p>
     </div>
   );

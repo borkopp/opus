@@ -45,14 +45,12 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
 import { getErrorMessage } from "@/lib/file-validation";
-import {
-  IMAGE_PRESETS,
-  uploadCompressedImage,
-} from "@/lib/image-compression";
+import { IMAGE_PRESETS, uploadCompressedImage } from "@/lib/image-compression";
 import { cn } from "@/lib/utils";
 import posthog from "posthog-js";
 
@@ -69,6 +67,7 @@ export function ServiceFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useDashboardI18n();
   const isEdit = Boolean(serviceId);
 
   const existingService = useQuery(
@@ -178,7 +177,12 @@ export function ServiceFormDialog({
       });
       setPhotoUrl(storageId);
     } catch (uploadError: unknown) {
-      setError(getErrorMessage(uploadError, "Could not upload image"));
+      setError(
+        getErrorMessage(
+          uploadError,
+          t("Could not upload image", "Не може да се прикачи сликата"),
+        ),
+      );
     } finally {
       setIsUploading(false);
       event.target.value = "";
@@ -190,25 +194,27 @@ export function ServiceFormDialog({
     setError("");
 
     if (!name.trim()) {
-      setError("Enter a service name.");
+      setError(t("Enter a service name.", "Внесете име на услугата."));
       return;
     }
 
     const duration = Number.parseInt(durationMins, 10);
     if (!duration || duration <= 0) {
-      setError("Enter a valid duration.");
+      setError(t("Enter a valid duration.", "Внесете валидно времетраење."));
       return;
     }
 
     if (staffIds.length === 0) {
       setShowStaffOptions(true);
-      setError("Choose at least one staff member.");
+      setError(
+        t("Choose at least one staff member.", "Изберете барем еден вработен."),
+      );
       return;
     }
 
     const priceMinorUnits = Math.round(Number.parseFloat(price) * 100);
     if (Number.isNaN(priceMinorUnits) || priceMinorUnits < 0) {
-      setError("Enter a valid price.");
+      setError(t("Enter a valid price.", "Внесете валидна цена."));
       return;
     }
 
@@ -278,7 +284,12 @@ export function ServiceFormDialog({
 
       onOpenChange(false);
     } catch (saveError: unknown) {
-      setError(getErrorMessage(saveError, "Could not save service"));
+      setError(
+        getErrorMessage(
+          saveError,
+          t("Could not save service", "Не може да се зачува услугата"),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -295,9 +306,14 @@ export function ServiceFormDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="sr-only">Loading service</DialogTitle>
+            <DialogTitle className="sr-only">
+              {t("Loading service", "Вчитување услуга")}
+            </DialogTitle>
             <DialogDescription className="sr-only">
-              Loading service details.
+              {t(
+                "Loading service details.",
+                "Се вчитуваат деталите за услугата.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-12">
@@ -313,13 +329,20 @@ export function ServiceFormDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Service unavailable</DialogTitle>
+            <DialogTitle>
+              {t("Service unavailable", "Услугата не е достапна")}
+            </DialogTitle>
             <DialogDescription>
-              This service could not be loaded. Close this window and try again.
+              {t(
+                "This service could not be loaded. Close this window and try again.",
+                "Оваа услуга не може да се вчита. Затворете го овој прозорец и обидете се повторно.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => onOpenChange(false)}>Close</Button>
+            <Button onClick={() => onOpenChange(false)}>
+              {t("Close", "Затвори")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -329,24 +352,43 @@ export function ServiceFormDialog({
   const allStaffSelected = staffIds.length === staffMembers.length;
   const staffSummary =
     staffMembers.length === 0
-      ? "Add a staff member before creating this service."
+      ? t(
+          "Add a staff member before creating this service.",
+          "Додајте вработен пред да ја креирате оваа услуга.",
+        )
       : allStaffSelected
         ? staffMembers.length === 1
           ? staffMembers[0].displayName
-          : `All ${staffMembers.length} staff members`
+          : t(
+              `All ${staffMembers.length} staff members`,
+              `Сите ${staffMembers.length} вработени`,
+            )
         : staffIds.length === 0
-          ? "No staff selected"
-          : `${staffIds.length} of ${staffMembers.length} staff members`;
+          ? t("No staff selected", "Нема избрано вработени")
+          : t(
+              `${staffIds.length} of ${staffMembers.length} staff members`,
+              `${staffIds.length} од ${staffMembers.length} вработени`,
+            );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit service" : "Add service"}</DialogTitle>
+          <DialogTitle>
+            {isEdit
+              ? t("Edit service", "Уреди услуга")
+              : t("Add service", "Додај услуга")}
+          </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update what customers can book."
-              : "Set the name, time, price, and who can provide it."}
+              ? t(
+                  "Update what customers can book.",
+                  "Ажурирајте што можат клиентите да закажат.",
+                )
+              : t(
+                  "Set the name, time, price, and who can provide it.",
+                  "Поставете име, времетраење, цена и кој ја извршува услугата.",
+                )}
           </DialogDescription>
         </DialogHeader>
 
@@ -357,21 +399,23 @@ export function ServiceFormDialog({
         >
           <FieldGroup className="gap-5 py-1">
             <Field>
-              <FieldLabel htmlFor="service-name">Service name</FieldLabel>
+              <FieldLabel htmlFor="service-name">
+                {t("Service name", "Име на услуга")}
+              </FieldLabel>
               <Input
                 id="service-name"
                 required
                 autoFocus={!isEdit}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Gel manicure"
+                placeholder={t("e.g. Gel manicure", "пр. Гел маникир")}
               />
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
               <Field>
                 <FieldLabel htmlFor="service-duration">
-                  Duration (min)
+                  {t("Duration (min)", "Времетраење (мин)")}
                 </FieldLabel>
                 <Input
                   id="service-duration"
@@ -386,7 +430,7 @@ export function ServiceFormDialog({
               </Field>
               <Field>
                 <FieldLabel htmlFor="service-price">
-                  Price ({orgSettings.currency || "USD"})
+                  {t("Price", "Цена")} ({orgSettings.currency || "USD"})
                 </FieldLabel>
                 <Input
                   id="service-price"
@@ -404,14 +448,23 @@ export function ServiceFormDialog({
 
             {categories.length > 0 && (
               <Field>
-                <FieldLabel htmlFor="service-category">Category</FieldLabel>
+                <FieldLabel htmlFor="service-category">
+                  {t("Category", "Категорија")}
+                </FieldLabel>
                 <Select value={categoryId} onValueChange={setCategoryId}>
                   <SelectTrigger id="service-category" className="w-full">
-                    <SelectValue placeholder="Choose a category" />
+                    <SelectValue
+                      placeholder={t(
+                        "Choose a category",
+                        "Изберете категорија",
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent position="popper">
                     <SelectGroup>
-                      <SelectItem value="uncategorized">No category</SelectItem>
+                      <SelectItem value="uncategorized">
+                        {t("No category", "Без категорија")}
+                      </SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category._id} value={category._id}>
                           {category.name}
@@ -429,7 +482,7 @@ export function ServiceFormDialog({
               data-invalid={staffIds.length === 0}
             >
               <FieldContent>
-                <FieldTitle>Staff</FieldTitle>
+                <FieldTitle>{t("Staff", "Вработени")}</FieldTitle>
                 <FieldDescription>{staffSummary}</FieldDescription>
               </FieldContent>
               {staffMembers.length > 1 && (
@@ -439,7 +492,9 @@ export function ServiceFormDialog({
                   size="sm"
                   onClick={() => setShowStaffOptions((current) => !current)}
                 >
-                  {showStaffOptions ? "Done" : "Change"}
+                  {showStaffOptions
+                    ? t("Done", "Готово")
+                    : t("Change", "Промени")}
                 </Button>
               )}
             </Field>
@@ -447,16 +502,21 @@ export function ServiceFormDialog({
             {staffMembers.length === 0 ? (
               <Alert>
                 <AlertCircleIcon />
-                <AlertTitle>No staff members</AlertTitle>
+                <AlertTitle>
+                  {t("No staff members", "Нема вработени")}
+                </AlertTitle>
                 <AlertDescription>
-                  Add a staff member before creating a bookable service.
+                  {t(
+                    "Add a staff member before creating a bookable service.",
+                    "Додајте вработен пред да креирате услуга за закажување.",
+                  )}
                 </AlertDescription>
               </Alert>
             ) : (
               showStaffOptions && (
                 <FieldSet>
                   <FieldLegend variant="label" className="sr-only">
-                    Staff members
+                    {t("Staff members", "Вработени")}
                   </FieldLegend>
                   <FieldGroup className="gap-2">
                     {staffMembers.map((staffMember) => (
@@ -482,7 +542,12 @@ export function ServiceFormDialog({
                     ))}
                   </FieldGroup>
                   {staffIds.length === 0 && (
-                    <FieldError>Choose at least one staff member.</FieldError>
+                    <FieldError>
+                      {t(
+                        "Choose at least one staff member.",
+                        "Изберете барем еден вработен.",
+                      )}
+                    </FieldError>
                   )}
                 </FieldSet>
               )
@@ -492,10 +557,13 @@ export function ServiceFormDialog({
               <Field orientation="horizontal" variant="surface">
                 <FieldContent>
                   <FieldLabel htmlFor="service-active">
-                    Available for booking
+                    {t("Available for booking", "Достапна за закажување")}
                   </FieldLabel>
                   <FieldDescription>
-                    Customers can choose this service.
+                    {t(
+                      "Customers can choose this service.",
+                      "Клиентите можат да ја изберат оваа услуга.",
+                    )}
                   </FieldDescription>
                 </FieldContent>
                 <Switch
@@ -517,7 +585,9 @@ export function ServiceFormDialog({
                 }
               >
                 <ImageIcon data-icon="inline-start" />
-                <span className="mr-auto">Photo and description</span>
+                <span className="mr-auto">
+                  {t("Photo and description", "Слика и опис")}
+                </span>
                 <ChevronDownIcon
                   data-icon="inline-end"
                   className={cn(
@@ -531,25 +601,31 @@ export function ServiceFormDialog({
                 <FieldGroup className="gap-5 border-t p-4">
                   <Field>
                     <FieldLabel htmlFor="service-description">
-                      Description
+                      {t("Description", "Опис")}
                     </FieldLabel>
                     <Textarea
                       id="service-description"
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
-                      placeholder="A short note customers will see"
+                      placeholder={t(
+                        "A short note customers will see",
+                        "Краток опис што ќе го видат клиентите",
+                      )}
                       className="min-h-20 resize-none"
                     />
                   </Field>
 
                   <Field>
-                    <FieldLabel>Photo</FieldLabel>
+                    <FieldLabel>{t("Photo", "Слика")}</FieldLabel>
                     <div className="flex items-center gap-4">
                       <div className="relative shrink-0">
                         <Avatar className="h-20 w-28 rounded-lg border">
                           <AvatarImage
                             src={photoPreviewUrl}
-                            alt={name || "Service preview"}
+                            alt={
+                              name ||
+                              t("Service preview", "Преглед на услугата")
+                            }
                             className="object-cover"
                           />
                           <AvatarFallback className="rounded-lg">
@@ -561,7 +637,10 @@ export function ServiceFormDialog({
                             type="button"
                             variant="destructive"
                             size="icon-xs"
-                            aria-label="Remove service photo"
+                            aria-label={t(
+                              "Remove service photo",
+                              "Отстрани слика на услугата",
+                            )}
                             className="absolute -right-2 -top-2"
                             onClick={() => setPhotoUrl("")}
                           >
@@ -590,10 +669,15 @@ export function ServiceFormDialog({
                           ) : (
                             <UploadIcon data-icon="inline-start" />
                           )}
-                          {photoUrl ? "Change photo" : "Upload photo"}
+                          {photoUrl
+                            ? t("Change photo", "Промени слика")
+                            : t("Upload photo", "Прикачи слика")}
                         </Button>
                         <FieldDescription>
-                          JPEG, PNG, or WebP. Automatically compressed.
+                          {t(
+                            "JPEG, PNG, or WebP. Automatically compressed.",
+                            "JPEG, PNG или WebP. Автоматски се компресира.",
+                          )}
                         </FieldDescription>
                       </div>
                     </div>
@@ -605,7 +689,12 @@ export function ServiceFormDialog({
             {error && (
               <Alert variant="destructive">
                 <AlertCircleIcon />
-                <AlertTitle>Check the service details</AlertTitle>
+                <AlertTitle>
+                  {t(
+                    "Check the service details",
+                    "Проверете ги деталите за услугата",
+                  )}
+                </AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -619,7 +708,7 @@ export function ServiceFormDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
           >
-            Cancel
+            {t("Cancel", "Откажи")}
           </Button>
           <Button
             type="submit"
@@ -628,7 +717,11 @@ export function ServiceFormDialog({
             disabled={isSaving || isUploading || staffMembers.length === 0}
           >
             {isSaving && <Spinner data-icon="inline-start" />}
-            {isSaving ? "Saving…" : isEdit ? "Save changes" : "Add service"}
+            {isSaving
+              ? t("Saving…", "Се зачувува…")
+              : isEdit
+                ? t("Save changes", "Зачувај промени")
+                : t("Add service", "Додај услуга")}
           </Button>
         </DialogFooter>
       </DialogContent>

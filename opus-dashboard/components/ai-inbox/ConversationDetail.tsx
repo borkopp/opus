@@ -8,9 +8,16 @@ import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { ConversationStatusBadge } from "./ConversationStatusBadge";
 import { Button } from "@/components/ui/button";
-import { Instagram, BotMessageSquare, MessageSquareOff, User } from "lucide-react";
+import {
+  Instagram,
+  BotMessageSquare,
+  MessageSquareOff,
+  User,
+} from "lucide-react";
 import { format } from "date-fns";
+import { mk } from "date-fns/locale";
 import posthog from "posthog-js";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 interface Props {
   orgId: Id<"orgs">;
@@ -18,10 +25,21 @@ interface Props {
 }
 
 export function ConversationDetail({ orgId, conversationId }: Props) {
-  const conversation = useQuery(api.ai.conversations.getConversation, { orgId, conversationId });
-  const messages = useQuery(api.ai.messages.listMessages, { orgId, conversationId });
-  const resolveConversation = useMutation(api.ai.conversations.resolveConversation);
-  const handoffConversation = useMutation(api.ai.conversations.handoffConversation);
+  const { language, t } = useDashboardI18n();
+  const conversation = useQuery(api.ai.conversations.getConversation, {
+    orgId,
+    conversationId,
+  });
+  const messages = useQuery(api.ai.messages.listMessages, {
+    orgId,
+    conversationId,
+  });
+  const resolveConversation = useMutation(
+    api.ai.conversations.resolveConversation,
+  );
+  const handoffConversation = useMutation(
+    api.ai.conversations.handoffConversation,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,26 +63,52 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         channel: conversation.channel,
         booking_count: conversation.bookingIds.length,
       });
-      toast.success("Conversation resolved");
+      toast.success(
+        t("Conversation resolved", "Разговорот е означен како решен"),
+      );
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to resolve conversation");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(
+              "Failed to resolve conversation",
+              "Неуспешно затворање на разговорот",
+            ),
+      );
     }
   };
 
   const handleTakeOver = async () => {
     try {
-      await handoffConversation({ orgId, conversationId, reason: "Staff takeover" });
+      await handoffConversation({
+        orgId,
+        conversationId,
+        reason: "Staff takeover",
+      });
       posthog.capture("ai_conversation_taken_over", {
         channel: conversation.channel,
         booking_count: conversation.bookingIds.length,
       });
-      toast.success("Conversation taken over — AI is no longer responding");
+      toast.success(
+        t(
+          "Conversation taken over — AI is no longer responding",
+          "Разговорот е преземен — AI веќе не одговара",
+        ),
+      );
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to take over conversation");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(
+              "Failed to take over conversation",
+              "Неуспешно преземање на разговорот",
+            ),
+      );
     }
   };
 
-  const ChannelIcon = conversation.channel === "instagram" ? Instagram : BotMessageSquare;
+  const ChannelIcon =
+    conversation.channel === "instagram" ? Instagram : BotMessageSquare;
 
   return (
     <div className="flex flex-col h-full">
@@ -77,18 +121,25 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-medium text-sm">
-                {conversation.customer?.name ?? "Unknown customer"}
+                {conversation.customer?.name ??
+                  t("Unknown customer", "Непознат клиент")}
               </span>
               <ChannelIcon size={13} className="text-muted-foreground" />
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               <ConversationStatusBadge status={conversation.status} />
               <span className="text-[11px] text-muted-foreground">
-                Started {format(new Date(conversation.createdAt), "d MMM yyyy")}
+                {t("Started", "Започнат на")}{" "}
+                {format(new Date(conversation.createdAt), "d MMM yyyy", {
+                  locale: language === "mk" ? mk : undefined,
+                })}
               </span>
               {conversation.bookingIds.length > 0 && (
                 <span className="text-[11px] text-muted-foreground">
-                  · {conversation.bookingIds.length} booking{conversation.bookingIds.length !== 1 ? "s" : ""}
+                  · {conversation.bookingIds.length}{" "}
+                  {conversation.bookingIds.length === 1
+                    ? t("booking", "термин")
+                    : t("bookings", "термини")}
                 </span>
               )}
             </div>
@@ -96,15 +147,16 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         </div>
 
         {/* Action buttons */}
-        {(conversation.status === "active" || conversation.status === "handed_off") && (
+        {(conversation.status === "active" ||
+          conversation.status === "handed_off") && (
           <div className="flex gap-2">
             {conversation.status === "active" && (
               <Button size="sm" variant="outline" onClick={handleTakeOver}>
-                Take Over
+                {t("Take Over", "Преземи")}
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={handleResolve}>
-              Mark Resolved
+              {t("Mark Resolved", "Означи како решен")}
             </Button>
           </div>
         )}
@@ -115,7 +167,9 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         {!messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
             <MessageSquareOff size={28} className="text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">No messages yet</p>
+            <p className="text-sm text-muted-foreground">
+              {t("No messages yet", "Сè уште нема пораки")}
+            </p>
           </div>
         ) : (
           messages.map((message) => (
@@ -128,7 +182,10 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
       {conversation.status === "handed_off" && conversation.handoffReason && (
         <div className="px-5 py-3 border-t border-border/40 bg-highlight/10 shrink-0">
           <p className="text-xs text-warning">
-            <span className="font-medium">Handed off:</span> {conversation.handoffReason}
+            <span className="font-medium">
+              {t("Handed off:", "Преземено:")}
+            </span>{" "}
+            {conversation.handoffReason}
           </p>
         </div>
       )}

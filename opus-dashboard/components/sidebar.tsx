@@ -43,6 +43,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import type { Id } from "@/convex/_generated/dataModel";
 import { WebsiteBanner } from "@/components/dashboard/WebsiteBanner";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 export interface NavLinkItem {
   label: string;
@@ -114,9 +115,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
         setIsMobileOpen,
       }}
     >
-      <TooltipProvider delayDuration={150}>
-        {children}
-      </TooltipProvider>
+      <TooltipProvider delayDuration={150}>{children}</TooltipProvider>
     </SidebarContext.Provider>
   );
 }
@@ -127,17 +126,23 @@ interface AppSidebarProps {
   industryBase: string;
 }
 
-export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarProps) {
-  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
+export function AppSidebar({
+  profile,
+  primaryLinks,
+  industryBase,
+}: AppSidebarProps) {
+  const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } =
+    useSidebar();
   const pathname = usePathname();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { t } = useDashboardI18n();
 
   return (
     <>
       {/* ── Desktop Sidebar ───────────────────────────────────── */}
       <motion.aside
-        aria-label="Main Navigation"
+        aria-label={t("Main Navigation", "Главна навигација")}
         initial={false}
         animate={{
           width: isCollapsed ? 72 : 256,
@@ -154,7 +159,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
         <div
           className={cn(
             "flex h-16 items-center border-b border-sidebar-border/60 shrink-0",
-            isCollapsed ? "justify-center px-0" : "justify-between px-3.5"
+            isCollapsed ? "justify-center px-0" : "justify-between px-3.5",
           )}
         >
           {isCollapsed ? (
@@ -164,13 +169,13 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                   type="button"
                   onClick={() => setIsCollapsed(false)}
                   className="flex items-center justify-center outline-none rounded-xl p-2 hover:bg-sidebar-accent/60 transition-colors active:scale-95 cursor-pointer"
-                  aria-label="Expand sidebar"
+                  aria-label={t("Expand sidebar", "Прошири странично мени")}
                 >
                   <LogoMark className="h-7 w-auto text-primary" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={12}>
-                Expand sidebar
+                {t("Expand sidebar", "Прошири странично мени")}
               </TooltipContent>
             </Tooltip>
           ) : (
@@ -178,7 +183,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               <div className="flex items-center gap-3 overflow-hidden">
                 <Link
                   href={industryBase}
-                  aria-label="OPUS dashboard"
+                  aria-label={t("OPUS dashboard", "OPUS контролна табла")}
                   className="flex items-center gap-2.5 outline-none rounded-lg p-1 hover:opacity-90 transition-opacity"
                 >
                   <LogoMark className="h-7 w-auto text-primary" />
@@ -192,13 +197,13 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                     type="button"
                     onClick={() => setIsCollapsed(true)}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors active:scale-95 shrink-0"
-                    aria-label="Collapse sidebar"
+                    aria-label={t("Collapse sidebar", "Склопи странично мени")}
                   >
                     <IconLayoutSidebarLeftCollapse className="h-4.5 w-4.5" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="right" sideOffset={10}>
-                  Collapse sidebar
+                  {t("Collapse sidebar", "Склопи странично мени")}
                 </TooltipContent>
               </Tooltip>
             </>
@@ -210,7 +215,9 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
           {primaryLinks.map((link) => {
             const isActive =
               pathname === link.href ||
-              (link.href !== industryBase && link.href !== "/settings" && pathname.startsWith(link.href));
+              (link.href !== industryBase &&
+                link.href !== "/settings" &&
+                pathname.startsWith(link.href));
             const isSettings = link.href === "/settings";
 
             const linkContent = (
@@ -223,13 +230,15 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                     : "h-10 w-full px-3 justify-start gap-3",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
                 )}
               >
                 <div
                   className={cn(
                     "shrink-0 flex items-center justify-center transition-colors",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    isActive
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground group-hover:text-foreground",
                   )}
                 >
                   {link.icon}
@@ -262,9 +271,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 )}
                 {isCollapsed ? (
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      {linkContent}
-                    </TooltipTrigger>
+                    <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                     <TooltipContent side="right" sideOffset={12}>
                       {link.label}
                     </TooltipContent>
@@ -294,11 +301,14 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                   type="button"
                   className={cn(
                     "group flex items-center rounded-lg transition-colors hover:bg-secondary/70 outline-none w-full text-left active:scale-[0.98] cursor-pointer",
-                    isCollapsed ? "p-1 justify-center" : "p-2 gap-3"
+                    isCollapsed ? "p-1 justify-center" : "p-2 gap-3",
                   )}
                 >
                   <Avatar className="h-9 w-9 shrink-0 border border-border/60 shadow-xs">
-                    <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
+                    <AvatarImage
+                      src={profile?.user?.avatarUrl}
+                      alt={profile?.user?.name ?? t("User", "Корисник")}
+                    />
                     <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
                       {(profile?.user?.name ?? "U").charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -310,11 +320,14 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                         initial={{ opacity: 0, width: 0 }}
                         animate={{ opacity: 1, width: "auto" }}
                         exit={{ opacity: 0, width: 0 }}
-                        transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                        transition={{
+                          duration: 0.18,
+                          ease: [0.23, 1, 0.32, 1],
+                        }}
                         className="flex-1 min-w-0 overflow-hidden"
                       >
                         <p className="text-xs font-semibold text-foreground truncate leading-tight">
-                          {profile?.user?.name ?? "Account"}
+                          {profile?.user?.name ?? t("Account", "Профил")}
                         </p>
                         <p className="text-[11px] text-muted-foreground truncate leading-normal">
                           {profile?.user?.email ?? ""}
@@ -336,7 +349,9 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               >
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-semibold leading-none">{profile?.user?.name ?? "Account"}</p>
+                    <p className="text-sm font-semibold leading-none">
+                      {profile?.user?.name ?? t("Account", "Профил")}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground truncate">
                       {profile?.user?.email}
                     </p>
@@ -344,29 +359,44 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={() => router.push("/settings")}
+                    className="cursor-pointer"
+                  >
                     <IconSettings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t("Settings", "Поставки")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="cursor-pointer">
                       <IconSun className="mr-2 h-4 w-4 dark:hidden" />
                       <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
-                      <span>Theme</span>
+                      <span>{t("Theme", "Тема")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-36">
-                      <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
-                        <DropdownMenuRadioItem value="light" className="cursor-pointer">
+                      <DropdownMenuRadioGroup
+                        value={theme ?? "system"}
+                        onValueChange={setTheme}
+                      >
+                        <DropdownMenuRadioItem
+                          value="light"
+                          className="cursor-pointer"
+                        >
                           <IconSun className="mr-2 h-4 w-4" />
-                          <span>Light</span>
+                          <span>{t("Light", "Светла")}</span>
                         </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="dark" className="cursor-pointer">
+                        <DropdownMenuRadioItem
+                          value="dark"
+                          className="cursor-pointer"
+                        >
                           <IconMoon className="mr-2 h-4 w-4" />
-                          <span>Dark</span>
+                          <span>{t("Dark", "Темна")}</span>
                         </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="system" className="cursor-pointer">
+                        <DropdownMenuRadioItem
+                          value="system"
+                          className="cursor-pointer"
+                        >
                           <IconDeviceDesktop className="mr-2 h-4 w-4" />
-                          <span>System</span>
+                          <span>{t("System", "Системска")}</span>
                         </DropdownMenuRadioItem>
                       </DropdownMenuRadioGroup>
                     </DropdownMenuSubContent>
@@ -375,12 +405,14 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    void authClient.signOut().then(() => router.replace("/login"));
+                    void authClient
+                      .signOut()
+                      .then(() => router.replace("/login"));
                   }}
                   className="text-destructive focus:bg-destructive/10 cursor-pointer"
                 >
                   <IconLogout className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t("Log out", "Одјава")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -395,13 +427,13 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
             type="button"
             onClick={() => setIsMobileOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors border border-border/40 active:scale-95 cursor-pointer"
-            aria-label="Open menu"
+            aria-label={t("Open menu", "Отвори мени")}
           >
             <IconMenu2 className="h-5 w-5" />
           </button>
           <Link
             href={industryBase}
-            aria-label="OPUS dashboard"
+            aria-label={t("OPUS dashboard", "OPUS контролна табла")}
             className="flex items-center gap-2"
           >
             <Logo className="text-lg" markClassName="h-6" />
@@ -409,13 +441,18 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
         </div>
 
         <div className="flex items-center gap-2.5">
-          {profile?.orgId && <NotificationBell orgId={profile.orgId} placement="header" />}
+          {profile?.orgId && (
+            <NotificationBell orgId={profile.orgId} placement="header" />
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="outline-none active:scale-95 cursor-pointer">
                 <Avatar className="h-9 w-9 border border-border/60 shadow-xs">
-                  <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
+                  <AvatarImage
+                    src={profile?.user?.avatarUrl}
+                    alt={profile?.user?.name ?? t("User", "Корисник")}
+                  />
                   <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
                     {(profile?.user?.name ?? "U").charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -425,7 +462,9 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
             <DropdownMenuContent className="w-56" align="end" sideOffset={8}>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-semibold leading-none">{profile?.user?.name ?? "Account"}</p>
+                  <p className="text-sm font-semibold leading-none">
+                    {profile?.user?.name ?? t("Account", "Профил")}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground truncate">
                     {profile?.user?.email}
                   </p>
@@ -433,29 +472,44 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => router.push("/settings")} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() => router.push("/settings")}
+                  className="cursor-pointer"
+                >
                   <IconSettings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>{t("Settings", "Поставки")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="cursor-pointer">
                     <IconSun className="mr-2 h-4 w-4 dark:hidden" />
                     <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
-                    <span>Theme</span>
+                    <span>{t("Theme", "Тема")}</span>
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-36">
-                    <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
-                      <DropdownMenuRadioItem value="light" className="cursor-pointer">
+                    <DropdownMenuRadioGroup
+                      value={theme ?? "system"}
+                      onValueChange={setTheme}
+                    >
+                      <DropdownMenuRadioItem
+                        value="light"
+                        className="cursor-pointer"
+                      >
                         <IconSun className="mr-2 h-4 w-4" />
-                        <span>Light</span>
+                        <span>{t("Light", "Светла")}</span>
                       </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="dark" className="cursor-pointer">
+                      <DropdownMenuRadioItem
+                        value="dark"
+                        className="cursor-pointer"
+                      >
                         <IconMoon className="mr-2 h-4 w-4" />
-                        <span>Dark</span>
+                        <span>{t("Dark", "Темна")}</span>
                       </DropdownMenuRadioItem>
-                      <DropdownMenuRadioItem value="system" className="cursor-pointer">
+                      <DropdownMenuRadioItem
+                        value="system"
+                        className="cursor-pointer"
+                      >
                         <IconDeviceDesktop className="mr-2 h-4 w-4" />
-                        <span>System</span>
+                        <span>{t("System", "Системска")}</span>
                       </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
@@ -464,12 +518,14 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
-                  void authClient.signOut().then(() => router.replace("/login"));
+                  void authClient
+                    .signOut()
+                    .then(() => router.replace("/login"));
                 }}
                 className="text-destructive focus:bg-destructive/10 cursor-pointer"
               >
                 <IconLogout className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>{t("Log out", "Одјава")}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -503,7 +559,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 <Link
                   href={industryBase}
                   onClick={() => setIsMobileOpen(false)}
-                  aria-label="OPUS dashboard"
+                  aria-label={t("OPUS dashboard", "OPUS контролна табла")}
                   className="flex items-center gap-2.5"
                 >
                   <Logo className="text-xl" markClassName="h-7" />
@@ -512,7 +568,7 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                   type="button"
                   onClick={() => setIsMobileOpen(false)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  aria-label="Close menu"
+                  aria-label={t("Close menu", "Затвори мени")}
                 >
                   <IconX className="h-5 w-5" />
                 </button>
@@ -523,7 +579,9 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                 {primaryLinks.map((link) => {
                   const isActive =
                     pathname === link.href ||
-                    (link.href !== industryBase && link.href !== "/settings" && pathname.startsWith(link.href));
+                    (link.href !== industryBase &&
+                      link.href !== "/settings" &&
+                      pathname.startsWith(link.href));
                   const isSettings = link.href === "/settings";
 
                   return (
@@ -541,10 +599,17 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                           "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98]",
                           isActive
                             ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
+                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
                         )}
                       >
-                        <div className={cn("shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground")}>
+                        <div
+                          className={cn(
+                            "shrink-0",
+                            isActive
+                              ? "text-primary-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        >
                           {link.icon}
                         </div>
                         <span>{link.label}</span>
@@ -560,14 +625,21 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
 
                 <div className="flex items-center gap-3 px-1">
                   <Avatar className="h-10 w-10 border border-border/60">
-                    <AvatarImage src={profile?.user?.avatarUrl} alt={profile?.user?.name ?? "User"} />
+                    <AvatarImage
+                      src={profile?.user?.avatarUrl}
+                      alt={profile?.user?.name ?? t("User", "Корисник")}
+                    />
                     <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
                       {(profile?.user?.name ?? "U").charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{profile?.user?.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{profile?.user?.email}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {profile?.user?.name ?? t("Account", "Профил")}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {profile?.user?.email}
+                    </p>
                   </div>
                 </div>
 
@@ -581,18 +653,20 @@ export function AppSidebar({ profile, primaryLinks, industryBase }: AppSidebarPr
                     className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
                   >
                     <IconSettings className="h-4 w-4" />
-                    <span>Settings</span>
+                    <span>{t("Settings", "Поставки")}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       setIsMobileOpen(false);
-                      void authClient.signOut().then(() => router.replace("/login"));
+                      void authClient
+                        .signOut()
+                        .then(() => router.replace("/login"));
                     }}
                     className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
                   >
                     <IconLogout className="h-4 w-4" />
-                    <span>Log out</span>
+                    <span>{t("Log out", "Одјава")}</span>
                   </button>
                 </div>
               </div>

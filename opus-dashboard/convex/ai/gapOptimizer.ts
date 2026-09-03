@@ -1,7 +1,7 @@
 "use node";
 
 import { v, ConvexError } from "convex/values";
-import { action } from "../_generated/server";
+import { action, internalAction, type ActionCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Anthropic } from "@anthropic-ai/sdk";
 import { classifyFreeIntervals, findInteriorGaps } from "../slots";
@@ -45,6 +45,22 @@ type StaffReport = {
     draftsCreated: number;
 };
 
+type ScanArgs = {
+    orgId: Id<"orgs">;
+    serviceDate?: string;
+    staffIds?: Array<Id<"staff_members">>;
+    detectedBy: "manual_scan" | "cancellation";
+    triggeredByBookingId?: Id<"bookings">;
+};
+
+const scanDayArgs = {
+    orgId: v.id("orgs"),
+    serviceDate: v.optional(v.string()),
+    staffIds: v.optional(v.array(v.id("staff_members"))),
+    detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation")),
+    triggeredByBookingId: v.optional(v.id("bookings")),
+};
+
 function todayInTimezone(tz: string): string {
     const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: tz,
@@ -58,15 +74,7 @@ function todayInTimezone(tz: string): string {
     return `${year}-${month}-${day}`;
 }
 
-export const scanDayForOrg = action({
-    args: {
-        orgId: v.id("orgs"),
-        serviceDate: v.optional(v.string()), // "YYYY-MM-DD" — defaults to today in org timezone
-        staffIds: v.optional(v.array(v.id("staff_members"))),
-        detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation")),
-        triggeredByBookingId: v.optional(v.id("bookings")),
-    },
-    handler: async (ctx, args): Promise<{
+async function runScan(ctx: ActionCtx, args: ScanArgs): Promise<{
         serviceDate: string;
         timezone: string;
         thresholds: { minGapMins: number; minGapSource: string; bufferTimeMins: number };
@@ -77,11 +85,7 @@ export const scanDayForOrg = action({
             messageDraftsCreated: number;
         };
         staffReports: StaffReport[];
-    }> => {
-        await ctx.runQuery(internal.auth.assertOrgRole, {
-            orgId: args.orgId,
-            role: "staff",
-        });
+    }> {
         const { orgSettings, activeStaff, services } = await ctx.runQuery(
             internal.ai.gapOptimizerHelpers.getOrgSettingsAndStaff,
             { orgId: args.orgId, staffIds: args.staffIds }
@@ -267,5 +271,27 @@ IMPORTANT RULES:
             },
             staffReports,
         };
+}
+
+export const scanDayForOrg = action({
+    args: scanDayArgs,
+    handler: async (ctx, args) => {
+        await ctx.runQuery(internal.auth.assertPaidOrgRole, {
+            orgId: args.orgId,
+            role: "staff",
+            feature: "Gap optimizer",
+        });
+        return await runScan(ctx, args);
+    },
+});
+
+export const scanDayAfterCancellation = internalAction({
+    args: scanDayArgs,
+    handler: async (ctx, args) => {
+        await ctx.runQuery(internal.auth.assertPaidOrg, {
+            orgId: args.orgId,
+            feature: "Gap optimizer",
+        });
+        return await runScan(ctx, args);
     },
 });

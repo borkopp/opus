@@ -1,6 +1,6 @@
 import { query, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
-import { requireRole } from "./lib/auth";
+import { normalizeProductPlan, requireRole } from "./lib/auth";
 
 export const getById = internalQuery({
     args: { orgId: v.id("orgs") },
@@ -63,7 +63,11 @@ export const getByInstagramPageId = query({
             .query("orgs")
             .withIndex("by_instagram_page_id", q => q.eq("instagramPageId", args.instagramPageId))
             .first();
-        if (!org || org.isDeleted) return null;
+        if (
+            !org ||
+            org.isDeleted ||
+            normalizeProductPlan(org.plan) !== "paid"
+        ) return null;
         return org._id;
     },
 });

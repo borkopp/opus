@@ -1,6 +1,11 @@
 import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
-import { requireAuth, requireRole } from "./lib/auth";
+import {
+  normalizeProductPlan,
+  requireAuth,
+  requirePaidPlan,
+  requireRole,
+} from "./lib/auth";
 import { internal } from "./_generated/api";
 import {
   canonicalLocale,
@@ -37,7 +42,7 @@ export const getOrgSettings = query({
       : [];
 
     return {
-      org,
+      org: { ...org, plan: normalizeProductPlan(org.plan) },
       settings,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
       emailRecipients,
@@ -283,7 +288,8 @@ export const updateGapOptimizerSettings = mutation({
     gapOptimizerMinGapMins: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, args.orgId, "owner");
+    const { org } = await requireRole(ctx, args.orgId, "owner");
+    requirePaidPlan(org, "Gap optimizer");
 
     const settings = await ctx.db
       .query("org_settings")
@@ -365,7 +371,8 @@ export const updateAiSettings = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, args.orgId, "owner");
+    const { org } = await requireRole(ctx, args.orgId, "owner");
+    requirePaidPlan(org, "AI front desk");
 
     const settings = await ctx.db
       .query("org_settings")

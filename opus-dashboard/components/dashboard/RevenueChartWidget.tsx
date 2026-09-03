@@ -1,10 +1,18 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Bar, BarChart, XAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  Bar,
+  BarChart,
+  XAxis,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { WidgetTitle } from "@/components/dashboard/WidgetTitle";
 
 interface RevenueDataItem {
@@ -18,7 +26,55 @@ interface RevenueChartProps {
   formatMoney: (val: number) => string;
 }
 
-export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartProps) {
+const DAYS_SHORT_MK: Record<string, string> = {
+  Mon: "Пон",
+  Tue: "Вто",
+  Wed: "Сре",
+  Thu: "Чет",
+  Fri: "Пет",
+  Sat: "Саб",
+  Sun: "Нед",
+};
+
+const DAYS_FULL_MK: Record<string, string> = {
+  Mon: "Понеделник",
+  Tue: "Вторник",
+  Wed: "Среда",
+  Thu: "Четврток",
+  Fri: "Петок",
+  Sat: "Сабота",
+  Sun: "Недела",
+  Monday: "Понеделник",
+  Tuesday: "Вторник",
+  Wednesday: "Среда",
+  Thursday: "Четврток",
+  Friday: "Петок",
+  Saturday: "Сабота",
+  Sunday: "Недела",
+};
+
+const DAYS_FULL_EN: Record<string, string> = {
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
+  Monday: "Monday",
+  Tuesday: "Tuesday",
+  Wednesday: "Wednesday",
+  Thursday: "Thursday",
+  Friday: "Friday",
+  Saturday: "Saturday",
+  Sunday: "Sunday",
+};
+
+export function RevenueChartWidget({
+  revenueData,
+  formatMoney,
+}: RevenueChartProps) {
+  const { language, t } = useDashboardI18n();
   const [activeBar, setActiveBar] = useState<number | null>(null);
 
   const containerVars = {
@@ -29,9 +85,9 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       transition: {
         duration: 0.6,
         ease: [0.22, 1, 0.36, 1],
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   } satisfies Variants;
 
   const itemVars = {
@@ -39,15 +95,32 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
-    }
+      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    },
   } satisfies Variants;
 
   // Identify today
   const today = new Date().getDay();
   const daysMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const todayName = daysMap[today];
-  const todayIndex = revenueData.findIndex((item) => item.day.startsWith(todayName));
+  const todayIndex = revenueData.findIndex((item) =>
+    item.day.startsWith(todayName),
+  );
+
+  const formatDayTick = (day: string) => {
+    if (language === "mk") {
+      return DAYS_SHORT_MK[day] || day;
+    }
+    return day;
+  };
+
+  const getDayTooltipLabel = (data: RevenueDataItem) => {
+    const rawDay = data.dayFull || data.day;
+    if (language === "mk") {
+      return DAYS_FULL_MK[rawDay] || DAYS_FULL_MK[data.day] || rawDay;
+    }
+    return DAYS_FULL_EN[rawDay] || rawDay;
+  };
 
   return (
     <motion.div
@@ -57,8 +130,11 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
       className="h-full col-span-1 lg:col-span-2"
     >
       <Card className="flex min-h-0 h-full flex-col bg-card p-6 text-card-foreground transition-shadow duration-300 hover:shadow-md">
-        <motion.div variants={itemVars} className="flex justify-between items-center mb-6 w-full px-1">
-          <WidgetTitle>Revenue</WidgetTitle>
+        <motion.div
+          variants={itemVars}
+          className="flex justify-between items-center mb-6 w-full px-1"
+        >
+          <WidgetTitle>{t("Revenue", "Приход")}</WidgetTitle>
           {/* <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -68,7 +144,10 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
           </motion.div> */}
         </motion.div>
 
-        <motion.div variants={itemVars} className="flex-1 w-full min-h-[160px] mt-auto relative">
+        <motion.div
+          variants={itemVars}
+          className="flex-1 w-full min-h-[160px] mt-auto relative"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={revenueData}
@@ -82,6 +161,7 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
             >
               <XAxis
                 dataKey="day"
+                tickFormatter={formatDayTick}
                 tickLine={false}
                 axisLine={false}
                 fontSize={12}
@@ -91,12 +171,17 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
               <Tooltip
                 cursor={false}
                 content={({ active, payload }) => {
-                  if (active && payload && payload.length > 0 && payload[0]?.value !== undefined) {
+                  if (
+                    active &&
+                    payload &&
+                    payload.length > 0 &&
+                    payload[0]?.value !== undefined
+                  ) {
                     const data = payload[0].payload as RevenueDataItem;
                     return (
                       <div className="bg-card rounded-lg p-3 shadow-m border border-border flex flex-col items-center animate-in fade-in zoom-in duration-200 -mt-12">
                         <span className="text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest leading-none mb-1.5">
-                          {data.dayFull || data.day}
+                          {getDayTooltipLabel(data)}
                         </span>
                         <span className="text-base font-black text-foreground leading-none font-display">
                           {formatMoney((payload[0].value as number) * 100)}
@@ -117,14 +202,20 @@ export function RevenueChartWidget({ revenueData, formatMoney }: RevenueChartPro
               >
                 {revenueData.map((entry, index) => {
                   // Logic: Highlight if hovered, ELSE highlight if it's today AND nothing is hovered.
-                  const isHighlighted = activeBar !== null ? activeBar === index : index === todayIndex;
+                  const isHighlighted =
+                    activeBar !== null
+                      ? activeBar === index
+                      : index === todayIndex;
 
                   // Use brand cobalt for highlighted bars and muted border for others
                   return (
                     <Cell
                       key={`${entry.day}-${index}`}
                       fill={isHighlighted ? "var(--brand)" : "var(--border)"}
-                      style={{ cursor: 'pointer', transition: 'fill 0.2s ease' }}
+                      style={{
+                        cursor: "pointer",
+                        transition: "fill 0.2s ease",
+                      }}
                     />
                   );
                 })}

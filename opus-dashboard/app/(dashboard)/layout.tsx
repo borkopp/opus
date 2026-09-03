@@ -9,6 +9,8 @@ import React from "react";
 import { getNavLinks } from "@/lib/vertical-nav-config";
 import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
+import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
+import { resolveDashboardLanguage } from "@/lib/i18n/types";
 
 export default function DashboardLayout({
   children,
@@ -22,6 +24,11 @@ export default function DashboardLayout({
   const profile = useQuery(
     api.users.getMyProfile,
     isAuthenticated ? {} : "skip",
+  );
+
+  const orgSettingsData = useQuery(
+    api.orgSettings.getOrgSettings,
+    profile?.orgId ? { orgId: profile.orgId } : "skip",
   );
 
   useEffect(() => {
@@ -49,7 +56,12 @@ export default function DashboardLayout({
     }
 
     // Allow shared routes (settings, gap optimizer, notifications, etc.)
-    const sharedPaths = ["/settings", "/notifications", "/gap-optimizer", "/ai-inbox"];
+    const sharedPaths = [
+      "/settings",
+      "/notifications",
+      "/gap-optimizer",
+      "/ai-inbox",
+    ];
     if (sharedPaths.some((p) => pathname.startsWith(p))) return;
 
     // If in the wrong vertical module, redirect
@@ -58,7 +70,11 @@ export default function DashboardLayout({
     }
   }, [profile, pathname, router]);
 
-  if (isLoading || (isAuthenticated && !profile)) {
+  if (
+    isLoading ||
+    (isAuthenticated && !profile) ||
+    (profile?.orgId && orgSettingsData === undefined)
+  ) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -70,25 +86,33 @@ export default function DashboardLayout({
 
   if (!profile?.orgId) return null;
 
+  const locale = orgSettingsData?.settings?.locale ?? "mk-MK";
+  const language = resolveDashboardLanguage(locale);
+
   // ── Resolve nav links from vertical config ──────────────
   const industry =
     profile?.industry === ACTIVE_INDUSTRY ? profile.industry : ACTIVE_INDUSTRY;
-  const { basePath: industryBase, links: primaryLinks } = getNavLinks(industry);
+  const { basePath: industryBase, links: primaryLinks } = getNavLinks(
+    industry,
+    language,
+  );
 
   return (
-    <SidebarProvider>
-      <QuickBookingProvider orgId={profile.orgId}>
-        <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-background">
-          <AppSidebar
-            profile={profile}
-            primaryLinks={primaryLinks}
-            industryBase={industryBase}
-          />
-          <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full bg-background relative z-0 flex flex-col">
-            {children}
-          </main>
-        </div>
-      </QuickBookingProvider>
-    </SidebarProvider>
+    <DashboardI18nProvider locale={locale}>
+      <SidebarProvider>
+        <QuickBookingProvider orgId={profile.orgId}>
+          <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-background">
+            <AppSidebar
+              profile={profile}
+              primaryLinks={primaryLinks}
+              industryBase={industryBase}
+            />
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full bg-background relative z-0 flex flex-col">
+              {children}
+            </main>
+          </div>
+        </QuickBookingProvider>
+      </SidebarProvider>
+    </DashboardI18nProvider>
   );
 }

@@ -1,5 +1,6 @@
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import { normalizeProductPlan } from "./auth";
 import { resolveStoredImageUrl } from "./imageUrl";
 
 type ReadCtx = Pick<QueryCtx, "db" | "storage">;
@@ -112,7 +113,9 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
       bookingWindowDays: orgSettings?.bookingWindowDays ?? 60,
     },
     aiWebchatEnabled: Boolean(
-      orgSettings?.aiEnabled && orgSettings.aiWebchatEnabled,
+      normalizeProductPlan(org.plan) === "paid" &&
+      orgSettings?.aiEnabled &&
+      orgSettings.aiWebchatEnabled,
     ),
     aiPersonaName: orgSettings?.aiPersonaName ?? "Aria",
     aiGreetingMessage: orgSettings?.aiGreetingMessage ?? null,

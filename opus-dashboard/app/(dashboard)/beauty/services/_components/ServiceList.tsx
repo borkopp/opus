@@ -35,6 +35,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage, getImageStorageUrl } from "@/lib/file-validation";
@@ -58,6 +59,7 @@ export function ServiceList({
   onAddService: () => void;
   onClearSearch: () => void;
 }) {
+  const { t } = useDashboardI18n();
   const categories = useQuery(api.serviceCategories.listCategories, { orgId });
   const services = useQuery(api.services.listServices, { orgId });
   const deactivateService = useMutation(api.services.deactivateService);
@@ -104,13 +106,13 @@ export function ServiceList({
     if (uncategorized.length > 0) {
       groups.push({
         key: "uncategorized",
-        name: "Other",
+        name: t("Other", "Друго"),
         services: uncategorized,
       });
     }
 
     return groups;
-  }, [categories, searchQuery, services]);
+  }, [categories, searchQuery, services, t]);
 
   if (categories === undefined || services === undefined) {
     return (
@@ -140,7 +142,10 @@ export function ServiceList({
   ) => {
     if (
       !window.confirm(
-        `Remove “${serviceName}”? Customers will no longer be able to book it.`,
+        t(
+          `Remove “${serviceName}”? Customers will no longer be able to book it.`,
+          `Дали сакате да ја отстраните „${serviceName}“? Клиентите повеќе нема да можат да ја закажуваат.`,
+        ),
       )
     ) {
       return;
@@ -149,7 +154,12 @@ export function ServiceList({
     try {
       await deactivateService({ orgId, serviceId });
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not remove service"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t("Could not remove service", "Не може да се отстрани услугата"),
+        ),
+      );
     }
   };
 
@@ -173,7 +183,15 @@ export function ServiceList({
         serviceIds: nextOrder.map((service) => service._id),
       });
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not reorder services"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not reorder services",
+            "Не може да се промени редоследот на услугите",
+          ),
+        ),
+      );
     }
   };
 
@@ -184,9 +202,12 @@ export function ServiceList({
           <EmptyMedia variant="icon">
             <ScissorsIcon />
           </EmptyMedia>
-          <EmptyTitle>No services yet</EmptyTitle>
+          <EmptyTitle>{t("No services yet", "Сè уште нема услуги")}</EmptyTitle>
           <EmptyDescription>
-            Add your first service so customers can start booking.
+            {t(
+              "Add your first service so customers can start booking.",
+              "Додајте ја вашата прва услуга за клиентите да можат да закажуваат.",
+            )}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -195,7 +216,7 @@ export function ServiceList({
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
             <PlusIcon data-icon="inline-start" />
-            Add service
+            {t("Add service", "Додај услуга")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -209,12 +230,19 @@ export function ServiceList({
           <EmptyMedia variant="icon">
             <SearchXIcon />
           </EmptyMedia>
-          <EmptyTitle>No matching services</EmptyTitle>
-          <EmptyDescription>Try a different name or category.</EmptyDescription>
+          <EmptyTitle>
+            {t("No matching services", "Нема пронајдено услуги")}
+          </EmptyTitle>
+          <EmptyDescription>
+            {t(
+              "Try a different name or category.",
+              "Обидете се со друго име или категорија.",
+            )}
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button variant="outline" onClick={onClearSearch}>
-            Clear search
+            {t("Clear search", "Исчисти пребарување")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -270,11 +298,13 @@ export function ServiceList({
                           {service.name}
                         </span>
                         {!service.isActive && (
-                          <Badge variant="secondary">Inactive</Badge>
+                          <Badge variant="secondary">
+                            {t("Inactive", "Неактивна")}
+                          </Badge>
                         )}
                       </span>
                       <span className="mt-1 block text-sm text-muted-foreground">
-                        {service.durationMins} min
+                        {service.durationMins} {t("min", "мин")}
                       </span>
                     </div>
                   </button>
@@ -288,7 +318,10 @@ export function ServiceList({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        aria-label={`Actions for ${service.name}`}
+                        aria-label={t(
+                          `Actions for ${service.name}`,
+                          `Опции за ${service.name}`,
+                        )}
                       >
                         <MoreHorizontalIcon />
                       </Button>
@@ -299,7 +332,7 @@ export function ServiceList({
                           onSelect={() => setEditingServiceId(service._id)}
                         >
                           <PencilIcon />
-                          Edit service
+                          {t("Edit service", "Уреди услуга")}
                         </DropdownMenuItem>
                         {!searchQuery.trim() && group.services.length > 1 && (
                           <>
@@ -310,7 +343,7 @@ export function ServiceList({
                               }
                             >
                               <ArrowUpIcon />
-                              Move up
+                              {t("Move up", "Помести нагоре")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               disabled={index === group.services.length - 1}
@@ -319,7 +352,7 @@ export function ServiceList({
                               }
                             >
                               <ArrowDownIcon />
-                              Move down
+                              {t("Move down", "Помести надолу")}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -333,7 +366,7 @@ export function ServiceList({
                           }
                         >
                           <Trash2Icon />
-                          Remove service
+                          {t("Remove service", "Отстрани услуга")}
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </DropdownMenuContent>

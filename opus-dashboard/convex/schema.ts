@@ -152,8 +152,12 @@ export default defineSchema({
     reviewCount: v.number(), // default 0
     averageRating: v.number(), // 0–5; stored as float (updated by cron)
 
-    // ── Product tier ──
+    // ── Product plan ──
+    // starter/growth/enterprise remain temporarily for stored-document
+    // compatibility. New businesses use free/paid exclusively.
     plan: v.union(
+      v.literal("free"),
+      v.literal("paid"),
       v.literal("starter"),
       v.literal("growth"),
       v.literal("enterprise"),

@@ -1,6 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { internalMutation, mutation, query } from "../_generated/server";
-import { requireAuth, requireRole } from "../lib/auth";
+import { requireAuth, requirePaidPlan, requireRole } from "../lib/auth";
 
 export const createConversation = mutation({
   args: {
@@ -10,6 +10,10 @@ export const createConversation = mutation({
     customerId: v.optional(v.id("customers")),
   },
   handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new ConvexError("Business not found");
+    requirePaidPlan(org, "AI front desk");
+
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", q => q.eq("orgId", args.orgId))
@@ -72,12 +76,18 @@ export const getConversationByThread = query({
     channelThreadId: v.string(),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const conversation = await ctx.db
       .query("ai_conversations")
       .withIndex("by_channel_thread", q =>
         q.eq("channel", args.channel).eq("channelThreadId", args.channelThreadId)
       )
       .first();
+    if (!conversation) return null;
+
+    const org = await ctx.db.get(conversation.orgId);
+    if (!org || org.isDeleted) return null;
+    requirePaidPlan(org, "AI front desk");
+    return conversation;
   },
 });
 
@@ -92,7 +102,8 @@ export const listConversations = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const { org } = await requireAuth(ctx, args.orgId);
+    requirePaidPlan(org, "AI front desk");
 
     const conversations = args.status
       ? await ctx.db
@@ -140,7 +151,8 @@ export const getConversation = query({
     conversationId: v.id("ai_conversations"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const { org } = await requireAuth(ctx, args.orgId);
+    requirePaidPlan(org, "AI front desk");
 
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId) return null;
@@ -157,7 +169,8 @@ export const resolveConversation = mutation({
     conversationId: v.id("ai_conversations"),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, args.orgId, "staff");
+    const { org } = await requireRole(ctx, args.orgId, "staff");
+    requirePaidPlan(org, "AI front desk");
 
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId) throw new ConvexError("Conversation not found.");
@@ -185,6 +198,10 @@ export const handoffConversation = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new ConvexError("Business not found");
+    requirePaidPlan(org, "AI front desk");
+
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId) throw new ConvexError("Conversation not found.");
     if (conv.status !== "active") return; // already handed off or resolved
@@ -227,6 +244,9 @@ export const updateTokenUsage = internalMutation({
   handler: async (ctx, args) => {
     const conv = await ctx.db.get(args.conversationId);
     if (!conv) return;
+    const org = await ctx.db.get(conv.orgId);
+    if (!org || org.isDeleted) return;
+    requirePaidPlan(org, "AI front desk");
 
     await ctx.db.patch(args.conversationId, {
       totalInputTokens: conv.totalInputTokens + args.inputTokens,
@@ -244,6 +264,9 @@ export const addBookingToConversation = internalMutation({
   handler: async (ctx, args) => {
     const conv = await ctx.db.get(args.conversationId);
     if (!conv) return;
+    const org = await ctx.db.get(conv.orgId);
+    if (!org || org.isDeleted) return;
+    requirePaidPlan(org, "AI front desk");
 
     await ctx.db.patch(args.conversationId, {
       bookingIds: [...conv.bookingIds, args.bookingId],

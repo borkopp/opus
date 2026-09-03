@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
+import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
 import {
   Card,
@@ -8,14 +8,19 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import {
-  ChartContainer,
-  type ChartConfig,
-} from "@/components/ui/chart"
-import { widgetTitleClassName } from "@/components/dashboard/WidgetTitle"
+} from "@/components/ui/card";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { widgetTitleClassName } from "@/components/dashboard/WidgetTitle";
 
-export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { revenueTodayMinorUnits: number, formatMoney: (v: number) => string }) {
+export function RevenueTargetWidget({
+  revenueTodayMinorUnits,
+  formatMoney,
+}: {
+  revenueTodayMinorUnits: number;
+  formatMoney: (v: number) => string;
+}) {
+  const { t } = useDashboardI18n();
   // Assume daily target is £400 (40000 minor units) for now
   const dailyTargetMinorUnits = 40000;
 
@@ -34,19 +39,21 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
   else if (percentage >= 80) progressColor = "var(--brand)";
   else if (percentage >= 50) progressColor = "var(--highlight)";
 
-  const chartData = [{
-    name: "Revenue",
-    revenue: visualRevenue,
-    remaining: remaining
-  }];
+  const chartData = [
+    {
+      name: "Revenue",
+      revenue: visualRevenue,
+      remaining: remaining,
+    },
+  ];
 
   const chartConfig = {
     revenue: {
-      label: "Revenue",
+      label: t("Revenue", "Приход"),
       color: progressColor,
     },
     remaining: {
-      label: "Remaining",
+      label: t("Remaining", "Преостанато"),
       color: "var(--secondary)",
     },
   } satisfies ChartConfig;
@@ -54,9 +61,12 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
   return (
     <Card className="flex flex-col h-full">
       <CardHeader className="items-start">
-        <CardTitle className={widgetTitleClassName}>Today&apos;s Goal
+        <CardTitle className={widgetTitleClassName}>
+          {t("Today's Goal", "Денешна цел")}
         </CardTitle>
-        <CardDescription>Are we on track today?</CardDescription>
+        <CardDescription>
+          {t("Are we on track today?", "Дали сме на добар пат денес?")}
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="flex flex-1 items-center justify-center pt-10">
@@ -82,17 +92,24 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
                           y={(viewBox.cy || 0) - 15}
                           className="fill-foreground text-3xl font-bold font-display"
                         >
-                          {formatMoney(revenueTodayMinorUnits).replace(/\.00$/, '')}
+                          {formatMoney(revenueTodayMinorUnits).replace(
+                            /\.00$/,
+                            "",
+                          )}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 16}
                           className="fill-muted-foreground text-sm font-semibold uppercase tracking-wider font-display"
                         >
-                          Target {formatMoney(dailyTargetMinorUnits).replace(/\.00$/, '')}
+                          {t("Target", "Цел")}{" "}
+                          {formatMoney(dailyTargetMinorUnits).replace(
+                            /\.00$/,
+                            "",
+                          )}
                         </tspan>
                       </text>
-                    )
+                    );
                   }
                 }}
               />
@@ -123,5 +140,5 @@ export function RevenueTargetWidget({ revenueTodayMinorUnits, formatMoney }: { r
         </div>
       </CardFooter> */}
     </Card>
-  )
+  );
 }

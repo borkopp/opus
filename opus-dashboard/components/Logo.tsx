@@ -20,6 +20,10 @@ type LogoProps = {
   wordmarkClassName?: string;
 };
 
+type LogoProProps = LogoProps & {
+  proClassName?: string;
+};
+
 export const LogoMark = ({ className }: LogoMarkProps) => (
   <svg
     viewBox="0 0 40 48"
@@ -58,6 +62,33 @@ export const Logo = ({
     >
       <LogoMark className={markClassName} />
       <LogoWordmark className={wordmarkClassName} />
+    </span>
+  );
+};
+
+export const LogoPro = ({
+  className,
+  markClassName,
+  wordmarkClassName,
+  proClassName,
+}: LogoProProps) => {
+  return (
+    <span
+      className={cn("inline-flex items-center gap-2 text-[#ff814a]", className)}
+      aria-label="OPUS Pro"
+    >
+      <LogoMark className={markClassName} />
+      <span className="inline-flex items-start gap-0.5">
+        <LogoWordmark className={wordmarkClassName} />
+        <span
+          className={cn(
+            "relative -top-[0.45em] font-mono text-[0.44em] font-medium leading-none tracking-tight text-foreground",
+            proClassName,
+          )}
+        >
+          Pro
+        </span>
+      </span>
     </span>
   );
 };

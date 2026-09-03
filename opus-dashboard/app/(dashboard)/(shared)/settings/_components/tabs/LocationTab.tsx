@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
 import {
   parseMapboxFeature,
@@ -46,13 +47,12 @@ interface LocationTabProps {
   };
 }
 
-function message(error: unknown): string {
-  return error instanceof Error
-    ? error.message
-    : "Location could not be saved.";
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function LocationTab({ initialData }: LocationTabProps) {
+  const { t } = useDashboardI18n();
   const [location, setLocation] = useState(initialData);
   const [query, setQuery] = useState(initialData.address);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -106,13 +106,23 @@ export function LocationTab({ initialData }: LocationTabProps) {
       const resolved = await reverseGeocodeMapbox(coordinates);
       if (resolved) applyLocation(resolved);
     } catch (caught) {
-      toast.error(message(caught));
+      toast.error(
+        getErrorMessage(
+          caught,
+          t("Location could not be saved.", "Локацијата не може да се зачува."),
+        ),
+      );
     }
   };
 
   const handleSave = async () => {
     if (!location.coordinates) {
-      toast.error("Confirm the map pin before saving.");
+      toast.error(
+        t(
+          "Confirm the map pin before saving.",
+          "Потврдете ја точната локација на мапата пред да зачувате.",
+        ),
+      );
       return;
     }
     setIsSaving(true);
@@ -125,9 +135,14 @@ export function LocationTab({ initialData }: LocationTabProps) {
         country: location.country,
         coordinates: location.coordinates,
       });
-      toast.success("Location saved");
+      toast.success(t("Location saved", "Локацијата е зачувана"));
     } catch (caught) {
-      toast.error(message(caught));
+      toast.error(
+        getErrorMessage(
+          caught,
+          t("Location could not be saved.", "Локацијата не може да се зачува."),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -141,19 +156,28 @@ export function LocationTab({ initialData }: LocationTabProps) {
   return (
     <TabsContent value="location" className="m-0">
       <SettingsCard
-        title="Business location"
-        description="This confirmed address and map pin appear on your studio website and keep booking setup complete."
+        title={t("Business location", "Локација на бизнисот")}
+        description={t(
+          "This confirmed address and map pin appear on your studio website and keep booking setup complete.",
+          "Оваа потврдена адреса и точна локација на мапата се прикажуваат на веб-страницата на студиото и овозможуваат комплетно поставување на закажувањето.",
+        )}
         footer={
           <Button type="button" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Spinner /> : <Save />}
-            Save location
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
+            {isSaving
+              ? t("Saving…", "Се зачувува…")
+              : t("Save location", "Зачувај локација")}
           </Button>
         }
       >
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="settings-address-search">
-              Find an address
+              {t("Find an address", "Најди адреса")}
             </FieldLabel>
             <div ref={searchContainerRef} className="relative">
               <InputGroup>
@@ -174,7 +198,10 @@ export function LocationTab({ initialData }: LocationTabProps) {
                       event.currentTarget.blur();
                     }
                   }}
-                  placeholder="Search by street or venue"
+                  placeholder={t(
+                    "Search by street or venue",
+                    "Пребарај по улица или објект",
+                  )}
                   autoComplete="off"
                   aria-autocomplete="list"
                   aria-controls="settings-address-results"
@@ -183,7 +210,10 @@ export function LocationTab({ initialData }: LocationTabProps) {
                 {query && (
                   <InputGroupAddon align="inline-end">
                     <InputGroupButton
-                      aria-label="Clear address search"
+                      aria-label={t(
+                        "Clear address search",
+                        "Исчисти пребарување на адреса",
+                      )}
                       onClick={clearSearch}
                       size="icon-xs"
                       variant="ghost"
@@ -223,7 +253,9 @@ export function LocationTab({ initialData }: LocationTabProps) {
           </Field>
 
           <Field>
-            <FieldLabel>Exact map pin</FieldLabel>
+            <FieldLabel>
+              {t("Exact map pin", "Точна позиција на мапата")}
+            </FieldLabel>
             <LocationMapPicker
               coords={location.coordinates}
               onChange={handleMapChange}
@@ -232,7 +264,9 @@ export function LocationTab({ initialData }: LocationTabProps) {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="settings-address">Street address</FieldLabel>
+              <FieldLabel htmlFor="settings-address">
+                {t("Street address", "Улица и број")}
+              </FieldLabel>
               <Input
                 id="settings-address"
                 value={location.address}
@@ -240,7 +274,9 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-city">City</FieldLabel>
+              <FieldLabel htmlFor="settings-city">
+                {t("City", "Град")}
+              </FieldLabel>
               <Input
                 id="settings-city"
                 value={location.city}
@@ -249,7 +285,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
             </Field>
             <Field>
               <FieldLabel htmlFor="settings-neighborhood">
-                Neighborhood
+                {t("Neighborhood", "Населба")}
               </FieldLabel>
               <Input
                 id="settings-neighborhood"
@@ -258,7 +294,9 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-postal">Postal code</FieldLabel>
+              <FieldLabel htmlFor="settings-postal">
+                {t("Postal code", "Поштенски број")}
+              </FieldLabel>
               <Input
                 id="settings-postal"
                 value={location.postalCode}
@@ -266,7 +304,9 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-country">Country code</FieldLabel>
+              <FieldLabel htmlFor="settings-country">
+                {t("Country code", "Код на држава")}
+              </FieldLabel>
               <Input
                 id="settings-country"
                 maxLength={2}

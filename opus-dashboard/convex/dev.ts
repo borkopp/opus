@@ -349,7 +349,7 @@ export const seedBarberDavidBookings = mutation({
         websiteStatus: "published",
         reviewCount: 24,
         averageRating: 4.95,
-        plan: "growth",
+        plan: "paid",
         isDeleted: false,
         createdAt: now,
         updatedAt: now,
@@ -1206,7 +1206,6 @@ export const getDevOverview = mutation({
     };
   },
 });
-
 
 
 

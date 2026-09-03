@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { format, parseISO } from "date-fns";
+import { enGB, mk } from "date-fns/locale";
 import {
   CalendarOffIcon,
   Clock3Icon,
@@ -38,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
@@ -51,6 +53,7 @@ export function TimeOffSection({
   orgId: Id<"orgs">;
   staffId: Id<"staff_members">;
 }) {
+  const { language, t } = useDashboardI18n();
   const [today] = useState(getLocalDate);
   const overrides = useQuery(api.availabilityOverrides.listOverrides, {
     orgId,
@@ -87,7 +90,10 @@ export function TimeOffSection({
   ) => {
     if (
       !window.confirm(
-        `Remove the schedule change for ${formatDate(overrideDate)}?`,
+        t(
+          `Remove the schedule change for ${formatDate(overrideDate, language)}?`,
+          `Дали сакате да ја отстраните промената на распоредот за ${formatDate(overrideDate, language)}?`,
+        ),
       )
     ) {
       return;
@@ -95,9 +101,19 @@ export function TimeOffSection({
 
     try {
       await deleteOverride({ orgId, overrideId });
-      toast.success("Schedule change removed.");
+      toast.success(
+        t("Schedule change removed.", "Промената на распоредот е отстранета."),
+      );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not remove schedule change"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not remove schedule change",
+            "Не може да се отстрани промената на распоредот",
+          ),
+        ),
+      );
     }
   };
 
@@ -105,11 +121,16 @@ export function TimeOffSection({
     event.preventDefault();
 
     if (!date) {
-      toast.error("Choose a date.");
+      toast.error(t("Choose a date.", "Изберете датум."));
       return;
     }
     if (type === "custom_hours" && startTime >= endTime) {
-      toast.error("The end time must be later than the start time.");
+      toast.error(
+        t(
+          "The end time must be later than the start time.",
+          "Крајното време мора да биде после почетното време.",
+        ),
+      );
       return;
     }
 
@@ -126,10 +147,23 @@ export function TimeOffSection({
       });
       setIsAddOpen(false);
       toast.success(
-        type === "day_off" ? "Time off added." : "Special working hours added.",
+        type === "day_off"
+          ? t("Time off added.", "Отсуството е додадено.")
+          : t(
+              "Special working hours added.",
+              "Специјалното работно време е додадено.",
+            ),
       );
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error, "Could not save schedule change"));
+      toast.error(
+        getErrorMessage(
+          error,
+          t(
+            "Could not save schedule change",
+            "Не може да се зачува промената на распоредот",
+          ),
+        ),
+      );
     } finally {
       setIsSaving(false);
     }
@@ -141,14 +175,22 @@ export function TimeOffSection({
         <CardHeader className="border-b">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>Time off &amp; special hours</CardTitle>
+              <CardTitle>
+                {t(
+                  "Time off & special hours",
+                  "Отсуства и специјално работно време",
+                )}
+              </CardTitle>
               <CardDescription className="mt-1.5">
-                Add one-off changes without editing the regular week.
+                {t(
+                  "Add one-off changes without editing the regular week.",
+                  "Додајте еднократни промени без да го менувате редовниот неделен распоред.",
+                )}
               </CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={openAddDialog}>
               <PlusIcon data-icon="inline-start" />
-              Add change
+              {t("Add change", "Додај промена")}
             </Button>
           </div>
         </CardHeader>
@@ -157,10 +199,13 @@ export function TimeOffSection({
           {overrides.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <p className="text-sm font-medium text-foreground">
-                No upcoming changes
+                {t("No upcoming changes", "Нема претстојни промени")}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Time off and special hours will appear here.
+                {t(
+                  "Time off and special hours will appear here.",
+                  "Отсуствата и специјалното работно време ќе се прикажат тука.",
+                )}
               </p>
             </div>
           ) : (
@@ -173,7 +218,7 @@ export function TimeOffSection({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-foreground">
-                        {formatDate(override.date)}
+                        {formatDate(override.date, language)}
                       </p>
                       <Badge
                         variant={
@@ -186,14 +231,17 @@ export function TimeOffSection({
                           <Clock3Icon />
                         )}
                         {override.type === "day_off"
-                          ? "Day off"
-                          : "Special hours"}
+                          ? t("Day off", "Слободен ден")
+                          : t("Special hours", "Специјално работно време")}
                       </Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {override.type === "custom_hours"
                         ? `${override.startTime}–${override.endTime}`
-                        : "Unavailable for bookings"}
+                        : t(
+                            "Unavailable for bookings",
+                            "Не е достапен за закажувања",
+                          )}
                       {override.note ? ` · ${override.note}` : ""}
                     </p>
                   </div>
@@ -201,7 +249,10 @@ export function TimeOffSection({
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={`Remove schedule change for ${formatDate(override.date)}`}
+                    aria-label={t(
+                      `Remove schedule change for ${formatDate(override.date, language)}`,
+                      `Отстрани ја промената на распоредот за ${formatDate(override.date, language)}`,
+                    )}
                     onClick={() => handleDelete(override._id, override.date)}
                   >
                     <Trash2Icon />
@@ -216,16 +267,23 @@ export function TimeOffSection({
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add a schedule change</DialogTitle>
+            <DialogTitle>
+              {t("Add a schedule change", "Додај промена на распоред")}
+            </DialogTitle>
             <DialogDescription>
-              Choose a day off or set different hours for one date.
+              {t(
+                "Choose a day off or set different hours for one date.",
+                "Изберете слободен ден или поставете поинакво работно време за одреден датум.",
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <form id="schedule-change-form" onSubmit={handleSave}>
             <FieldGroup className="gap-5 py-2">
               <Field>
-                <FieldLabel htmlFor="schedule-change-date">Date</FieldLabel>
+                <FieldLabel htmlFor="schedule-change-date">
+                  {t("Date", "Датум")}
+                </FieldLabel>
                 <Input
                   id="schedule-change-date"
                   type="date"
@@ -237,7 +295,7 @@ export function TimeOffSection({
               </Field>
 
               <Field>
-                <FieldLabel>What changes?</FieldLabel>
+                <FieldLabel>{t("What changes?", "Што се менува?")}</FieldLabel>
                 <ToggleGroup
                   type="single"
                   variant="outline"
@@ -249,15 +307,18 @@ export function TimeOffSection({
                     }
                   }}
                   className="w-full"
-                  aria-label="Schedule change type"
+                  aria-label={t(
+                    "Schedule change type",
+                    "Тип на промена на распоред",
+                  )}
                 >
                   <ToggleGroupItem value="day_off" className="flex-1">
                     <CalendarOffIcon />
-                    Day off
+                    {t("Day off", "Слободен ден")}
                   </ToggleGroupItem>
                   <ToggleGroupItem value="custom_hours" className="flex-1">
                     <Clock3Icon />
-                    Special hours
+                    {t("Special hours", "Специјално работно време")}
                   </ToggleGroupItem>
                 </ToggleGroup>
               </Field>
@@ -266,7 +327,7 @@ export function TimeOffSection({
                 <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/35 p-4">
                   <Field>
                     <FieldLabel htmlFor="special-start-time">
-                      Start time
+                      {t("Start time", "Почетно време")}
                     </FieldLabel>
                     <Input
                       id="special-start-time"
@@ -277,7 +338,9 @@ export function TimeOffSection({
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="special-end-time">End time</FieldLabel>
+                    <FieldLabel htmlFor="special-end-time">
+                      {t("End time", "Крајно време")}
+                    </FieldLabel>
                     <Input
                       id="special-end-time"
                       type="time"
@@ -291,16 +354,25 @@ export function TimeOffSection({
 
               <Field>
                 <FieldLabel htmlFor="schedule-change-note">
-                  Note <span className="text-muted-foreground">(optional)</span>
+                  {t("Note", "Забелешка")}{" "}
+                  <span className="text-muted-foreground">
+                    ({t("optional", "опционално")})
+                  </span>
                 </FieldLabel>
                 <Input
                   id="schedule-change-note"
-                  placeholder="Vacation, appointment, public holiday…"
+                  placeholder={t(
+                    "Vacation, appointment, public holiday…",
+                    "Одмор, термин, државен празник…",
+                  )}
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                 />
                 <FieldDescription>
-                  Only your team can see this note.
+                  {t(
+                    "Only your team can see this note.",
+                    "Само вашиот тим може да ја види оваа забелешка.",
+                  )}
                 </FieldDescription>
               </Field>
             </FieldGroup>
@@ -313,7 +385,7 @@ export function TimeOffSection({
               onClick={() => setIsAddOpen(false)}
               disabled={isSaving}
             >
-              Cancel
+              {t("Cancel", "Откажи")}
             </Button>
             <Button
               type="submit"
@@ -321,7 +393,9 @@ export function TimeOffSection({
               disabled={isSaving}
             >
               {isSaving && <Spinner data-icon="inline-start" />}
-              Save change
+              {isSaving
+                ? t("Saving…", "Се зачувува…")
+                : t("Save change", "Зачувај промена")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -336,6 +410,9 @@ function getLocalDate() {
   return localTime.toISOString().slice(0, 10);
 }
 
-function formatDate(value: string) {
-  return format(parseISO(value), "EEE, MMM d, yyyy");
+function formatDate(value: string, language: "en" | "mk") {
+  const dateLocale = language === "mk" ? mk : enGB;
+  const formatPattern =
+    language === "mk" ? "EEE, d MMM yyyy" : "EEE, MMM d, yyyy";
+  return format(parseISO(value), formatPattern, { locale: dateLocale });
 }

@@ -1,11 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
-import {
-  normalizeProductPlan,
-  requireAuth,
-  requirePaidPlan,
-  requireRole,
-} from "./lib/auth";
+import { requireAuth, requirePaidPlan, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
 import {
   canonicalLocale,
@@ -42,7 +37,7 @@ export const getOrgSettings = query({
       : [];
 
     return {
-      org: { ...org, plan: normalizeProductPlan(org.plan) },
+      org,
       settings,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
       emailRecipients,

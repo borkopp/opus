@@ -153,15 +153,7 @@ export default defineSchema({
     averageRating: v.number(), // 0–5; stored as float (updated by cron)
 
     // ── Product plan ──
-    // starter/growth/enterprise remain temporarily for stored-document
-    // compatibility. New businesses use free/paid exclusively.
-    plan: v.union(
-      v.literal("free"),
-      v.literal("paid"),
-      v.literal("starter"),
-      v.literal("growth"),
-      v.literal("enterprise"),
-    ),
+    plan: v.union(v.literal("free"), v.literal("paid")),
 
     // ── Scraper / external data ──
     // Set on orgs imported by the Skopje scraper pipeline.

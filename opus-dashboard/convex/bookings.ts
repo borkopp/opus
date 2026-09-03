@@ -6,7 +6,7 @@ import {
   query,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { normalizeProductPlan, requireAuth, requireRole } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
 import type { Doc } from "./_generated/dataModel";
 import { computeFreeIntervalsForStaffDate } from "./slots";
 import {
@@ -734,7 +734,7 @@ export const cancelBooking = mutation({
 
       if (
         orgSettings?.gapOptimizerEnabled &&
-        normalizeProductPlan(org.plan) === "paid"
+        org.plan === "paid"
       ) {
         await ctx.scheduler.runAfter(
           0,

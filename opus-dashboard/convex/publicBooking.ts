@@ -24,6 +24,10 @@ import {
 } from "./lib/bookingEmailSecurity";
 import { queueBookingEmailNotifications } from "./lib/bookingEmailNotifications";
 import { formatBookingNotificationDateTime } from "./lib/bookingTime";
+import {
+  isValidPublicBookingPhone,
+  normalizePublicBookingPhone,
+} from "../lib/public-booking-phone";
 
 const PUBLIC_BOOKING_ORG_LIMIT = 12;
 const PUBLIC_BOOKING_ORG_WINDOW_MS = 5 * 60 * 1_000;
@@ -129,9 +133,12 @@ async function createPublicBookingRecord(
     );
   }
   const normalizedPhone = args.customerPhone?.trim()
-    ? args.customerPhone.trim().replace(/[^\d+]/g, "")
+    ? normalizePublicBookingPhone(args.customerPhone)
     : undefined;
-  if (normalizedPhone && !/^\+?\d{7,15}$/.test(normalizedPhone)) {
+  if (!opusUserId && !normalizedPhone) {
+    throw new ConvexError("Enter a phone number.");
+  }
+  if (normalizedPhone && !isValidPublicBookingPhone(normalizedPhone)) {
     throw new ConvexError("Enter a valid phone number.");
   }
   const customerEmail = args.customerEmail
@@ -702,6 +709,7 @@ type BookingOtpFailureReason = "expired" | "invalid" | "locked" | "inactive";
 export const createVerifiedPublicBooking = internalMutation({
   args: {
     ...publicBookingArgs,
+    customerPhone: v.string(),
     customerEmail: v.string(),
     challengeId: v.id("booking_email_verifications"),
     otpHash: v.string(),
@@ -770,6 +778,7 @@ export const createVerifiedPublicBooking = internalMutation({
 export const confirmPublicBooking = action({
   args: {
     ...publicBookingArgs,
+    customerPhone: v.string(),
     customerEmail: v.string(),
     challengeId: v.id("booking_email_verifications"),
     otp: v.string(),

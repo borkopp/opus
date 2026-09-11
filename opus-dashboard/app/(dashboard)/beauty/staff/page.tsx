@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useQuery } from "convex/react";
-import { PlusIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { StaffFormDialog } from "./_components/StaffFormDialog";
 import { StaffList } from "./_components/StaffList";
+import { StaffPageHeader } from "./_components/StaffPageHeader";
+import { StaffPlanFooter } from "./_components/StaffPlanFooter";
 
 export default function StaffPage() {
   const { t } = useDashboardI18n();
@@ -42,33 +42,15 @@ export default function StaffPage() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
     >
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-            {t("Staff", "Вработени")}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t(
-              "Add team members and manage when customers can book them.",
-              "Додајте членови на тимот и управувајте со нивното работно време за закажување.",
-            )}
-          </p>
-        </div>
-
-        <Button
-          onClick={() => setIsAddStaffOpen(true)}
-          className="w-full transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:w-auto"
-        >
-          <PlusIcon data-icon="inline-start" />
-          {t("Add staff member", "Додај вработен")}
-        </Button>
-      </header>
+      <StaffPageHeader onAddClick={() => setIsAddStaffOpen(true)} />
 
       <StaffList
         orgId={profile.orgId}
         onAddClick={() => setIsAddStaffOpen(true)}
         canManageAppointmentEmail={profile.role === "owner"}
       />
+
+      <StaffPlanFooter />
 
       {isAddStaffOpen && (
         <StaffFormDialog

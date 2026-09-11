@@ -6,6 +6,10 @@ import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { publicBookingErrorMessage } from "@/lib/public-booking-errors";
+import {
+  isValidPublicBookingPhone,
+  normalizePublicBookingPhone,
+} from "@/lib/public-booking-phone";
 import { dateInTimezone } from "@/lib/public-booking-format";
 import { BookingConfirmationStep } from "./BookingConfirmationStep";
 import { BookingStepProgress, type BookingStep } from "./BookingStepProgress";
@@ -42,7 +46,7 @@ type PendingBooking = {
   staffId: Id<"staff_members">;
   startAt: number;
   customerName: string;
-  customerPhone?: string;
+  customerPhone: string;
   customerEmail: string;
   customerNote?: string;
 };
@@ -123,11 +127,17 @@ export function BookingForm({
     if (selectedSlotTimestamp && selectedSlotStaffId) {
       completed.add("datetime");
     }
-    if (customerName.trim() && customerEmail.trim()) completed.add("details");
+    if (
+      customerName.trim() &&
+      customerEmail.trim() &&
+      isValidPublicBookingPhone(normalizePublicBookingPhone(customerPhone))
+    )
+      completed.add("details");
     return completed;
   }, [
     customerEmail,
     customerName,
+    customerPhone,
     selectedServiceId,
     selectedSlotStaffId,
     selectedSlotTimestamp,
@@ -221,6 +231,15 @@ export function BookingForm({
       setError("Внесете е-пошта за да го потврдите терминот.");
       return;
     }
+    if (!customerPhone.trim()) {
+      setError("Внесете телефонски број.");
+      return;
+    }
+    const normalizedPhone = normalizePublicBookingPhone(customerPhone);
+    if (!isValidPublicBookingPhone(normalizedPhone)) {
+      setError("Внесете валиден телефонски број.");
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -238,7 +257,7 @@ export function BookingForm({
         staffId: selectedSlotStaffId as Id<"staff_members">,
         startAt: selectedSlotTimestamp,
         customerName: normalizedName,
-        customerPhone: customerPhone.trim() || undefined,
+        customerPhone: normalizedPhone,
         customerEmail: normalizedEmail,
         customerNote: customerNote.trim() || undefined,
       });

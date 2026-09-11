@@ -39,6 +39,7 @@ import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
+import { getStaffErrorMessage } from "@/lib/staff-errors";
 import { cn } from "@/lib/utils";
 import { StaffFormDialog } from "./StaffFormDialog";
 
@@ -51,8 +52,9 @@ export function StaffList({
   onAddClick: () => void;
   canManageAppointmentEmail: boolean;
 }) {
-  const { t } = useDashboardI18n();
+  const { language, t } = useDashboardI18n();
   const staff = useQuery(api.staff.listStaffMembers, { orgId });
+  const planStatus = useQuery(api.staff.getStaffPlanStatus, {});
   const deactivateStaffMember = useMutation(api.staff.deactivateStaffMember);
   const updateStaffMember = useMutation(api.staff.updateStaffMember);
   const [editingStaffId, setEditingStaffId] =
@@ -102,6 +104,7 @@ export function StaffList({
         <EmptyContent>
           <Button
             onClick={onAddClick}
+            disabled={!planStatus?.canUseStaffRole}
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
             <PlusIcon data-icon="inline-start" />
@@ -162,12 +165,13 @@ export function StaffList({
       );
     } catch (error: unknown) {
       toast.error(
-        getErrorMessage(
+        getStaffErrorMessage(
           error,
           t(
             "Could not reactivate staff member",
             "Не може повторно да се активира вработениот",
           ),
+          language,
         ),
       );
     }
@@ -260,6 +264,11 @@ export function StaffList({
                     </DropdownMenuItem>
                     {!member.isActive && (
                       <DropdownMenuItem
+                        disabled={
+                          !(member.role === "owner"
+                            ? planStatus?.canUseOwnerRole
+                            : planStatus?.canUseStaffRole)
+                        }
                         onSelect={() =>
                           handleReactivate(member._id, member.displayName)
                         }

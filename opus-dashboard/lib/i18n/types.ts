@@ -10,16 +10,16 @@ export const SUPPORTED_DASHBOARD_LOCALES = [
     code: "mk-MK" as const,
     language: "mk" as const,
     label: {
-      en: "Macedonian (mk-MK)",
-      mk: "Македонски (mk-MK)",
+      en: "Macedonian",
+      mk: "Македонски",
     },
   },
   {
     code: "en-GB" as const,
     language: "en" as const,
     label: {
-      en: "English (en-GB)",
-      mk: "Англиски (en-GB)",
+      en: "English",
+      mk: "Англиски",
     },
   },
 ] as const;

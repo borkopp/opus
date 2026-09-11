@@ -136,10 +136,7 @@ export function CustomerDetailsStep({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="customer-phone">
-              Телефон{" "}
-              <span className="text-muted-foreground">(опционално)</span>
-            </FieldLabel>
+            <FieldLabel htmlFor="customer-phone">Телефон</FieldLabel>
             <Input
               id="customer-phone"
               name="tel"
@@ -149,6 +146,7 @@ export function CustomerDetailsStep({
               placeholder="+389 70 123 456"
               value={customerPhone}
               onChange={(event) => onChangePhone(event.target.value)}
+              required
             />
             <FieldDescription>
               Студиото може да го користи бројот за контакт околу терминот.

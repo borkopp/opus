@@ -43,6 +43,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useStorageImageUrl } from "@/hooks/use-storage-image-url";
 import { getErrorMessage } from "@/lib/file-validation";
+import { getStaffErrorMessage } from "@/lib/staff-errors";
 import { IMAGE_PRESETS, uploadCompressedImage } from "@/lib/image-compression";
 import posthog from "posthog-js";
 
@@ -65,12 +66,16 @@ export function StaffFormDialog({
   onOpenChange: (open: boolean) => void;
   canManageAppointmentEmail: boolean;
 }) {
-  const { t } = useDashboardI18n();
+  const { language, t } = useDashboardI18n();
   const router = useRouter();
   const isEdit = staffId !== undefined;
   const existingStaff = useQuery(
     api.staff.getStaffMember,
     staffId ? { orgId, staffId } : "skip",
+  );
+  const planStatus = useQuery(
+    api.staff.getStaffPlanStatus,
+    open ? (staffId ? { staffId } : {}) : "skip",
   );
   const createStaffMember = useMutation(api.staff.createStaffMember);
   const updateStaffMember = useMutation(api.staff.updateStaffMember);
@@ -88,6 +93,17 @@ export function StaffFormDialog({
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarPreviewUrl = useStorageImageUrl(orgId, avatarUrl);
+  const planLimitReached = Boolean(
+    planStatus &&
+    (!isEdit || isActive) &&
+    !(role === "owner"
+      ? planStatus.canUseOwnerRole
+      : planStatus.canUseStaffRole),
+  );
+  const planLimitMessage = t(
+    "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
+    "Бесплатниот план дозволува 1 активен сопственик и до 3 активни вработени (вкупно 4 лица). Деактивирајте член на тимот или преминете на OPUS Pro за да додадете повеќе.",
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -143,6 +159,11 @@ export function StaffFormDialog({
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!planStatus) return;
+    if (planLimitReached) {
+      setError(planLimitMessage);
+      return;
+    }
     const name = displayName.trim();
     if (!name) {
       setError(t("Enter a display name.", "Внесете име за приказ."));
@@ -209,12 +230,13 @@ export function StaffFormDialog({
       }
     } catch (saveError: unknown) {
       setError(
-        getErrorMessage(
+        getStaffErrorMessage(
           saveError,
           t(
             "Failed to save staff member",
             "Неуспешно зачувување на вработениот",
           ),
+          language,
         ),
       );
     } finally {
@@ -336,18 +358,44 @@ export function StaffFormDialog({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="staff">
+                          <SelectItem
+                            value="staff"
+                            disabled={
+                              (!isEdit || isActive) &&
+                              !planStatus?.canUseStaffRole
+                            }
+                          >
                             {t("Staff member", "Вработен")}
                           </SelectItem>
-                          <SelectItem value="manager">
+                          <SelectItem
+                            value="manager"
+                            disabled={
+                              (!isEdit || isActive) &&
+                              !planStatus?.canUseStaffRole
+                            }
+                          >
                             {t("Manager", "Менаџер")}
                           </SelectItem>
-                          <SelectItem value="owner">
+                          <SelectItem
+                            value="owner"
+                            disabled={
+                              (!isEdit || isActive) &&
+                              !planStatus?.canUseOwnerRole
+                            }
+                          >
                             {t("Owner", "Сопственик")}
                           </SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
+                    {planStatus?.isFree && (
+                      <FieldDescription>
+                        {t(
+                          "Free: 1 owner and 3 staff. Managers use a staff slot.",
+                          "Бесплатно: 1 сопственик и 3 вработени. Менаџерите зафаќаат место за вработен.",
+                        )}
+                      </FieldDescription>
+                    )}
                   </Field>
                 </FieldGroup>
 
@@ -446,7 +494,11 @@ export function StaffFormDialog({
                   </Field>
                 )}
 
-                {error && <FieldError>{error}</FieldError>}
+                {(planLimitReached || error) && (
+                  <FieldError>
+                    {planLimitReached ? planLimitMessage : error}
+                  </FieldError>
+                )}
               </FieldGroup>
             </form>
           )}
@@ -464,7 +516,13 @@ export function StaffFormDialog({
           <Button
             type="submit"
             form="staff-form"
-            disabled={isLoadingStaff || isSaving || isUploading}
+            disabled={
+              isLoadingStaff ||
+              isSaving ||
+              isUploading ||
+              !planStatus ||
+              planLimitReached
+            }
           >
             {isSaving && <Spinner data-icon="inline-start" />}
             {isEdit

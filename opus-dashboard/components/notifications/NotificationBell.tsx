@@ -381,45 +381,37 @@ export function NotificationBell({
   if (placement === "sidebar-nav") {
     if (collapsed) {
       triggerElement = (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => {
-                setToastNotification(null);
-              }}
-              className={cn(
-                "group relative flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-10 mx-auto outline-none",
-                open
-                  ? "bg-secondary text-foreground font-semibold shadow-xs"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
-              )}
-              aria-label={t("Notifications", "Известувања")}
-            >
-              <div className="shrink-0 flex items-center justify-center relative">
-                {hasUnread ? (
-                  <BellRing className="h-5 w-5" />
-                ) : (
-                  <Bell className="h-5 w-5" />
+        <button
+          type="button"
+          onClick={() => {
+            setToastNotification(null);
+          }}
+          className={cn(
+            "group relative flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-10 mx-auto outline-none",
+            open
+              ? "bg-secondary text-foreground font-semibold shadow-xs"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+          )}
+          aria-label={t("Notifications", "Известувања")}
+        >
+          <div className="shrink-0 flex items-center justify-center relative">
+            {hasUnread ? (
+              <BellRing className="h-5 w-5" />
+            ) : (
+              <Bell className="h-5 w-5" />
+            )}
+            {hasUnread && (
+              <span
+                className={cn(
+                  "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
+                  pulse && "animate-pulse",
                 )}
-                {hasUnread && (
-                  <span
-                    className={cn(
-                      "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
-                      pulse && "animate-pulse",
-                    )}
-                  >
-                    {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
-                  </span>
-                )}
-              </div>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={12}>
-            {t("Notifications", "Известувања")}
-            {hasUnread ? ` (${unreadCount})` : ""}
-          </TooltipContent>
-        </Tooltip>
+              >
+                {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </div>
+        </button>
       );
     } else {
       triggerElement = (
@@ -550,7 +542,19 @@ export function NotificationBell({
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
+        {collapsed && placement === "sidebar-nav" ? (
+          <Tooltip open={open ? false : undefined}>
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={12}>
+              {t("Notifications", "Известувања")}
+              {hasUnread ? ` (${unreadCount})` : ""}
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
+        )}
 
         <PopoverContent
           side={

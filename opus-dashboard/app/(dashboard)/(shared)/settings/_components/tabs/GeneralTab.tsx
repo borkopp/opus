@@ -220,7 +220,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
 
           <Field data-invalid={Boolean(errors.locale)}>
             <FieldLabel htmlFor="locale-select">
-              {t("Language and region", "Јазик и регион")}
+              {t("Language", "Јазик на платформата")}
             </FieldLabel>
             <Select
               value={general.locale}

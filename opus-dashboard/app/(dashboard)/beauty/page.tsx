@@ -25,6 +25,8 @@ import { RevenueChartWidget } from "@/components/dashboard/RevenueChartWidget";
 import { StaffUtilisationWidget } from "@/components/dashboard/StaffUtilisationWidget";
 import { LatestActivityWidget } from "@/components/dashboard/LatestActivityWidget";
 import { AIPerformanceWidget } from "@/components/dashboard/AIPerformanceWidget";
+import { ServicePerformanceWidget } from "@/components/dashboard/ServicePerformanceWidget";
+import { ClientGrowthWidget } from "@/components/dashboard/ClientGrowthWidget";
 
 export default function DashboardHome() {
   const { t } = useDashboardI18n();
@@ -122,12 +124,10 @@ export default function DashboardHome() {
   }
 
   // Derived calculations for UI
-  const formatMoney = (minorUnits: number) =>
-    formatPrice(
-      minorUnits,
-      orgSettingsData?.settings?.currency,
-      orgSettingsData?.settings?.locale,
-    );
+  const formatMoney = (
+    minorUnits: number,
+    currency = orgSettingsData?.settings?.currency,
+  ) => formatPrice(minorUnits, currency, orgSettingsData?.settings?.locale);
 
   type DailyBooking = FunctionReturnType<
     typeof api.dashboard.getDailySchedule
@@ -148,10 +148,7 @@ export default function DashboardHome() {
       toast.error(
         error instanceof Error
           ? error.message
-          : t(
-              "Could not complete booking",
-              "Терминот не може да се заврши",
-            ),
+          : t("Could not complete booking", "Терминот не може да се заврши"),
       );
     }
   };
@@ -165,7 +162,7 @@ export default function DashboardHome() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 flex-1 min-h-0"
       >
-        {/* ── Row 1: Schedule + AI Gap Optimizer + Latest Activity ── */}
+        {/* ── Row 1: Schedule + plan-specific insights + Latest Activity ── */}
         <div className="md:col-span-2 md:h-full md:min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
@@ -173,13 +170,17 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <GapOptimizerWidget orgId={orgId} isPaid={isPaid} />
+          {isPaid ? (
+            <GapOptimizerWidget orgId={orgId} isPaid={isPaid} />
+          ) : (
+            <ServicePerformanceWidget formatMoney={formatMoney} />
+          )}
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
           <LatestActivityWidget orgId={orgId} />
         </div>
 
-        {/* ── Row 2: Staff Capacity + Revenue Chart + AI Performance ── */}
+        {/* ── Row 2: Staff Capacity + Revenue Chart + plan-specific insights ── */}
         <div className="md:col-span-1 md:h-full md:min-h-0">
           <StaffUtilisationWidget staffUtilisation={staffUtilisation} />
         </div>
@@ -190,10 +191,14 @@ export default function DashboardHome() {
           />
         </div>
         <div className="md:col-span-1 md:h-full md:min-h-0">
-          <AIPerformanceWidget
-            aiPerformance={aiPerformance ?? null}
-            isPaid={isPaid}
-          />
+          {isPaid ? (
+            <AIPerformanceWidget
+              aiPerformance={aiPerformance ?? null}
+              isPaid={isPaid}
+            />
+          ) : (
+            <ClientGrowthWidget formatMoney={formatMoney} />
+          )}
         </div>
       </motion.div>
     </div>

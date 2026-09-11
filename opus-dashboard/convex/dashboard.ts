@@ -1,7 +1,28 @@
 import { query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireAuth, requirePaidPlan } from "./lib/auth";
+import { buildDashboardAnalytics } from "./lib/dashboardAnalytics";
+
+export const getFreePlanAnalytics = query({
+    args: { endMs: v.number() },
+    handler: async (ctx, args) => {
+        const { orgId } = await requireAuth(ctx);
+        if (!Number.isFinite(args.endMs) || args.endMs <= 0) {
+            throw new ConvexError("Invalid reporting period");
+        }
+        const [bookings, services] = await Promise.all([
+            ctx.db.query("bookings")
+                .withIndex("by_org_status", (q) => q.eq("orgId", orgId).eq("status", "completed"))
+                .collect(),
+            ctx.db.query("services")
+                .withIndex("by_org", (q) => q.eq("orgId", orgId))
+                .collect(),
+        ]);
+
+        return buildDashboardAnalytics(bookings, services, Math.min(args.endMs, Date.now()));
+    },
+});
 
 export const getDailySchedule = query({
     args: {

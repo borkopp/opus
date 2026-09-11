@@ -38,6 +38,7 @@ const PUBLIC_BOOKING_ERRORS = [
     "Enter a customer name between 2 and 100 characters.",
     "Внесете име и презиме од 2 до 100 знаци.",
   ],
+  ["Enter a phone number.", "Внесете телефонски број."],
   ["Enter a valid phone number.", "Внесете валиден телефонски број."],
   ["Enter a valid email address.", "Внесете валидна е-пошта."],
   [

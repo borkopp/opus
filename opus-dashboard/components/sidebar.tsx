@@ -17,7 +17,8 @@ import {
   IconChevronRight,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-import { Logo, LogoMark, LogoWordmark } from "@/components/Logo";
+import { Logo, LogoFree, LogoMark, LogoPro } from "@/components/Logo";
+import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   DropdownMenu,
@@ -54,6 +55,7 @@ export interface NavLinkItem {
 export interface UserProfileData {
   orgId?: Id<"orgs">;
   industry?: string;
+  plan?: "free" | "paid";
   user?: {
     name?: string;
     email?: string;
@@ -137,6 +139,12 @@ export function AppSidebar({
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const { t } = useDashboardI18n();
+  const SidebarLogo = profile?.orgId
+    ? profile.plan === "paid"
+      ? LogoPro
+      : LogoFree
+    : Logo;
+  const showProUpgrade = Boolean(profile?.orgId && profile.plan !== "paid");
 
   return (
     <>
@@ -186,8 +194,10 @@ export function AppSidebar({
                   aria-label={t("OPUS dashboard", "OPUS контролна табла")}
                   className="flex items-center gap-2.5 outline-none rounded-lg p-1 hover:opacity-90 transition-opacity"
                 >
-                  <LogoMark className="h-7 w-auto text-primary" />
-                  <LogoWordmark className="text-xl text-primary" />
+                  <SidebarLogo
+                    className="text-xl text-primary"
+                    markClassName="h-7"
+                  />
                 </Link>
               </div>
 
@@ -358,6 +368,14 @@ export function AppSidebar({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {showProUpgrade && (
+                  <>
+                    <DropdownMenuGroup>
+                      <OpusProMenuItem />
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuGroup>
                   <DropdownMenuItem
                     onClick={() => router.push("/settings")}
@@ -436,7 +454,7 @@ export function AppSidebar({
             aria-label={t("OPUS dashboard", "OPUS контролна табла")}
             className="flex items-center gap-2"
           >
-            <Logo className="text-lg" markClassName="h-6" />
+            <SidebarLogo className="text-lg" markClassName="h-6" />
           </Link>
         </div>
 
@@ -471,6 +489,14 @@ export function AppSidebar({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {showProUpgrade && (
+                <>
+                  <DropdownMenuGroup>
+                    <OpusProMenuItem />
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onClick={() => router.push("/settings")}
@@ -562,7 +588,7 @@ export function AppSidebar({
                   aria-label={t("OPUS dashboard", "OPUS контролна табла")}
                   className="flex items-center gap-2.5"
                 >
-                  <Logo className="text-xl" markClassName="h-7" />
+                  <SidebarLogo className="text-xl" markClassName="h-7" />
                 </Link>
                 <button
                   type="button"

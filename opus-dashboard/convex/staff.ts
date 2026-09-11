@@ -8,6 +8,10 @@ import {
   normalizeBookingEmail,
 } from "./lib/bookingEmailSecurity";
 import { resolveStoredImageUrl } from "./lib/imageUrl";
+import {
+  getStaffPlanStatusForOrg,
+  requireStaffPlanCapacity,
+} from "./lib/staffPlanLimits";
 
 type StorageCtx = Pick<import("./_generated/server").QueryCtx, "storage">;
 
@@ -33,7 +37,9 @@ async function normalizeAvatarUrl(
 ) {
   const avatarUrl = await resolveStoredImageUrl(ctx, value);
   if (value?.trim() && !avatarUrl) {
-    throw new ConvexError("Profile photo could not be loaded. Upload it again.");
+    throw new ConvexError(
+      "Profile photo could not be loaded. Upload it again.",
+    );
   }
   return avatarUrl;
 }
@@ -46,6 +52,25 @@ function normalizeAppointmentEmail(value: string | null | undefined) {
   }
   return email;
 }
+
+export const getStaffPlanStatus = query({
+  args: { staffId: v.optional(v.id("staff_members")) },
+  handler: async (ctx, args) => {
+    const { org } = await requireAuth(ctx);
+    const existingStaff = args.staffId
+      ? await ctx.db.get(args.staffId)
+      : undefined;
+    if (
+      args.staffId &&
+      (!existingStaff ||
+        existingStaff.orgId !== org._id ||
+        existingStaff.isDeleted)
+    ) {
+      throw new ConvexError("Staff member not found");
+    }
+    return getStaffPlanStatusForOrg(ctx, org, existingStaff ?? undefined);
+  },
+});
 
 export const listStaffMembers = query({
   args: {
@@ -90,11 +115,7 @@ export const getStaffMember = query({
       return null;
     }
 
-    return await visibleStaffMember(
-      ctx,
-      staffMember,
-      caller.role === "owner",
-    );
+    return await visibleStaffMember(ctx, staffMember, caller.role === "owner");
   },
 });
 
@@ -110,7 +131,7 @@ export const createStaffMember = mutation({
   },
   returns: v.id("staff_members"),
   handler: async (ctx, args) => {
-    const { staffMember: caller } = await requireRole(
+    const { staffMember: caller, org } = await requireRole(
       ctx,
       args.orgId,
       "manager",
@@ -123,6 +144,7 @@ export const createStaffMember = mutation({
         "Only an owner can manage staff appointment emails.",
       );
     }
+    await requireStaffPlanCapacity(ctx, org, args.role);
     const appointmentEmail = normalizeAppointmentEmail(args.appointmentEmail);
     const avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
 
@@ -181,7 +203,7 @@ export const updateStaffMember = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { staffMember: caller } = await requireAuth(ctx, args.orgId);
+    const { staffMember: caller, org } = await requireAuth(ctx, args.orgId);
 
     // Only managers and owners can update roles or other people's profiles
     const tryingToUpdateSelf = caller._id === args.staffId;
@@ -233,6 +255,15 @@ export const updateStaffMember = mutation({
           "The business must keep at least one active owner",
         );
       }
+    }
+
+    const nextRole = args.role ?? existingStaff.role;
+    const nextIsActive = args.isActive ?? existingStaff.isActive;
+    if (
+      nextIsActive &&
+      (!existingStaff.isActive || nextRole !== existingStaff.role)
+    ) {
+      await requireStaffPlanCapacity(ctx, org, nextRole, existingStaff);
     }
 
     const updates: Partial<typeof existingStaff> = {

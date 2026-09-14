@@ -1,11 +1,14 @@
 "use client";
 import React, { useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Tabs } from "radix-ui";
 import { ChatConversation } from "./features-one/chat";
 import { GapOptimizerSkeleton } from "./features-one/gap-optimizer-skeleton";
 import { AnalysisUpsellSkeleton } from "./features-one/analysis-upsell-skeleton";
 import { useI18n } from "./i18n-provider";
+import { landingCopy } from "@/lib/landing-copy";
+import { Reveal } from "./ui/reveal";
 
 const cn = (...classes: (string | boolean | undefined)[]) =>
   classes.filter(Boolean).join(" ");
@@ -76,9 +79,7 @@ const InternalAiSkeleton = () => {
             <div className="space-y-1">
               <div className="flex justify-between text-[10px] text-neutral-500">
                 <span>{copy.tuesday}</span>
-                <span className="text-brand-primary">
-                  {copy.versusAverage}
-                </span>
+                <span className="text-brand-primary">{copy.versusAverage}</span>
               </div>
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
                 <motion.div
@@ -130,8 +131,11 @@ const InternalAiSkeleton = () => {
 };
 
 export function FeatureSectionWithTerminal() {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const copy = messages.aiSection;
+  const reducedMotion = useReducedMotion();
+  const [keyboard, setKeyboard] = useState(false);
+  const instant = Boolean(reducedMotion || keyboard);
   const features: Feature[] = [
     {
       id: "ai-assistant",
@@ -175,58 +179,95 @@ export function FeatureSectionWithTerminal() {
   const currentFeature = features.find((f) => f.id === activeFeature)!;
 
   return (
-    <div className="relative mx-auto w-full max-w-7xl px-4 py-20 md:px-8">
-      <div className="mb-12 w-full text-left">
-        <h2 className="text-3xl font-medium tracking-tight text-neutral-700 md:text-5xl dark:text-white">
-          {copy.heading}{" "}
-          <span className="text-brand-primary font-lora italic">
-            {copy.headingAccent}
-          </span>
-        </h2>
-        <p className="mt-4 max-w-3xl text-lg text-neutral-500 dark:text-neutral-400">
-          {copy.description}
-        </p>
-      </div>
+    <Tabs.Root
+      value={activeFeature}
+      onValueChange={setActiveFeature}
+      orientation="vertical"
+      asChild
+    >
+      <section
+        id="ai"
+        className="relative mx-auto w-full max-w-7xl px-4 py-16 md:px-8 md:py-24"
+      >
+        <Reveal className="mb-10 w-full text-left">
+          <p className="text-brand-primary mb-5 text-[11px] font-medium tracking-[0.18em] uppercase">
+            {landingCopy[locale].pro}
+          </p>
+          <h2 className="text-3xl font-medium tracking-tight text-neutral-700 md:text-5xl dark:text-white">
+            {copy.heading}{" "}
+            <span className="text-brand-primary font-lora italic">
+              {copy.headingAccent}
+            </span>
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-neutral-500 dark:text-neutral-400">
+            {copy.description}
+          </p>
+        </Reveal>
 
-      <div className="grid rounded-3xl bg-gray-100 shadow-sm ring-1 shadow-black/10 ring-black/10 transition-all lg:grid-cols-2 dark:bg-neutral-900">
-        <div className="relative order-2 flex h-full min-h-[400px] items-center justify-center overflow-hidden rounded-b-3xl bg-neutral-900 p-4 md:p-8 lg:order-1 lg:rounded-l-3xl lg:rounded-r-none">
-          {/* Background Image & Overlay */}
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/bg.jpg"
-              alt=""
-              fill
-              className="object-cover opacity-60"
-            />
-            <div className="absolute inset-0 bg-neutral-900/60" />
+        <div className="grid rounded-3xl bg-gray-100 shadow-sm ring-1 shadow-black/10 ring-black/10 transition-all lg:grid-cols-2 dark:bg-neutral-900">
+          <div className="relative order-2 flex h-full min-h-[400px] items-center justify-center overflow-hidden rounded-b-3xl bg-neutral-900 p-4 md:p-8 lg:order-1 lg:rounded-l-3xl lg:rounded-r-none">
+            {/* Background Image & Overlay */}
+            <div className="absolute inset-0 z-0">
+              <Image
+                src="/bg.jpg"
+                alt=""
+                fill
+                className="object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-neutral-900/60" />
+            </div>
+
+            <AnimatePresence mode="wait" initial={false}>
+              <Tabs.Content
+                key={activeFeature}
+                value={activeFeature}
+                forceMount
+                asChild
+              >
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                    transform: instant ? "none" : "translateY(8px)",
+                  }}
+                  animate={{ opacity: 1, transform: "translateY(0px)" }}
+                  exit={{
+                    opacity: 0,
+                    transform: instant ? "none" : "translateY(-6px)",
+                  }}
+                  transition={{
+                    duration: instant ? 0 : 0.2,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className="relative z-10 flex min-h-[25rem] w-full items-center justify-center outline-none"
+                >
+                  {currentFeature.skeleton}
+                </motion.div>
+              </Tabs.Content>
+            </AnimatePresence>
+            <p className="absolute inset-x-4 bottom-4 z-10 text-center text-[10px] text-white/45">
+              {landingCopy[locale].demoNote}
+            </p>
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeFeature}
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="relative z-10 flex h-full w-full items-center justify-center"
-            >
-              {currentFeature.skeleton}
-            </motion.div>
-          </AnimatePresence>
+          <Tabs.List
+            aria-label={landingCopy[locale].pro}
+            onKeyDownCapture={() => setKeyboard(true)}
+            onPointerDownCapture={() => setKeyboard(false)}
+            className="order-1 flex flex-col justify-center gap-3 rounded-t-3xl bg-gray-50 p-4 md:p-8 lg:order-2 lg:rounded-l-none lg:rounded-r-3xl dark:bg-neutral-950/20"
+          >
+            {features.map((feature) => (
+              <FeatureCard
+                key={feature.id}
+                feature={feature}
+                isActive={activeFeature === feature.id}
+                instant={instant}
+                onClick={() => setActiveFeature(feature.id)}
+              />
+            ))}
+          </Tabs.List>
         </div>
-
-        <div className="order-1 space-y-3 rounded-t-3xl bg-gray-50 p-4 md:p-8 lg:order-2 lg:rounded-l-none lg:rounded-r-3xl dark:bg-neutral-950/20">
-          {features.map((feature) => (
-            <FeatureCard
-              key={feature.id}
-              feature={feature}
-              isActive={activeFeature === feature.id}
-              onClick={() => setActiveFeature(feature.id)}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+      </section>
+    </Tabs.Root>
   );
 }
 
@@ -234,42 +275,47 @@ function FeatureCard({
   feature,
   isActive,
   onClick,
+  instant,
 }: {
   feature: Feature;
   isActive: boolean;
   onClick: () => void;
+  instant: boolean;
 }) {
   return (
-    <motion.div
-      onClick={onClick}
-      className={cn(
-        "cursor-pointer rounded-xl transition-all duration-300",
-        isActive
-          ? "bg-white shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-800"
-          : "hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30",
-      )}
-      layout
-    >
-      <div className="flex items-center gap-4 p-4 text-left">
-        <div className="flex-1">
-          <h3
-            className={cn(
-              "font-semibold text-neutral-700 transition-colors dark:text-neutral-200",
-              isActive && "text-brand-primary dark:text-white",
-            )}
-          >
-            {feature.title}
-          </h3>
-          <p
-            className={cn(
-              "mt-1 text-xs text-neutral-500 transition-opacity dark:text-neutral-400",
-              !isActive && "opacity-60",
-            )}
-          >
-            {feature.description}
-          </p>
+    <Tabs.Trigger value={feature.id} asChild>
+      <motion.button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "focus-visible:outline-ring w-full cursor-pointer rounded-xl text-left outline-offset-4 transition-[background-color,box-shadow] duration-200 focus-visible:outline-2",
+          isActive
+            ? "bg-white shadow-md ring-1 shadow-black/5 ring-black/5 dark:bg-neutral-800"
+            : "hover:bg-neutral-200/50 dark:hover:bg-neutral-800/30",
+        )}
+        layout={!instant}
+      >
+        <div className="flex items-center gap-4 p-4 text-left">
+          <div className="flex-1">
+            <h3
+              className={cn(
+                "font-semibold text-neutral-700 transition-colors dark:text-neutral-200",
+                isActive && "text-brand-primary dark:text-white",
+              )}
+            >
+              {feature.title}
+            </h3>
+            <p
+              className={cn(
+                "mt-1 text-xs text-neutral-500 transition-opacity dark:text-neutral-400",
+                !isActive && "opacity-60",
+              )}
+            >
+              {feature.description}
+            </p>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.button>
+    </Tabs.Trigger>
   );
 }

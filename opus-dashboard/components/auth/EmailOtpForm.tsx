@@ -7,7 +7,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   InputOTP,
@@ -173,7 +178,7 @@ export function EmailOtpForm({
             <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-4xl">
               {step === "email" ? title : "Check your email"}
             </h1>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
+            <p className="mx-auto mt-3 max-w-sm text-pretty text-sm leading-6 text-muted-foreground">
               {step === "email"
                 ? description
                 : `Enter the six-digit code sent to ${email}.`}
@@ -195,13 +200,17 @@ export function EmailOtpForm({
                     required
                     autoFocus
                     aria-invalid={Boolean(error)}
-                    className="h-11"
+                    aria-describedby="auth-email-hint"
+                    className="h-12"
                   />
+                  <FieldDescription id="auth-email-hint">
+                    We’ll email you a six-digit code. No password needed.
+                  </FieldDescription>
                 </Field>
                 <Button
                   type="submit"
                   size="lg"
-                  className="h-11 w-full"
+                  className="h-12 w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -253,7 +262,7 @@ export function EmailOtpForm({
                 <Button
                   type="submit"
                   size="lg"
-                  className="h-11 w-full"
+                  className="h-12 w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (

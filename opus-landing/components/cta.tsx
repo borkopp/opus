@@ -1,24 +1,30 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { IconArrowRight } from "@tabler/icons-react";
-import { Button } from "./button";
+import { Button } from "./ui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { useI18n } from "./i18n-provider";
+import { siteLinks } from "@/lib/site-links";
+import { landingCopy } from "@/lib/landing-copy";
 
 export function LaunchBanner() {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const copy = messages.cta;
+  const reducedMotion = useReducedMotion();
 
   return (
-    <section className="relative flex min-h-[70vh] w-full items-center justify-center overflow-hidden px-4 py-24">
+    <section className="relative flex w-full items-center justify-center overflow-hidden px-4 pt-8 pb-20 md:pb-28">
       <div className="relative mx-auto w-full max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.98 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{
+            duration: reducedMotion ? 0 : 0.7,
+            ease: [0.22, 1, 0.36, 1],
+          }}
           className="relative flex flex-col items-center gap-8 overflow-hidden rounded-[40px] border border-neutral-800 bg-neutral-900 p-8 text-center shadow-2xl md:p-16"
         >
           <div className="absolute inset-0 z-0">
@@ -49,12 +55,24 @@ export function LaunchBanner() {
           </div>
 
           <div className="relative z-10 flex flex-col items-center gap-4">
-            <Link href="https://studio.opus.mk">
-              <Button className="shadow-brand-primary/20 h-14 rounded-full px-8 text-base shadow-xl">
+            <Button
+              asChild
+              variant="brand"
+              size="hero"
+              className="group h-14 px-8"
+            >
+              <Link href={siteLinks.signup}>
                 {copy.button}
-                <IconArrowRight className="ml-2 size-4" />
-              </Button>
-            </Link>
+                <IconArrowRight
+                  data-icon="inline-end"
+                  aria-hidden="true"
+                  className="transition-transform duration-200 group-hover:translate-x-1"
+                />
+              </Link>
+            </Button>
+            <p className="text-xs text-white/60">
+              {landingCopy[locale].reassurance}
+            </p>
             {/* <p className="text-xs text-neutral-400">
               Бесплатно засекогаш · Неограничени термини · Надградба кога ќе
               посакате
@@ -87,12 +105,12 @@ export function CTA() {
             {copy.alternateDescription}
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link href="https://studio.opus.mk">
-              <Button className="shadow-brand-primary/20 h-14 rounded-full px-10 text-lg shadow-xl">
+            <Button asChild variant="brand" size="hero" className="h-14 px-10">
+              <Link href={siteLinks.signup}>
                 {copy.button}
-                <IconArrowRight className="ml-2 size-4" />
-              </Button>
-            </Link>
+                <IconArrowRight data-icon="inline-end" aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
         </div>
 

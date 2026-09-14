@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/button";
 import {
   motion,
   useMotionValueEvent,
@@ -10,15 +9,30 @@ import {
 } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button as HeroButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 import { useI18n } from "./i18n-provider";
+import { siteLinks } from "@/lib/site-links";
+import { landingCopy } from "@/lib/landing-copy";
 
 export const Navbar = () => {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileResourcesOpen, setMobileResourcesOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const pathname = usePathname();
+  const photoNav = pathname === "/";
+  const overHero = photoNav && !hasScrolled;
+  const logoColor = overHero ? "text-white" : "text-foreground";
+  const navLinkClass = cn(
+    "text-sm font-medium transition-colors",
+    overHero
+      ? "text-white/90 hover:text-white"
+      : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white",
+  );
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -110,22 +124,22 @@ export const Navbar = () => {
       >
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <Logo className="text-xl md:text-3xl" />
+          <Logo
+            className={cn("text-xl md:text-3xl", logoColor)}
+            markClassName={logoColor}
+          />
         </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden items-center gap-6 lg:flex lg:gap-8">
-          <Link
-            href="/#product"
-            className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
+          <Link href={siteLinks.demo} className={navLinkClass}>
+            {landingCopy[locale].howItWorks}
+          </Link>
+          <Link href="/#product" className={navLinkClass}>
             {messages.nav.platform}
           </Link>
 
-          <Link
-            href="/pricing"
-            className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
+          <Link href="/pricing" className={navLinkClass}>
             {messages.nav.pricing}
           </Link>
 
@@ -182,10 +196,7 @@ export const Navbar = () => {
           </NavigationMenu>
           */}
 
-          <Link
-            href="/contact"
-            className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
-          >
+          <Link href="/contact" className={navLinkClass}>
             {messages.nav.contact}
           </Link>
         </div>
@@ -198,16 +209,36 @@ export const Navbar = () => {
           >
             Најава
           </Link> */}
-          <Link href="https://studio.opus.mk">
-            <Button className="px-4 py-2 text-sm">
-              {messages.nav.startFree}
-            </Button>
-          </Link>
+          {photoNav ? (
+            <>
+              <HeroButton
+                asChild
+                variant={overHero ? "heroGlass" : "navGlass"}
+                size="hero"
+              >
+                <Link href={siteLinks.login}>{messages.footer.signIn}</Link>
+              </HeroButton>
+              <HeroButton
+                asChild
+                variant={overHero ? "hero" : "navSolid"}
+                size="hero"
+              >
+                <Link href={siteLinks.signup}>{messages.nav.startFree}</Link>
+              </HeroButton>
+            </>
+          ) : (
+            <HeroButton asChild variant="brand" size="hero">
+              <Link href={siteLinks.signup}>{messages.nav.startFree}</Link>
+            </HeroButton>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
         <button
+          type="button"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="landing-mobile-menu"
           className="flex size-10 items-center justify-center rounded-md lg:hidden"
           aria-label={
             mobileMenuOpen
@@ -216,15 +247,18 @@ export const Navbar = () => {
           }
         >
           {mobileMenuOpen ? (
-            <CloseIcon className="size-5 text-neutral-900 dark:text-white" />
+            <CloseIcon className={cn("size-5", logoColor)} />
           ) : (
-            <MenuIcon className="size-5 text-neutral-900 dark:text-white" />
+            <MenuIcon className={cn("size-5", logoColor)} />
           )}
         </button>
       </motion.div>
 
       {/* Mobile Menu - Full Screen Overlay */}
       <motion.div
+        id="landing-mobile-menu"
+        inert={!mobileMenuOpen}
+        aria-hidden={!mobileMenuOpen}
         initial={false}
         animate={{
           opacity: mobileMenuOpen ? 1 : 0,
@@ -237,6 +271,13 @@ export const Navbar = () => {
       >
         <div className="flex flex-1 flex-col overflow-y-auto px-6 py-6">
           <div className="flex flex-col gap-2">
+            <Link
+              href={siteLinks.demo}
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-foreground hover:bg-muted rounded-xl px-4 py-3.5 text-base font-medium transition-colors"
+            >
+              {landingCopy[locale].howItWorks}
+            </Link>
             <Link
               href="/#product"
               onClick={() => setMobileMenuOpen(false)}
@@ -316,14 +357,19 @@ export const Navbar = () => {
             >
               Најава
             </Link> */}
-            <Link
-              href="https://studio.opus.mk"
-              onClick={() => setMobileMenuOpen(false)}
+            <HeroButton
+              asChild
+              variant="brand"
+              size="hero"
+              className="mt-3 w-full"
             >
-              <Button className="mt-3 w-full rounded-xl px-4 py-3.5 text-base">
+              <Link
+                href={siteLinks.signup}
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 {messages.nav.startFree}
-              </Button>
-            </Link>
+              </Link>
+            </HeroButton>
           </div>
         </div>
       </motion.div>

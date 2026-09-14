@@ -12,22 +12,24 @@ import { Heading } from "./heading";
 import { Subheading } from "./subheading";
 import Link from "next/link";
 import { useI18n } from "./i18n-provider";
+import { siteLinks } from "@/lib/site-links";
+import { landingCopy } from "@/lib/landing-copy";
 
 export function Pricing() {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const copy = messages.pricing;
   const plans = [
     {
       id: "free",
       ...copy.plans[0],
       popular: false,
-      buttonHref: "https://studio.opus.mk",
+      buttonHref: siteLinks.signup,
     },
     {
       id: "pro",
       ...copy.plans[1],
       popular: true,
-      buttonHref: "https://opus.mk/contact",
+      buttonHref: siteLinks.contact,
     },
   ];
   const containerRef = useRef(null);
@@ -116,20 +118,17 @@ export function Pricing() {
                     {plan.description}
                   </PricingCardUI.Description>
 
-                  <Link href={plan.buttonHref} className="block w-full">
-                    <Button
-                      className={cn(
-                        "w-full rounded-xl py-6 text-sm font-bold transition-all active:scale-[0.98] sm:text-base",
-                        plan.popular
-                          ? "bg-brand-primary hover:bg-brand-primary/90 text-white shadow-[0_10px_30px_rgba(206,93,69,0.25)]"
-                          : "border border-neutral-300 bg-white text-neutral-900 shadow-xs hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700",
-                      )}
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        {plan.buttonText}
-                      </span>
-                    </Button>
-                  </Link>
+                  <Button
+                    asChild
+                    className={cn(
+                      "w-full rounded-xl py-6 text-sm font-bold transition-all active:scale-[0.98] sm:text-base",
+                      plan.popular
+                        ? "bg-brand-primary hover:bg-brand-primary/90 text-white shadow-[0_10px_30px_rgba(206,93,69,0.25)]"
+                        : "border border-neutral-300 bg-white text-neutral-900 shadow-xs hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700",
+                    )}
+                  >
+                    <Link href={plan.buttonHref}>{plan.buttonText}</Link>
+                  </Button>
                 </PricingCardUI.Header>
 
                 <PricingCardUI.Body className="p-4 sm:p-5">
@@ -159,6 +158,9 @@ export function Pricing() {
             </motion.div>
           ))}
         </div>
+        <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-xs leading-relaxed">
+          {landingCopy[locale].pricingNote}
+        </p>
       </Container>
     </section>
   );

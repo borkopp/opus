@@ -17,6 +17,7 @@ Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scop
 | `opus-dashboard/` | Beauty-business dashboard, automatic `{slug}.opus.mk` websites, guest booking, and the shared Convex backend | `3000` / Convex `3210` |
 | `opus-mk/`        | Dormant marketplace package retained for possible future work; do not modify by default                      | `3001`                 |
 | `opus-landing/`   | Truthful beauty-focused `opus.mk` marketing website                                                          | `3000`                 |
+| `opus-owner/`     | Private read-only platform overview for the OPUS owner at `admin.opus.mk`                                     | `3002`                 |
 
 `opus-dashboard/convex` is the backend source of truth. `opus-mk/convex` points to that shared backend.
 
@@ -106,3 +107,7 @@ npm run build
 ## Deployment
 
 The target web topology is `opus-landing/` on Vercel at `opus.mk` and `opus-dashboard/` on a separate Vercel project at `studio.opus.mk` plus `*.opus.mk`. See [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md) for the environment, domain, and verification runbook. No per-business DNS change or VPS deployment is part of publishing a studio website.
+
+The separate `opus-owner` Vercel project serves the private owner overview at
+`admin.opus.mk`. It uses email-code access limited to the platform owner and does
+not deploy or alter the studio frontend. See [`docs/OWNER_OVERVIEW.md`](docs/OWNER_OVERVIEW.md).

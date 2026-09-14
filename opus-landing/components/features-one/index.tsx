@@ -12,26 +12,29 @@ import { Subheading } from "../subheading";
 import { Container } from "../container";
 import { CalendarCheck, MailCheck, Smartphone } from "lucide-react";
 import { useI18n } from "../i18n-provider";
+import { Reveal } from "../ui/reveal";
+import { landingCopy } from "@/lib/landing-copy";
 
 export function FeaturesOne() {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const copy = messages.featuresOne;
 
   return (
     <Container as="section" id="product" className="py-10 md:py-20 lg:py-32">
-      <Heading>
+      <Heading as="h2">
         {copy.heading}{" "}
         <span className="text-brand-primary font-lora italic">
           {copy.headingAccent}
         </span>
       </Heading>
-      <Subheading className="mt-2">
-        {copy.description}
-      </Subheading>
+      <Subheading className="mt-2">{copy.description}</Subheading>
       <div className="mx-auto mt-8 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-3 md:grid-rows-2">
         <Card className="md:row-span-2">
           <CardContent className="flex h-full flex-col">
             <CardHeader>
+              <span className="text-brand-primary text-[10px] font-medium tracking-[0.08em] uppercase">
+                {landingCopy[locale].free}
+              </span>
               <CardTitle>{copy.cards.calendar.title}</CardTitle>
               <CardDescription>
                 {copy.cards.calendar.description}
@@ -60,10 +63,11 @@ export function FeaturesOne() {
         <Card className="md:row-span-2">
           <CardContent className="flex h-full flex-col">
             <CardHeader>
+              <span className="text-brand-primary text-[10px] font-medium tracking-[0.08em] uppercase">
+                {landingCopy[locale].pro}
+              </span>
               <CardTitle>{copy.cards.ai.title}</CardTitle>
-              <CardDescription>
-                {copy.cards.ai.description}
-              </CardDescription>
+              <CardDescription>{copy.cards.ai.description}</CardDescription>
             </CardHeader>
             <CardSkeleton className="mt-auto flex flex-1 flex-col items-center justify-between gap-2 overflow-hidden pt-4">
               <ChatConversation className="min-h-0 shrink p-2 px-4" />
@@ -125,14 +129,14 @@ function Card({
   className?: string;
 }) {
   return (
-    <div
+    <Reveal
       className={cn(
         "rounded-2xl bg-white shadow-sm ring-1 shadow-black/10 ring-black/10 dark:bg-neutral-900 dark:shadow-white/5 dark:ring-white/10",
         className,
       )}
     >
       {children}
-    </div>
+    </Reveal>
   );
 }
 

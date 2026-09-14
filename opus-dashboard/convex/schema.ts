@@ -194,6 +194,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_industry_created", ["industry", "createdAt"])
     .index("by_slug", ["slug"])
     .index("by_listing_status", ["listingStatus"])
     .index("by_listing_status_deleted", ["listingStatus", "isDeleted"])

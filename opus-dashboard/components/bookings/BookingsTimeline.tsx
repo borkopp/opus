@@ -31,7 +31,7 @@ import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 const START_HOUR = 8;
 const END_HOUR = 20;
-const HOUR_HEIGHT = 90;
+const HOUR_HEIGHT = 130;
 const HEADER_HEIGHT = 56; // h-14 = 3.5rem = 56px — staff header row
 
 function formatBookingDate(timestamp: number, locale: string) {
@@ -463,10 +463,13 @@ export function BookingsTimeline({
         {/* Current Time Indicator */}
         {currentTimeOffset !== null && (
           <div
-            className="absolute left-12 right-0 border-t-[1.5px] border-danger z-10 pointer-events-none"
+            className="absolute left-12 right-0 border-t-2 border-danger z-20 pointer-events-none flex items-center"
             style={{ top: currentTimeOffset + HEADER_HEIGHT }}
           >
-            <div className="absolute -left-1.5 -top-[5px] w-[9px] h-[9px] rounded-full bg-danger animate-pulse" />
+            <div className="absolute -left-2 -top-[5px] w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-background" />
+            <div className="absolute left-1 -top-2.5 px-1.5 py-0.5 rounded bg-danger text-[9.5px] font-mono font-bold text-white leading-none shadow-xs">
+              {format(new Date(), "HH:mm")}
+            </div>
           </div>
         )}
 
@@ -546,7 +549,7 @@ export function BookingsTimeline({
                   <button
                     type="button"
                     data-slot="quick-booking-target"
-                    className="absolute left-1.5 right-1.5 z-10 flex items-center justify-center gap-1.5 overflow-hidden rounded-md border border-border/60 bg-muted/60 px-2 text-xs font-medium text-muted-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="absolute left-1.5 right-1.5 z-10 flex items-center justify-center gap-2 overflow-hidden rounded-lg border-2 border-dashed border-primary/40 bg-primary/[0.04] px-2 text-xs font-medium text-primary shadow-xs transition-all duration-150 hover:bg-primary/[0.08] hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     style={{
                       top:
                         ((quickSlotStartMinute - START_HOUR * 60) / 60) *
@@ -554,7 +557,7 @@ export function BookingsTimeline({
                         HEADER_HEIGHT,
                       height: Math.max(
                         (staffQuickSlot.durationMins / 60) * HOUR_HEIGHT,
-                        22,
+                        24,
                       ),
                     }}
                     onClick={() => onQuickBooking(staffQuickSlot)}
@@ -563,10 +566,15 @@ export function BookingsTimeline({
                       `Креирај термин од ${bookingTimeLabel(staffQuickSlot.startAt)} до ${bookingTimeLabel(staffQuickSlot.endAt)} со ${staff.displayName}`,
                     )}
                   >
-                    <IconPlus className="size-3.5 shrink-0" />
-                    <span className="tabular-nums">
+                    <div className="size-4.5 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      <IconPlus className="size-3 shrink-0" />
+                    </div>
+                    <span className="font-mono font-medium text-[11px] tabular-nums tracking-tight">
                       {bookingTimeLabel(staffQuickSlot.startAt)} –{" "}
                       {bookingTimeLabel(staffQuickSlot.endAt)}
+                    </span>
+                    <span className="text-[10.5px] opacity-70 hidden sm:inline font-sans">
+                      {t("· Open slot", "· Слободен")}
                     </span>
                   </button>
                 )}
@@ -618,7 +626,7 @@ export function BookingsTimeline({
                     <div
                       key={booking._id}
                       className={cn(
-                        "absolute left-1 right-1 z-10 p-[1px] group/booking",
+                        "absolute left-1.5 right-1.5 z-10 p-[1px] group/booking",
                         isDraggingThis && "z-30 opacity-90",
                         isDraggingThis && "transition-none",
                         !isDraggingThis &&
@@ -634,10 +642,10 @@ export function BookingsTimeline({
                       {/* Drag handle */}
                       {canDrag && !drag && (
                         <div
-                          className="absolute -left-0 top-0 bottom-0 w-5 flex items-center justify-center opacity-0 group-hover/booking:opacity-100 transition-opacity cursor-grab z-20"
+                          className="absolute -left-1 top-0 bottom-0 w-5 flex items-center justify-center opacity-0 group-hover/booking:opacity-100 transition-opacity cursor-grab z-20"
                           onMouseDown={(e) => handleDragStart(e, booking)}
                         >
-                          <div className="bg-background/90 backdrop-blur border border-border/60 shadow-sm rounded-l-md px-0.5 py-2">
+                          <div className="bg-background/95 backdrop-blur border border-border/80 shadow-xs rounded-l-md px-0.5 py-2">
                             <IconGripVertical className="h-3 w-3 text-muted-foreground" />
                           </div>
                         </div>
@@ -661,6 +669,7 @@ export function BookingsTimeline({
                       <BookingCard
                         booking={booking}
                         isSelected={selectedBookingId === booking._id}
+                        height={height}
                         onClick={() => {
                           if (!isDragging.current) {
                             onSelectBooking(booking._id);

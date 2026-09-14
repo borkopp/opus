@@ -58,10 +58,10 @@ const mkMessages = {
     dashboardDarkAlt: "OPUS календар и контролна табла во темен приказ",
   },
   featuresOne: {
-    heading: "Сè што ви треба за закажување —",
-    headingAccent: "бесплатно",
+    heading: "Помалку обврски.",
+    headingAccent: "Повеќе простор за клиенти.",
     description:
-      "Водете го календарот, тимот, услугите и клиентите без месечен лимит на термини. OPUS е направен за мали студија, без непотребна сложеност.",
+      "Календар, веб-сајт и тим во бесплатниот план. AI рецепција и автоматизација со OPUS Pro — сè поврзано со вашите термини.",
     cards: {
       calendar: {
         title: "Сите термини, без хаос",
@@ -71,10 +71,10 @@ const mkMessages = {
       website: {
         title: "Сопствен веб-сајт за закажување",
         description:
-          "Добијте адреса како studio.opus.mk, каде клиентите ги гледаат услугите, цените и слободните термини и закажуваат сами.",
+          "Вашите услуги, цени и слободни термини на yourstudio.opus.mk. Споделете го линкот и овозможете им на клиентите сами да закажат.",
       },
       ai: {
-        title: "AI рецепција со OPUS Pro",
+        title: "Одговор и кога сте зафатени",
         description:
           "Одговара на прашања, проверува слободни термини и помага при закажување — автоматски, на македонски, 24/7.",
       },
@@ -185,7 +185,7 @@ const mkMessages = {
     devices: {
       screenAlt: "OPUS контролна табла",
       connected: "Поврзано",
-      airpodsConnected: "AirPods поврзани",
+      airpodsConnected: "Календарот е усогласен",
       userAvatarAlt: "Кориснички аватар",
       regions: [
         "Северна Америка",
@@ -206,10 +206,10 @@ const mkMessages = {
     weekendAverage: "Викенд просек (88%)",
     suggestion:
       "Предлог: Понудете попуст од 20% за термините меѓу 14:00 и 17:00.",
-    heading: "AI што ви помага да го",
-    headingAccent: "пополните календарот",
+    heading: "Посветете се на клиентот.",
+    headingAccent: "AI го пречекува следниот.",
     description:
-      "Со OPUS Pro, AI рецепцијата одговара на клиентите, оптимизаторот ги пронаоѓа празните термини, а анализите ви покажуваат каде студиото може да работи подобро.",
+      "OPUS Pro одговара на прашања за закажување, помага да ги пополните откажаните термини и открива можности во календарот. Вие ја задржувате контролата.",
     features: [
       {
         title: "AI рецепција 24/7",
@@ -301,7 +301,7 @@ const mkMessages = {
     heading: "Бесплатно за работа.",
     headingAccent: "Pro за раст.",
     description:
-      "Водете го студиото бесплатно без лимит на термини. Преминете на Pro кога ќе посакате AI, автоматизација и алатки што го пополнуваат календарот.",
+      "Започнете со основните алатки, бесплатно без временски лимит. Изберете Pro за AI рецепција, пополнување откажани термини и поголем тим.",
     plans: [
       {
         title: "Бесплатен",
@@ -314,7 +314,7 @@ const mkMessages = {
         features: [
           "Неограничени термини, услуги и клиенти",
           "Сопствен веб-сајт (yourstudio.opus.mk)",
-          "Календар, тим и работно време",
+          "Календар, работно време, 1 сопственик + 3 вработени",
           "Заштита од преклопување на термини",
           "Потврди и потсетници по е-пошта",
           "Галерија со најмногу 3 фотографии",
@@ -325,7 +325,7 @@ const mkMessages = {
         title: "OPUS Pro",
         badge: "AI и раст",
         description:
-          "За студија што сакаат помалку празни термини, помалку рачна комуникација и повеќе контрола.",
+          "Сè од бесплатниот план, плус AI и автоматизација за помалку празни термини и помалку рачна комуникација.",
         price: "1.190",
         currency: "ден.",
         period: "/ месечно",
@@ -334,7 +334,7 @@ const mkMessages = {
           "Оптимизатор на празни термини",
           "Автоматско пополнување по откажување",
           "Напредни мејлови и маркетинг алатки",
-          "Повеќе кориснички профили и улоги",
+          "Поголем тим со повеќе кориснички профили и улоги",
           "Напредна аналитика и приоритетна поддршка",
         ],
         buttonText: "Контактирајте нѐ",
@@ -342,74 +342,75 @@ const mkMessages = {
     ],
   },
   faq: {
-    heading: "Најчесто",
-    headingAccent: "поставувани",
-    headingEnd: "прашања",
+    heading: "Пред да",
+    headingAccent: "започнете",
+    headingEnd: "",
     description:
-      "Јасни одговори за бесплатниот план, OPUS Pro, AI рецепцијата и е-пораките.",
+      "Практични одговори за вашето студио, вашите клиенти и вашиот план.",
     sections: [
+      {
+        title: "Првите чекори",
+        items: [
+          {
+            question: "За какви студија е наменет OPUS?",
+            answer:
+              "За мали салони за коса и убавина, студија за нокти, трепки и веѓи, шминкери и студија за масажа во Македонија. Можете да работите сами или со тим.",
+          },
+          {
+            question: "Што ми треба за да започнам?",
+            answer:
+              "Додајте ги услугите, цените, тимот и работното време. Потоа објавете го вашиот OPUS веб-сајт и споделете го линкот. Не ви треба постоечки веб-сајт.",
+          },
+          {
+            question:
+              "Можам ли да продолжам да закажувам по телефон и Instagram?",
+            answer:
+              "Да. Внесете ги постоечките и телефонски договорените термини во календарот. Онлајн закажувањата пристигнуваат во истиот распоред, а клиентите гледаат само слободни термини.",
+          },
+          {
+            question: "Дали на клиентите им треба профил или апликација?",
+            answer:
+              "Не им треба апликација или кориснички профил. Го отвораат вашиот линк, избираат услуга и слободен термин и ги внесуваат потребните контактни податоци за да го потврдат закажувањето.",
+          },
+        ],
+      },
       {
         title: "Бесплатниот план",
         items: [
           {
-            question: "Што е OPUS?",
+            question: "Дали бесплатниот план има временски лимит?",
             answer:
-              "OPUS е бесплатна платформа за закажување за мали салони и студија за убавина во Македонија. На едно место ги поврзува календарот, тимот, услугите, клиентите и вашиот веб-сајт за онлајн закажување.",
+              "Не. Не е пробен период, не бара кредитна картичка и нема месечен лимит на термини. Pro е избор кога ќе ви требаат AI и дополнителна автоматизација.",
           },
           {
-            question: "Дали бесплатниот план навистина е бесплатен?",
+            question: "Колку луѓе можат да го користат бесплатниот план?",
             answer:
-              "Да. Бесплатниот план нема временско ограничување, не бара кредитна картичка и нема месечен лимит на бројот на термини.",
+              "Еден активен сопственик и најмногу 3 активни вработени — вкупно 4 лица. Вклучени се календар, услуги, клиенти, работно време, сопствен OPUS веб-сајт и галерија со најмногу 3 фотографии.",
           },
           {
-            question: "Што е вклучено бесплатно?",
+            question: "Што се случува ако го откажам Pro?",
             answer:
-              "Добивате неограничени термини, услуги и клиенти, календар за целиот тим, работно време, заштита од преклопување, сопствен OPUS веб-сајт, потврди и потсетници по е-пошта и галерија со најмногу 3 фотографии.",
-          },
-          {
-            question: "Може ли клиент да закаже без да отвори профил?",
-            answer:
-              "Да. Клиентот го отвора вашиот линк, избира услуга, вработен и слободен термин, ја потврдува својата е-пошта и го завршува закажувањето без да креира кориснички профил.",
+              "Сметката се враќа на бесплатниот план. Термините, клиентите, услугите и историјата се зачувуваат. Pro автоматизациите се исклучуваат, а повторно важат ограничувањата на бесплатниот план.",
           },
         ],
       },
       {
-        title: "OPUS Pro и автоматизација",
+        title: "AI и комуникација",
         items: [
           {
-            question: "Што добивам со OPUS Pro?",
+            question: "Што презема AI рецепцијата?",
             answer:
-              "OPUS Pro додава AI рецепција 24/7, оптимизатор на празни термини, автоматско пополнување по откажување, паметни цени според побарувачката, напредни е-пораки, повеќе кориснички профили и подетална аналитика.",
+              "Со OPUS Pro, AI одговара на прашања за услуги и цени, проверува слободни термини и помага при закажување преку веб-чет, Instagram и WhatsApp. Кога е потребна човечка одлука, разговорот го презема вашиот тим.",
           },
           {
-            question: "Како функционира AI рецепцијата?",
+            question: "Како помага OPUS кога ќе се откаже термин?",
             answer:
-              "AI рецепцијата одговара на прашања за услугите, цените и слободните термини, помага при закажување и го предава разговорот на член од тимот кога барањето е нејасно или е потребна човечка одлука.",
+              "Оптимизаторот ја пронаоѓа празнината и предлага соодветни клиенти што се согласиле да добиваат понуди. Вие ја прегледувате и одобрувате подготвената порака пред да се испрати.",
           },
           {
-            question: "Како OPUS ги пополнува откажаните термини?",
+            question: "Дали клиентите добиваат потврди и потсетници?",
             answer:
-              "Оптимизаторот ја открива новата празнина, наоѓа соодветни клиенти кои се согласиле да добиваат понуди и подготвува порака. Вие ја прегледувате и одобрувате пред да биде испратена.",
-          },
-          {
-            question: "Што се случува ако го откажам Pro планот?",
-            answer:
-              "Профилот се враќа на Бесплатниот план. Термините, клиентите, услугите и историјата остануваат зачувани, а се исклучуваат само автоматизациите и напредните можности од Про.",
-          },
-        ],
-      },
-      {
-        title: "Е-пошта и известувања",
-        items: [
-          {
-            question: "Кои е-пораки ги испраќа OPUS?",
-            answer:
-              "OPUS испраќа кодови за најава и потврда на е-поштата, потврди за закажување, известувања за презакажување или откажување и потсетници пред терминот. Про овозможува дополнителни потсетници и известувања за тимот.",
-          },
-          {
-            question: "Можам ли да ги изберам потсетниците?",
-            answer:
-              "Да. Во Pro планот избирате кога клиентите и членовите на тимот ќе добијат потсетник и кои членови на тимот ќе примаат известувања за нови термини.",
+              "Да. Бесплатниот план вклучува потврди, известувања за промени и потсетници по е-пошта. Pro додава повеќе контрола врз потсетниците и известувањата за тимот.",
           },
         ],
       },
@@ -420,7 +421,7 @@ const mkMessages = {
     headingAccent: "онлајн термини",
     headingEnd: "уште денес",
     description:
-      "Поставете ги услугите, споделете го сајтот и почнете со закажување. 100% бесплатно, без кредитна картичка.",
+      "Вашите услуги. Вашиот линк. Вашиот следен клиент. Започнете со бесплатниот план и посветете се на работата што ја сакате.",
     button: "Започнете бесплатно",
     alternateHeading: "Бесплатно за секојдневната работа.",
     alternateHeadingAccent: "Pro кога сакате повеќе.",
@@ -487,7 +488,7 @@ const enMessages = {
     platform: "Platform",
     pricing: "Pricing",
     contact: "Contact",
-    startFree: "Get started for free",
+    startFree: "Start for free",
   },
   footer: {
     copyright: "Copyright OPUS 2026. All rights reserved.",
@@ -506,16 +507,16 @@ const enMessages = {
     titleAccent: "booked appointments.",
     description:
       "A free booking platform for beauty studios in Macedonia. Calendar, your own website, and unlimited appointments.",
-    startFree: "Get started for free",
+    startFree: "Start for free",
     learnMore: "Learn more",
     dashboardAlt: "OPUS calendar and dashboard",
     dashboardDarkAlt: "OPUS calendar and dashboard in dark mode",
   },
   featuresOne: {
-    heading: "Everything you need to manage bookings —",
-    headingAccent: "free",
+    heading: "A calmer day.",
+    headingAccent: "A fuller calendar.",
     description:
-      "Manage your calendar, team, services, and clients with no monthly booking limit. OPUS is made for small studios, without unnecessary complexity.",
+      "Your calendar, website, and team are included free. OPUS Pro adds AI reception and automation, all connected to your appointments.",
     cards: {
       calendar: {
         title: "Every appointment, without the chaos",
@@ -525,10 +526,10 @@ const enMessages = {
       website: {
         title: "Your own booking website",
         description:
-          "Get an address such as studio.opus.mk, where clients can see your services, prices, and available times and book on their own.",
+          "Your services, prices, and available times at yourstudio.opus.mk. Share the link and let clients book when it suits them.",
       },
       ai: {
-        title: "AI receptionist with OPUS Pro",
+        title: "An answer, even when you’re busy",
         description:
           "It answers questions, checks availability, and helps with bookings — automatically, in Macedonian, 24/7.",
       },
@@ -639,7 +640,7 @@ const enMessages = {
     devices: {
       screenAlt: "OPUS dashboard",
       connected: "Connected",
-      airpodsConnected: "AirPods connected",
+      airpodsConnected: "Calendar synced",
       userAvatarAlt: "User avatar",
       regions: ["North America", "Europe", "Asia Pacific", "South America"],
     },
@@ -655,10 +656,10 @@ const enMessages = {
     weekendAverage: "Weekend average (88%)",
     suggestion:
       "Suggestion: Offer 20% off appointments between 14:00 and 17:00.",
-    heading: "AI that helps you",
-    headingAccent: "fill your calendar",
+    heading: "Stay with your client.",
+    headingAccent: "Let AI handle the next.",
     description:
-      "With OPUS Pro, the AI receptionist responds to clients, the optimizer finds open slots, and analytics show you where the studio can perform better.",
+      "OPUS Pro answers booking enquiries, helps refill cancellations, and finds opportunities in your calendar. You stay in control.",
     features: [
       {
         title: "24/7 AI receptionist",
@@ -748,7 +749,7 @@ const enMessages = {
     heading: "Free to run.",
     headingAccent: "Pro to grow.",
     description:
-      "Run your studio free with unlimited appointments. Move to Pro when you want AI, automation, and tools that help fill your calendar.",
+      "Start with the essentials, free for as long as you need. Choose Pro for AI reception, cancellation recovery, and a bigger team.",
     plans: [
       {
         title: "Free",
@@ -761,18 +762,18 @@ const enMessages = {
         features: [
           "Unlimited appointments, services, and clients",
           "Your own website (yourstudio.opus.mk)",
-          "Calendar, team, and working hours",
+          "Calendar, working hours, 1 owner + 3 staff",
           "Protection against overlapping appointments",
           "Email confirmations and reminders",
           "A gallery with up to 3 photos",
         ],
-        buttonText: "Get started for free",
+        buttonText: "Start for free",
       },
       {
         title: "OPUS Pro",
         badge: "AI and growth",
         description:
-          "For studios that want fewer empty slots, less manual communication, and more control.",
+          "Everything in Free, plus AI and automation for fewer empty slots and less manual communication.",
         price: "1,190",
         currency: "MKD",
         period: "/ month",
@@ -781,7 +782,7 @@ const enMessages = {
           "Open-slot optimizer",
           "Automatic refill after a cancellation",
           "Advanced email and marketing tools",
-          "More user accounts and roles",
+          "A bigger team with more user accounts and roles",
           "Advanced analytics and priority support",
         ],
         buttonText: "Contact us",
@@ -789,74 +790,74 @@ const enMessages = {
     ],
   },
   faq: {
-    heading: "Frequently",
-    headingAccent: "asked",
-    headingEnd: "questions",
+    heading: "Before you",
+    headingAccent: "get started",
+    headingEnd: "",
     description:
-      "Clear answers about the Free plan, OPUS Pro, the AI receptionist, and email.",
+      "Practical answers about your studio, your clients, and your plan.",
     sections: [
       {
-        title: "The Free plan",
+        title: "Getting started",
         items: [
           {
-            question: "What is OPUS?",
+            question: "Who is OPUS made for?",
             answer:
-              "OPUS is a free booking platform for small beauty salons and studios in Macedonia. It brings your calendar, team, services, clients, and online booking website together in one place.",
+              "Small hair and beauty salons, nail studios, lash and brow studios, makeup artists, and massage studios in Macedonia. You can work on your own or with a team.",
           },
           {
-            question: "Is the Free plan really free?",
+            question: "What do I need to get started?",
             answer:
-              "Yes. The Free plan has no time limit, does not require a credit card, and has no monthly limit on the number of appointments.",
+              "Add your services, prices, team, and working hours. Then publish your OPUS website and share the link. You do not need an existing website.",
           },
           {
-            question: "What is included for free?",
+            question: "Can I keep taking bookings by phone and Instagram?",
             answer:
-              "You get unlimited appointments, services, and clients, a team calendar, working hours, overlap protection, your own OPUS website, email confirmations and reminders, and a gallery with up to 3 photos.",
+              "Yes. Add your existing appointments and phone bookings to the calendar. Online bookings arrive in the same schedule, and clients only see available times.",
           },
           {
-            question: "Can a client book without creating an account?",
+            question: "Do clients need an account or an app?",
             answer:
-              "Yes. The client opens your link, chooses a service, staff member, and available time, verifies their email, and completes the booking without creating a user account.",
+              "Neither. Clients open your link, choose a service and available time, then enter the required contact details to confirm their booking.",
           },
         ],
       },
       {
-        title: "OPUS Pro and automation",
+        title: "Your Free plan",
         items: [
           {
-            question: "What do I get with OPUS Pro?",
+            question: "Does the Free plan expire?",
             answer:
-              "OPUS Pro adds a 24/7 AI receptionist, an open-slot optimizer, automatic refill after a cancellation, demand-based smart pricing, advanced email, more user accounts, and more detailed analytics.",
+              "No. It is not a trial, does not require a credit card, and has no monthly appointment limit. Pro is optional when you want AI and additional automation.",
           },
           {
-            question: "How does the AI receptionist work?",
+            question: "How many people can use the Free plan?",
             answer:
-              "The AI receptionist answers questions about services, prices, and available times, helps with booking, and hands the conversation to a team member when a request is unclear or needs a human decision.",
-          },
-          {
-            question: "How does OPUS fill cancelled slots?",
-            answer:
-              "The optimizer finds the new gap, identifies suitable clients who agreed to receive offers, and prepares a message. You review and approve it before it is sent.",
+              "One active owner and up to 3 active staff members — 4 people in total. Your calendar, services, clients, working hours, OPUS website, and a gallery with up to 3 photos are included.",
           },
           {
             question: "What happens if I cancel Pro?",
             answer:
-              "Your account returns to the Free plan. Appointments, clients, services, and history remain saved; only Pro automation and advanced features are turned off.",
+              "Your account returns to the Free plan. Appointments, clients, services, and history stay saved. Pro automation is switched off and the Free plan limits apply again.",
           },
         ],
       },
       {
-        title: "Email and notifications",
+        title: "AI and communication",
         items: [
           {
-            question: "Which emails does OPUS send?",
+            question: "What does the AI receptionist take care of?",
             answer:
-              "OPUS sends sign-in and email verification codes, booking confirmations, rescheduling or cancellation notices, and appointment reminders. Pro enables additional reminders and team notifications.",
+              "With OPUS Pro, AI answers questions about services and prices, checks available times, and helps with bookings through web chat, Instagram, and WhatsApp. Your team takes over when a conversation needs a human decision.",
           },
           {
-            question: "Can I choose the reminders?",
+            question: "How does OPUS help when someone cancels?",
             answer:
-              "Yes. On the Pro plan, you choose when clients and team members receive reminders and which team members receive notifications about new appointments.",
+              "The optimizer spots the opening and suggests suitable clients who agreed to receive offers. You review and approve the prepared message before it is sent.",
+          },
+          {
+            question: "Do clients receive confirmations and reminders?",
+            answer:
+              "Yes. Free includes email confirmations, notices about changes, and appointment reminders. Pro adds more control over reminders and team notifications.",
           },
         ],
       },
@@ -867,8 +868,8 @@ const enMessages = {
     headingAccent: "online bookings",
     headingEnd: "today",
     description:
-      "Set up your services, share your website, and start taking bookings. 100% free, no credit card required.",
-    button: "Get started for free",
+      "Your services. Your booking link. Your next client. Start with the Free plan and make room for the work you love.",
+    button: "Start for free",
     alternateHeading: "Free for daily operations.",
     alternateHeadingAccent: "Pro when you want more.",
     alternateDescription:

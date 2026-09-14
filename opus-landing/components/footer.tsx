@@ -7,6 +7,7 @@ import { LanguageToggle } from "./language-toggle";
 import { ModeToggle } from "./mode-toggle";
 import { Logo } from "./logo";
 import { useI18n } from "./i18n-provider";
+import { siteLinks } from "@/lib/site-links";
 
 export function Footer() {
   const { messages } = useI18n();
@@ -53,11 +54,11 @@ export function Footer() {
   const signups = [
     {
       title: messages.nav.startFree,
-      href: "https://studio.opus.mk",
+      href: siteLinks.signup,
     },
     {
       title: messages.footer.signIn,
-      href: "https://studio.opus.mk",
+      href: siteLinks.login,
     },
   ];
 

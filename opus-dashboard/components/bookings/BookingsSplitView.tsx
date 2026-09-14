@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingsTimeline } from "./BookingsTimeline";
-import { BookingSidebar } from "./BookingSidebar";
+import { BookingDetailsPanel } from "./BookingDetailsPanel";
 import { BookingsList } from "./BookingsList";
 import { cn } from "@/lib/utils";
 import { Price } from "@/components/ui/price";
@@ -177,17 +177,17 @@ export function BookingsSplitView({
   );
 
   return (
-    <div className="flex flex-col h-full gap-4">
+    <div className="flex h-full min-w-0 flex-col gap-4">
       {/* Header / Live View */}
-      <div className="flex flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <h1 className="text-3xl font-display font-semibold tracking-tight text-foreground">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          <h1 className="text-2xl font-display font-semibold tracking-tight text-foreground sm:text-3xl">
             {t("Bookings", "Термини")}
           </h1>
 
-          <div className="hidden sm:flex h-8 w-[1px] bg-border mx-1"></div>
+          <div className="hidden xl:flex h-8 w-[1px] bg-border mx-1"></div>
 
-          <div className="hidden sm:flex items-center gap-3 text-sm">
+          <div className="hidden xl:flex items-center gap-3 text-sm">
             <div className="flex items-baseline gap-1.5">
               <span className="font-semibold text-foreground tracking-tight">
                 {totalBookingsCount}
@@ -228,17 +228,17 @@ export function BookingsSplitView({
       </div>
 
       {/* Split View Container */}
-      <div className="flex-1 flex flex-col md:flex-row gap-6 overflow-visible min-h-[600px] relative">
+      <div className="relative flex min-h-[600px] min-w-0 flex-1 flex-col gap-6 lg:flex-row">
         {/* 70% Left: Schedule Main Area */}
-        <div className="flex-1 overflow-hidden bg-card rounded-xl flex flex-col">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
           {/* Action & Filter Bar */}
           <div className="p-3 border-b border-border/40 flex flex-wrap justify-between items-center gap-3">
             {/* Date Nav */}
-            <div className="flex items-center gap-2 rounded-md p-1 bg-background">
+            <div className="flex w-full items-center justify-between gap-2 rounded-md bg-background p-1 sm:w-auto">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 border-none rounded-l-sm rounded-r-[2px]"
+                className="size-9 border-none rounded-l-sm rounded-r-[2px] sm:size-7"
                 onClick={() => setCurrentDate(subDays(currentDate, 1))}
                 aria-label={t("Previous day", "Претходен ден")}
               >
@@ -250,7 +250,7 @@ export function BookingsSplitView({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 border-none rounded-l-none rounded-r-sm"
+                className="size-9 border-none rounded-l-none rounded-r-sm sm:size-7"
                 onClick={() => setCurrentDate(addDays(currentDate, 1))}
                 aria-label={t("Next day", "Следен ден")}
               >
@@ -259,7 +259,7 @@ export function BookingsSplitView({
             </div>
 
             {/* View Filters & Toggles */}
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:gap-3">
               {/* Status Filter Tabs */}
               <div className="hidden lg:flex items-center rounded-md bg-background p-1 overflow-hidden text-xs font-medium">
                 <button
@@ -326,7 +326,7 @@ export function BookingsSplitView({
                   variant={viewMode === "list" ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "h-7 px-2.5",
+                    "h-9 px-2.5 sm:h-7",
                     viewMode === "list"
                       ? "shadow-sm"
                       : "opacity-70 hover:opacity-100",
@@ -340,7 +340,7 @@ export function BookingsSplitView({
                   variant={viewMode === "calendar" ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "h-7 px-2.5",
+                    "h-9 px-2.5 sm:h-7",
                     viewMode === "calendar"
                       ? "shadow-sm"
                       : "opacity-70 hover:opacity-100",
@@ -408,19 +408,15 @@ export function BookingsSplitView({
           </div>
         </div>
 
-        {/* 30% Right: Sidebar */}
-        <div className="w-full md:w-[320px] lg:w-[380px] shrink-0 bg-card rounded-xl flex flex-col">
-          <BookingSidebar
-            key={selectedBookingId ?? "empty"}
-            booking={selectedBooking ?? null}
-            onClose={() => setSelectedBookingId(null)}
-            onReschedule={handleReschedule}
-            onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-            onComplete={(bookingId) => runBookingAction("complete", bookingId)}
-            onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
-            isUpdating={pendingAction !== null}
-          />
-        </div>
+        <BookingDetailsPanel
+          booking={selectedBooking ?? null}
+          onClose={() => setSelectedBookingId(null)}
+          onReschedule={handleReschedule}
+          onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+          onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+          onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+          isUpdating={pendingAction !== null}
+        />
       </div>
     </div>
   );

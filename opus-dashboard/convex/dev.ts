@@ -572,12 +572,7 @@ export const seedBarberDavidBookings = mutation({
       let service = await ctx.db
         .query("services")
         .withIndex("by_org", (q) => q.eq("orgId", orgId))
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("isDeleted"), false),
-            q.eq(q.field("name"), def.name),
-          ),
-        )
+        .filter((q) => q.eq(q.field("name"), def.name))
         .first();
 
       if (!service) {
@@ -605,6 +600,8 @@ export const seedBarberDavidBookings = mutation({
           priceMinorUnits: def.priceMinorUnits,
           staffIds: Array.from(new Set([...service.staffIds, ...def.staffIds])),
           isActive: true,
+          isDeleted: false,
+          deletedAt: undefined,
           updatedAt: now,
         });
       }
@@ -768,12 +765,7 @@ export const seedBarberDavidBookings = mutation({
       let customer = await ctx.db
         .query("customers")
         .withIndex("by_org", (q) => q.eq("orgId", orgId))
-        .filter((q) =>
-          q.and(
-            q.eq(q.field("isDeleted"), false),
-            q.eq(q.field("name"), def.name),
-          ),
-        )
+        .filter((q) => q.eq(q.field("name"), def.name))
         .first();
 
       if (!customer) {
@@ -814,6 +806,8 @@ export const seedBarberDavidBookings = mutation({
           totalVisits: def.totalVisits,
           totalSpendMinorUnits: def.totalSpendMinorUnits,
           preferredStaffId: def.preferredStaffId,
+          isDeleted: false,
+          deletedAt: undefined,
           updatedAt: now,
         });
       }
@@ -834,9 +828,9 @@ export const seedBarberDavidBookings = mutation({
 
     // 8. Generate appointments for TODAY
     const baseDate = args.targetDateMs ? new Date(args.targetDateMs) : new Date();
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth();
-    const day = baseDate.getDate();
+    const year = baseDate.getUTCFullYear();
+    const month = baseDate.getUTCMonth();
+    const day = baseDate.getUTCDate();
 
     const todayAppointments = [
       // --- David's Schedule ---
@@ -1039,9 +1033,9 @@ export const seedBarberDavidBookings = mutation({
 
     // 9. Generate appointments for TOMORROW (Day + 1)
     const tomorrow = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
-    const tYear = tomorrow.getFullYear();
-    const tMonth = tomorrow.getMonth();
-    const tDay = tomorrow.getDate();
+    const tYear = tomorrow.getUTCFullYear();
+    const tMonth = tomorrow.getUTCMonth();
+    const tDay = tomorrow.getUTCDate();
 
     const tomorrowAppointments = [
       // David

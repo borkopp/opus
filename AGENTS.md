@@ -31,15 +31,24 @@ Canonical positioning: **OPUS helps small beauty studios manage appointments and
 
 ## Monorepo Structure
 
-Three independent Next.js applications sharing a single Convex backend:
+Independent Next.js applications, with the studio and owner apps sharing Convex:
 
 | App               | Purpose                                                                       | Dev port                       |
 | ----------------- | ----------------------------------------------------------------------------- | ------------------------------ |
 | `opus-dashboard/` | Beauty-business dashboard plus automatic tenant websites and guest booking    | 3000 (frontend), 3210 (Convex) |
 | `opus-mk/`        | Dormant beauty marketplace retained for future work; do not modify by default | 3001                           |
 | `opus-landing/`   | Beauty-focused `opus.mk` marketing site — no backend, no auth                 | 3000                           |
+| `opus-owner/`     | Private platform-owner overview at `admin.opus.mk`; read-only analytics       | 3002                           |
 
 `opus-mk/convex` is a symlink to `../opus-dashboard/convex`. Both apps share the same Convex deployment.
+
+`opus-owner/` has its own build and deployment and shares only two small contracts
+under `shared/`. Its analytics functions live in the existing Convex backend and
+require the single verified platform-owner email on every read. See
+[`docs/OWNER_OVERVIEW.md`](docs/OWNER_OVERVIEW.md) before changing owner access,
+metric definitions or deployment. The explicitly authorized owner report may
+enumerate organization roots and global storage metadata; tenant-owned tables
+still require their named `orgId` index. This is not a general admin-role bypass.
 
 ---
 

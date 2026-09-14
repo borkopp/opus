@@ -27,6 +27,10 @@ The active web surfaces are:
 - `opus-dashboard/` for business onboarding, services, staff, availability, customers, calendar, appointment management, automatic `{slug}.opus.mk` studio websites, and guest booking;
 - `opus-landing/` for the truthful beauty-focused `opus.mk` marketing site.
 
+The separate `opus-owner/` app is an internal, read-only platform overview at
+`admin.opus.mk`, accessible only to the OPUS owner's verified email. It does not
+add a customer vertical or a business-facing feature. See [`OWNER_OVERVIEW.md`](OWNER_OVERVIEW.md).
+
 `opus-mk/` is retained as a dormant marketplace package, but marketplace discovery and marketplace publication are paused. Do not delete its schemas or reusable backend foundations, and do not expose or expand the marketplace unless the user explicitly resumes that work.
 
 The enabled-vertical boundaries live in `opus-dashboard/lib/product-scope.ts`, `opus-dashboard/convex/lib/productScope.ts`, and `opus-mk/lib/product-scope.ts`. Deferred dashboard capability flags also live in `opus-dashboard/lib/product-scope.ts`. Do not casually bypass them with a new local condition.

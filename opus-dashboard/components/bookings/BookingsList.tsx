@@ -86,29 +86,31 @@ export function BookingsList({
         const isAiBooked = booking.source?.startsWith("ai_");
 
         return (
-          <div
+          <button
             key={booking._id}
+            type="button"
             onClick={() => onSelectBooking(booking._id)}
+            aria-pressed={isSelected}
             className={cn(
-              "group flex items-center justify-between px-3 py-3 rounded-lg text-sm cursor-pointer hover:bg-muted/30 hover:border-border hover:shadow-m transition-all",
+              "group flex w-full min-w-0 items-center justify-between rounded-lg px-3 py-3 text-left text-sm cursor-pointer hover:bg-muted/30 hover:border-border hover:shadow-m transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               isSelected
                 ? "bg-muted/30 border-border/50 shadow-md ring-1 ring-primary/20"
                 : "bg-card border-border/50 hover:border-primary/40 ",
             )}
           >
-            <div className="flex items-center gap-4 flex-1">
+            <div className="grid min-w-0 flex-1 grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-3 gap-y-1 sm:flex sm:gap-4">
               {/* 10:00 */}
               <div className="w-12 text-muted-foreground font-semibold text-[13px] text-right shrink-0">
                 {bookingTimeLabel(booking.startAt)}
               </div>
 
               {/* Name */}
-              <div className="w-36 font-semibold text-foreground truncate shrink-0">
+              <div className="min-w-0 truncate font-semibold text-foreground sm:w-36 sm:shrink-0">
                 {booking.customer?.name || t("Unknown", "Непознат")}
               </div>
 
               {/* Service · Duration · Staff */}
-              <div className="flex-1 flex items-center gap-2 text-muted-foreground text-[13px] truncate">
+              <div className="col-start-2 flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted-foreground sm:flex-nowrap sm:truncate">
                 <span
                   className={cn(
                     "truncate font-medium",
@@ -130,8 +132,8 @@ export function BookingsList({
             </div>
 
             {/* Right Actions: Price and status */}
-            <div className="flex items-center gap-4 shrink-0 justify-end ml-4">
-              <div className="font-semibold text-foreground w-12 text-right">
+            <div className="ml-3 flex shrink-0 flex-col items-end justify-end gap-2 sm:ml-4 sm:flex-row sm:items-center sm:gap-4">
+              <div className="text-right font-semibold text-foreground sm:w-12">
                 <Price
                   amount={booking.priceMinorUnits || 0}
                   showDecimals={false}
@@ -142,7 +144,7 @@ export function BookingsList({
                 {getStatusIndicator(booking.status, isAiBooked, isSelected)}
               </div>
             </div>
-          </div>
+          </button>
         );
       })}
     </div>

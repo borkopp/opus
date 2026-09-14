@@ -13,8 +13,8 @@ export default async function Login({
   return (
     <AuthLayout>
       <EmailOtpForm
-        title="Welcome back"
-        description="Enter your studio email. We’ll send a six-digit code."
+        title="Welcome to your studio"
+        description="Log in or create an account to manage your beauty studio."
         callbackUrl={callbackUrl}
       />
     </AuthLayout>

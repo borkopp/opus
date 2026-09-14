@@ -3,6 +3,7 @@
 import { createContext, useContext } from "react";
 import type { Locale } from "@/lib/i18n/locale";
 import type { Messages } from "@/lib/i18n/messages";
+import { MotionConfig } from "motion/react";
 
 interface I18nContextValue {
   locale: Locale;
@@ -18,7 +19,7 @@ export function I18nProvider({
 }: I18nContextValue & { children: React.ReactNode }) {
   return (
     <I18nContext.Provider value={{ locale, messages }}>
-      {children}
+      <MotionConfig reducedMotion="user">{children}</MotionConfig>
     </I18nContext.Provider>
   );
 }

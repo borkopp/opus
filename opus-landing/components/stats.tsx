@@ -7,6 +7,8 @@ import { Heading } from "./heading";
 import { Subheading } from "./subheading";
 import { Container } from "./container";
 import { useI18n } from "./i18n-provider";
+import { landingCopy } from "@/lib/landing-copy";
+import { Reveal } from "./ui/reveal";
 
 interface Stat {
   value: number | string;
@@ -39,13 +41,51 @@ const css = `
 }
 `;
 
-const Stats = () => {
-  const { messages } = useI18n();
+const Stats = ({ compact = false }: { compact?: boolean }) => {
+  const { locale, messages } = useI18n();
   const copy = messages.stats;
   const stats: Stat[] = copy.items.map((item, index) => ({
     ...item,
     ...STAT_VALUES[index],
   }));
+
+  if (compact) {
+    const summary = landingCopy[locale].freeSummary;
+    return (
+      <Container
+        as="section"
+        aria-label={summary.label}
+        className="pt-12 md:pt-20"
+      >
+        <div className="border-border border-y py-8 md:py-10">
+          <p className="text-muted-foreground mb-7 text-center text-xs">
+            {summary.label}
+          </p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
+            {summary.items.map((item, index) => (
+              <Reveal
+                key={item.label}
+                delay={index * 0.05}
+                className="text-center"
+              >
+                <p className="flex items-baseline justify-center gap-2">
+                  <span className="text-4xl font-medium tracking-tight">
+                    {item.value}
+                  </span>
+                  <span className="text-brand-primary text-sm">
+                    {item.suffix}
+                  </span>
+                </p>
+                <p className="text-muted-foreground mt-2 text-xs">
+                  {item.label}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <section className="relative overflow-hidden py-20 md:py-32">

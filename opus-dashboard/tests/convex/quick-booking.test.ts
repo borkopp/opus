@@ -43,7 +43,7 @@ describe("manual quick booking", () => {
   test("creates a multi-service booking for a name-only customer and rejects overlap", async () => {
     const owner = t.withIdentity(ownerIdentity);
     await owner.mutation(api.users.ensureUser);
-    const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
       name: "Quick Booking Studio",
       category: "beauty_salon",
     });

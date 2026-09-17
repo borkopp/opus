@@ -1,20 +1,24 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  images: {
-    remotePatterns: [
+  // Consent utilities are shared with the dashboard from the monorepo root.
+  outputFileTracingRoot: path.resolve(__dirname, ".."),
+  async redirects() {
+    return [
+      { source: "/pricing", destination: "/#pricing", permanent: true },
+      { source: "/hero-original", destination: "/", permanent: true },
       {
-        protocol: "https",
-        hostname: "*",
+        source: "/login",
+        destination: "https://studio.opus.mk/login",
+        permanent: true,
       },
       {
-        protocol: "http",
-        hostname: "*",
+        source: "/signup",
+        destination: "https://studio.opus.mk/signup",
+        permanent: true,
       },
-    ],
-    qualities: [100, 90, 75],
+    ];
   },
 };
-
 export default nextConfig;

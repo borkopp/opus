@@ -83,7 +83,7 @@ const invalidSettingsCases: Array<[string, Partial<SettingsInput>, string]> = [
 async function createOwner(t: TestBackend) {
   const owner = t.withIdentity(ownerIdentity);
   await owner.mutation(api.users.ensureUser);
-  const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+  const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
     name: "Hardening Studio",
     category: "beauty_salon",
   });

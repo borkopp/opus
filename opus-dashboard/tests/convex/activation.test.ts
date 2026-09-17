@@ -114,7 +114,7 @@ async function createVerifiedGuestBooking(
 
 async function completeOperationalSetup(t: TestBackend) {
   const owner = await createOwner(t);
-  const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+  const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
     name: "Atelier One",
     category: "hair_salon",
   });
@@ -179,7 +179,7 @@ describe("beauty activation engine", () => {
     ).rejects.toThrow("Unauthenticated");
 
     const firstOwner = await createOwner(t, "owner-1");
-    const firstOrgId = await firstOwner.mutation(
+    const { orgId: firstOrgId } = await firstOwner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Tenant One", category: "barbershop" },
     );
@@ -382,18 +382,20 @@ describe("beauty activation engine", () => {
 
   test("creates one idempotent business and assigns unique slugs", async () => {
     const owner = await createOwner(t);
-    const firstOrgId = await owner.mutation(
+    const { orgId: firstOrgId, created: firstCreated } = await owner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Studio North", category: "beauty_salon" },
     );
-    const repeatedOrgId = await owner.mutation(
+    const { orgId: repeatedOrgId, created: repeatedCreated } = await owner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Studio North", category: "beauty_salon" },
     );
     expect(repeatedOrgId).toBe(firstOrgId);
+    expect(firstCreated).toBe(true);
+    expect(repeatedCreated).toBe(false);
 
     const secondOwner = await createOwner(t, "owner-2");
-    const secondOrgId = await secondOwner.mutation(
+    const { orgId: secondOrgId } = await secondOwner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Studio North", category: "beauty_salon" },
     );
@@ -412,13 +414,13 @@ describe("beauty activation engine", () => {
 
   test("generates tenant-safe slugs for reserved names and Macedonian text", async () => {
     const reservedOwner = await createOwner(t);
-    const reservedOrgId = await reservedOwner.mutation(
+    const { orgId: reservedOrgId } = await reservedOwner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Studio", category: "beauty_salon" },
     );
 
     const macedonianOwner = await createOwner(t, "owner-macedonian");
-    const macedonianOrgId = await macedonianOwner.mutation(
+    const { orgId: macedonianOrgId } = await macedonianOwner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Студио Љубов", category: "beauty_salon" },
     );
@@ -435,7 +437,7 @@ describe("beauty activation engine", () => {
 
   test("persists confirmed location and maps ISO hours to provider availability", async () => {
     const owner = await createOwner(t);
-    const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
       name: "Map Studio",
       category: "nail_salon",
     });
@@ -481,7 +483,7 @@ describe("beauty activation engine", () => {
 
   test("rejects incomplete, foreign, oversized, and invalid locations before writing", async () => {
     const owner = await createOwner(t);
-    const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
       name: "Hardened Location Studio",
       category: "beauty_salon",
     });
@@ -577,7 +579,7 @@ describe("beauty activation engine", () => {
 
   test("publishes the marketplace only when ready and keeps it independent from website readiness", async () => {
     const owner = await createOwner(t);
-    const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
       name: "Blocked Studio",
       category: "spa",
     });
@@ -1227,7 +1229,7 @@ describe("beauty activation engine", () => {
     await owner.mutation(api.website.publish, { orgId });
 
     const otherOwner = await createOwner(t, "owner-foreign-staff");
-    const otherOrgId = await otherOwner.mutation(
+    const { orgId: otherOrgId } = await otherOwner.mutation(
       api.activation.startBeautyBusiness,
       { name: "Other Tenant", category: "beauty_salon" },
     );

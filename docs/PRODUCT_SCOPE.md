@@ -83,6 +83,39 @@ Reliability of this path takes priority over optional features:
 
 P2 code may remain as a dormant foundation. It must not be advertised as operational or expanded without explicit instruction.
 
+### Authorized manual opening recovery
+
+Manual opening recovery was explicitly authorized on September 16, 2026. The
+existing `/gap-optimizer` page now supports paid beauty studios with a published
+website. It reconciles bookable openings over the next seven days, ranks concrete
+service offers using completed appointments, and requires owner or manager
+approval for every email. Calendar changes can refresh suggestions; they cannot
+approve or send an offer automatically.
+
+Clients must have email-offer permission, and acceptance uses the studio website's
+email verification and atomic booking checks. Queueing, provider acceptance,
+delivery, expiry, and attributed bookings are distinct outcomes. No AI model is
+required for this workflow. Waitlists, learned acceptance probabilities, and
+autonomous campaigns remain deferred. The legacy `automatedGapOptimizer` flag
+names this manual capability; it does not authorize campaigns.
+
+See [GAP_RECOVERY.md](GAP_RECOVERY.md) for configuration, limits, and validation.
+
+### Authorized business analyst
+
+The read-only business analyst was explicitly authorized on September 16, 2026.
+It lives in the beauty dashboard at `/beauty/assistant` and is restricted to
+paid-plan owners and managers. It answers questions using tenant-scoped booking
+analytics, attaches inspectable reports, and proposes experiments. It cannot
+change appointments, contact customers, launch campaigns, or infer profit from
+appointment prices. This authorization does not enable the AI front desk or the
+dormant marketplace.
+
+New analyses require the Convex `BUSINESS_ANALYST_ENABLED=true` flag and a
+`BUSINESS_ANALYST_OPENAI_API_KEY`. Availability must be verified before marketing it as live.
+See [BUSINESS_ASSISTANT.md](BUSINESS_ASSISTANT.md) for metric definitions,
+allowances, configuration, and rollout checks.
+
 ## Hospitality freeze
 
 Hospitality was explored during earlier product directions and remains in parts of the schema and backend. It is postponed, not deleted. Preserve historical data and reusable foundations, but do not expose restaurants, cafes, table reservations, floor plans, events, or QR menus in active UI, routes, filters, demo data, metadata, or marketing.

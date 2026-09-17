@@ -49,6 +49,8 @@ type ShellOptions = {
   studioName: string;
   content: string;
   finePrint?: string;
+  footerLabel?: string;
+  language?: "mk" | "en";
 };
 
 const EMAIL_COLORS = {
@@ -137,7 +139,7 @@ function formatPrice(
 
 function renderShell(options: ShellOptions) {
   return `<!doctype html>
-<html lang="en">
+<html lang="${options.language ?? "en"}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -182,7 +184,7 @@ function renderShell(options: ShellOptions) {
             <tr>
               <td class="email-pad" style="padding:22px 42px 28px;border-top:1px solid ${EMAIL_COLORS.line};background:#fbfbf9;">
                 <p style="margin:0 0 6px;font-size:12px;line-height:18px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.finePrint ?? `Sent securely by OPUS for ${options.studioName}.`)}</p>
-                <p style="margin:0;font-size:11px;line-height:17px;color:#85877f;">Transactional appointment email · No marketing subscription</p>
+                <p style="margin:0;font-size:11px;line-height:17px;color:#85877f;">${escapeHtml(options.footerLabel ?? "Transactional appointment email · No marketing subscription")}</p>
               </td>
             </tr>
           </table>
@@ -629,5 +631,52 @@ export function renderStaffInviteEmail({
       content: button(dashboardUrl, "Open OPUS Studio", true),
     }),
     text: `${studioName} invited you to its OPUS workspace. Sign in with this email address at ${dashboardUrl}.`,
+  };
+}
+
+export function renderGapOfferEmail(
+  data: AppointmentEmailData & {
+    draftedMessage: string;
+    bookingLink: string;
+    expiresAt: number;
+  },
+): RenderedEmail {
+  const mk = isMacedonian(data.locale);
+  const title = mk ? "Слободен термин за вас" : "An opening for you";
+  const cta = mk ? "Прегледај ја понудата" : "View your offer";
+  const expiry = new Intl.DateTimeFormat(mk ? "mk-MK" : "en-GB", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: data.timezone || "Europe/Skopje",
+  }).format(data.expiresAt);
+  const notice = mk
+    ? `Понудата важи до ${expiry}, додека терминот е слободен. Терминот се зачувува откако ќе го потврдите со код од е-пошта.`
+    : `This offer expires ${expiry}, subject to availability. Your appointment is saved after you confirm with an email code.`;
+  const preferences = mk
+    ? "Одбијте ја понудата или исклучете ги овие пораки"
+    : "Decline this offer or stop opening emails";
+  return {
+    subject: cleanSubject(`${title} · ${data.studioName}`),
+    html: renderShell({
+      studioName: data.studioName,
+      title,
+      language: mk ? "mk" : "en",
+      eyebrow: mk ? "ПОНУДА ЗА ТЕРМИН" : "APPOINTMENT OFFER",
+      preheader: data.draftedMessage,
+      intro: data.draftedMessage,
+      content: `${appointmentCard(data)}<p style="font-size:14px;line-height:22px;">${escapeHtml(notice)}</p>
+        <p><a class="action" href="${escapeHtml(data.bookingLink)}" style="display:inline-block;background:${EMAIL_COLORS.brand};color:${EMAIL_COLORS.ink};padding:14px 22px;border-radius:10px;text-decoration:none;font-weight:700;">${escapeHtml(cta)}</a></p>
+        <p style="font-size:12px;"><a href="${escapeHtml(data.bookingLink)}">${escapeHtml(preferences)}</a></p>`,
+      finePrint: mk
+        ? "Ја добивате оваа порака затоа што дозволивте понуди за слободни термини од ова студио."
+        : "You received this email because you allowed appointment-opening offers from this studio.",
+      footerLabel: mk
+        ? "Понуда од студиото преку OPUS"
+        : "Studio opening offer sent through OPUS",
+    }),
+    text: `${data.draftedMessage}\n\n${notice}\n\n${cta}: ${data.bookingLink}\n\n${preferences}: ${data.bookingLink}`,
   };
 }

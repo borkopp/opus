@@ -1,3 +1,4 @@
+import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
 import { v, ConvexError } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
@@ -168,6 +169,7 @@ export const createService = mutation({
       },
     );
 
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return serviceId;
   },
 });
@@ -312,6 +314,7 @@ export const updateService = mutation({
       },
     );
 
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return args.serviceId;
   },
 });
@@ -369,6 +372,7 @@ export const deactivateService = mutation({
       },
     );
 
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return null;
   },
 });

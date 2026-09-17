@@ -3,11 +3,8 @@ import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
-import {
-  Commissioner,
-  Manrope,
-  IBM_Plex_Mono,
-} from "next/font/google";
+import { CookieConsent } from "@/components/privacy/CookieConsent";
+import { Commissioner, Manrope, IBM_Plex_Mono } from "next/font/google";
 
 const commissioner = Commissioner({
   subsets: ["latin", "cyrillic"],
@@ -28,6 +25,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  referrer: "strict-origin",
   title: {
     default: "OPUS",
     template: "%s | OPUS",
@@ -57,6 +55,7 @@ export default function RootLayout({
           <ConvexClientProvider>
             {children}
             <Toaster richColors position="bottom-right" />
+            <CookieConsent />
           </ConvexClientProvider>
         </ThemeProvider>
       </body>

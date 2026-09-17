@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OPUS landing page
 
-## Getting Started
+The approved blue OPUS marketing site, ported into the monorepo as a Next.js application. Includes the illustrated feature grid, studio carousel, booking demo, AI demo, pricing, generated onboarding art, and panoramic logo CTA.
 
-First, run the development server:
+## Local development
 
-```bash
+```sh
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The landing page runs at http://localhost:3001, alongside the dashboard at port 3000. Webpack is used for this independent app inside the monorepo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```sh
+npm run build
+npm start
+```
 
-## Learn More
+## Vercel and GitHub
 
-To learn more about Next.js, take a look at the following resources:
+- Existing Vercel project: `opus-landing`, team `borko-projects`.
+- Git repository: `borkopp/opus`.
+- Root directory: `opus-landing`.
+- Framework: Next.js. Node.js: 24.x.
+- Install: `npm ci`. Build: `npm run build`. Output: Next.js default.
+- Production branch: `main`. Production domain: https://opus.mk.
+- Vercel Git deployments are enabled in `vercel.json`. Pushes to `main` trigger production; other branches produce previews through the existing Git integration.
+- Include files outside the root directory: enabled, because consent utilities live under `shared/analytics`.
+- This app uses native Vercel Git integration; no GitHub Actions deployment token is required.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+When committing the migration, include `opus-landing/` and the existing shared consent source under `shared/analytics/`. Those shared files were not yet tracked when this migration was prepared. Review the other monorepo changes independently.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+No push or deployment was performed during the migration.
 
-## Deploy on Vercel
+## Preserved behavior
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Privacy and terms retain their Macedonian and English document content. The contact form retains the existing Formspree endpoint. Analytics and marketing choices remain independently opt-in through the shared consent utilities, with a Cookie settings action in the footer. `NEXT_PUBLIC_META_PIXEL_ID` remains optional; an unset ID disables Meta Pixel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`/pricing` redirects to the new pricing section, `/hero-original` to the homepage, and `/login` and `/signup` to the real dashboard.
+
+## Editing
+
+- `app/page.tsx`: homepage markup.
+- `app/_styles/`: the approved visual design.
+- `components/landing/`: navigation, footer, and interactive demo/carousel behavior.
+- `public/assets/`: locally served generated brand artwork and the OPUS mark.
+- `lib/legal.ts`: retained legal content.

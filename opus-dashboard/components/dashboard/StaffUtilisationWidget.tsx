@@ -51,8 +51,8 @@ function StatCounter({
 interface StaffUtilisationItem {
   staffName: string;
   bookedMins: number;
-  availableMins: number;
-  utilisationPct: number;
+  availableMins: number | null;
+  utilisationPct: number | null;
 }
 
 interface StaffUtilisationProps {
@@ -68,11 +68,12 @@ export function StaffUtilisationWidget({
     0,
   );
   const totalAvailable = staffUtilisation.reduce(
-    (sum, s) => sum + s.availableMins,
+    (sum, s) => sum + (s.availableMins ?? 0),
     0,
   );
   const overallUtilisation =
-    totalAvailable > 0 ? (totalBooked / totalAvailable) * 100 : 0;
+    staffUtilisation.every(s => s.availableMins !== null) && totalAvailable > 0
+      ? (totalBooked / totalAvailable) * 100 : null;
 
   const containerVars = {
     hidden: { opacity: 0, scale: 0.98 },
@@ -167,14 +168,14 @@ export function StaffUtilisationWidget({
               <motion.path
                 initial={{ strokeDasharray: "0, 100" }}
                 animate={{
-                  strokeDasharray: `${Math.min(100, isNaN(overallUtilisation) ? 0 : overallUtilisation)}, 100`,
+                  strokeDasharray: `${Math.min(100, (overallUtilisation ?? 0))}, 100`,
                 }}
                 transition={{
                   duration: 2,
                   ease: [0.22, 1, 0.36, 1],
                   delay: 0.2,
                 }}
-                className={`stroke-current fill-none ${getUtilisationText(overallUtilisation)}`}
+                className={`stroke-current fill-none ${getUtilisationText(overallUtilisation ?? 0)}`}
                 style={{ strokeWidth: 3 }}
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 strokeLinecap="round"
@@ -182,11 +183,9 @@ export function StaffUtilisationWidget({
             </svg>
             <div className="absolute flex flex-col items-center">
               <span className="text-sm font-bold font-display leading-none">
-                <StatCounter
-                  value={isNaN(overallUtilisation) ? 0 : overallUtilisation}
-                  locale={locale}
-                />
-                <span className="ml-0.5">%</span>
+                {overallUtilisation === null ? "—" : <StatCounter
+                  value={overallUtilisation} locale={locale} suffix="%"
+                />}
               </span>
             </div>
           </div>
@@ -195,11 +194,12 @@ export function StaffUtilisationWidget({
               <span className="text-3xl">{t("Overall", "Вкупно")}</span>
             </span>
             <span className="text-sm text-muted-foreground font-medium mt-1">
-              {t("Shop Utilisation Today", "Искористеност на студиото денес")}
+              {t("This week through today", "Оваа недела до денес")}
             </span>
           </div>
         </motion.div>
 
+        {overallUtilisation === null && <p className="mb-4 text-xs text-muted-foreground">{t("Capacity is unavailable until working hours are recorded for the full period.", "Зафатеноста е достапна кога работното време е евидентирано за целиот период.")}</p>}
         <div className="flex-1 flex flex-col gap-4 text-sm font-semibold">
           {staffUtilisation.length === 0 ? (
             <span className="text-sm text-muted-foreground text-center py-4">
@@ -212,7 +212,7 @@ export function StaffUtilisationWidget({
             staffUtilisation.slice(0, 4).map((staff, index) => {
               const pct = Math.min(
                 100,
-                isNaN(staff.utilisationPct) ? 0 : staff.utilisationPct,
+                staff.utilisationPct ?? 0,
               );
               return (
                 <motion.div
@@ -225,7 +225,7 @@ export function StaffUtilisationWidget({
                       {staff.staffName}
                     </span>
                     <span className="font-display text-foreground">
-                      <StatCounter value={pct} locale={locale} suffix="%" />
+                      {staff.utilisationPct === null ? "—" : <StatCounter value={staff.utilisationPct} locale={locale} suffix="%" />}
                     </span>
                   </div>
                   <div className="w-full h-3 rounded-full bg-secondary/50 shadow-[inset_0_1px_3px_rgba(0,0,0,0.15)] flex items-center p-0.5 overflow-hidden">

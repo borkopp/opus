@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Logo, LogoFree, LogoMark, LogoPro } from "@/components/Logo";
 import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
+import { CookiePreferencesMenuItem } from "@/components/account/CookiePreferencesMenuItem";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   DropdownMenu,
@@ -390,7 +391,7 @@ export function AppSidebar({
                       <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
                       <span>{t("Theme", "Тема")}</span>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-36">
+                    <DropdownMenuSubContent className="min-w-[11.5rem] p-1.5 rounded-xl">
                       <DropdownMenuRadioGroup
                         value={theme ?? "system"}
                         onValueChange={setTheme}
@@ -399,26 +400,27 @@ export function AppSidebar({
                           value="light"
                           className="cursor-pointer"
                         >
-                          <IconSun className="mr-2 h-4 w-4" />
+                          <IconSun className="size-4 shrink-0 text-muted-foreground" />
                           <span>{t("Light", "Светла")}</span>
                         </DropdownMenuRadioItem>
                         <DropdownMenuRadioItem
                           value="dark"
                           className="cursor-pointer"
                         >
-                          <IconMoon className="mr-2 h-4 w-4" />
+                          <IconMoon className="size-4 shrink-0 text-muted-foreground" />
                           <span>{t("Dark", "Темна")}</span>
                         </DropdownMenuRadioItem>
                         <DropdownMenuRadioItem
                           value="system"
                           className="cursor-pointer"
                         >
-                          <IconDeviceDesktop className="mr-2 h-4 w-4" />
+                          <IconDeviceDesktop className="size-4 shrink-0 text-muted-foreground" />
                           <span>{t("System", "Системска")}</span>
                         </DropdownMenuRadioItem>
                       </DropdownMenuRadioGroup>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
+                  <CookiePreferencesMenuItem />
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -511,7 +513,7 @@ export function AppSidebar({
                     <IconMoon className="mr-2 h-4 w-4 hidden dark:block" />
                     <span>{t("Theme", "Тема")}</span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent className="w-36">
+                  <DropdownMenuSubContent className="min-w-[11.5rem] p-1.5 rounded-xl">
                     <DropdownMenuRadioGroup
                       value={theme ?? "system"}
                       onValueChange={setTheme}
@@ -520,26 +522,27 @@ export function AppSidebar({
                         value="light"
                         className="cursor-pointer"
                       >
-                        <IconSun className="mr-2 h-4 w-4" />
+                        <IconSun className="size-4 shrink-0 text-muted-foreground" />
                         <span>{t("Light", "Светла")}</span>
                       </DropdownMenuRadioItem>
                       <DropdownMenuRadioItem
                         value="dark"
                         className="cursor-pointer"
                       >
-                        <IconMoon className="mr-2 h-4 w-4" />
+                        <IconMoon className="size-4 shrink-0 text-muted-foreground" />
                         <span>{t("Dark", "Темна")}</span>
                       </DropdownMenuRadioItem>
                       <DropdownMenuRadioItem
                         value="system"
                         className="cursor-pointer"
                       >
-                        <IconDeviceDesktop className="mr-2 h-4 w-4" />
+                        <IconDeviceDesktop className="size-4 shrink-0 text-muted-foreground" />
                         <span>{t("System", "Системска")}</span>
                       </DropdownMenuRadioItem>
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
+                <CookiePreferencesMenuItem />
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem

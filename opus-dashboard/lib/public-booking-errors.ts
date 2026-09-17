@@ -3,6 +3,14 @@ const GENERIC_BOOKING_ERROR =
 
 const PUBLIC_BOOKING_ERRORS = [
   [
+    "This opening offer is unavailable or belongs to another email address.",
+    "Користете ја е-поштата на која ја добивте понудата. Ако понудата истекла, изберете друг термин.",
+  ],
+  [
+    "This opening offer is no longer available. Choose another appointment.",
+    "Понудата повеќе не е достапна. Изберете друг слободен термин.",
+  ],
+  [
     "This business is not currently accepting bookings.",
     "Студиото моментално не прима онлајн резервации.",
   ],

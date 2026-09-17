@@ -72,9 +72,7 @@ export default function DashboardHome() {
 
   const staffUtilisation = useQuery(
     api.dashboard.getStaffUtilisation,
-    orgId
-      ? { orgId, startMs: startOfCurrentWeekMs, endMs: endOfCurrentWeekMs }
-      : "skip",
+    orgId ? {} : "skip",
   );
 
   const weeklyRevenueChart = useQuery(

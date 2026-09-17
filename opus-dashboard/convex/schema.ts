@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { answerValidator, depthValidator, reportValidator, scheduleValidator } from "./analyst/contracts";
 import {
   emailDeliveryStatusValidator,
   emailProviderAttemptValidator,
@@ -35,6 +36,45 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
+  analyst_conversations: defineTable({
+    orgId: v.id("orgs"), userId: v.id("users"), title: v.string(),
+    createdAt: v.number(), updatedAt: v.number(),
+    isDeleted: v.boolean(), deletedAt: v.optional(v.number()),
+  }).index("by_org", ["orgId"])
+    .index("by_org_user", ["orgId", "userId", "updatedAt"]),
+
+  analyst_turns: defineTable({
+    orgId: v.id("orgs"), userId: v.id("users"),
+    conversationId: v.id("analyst_conversations"), requestId: v.string(),
+    question: v.string(), language: v.union(v.literal("en"), v.literal("mk")),
+    depth: depthValidator,
+    status: v.union(v.literal("pending"), v.literal("running"), v.literal("completed"), v.literal("failed")),
+    model: v.string(), answer: v.optional(answerValidator), reports: v.array(reportValidator),
+    errorCode: v.optional(v.string()),
+    inputTokens: v.number(), outputTokens: v.number(), costMicroUsd: v.number(),
+    reservationMicroUsd: v.number(), usageMonthMs: v.number(),
+    createdAt: v.number(), expiresAt: v.number(), completedAt: v.optional(v.number()),
+    isDeleted: v.boolean(), deletedAt: v.optional(v.number()),
+  }).index("by_org", ["orgId"])
+    .index("by_org_conversation", ["orgId", "conversationId", "createdAt"])
+    .index("by_org_request", ["orgId", "userId", "requestId"])
+    .index("by_org_created", ["orgId", "createdAt"]),
+
+  analyst_usage: defineTable({
+    orgId: v.id("orgs"), monthStartMs: v.number(),
+    answers: v.number(), deepAnswers: v.number(),
+    spentMicroUsd: v.number(), reservedMicroUsd: v.number(), updatedAt: v.number(),
+  }).index("by_org", ["orgId"])
+    .index("by_org_month", ["orgId", "monthStartMs"]),
+
+  // Append-only schedule versions. Dates preceding the first version have
+  // unknown historical capacity, rather than today's hours applied backwards.
+  analyst_schedule_versions: defineTable({
+    orgId: v.id("orgs"), effectiveFrom: v.number(), recordedAt: v.number(),
+    complete: v.boolean(), schedule: scheduleValidator,
+  }).index("by_org", ["orgId"])
+    .index("by_org_effective", ["orgId", "effectiveFrom"]),
+
   // ─────────────────────────────────────────────────────
   // ORGS
   // One row per business. Root of all multi-tenancy.
@@ -338,6 +378,9 @@ export default defineSchema({
     // AI Gap Optimizer
     gapOptimizerEnabled: v.optional(v.boolean()),
     gapOptimizerMinGapMins: v.optional(v.number()),
+    gapRecoveryLastScanAt: v.optional(v.number()),
+    gapRecoveryLastScanDate: v.optional(v.string()),
+    gapRecoveryScanHistory: v.optional(v.array(v.object({ serviceDate: v.string(), scannedAt: v.number(), gapsFound: v.number(), eligibleCustomers: v.number() }))),
 
     updatedAt: v.number(),
   }).index("by_org", ["orgId"]),
@@ -557,6 +600,7 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_staff", ["staffId"])
     .index("by_staff_day", ["staffId", "dayOfWeek"])
+    .index("by_org_staff_day_active", ["orgId", "staffId", "dayOfWeek", "isDeleted", "isActive"])
     .index("by_staff_day_active", [
       "staffId",
       "dayOfWeek",
@@ -585,6 +629,7 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_staff_date", ["staffId", "date"])
     .index("by_staff_date_active", ["staffId", "date", "isDeleted"])
+    .index("by_org_staff_date_active", ["orgId", "staffId", "date", "isDeleted"])
     .index("by_org_active", ["orgId", "isDeleted"]),
 
   // ─────────────────────────────────────────────────────
@@ -634,6 +679,9 @@ export default defineSchema({
     ),
     aiConversationId: v.optional(v.id("ai_conversations")),
 
+    // Attributed only after the recipient verifies their email and claims an offer.
+    gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
+
     // Cancellation
     cancelledAt: v.optional(v.number()),
     cancelledBy: v.optional(v.string()),
@@ -653,6 +701,8 @@ export default defineSchema({
     .index("by_staff_start", ["staffId", "startAt"]) // slot conflict check
     .index("by_customer", ["customerId"])
     .index("by_org_start", ["orgId", "startAt"]) // daily schedule view
+    .index("by_org_customer_start", ["orgId", "customerId", "startAt"])
+    .index("by_org_staff_start", ["orgId", "staffId", "startAt"])
     .index("by_opus_user", ["opusUserId"]),
 
   // ─────────────────────────────────────────────────────
@@ -688,6 +738,11 @@ export default defineSchema({
     ),
     whatsappOptIn: v.boolean(),
     marketingOptIn: v.boolean(),
+    gapRecoveryEmailOptIn: v.optional(v.boolean()),
+    gapRecoveryConsentAt: v.optional(v.number()),
+    gapRecoveryConsentSource: v.optional(v.union(v.literal("guest_booking"), v.literal("staff_recorded"), v.literal("offer_unsubscribe"), v.literal("provider_feedback"))),
+    gapRecoveryUndeliverableEmail: v.optional(v.string()),
+    gapRecoveryLastContactAt: v.optional(v.number()),
 
     // GDPR
     gdprConsentAt: v.optional(v.number()),
@@ -842,6 +897,7 @@ export default defineSchema({
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
+    gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
 
     channel: v.union(
       v.literal("sms"),
@@ -997,10 +1053,13 @@ export default defineSchema({
       v.literal("expired"),
       v.literal("dismissed"),
     ),
-    detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation")),
+    detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation"), v.literal("calendar_change")),
     triggeredByBookingId: v.optional(v.id("bookings")),
     outreachSentAt: v.optional(v.number()),
     filledByBookingId: v.optional(v.id("bookings")),
+    recoveryVersion: v.optional(v.number()),
+    opportunityKey: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -1033,14 +1092,32 @@ export default defineSchema({
       v.literal("skipped"),
       v.literal("responded_yes"),
       v.literal("responded_no"),
+      v.literal("queued"),
+      v.literal("failed"),
+      v.literal("expired"),
+      v.literal("booked"),
     ),
     sentNotificationId: v.optional(v.id("notifications")),
+    serviceId: v.optional(v.id("services")),
+    offerStartAt: v.optional(v.number()),
+    offerEndAt: v.optional(v.number()),
+    priceMinorUnits: v.optional(v.number()),
+    currency: v.optional(v.string()),
+    reasons: v.optional(v.array(v.object({ en: v.string(), mk: v.string() }))),
+    offerTokenHash: v.optional(v.string()),
+    recipientEmail: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+    approvedAt: v.optional(v.number()),
+    bookedById: v.optional(v.id("bookings")),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_org", ["orgId"])
     .index("by_gap", ["gapSuggestionId"])
     .index("by_gap_rank", ["gapSuggestionId", "rank"])
+    .index("by_org_gap_rank", ["orgId", "gapSuggestionId", "rank"])
+    .index("by_org_token", ["orgId", "offerTokenHash"])
+    .index("by_org_customer", ["orgId", "customerId"])
     .index("by_customer", ["customerId"]),
 
   // ═══════════════════════════════════════════════════════

@@ -4,6 +4,11 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useRef } from "react";
 import posthog from "posthog-js";
 import { api } from "@/convex/_generated/api";
+import {
+  canCaptureAnalytics,
+  syncPostHogConsent,
+} from "@/lib/analytics-consent";
+import { subscribeConsent } from "../../shared/analytics/consent";
 
 export function SyncUser() {
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -21,6 +26,7 @@ export function SyncUser() {
       hasSyncedRef.current = false;
       if (identifiedUserIdRef.current) {
         posthog.reset();
+        syncPostHogConsent();
         identifiedUserIdRef.current = null;
       }
       return;
@@ -35,19 +41,26 @@ export function SyncUser() {
   }, [ensureUser, isAuthenticated, isLoading]);
 
   useEffect(() => {
-    const user = profile?.user;
-    if (!user || identifiedUserIdRef.current === user._id) return;
-
-    if (identifiedUserIdRef.current) {
-      posthog.reset();
-    }
-
-    posthog.identify(user._id, {
-      email: user.email,
-      name: user.name,
-      role: profile.role,
-    });
-    identifiedUserIdRef.current = user._id;
+    const identify = () => {
+      if (!canCaptureAnalytics()) {
+        identifiedUserIdRef.current = null;
+        return;
+      }
+      const user = profile?.user;
+      if (!user || identifiedUserIdRef.current === user._id) return;
+      if (identifiedUserIdRef.current) {
+        posthog.reset();
+        syncPostHogConsent();
+      }
+      posthog.identify(user._id, {
+        email: user.email,
+        name: user.name,
+        role: profile.role,
+      });
+      identifiedUserIdRef.current = user._id;
+    };
+    identify();
+    return subscribeConsent(identify);
   }, [profile]);
 
   return null;

@@ -17,6 +17,7 @@ import {
   Store,
 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { trackStudioRegistration } from "../../../../shared/analytics/meta-pixel";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -1036,7 +1037,16 @@ export function OnboardingWizard() {
   };
 
   const handleCategorySaved = async (category: BeautyCategory) => {
-    await startBusiness({ name: currentDraft.name, category });
+    const registration = await startBusiness({
+      name: currentDraft.name,
+      category,
+    });
+    if (registration.created) {
+      trackStudioRegistration(
+        process.env.NEXT_PUBLIC_META_PIXEL_ID,
+        registration.orgId,
+      );
+    }
     posthog.capture("onboarding_business_configured", { category });
     updateDraft({ category });
     goNext();

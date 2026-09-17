@@ -30,7 +30,7 @@ async function setupPublishedStudio(t: TestBackend) {
     name: "Ada Owner",
   });
   const ownerUserId = await owner.mutation(api.users.ensureUser);
-  const orgId = await owner.mutation(api.activation.startBeautyBusiness, {
+  const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
     name: "Atelier Email",
     category: "beauty_salon",
   });

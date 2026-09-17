@@ -104,7 +104,7 @@ export default function DashboardLayout({
           <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-background">
             <AppSidebar
               profile={profile}
-              primaryLinks={primaryLinks}
+              primaryLinks={primaryLinks.filter(link => profile.role !== "staff" || link.href !== "/beauty/assistant")}
               industryBase={industryBase}
             />
             <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full bg-background relative z-0 flex flex-col">

@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -25,6 +28,14 @@ interface BookingFormProps {
   site: PublicSite;
   initialServiceId?: string;
   initialStaffId?: string;
+  recoveryOffer?: {
+    token: string;
+    available: boolean;
+    startAt: number;
+    priceMinorUnits: number;
+    currency: string;
+    expiresAt: number;
+  };
 }
 
 type BookingResult = {
@@ -49,12 +60,15 @@ type PendingBooking = {
   customerPhone: string;
   customerEmail: string;
   customerNote?: string;
+  gapRecoveryEmailOptIn?: boolean;
+  recoveryToken?: string;
 };
 
 export function BookingForm({
   site,
   initialServiceId,
   initialStaffId,
+  recoveryOffer,
 }: BookingFormProps) {
   const router = useRouter();
   const initialService = site.services.find(
@@ -83,24 +97,31 @@ export function BookingForm({
     [site.bookingSettings.timezone],
   );
 
-  const [currentStep, setCurrentStep] = useState<BookingStep>(initialStep);
+  const [currentStep, setCurrentStep] = useState<BookingStep>(
+    recoveryOffer ? "details" : initialStep,
+  );
   const [selectedServiceId, setSelectedServiceId] = useState<
     string | undefined
   >(initialService?._id);
   const [selectedStaffId, setSelectedStaffId] = useState<
     string | "any" | undefined
   >(compatibleInitialStaff);
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(
+    recoveryOffer
+      ? new Date(recoveryOffer.startAt).toISOString().slice(0, 10)
+      : today,
+  );
   const [selectedSlotTimestamp, setSelectedSlotTimestamp] = useState<
     number | null
-  >(null);
+  >(recoveryOffer?.startAt ?? null);
   const [selectedSlotStaffId, setSelectedSlotStaffId] = useState<string | null>(
-    null,
+    recoveryOffer ? (compatibleInitialStaff ?? null) : null,
   );
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerNote, setCustomerNote] = useState("");
+  const [gapRecoveryEmailOptIn, setGapRecoveryEmailOptIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingBooking, setPendingBooking] = useState<PendingBooking | null>(
@@ -248,6 +269,7 @@ export function BookingForm({
       const challenge = await requestBookingEmailOtp({
         orgId: site._id,
         email: normalizedEmail,
+        recoveryToken: recoveryOffer?.token,
       });
 
       setPendingBooking({
@@ -260,6 +282,8 @@ export function BookingForm({
         customerPhone: normalizedPhone,
         customerEmail: normalizedEmail,
         customerNote: customerNote.trim() || undefined,
+        gapRecoveryEmailOptIn,
+        recoveryToken: recoveryOffer?.token,
       });
       setOtp("");
       scrollToFlowStart();
@@ -290,6 +314,8 @@ export function BookingForm({
         customerPhone: pendingBooking.customerPhone,
         customerEmail: pendingBooking.customerEmail,
         customerNote: pendingBooking.customerNote,
+        gapRecoveryEmailOptIn: pendingBooking.gapRecoveryEmailOptIn,
+        recoveryToken: pendingBooking.recoveryToken,
         challengeId: pendingBooking.challengeId,
         otp,
       });
@@ -319,6 +345,7 @@ export function BookingForm({
       const challenge = await requestBookingEmailOtp({
         orgId: pendingBooking.orgId,
         email: pendingBooking.customerEmail,
+        recoveryToken: pendingBooking.recoveryToken,
       });
       setPendingBooking((current) =>
         current ? { ...current, ...challenge } : current,
@@ -332,6 +359,10 @@ export function BookingForm({
   };
 
   const handleBookAnother = () => {
+    if (recoveryOffer) {
+      router.push("/book");
+      return;
+    }
     setBookingResult(null);
     setPendingBooking(null);
     setSelectedServiceId(undefined);
@@ -356,6 +387,22 @@ export function BookingForm({
       </main>
     );
   }
+
+  if (recoveryOffer && !recoveryOffer.available)
+    return (
+      <main className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-12">
+        <Alert>
+          <AlertTitle>Понудата повеќе не е достапна</AlertTitle>
+          <AlertDescription>
+            Можеби истекла или терминот е веќе резервиран. Може да изберете друг
+            термин.
+          </AlertDescription>
+        </Alert>
+        <Button asChild>
+          <Link href="/book">Прегледај други термини</Link>
+        </Button>
+      </main>
+    );
 
   if (pendingBooking) {
     const staffName =
@@ -393,12 +440,14 @@ export function BookingForm({
 
   return (
     <main className="min-h-[calc(100vh-9rem)] bg-secondary/45">
-      <BookingStepProgress
-        currentStep={currentStep}
-        completedSteps={completedSteps}
-        onStepClick={goToStep}
-        disabled={isSubmitting}
-      />
+      {!recoveryOffer && (
+        <BookingStepProgress
+          currentStep={currentStep}
+          completedSteps={completedSteps}
+          onStepClick={goToStep}
+          disabled={isSubmitting}
+        />
+      )}
 
       {currentStep === "service" && (
         <ServiceSelectionStep
@@ -447,6 +496,9 @@ export function BookingForm({
             customerEmail={customerEmail}
             customerPhone={customerPhone}
             customerNote={customerNote}
+            gapRecoveryEmailOptIn={gapRecoveryEmailOptIn}
+            onChangeRecoveryOptIn={setGapRecoveryEmailOptIn}
+            offerPriceMinorUnits={recoveryOffer?.priceMinorUnits}
             isSubmitting={isSubmitting}
             error={error}
             onChangeName={setCustomerName}
@@ -454,7 +506,9 @@ export function BookingForm({
             onChangePhone={setCustomerPhone}
             onChangeNote={setCustomerNote}
             onSubmit={handleSubmitDetails}
-            onBack={() => goToStep("datetime")}
+            onBack={() =>
+              recoveryOffer ? router.push("/book") : goToStep("datetime")
+            }
           />
         )}
     </main>

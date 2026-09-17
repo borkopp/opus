@@ -1,3 +1,7 @@
+import {
+  closeOrgRecoveryGaps,
+  scheduleRecoveryRefresh,
+} from "./lib/gapRecovery";
 import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requirePaidPlan, requireRole } from "./lib/auth";
@@ -86,6 +90,8 @@ export const updateOrgSettings = mutation({
     const validationError = operationalSettingsError(updates);
     if (validationError) throw new ConvexError(validationError);
 
+    if (settings.timezone !== updates.timezone)
+      await closeOrgRecoveryGaps(ctx, args.orgId);
     await ctx.db.patch(settings._id, updates);
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
@@ -111,6 +117,7 @@ export const updateOrgSettings = mutation({
     await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: args.orgId,
     });
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return true;
   },
 });
@@ -145,7 +152,7 @@ export const updateSurgePricingRules = mutation({
       surgeRules: args.surgeRules,
       updatedAt: Date.now(),
     });
-
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return true;
   },
 });
@@ -283,9 +290,16 @@ export const updateGapOptimizerSettings = mutation({
     gapOptimizerMinGapMins: v.number(),
   },
   handler: async (ctx, args) => {
-    const { org } = await requireRole(ctx, args.orgId, "owner");
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
     requirePaidPlan(org, "Gap optimizer");
 
+    if (
+      !Number.isInteger(args.gapOptimizerMinGapMins) ||
+      args.gapOptimizerMinGapMins < 15 ||
+      args.gapOptimizerMinGapMins > 240
+    ) {
+      throw new ConvexError("Enter a whole number between 15 and 240 minutes.");
+    }
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
@@ -299,6 +313,21 @@ export const updateGapOptimizerSettings = mutation({
       updatedAt: Date.now(),
     });
 
+    if (!args.gapOptimizerEnabled) await closeOrgRecoveryGaps(ctx, args.orgId);
+    else await scheduleRecoveryRefresh(ctx, args.orgId);
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "gap_optimizer.settings_updated",
+      resourceType: "org_settings",
+      resourceId: settings._id,
+      after: {
+        enabled: args.gapOptimizerEnabled,
+        minGapMins: args.gapOptimizerMinGapMins,
+      },
+      createdAt: Date.now(),
+    });
     return true;
   },
 });

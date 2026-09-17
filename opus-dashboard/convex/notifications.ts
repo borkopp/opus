@@ -29,6 +29,10 @@ import {
 } from "./lib/emailDeliveryTypes";
 import { isActiveIndustry } from "./lib/productScope";
 import {
+  recoveryDeliverySkipReason,
+  syncRecoveryDelivery,
+} from "./lib/gapRecovery";
+import {
   type AppointmentEmailData,
   type RenderedEmail,
   renderBookingVerificationEmail,
@@ -39,6 +43,7 @@ import {
   renderStaffInviteEmail,
   renderStaffNewBookingEmail,
   renderStaffReminderEmail,
+  renderGapOfferEmail,
 } from "./lib/emailTemplates";
 
 const notificationType = v.union(
@@ -72,6 +77,7 @@ type DeliveryContext = {
   staff: Doc<"staff_members"> | null;
   verification: Doc<"booking_email_verifications"> | null;
   staffRecipientEmails: string[];
+  gapOfferError: string | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -107,6 +113,7 @@ export const scheduleNotification = internalMutation({
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
+    gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
     channel: notificationChannel,
     type: notificationType,
     recipientAddress: v.string(),
@@ -134,6 +141,7 @@ export const scheduleNotification = internalMutation({
       customerId: args.customerId,
       bookingId: args.bookingId,
       bookingEmailVerificationId: args.bookingEmailVerificationId,
+      gapRecoveryCandidateId: args.gapRecoveryCandidateId,
       channel: args.channel,
       type: args.type,
       recipientAddress: args.recipientAddress.trim().toLowerCase(),
@@ -240,6 +248,7 @@ export const getNotificationDeliveryContext = internalQuery({
       staff,
       verification,
       staffRecipientEmails,
+      gapOfferError: await recoveryDeliverySkipReason(ctx, notification),
     };
   },
 });
@@ -254,6 +263,7 @@ function deliverySkipReason(context: DeliveryContext) {
     staffRecipientEmails,
   } = context;
   if (!org || org.isDeleted || !settings) return "Organization unavailable";
+  if (context.gapOfferError) return context.gapOfferError;
 
   if (notification.type === "booking_verification") {
     if (!verification || verification.orgId !== notification.orgId) {
@@ -427,6 +437,14 @@ async function renderNotificationEmail(
   }
 
   const appointment = appointmentData(context);
+  if (notification.type === "gap_fill_offer") {
+    return renderGapOfferEmail({
+      ...appointment,
+      draftedMessage: stringValue(data.draftedMessage),
+      bookingLink: stringValue(data.bookingLink),
+      expiresAt: numberValue(data.expiresAt)!,
+    });
+  }
   switch (notification.type) {
     case "booking_confirmation":
       return renderClientConfirmationEmail(appointment);
@@ -544,6 +562,7 @@ export const updateNotificationStatus = internalMutation({
       ...(isBookingVerification ? { templateData: redactedTemplateData } : {}),
     });
     const updated = await ctx.db.get(args.notificationId);
+    await syncRecoveryDelivery(ctx, existing, args.status);
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
       actorType: "system",
@@ -586,6 +605,7 @@ export const recordNotificationFailure = internalMutation({
       existing.type !== "booking_verification" &&
       attemptCount < 3;
     if (!mayRetry) {
+      await syncRecoveryDelivery(ctx, existing, "failed");
       const isBookingVerification = existing.type === "booking_verification";
       const redactedTemplateData = isBookingVerification
         ? { redacted: true }

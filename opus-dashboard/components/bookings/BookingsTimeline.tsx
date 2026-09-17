@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { format, isSameDay } from "date-fns";
-import { BookingCard } from "./BookingCard";
+import { BookingPill } from "./BookingPill";
+import { BookingPopoverCard } from "./BookingPopoverCard";
 import { IconPlus, IconClock, IconGripVertical } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -89,6 +90,9 @@ export function BookingsTimeline({
   selectedBookingId,
   onSelectBooking,
   onReschedule,
+  onComplete,
+  onCancel,
+  onMarkNoShow,
   currentDate,
   quickBookingSlots,
   slotDurationMins,
@@ -102,6 +106,9 @@ export function BookingsTimeline({
     bookingId: Id<"bookings">,
     newStartAt: number,
   ) => Promise<boolean>;
+  onComplete?: (bookingId: Id<"bookings">) => void;
+  onCancel?: (bookingId: Id<"bookings">) => void;
+  onMarkNoShow?: (bookingId: Id<"bookings">) => void;
   currentDate: Date;
   quickBookingSlots: QuickBookingSelection[];
   slotDurationMins: number;
@@ -463,11 +470,11 @@ export function BookingsTimeline({
         {/* Current Time Indicator */}
         {currentTimeOffset !== null && (
           <div
-            className="absolute left-12 right-0 border-t-2 border-danger z-20 pointer-events-none flex items-center"
+            className="absolute left-12 right-0 border-t-2 border-sky-500 z-20 pointer-events-none flex items-center shadow-[0_0_8px_rgba(14,165,233,0.4)]"
             style={{ top: currentTimeOffset + HEADER_HEIGHT }}
           >
-            <div className="absolute -left-2 -top-[5px] w-2.5 h-2.5 rounded-full bg-danger ring-2 ring-background" />
-            <div className="absolute left-1 -top-2.5 px-1.5 py-0.5 rounded bg-danger text-[9.5px] font-mono font-bold text-white leading-none shadow-xs">
+            <div className="absolute -left-2 -top-[5px] w-2.5 h-2.5 rounded-full bg-sky-500 ring-2 ring-background" />
+            <div className="absolute left-1 -top-2.5 px-1.5 py-0.5 rounded-full bg-sky-500 text-[9.5px] font-mono font-bold text-white leading-none shadow-xs">
               {format(new Date(), "HH:mm")}
             </div>
           </div>
@@ -506,15 +513,15 @@ export function BookingsTimeline({
                 }}
               >
                 {/* Staff Header */}
-                <div className="h-14 flex items-center justify-center font-medium text-sm border-b border-border/50 bg-card sticky top-0 z-20 transition-colors">
+                <div className="h-14 flex items-center justify-center font-medium text-sm border-b border-border/50 bg-card/95 backdrop-blur-md sticky top-0 z-20 transition-colors">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden">
+                    <div className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden ring-1 ring-border/50 shrink-0">
                       {staffAvatarUrl ? (
                         <Image
                           src={staffAvatarUrl}
                           alt={staff.displayName}
-                          width={24}
-                          height={24}
+                          width={32}
+                          height={32}
                           unoptimized
                           className="w-full h-full object-cover"
                         />
@@ -522,9 +529,11 @@ export function BookingsTimeline({
                         staff.displayName.charAt(0)
                       )}
                     </div>
-                    <span>{staff.displayName}</span>
+                    <span className="font-semibold text-sm text-foreground tracking-tight">
+                      {staff.displayName}
+                    </span>
                     {staffBookings.length > 0 && (
-                      <span className="text-[10px] font-semibold bg-muted/50 text-muted-foreground px-1.5 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                         {staffBookings.length}
                       </span>
                     )}
@@ -666,16 +675,40 @@ export function BookingsTimeline({
                         </div>
                       )}
 
-                      <BookingCard
+                      <BookingPopoverCard
                         booking={booking}
-                        isSelected={selectedBookingId === booking._id}
-                        height={height}
-                        onClick={() => {
+                        staff={staff}
+                        open={selectedBookingId === booking._id}
+                        onOpenChange={(open) => {
                           if (!isDragging.current) {
-                            onSelectBooking(booking._id);
+                            onSelectBooking(open ? booking._id : null);
                           }
                         }}
-                      />
+                        onComplete={onComplete}
+                        onCancel={onCancel}
+                        onMarkNoShow={onMarkNoShow}
+                        side="right"
+                        align="start"
+                      >
+                        <div className="w-full h-full">
+                          <BookingPill
+                            booking={booking}
+                            isSelected={selectedBookingId === booking._id}
+                            isDragging={isDraggingThis}
+                            orientation="vertical"
+                            className="w-full h-full"
+                            onClick={() => {
+                              if (!isDragging.current) {
+                                onSelectBooking(
+                                  selectedBookingId === booking._id
+                                    ? null
+                                    : booking._id,
+                                );
+                              }
+                            }}
+                          />
+                        </div>
+                      </BookingPopoverCard>
                     </div>
                   );
                 })}

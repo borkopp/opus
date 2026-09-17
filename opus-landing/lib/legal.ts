@@ -328,16 +328,16 @@ const mkPrivacy: LegalDocument = {
     "Како OPUS собира, користи, споделува и штити лични податоци на студија, членови на тим, клиенти и посетители.",
   eyebrow: "Правни информации · Документ 02",
   summary:
-    "OPUS не продава лични податоци и не користи рекламни или аналитички колачиња. Податоците ги користиме за профили, безбедно закажување, поддршка и трансакциски пораки.",
+    "OPUS користи лични податоци за профили, безбедно закажување и поддршка. Незадолжителната аналитика и мерењето на реклами се вклучуваат само со ваша согласност.",
   effectiveLabel: "Стапува во сила",
   effectiveDate: "1 септември 2026",
   lastUpdatedLabel: "Последно ажурирање",
-  lastUpdatedDate: "1 септември 2026",
+  lastUpdatedDate: "14 септември 2026",
   tocLabel: "Во овој документ",
   highlights: [
     "Студиото е контролор за податоците на своите клиенти; OPUS ја обезбедува платформата.",
-    "Не продаваме лични податоци и не ги споделуваме со рекламни мрежи.",
-    "Користиме само неопходни и кориснички побарани колачиња или локална меморија.",
+    "PostHog и Meta Pixel имаат одделни, незадолжителни поставки за согласност.",
+    "Може да го смените изборот во Поставки за колачиња во секое време.",
   ],
   sections: [
     {
@@ -410,6 +410,7 @@ const mkPrivacy: LegalDocument = {
             "Податоци за клиент и термин: име, е-пошта, телефон кога е внесен, избрана услуга, член на тим, датум и време, статус на термин, причина за откажување и белешка што ја внесува клиентот или овластен член на тим.",
             "Комуникации: пораки до поддршка, податоци од контакт-формата и записи за испраќање или неуспех на трансакциски е-пораки.",
             "Технички и безбедносни податоци: IP-адреса и кориснички агент кога се евидентираат за безбедност или ревизија, време на барање, системски настани, колачиња и локални поставки на прелистувачот.",
+            "Со аналитичка согласност: користење на платформата, посетени страници и настани, поврзани со идентификаторот, името, е-поштата и улогата на најавениот деловен корисник во PostHog. Со рекламна согласност: Meta Pixel добива посети на маркетинг и регистрациски страници, настан за ново студио, URL, идентификатори на колачиња и рекламни кликови, како и технички податоци како IP-адреса и прелистувач.",
             "Содржина што ја поставувате: фотографии, описи, јавни податоци за студиото и други информации што доброволно ги внесувате.",
           ],
         },
@@ -440,6 +441,7 @@ const mkPrivacy: LegalDocument = {
             "За безбедност и интегритет: проверка на е-пошта, спречување злоупотреба и двојни термини, контрола на пристап, ревизиски записи и решавање инциденти.",
             "За поддршка и комуникација: одговор на прашање, контакт-барање, поплака или барање за остварување право.",
             "За одржување и подобрување: дијагностика на грешки, сигурност, капацитет и подобрување на текот на закажување без рекламно профилирање.",
+            "Со ваша согласност: аналитика на користењето преку PostHog и мерење, оптимизација и создавање рекламни публики за OPUS преку Meta Pixel. Meta може да ги поврзе настаните со вашата сметка според своите услови и политика за приватност.",
             "За законски обврски: постапување по важечко барање од орган, заштита на права и водење записи што мора да се зачуваат.",
           ],
         },
@@ -459,7 +461,7 @@ const mkPrivacy: LegalDocument = {
             "извршување договор или преземање чекори по ваше барање, на пример за профил, закажување или одговор пред започнување со користење;",
             "законска обврска, на пример кога мора да зачуваме или доставиме одреден запис;",
             "легитимен интерес за безбедно, доверливо и корисно работење на Услугата, спречување злоупотреба и заштита на правни барања, кога вашите права не преовладуваат; и",
-            "согласност, кога законски е потребна, на пример за незадолжителна маркетинг комуникација или кориснички избрана поставка.",
+            "согласност за незадолжителна аналитика, рекламно мерење и маркетинг комуникација кога е применливо. Може да ја повлечете согласноста за колачиња преку Поставки за колачиња.",
           ],
         },
         {
@@ -484,13 +486,14 @@ const mkPrivacy: LegalDocument = {
             "Со Convex: за базата, складирањето, серверските функции и инфраструктурата за најава.",
             "Со Resend и/или Sender: за еднократни кодови и трансакциски е-пораки, само кога соодветниот давател е конфигуриран.",
             "Со Formspree: кога ја испраќате контакт-формата на opus.mk.",
+            "Со PostHog: за аналитика на платформата, само со аналитичка согласност. Со Meta: за мерење и оптимизација на рекламите за OPUS и рекламни публики, само со рекламна согласност. Не испраќаме имиња, е-пошта, телефонски броеви или содржина на клиентски термини како параметри на Meta Pixel.",
             "Со Mapbox: кога се користи пребарување адреса, мапа или насока и функцијата е конфигурирана; за пресметка на рута може да ги добие координатите на студиото и на вашиот уред.",
             "Со професионални советници, надлежен орган или суд кога тоа е законски потребно или неопходно за заштита на права, безбедност и корисници.",
           ],
         },
         {
           type: "paragraph",
-          text: "Не продаваме лични податоци, не ги изнајмуваме и не ги споделуваме со рекламни мрежи. Ако дојде до реорганизација, финансирање или пренос на Услугата, податоците може да бидат пренесени со соодветно известување и заштита.",
+          text: "Не продаваме и не изнајмуваме клиентски записи. Споделувањето со Meta опишано погоре е незадолжително и зависи од вашата рекламна согласност. Ако дојде до реорганизација, финансирање или пренос на Услугата, податоците може да бидат пренесени со соодветно известување и заштита.",
         },
       ],
     },
@@ -534,19 +537,22 @@ const mkPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Тековната верзија на OPUS не користи рекламни или аналитички колачиња. Користиме само технологии потребни за функција што ја барате:",
+          text: "Неопходните технологии овозможуваат најава, безбедност и вашите поставки. Аналитиката и рекламните технологии се одделни и исклучени додека не ги прифатите:",
         },
         {
           type: "list",
           items: [
             "Неопходни колачиња за сесија и безбедност на studio.opus.mk, за да се најавите и да останете безбедно најавени.",
+            "opus_consent_v1 го памети вашиот избор до 180 дена на opus.mk и studio.opus.mk. Локален сигнал ги известува другите отворени картички за промена на изборот.",
+            "PostHog: аналитички колачиња со префикс ph_ и локална меморија, само со аналитичка согласност. Периодот на колачињата е поставен на 180 дена; локалната меморија останува до повлекување на согласноста или бришење. Снимањето сесии е исклучено.",
+            "Meta Pixel: _fbp и, кога постои идентификатор на рекламен клик, _fbc, вообичаено до 90 дена и обновувани при користење. Се вчитува само по рекламна согласност, на маркетинг и регистрациските страници на OPUS. Не го вчитуваме на јавните веб-сајтови за закажување на студијата или на приватните страници на контролниот панел.",
             "Колачето opus_locale, кое се поставува кога самите ќе го смените јазикот и го памети изборот до една година.",
             "Локална меморија за избраната светла или темна тема и за одредени поставки на интерфејсот. Овие вредности остануваат на уредот додека не ги исчистите.",
           ],
         },
         {
           type: "paragraph",
-          text: "Може да ги избришете колачињата и локалната меморија преку поставките на прелистувачот. Блокирањето на неопходните колачиња може да спречи најава или друга побарана функција. Ако во иднина воведеме незадолжителна аналитика или рекламирање, прво ќе ја ажурираме оваа Политика и ќе побараме согласност кога законот го бара тоа.",
+          text: "Изберете Само неопходни, Прифати ги сите или зачувајте одделен избор за аналитика и рекламирање. Поставки за колачиња се достапни во подножјето на opus.mk и во студиската апликација. Повлекувањето го запира идното незадолжително следење; не ја поништува претходната обработка. Може и да ја исчистите меморијата во прелистувачот. Блокирањето на неопходните колачиња може да спречи најава.",
         },
       ],
     },
@@ -918,16 +924,16 @@ const enPrivacy: LegalDocument = {
     "How OPUS collects, uses, shares, and protects personal data about studios, team members, clients, and visitors.",
   eyebrow: "Legal information · Document 02",
   summary:
-    "OPUS does not sell personal data or use advertising or analytics cookies. We use data for accounts, secure booking, support, and transactional messages.",
+    "OPUS uses personal data for accounts, secure booking, and support. Optional analytics and advertising measurement are enabled only with your consent.",
   effectiveLabel: "Effective",
   effectiveDate: "1 September 2026",
   lastUpdatedLabel: "Last updated",
-  lastUpdatedDate: "1 September 2026",
+  lastUpdatedDate: "14 September 2026",
   tocLabel: "In this document",
   highlights: [
     "The studio controls its client records; OPUS provides the platform.",
-    "We do not sell personal data or share it with advertising networks.",
-    "We use only necessary and user-requested cookies or local storage.",
+    "PostHog and Meta Pixel have separate, optional consent settings.",
+    "You can change your choice in Cookie settings at any time.",
   ],
   sections: [
     {
@@ -1000,6 +1006,7 @@ const enPrivacy: LegalDocument = {
             "Client and appointment data: name, email, phone when provided, selected service, team member, date and time, appointment status, cancellation reason, and a note entered by the client or an authorised team member.",
             "Communications: support messages, contact-form submissions, and records showing whether a transactional email was sent or failed.",
             "Technical and security data: IP address and user agent when recorded for security or audit, request time, system events, cookies, and local browser preferences.",
+            "With analytics consent: platform usage, page visits, and events linked to the signed-in business user's account ID, name, email, and role in PostHog. With advertising consent: Meta Pixel receives marketing and registration page visits, a new-studio event, URLs, cookie and ad-click identifiers, and technical information such as IP address and browser.",
             "Content you upload: photos, descriptions, public studio information, and other information you voluntarily enter.",
           ],
         },
@@ -1030,6 +1037,7 @@ const enPrivacy: LegalDocument = {
             "For security and integrity: verify email, prevent misuse and overlapping bookings, control access, keep audit records, and resolve incidents.",
             "For support and communication: respond to a question, contact request, complaint, or rights request.",
             "For maintenance and improvement: diagnose errors, maintain reliability and capacity, and improve the booking flow without advertising profiling.",
+            "With your consent: understand platform usage through PostHog and measure, optimise, and build audiences for OPUS ads through Meta Pixel. Meta may associate events with your account under its own terms and privacy policy.",
             "For legal obligations: respond to a valid authority request, protect legal rights, and keep records that must be retained.",
           ],
         },
@@ -1049,7 +1057,7 @@ const enPrivacy: LegalDocument = {
             "performance of a contract or steps requested before a contract, such as an account, appointment, or pre-service response;",
             "a legal obligation, such as when a record must be kept or disclosed;",
             "a legitimate interest in operating a secure, reliable, and useful Service, preventing misuse, and protecting legal claims where your rights do not override that interest; and",
-            "consent where the law requires it, such as optional marketing or a user-selected preference.",
+            "consent for optional analytics, advertising measurement, and marketing communications where applicable. You can withdraw cookie consent through Cookie settings.",
           ],
         },
         {
@@ -1074,13 +1082,14 @@ const enPrivacy: LegalDocument = {
             "Convex: for the database, storage, server functions, and sign-in infrastructure.",
             "Resend and/or Sender: for one-time codes and transactional email, only when the relevant provider is configured.",
             "Formspree: when you submit the contact form on opus.mk.",
+            "PostHog: for platform analytics, only with analytics consent. Meta: for OPUS advertising measurement, optimisation, and audiences, only with advertising consent. We do not send names, emails, phone numbers, or customer appointment content as Meta Pixel event parameters.",
             "Mapbox: when address search, a map, or directions are used and the feature is configured; it may receive the studio and device coordinates to calculate a route.",
             "Professional advisers, a competent authority, or a court where legally required or necessary to protect rights, security, and users.",
           ],
         },
         {
           type: "paragraph",
-          text: "We do not sell or rent personal data and do not share it with advertising networks. If the Service is reorganised, financed, or transferred, data may transfer with appropriate notice and safeguards.",
+          text: "We do not sell or rent customer records. The sharing with Meta described above is optional and depends on your advertising consent. If the Service is reorganised, financed, or transferred, data may transfer with appropriate notice and safeguards.",
         },
       ],
     },
@@ -1124,19 +1133,22 @@ const enPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "The current version of OPUS does not use advertising or analytics cookies. We use only technologies needed for a function you request:",
+          text: "Necessary technologies support sign-in, security, and your preferences. Analytics and advertising technologies are separate and remain off until you accept them:",
         },
         {
           type: "list",
           items: [
             "Necessary session and security cookies on studio.opus.mk so you can sign in and remain securely signed in.",
+            "opus_consent_v1 remembers your choice for up to 180 days across opus.mk and studio.opus.mk. A local storage signal informs other open tabs when your choice changes.",
+            "PostHog: analytics cookies beginning with ph_ and local storage, only with analytics consent. Cookie expiry is configured to 180 days; local storage remains until consent is withdrawn or storage is cleared. Session recording is disabled.",
+            "Meta Pixel: _fbp and, when an ad-click identifier is present, _fbc, typically lasting up to 90 days and renewed with use. It loads only after advertising consent on OPUS marketing and registration pages. We do not load it on studios' public booking websites or private dashboard pages.",
             "The opus_locale cookie, set when you choose another language, which remembers that choice for up to one year.",
             "Local storage for your light or dark theme and certain interface preferences. These values stay on your device until you clear them.",
           ],
         },
         {
           type: "paragraph",
-          text: "You can delete cookies and local storage in your browser settings. Blocking necessary cookies may prevent sign-in or another requested function. If we introduce optional analytics or advertising later, we will first update this Policy and request consent where the law requires it.",
+          text: "Choose Necessary only, Accept all, or save separate analytics and advertising choices. Cookie settings are available in the opus.mk footer and studio application. Withdrawal stops future optional tracking; it does not undo prior processing. You can also clear browser storage. Blocking necessary cookies may prevent sign-in.",
         },
       ],
     },

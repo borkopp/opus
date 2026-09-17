@@ -61,10 +61,10 @@ export const Logo = ({
 }: LogoProps) => {
   return (
     <span
-      className={cn("inline-flex items-center gap-2 text-[#ff814a]", className)}
+      className={cn("inline-flex items-center gap-2 text-foreground", className)}
       aria-label="OPUS"
     >
-      <LogoMark className={markClassName} />
+      <LogoMark className={cn("text-brand", markClassName)} />
       <LogoWordmark className={wordmarkClassName} />
     </span>
   );
@@ -79,10 +79,10 @@ const LogoPlan = ({
 }: LogoProps & { plan: "Free" | "Pro"; planClassName?: string }) => {
   return (
     <span
-      className={cn("inline-flex items-center gap-2 text-[#ff814a]", className)}
+      className={cn("inline-flex items-center gap-2 text-foreground", className)}
       aria-label={`OPUS ${plan}`}
     >
-      <LogoMark className={markClassName} />
+      <LogoMark className={cn("text-brand", markClassName)} />
       <span className="inline-flex items-start gap-0.5">
         <LogoWordmark className={wordmarkClassName} />
         <span

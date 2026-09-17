@@ -99,89 +99,92 @@ export function GapOptimizerTab({
           "Оптимизаторот на празни термини бара OPUS Pro",
         )}
       >
-      <SettingsCard
-        title={t("Gap optimizer", "Оптимизатор на празни термини")}
-        description={t(
-          "Choose which openings are large enough for OPUS to consider in cancellation-recovery workflows.",
-          "Изберете кои празнини во распоредот се доволно долги за OPUS да ги земе предвид при пополнување откажани термини.",
-        )}
-        contentClassName="flex flex-col gap-6"
-        footer={
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <Save data-icon="inline-start" />
-            )}
-            {isSaving
-              ? t("Saving…", "Се зачувува…")
-              : t("Save optimizer settings", "Зачувај поставки за оптимизатор")}
-          </Button>
-        }
-      >
-        <SettingsToggleRow
-          title={t(
-            "Enable gap optimizer",
-            "Овозможи оптимизатор на празни термини",
-          )}
+        <SettingsCard
+          title={t("Gap optimizer", "Оптимизатор на празни термини")}
           description={t(
-            "Scan for eligible openings when a cancellation creates space in the schedule.",
-            "Пребарувај соодветни слободни термини кога некое откажување ќе ослободи простор во распоредот.",
+            "Find bookable openings in the next seven days. Review a client and approve each email offer before sending.",
+            "Пронајдете слободни термини во следните седум дена. Изберете клиент и одобрете ја секоја понуда по е-пошта пред испраќање.",
           )}
-          control={
-            <Switch
-              id="gap-enabled"
-              aria-label={t(
-                "Enable gap optimizer",
-                "Овозможи оптимизатор на празни термини",
+          contentClassName="flex flex-col gap-6"
+          footer={
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <Save data-icon="inline-start" />
               )}
-              checked={optimizer.enabled}
-              onCheckedChange={(checked) =>
-                setOptimizer((current) => ({
-                  ...current,
-                  enabled: checked,
-                }))
-              }
-            />
+              {isSaving
+                ? t("Saving…", "Се зачувува…")
+                : t(
+                    "Save optimizer settings",
+                    "Зачувај поставки за оптимизатор",
+                  )}
+            </Button>
           }
-        />
+        >
+          <SettingsToggleRow
+            title={t(
+              "Enable gap optimizer",
+              "Овозможи оптимизатор на празни термини",
+            )}
+            description={t(
+              "Refresh openings after calendar changes. Requires a published studio website, configured email delivery, and client permission. Turning this off cancels outstanding offers.",
+              "Освежувај ги слободните термини по промени во распоредот. Потребни се објавена веб-страница, конфигурирана е-пошта и дозвола од клиентот. Исклучувањето ги поништува активните понуди.",
+            )}
+            control={
+              <Switch
+                id="gap-enabled"
+                aria-label={t(
+                  "Enable gap optimizer",
+                  "Овозможи оптимизатор на празни термини",
+                )}
+                checked={optimizer.enabled}
+                onCheckedChange={(checked) =>
+                  setOptimizer((current) => ({
+                    ...current,
+                    enabled: checked,
+                  }))
+                }
+              />
+            }
+          />
 
-        <FieldGroup className="max-w-xl">
-          <Field data-invalid={Boolean(error)}>
-            <FieldLabel htmlFor="min-gap-mins">
-              {t(
-                "Minimum gap duration (minutes)",
-                "Минимално времетраење на празнината (минути)",
-              )}
-            </FieldLabel>
-            <Input
-              id="min-gap-mins"
-              type="number"
-              min={15}
-              max={240}
-              step={15}
-              value={optimizer.minGapMins}
-              aria-describedby="min-gap-description"
-              aria-invalid={Boolean(error)}
-              disabled={!optimizer.enabled}
-              onChange={(event) => {
-                setOptimizer((current) => ({
-                  ...current,
-                  minGapMins: Number.parseInt(event.target.value, 10),
-                }));
-                if (error) setError(undefined);
-              }}
-            />
-            <FieldDescription id="min-gap-description">
-              {t(
-                "Shorter openings are ignored so recovery stays focused on useful appointment slots.",
-                "Пократките празнини се игнорираат за пополнувањето да остане фокусирано на корисни термини.",
-              )}
-            </FieldDescription>
-            <FieldError>{error}</FieldError>
-          </Field>
-        </FieldGroup>
-      </SettingsCard>
+          <FieldGroup className="max-w-xl">
+            <Field data-invalid={Boolean(error)}>
+              <FieldLabel htmlFor="min-gap-mins">
+                {t(
+                  "Minimum gap duration (minutes)",
+                  "Минимално времетраење на празнината (минути)",
+                )}
+              </FieldLabel>
+              <Input
+                id="min-gap-mins"
+                type="number"
+                min={15}
+                max={240}
+                step={15}
+                value={optimizer.minGapMins}
+                aria-describedby="min-gap-description"
+                aria-invalid={Boolean(error)}
+                disabled={!optimizer.enabled}
+                onChange={(event) => {
+                  setOptimizer((current) => ({
+                    ...current,
+                    minGapMins: Number.parseInt(event.target.value, 10),
+                  }));
+                  if (error) setError(undefined);
+                }}
+              />
+              <FieldDescription id="min-gap-description">
+                {t(
+                  "Shorter openings are ignored so recovery stays focused on useful appointment slots.",
+                  "Пократките празнини се игнорираат за пополнувањето да остане фокусирано на корисни термини.",
+                )}
+              </FieldDescription>
+              <FieldError>{error}</FieldError>
+            </Field>
+          </FieldGroup>
+        </SettingsCard>
       </PaidFeatureOverlay>
     </TabsContent>
   );

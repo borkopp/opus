@@ -1,3 +1,5 @@
+import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
+import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
@@ -148,6 +150,7 @@ export const createStaffMember = mutation({
     const appointmentEmail = normalizeAppointmentEmail(args.appointmentEmail);
     const avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     const newStaffId = await ctx.db.insert("staff_members", {
       orgId: args.orgId,
       displayName: args.displayName,
@@ -183,6 +186,8 @@ export const createStaffMember = mutation({
       orgId: args.orgId,
     });
 
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     return newStaffId;
   },
 });
@@ -283,7 +288,10 @@ export const updateStaffMember = mutation({
       );
     }
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     await ctx.db.patch(args.staffId, updates);
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
 
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
@@ -366,7 +374,10 @@ export const deactivateStaffMember = mutation({
       updatedAt: Date.now(),
     };
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     await ctx.db.patch(args.staffId, updates);
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
 
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,

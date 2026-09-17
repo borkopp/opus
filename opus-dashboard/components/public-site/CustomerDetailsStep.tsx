@@ -9,6 +9,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,9 @@ interface CustomerDetailsStepProps {
   customerEmail: string;
   customerPhone: string;
   customerNote: string;
+  gapRecoveryEmailOptIn: boolean;
+  onChangeRecoveryOptIn: (value: boolean) => void;
+  offerPriceMinorUnits?: number;
   isSubmitting: boolean;
   error: string | null;
   onChangeName: (value: string) => void;
@@ -48,6 +52,9 @@ export function CustomerDetailsStep({
   customerEmail,
   customerPhone,
   customerNote,
+  gapRecoveryEmailOptIn,
+  onChangeRecoveryOptIn,
+  offerPriceMinorUnits,
   isSubmitting,
   error,
   onChangeName,
@@ -95,7 +102,7 @@ export function CustomerDetailsStep({
           <dd className="font-mono font-medium">
             {service &&
               formatPrice(
-                service.priceMinorUnits,
+                offerPriceMinorUnits ?? service.priceMinorUnits,
                 service.currency,
                 site.bookingSettings.locale,
               )}
@@ -131,7 +138,9 @@ export function CustomerDetailsStep({
               required
             />
             <FieldDescription>
-              На оваа адреса ќе го испратиме кодот за потврда.
+              {offerPriceMinorUnits !== undefined
+                ? "Внесете ја е-поштата на која ја добивте понудата. На неа ќе го испратиме кодот за потврда."
+                : "На оваа адреса ќе го испратиме кодот за потврда."}
             </FieldDescription>
           </Field>
 
@@ -166,6 +175,25 @@ export function CustomerDetailsStep({
               maxLength={1_000}
               placeholder="Додајте нешто што студиото треба да го знае."
             />
+          </Field>
+
+          <Field orientation="horizontal">
+            <Checkbox
+              id="recovery-email-consent"
+              checked={gapRecoveryEmailOptIn}
+              onCheckedChange={(checked) =>
+                onChangeRecoveryOptIn(checked === true)
+              }
+            />
+            <div className="flex flex-col gap-1">
+              <FieldLabel htmlFor="recovery-email-consent">
+                Сакам понуди за слободни термини по е-пошта
+              </FieldLabel>
+              <FieldDescription>
+                Опционално. Студиото може да ми понуди соодветен слободен
+                термин. Може да ги исклучам пораките во секое време.
+              </FieldDescription>
+            </div>
           </Field>
 
           {error && (

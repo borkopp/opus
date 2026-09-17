@@ -1,68 +1,78 @@
-import type { Metadata } from "next";
-import { Geist_Mono, Lora, Commissioner } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Audiowide, DM_Sans, Manrope } from "next/font/google";
+import { SiteHeader } from "@/components/landing/site-header";
+import { SiteFooter } from "@/components/landing/site-footer";
+import { CookieConsent } from "@/components/privacy/cookie-consent";
 import "./globals.css";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
-import { ThemeProvider } from "@/components/theme-provider";
-import { I18nProvider } from "@/components/i18n-provider";
-import { getMessages } from "@/lib/i18n/messages";
-import { getRequestLocale } from "@/lib/i18n/server";
 
-const manrope = Commissioner({
-  variable: "--font-manrope-family",
-  subsets: ["cyrillic", "latin"],
-  weight: ["400", "500", "700"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const bodyFont = DM_Sans({
   subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
 });
-
-const lora = Lora({
-  variable: "--font-lora-family",
-  subsets: ["cyrillic", "latin"],
-  style: "italic",
-  weight: "500",
+const headingFont = Manrope({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-manrope",
+  display: "swap",
 });
+const logoFont = Audiowide({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-audiowide",
+  display: "swap",
+});
+const title = "OPUS — More time for your craft.";
+const description =
+  "Your own free booking website, one organized team calendar, and AI that helps your beauty business grow. Made for studios in Macedonia.";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  const { home } = getMessages(locale).metadata;
+export const metadata: Metadata = {
+  metadataBase: new URL("https://opus.mk"),
+  title,
+  description,
+  referrer: "strict-origin",
+  alternates: { canonical: "/" },
+  icons: { icon: "/opus-mark.svg" },
+  openGraph: {
+    title,
+    description,
+    siteName: "OPUS",
+    type: "website",
+    images: [
+      {
+        url: "/assets/opus-cta-wide.jpg",
+        width: 2172,
+        height: 724,
+        alt: "OPUS studio intelligence",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/assets/opus-cta-wide.jpg"],
+  },
+};
+export const viewport: Viewport = { themeColor: "#f4faff" };
 
-  return {
-    title: home.title,
-    description: home.description,
-    icons: {
-      icon: "/opus-mark.svg",
-    },
-  };
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const locale = await getRequestLocale();
-  const messages = getMessages(locale);
-
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body
-        className={`${manrope.variable} ${geistMono.variable} ${lora.variable} antialiased`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          disableTransitionOnChange
-        >
-          <I18nProvider locale={locale} messages={messages}>
-            <Navbar />
-            {children}
-            <Footer />
-          </I18nProvider>
-        </ThemeProvider>
+    <html
+      lang="en"
+      className={`${bodyFont.variable} ${headingFont.variable} ${logoFont.variable}`}
+    >
+      <body>
+        <a className="skip" href="#main">
+          Skip to content
+        </a>
+        <div className="site-shell">
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </div>
+        <CookieConsent />
       </body>
     </html>
   );

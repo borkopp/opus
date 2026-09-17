@@ -191,13 +191,13 @@ export default function SettingsPage() {
           <div className="max-w-full overflow-x-auto overscroll-x-contain rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsList
               aria-label={t("Settings sections", "Секции за поставки")}
-              className="h-auto w-max min-w-full justify-start gap-1 rounded-xl bg-muted/70 p-1"
+              className="h-auto w-max min-w-full justify-start gap-1 rounded-xl p-1 bg-muted/80 border border-border/70 shadow-2xs dark:bg-muted/70 dark:border-transparent dark:shadow-none"
             >
               {SETTINGS_TABS.map(({ value, labelEn, labelMk, icon: Icon }) => (
                 <TabsTrigger
                   key={value}
                   value={value}
-                  className="h-9 min-w-max flex-1 gap-2 rounded-lg px-3 text-muted-foreground data-[state=active]:border-input data-[state=active]:bg-input/30 data-[state=active]:font-semibold data-[state=active]:text-foreground group-data-[variant=default]/tabs-list:data-[state=active]:shadow-none"
+                  className="h-9 min-w-max flex-1 gap-2 rounded-lg px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card/40 transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border/60 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-transparent dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground dark:data-[state=active]:shadow-none"
                 >
                   <Icon />
                   {t(labelEn, labelMk)}

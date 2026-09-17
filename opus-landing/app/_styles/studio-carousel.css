@@ -1,0 +1,121 @@
+.studio-carousel-section .split-heading { align-items: flex-end; margin-bottom: 48px; }
+.studio-carousel-section .split-heading h2 { font-size: 40px; }
+.studio-carousel-section .split-heading>p { max-width: 370px; }
+.studio-carousel { position: relative; }
+.studio-carousel-stage { position: relative; height: 510px; isolation: isolate; touch-action: pan-y; user-select: none; }
+.studio-slide {
+  --slide-x: 0px;
+  --slide-scale: 1;
+  --slide-crop: 0%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 410px;
+  height: 500px;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  text-align: left;
+  background: #e7f1fa;
+  transform: translate(-50%,-50%) translateX(var(--slide-x)) scale(var(--slide-scale));
+  clip-path: inset(0 var(--slide-crop) round 22px);
+  transition: transform 700ms cubic-bezier(.22,.75,.2,1),clip-path 700ms cubic-bezier(.22,.75,.2,1),opacity 500ms ease;
+  will-change: transform;
+  z-index: 3;
+}
+.studio-slide>img { width: 100%; height: 100%; object-fit: cover; object-position: center 38%; pointer-events: none; transition: filter 600ms ease; }
+.studio-slide[data-offset="-1"],.studio-slide[data-offset="1"] { --slide-scale: .88; --slide-crop: 34%; opacity: .68; z-index: 2; }
+.studio-slide[data-offset="-2"],.studio-slide[data-offset="2"] { --slide-scale: .75; --slide-crop: 37%; opacity: .38; z-index: 1; }
+.studio-slide[data-offset="-1"] { --slide-x: -285px; }
+.studio-slide[data-offset="1"] { --slide-x: 285px; }
+.studio-slide[data-offset="-2"] { --slide-x: -399px; }
+.studio-slide[data-offset="2"] { --slide-x: 399px; }
+.studio-slide:not([data-offset="0"])>img { filter: grayscale(1); }
+.studio-slide[data-offset="0"] { box-shadow: 0 12px 40px #27465f12; cursor: default; }
+.studio-slide:focus-visible { outline-offset: 6px; }
+.studio-slide:active { transform: translate(-50%,-50%) translateX(var(--slide-x)) scale(var(--slide-scale)); }
+.studio-slide-copy { position: absolute; bottom: 14px; left: 14px; right: 14px; padding: 24px; border: 1px solid #ffffff40; border-radius: 15px; background: linear-gradient(140deg,#294453c9,#162a37e0); backdrop-filter: blur(20px); color: white; transition: opacity 300ms ease,translate 500ms ease; }
+.studio-slide-title { display: block; font-family: var(--font-manrope),sans-serif; font-size: 26px; font-weight: 550; line-height: 1.15; letter-spacing: -.7px; }
+.studio-slide-description { display: block; font-size: 14px; font-weight: 400; line-height: 1.65; color: #e4edf3; margin-top: 12px; }
+.studio-slide-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #ffffff28; padding-top: 16px; margin-top: 18px; font-size: 11px; font-weight: 400; color: #c5d6e2; }
+.studio-slide-footer>span { font-size: 19px; color: white; }
+.studio-slide:not([data-offset="0"]) .studio-slide-copy { opacity: 0; translate: 0 14px; }
+.studio-carousel-controls { display: flex; justify-content: center; align-items: center; gap: 22px; margin-top: 31px; }
+.studio-carousel-controls>button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; padding: 12px; transition: transform 180ms ease,background 180ms ease; }
+.studio-carousel-controls svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.studio-prev { background: #edf2f6; color: #5c6e7c; }
+.studio-next { background: #252d35; color: white; }
+.studio-carousel-count { display: inline-flex; gap: 7px; font-size: 11px; color: #a1b0bc; font-variant-numeric: tabular-nums; }
+.studio-carousel-count b { font-weight: 500; color: #5b7487; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.generated-step { height: auto; aspect-ratio: 1.12; background: #edf6ff; }
+.generated-step>img { width: 100%; height: 100%; object-fit: cover; transition: transform 750ms cubic-bezier(.2,.65,.25,1); }
+.intelligence-art>img { object-fit: contain; }
+.final-cta { position: relative; isolation: isolate; aspect-ratio: 3 / 1; min-height: 0; padding: 0; background: #e9f5ff; }
+.final-cta>.cta-panorama { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: normal; }
+.final-cta>.cta-content { position: absolute; left: 5%; top: 50%; width: 45%; transform: translateY(-50%); }
+.final-cta h2 { font-size: 38px; line-height: 1.15; letter-spacing: -1.4px; }
+.final-cta p { font-size: 14px; color: #6c879c; line-height: 1.6; margin-top: 17px; }
+.final-cta .button { font-size: 12px; padding: 14px 19px; margin-top: 20px; }
+.final-cta small { font-size: 10px; color: #7593aa; margin-top: 13px; }
+@media (hover:hover) and (pointer:fine) {
+  .studio-prev:hover { background: #dfeaf3; }
+  .studio-next:hover { background: #405667; }
+  .studio-slide:not([data-offset="0"]):hover { opacity: .92; }
+  .generated-step:hover>img { transform: scale(1.035); }
+}
+@media (max-width:1050px) {
+  .studio-carousel-section .split-heading h2 { font-size: 34px; }
+  .studio-carousel-section .split-heading>p { max-width: 300px; }
+  .studio-carousel-stage { height: 460px; }
+  .studio-slide { width: 365px; height: 455px; }
+  .studio-slide[data-offset="-1"] { --slide-x: -254px; }
+  .studio-slide[data-offset="1"] { --slide-x: 254px; }
+  .studio-slide[data-offset="-2"] { --slide-x: -355px; }
+  .studio-slide[data-offset="2"] { --slide-x: 355px; }
+  .studio-slide-copy { padding: 21px; }
+  .studio-slide-title { font-size: 25px; }
+  .studio-slide-description { font-size: 13px; }
+  .final-cta h2 { font-size: 32px; }
+  .final-cta p { font-size: 12px; margin-top: 12px; }
+  .final-cta .button { font-size: 11px; margin-top: 15px; padding: 12px 16px; }
+  .final-cta small { font-size: 9px; margin-top: 10px; }
+}
+@media (max-width:760px) {
+  .studio-carousel-section .split-heading { margin-bottom: 28px; }
+  .studio-carousel-section .split-heading h2 { font-size: 34px; }
+  .studio-carousel-section .split-heading>p { max-width: 410px; }
+  .studio-carousel-stage { width: calc(100% + 40px); margin-left: -20px; height: 470px; overflow: hidden; }
+  .studio-slide { width: 350px; height: 445px; }
+  .studio-slide[data-offset="-1"] { --slide-x: -244px; }
+  .studio-slide[data-offset="1"] { --slide-x: 244px; }
+  .studio-slide[data-offset="-2"] { --slide-x: -343px; }
+  .studio-slide[data-offset="2"] { --slide-x: 343px; }
+  .studio-slide-copy { left: 12px; right: 12px; bottom: 12px; padding: 20px; }
+  .studio-carousel-controls { margin-top: 21px; }
+  .generated-step { height: auto; aspect-ratio: 1.2; }
+  .final-cta { display: flex; flex-direction: column; aspect-ratio: auto; padding: 0; background: #e8f4ff; }
+  .final-cta>.cta-content { position: relative; inset: auto; width: 100%; transform: none; order: 1; padding: 32px 30px 12px; }
+  .final-cta>.cta-panorama { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 3 / 1; object-fit: contain; order: 2; }
+  .final-cta h2 { font-size: 36px; }
+  .final-cta p { font-size: 14px; margin-top: 17px; }
+  .final-cta .button { font-size: 12px; margin-top: 20px; padding: 15px 19px; }
+  .final-cta small { font-size: 10px; margin-top: 13px; }
+}
+@media (max-width:480px) {
+  .studio-slide { width: calc(100% - 80px); height: 440px; }
+  .studio-slide[data-offset="-1"] { --slide-x: calc(-50vw + 10px); --slide-crop: 41%; opacity: .45; }
+  .studio-slide[data-offset="1"] { --slide-x: calc(50vw - 10px); --slide-crop: 41%; opacity: .45; }
+  .studio-slide[data-offset="-2"] { --slide-x: -110vw; opacity: 0; pointer-events: none; }
+  .studio-slide[data-offset="2"] { --slide-x: 110vw; opacity: 0; pointer-events: none; }
+  .studio-slide-title { font-size: 25px; }
+  .studio-slide-copy { padding: 18px; }
+  .studio-slide-description { font-size: 13px; }
+  .studio-slide-footer { font-size: 10px; margin-top: 15px; padding-top: 13px; }
+  .studio-carousel-section .split-heading h2 { font-size: 31px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .studio-slide,.studio-slide>img,.studio-slide-copy,.generated-step>img { transition: none; }
+  .generated-step:hover>img { transform: none; }
+}

@@ -1,0 +1,150 @@
+/* Image-led product stories: one tall anchor, a wide calendar, two smaller moments. */
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1.16fr 1fr 1fr;
+  grid-template-rows: 300px 360px;
+  gap: 16px;
+}
+.bento-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eaf4fc;
+  box-shadow: inset 0 0 0 1px #213c5010;
+}
+.bento-art {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  z-index: -2;
+  transition: transform 850ms cubic-bezier(.2,.65,.25,1);
+}
+.bento-copy {
+  position: relative;
+  padding: 29px 28px;
+  z-index: 1;
+}
+.bento-copy h3 {
+  font-size: 25px;
+  font-weight: 550;
+  line-height: 1.19;
+  letter-spacing: -.85px;
+  color: #263f52;
+}
+.bento-copy p {
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #688194;
+}
+.bento-booking {
+  grid-row: span 2;
+  background: #c9e2f5;
+}
+.bento-booking .bento-copy { padding: 35px 32px; }
+.bento-booking h3 { font-size: 34px; letter-spacing: -1.3px; }
+.bento-booking p { font-size: 14px; color: #617f96; }
+.bento-booking .bento-art { object-position: center center; }
+.bento-link-detail {
+  position: absolute;
+  bottom: 22px;
+  left: 25px;
+  right: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid #ffffffa6;
+  background: #ffffff9c;
+  backdrop-filter: blur(18px);
+  border-radius: 10px;
+  box-shadow: 0 5px 20px #3b648512;
+  font-size: 12px;
+  color: #567994;
+}
+.bento-link-detail>span:last-child { font-size: 18px; color: #7599b2; }
+.bento-calendar { grid-column: span 2; background: #252d35; }
+.bento-calendar .bento-art { object-position: center 54%; }
+.bento-calendar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #252d35 0%, #252d35ed 22%, #252d3500 65%);
+  z-index: -1;
+}
+.bento-calendar .bento-copy { width: 47%; padding: 34px 0 28px 32px; }
+.bento-calendar h3 { color: #f1f7fc; font-size: 27px; letter-spacing: -.9px; }
+.bento-calendar p { color: #b2c1ce; font-size: 14px; max-width: 205px; margin-top: 17px; }
+.bento-clients,.bento-reminders { background: #edf5fb; }
+.bento-clients .bento-art,.bento-reminders .bento-art { object-position: center bottom; }
+.bento-clients .bento-copy,.bento-reminders .bento-copy { padding: 27px 24px; }
+.bento-clients .bento-copy p,.bento-reminders .bento-copy p { font-size: 14px; margin-top: 11px; }
+.features-section .feature-summary { margin-top: 27px; }
+@media (hover:hover) and (pointer:fine) {
+  .bento-panel:hover .bento-art { transform: scale(1.035); }
+  .bento-booking:hover .bento-art { transform: scale(1.025) translateY(-3px); }
+}
+@media (max-width:1050px) {
+  .bento-grid { grid-template-columns: 1.1fr 1fr 1fr; grid-template-rows: 280px 320px; gap: 13px; }
+  .bento-booking .bento-copy { padding: 27px 24px; }
+  .bento-booking h3 { font-size: 29px; }
+  .bento-booking p { font-size: 12px; }
+  .bento-calendar .bento-copy { width: 48%; padding: 29px 0 24px 25px; }
+  .bento-calendar h3 { font-size: 24px; }
+  .bento-calendar p { font-size: 12px; max-width: 175px; }
+  .bento-clients .bento-copy,.bento-reminders .bento-copy { padding: 24px 20px; }
+  .bento-copy h3 { font-size: 21px; }
+  .bento-clients .bento-copy p,.bento-reminders .bento-copy p { font-size: 13px; }
+  .bento-link-detail { left: 18px; right: 18px; bottom: 18px; font-size: 10px; }
+}
+@media (max-width:760px) {
+  .bento-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 440px 260px 335px; gap: 12px; }
+  .bento-panel { border-radius: 17px; }
+  .bento-booking { grid-row: auto; grid-column: span 2; }
+  .bento-booking .bento-copy { padding: 28px; }
+  .bento-booking h3 { font-size: 32px; }
+  .bento-booking p { font-size: 13px; max-width: 225px; }
+  .bento-booking .bento-art { object-fit: contain; object-position: right bottom; width: 84%; height: 112%; inset: auto -15% -6% auto; }
+  .bento-booking::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg,#c9e2f5,#c9e2f500 65%); z-index: -1; }
+  .bento-link-detail { left: 22px; right: 22px; bottom: 20px; font-size: 12px; }
+  .bento-calendar .bento-copy { width: 49%; padding: 25px 0 20px 23px; }
+  .bento-calendar h3 { font-size: 24px; }
+  .bento-calendar p { font-size: 12px; margin-top: 14px; }
+  .bento-calendar .bento-art { object-fit: cover; object-position: center center; }
+  .bento-calendar::before { background: linear-gradient(90deg,#252d35 0%,#252d35d9 30%,#252d3500 70%); }
+  .bento-clients .bento-copy,.bento-reminders .bento-copy { padding: 21px 17px; }
+  .bento-copy h3 { font-size: 21px; letter-spacing: -.6px; }
+  .bento-clients .bento-copy p,.bento-reminders .bento-copy p { font-size: 12px; line-height: 1.55; }
+  .bento-copy p br { display: none; }
+  .bento-clients .bento-art,.bento-reminders .bento-art { height: 74%; top: auto; bottom: -6%; object-fit: cover; }
+}
+@media (max-width:480px) {
+  .bento-grid { grid-template-columns: 1fr; grid-template-rows: 500px 320px 390px 390px; }
+  .bento-booking,.bento-calendar { grid-column: auto; }
+  .bento-booking .bento-art { width: 100%; height: 100%; inset: 0; object-fit: cover; object-position: center 44%; }
+  .bento-booking::before { display: none; }
+  .bento-booking .bento-copy { padding: 27px; }
+  .bento-booking h3 { font-size: 32px; }
+  .bento-booking p { font-size: 14px; max-width: 260px; }
+  .bento-calendar .bento-copy { padding: 27px 0 20px 25px; width: 50%; }
+  .bento-calendar h3 { font-size: 25px; }
+  .bento-calendar p { font-size: 12px; }
+  .bento-calendar .bento-art { object-position: 59% center; }
+  .bento-clients .bento-copy,.bento-reminders .bento-copy { padding: 27px; }
+  .bento-copy h3 { font-size: 28px; letter-spacing: -.9px; }
+  .bento-clients .bento-copy p,.bento-reminders .bento-copy p { font-size: 14px; max-width: 275px; }
+  .bento-clients .bento-art,.bento-reminders .bento-art { height: 100%; inset: 0; object-fit: cover; object-position: center bottom; }
+}
+.bento-reminders .bento-art {
+  top: 44px;
+  bottom: auto;
+  height: 100%;
+  mask-image: linear-gradient(to bottom, transparent, #000 12%);
+}
+@media (prefers-reduced-motion:reduce) {
+  .bento-art { transition: none; }
+  .bento-panel:hover .bento-art,.bento-booking:hover .bento-art { transform: none; }
+}

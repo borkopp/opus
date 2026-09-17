@@ -1,3 +1,7 @@
+import {
+  recordRecoveryBooking,
+  scheduleRecoveryRefresh,
+} from "./lib/gapRecovery";
 import { v, ConvexError } from "convex/values";
 import {
   internalMutation,
@@ -252,6 +256,9 @@ export const createBooking = mutation({
       customerId: args.customerId,
     });
 
+    const createdForRecovery = await ctx.db.get(bookingId);
+    if (createdForRecovery)
+      await recordRecoveryBooking(ctx, createdForRecovery);
     return bookingId;
   },
 });
@@ -559,6 +566,9 @@ export const createManualBooking = mutation({
       customerId,
     });
 
+    const createdForRecovery = await ctx.db.get(bookingId);
+    if (createdForRecovery)
+      await recordRecoveryBooking(ctx, createdForRecovery);
     return bookingId;
   },
 });
@@ -645,7 +655,7 @@ export const cancelBooking = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { staffMember, org } = await requireRole(ctx, args.orgId, "staff");
+    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
     const booking = await ctx.db.get(args.bookingId);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
@@ -705,7 +715,9 @@ export const cancelBooking = mutation({
       }
 
       // Dashboard notification
-      const cancelDateLabel = formatBookingNotificationDateTime(booking.startAt);
+      const cancelDateLabel = formatBookingNotificationDateTime(
+        booking.startAt,
+      );
       await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "booking_cancelled",
@@ -714,42 +726,14 @@ export const cancelBooking = mutation({
         bookingId: booking._id,
         customerId: customer._id,
       });
-
-      const timeZone = orgSettings?.timezone || "Europe/Belgrade";
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).formatToParts(new Date(booking.startAt));
-
-      let year, month, day;
-      for (const p of parts) {
-        if (p.type === "year") year = p.value;
-        if (p.type === "month") month = p.value;
-        if (p.type === "day") day = p.value;
-      }
-
-      const serviceDate = `${year}-${month}-${day}`;
-
-      if (
-        orgSettings?.gapOptimizerEnabled &&
-        org.plan === "paid"
-      ) {
-        await ctx.scheduler.runAfter(
-          0,
-          internal.ai.gapOptimizer.scanDayAfterCancellation,
-          {
-            orgId: args.orgId,
-            serviceDate,
-            staffIds: [booking.staffId],
-            detectedBy: "cancellation",
-            triggeredByBookingId: booking._id,
-          },
-        );
-      }
     }
 
+    await scheduleRecoveryRefresh(
+      ctx,
+      args.orgId,
+      booking.staffId,
+      new Date(booking.startAt).toISOString().slice(0, 10),
+    );
     return true;
   },
 });
@@ -1003,7 +987,9 @@ export const rescheduleBooking = mutation({
         });
       }
 
-      const newAppointmentLabel = formatBookingNotificationDateTime(args.newStartAt);
+      const newAppointmentLabel = formatBookingNotificationDateTime(
+        args.newStartAt,
+      );
       await ctx.runMutation(internal.dashboardNotifications.create, {
         orgId: args.orgId,
         type: "new_booking",
@@ -1014,6 +1000,15 @@ export const rescheduleBooking = mutation({
       });
     }
 
+    const createdForRecovery = await ctx.db.get(newBookingId);
+    if (createdForRecovery)
+      await recordRecoveryBooking(ctx, createdForRecovery);
+    await scheduleRecoveryRefresh(
+      ctx,
+      args.orgId,
+      oldBooking.staffId,
+      new Date(oldBooking.startAt).toISOString().slice(0, 10),
+    );
     return newBookingId;
   },
 });
@@ -1309,6 +1304,9 @@ export const createBookingForAI = internalMutation({
       createdAt: Date.now(),
     });
 
+    const createdForRecovery = await ctx.db.get(bookingId);
+    if (createdForRecovery)
+      await recordRecoveryBooking(ctx, createdForRecovery);
     return bookingId;
   },
 });

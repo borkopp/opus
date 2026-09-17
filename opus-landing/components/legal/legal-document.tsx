@@ -106,13 +106,13 @@ export function LegalDocument({
   document: LegalDocumentContent;
 }) {
   return (
-    <main className="bg-background text-foreground min-h-screen pt-24 sm:pt-28">
+    <main
+      id="main"
+      className="legal-page bg-background text-foreground min-h-screen"
+    >
       <header className="border-border border-b">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 sm:px-8 sm:py-20 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20 lg:px-12 lg:py-24">
           <div className="max-w-3xl">
-            <p className="text-brand-primary font-mono text-xs font-medium tracking-[0.16em] uppercase">
-              {document.eyebrow}
-            </p>
             <h1 className="text-foreground mt-5 max-w-3xl text-4xl leading-[1.05] font-bold tracking-[-0.045em] sm:text-6xl lg:text-7xl">
               {document.title}
             </h1>

@@ -2,6 +2,10 @@ import { query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 import { requireAuth, requirePaidPlan } from "./lib/auth";
+import { loadAnalyticsData } from "./analyst/data";
+import { buildReport } from "./analyst/metrics";
+import { resolvePeriod } from "./analyst/periods";
+import type { AnalysisRequest } from "./analyst/contracts";
 import { buildDashboardAnalytics } from "./lib/dashboardAnalytics";
 
 export const getFreePlanAnalytics = query({
@@ -190,67 +194,28 @@ export const getNoShowStats = query({
 });
 
 export const getStaffUtilisation = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        // Simplified utilisation: For each staff, calculate booked minutes vs available over the period
-        // For accurate available minutes, we'd need to expand logic across everyday of the period.
-        // For now, we'll return booked minutes per staff, and we can compute static available mins or rough estimate.
-
-        const staffMembers = await ctx.db
-            .query("staff_members")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.eq(q.field("isActive"), true)
-            ))
-            .collect();
-
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startMs)
-                    .lt("startAt", args.endMs)
-            )
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.neq(q.field("status"), "cancelled"),
-                q.neq(q.field("status"), "no_show")
-            ))
-            .collect();
-
-        const staffMap = new Map<string, { name: string, bookedMins: number }>();
-        staffMembers.forEach(s => staffMap.set(s._id, { name: s.displayName, bookedMins: 0 }));
-
-        bookings.forEach(b => {
-            const duration = (b.endAt - b.startAt) / (60 * 1000);
-            const s = staffMap.get(b.staffId);
-            if (s) {
-                s.bookedMins += duration;
-            }
+    args: {},
+    handler: async (ctx) => {
+        const { orgId } = await requireAuth(ctx);
+        const settings = await ctx.db.query("org_settings")
+            .withIndex("by_org", q => q.eq("orgId", orgId)).first();
+        const timezone = settings?.timezone ?? "Europe/Skopje";
+        const now = Date.now();
+        const request: AnalysisRequest = {
+            metric: "utilisation", groupBy: "staff",
+            period: { preset: "this_week", startDate: null, endDate: null },
+            comparison: null, staffName: null, serviceName: null,
+        };
+        const range = resolvePeriod(request.period, timezone, now);
+        const data = await loadAnalyticsData(ctx, orgId, request, range, null);
+        const report = buildReport(request, data, range, {
+            asOf: now, localNow: range.localNow, timezone, language: "en", key: "capacity",
         });
-
-        // Compute dummy Available Minutes (e.g. 5 days * 8 hours = 2400 mins a week)
-        // In reality, this requires mapping over available dates and summing availability rules.
-        const daysInRange = Math.max(1, Math.ceil((args.endMs - args.startMs) / (24 * 60 * 60 * 1000)));
-        const defaultAvailableMins = daysInRange * 8 * 60; // 8 hours per day assumption if no rules checked.
-
-        const results = Array.from(staffMap.values()).map(s => ({
-            staffName: s.name,
-            bookedMins: s.bookedMins,
-            availableMins: defaultAvailableMins,
-            utilisationPct: defaultAvailableMins > 0 ? (s.bookedMins / defaultAvailableMins) * 100 : 0
-        }));
-
-        // Sort descending by utilisation
-        results.sort((a, b) => b.utilisationPct - a.utilisationPct);
-        return results;
-    }
+        return report.rows.map(row => ({
+            staffName: row.label, bookedMins: row.bookedMinutes,
+            availableMins: row.availableMinutes, utilisationPct: row.value,
+        })).sort((a, b) => (b.utilisationPct ?? -1) - (a.utilisationPct ?? -1));
+    },
 });
 
 export const getTopServices = query({

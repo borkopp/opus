@@ -1,3 +1,4 @@
+import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -91,7 +92,7 @@ export const startBeautyBusiness = mutation({
     name: v.string(),
     category: beautyCategory,
   },
-  returns: v.id("orgs"),
+  returns: v.object({ orgId: v.id("orgs"), created: v.boolean() }),
   handler: async (ctx, args) => {
     const { user } = await requireUser(ctx);
     const name = args.name.trim();
@@ -138,7 +139,7 @@ export const startBeautyBusiness = mutation({
       await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
         orgId: org._id,
       });
-      return org._id;
+      return { orgId: org._id, created: false };
     }
 
     const now = Date.now();
@@ -217,7 +218,7 @@ export const startBeautyBusiness = mutation({
       createdAt: now,
     });
 
-    return orgId;
+    return { orgId, created: true };
   },
 });
 
@@ -410,6 +411,7 @@ export const saveHours = mutation({
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, undefined, "owner");
     assertHours(args.openingHours);
+    await ensureScheduleBaseline(ctx, org._id);
     const now = Date.now();
 
     await ctx.db.patch(org._id, {
@@ -460,6 +462,7 @@ export const saveHours = mutation({
     await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: org._id,
     });
+    await recordScheduleVersion(ctx, org._id);
     return org._id;
   },
 });

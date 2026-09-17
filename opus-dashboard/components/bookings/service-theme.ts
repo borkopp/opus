@@ -19,7 +19,21 @@ export interface ServiceTheme {
   priceText: string;
   // Active / Selected ring
   ring: string;
+  // Modern Pill Styling (matches reference design)
+  pillBg: string;
+  pillRing: string;
+  pillBorder?: string;
 }
+
+export const PILL_STRIPE_STYLE: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.045) 10px, transparent 10px, transparent 20px)",
+};
+
+export const MUTED_STRIPE_STYLE: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(45deg, rgba(120, 120, 120, 0.035), rgba(120, 120, 120, 0.035) 10px, transparent 10px, transparent 20px)",
+};
 
 export const SERVICE_THEMES: Record<string, ServiceTheme> = {
   // 1. Sky / Indigo: Precision cuts, fades, scissor cuts, junior haircuts
@@ -39,6 +53,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-sky-100/70 dark:bg-sky-900/50",
     priceText: "text-sky-900 dark:text-sky-200",
     ring: "ring-sky-500",
+    pillBg: "bg-sky-500 text-white shadow-sm shadow-sky-500/20",
+    pillRing: "ring-sky-400",
   },
 
   // 2. Warm Amber / Terracotta: Beard trims, hot towel shaves, beard contouring, combos
@@ -58,6 +74,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-amber-100/70 dark:bg-amber-900/50",
     priceText: "text-amber-900 dark:text-amber-200",
     ring: "ring-amber-500",
+    pillBg: "bg-[#FF6B35] text-white shadow-sm shadow-orange-500/25",
+    pillRing: "ring-orange-400",
   },
 
   // 3. Purple / Berry: Hair dyeing, balayage, toner, color treatments
@@ -77,6 +95,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-purple-100/70 dark:bg-purple-900/50",
     priceText: "text-purple-900 dark:text-purple-200",
     ring: "ring-purple-500",
+    pillBg: "bg-[#8B5CF6] text-white shadow-sm shadow-purple-500/25",
+    pillRing: "ring-purple-400",
   },
 
   // 4. Emerald / Mint: Hair wash, scalp treatments, blowout, styling
@@ -96,6 +116,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-emerald-100/70 dark:bg-emerald-900/50",
     priceText: "text-emerald-900 dark:text-emerald-200",
     ring: "ring-emerald-500",
+    pillBg: "bg-[#10B981] text-white shadow-sm shadow-emerald-500/25",
+    pillRing: "ring-emerald-400",
   },
 
   // 5. Rose / Coral: Nails, manicures, pedicures, brows, lashes
@@ -115,6 +137,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-rose-100/70 dark:bg-rose-900/50",
     priceText: "text-rose-900 dark:text-rose-200",
     ring: "ring-rose-500",
+    pillBg: "bg-[#EC4899] text-white shadow-sm shadow-pink-500/25",
+    pillRing: "ring-pink-400",
   },
 
   // 6. Teal / Cyan: Facials, skincare, massage
@@ -134,6 +158,8 @@ export const SERVICE_THEMES: Record<string, ServiceTheme> = {
     priceBg: "bg-teal-100/70 dark:bg-teal-900/50",
     priceText: "text-teal-900 dark:text-teal-200",
     ring: "ring-teal-500",
+    pillBg: "bg-[#06B6D4] text-white shadow-sm shadow-cyan-500/25",
+    pillRing: "ring-cyan-400",
   },
 };
 

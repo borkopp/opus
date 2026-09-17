@@ -4,20 +4,20 @@ import { useState, useCallback } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { startOfDay, addDays, subDays } from "date-fns";
+import { startOfDay, addDays, subDays, isToday } from "date-fns";
 import {
   IconPlus,
   IconChevronLeft,
   IconChevronRight,
   IconCalendarOff,
   IconLayoutList,
-  IconCalendarEvent,
-  IconFilter,
+  IconLayoutColumns,
+  IconLayoutRows,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { BookingsHorizontalTimeline } from "./BookingsHorizontalTimeline";
 import { BookingsTimeline } from "./BookingsTimeline";
-import { BookingDetailsPanel } from "./BookingDetailsPanel";
 import { BookingsList } from "./BookingsList";
 import { cn } from "@/lib/utils";
 import { Price } from "@/components/ui/price";
@@ -49,21 +49,39 @@ export function BookingsSplitView({
   const completeBooking = useMutation(api.bookings.completeBooking);
   const markNoShow = useMutation(api.bookings.markNoShow);
   const { openQuickBooking } = useQuickBooking();
+
   const [selectedBookingId, setSelectedBookingId] =
     useState<Id<"bookings"> | null>(null);
-  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
-  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [viewVariant, setViewVariant] = useState<
+    "horizontal" | "vertical" | "list"
+  >(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("opus_bookings_timeline_variant");
+      if (saved === "horizontal" || saved === "vertical" || saved === "list") {
+        return saved;
+      }
+    }
+    return "horizontal";
+  });
+
+  const handleVariantChange = (variant: "horizontal" | "vertical" | "list") => {
+    setViewVariant(variant);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("opus_bookings_timeline_variant", variant);
+    }
+  };
+
   const [statusFilter, setStatusFilter] = useState<
     "all" | "upcoming" | "completed" | "no-show"
   >("all");
+
   const quickBookingSlots = useQuery(api.slots.getQuickBookingSlots, {
     orgId,
     date: dateKey(currentDate),
   });
 
-  // Exclude bookings that were cancelled as part of a reschedule — they are history
-  // artifacts (the new booking is shown instead) and should not appear on the calendar.
+  // Exclude bookings that were cancelled as part of a reschedule
   const todayBookings = bookings.filter(
     (b) =>
       isBookingOnDate(b.startAt, currentDate) &&
@@ -91,27 +109,21 @@ export function BookingsSplitView({
   // Filtering logic for the main view
   const filteredBookings = todayBookings.filter((b) => {
     if (statusFilter === "all") return true;
-
     if (statusFilter === "completed") return b.status === "completed";
     if (statusFilter === "no-show") return b.status === "no_show";
     if (statusFilter === "upcoming") return b.status === "confirmed";
-
     return true;
   });
 
-  const selectedBooking = bookings.find((b) => b._id === selectedBookingId);
-
-  // Shared reschedule handler for both drag-and-drop and sidebar button
+  // Reschedule handler
   const handleReschedule = useCallback(
     async (bookingId: Id<"bookings">, newStartAt: number) => {
-      setPendingAction("reschedule");
       try {
         await rescheduleBooking({
           orgId,
           bookingId,
           newStartAt,
         });
-        // After rescheduling, deselect the old booking (it was cancelled + new one created)
         setSelectedBookingId(null);
         toast.success(t("Booking rescheduled", "Терминот е презакажан"));
         return true;
@@ -126,8 +138,6 @@ export function BookingsSplitView({
               ),
         );
         return false;
-      } finally {
-        setPendingAction(null);
       }
     },
     [rescheduleBooking, orgId, t],
@@ -138,7 +148,6 @@ export function BookingsSplitView({
       action: "cancel" | "complete" | "no-show",
       bookingId: Id<"bookings">,
     ) => {
-      setPendingAction(action);
       try {
         if (action === "cancel") {
           await cancelBooking({
@@ -169,8 +178,6 @@ export function BookingsSplitView({
                 "Не може да се ажурира терминот.",
               ),
         );
-      } finally {
-        setPendingAction(null);
       }
     },
     [cancelBooking, completeBooking, markNoShow, orgId, t],
@@ -178,15 +185,16 @@ export function BookingsSplitView({
 
   return (
     <div className="flex h-full min-w-0 flex-col gap-4">
-      {/* Header / Live View */}
+      {/* Top Header: Title, Live Stats & Date Navigator */}
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <h1 className="text-2xl font-display font-semibold tracking-tight text-foreground sm:text-3xl">
             {t("Bookings", "Термини")}
           </h1>
 
-          <div className="hidden xl:flex h-8 w-[1px] bg-border mx-1"></div>
+          <div className="hidden xl:flex h-7 w-[1px] bg-border/60 mx-1" />
 
+          {/* Quick Metrics */}
           <div className="hidden xl:flex items-center gap-3 text-sm">
             <div className="flex items-baseline gap-1.5">
               <span className="font-semibold text-foreground tracking-tight">
@@ -200,7 +208,7 @@ export function BookingsSplitView({
             <span className="text-border px-1">·</span>
 
             <div className="flex items-baseline gap-1.5 line-clamp-1">
-              <span className="font-semibold text-success tracking-tight">
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 <Price amount={completedValue} showDecimals={false} />
               </span>
               <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">
@@ -216,9 +224,50 @@ export function BookingsSplitView({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Date Navigator */}
+          <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 shadow-2xs">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
+              onClick={() => setCurrentDate(subDays(currentDate, 1))}
+              aria-label={t("Previous day", "Претходен ден")}
+            >
+              <IconChevronLeft className="size-4" />
+            </Button>
+
+            {!isToday(currentDate) && (
+              <button
+                type="button"
+                onClick={() => setCurrentDate(startOfDay(new Date()))}
+                className="px-2 py-0.5 text-xs font-semibold rounded-md bg-muted/60 text-foreground hover:bg-muted transition-colors"
+              >
+                {t("Today", "Денес")}
+              </button>
+            )}
+
+            <span className="text-xs font-semibold px-2 text-center select-none tracking-tight min-w-[105px]">
+              {formatHeaderDate(currentDate, locale)}
+            </span>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
+              onClick={() => setCurrentDate(addDays(currentDate, 1))}
+              aria-label={t("Next day", "Следен ден")}
+            >
+              <IconChevronRight className="size-4" />
+            </Button>
+          </div>
+
+          {/* New Booking Action */}
           <Button
             variant="default"
+            className="rounded-xl shadow-xs"
             onClick={() => openQuickBooking({ date: currentDate })}
           >
             <IconPlus data-icon="inline-start" />
@@ -227,196 +276,197 @@ export function BookingsSplitView({
         </div>
       </div>
 
-      {/* Split View Container */}
-      <div className="relative flex min-h-[600px] min-w-0 flex-1 flex-col gap-6 lg:flex-row">
-        {/* 70% Left: Schedule Main Area */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-xl bg-card">
-          {/* Action & Filter Bar */}
-          <div className="p-3 border-b border-border/40 flex flex-wrap justify-between items-center gap-3">
-            {/* Date Nav */}
-            <div className="flex w-full items-center justify-between gap-2 rounded-md bg-background p-1 sm:w-auto">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9 border-none rounded-l-sm rounded-r-[2px] sm:size-7"
-                onClick={() => setCurrentDate(subDays(currentDate, 1))}
-                aria-label={t("Previous day", "Претходен ден")}
-              >
-                <IconChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-semibold w-36 text-center select-none tracking-tight">
-                {formatHeaderDate(currentDate, locale)}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-9 border-none rounded-l-none rounded-r-sm sm:size-7"
-                onClick={() => setCurrentDate(addDays(currentDate, 1))}
-                aria-label={t("Next day", "Следен ден")}
-              >
-                <IconChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* View Filters & Toggles */}
-            <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:gap-3">
-              {/* Status Filter Tabs */}
-              <div className="hidden lg:flex items-center rounded-md bg-background p-1 overflow-hidden text-xs font-medium">
-                <button
-                  onClick={() => setStatusFilter("all")}
-                  className={cn(
-                    "px-3 py-1.5 rounded transition-colors",
-                    statusFilter === "all"
-                      ? "bg-muted/30 text-foreground rounded-md"
-                      : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
-                  )}
-                >
-                  {t("All", "Сите")}
-                </button>
-                <button
-                  onClick={() => setStatusFilter("upcoming")}
-                  className={cn(
-                    "px-3 py-1.5 rounded transition-colors",
-                    statusFilter === "upcoming"
-                      ? "bg-muted/30 text-foreground rounded-md"
-                      : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
-                  )}
-                >
-                  {t("Upcoming", "Претстојни")}
-                </button>
-                <button
-                  onClick={() => setStatusFilter("completed")}
-                  className={cn(
-                    "px-3 py-1.5 rounded transition-colors",
-                    statusFilter === "completed"
-                      ? "bg-muted/30 text-foreground rounded-md"
-                      : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
-                  )}
-                >
-                  {t("Completed", "Завршени")}
-                </button>
-                <button
-                  onClick={() => setStatusFilter("no-show")}
-                  className={cn(
-                    "px-3 py-1.5 rounded transition-colors",
-                    statusFilter === "no-show"
-                      ? "bg-muted/30 text-foreground rounded-md"
-                      : "text-muted-foreground hover:bg-muted/20 hover:text-muted-foreground rounded-md",
-                  )}
-                >
-                  {t("No-Show", "Не се појави")}
-                </button>
-              </div>
-
-              {/* Mobile Filter */}
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={t("Filter bookings", "Филтрирај термини")}
-                className="h-9 w-9 lg:hidden text-muted-foreground"
-              >
-                <IconFilter className="h-4 w-4" />
-              </Button>
-
-              <div className="w-px h-6 bg-border mx-1 hidden sm:block"></div>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant={viewMode === "list" ? "secondary" : "ghost"}
-                  size="sm"
-                  className={cn(
-                    "h-9 px-2.5 sm:h-7",
-                    viewMode === "list"
-                      ? "shadow-sm"
-                      : "opacity-70 hover:opacity-100",
-                  )}
-                  onClick={() => setViewMode("list")}
-                >
-                  <IconLayoutList className="h-4 w-4 mr-1.5" />
-                  {t("List", "Листа")}
-                </Button>
-                <Button
-                  variant={viewMode === "calendar" ? "secondary" : "ghost"}
-                  size="sm"
-                  className={cn(
-                    "h-9 px-2.5 sm:h-7",
-                    viewMode === "calendar"
-                      ? "shadow-sm"
-                      : "opacity-70 hover:opacity-100",
-                  )}
-                  onClick={() => setViewMode("calendar")}
-                >
-                  <IconCalendarEvent className="h-4 w-4 mr-1.5" />
-                  {t("Calendar", "Календар")}
-                </Button>
-              </div>
-            </div>
+      {/* Main Schedule Canvas Container */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
+        {/* Action & Filter Toolbar */}
+        <div className="p-2.5 sm:p-3 border-b border-border/40 flex flex-wrap justify-between items-center gap-3 bg-muted/[0.04]">
+          {/* Left: Status Filter Pills */}
+          <div className="flex items-center gap-1 overflow-hidden text-xs font-medium">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl transition-all",
+                statusFilter === "all"
+                  ? "bg-foreground text-background font-semibold shadow-2xs"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              {t("All", "Сите")}
+            </button>
+            <button
+              onClick={() => setStatusFilter("upcoming")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl transition-all",
+                statusFilter === "upcoming"
+                  ? "bg-foreground text-background font-semibold shadow-2xs"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              {t("Upcoming", "Претстојни")}
+            </button>
+            <button
+              onClick={() => setStatusFilter("completed")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl transition-all",
+                statusFilter === "completed"
+                  ? "bg-foreground text-background font-semibold shadow-2xs"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              {t("Completed", "Завршени")}
+            </button>
+            <button
+              onClick={() => setStatusFilter("no-show")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl transition-all",
+                statusFilter === "no-show"
+                  ? "bg-foreground text-background font-semibold shadow-2xs"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              )}
+            >
+              {t("No-Show", "Не се појави")}
+            </button>
           </div>
 
-          {/* Content Area */}
-          <div
-            data-scroll-container
-            className="flex-1 overflow-y-auto overflow-x-auto relative bg-background/50"
-          >
-            {staffMembers.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
-                <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
-                <p className="font-medium text-foreground">
-                  {t(
-                    "No staff members found",
-                    "Не се пронајдени членови на тимот",
-                  )}
-                </p>
-              </div>
-            ) : viewMode === "calendar" ? (
-              <BookingsTimeline
-                bookings={filteredBookings}
-                staffMembers={staffMembers}
-                selectedBookingId={selectedBookingId}
-                onSelectBooking={(id) =>
-                  setSelectedBookingId(id === selectedBookingId ? null : id)
-                }
-                onReschedule={handleReschedule}
-                currentDate={currentDate}
-                quickBookingSlots={quickBookingSlots?.slots ?? []}
-                slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
-                onQuickBooking={(slot) => openQuickBooking({ slot })}
-              />
-            ) : filteredBookings.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8">
-                <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
-                <p className="font-medium text-foreground">
-                  {t("No bookings found", "Нема пронајдени термини")}
-                </p>
-                <p className="text-sm">
-                  {t(
-                    "Try a different filter or date.",
-                    "Обидете се со друг филтер или датум.",
-                  )}
-                </p>
-              </div>
-            ) : (
-              <BookingsList
-                bookings={filteredBookings}
-                selectedBookingId={selectedBookingId}
-                onSelectBooking={(id) =>
-                  setSelectedBookingId(id === selectedBookingId ? null : id)
-                }
-              />
-            )}
+          {/* Right: Variant Switcher Toggle (Horizontal / Vertical / List) */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center rounded-xl bg-muted/60 p-1 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => handleVariantChange("horizontal")}
+                title={t(
+                  "Horizontal Timeline (Staff rows, Time columns)",
+                  "Хоризонтален приказ (Тим редови, време колони)",
+                )}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
+                  viewVariant === "horizontal"
+                    ? "bg-card text-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <IconLayoutColumns className="size-3.5" />
+                <span>{t("Horizontal", "Хоризонтално")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleVariantChange("vertical")}
+                title={t(
+                  "Vertical Timeline (Staff columns, Time rows)",
+                  "Вертикален приказ (Тим колони, време редови)",
+                )}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
+                  viewVariant === "vertical"
+                    ? "bg-card text-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <IconLayoutRows className="size-3.5" />
+                <span>{t("Vertical", "Вертикално")}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleVariantChange("list")}
+                title={t("List View", "Листа")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
+                  viewVariant === "list"
+                    ? "bg-card text-foreground font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <IconLayoutList className="size-3.5" />
+                <span>{t("List", "Листа")}</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <BookingDetailsPanel
-          booking={selectedBooking ?? null}
-          onClose={() => setSelectedBookingId(null)}
-          onReschedule={handleReschedule}
-          onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-          onComplete={(bookingId) => runBookingAction("complete", bookingId)}
-          onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
-          isUpdating={pendingAction !== null}
-        />
+        {/* Content Area */}
+        <div
+          data-scroll-container
+          className="flex-1 overflow-y-auto overflow-x-auto relative bg-background/50"
+        >
+          {staffMembers.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12">
+              <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
+              <p className="font-semibold text-foreground text-base">
+                {t(
+                  "No staff members found",
+                  "Не се пронајдени членови на тимот",
+                )}
+              </p>
+            </div>
+          ) : viewVariant === "horizontal" ? (
+            <BookingsHorizontalTimeline
+              bookings={filteredBookings}
+              staffMembers={staffMembers}
+              selectedBookingId={selectedBookingId}
+              onSelectBooking={(id) =>
+                setSelectedBookingId(id === selectedBookingId ? null : id)
+              }
+              onReschedule={handleReschedule}
+              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+              onMarkNoShow={(bookingId) =>
+                runBookingAction("no-show", bookingId)
+              }
+              currentDate={currentDate}
+              quickBookingSlots={quickBookingSlots?.slots ?? []}
+              slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
+              onQuickBooking={(slot) => openQuickBooking({ slot })}
+            />
+          ) : viewVariant === "vertical" ? (
+            <BookingsTimeline
+              bookings={filteredBookings}
+              staffMembers={staffMembers}
+              selectedBookingId={selectedBookingId}
+              onSelectBooking={(id) =>
+                setSelectedBookingId(id === selectedBookingId ? null : id)
+              }
+              onReschedule={handleReschedule}
+              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+              onMarkNoShow={(bookingId) =>
+                runBookingAction("no-show", bookingId)
+              }
+              currentDate={currentDate}
+              quickBookingSlots={quickBookingSlots?.slots ?? []}
+              slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
+              onQuickBooking={(slot) => openQuickBooking({ slot })}
+            />
+          ) : filteredBookings.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12">
+              <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
+              <p className="font-semibold text-foreground text-base">
+                {t("No bookings found", "Нема пронајдени термини")}
+              </p>
+              <p className="text-xs mt-1">
+                {t(
+                  "Try a different filter or date.",
+                  "Обидете се со друг филтер или датум.",
+                )}
+              </p>
+            </div>
+          ) : (
+            <BookingsList
+              bookings={filteredBookings}
+              staffMembers={staffMembers}
+              selectedBookingId={selectedBookingId}
+              onSelectBooking={(id) =>
+                setSelectedBookingId(id === selectedBookingId ? null : id)
+              }
+              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+              onMarkNoShow={(bookingId) =>
+                runBookingAction("no-show", bookingId)
+              }
+            />
+          )}
+        </div>
       </div>
     </div>
   );

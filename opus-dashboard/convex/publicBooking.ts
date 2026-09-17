@@ -9,6 +9,8 @@ import {
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { computeSlotsForDate } from "./slots";
+import { recordRecoveryBooking, recoveryOfferContext } from "./lib/gapRecovery";
+import { hashRecoveryToken } from "./lib/gapRecoveryRules";
 import { isActiveIndustry } from "./lib/productScope";
 import { ensureCurrentOpusUser } from "./lib/opusUserAuth";
 import { acceptsPublicBookings } from "./lib/publication";
@@ -50,6 +52,7 @@ type PublicBookingInput = {
   customerPhone?: string;
   customerEmail?: string;
   customerNote?: string;
+  gapRecoveryEmailOptIn?: boolean;
 };
 
 type PublicBookingResult = {
@@ -71,6 +74,7 @@ const publicBookingArgs = {
   customerPhone: v.optional(v.string()),
   customerEmail: v.optional(v.string()),
   customerNote: v.optional(v.string()),
+  gapRecoveryEmailOptIn: v.optional(v.boolean()),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +90,7 @@ async function createPublicBookingRecord(
   ctx: MutationCtx,
   args: PublicBookingInput,
   opusUserId?: Id<"opus_users">,
+  recoveryCandidateId?: Id<"gap_outreach_candidates">,
 ): Promise<PublicBookingResult> {
   // ── Validate org accepts bookings on a published public surface ──
   const org = await ctx.db.get(args.orgId);
@@ -374,6 +379,23 @@ async function createPublicBookingRecord(
     });
   }
 
+  if (args.gapRecoveryEmailOptIn === true) {
+    await ctx.db.patch(customerId, {
+      gapRecoveryEmailOptIn: true,
+      gapRecoveryConsentAt: Date.now(),
+      gapRecoveryConsentSource: "guest_booking",
+    });
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "system",
+      action: "gap_optimizer.consent_recorded",
+      resourceType: "customers",
+      resourceId: customerId,
+      after: { optedIn: true, source: "guest_booking" },
+      createdAt: Date.now(),
+    });
+  }
+
   // If opusUserId is provided, also link it to existing customer
   if (opusUserId && customer && !customer.opusUserId) {
     await ctx.db.patch(customerId, { opusUserId, updatedAt: Date.now() });
@@ -452,6 +474,7 @@ async function createPublicBookingRecord(
   if (!booking || !bookingCustomer) {
     throw new Error("Created booking email context was not found.");
   }
+  await recordRecoveryBooking(ctx, booking, recoveryCandidateId);
   await queueBookingEmailNotifications(ctx, {
     org,
     settings: orgSettings,
@@ -651,6 +674,7 @@ export const requestBookingEmailOtp = action({
   args: {
     orgId: v.id("orgs"),
     email: v.string(),
+    recoveryToken: v.optional(v.string()),
   },
   handler: async (
     ctx,
@@ -664,6 +688,12 @@ export const requestBookingEmailOtp = action({
     if (!isValidBookingEmail(email)) {
       throw new ConvexError("Enter a valid email address.");
     }
+    if (args.recoveryToken)
+      await ctx.runQuery(internal.ai.gapOptimizerHelpers.assertOfferRecipient, {
+        orgId: args.orgId,
+        token: args.recoveryToken,
+        email,
+      });
     const code = generateBookingOtp();
     const [codeHash, encryptedCode] = await Promise.all([
       hashBookingOtp(email, code),
@@ -711,6 +741,7 @@ export const createVerifiedPublicBooking = internalMutation({
     ...publicBookingArgs,
     customerPhone: v.string(),
     customerEmail: v.string(),
+    recoveryToken: v.optional(v.string()),
     challengeId: v.id("booking_email_verifications"),
     otpHash: v.string(),
   },
@@ -756,16 +787,49 @@ export const createVerifiedPublicBooking = internalMutation({
       };
     }
 
-    const booking = await createPublicBookingRecord(ctx, {
-      orgId: args.orgId,
-      serviceId: args.serviceId,
-      staffId: args.staffId,
-      startAt: args.startAt,
-      customerName: args.customerName,
-      customerPhone: args.customerPhone,
-      customerEmail: email,
-      customerNote: args.customerNote,
-    });
+    let recoveryCandidateId: Id<"gap_outreach_candidates"> | undefined;
+    if (args.recoveryToken) {
+      const hash = await hashRecoveryToken(args.recoveryToken);
+      const candidate = hash
+        ? await ctx.db
+            .query("gap_outreach_candidates")
+            .withIndex("by_org_token", (q) =>
+              q.eq("orgId", args.orgId).eq("offerTokenHash", hash),
+            )
+            .unique()
+        : null;
+      const offer = candidate
+        ? await recoveryOfferContext(ctx, candidate)
+        : null;
+      if (
+        !offer ||
+        offer.candidate.recipientEmail !== email ||
+        offer.option.serviceId !== args.serviceId ||
+        offer.option.staffId !== args.staffId ||
+        offer.option.startAt !== args.startAt
+      ) {
+        throw new ConvexError(
+          "This opening offer is no longer available. Choose another appointment.",
+        );
+      }
+      recoveryCandidateId = offer.candidate._id;
+    }
+    const booking = await createPublicBookingRecord(
+      ctx,
+      {
+        orgId: args.orgId,
+        serviceId: args.serviceId,
+        staffId: args.staffId,
+        startAt: args.startAt,
+        customerName: args.customerName,
+        customerPhone: args.customerPhone,
+        customerEmail: email,
+        customerNote: args.customerNote,
+        gapRecoveryEmailOptIn: args.gapRecoveryEmailOptIn,
+      },
+      undefined,
+      recoveryCandidateId,
+    );
     await ctx.db.patch(args.challengeId, {
       status: "consumed",
       consumedAt: Date.now(),
@@ -780,6 +844,7 @@ export const confirmPublicBooking = action({
     ...publicBookingArgs,
     customerPhone: v.string(),
     customerEmail: v.string(),
+    recoveryToken: v.optional(v.string()),
     challengeId: v.id("booking_email_verifications"),
     otp: v.string(),
   },
@@ -802,6 +867,8 @@ export const confirmPublicBooking = action({
         customerPhone: args.customerPhone,
         customerEmail: email,
         customerNote: args.customerNote,
+        gapRecoveryEmailOptIn: args.gapRecoveryEmailOptIn,
+        recoveryToken: args.recoveryToken,
         challengeId: args.challengeId,
         otpHash: await hashBookingOtp(email, args.otp),
       },

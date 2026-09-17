@@ -1,7 +1,9 @@
+import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
 import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
+import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
 
 export const setAvailabilityRule = mutation({
   args: {
@@ -48,6 +50,7 @@ export const setAvailabilityRule = mutation({
       )
       .first();
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     const timestamp = Date.now();
     let ruleId;
 
@@ -106,6 +109,8 @@ export const setAvailabilityRule = mutation({
     }
 
     // Recompute website status — availability rules changed.
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: args.orgId,
     });
@@ -131,6 +136,7 @@ export const deleteAvailabilityRule = mutation({
       throw new ConvexError("Rule not found.");
     }
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     await ctx.db.patch(args.ruleId, {
       isActive: false,
       isDeleted: true,
@@ -151,6 +157,8 @@ export const deleteAvailabilityRule = mutation({
     });
 
     // Recompute website status — an availability rule was deleted.
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: args.orgId,
     });
@@ -199,6 +207,7 @@ export const copyScheduleToAllStaff = mutation({
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 
+    await ensureScheduleBaseline(ctx, args.orgId);
     const timestamp = Date.now();
 
     for (const target of allStaff) {
@@ -250,6 +259,8 @@ export const copyScheduleToAllStaff = mutation({
     });
 
     // Copying a schedule can restore the bookable hours required for publishing.
+    await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
     await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
       orgId: args.orgId,
     });

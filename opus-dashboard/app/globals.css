@@ -59,154 +59,155 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   OPUS DESIGN SYSTEM — Light Mode (Primary)
+   OPUS DESIGN SYSTEM — Light Mode
+   Landing-page palette: sky blue, ice-blue surfaces, white and charcoal.
    Identity:
-     ink          #20211F  → text foreground / dark surface base
-     canvas       #F6F6F3  → neutral page background
+     ink          #24282F  → text foreground / dark surface base
+     canvas       #EAF4FC  → pale blue page background
      surface      #FFFFFF  → card & popover background
-     brand        #FF814A  → primary actions & active states
-     brand-soft   #FFF0EA  → accent / subtle brand fills
-     highlight    #F2B08C  → apricot highlight accents
-     success      #2F765F  → moss green status & confirmation
-     danger       #B54742  → pomegranate destructive / errors
-     border       #DCDDD7  → structural borders & dividers
-     muted text   #686A65  → secondary metadata & placeholder
+     brand        #2588C8  → logo, focus rings & chart accents
+     primary      #1D76B0  → deeper blue for actions with white text
+     brand-soft   #EAF6FF  → accent / subtle brand fills
+     highlight    #8BBDE5  → soft sky-blue highlights
+     success      #2F765F  → status & confirmation
+     danger       #B54742  → destructive / errors
+     border       #DCE7EF  → structural borders & dividers
+     muted text   #697580  → secondary metadata & placeholder
    Fonts:
-     Commissioner    → display headings, wordmark, large numbers  [--font-commissioner]
-     Manrope         → UI & body copy                             [--font-manrope]
-     IBM Plex Mono   → appointment times, compact metadata        [--font-ibm-plex-mono]
+     Commissioner    → display headings, large numbers             [--font-commissioner]
+     Manrope         → UI & body copy                              [--font-manrope]
+     IBM Plex Mono   → appointment times, compact metadata          [--font-ibm-plex-mono]
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
   --radius: 1rem;
 
   /* Canvas & Ink */
-  --background: #f6f6f3;
-  --foreground: #20211f;
-  --ink-surface: #20211f;
+  --background: #eaf4fc;
+  --foreground: #24282f;
+  --ink-surface: #24282f;
 
   /* Surface */
   --card: #ffffff;
-  --card-foreground: #20211f;
+  --card-foreground: var(--foreground);
 
   --popover: #ffffff;
-  --popover-foreground: #20211f;
+  --popover-foreground: var(--foreground);
 
-  /* Brand Primary */
-  --brand: #ff814a;
-  --primary: var(--brand);
+  /* Brand Primary — deeper action blue keeps white labels readable. */
+  --brand: #2588c8;
+  --primary: #1d76b0;
   --primary-foreground: #ffffff;
 
   /* Brand Soft & Secondary */
-  --secondary: #f0f0ec;
-  --secondary-foreground: #20211f;
+  --secondary: #f1f7fb;
+  --secondary-foreground: var(--foreground);
 
-  --muted: #eaeae5;
-  --muted-foreground: #686a65;
+  --muted: #e6eef4;
+  --muted-foreground: #697580;
 
-  --accent: #fff0ea;
-  --accent-foreground: #d4561d;
+  --accent: var(--brand-soft);
+  --accent-foreground: #1b689b;
 
   /* Semantic status roles */
-  --brand-soft: #fff0ea;
-  --highlight: #f2b08c;
+  --brand-soft: #eaf6ff;
+  --highlight: #8bbde5;
   --success: #2f765f;
   --danger: #b54742;
-  --destructive: #b54742;
+  --destructive: var(--danger);
   --destructive-foreground: #ffffff;
-  --warning: #a7643f;
-  --info: #ff814a;
+  --warning: #96710d;
+  --info: var(--primary);
 
   /* Borders & Focus */
-  --border: #dcddd7;
-  --input: #dcddd7;
-  --ring: #ff814a;
+  --border: #dce7ef;
+  --input: var(--border);
+  --ring: var(--brand);
 
   /* Chart palette */
-  --chart-1: #ff814a;
-  --chart-2: #20211f;
-  --chart-3: #f2b08c;
-  --chart-4: #2f765f;
-  --chart-5: #fff0ea;
+  --chart-1: var(--brand);
+  --chart-2: var(--foreground);
+  --chart-3: var(--highlight);
+  --chart-4: var(--success);
+  --chart-5: #c9e6fa;
 
   /* Sidebar */
-  --sidebar: #fbfbf9;
-  --sidebar-foreground: #20211f;
-  --sidebar-primary: #ff814a;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff0ea;
-  --sidebar-accent-foreground: #d4561d;
-  --sidebar-border: #dcddd7;
-  --sidebar-ring: #ff814a;
+  --sidebar: #fafdff;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 
   /* Shadows */
   --shadow-s:
-    inset 0 1px 2px #ffffff30, 0 1px 2px #20211f15, 0 2px 4px #20211f08;
+    inset 0 1px 2px #ffffff30, 0 1px 2px #24282f15, 0 2px 4px #24282f08;
   --shadow-m:
-    inset 0 1px 2px #ffffff50, 0 2px 4px #20211f20, 0 4px 8px #20211f10;
+    inset 0 1px 2px #ffffff50, 0 2px 4px #24282f20, 0 4px 8px #24282f10;
   --shadow-l:
-    inset 0 1px 2px #ffffff70, 0 4px 6px #20211f20, 0 6px 12px #20211f10;
+    inset 0 1px 2px #ffffff70, 0 4px 6px #24282f20, 0 6px 12px #24282f10;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   OPUS DESIGN SYSTEM — Dark Mode (Neutral Charcoal)
-   Background  #181917  → neutral charcoal canvas
-   Card        #21211F  → lifted neutral surface
-   Popover     #282926  → floating neutral surface
-   Foreground  #F3F3EF  → soft neutral text
-   Border      rgba(220, 221, 215, 0.12)
-   Primary     #FF814A  → brand coral for dark context
+   OPUS DESIGN SYSTEM — Dark Mode (Cool Charcoal)
+   Background  #171E26  → cool charcoal canvas
+   Card        #202832  → lifted cool surface
+   Popover     #26313C  → floating cool surface
+   Foreground  #EDF4F9  → soft ice-white text
+   Primary     #69B6E6  → sky blue with deep ink action labels
    ───────────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background: #181917;
-  --foreground: #f3f3ef;
-  --ink-surface: #111210;
+  --background: #171e26;
+  --foreground: #edf4f9;
+  --ink-surface: #10171e;
 
-  --card: #21211f;
-  --card-foreground: #f3f3ef;
+  --card: #202832;
+  --card-foreground: var(--foreground);
 
-  --popover: #282926;
-  --popover-foreground: #f3f3ef;
+  --popover: #26313c;
+  --popover-foreground: var(--foreground);
 
-  --brand: #ff814a;
+  --brand: #69b6e6;
   --primary: var(--brand);
-  --primary-foreground: #ffffff;
+  --primary-foreground: #14212c;
 
-  --secondary: #2b2c29;
-  --secondary-foreground: #f3f3ef;
+  --secondary: #293644;
+  --secondary-foreground: var(--foreground);
 
-  --muted: #242522;
-  --muted-foreground: #a4a59f;
+  --muted: #24303b;
+  --muted-foreground: #a6b6c6;
 
-  --accent: rgba(255, 129, 74, 0.16);
-  --accent-foreground: #ff814a;
+  --accent: var(--brand-soft);
+  --accent-foreground: #a6d6f4;
 
-  --brand-soft: rgba(255, 129, 74, 0.16);
-  --highlight: #f2b08c;
+  --brand-soft: rgba(105, 182, 230, 0.16);
+  --highlight: #a6d6f4;
   --success: #3da182;
   --danger: #d45b56;
-  --destructive: #d45b56;
+  --destructive: var(--danger);
   --destructive-foreground: #ffffff;
-  --warning: #f2b08c;
-  --info: #ff9b6a;
+  --warning: #e5c76b;
+  --info: var(--brand);
 
-  --border: rgba(220, 221, 215, 0.14);
-  --input: rgba(220, 221, 215, 0.2);
-  --ring: #ff814a;
+  --border: rgba(201, 219, 233, 0.14);
+  --input: rgba(201, 219, 233, 0.2);
+  --ring: var(--brand);
 
-  --chart-1: #ff814a;
-  --chart-2: #f3f3ef;
-  --chart-3: #f2b08c;
-  --chart-4: #3da182;
-  --chart-5: rgba(255, 129, 74, 0.25);
+  --chart-1: var(--brand);
+  --chart-2: var(--foreground);
+  --chart-3: var(--highlight);
+  --chart-4: var(--success);
+  --chart-5: #39769e;
 
-  --sidebar: #1d1e1b;
-  --sidebar-foreground: #f3f3ef;
-  --sidebar-primary: #ff814a;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(255, 129, 74, 0.16);
-  --sidebar-accent-foreground: #ff814a;
-  --sidebar-border: rgba(220, 221, 215, 0.12);
-  --sidebar-ring: #ff814a;
+  --sidebar: #1b242e;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: rgba(201, 219, 233, 0.12);
+  --sidebar-ring: var(--ring);
 
   --shadow-s:
     inset 0 1px 2px #ffffff10, 0 1px 2px #00000060, 0 2px 4px #00000040;

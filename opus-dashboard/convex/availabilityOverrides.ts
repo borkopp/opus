@@ -1,6 +1,8 @@
+import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
 import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
+import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
 
 export const createOverride = mutation({
     args: {
@@ -26,6 +28,7 @@ export const createOverride = mutation({
             .withIndex("by_staff_date", q => q.eq("staffId", args.staffId).eq("date", args.date))
             .first();
 
+        await ensureScheduleBaseline(ctx, args.orgId);
         const timestamp = Date.now();
         let overrideId;
 
@@ -78,6 +81,8 @@ export const createOverride = mutation({
             });
         }
 
+        await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
         return overrideId;
     },
 });
@@ -95,6 +100,7 @@ export const deleteOverride = mutation({
             throw new ConvexError("Override not found.");
         }
 
+        await ensureScheduleBaseline(ctx, args.orgId);
         const now = Date.now();
         await ctx.db.patch(args.overrideId, {
             isDeleted: true,
@@ -113,6 +119,8 @@ export const deleteOverride = mutation({
             createdAt: now,
         });
 
+        await recordScheduleVersion(ctx, args.orgId);
+    await scheduleRecoveryRefresh(ctx, args.orgId);
         return null;
     }
 });

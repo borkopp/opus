@@ -4,6 +4,8 @@ import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { defaultQuickBookingDurationMins } from "./lib/orgSettingsValidation";
 import { buildQuickBookingSlots } from "./lib/quickBooking";
+import { BOOKING_NOTICE_MS } from "./lib/gapRecoveryRules";
+import { wallClockNow } from "./lib/bookingTime";
 
 // --- Time Utilities ---
 
@@ -140,234 +142,85 @@ export async function computeSlotsForDate(
   ) {
     throw new ConvexError("Service not found or is inactive.");
   }
-
-  const orgSettings = await ctx.db
+  const settings = await ctx.db
     .query("org_settings")
     .withIndex("by_org", (q) => q.eq("orgId", orgId))
     .first();
-
-  if (!orgSettings) throw new ConvexError("Organization settings not found.");
-
-  const staffMembersToProcess: Id<"staff_members">[] = [];
-
-  if (staffId === "any") {
-    const assignedStaff = service.staffIds;
-    for (const id of assignedStaff) {
-      const s = await ctx.db.get(id);
-      if (s && s.orgId === orgId && !s.isDeleted && s.isActive) {
-        staffMembersToProcess.push(id);
-      }
-    }
-    if (staffMembersToProcess.length === 0) return [];
-  } else {
-    const selectedStaff = await ctx.db.get(staffId);
-    if (
-      !selectedStaff ||
-      selectedStaff.orgId !== orgId ||
-      selectedStaff.isDeleted ||
-      !selectedStaff.isActive ||
-      !service.staffIds.includes(staffId)
-    ) {
-      return [];
-    }
-    staffMembersToProcess.push(staffId);
+  if (!settings) throw new ConvexError("Organization settings not found.");
+  if (
+    dayStartAtForDate(date) === null ||
+    settings.slotDurationMins <= 0 ||
+    service.durationMins <= 0
+  ) {
+    throw new ConvexError("Invalid booking date or duration.");
   }
-
-  const dateObj = new Date(date + "T00:00:00");
-  const dayOfWeek = dateObj.getDay();
-
-  const midnightMs = new Date(`${date}T00:00:00Z`).getTime();
-  const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
-
-  const allSlotsMap = new Map<
-    number,
-    {
-      startAt: number;
-      endAt: number;
-      priceMinorUnits: number;
-      surgePriceApplied: boolean;
-      surgeMultiplierPct?: number;
-      availableStaffIds: Id<"staff_members">[];
-    }
-  >();
-
-  for (const currentStaffId of staffMembersToProcess) {
-    const override = await ctx.db
-      .query("availability_overrides")
-      .withIndex("by_staff_date_active", (q) =>
-        q.eq("staffId", currentStaffId).eq("date", date).eq("isDeleted", false),
-      )
-      .first();
-
-    let workingHours: { startTime: string; endTime: string } | null = null;
-    let breaks: { startTime: string; endTime: string }[] = [];
-
-    if (override) {
-      if (override.type === "day_off") {
-        continue;
-      } else if (
-        override.type === "custom_hours" &&
-        override.startTime &&
-        override.endTime
+  const assigned =
+    staffId === "any"
+      ? service.staffIds
+      : service.staffIds.filter((id) => id === staffId);
+  type Slot = {
+    startAt: number;
+    endAt: number;
+    priceMinorUnits: number;
+    surgePriceApplied: boolean;
+    surgeMultiplierPct?: number;
+    availableStaffIds: Id<"staff_members">[];
+  };
+  const slots = new Map<number, Slot>();
+  const dayOfWeek = new Date(`${date}T00:00:00Z`).getUTCDay();
+  const stepMs = settings.slotDurationMins * 60_000;
+  const durationMs = service.durationMins * 60_000;
+  const bufferMs = (settings.bufferTimeMins || 0) * 60_000;
+  for (const currentStaffId of assigned) {
+    const staff = await ctx.db.get(currentStaffId);
+    if (!staff || staff.orgId !== orgId || staff.isDeleted || !staff.isActive)
+      continue;
+    const availability = await computeFreeIntervalsForStaffDate(
+      ctx,
+      orgId,
+      currentStaffId,
+      date,
+      settings,
+    );
+    if (!availability.workingWindow) continue;
+    const anchor = availability.workingWindow.startAt;
+    for (const interval of availability.freeIntervals) {
+      let startAt =
+        anchor + Math.ceil((interval.startAt - anchor) / stepMs) * stepMs;
+      for (
+        ;
+        startAt + durationMs + bufferMs <= interval.endAt;
+        startAt += stepMs
       ) {
-        workingHours = {
-          startTime: override.startTime,
-          endTime: override.endTime,
-        };
-      }
-    } else {
-      const rule = await ctx.db
-        .query("availability_rules")
-        .withIndex("by_staff_day_active", (q) =>
-          q
-            .eq("staffId", currentStaffId)
-            .eq("dayOfWeek", dayOfWeek)
-            .eq("isDeleted", false)
-            .eq("isActive", true),
-        )
-        .first();
-
-      if (rule) {
-        workingHours = { startTime: rule.startTime, endTime: rule.endTime };
-        breaks = rule.breaks || [];
-      }
-    }
-
-    if (!workingHours) continue;
-
-    const startMins = timeToMins(workingHours.startTime);
-    const endMins = timeToMins(workingHours.endTime);
-    const durationMins = service.durationMins;
-
-    const rawSlots: { start: number; end: number }[] = [];
-    for (
-      let m = startMins;
-      m + durationMins <= endMins;
-      m += orgSettings.slotDurationMins
-    ) {
-      const slotEnd = m + durationMins;
-      const overlapsBreak = breaks.some((b) => {
-        const bStart = timeToMins(b.startTime);
-        const bEnd = timeToMins(b.endTime);
-        return m < bEnd && slotEnd > bStart;
-      });
-
-      if (!overlapsBreak) {
-        rawSlots.push({ start: m, end: slotEnd });
-      }
-    }
-
-    const existingBookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_staff_start", (q) =>
-        q
-          .eq("staffId", currentStaffId)
-          .gte("startAt", midnightMs)
-          .lt("startAt", nextMidnightMs),
-      )
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("isDeleted"), false),
-          q.neq(q.field("status"), "cancelled"),
-        ),
-      )
-      .collect();
-
-    const bookedBlocks = existingBookings.map((b) => {
-      const d = new Date(b.startAt);
-      const startMin = d.getUTCHours() * 60 + d.getUTCMinutes();
-      const endMin =
-        new Date(b.endAt).getUTCHours() * 60 +
-        new Date(b.endAt).getUTCMinutes() +
-        (orgSettings.bufferTimeMins || 0);
-      return { start: startMin, end: endMin };
-    });
-
-    const validSlots = rawSlots.filter((slot) => {
-      const isConflict = bookedBlocks.some(
-        (b) => slot.start < b.end && slot.end > b.start,
-      );
-      return !isConflict;
-    });
-
-    // Calculate pseudo-UTC "now" to compare against pseudo-UTC `slotTimestamp`
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: orgSettings.timezone || "Europe/Belgrade",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hourCycle: "h23",
-    }).formatToParts(new Date());
-
-    let year, month, day, hour, minute, second;
-    for (const p of parts) {
-      if (p.type === "year") year = p.value;
-      if (p.type === "month") month = p.value;
-      if (p.type === "day") day = p.value;
-      if (p.type === "hour") hour = p.value;
-      if (p.type === "minute") minute = p.value;
-      if (p.type === "second") second = p.value;
-    }
-    const pseudoUtcNow = new Date(
-      `${year}-${month}-${day}T${hour}:${minute}:${second}Z`,
-    ).getTime();
-
-    for (const slot of validSlots) {
-      const slotTimestamp = midnightMs + slot.start * 60 * 1000;
-      const endTimestamp = midnightMs + slot.end * 60 * 1000;
-
-      // Hide timeslots that are in the past or within the next 15 minutes.
-      if (slotTimestamp <= pseudoUtcNow + 15 * 60 * 1000) {
-        continue;
-      }
-
-      let priceMinorUnits = service.priceMinorUnits;
-      let surgePriceApplied = false;
-      let surgeMultiplierPct: number | undefined = undefined;
-
-      if (orgSettings.surgeRules && orgSettings.surgeRules.length > 0) {
-        const timeH = Math.floor(slot.start / 60);
-        const timeM = slot.start % 60;
-        const timeStr = `${String(timeH).padStart(2, "0")}:${String(timeM).padStart(2, "0")}`;
-
-        const matchingRule = orgSettings.surgeRules.find(
-          (r) =>
-            r.dayOfWeek === dayOfWeek &&
-            timeStr >= r.startTime &&
-            timeStr < r.endTime,
-        );
-
-        if (matchingRule) {
-          surgePriceApplied = true;
-          surgeMultiplierPct = matchingRule.multiplierPct;
-          priceMinorUnits = Math.round(
-            priceMinorUnits * (1 + matchingRule.multiplierPct / 100),
-          );
-        }
-      }
-
-      if (allSlotsMap.has(slotTimestamp)) {
-        const existing = allSlotsMap.get(slotTimestamp)!;
-        if (!existing.availableStaffIds.includes(currentStaffId)) {
-          existing.availableStaffIds.push(currentStaffId);
-        }
-      } else {
-        allSlotsMap.set(slotTimestamp, {
-          startAt: slotTimestamp,
-          endAt: endTimestamp,
-          priceMinorUnits,
-          surgePriceApplied,
-          surgeMultiplierPct,
-          availableStaffIds: [currentStaffId],
-        });
+        if (startAt <= availability.pseudoUtcNow + BOOKING_NOTICE_MS) continue;
+        const time = new Date(startAt).toISOString().slice(11, 16);
+        const surge = settings.surgePricingEnabled
+          ? settings.surgeRules?.find(
+              (rule) =>
+                rule.dayOfWeek === dayOfWeek &&
+                time >= rule.startTime &&
+                time < rule.endTime,
+            )
+          : undefined;
+        const existing = slots.get(startAt);
+        if (existing) existing.availableStaffIds.push(currentStaffId);
+        else
+          slots.set(startAt, {
+            startAt,
+            endAt: startAt + durationMs,
+            priceMinorUnits: surge
+              ? Math.round(
+                  service.priceMinorUnits * (1 + surge.multiplierPct / 100),
+                )
+              : service.priceMinorUnits,
+            surgePriceApplied: !!surge,
+            ...(surge ? { surgeMultiplierPct: surge.multiplierPct } : {}),
+            availableStaffIds: [currentStaffId],
+          });
       }
     }
   }
-
-  return Array.from(allSlotsMap.values()).sort((a, b) => a.startAt - b.startAt);
+  return [...slots.values()].sort((a, b) => a.startAt - b.startAt);
 }
 
 // --- Queries ---
@@ -528,8 +381,13 @@ export async function computeFreeIntervalsForStaffDate(
     throw new ConvexError("Organization settings not found.");
   }
 
-  const dateObj = new Date(date + "T00:00:00");
-  const dayOfWeek = dateObj.getDay();
+  const staff = await ctx.db.get(staffId);
+  if (!staff || staff.orgId !== orgId || staff.isDeleted || !staff.isActive) {
+    throw new ConvexError("Staff member not found or inactive.");
+  }
+  if (dayStartAtForDate(date) === null)
+    throw new ConvexError("Enter a valid booking date.");
+  const dayOfWeek = new Date(`${date}T00:00:00Z`).getUTCDay();
 
   const midnightMs = new Date(`${date}T00:00:00Z`).getTime();
   const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
@@ -551,8 +409,12 @@ export async function computeFreeIntervalsForStaffDate(
 
   const override = await ctx.db
     .query("availability_overrides")
-    .withIndex("by_staff_date_active", (q) =>
-      q.eq("staffId", staffId).eq("date", date).eq("isDeleted", false),
+    .withIndex("by_org_staff_date_active", (q) =>
+      q
+        .eq("orgId", orgId)
+        .eq("staffId", staffId)
+        .eq("date", date)
+        .eq("isDeleted", false),
     )
     .first();
 
@@ -575,8 +437,9 @@ export async function computeFreeIntervalsForStaffDate(
   } else {
     const rule = await ctx.db
       .query("availability_rules")
-      .withIndex("by_staff_day_active", (q) =>
+      .withIndex("by_org_staff_day_active", (q) =>
         q
+          .eq("orgId", orgId)
           .eq("staffId", staffId)
           .eq("dayOfWeek", dayOfWeek)
           .eq("isDeleted", false)
@@ -601,10 +464,11 @@ export async function computeFreeIntervalsForStaffDate(
 
   const existingBookings = await ctx.db
     .query("bookings")
-    .withIndex("by_staff_start", (q) =>
+    .withIndex("by_org_staff_start", (q) =>
       q
+        .eq("orgId", orgId)
         .eq("staffId", staffId)
-        .gte("startAt", midnightMs)
+        .gte("startAt", midnightMs - 86_400_000)
         .lt("startAt", nextMidnightMs),
     )
     .filter((q) =>
@@ -615,30 +479,7 @@ export async function computeFreeIntervalsForStaffDate(
     )
     .collect();
 
-  // Pseudo-UTC "now" in org timezone, matching how booking timestamps are stored.
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: orgSettings.timezone || "Europe/Belgrade",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-
-  let year, month, day, hour, minute, second;
-  for (const p of parts) {
-    if (p.type === "year") year = p.value;
-    if (p.type === "month") month = p.value;
-    if (p.type === "day") day = p.value;
-    if (p.type === "hour") hour = p.value;
-    if (p.type === "minute") minute = p.value;
-    if (p.type === "second") second = p.value;
-  }
-  const pseudoUtcNow = new Date(
-    `${year}-${month}-${day}T${hour}:${minute}:${second}Z`,
-  ).getTime();
+  const pseudoUtcNow = wallClockNow(orgSettings.timezone || "Europe/Skopje");
 
   const bufferMs = (orgSettings.bufferTimeMins || 0) * 60 * 1000;
 
@@ -657,10 +498,20 @@ export async function computeFreeIntervalsForStaffDate(
     });
   });
 
-  rawBlocks.sort((a, b) => a.start - b.start);
+  const windowBlocks = rawBlocks
+    .filter(
+      (block) =>
+        block.start < workingWindow.endAt && block.end > workingWindow.startAt,
+    )
+    .map((block) => ({
+      ...block,
+      start: Math.max(block.start, workingWindow.startAt),
+      end: Math.min(block.end, workingWindow.endAt),
+    }));
+  windowBlocks.sort((a, b) => a.start - b.start);
 
   const mergedBlocks: Block[] = [];
-  for (const block of rawBlocks) {
+  for (const block of windowBlocks) {
     if (mergedBlocks.length === 0) {
       mergedBlocks.push({ ...block });
     } else {

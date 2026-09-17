@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { httpAction, internalMutation } from "./_generated/server";
+import {
+  expireRecoveryCandidate,
+  syncRecoveryDelivery,
+} from "./lib/gapRecovery";
+import { normalizeBookingEmail } from "./lib/bookingEmailSecurity";
 
 const RESEND_SIGNATURE_TOLERANCE_SECONDS = 5 * 60;
 
@@ -219,6 +224,11 @@ export const recordResendDeliveryEvent = internalMutation({
 
     const state = eventState(args.eventType);
     if (
+      existing.gapRecoveryCandidateId &&
+      (existing.deliveryUpdatedAt ?? 0) > args.eventAt
+    )
+      return "ignored";
+    if (
       existing.deliveryStatus === state.deliveryStatus &&
       (existing.deliveryUpdatedAt ?? 0) >= args.eventAt
     ) {
@@ -237,6 +247,51 @@ export const recordResendDeliveryEvent = internalMutation({
       failureReason: state.failureReason,
     });
     const updated = await ctx.db.get(notificationId);
+    if (existing.gapRecoveryCandidateId) {
+      if (state.status === "failed")
+        await syncRecoveryDelivery(ctx, existing, "failed");
+      const candidate = await ctx.db.get(existing.gapRecoveryCandidateId);
+      const blocksOffers = [
+        "email.bounced",
+        "email.suppressed",
+        "email.complained",
+      ].includes(args.eventType);
+      if (candidate?.orgId === orgId && blocksOffers) {
+        const customer = await ctx.db.get(candidate.customerId);
+        if (customer?.orgId === orgId) {
+          await ctx.db.patch(customer._id, {
+            ...(args.eventType === "email.complained"
+              ? {
+                  gapRecoveryEmailOptIn: false,
+                  gapRecoveryConsentAt: args.eventAt,
+                  gapRecoveryConsentSource: "provider_feedback" as const,
+                }
+              : {
+                  gapRecoveryUndeliverableEmail: normalizeBookingEmail(
+                    existing.recipientAddress,
+                  ),
+                }),
+            updatedAt: Date.now(),
+          });
+          const offers = await ctx.db
+            .query("gap_outreach_candidates")
+            .withIndex("by_org_customer", (q) =>
+              q.eq("orgId", orgId).eq("customerId", customer._id),
+            )
+            .collect();
+          for (const offer of offers) await expireRecoveryCandidate(ctx, offer);
+          await ctx.db.insert("audit_log", {
+            orgId,
+            actorType: "system",
+            action: "gap_optimizer.delivery_preference_updated",
+            resourceType: "customers",
+            resourceId: customer._id,
+            after: { eventType: args.eventType },
+            createdAt: Date.now(),
+          });
+        }
+      }
+    }
     await ctx.db.insert("audit_log", {
       orgId,
       actorType: "system",

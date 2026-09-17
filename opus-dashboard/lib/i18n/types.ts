@@ -60,6 +60,7 @@ export function translate(
 }
 
 const DASHBOARD_PAGE_TITLES = [
+  { path: "/beauty/assistant", en: "Business assistant", mk: "Деловен асистент" },
   {
     path: "/beauty/bookings",
     en: "Appointments",

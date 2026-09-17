@@ -7,6 +7,8 @@
 @import "./_styles/page-layout.css" layer(components);
 @import "./_styles/hero-shader.css" layer(components);
 @import "./_styles/icons.css" layer(components);
+@import "./_styles/intelligence-rotation.css" layer(components);
+@import "./_styles/product-tour.css" layer(components);
 @import "./_styles/contact.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));

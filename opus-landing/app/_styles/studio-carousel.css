@@ -54,6 +54,7 @@
 .intelligence-art>img { object-fit: contain; }
 .final-cta { position: relative; isolation: isolate; aspect-ratio: 3 / 1; min-height: 0; padding: 0; background: #e9f5ff; }
 .final-cta>.cta-panorama { display: block; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: normal; }
+.final-cta>.cta-panorama>img { display: block; width: 100%; height: 100%; object-fit: inherit; }
 .final-cta>.cta-content { position: absolute; left: 5%; top: 50%; width: 45%; transform: translateY(-50%); }
 .final-cta h2 { font-size: 38px; line-height: 1.15; letter-spacing: -1.4px; }
 .final-cta p { font-size: 14px; color: #6c879c; line-height: 1.6; margin-top: 17px; }
@@ -95,10 +96,11 @@
   .studio-slide-copy { left: 12px; right: 12px; bottom: 12px; padding: 20px; }
   .studio-carousel-controls { margin-top: 21px; }
   .generated-step { height: auto; aspect-ratio: 1.2; }
-  .final-cta { display: flex; flex-direction: column; aspect-ratio: auto; padding: 0; background: #e8f4ff; }
-  .final-cta>.cta-content { position: relative; inset: auto; width: 100%; transform: none; order: 1; padding: 32px 30px 12px; }
-  .final-cta>.cta-panorama { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 3 / 1; object-fit: contain; order: 2; }
-  .final-cta h2 { font-size: 36px; }
+  .final-cta { display: block; aspect-ratio: 2 / 3; min-height: 660px; padding: 0; background: #e8f4ff; }
+  .final-cta>.cta-content { position: relative; inset: auto; width: 100%; transform: none; padding: 32px 30px 12px; }
+  .final-cta>.cta-panorama { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .final-cta>.cta-panorama>img { object-position: center bottom; }
+  .final-cta h2 { font-size: clamp(30px, 7.2vw, 36px); }
   .final-cta p { font-size: 14px; margin-top: 17px; }
   .final-cta .button { font-size: 12px; margin-top: 20px; padding: 15px 19px; }
   .final-cta small { font-size: 10px; margin-top: 13px; }

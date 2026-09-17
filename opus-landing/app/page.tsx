@@ -1,18 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
-import type { CSSProperties } from "react";
 import {
-  ArrowRight,
   ArrowUpRight,
   BatteryFull,
-  CalendarDays,
   Check,
   ChevronLeft,
   ChevronRight,
   Ellipsis,
-  Heart,
   Infinity,
   LockKeyhole,
-  MessagesSquare,
   MonitorSmartphone,
   Plus,
   RotateCw,
@@ -21,6 +16,8 @@ import {
   Sparkles,
   Sun,
 } from "lucide-react";
+import { ProductTour } from "./_components/product-tour";
+import { IntelligenceRotation } from "./_components/intelligence-rotation";
 import { CloudShader } from "@/components/landing/cloud-shader";
 import { LandingInteractions } from "@/components/landing/landing-interactions";
 
@@ -48,16 +45,25 @@ export default function HomePage() {
                 className="button button-dark"
                 href="https://studio.opus.mk/signup"
               >
-                Create your free website <span><ArrowUpRight aria-hidden="true" /></span>
+                Create your free website{" "}
+                <span>
+                  <ArrowUpRight aria-hidden="true" />
+                </span>
               </a>
               <a className="button button-light" href="#product">
                 Learn more
               </a>
             </div>
             <div className="microcopy">
-              <span><Check aria-hidden="true" /> Free</span>
-              <span><Check aria-hidden="true" /> No credit card</span>
-              <span><Check aria-hidden="true" /> Made for your studio</span>
+              <span>
+                <Check aria-hidden="true" /> Free
+              </span>
+              <span>
+                <Check aria-hidden="true" /> No credit card
+              </span>
+              <span>
+                <Check aria-hidden="true" /> Made for your studio
+              </span>
             </div>
           </div>
           <div
@@ -65,7 +71,9 @@ export default function HomePage() {
             aria-label="OPUS booking and calendar product preview"
           >
             <div className="floating-note note-left">
-              <span className="note-icon"><Check aria-hidden="true" /></span>
+              <span className="note-icon">
+                <Check aria-hidden="true" />
+              </span>
               <div>
                 <strong>A new booking. Zero messages.</strong>
                 <small>Eva booked a haircut for Friday.</small>
@@ -84,12 +92,17 @@ export default function HomePage() {
                   />
                   <span className="opus-wordmark">OPUS</span>
                 </span>
-                <span className="window-dots"><Ellipsis aria-hidden="true" /></span>
+                <span className="window-dots">
+                  <Ellipsis aria-hidden="true" />
+                </span>
               </div>
               <div className="calendar-title">
                 <div>
                   <h3>
-                    Good morning, Ana <span><Sun aria-hidden="true" /></span>
+                    Good morning, Ana{" "}
+                    <span>
+                      <Sun aria-hidden="true" />
+                    </span>
                   </h3>
                 </div>
                 <span className="calendar-date">Thu, 17 Sep</span>
@@ -136,17 +149,28 @@ export default function HomePage() {
                 <span>
                   <i></i> Everything in its right place.
                 </span>
-                <span>View calendar <ArrowUpRight aria-hidden="true" /></span>
+                <span>
+                  View calendar <ArrowUpRight aria-hidden="true" />
+                </span>
               </div>
             </div>
             <div className="phone phone-hero">
               <div className="phone-island"></div>
               <div className="phone-status">
                 <span>9:41</span>
-                <span className="phone-status-icons"><SignalHigh aria-hidden="true" /><BatteryFull aria-hidden="true" /></span>
+                <span className="phone-status-icons">
+                  <SignalHigh aria-hidden="true" />
+                  <BatteryFull aria-hidden="true" />
+                </span>
               </div>
               <div className="phone-url">
-                <span><LockKeyhole aria-hidden="true" /></span> atelier.opus.mk <span><RotateCw aria-hidden="true" /></span>
+                <span>
+                  <LockKeyhole aria-hidden="true" />
+                </span>{" "}
+                atelier.opus.mk{" "}
+                <span>
+                  <RotateCw aria-hidden="true" />
+                </span>
               </div>
               <div className="studio-cover">
                 <div className="studio-cover-shade"></div>
@@ -158,7 +182,10 @@ export default function HomePage() {
               </div>
               <div className="phone-content">
                 <div className="studio-location">
-                  SKOPJE, MACEDONIA <span><ArrowUpRight aria-hidden="true" /></span>
+                  SKOPJE, MACEDONIA{" "}
+                  <span>
+                    <ArrowUpRight aria-hidden="true" />
+                  </span>
                 </div>
                 <h3>A moment for you.</h3>
                 <p>Good hair. Good energy. Your time.</p>
@@ -172,24 +199,33 @@ export default function HomePage() {
                     <b>Cut &amp; blow-dry</b>
                     <small>60 min · from 900 MKD</small>
                   </span>
-                  <span className="service-plus"><Plus aria-hidden="true" /></span>
+                  <span className="service-plus">
+                    <Plus aria-hidden="true" />
+                  </span>
                 </div>
                 <div className="phone-service">
                   <span>
                     <b>Color &amp; care</b>
                     <small>90 min · from 1,800 MKD</small>
                   </span>
-                  <span className="service-plus"><Plus aria-hidden="true" /></span>
+                  <span className="service-plus">
+                    <Plus aria-hidden="true" />
+                  </span>
                 </div>
                 <div className="phone-service">
                   <span>
                     <b>A little refresh</b>
                     <small>30 min · from 500 MKD</small>
                   </span>
-                  <span className="service-plus"><Plus aria-hidden="true" /></span>
+                  <span className="service-plus">
+                    <Plus aria-hidden="true" />
+                  </span>
                 </div>
                 <span className="mock-button">
-                  Find your moment <span><ArrowUpRight aria-hidden="true" /></span>
+                  Find your moment{" "}
+                  <span>
+                    <ArrowUpRight aria-hidden="true" />
+                  </span>
                 </span>
                 <small className="powered">
                   Made possible with{" "}
@@ -208,28 +244,33 @@ export default function HomePage() {
               <div className="phone-home"></div>
             </div>
             <div className="floating-note note-right">
-              <span className="note-icon ai-note-icon"><Sparkles aria-hidden="true" /></span>
+              <span className="note-icon ai-note-icon">
+                <Sparkles aria-hidden="true" />
+              </span>
               <div>
                 <strong>Your next good idea, found.</strong>
                 <small>Ask OPUS AI about your business.</small>
               </div>
             </div>
-            <div className="stage-caption">
-              <span className="caption-line"></span> LESS ADMIN. MORE YOU.{" "}
-              <span className="caption-line"></span>
-            </div>
           </div>
           <div className="audience-strip">
-            <span>Made for the way you work</span>
             <div>
               <span>Hair salons</span>
-              <i><Sparkle aria-hidden="true" /></i>
+              <i>
+                <Sparkle aria-hidden="true" />
+              </i>
               <span>Barbershops</span>
-              <i><Sparkle aria-hidden="true" /></i>
+              <i>
+                <Sparkle aria-hidden="true" />
+              </i>
               <span>Nail studios</span>
-              <i><Sparkle aria-hidden="true" /></i>
+              <i>
+                <Sparkle aria-hidden="true" />
+              </i>
               <span>Makeup artists</span>
-              <i><Sparkle aria-hidden="true" /></i>
+              <i>
+                <Sparkle aria-hidden="true" />
+              </i>
               <span>Massage studios</span>
             </div>
           </div>
@@ -243,87 +284,9 @@ export default function HomePage() {
             </h2>
             <p>
               Let your link do the scheduling.
-              <br />
-              You get back to doing what you do best.
             </p>
           </div>
-          <div
-            className="tour-tabs"
-            role="tablist"
-            aria-label="Explore OPUS features"
-          >
-            <button
-              role="tab"
-              id="tab-website"
-              aria-controls="tour-panel"
-              aria-selected="true"
-              data-tour="website"
-            >
-              <span><ArrowUpRight aria-hidden="true" /></span> Your booking website
-            </button>
-            <button
-              role="tab"
-              id="tab-calendar"
-              aria-controls="tour-panel"
-              aria-selected="false"
-              tabIndex={-1}
-              data-tour="calendar"
-            >
-              <span><CalendarDays aria-hidden="true" /></span> One team calendar
-            </button>
-            <button
-              role="tab"
-              id="tab-clients"
-              aria-controls="tour-panel"
-              aria-selected="false"
-              tabIndex={-1}
-              data-tour="clients"
-            >
-              <span><Heart aria-hidden="true" /></span> Every client, remembered
-            </button>
-          </div>
-          <div className="tour-surround reveal">
-            <div className="tour-browser">
-              <div className="browser-chrome">
-                <div className="browser-dots">
-                  <i></i>
-                  <i></i>
-                  <i></i>
-                </div>
-                <span id="tour-address">atelier.opus.mk</span>
-                <span className="demo-label">INTERACTIVE PREVIEW</span>
-              </div>
-              <div
-                id="tour-panel"
-                role="tabpanel"
-                aria-labelledby="tab-website"
-                tabIndex={0}
-              ></div>
-            </div>
-            <div className="tour-footnote">
-              <span>
-                <Sparkle aria-hidden="true" /> Your name. Your services. Your little corner of the internet.
-              </span>
-              <span>
-                Included in Free <b><ArrowUpRight aria-hidden="true" /></b>
-              </span>
-            </div>
-          </div>
-          <div className="product-bottom reveal">
-            <h3>
-              Easy for your clients.
-              <br />
-              Even easier for you.
-            </h3>
-            <p>
-              No account. No app. Just pick a service, choose a time,
-              <br className="desktop-break" /> and book. Every appointment lands
-              in your calendar.
-            </p>
-            <a className="text-link" href="https://studio.opus.mk/signup">
-              Make it yours <span><ArrowUpRight aria-hidden="true" /></span>
-            </a>
-          </div>
+          <ProductTour />
         </section>
 
         <section className="section features-section" id="features">
@@ -334,22 +297,25 @@ export default function HomePage() {
                 <br />A beautifully simple day.
               </h2>
             </div>
-            <p>
-              Everything your studio needs, together in one place.
-              <br />
-              Less switching between apps. More being present.
-            </p>
+            <p>Everything your studio needs, together in one place.</p>
           </div>
           <div className="bento-grid">
             <article className="bento-panel bento-booking reveal">
-              <img
-                className="bento-art"
-                src="/assets/bento-booking.jpg"
-                alt="A titanium phone displaying a beauty studio booking website, rendered in a sculptural blue setting"
-                width="1024"
-                height="1536"
-                loading="lazy"
-              />
+              <picture className="bento-art">
+                <source
+                  media="(max-width: 760px)"
+                  srcSet="/assets/bento-booking-mobile.png"
+                  width="1254"
+                  height="1254"
+                />
+                <img
+                  src="/assets/bento-booking.jpg"
+                  alt="A titanium phone displaying a beauty studio booking website, rendered in a sculptural blue setting"
+                  width="1024"
+                  height="1536"
+                  loading="lazy"
+                />
+              </picture>
               <div className="bento-copy">
                 <h3>
                   Your studio.
@@ -364,7 +330,9 @@ export default function HomePage() {
               </div>
               <div className="bento-link-detail">
                 <span>yourstudio.opus.mk</span>
-                <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                <span aria-hidden="true">
+                  <ArrowUpRight aria-hidden="true" />
+                </span>
               </div>
             </article>
             <article className="bento-panel bento-calendar reveal">
@@ -432,9 +400,15 @@ export default function HomePage() {
             </article>
           </div>
           <div className="feature-summary">
-            <span><Infinity aria-hidden="true" /> Unlimited appointments</span>
-            <span><Infinity aria-hidden="true" /> Unlimited services &amp; clients</span>
-            <span><MonitorSmartphone aria-hidden="true" /> Works on every device</span>
+            <span>
+              <Infinity aria-hidden="true" /> Unlimited appointments
+            </span>
+            <span>
+              <Infinity aria-hidden="true" /> Unlimited services &amp; clients
+            </span>
+            <span>
+              <MonitorSmartphone aria-hidden="true" /> Works on every device
+            </span>
           </div>
         </section>
 
@@ -451,159 +425,7 @@ export default function HomePage() {
               Less guesswork. More room to grow.
             </p>
           </div>
-          <div className="intelligence-main reveal">
-            <div className="intelligence-art">
-              <img
-                src="/assets/opus-logo-3d.jpg"
-                alt="The OPUS symbol sculpted in ice-blue glass and pearl chrome"
-                width="1254"
-                height="1254"
-                loading="lazy"
-              />
-              <div className="intelligence-art-copy">
-                <h3>
-                  A little clarity.
-                  <br />A world of possibility.
-                </h3>
-              </div>
-            </div>
-            <div className="analyst">
-              <div className="analyst-top">
-                <span className="analyst-icon"><Sparkles aria-hidden="true" /></span>
-                <div>
-                  <b>Your business analyst</b>
-                  <span>Good questions. Clearer decisions.</span>
-                </div>
-              </div>
-              <div className="analyst-example">
-                <span className="example-label">
-                  EXPLORE A SAMPLE CONVERSATION
-                </span>
-                <div className="question-bubble" id="analyst-question">
-                  When is my studio busiest?
-                </div>
-                <div className="analyst-answer">
-                  <span className="blue-spark"><Sparkles aria-hidden="true" /></span>
-                  <div>
-                    <p id="analyst-answer">
-                      In this sample week, Friday is your busiest day. Tuesday
-                      has the most space for new appointments.
-                    </p>
-                    <div
-                      className="bar-chart"
-                      id="analyst-chart"
-                      aria-label="Illustrative weekly occupancy chart"
-                    >
-                      <div>
-                        <i style={{ "--bar": "48%" } as CSSProperties}></i>
-                        <span>M</span>
-                      </div>
-                      <div>
-                        <i style={{ "--bar": "30%" } as CSSProperties}></i>
-                        <span>T</span>
-                      </div>
-                      <div>
-                        <i style={{ "--bar": "65%" } as CSSProperties}></i>
-                        <span>W</span>
-                      </div>
-                      <div>
-                        <i style={{ "--bar": "56%" } as CSSProperties}></i>
-                        <span>T</span>
-                      </div>
-                      <div className="highlight-bar">
-                        <i style={{ "--bar": "92%" } as CSSProperties}></i>
-                        <span>F</span>
-                      </div>
-                      <div>
-                        <i style={{ "--bar": "76%" } as CSSProperties}></i>
-                        <span>S</span>
-                      </div>
-                    </div>
-                    <span className="sample-note">
-                      Illustrative data · Your answers use your studio’s data.
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div
-                className="question-options"
-                aria-label="Sample business analyst questions"
-              >
-                <button
-                  className="selected"
-                  data-question="busy"
-                  aria-pressed="true"
-                >
-                  My busiest days?
-                </button>
-                <button data-question="cancel" aria-pressed="false">
-                  Cancellation patterns?
-                </button>
-                <button data-question="grow" aria-pressed="false">
-                  Room to grow?
-                </button>
-              </div>
-              <div className="analyst-limit">
-                <span>200 answers / month</span>
-                <span>Up to 20 detailed analyses</span>
-              </div>
-            </div>
-          </div>
-          <div className="ai-features">
-            <article className="ai-card reveal">
-              <span className="card-icon"><MessagesSquare aria-hidden="true" /></span>
-              <h3>
-                Always there.
-                <br />
-                Even when you’re busy.
-              </h3>
-              <p>
-                Your 24/7 AI receptionist keeps conversations moving on web
-                chat, Instagram, and WhatsApp.
-              </p>
-              <div className="channel-chips">
-                <span>Web chat</span>
-                <span>Instagram</span>
-                <span>WhatsApp</span>
-              </div>
-              <small>500 replies included per month.</small>
-            </article>
-            <article className="ai-card reveal">
-              <span className="card-icon"><Sparkle aria-hidden="true" /></span>
-              <h3>
-                The next visit.
-                <br />A little more personal.
-              </h3>
-              <p>
-                AI uses previous visits to suggest thoughtful rebookings and
-                relevant service upgrades for each client.
-              </p>
-              <div className="suggestion-chip">
-                <span><Heart aria-hidden="true" /></span>
-                <span>Personalized to their visit history</span>
-              </div>
-              <small>Suggestions to help you decide what fits.</small>
-            </article>
-            <article className="ai-card recovery-card reveal">
-              <span className="card-icon"><RotateCw aria-hidden="true" /></span>
-              <h3>
-                An open slot.
-                <br />A new opportunity.
-              </h3>
-              <p>
-                Find suitable clients for an opening, review the suggestion, and
-                approve each email offer yourself.
-              </p>
-              <div className="recovery-flow">
-                <span>Find</span>
-                <b><ArrowRight aria-hidden="true" /></b>
-                <span>Review</span>
-                <b><ArrowRight aria-hidden="true" /></b>
-                <span>Approve</span>
-              </div>
-              <small>No AI required. No automatic bookings.</small>
-            </article>
-          </div>
+          <IntelligenceRotation />
           <p className="ai-usage-note">
             AI features are included in Pro and subject to usage limits.
           </p>
@@ -655,7 +477,9 @@ export default function HomePage() {
                   </span>
                   <span className="studio-slide-footer">
                     Your craft. A little more effortless.
-                    <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                    <span aria-hidden="true">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -684,7 +508,9 @@ export default function HomePage() {
                   </span>
                   <span className="studio-slide-footer">
                     Your craft. A little more effortless.
-                    <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                    <span aria-hidden="true">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -713,7 +539,9 @@ export default function HomePage() {
                   </span>
                   <span className="studio-slide-footer">
                     Your craft. A little more effortless.
-                    <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                    <span aria-hidden="true">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -742,7 +570,9 @@ export default function HomePage() {
                   </span>
                   <span className="studio-slide-footer">
                     Your craft. A little more effortless.
-                    <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                    <span aria-hidden="true">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -771,7 +601,9 @@ export default function HomePage() {
                   </span>
                   <span className="studio-slide-footer">
                     Your craft. A little more effortless.
-                    <span aria-hidden="true"><ArrowUpRight aria-hidden="true" /></span>
+                    <span aria-hidden="true">
+                      <ArrowUpRight aria-hidden="true" />
+                    </span>
                   </span>
                 </span>
               </button>
@@ -871,7 +703,10 @@ export default function HomePage() {
             className="button button-dark"
             href="https://studio.opus.mk/signup"
           >
-            Let’s set up your studio <span><ArrowUpRight aria-hidden="true" /></span>
+            Let’s set up your studio{" "}
+            <span>
+              <ArrowUpRight aria-hidden="true" />
+            </span>
           </a>
         </section>
 
@@ -891,7 +726,9 @@ export default function HomePage() {
           <div className="pricing-grid">
             <article className="price-card reveal">
               <div className="plan-heading">
-                <span className="plan-symbol"><Sparkle aria-hidden="true" /></span>
+                <span className="plan-symbol">
+                  <Sparkle aria-hidden="true" />
+                </span>
               </div>
               <h3>Free</h3>
               <div className="price">
@@ -902,23 +739,58 @@ export default function HomePage() {
                 className="button button-light"
                 href="https://studio.opus.mk/signup"
               >
-                Create your free website <span><ArrowUpRight aria-hidden="true" /></span>
+                Create your free website{" "}
+                <span>
+                  <ArrowUpRight aria-hidden="true" />
+                </span>
               </a>
               <div className="plan-divider"></div>
               <strong className="included-label">
                 A real free plan. No expiry.
               </strong>
               <ul className="plan-features">
-                <li><Check aria-hidden="true" /><span>Unlimited appointments, services, and clients</span></li>
-                <li><Check aria-hidden="true" /><span>Your own <b>yourstudio.opus.mk</b> website</span></li>
-                <li><Check aria-hidden="true" /><span>Guest booking — no client account needed</span></li>
-                <li><Check aria-hidden="true" /><span>One owner + 3 staff members</span></li>
-                <li><Check aria-hidden="true" /><span>Team calendar with overlap protection</span></li>
-                <li><Check aria-hidden="true" /><span>Working hours, breaks, and days off</span></li>
-                <li><Check aria-hidden="true" /><span>Client details and visit history</span></li>
-                <li><Check aria-hidden="true" /><span>Email confirmations and reminders</span></li>
-                <li><Check aria-hidden="true" /><span>Gallery with up to 3 photos</span></li>
-                <li><Check aria-hidden="true" /><span>Phone, tablet, and desktop access</span></li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Unlimited appointments, services, and clients</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>
+                    Your own <b>yourstudio.opus.mk</b> website
+                  </span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Guest booking — no client account needed</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>One owner + 3 staff members</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Team calendar with overlap protection</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Working hours, breaks, and days off</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Client details and visit history</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Email confirmations and reminders</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Gallery with up to 3 photos</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Phone, tablet, and desktop access</span>
+                </li>
               </ul>
               <span className="plan-end">
                 No credit card. No trial countdown.
@@ -926,7 +798,9 @@ export default function HomePage() {
             </article>
             <article className="price-card price-pro reveal">
               <div className="plan-heading">
-                <span className="plan-symbol"><Sparkles aria-hidden="true" /></span>
+                <span className="plan-symbol">
+                  <Sparkles aria-hidden="true" />
+                </span>
               </div>
               <h3>Pro</h3>
               <div className="price">
@@ -937,34 +811,67 @@ export default function HomePage() {
                 className="button button-dark"
                 href="https://studio.opus.mk/signup"
               >
-                Get started with Pro <span><ArrowUpRight aria-hidden="true" /></span>
+                Get started with Pro{" "}
+                <span>
+                  <ArrowUpRight aria-hidden="true" />
+                </span>
               </a>
               <div className="plan-divider"></div>
               <strong className="included-label">
                 Everything in Free, plus:
               </strong>
               <ul className="plan-features">
-                <li><Check aria-hidden="true" /><span>A larger team</span></li>
-                <li><Check aria-hidden="true" /><span>Opening and cancellation recovery</span></li>
-                <li><Check aria-hidden="true" /><span>Advanced studio analytics</span></li>
-                <li><Check aria-hidden="true" /><span>More email, marketing, and notification controls</span></li>
-                <li><Check aria-hidden="true" /><span>Priority support</span></li>
-                <li><Check aria-hidden="true" /><span><span>
-                    <b>AI business analyst</b>
-                    <small>200 answers/month, up to 20 detailed</small>
-                  </span></span></li>
-                <li><Check aria-hidden="true" /><span><span>
-                    <b>24/7 AI receptionist</b>
-                    <small>
-                      Web chat, Instagram, WhatsApp · 500 replies/month
-                    </small>
-                  </span></span></li>
-                <li><Check aria-hidden="true" /><span><span>
-                    <b>Personalized AI recommendations</b>
-                    <small>
-                      Rebooking and upsells based on previous visits
-                    </small>
-                  </span></span></li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>A larger team</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Opening and cancellation recovery</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Advanced studio analytics</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>More email, marketing, and notification controls</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>Priority support</span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>
+                    <span>
+                      <b>AI business analyst</b>
+                      <small>200 answers/month, up to 20 detailed</small>
+                    </span>
+                  </span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>
+                    <span>
+                      <b>24/7 AI receptionist</b>
+                      <small>
+                        Web chat, Instagram, WhatsApp · 500 replies/month
+                      </small>
+                    </span>
+                  </span>
+                </li>
+                <li>
+                  <Check aria-hidden="true" />
+                  <span>
+                    <span>
+                      <b>Personalized AI recommendations</b>
+                      <small>
+                        Rebooking and upsells based on previous visits
+                      </small>
+                    </span>
+                  </span>
+                </li>
               </ul>
               <span className="plan-end">
                 AI features are subject to usage limits.
@@ -989,19 +896,14 @@ export default function HomePage() {
               <br />
               before making yourself at home.
             </p>
-            <div className="faq-mini-card">
-              <span className="blue-spark"><Sparkle aria-hidden="true" /></span>
-              <h3>Try a simpler studio day.</h3>
-              <p>Your next chapter can start for free.</p>
-              <a className="text-link" href="https://studio.opus.mk/signup">
-                Get started <span><ArrowUpRight aria-hidden="true" /></span>
-              </a>
-            </div>
           </div>
           <div className="faq-list reveal">
             <details open>
               <summary>
-                Is the Free plan really free?<span><Plus aria-hidden="true" /></span>
+                Is the Free plan really free?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 Yes. Free is 0 MKD, with no credit card and no trial expiry. You
@@ -1012,7 +914,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                Do my clients need to download an app?<span><Plus aria-hidden="true" /></span>
+                Do my clients need to download an app?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 No. Clients open your booking link on their phone or computer,
@@ -1022,7 +927,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                How do I get my own booking website?<span><Plus aria-hidden="true" /></span>
+                How do I get my own booking website?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 Add your services, prices, team, and working hours, then
@@ -1033,7 +941,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                Can my team use the same calendar?<span><Plus aria-hidden="true" /></span>
+                Can my team use the same calendar?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 Yes. The Free plan includes one owner and three staff members.
@@ -1044,7 +955,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                What can I ask the AI business analyst?<span><Plus aria-hidden="true" /></span>
+                What can I ask the AI business analyst?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 Ask about your bookings, occupancy, cancellations, and business
@@ -1055,7 +969,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                Does opening recovery book clients automatically?<span><Plus aria-hidden="true" /></span>
+                Does opening recovery book clients automatically?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 No. Opening recovery suggests suitable clients for empty
@@ -1066,7 +983,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                Which channels does the AI receptionist support?<span><Plus aria-hidden="true" /></span>
+                Which channels does the AI receptionist support?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 The Pro AI receptionist supports web chat, Instagram, and
@@ -1076,7 +996,10 @@ export default function HomePage() {
             </details>
             <details>
               <summary>
-                Is OPUS made for my kind of studio?<span><Plus aria-hidden="true" /></span>
+                Is OPUS made for my kind of studio?
+                <span>
+                  <Plus aria-hidden="true" />
+                </span>
               </summary>
               <p>
                 OPUS is built for beauty salons, barbershops, nail studios,
@@ -1089,14 +1012,21 @@ export default function HomePage() {
         </section>
 
         <section className="final-cta section reveal">
-          <img
-            className="cta-panorama"
-            src="/assets/opus-cta-wide.jpg"
-            alt="A dimensional glass and chrome OPUS logo in a wide, softly lit blue studio"
-            width="2172"
-            height="724"
-            loading="lazy"
-          />
+          <picture className="cta-panorama">
+            <source
+              media="(max-width: 760px)"
+              srcSet="/assets/opus-contact-portrait.png"
+              width="1024"
+              height="1536"
+            />
+            <img
+              src="/assets/opus-cta-wide.jpg"
+              alt="A dimensional glass and chrome OPUS logo in a softly lit blue studio"
+              width="2172"
+              height="724"
+              loading="lazy"
+            />
+          </picture>
           <div className="cta-content">
             <h2>
               Less admin.
@@ -1112,7 +1042,10 @@ export default function HomePage() {
               className="button button-dark"
               href="https://studio.opus.mk/signup"
             >
-              Create your free website <span><ArrowUpRight aria-hidden="true" /></span>
+              Create your free website{" "}
+              <span>
+                <ArrowUpRight aria-hidden="true" />
+              </span>
             </a>
             <small>Free. No credit card needed.</small>
           </div>

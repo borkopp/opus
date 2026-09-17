@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import Link from "next/link";
 
 import { useEffect, useState } from "react";
@@ -9,6 +10,7 @@ const links = [
   { href: "/#intelligence", label: "OPUS AI" },
   { href: "/#how-it-works", label: "How it works" },
   { href: "/#pricing", label: "Pricing" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function SiteHeader() {
@@ -55,7 +57,7 @@ export function SiteHeader() {
           className="button button-dark button-small"
           href="https://studio.opus.mk/signup"
         >
-          Start for free <span>↗</span>
+          Start for free <span><ArrowUpRight aria-hidden="true" /></span>
         </a>
         <button
           type="button"
@@ -65,8 +67,7 @@ export function SiteHeader() {
           aria-controls="mobile-nav"
           onClick={() => setOpen(!open)}
         >
-          <span />
-          <span />
+          {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
         </button>
       </div>
       <nav

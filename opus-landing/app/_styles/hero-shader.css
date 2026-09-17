@@ -1,0 +1,44 @@
+.hero {
+  isolation: isolate;
+}
+
+.hero-background {
+  position: absolute;
+  inset: calc(-1 * var(--site-header-height)) 0 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(#6bafe6, #b3d9f5);
+}
+
+.hero-copy h1,
+.hero-copy h1 > span,
+.hero-copy > p,
+.hero-copy .microcopy,
+.hero .stage-caption,
+.hero .audience-strip > span,
+.hero .audience-strip > div,
+.hero .audience-strip i {
+  color: #ffffff;
+}
+
+.hero-copy h1 {
+  text-shadow: 0 2px 12px rgb(24 68 104 / 22%);
+}
+
+.hero-copy > p {
+  text-shadow: 0 1px 6px rgb(24 68 104 / 30%);
+}
+
+.hero-copy .microcopy {
+  text-shadow: 0 1px 4px rgb(24 68 104 / 40%);
+}
+
+.hero-copy .microcopy svg {
+  filter: drop-shadow(0 1px 2px rgb(24 68 104 / 30%));
+}
+
+.hero .stage-caption,
+.hero .audience-strip {
+  text-shadow: 0 1px 6px rgb(24 68 104 / 30%);
+}

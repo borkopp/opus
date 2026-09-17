@@ -1,0 +1,50 @@
+:root {
+  --site-header-height: 94px;
+  background: #ffffff;
+}
+
+.site-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.header {
+  height: var(--site-header-height);
+  background: transparent;
+}
+
+.site-shell:has(.hero) .header,
+.site-shell:has(.hero) .header .brand,
+.site-shell:has(.hero) .header nav a,
+.site-shell:has(.hero) .header .login,
+.site-shell:has(.hero) .header .menu-toggle {
+  color: #ffffff;
+}
+
+.site-shell:has(.hero) .header .opus-mark {
+  filter: brightness(0) invert(1);
+}
+
+.site-shell:has(.hero) .header .tiny-pill {
+  color: #ffffff;
+  background: #ffffff1f;
+  border-color: #ffffff4d;
+}
+
+.site-shell:has(.hero) .header .nav-actions > .button,
+.site-shell:has(.hero) .header .nav-actions > .button:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+.site-shell:has(.hero) .header .mobile-nav:not([hidden]) {
+  background: #286698f0;
+  border-color: #ffffff33;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --site-header-height: 78px;
+  }
+}

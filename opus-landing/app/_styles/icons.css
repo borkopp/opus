@@ -1,0 +1,58 @@
+/* Keep Lucide icons aligned with the existing typography and spacing. */
+svg.lucide {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -0.15em;
+  stroke-width: 1.75;
+}
+
+.button svg.lucide,
+.text-link svg.lucide {
+  width: 16px;
+  height: 16px;
+}
+
+.play-icon svg.lucide {
+  width: 9px;
+  height: 9px;
+  fill: currentColor;
+}
+
+.phone-status-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.phone-status-icons svg.lucide {
+  width: 12px;
+  height: 12px;
+}
+
+.window-dots svg.lucide {
+  width: 20px;
+  height: 16px;
+}
+
+.menu-toggle svg.lucide {
+  width: 20px;
+  height: 20px;
+}
+
+.studio-carousel-controls svg.lucide {
+  width: 22px;
+  height: 22px;
+}
+
+.plan-features li > svg.lucide {
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+  color: #9dbacb;
+}
+
+.price-pro .plan-features li > svg.lucide {
+  color: #86b7db;
+}

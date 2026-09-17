@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+import { ArrowUpRight, ArrowUp } from "lucide-react";
 import Link from "next/link";
 import { openCookiePreferences } from "../../../shared/analytics/consent";
 
@@ -34,7 +35,7 @@ export function SiteFooter() {
           <b>Your next chapter</b>
           <Link href="/#how-it-works">How it works</Link>
           <Link href="/#faq">Common questions</Link>
-          <a href="https://studio.opus.mk/signup">Create your website ↗</a>
+          <a href="https://studio.opus.mk/signup">Create your website <ArrowUpRight aria-hidden="true" /></a>
         </div>
         <div className="footer-statement">
           <h3>Made for you.</h3>
@@ -55,7 +56,7 @@ export function SiteFooter() {
           <button type="button" onClick={openCookiePreferences}>
             Cookie settings
           </button>
-          <Link href="/#">Back to top ↑</Link>
+          <Link href="/#">Back to top <ArrowUp aria-hidden="true" /></Link>
         </div>
       </div>
     </footer>

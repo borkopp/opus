@@ -1,3 +1,5 @@
+import { demoIcons } from "./demo-icons";
+
 export function initializeLanding() {
   const controller = new AbortController();
   const { signal } = controller;
@@ -9,7 +11,7 @@ export function initializeLanding() {
     website: () =>
       `<div class="tour-studio-header"><span class="atelier-logo">ATELIER</span><div class="tour-studio-nav"><b>Book a moment</b><span>Our studio</span><span>Skopje, MK</span></div></div><div class="tour-studio-main"><div class="tour-studio-photo"><img src="/assets/studio.jpg" alt="Atelier sample studio interior" width="1536" height="1024"><div class="photo-overlay"><h3>Good hair.<br>Even better energy.</h3></div></div><div class="service-picker"><h3>What feels like you today?</h3><p>Choose a service. We’ll save you a seat.</p><div id="booking-demo-controls">${renderServices()}</div></div></div>`,
     calendar: () =>
-      `<div class="tour-calendar"><div class="tour-dashboard-heading"><div><h3>A good day, all in view.</h3><p>Sample calendar · Thursday, 17 September</p></div><span>3 team members</span></div><div class="full-calendar"><div class="time-column"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span></div><div class="day-column"><div class="staff">Ana</div><div class="appointment apt-blue"><b>Cut &amp; blow-dry</b><span>09:00 · Elena P.</span></div><div class="appointment apt-cream"><b>Color &amp; care</b><span>10:30 · Mila S.</span></div><div class="appointment apt-green"><b>Hair treatment</b><span>12:00 · Nina A.</span></div></div><div class="day-column"><div class="staff">Marija</div><div class="appointment apt-purple"><b>Gel manicure</b><span>09:30 · Sara K.</span></div><div class="appointment apt-green"><b>Classic manicure</b><span>11:00 · Eva M.</span></div></div><div class="day-column"><div class="staff">Elena</div><div class="appointment apt-cream"><b>Makeup session</b><span>09:00 · Jana M.</span></div><div class="appointment apt-blue" style="margin-top:39px"><b>Event makeup</b><span>11:00 · Tea S.</span></div></div></div><p class="calendar-demo-footnote">✧ One shared view for your team’s appointments, breaks, and availability.</p></div>`,
+      `<div class="tour-calendar"><div class="tour-dashboard-heading"><div><h3>A good day, all in view.</h3><p>Sample calendar · Thursday, 17 September</p></div><span>3 team members</span></div><div class="full-calendar"><div class="time-column"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span></div><div class="day-column"><div class="staff">Ana</div><div class="appointment apt-blue"><b>Cut &amp; blow-dry</b><span>09:00 · Elena P.</span></div><div class="appointment apt-cream"><b>Color &amp; care</b><span>10:30 · Mila S.</span></div><div class="appointment apt-green"><b>Hair treatment</b><span>12:00 · Nina A.</span></div></div><div class="day-column"><div class="staff">Marija</div><div class="appointment apt-purple"><b>Gel manicure</b><span>09:30 · Sara K.</span></div><div class="appointment apt-green"><b>Classic manicure</b><span>11:00 · Eva M.</span></div></div><div class="day-column"><div class="staff">Elena</div><div class="appointment apt-cream"><b>Makeup session</b><span>09:00 · Jana M.</span></div><div class="appointment apt-blue" style="margin-top:39px"><b>Event makeup</b><span>11:00 · Tea S.</span></div></div></div><p class="calendar-demo-footnote">${demoIcons.sparkle} One shared view for your team’s appointments, breaks, and availability.</p></div>`,
     clients: () =>
       `<div class="client-demo"><div class="tour-dashboard-heading"><div><h3>Every client, remembered.</h3><p>Sample clients · A little context makes all the difference.</p></div><span>Your studio’s people</span></div><table class="client-table"><thead><tr><th>CLIENT</th><th>LAST VISIT</th><th>SERVICE</th><th>VISITS</th></tr></thead><tbody><tr><td><span class="avatar-letter">EP</span>Elena Petrova</td><td>14 Sep 2026</td><td>Cut &amp; blow-dry</td><td>8 visits</td></tr><tr><td><span class="avatar-letter">MS</span>Mila Stojanova</td><td>12 Sep 2026</td><td>Color &amp; care</td><td>5 visits</td></tr><tr><td><span class="avatar-letter">SK</span>Sara Kostova</td><td>11 Sep 2026</td><td>Gel manicure</td><td>12 visits</td></tr><tr><td><span class="avatar-letter">EM</span>Eva Mitreva</td><td>9 Sep 2026</td><td>Classic manicure</td><td>3 visits</td></tr></tbody></table><p class="calendar-demo-footnote">Client contact details and visit history, together in one place. Included in Free.</p></div>`,
   };
@@ -18,10 +20,10 @@ export function initializeLanding() {
       serviceNames
         .map(
           (name, i) =>
-            `<button class="service-option" data-service="${i}" aria-pressed="${i === selectedService}"><span><b>${name}</b><small>${["60 min · from 900 MKD", "90 min · from 1,800 MKD", "30 min · from 500 MKD"][i]}</small></span><i>${i === selectedService ? "✓" : "+"}</i></button>`,
+            `<button class="service-option" data-service="${i}" aria-pressed="${i === selectedService}"><span><b>${name}</b><small>${["60 min · from 900 MKD", "90 min · from 1,800 MKD", "30 min · from 500 MKD"][i]}</small></span><i>${i === selectedService ? demoIcons.check : demoIcons.plus}</i></button>`,
         )
         .join("") +
-      '<button class="demo-book" data-booking-next>Choose a time <span>↗</span></button>'
+      `<button class="demo-book" data-booking-next>Choose a time <span>${demoIcons.arrowUpRight}</span></button>`
     );
   }
   const tourTabs = [...document.querySelectorAll("[data-tour]")];
@@ -74,18 +76,18 @@ export function initializeLanding() {
         panel.querySelectorAll("[data-service]").forEach((button) => {
           const selected = Number(button.dataset.service) === selectedService;
           button.setAttribute("aria-pressed", String(selected));
-          button.querySelector("i").textContent = selected ? "✓" : "+";
+          button.querySelector("i").innerHTML = selected ? demoIcons.check : demoIcons.plus;
         });
       }
       if (event.target.closest("[data-booking-next]")) {
         document.querySelector("#booking-demo-controls").innerHTML =
-          `<p style="font-size:12px;color:#74846d;margin:14px 0">${serviceNames[selectedService]} · Friday, 18 September</p><div class="time-select">${["09:00", "10:30", "11:30", "13:00", "14:30", "16:00"].map((time) => `<button data-time="${time}">${time}</button>`).join("")}</div><p style="font-size:10px;margin-top:13px;color:#9aa794">Choose a sample time to try the flow.</p><button class="demo-back" data-booking-back>← Back to services</button>`;
+          `<p style="font-size:12px;color:#74846d;margin:14px 0">${serviceNames[selectedService]} · Friday, 18 September</p><div class="time-select">${["09:00", "10:30", "11:30", "13:00", "14:30", "16:00"].map((time) => `<button data-time="${time}">${time}</button>`).join("")}</div><p style="font-size:10px;margin-top:13px;color:#9aa794">Choose a sample time to try the flow.</p><button class="demo-back" data-booking-back>${demoIcons.arrowLeft} Back to services</button>`;
         document.querySelector("[data-time]").focus();
       }
       const time = event.target.closest("[data-time]");
       if (time) {
         document.querySelector("#booking-demo-controls").innerHTML =
-          `<div class="demo-notice" role="status"><b>That’s how easy booking can feel.</b><br>${serviceNames[selectedService]} · Friday at ${time.dataset.time}.<br><br>This is a preview. No appointment has been booked.</div><a class="demo-book" href="https://studio.opus.mk/signup">Create your own booking website <span>↗</span></a><button class="demo-back" data-booking-back>← Try another service</button>`;
+          `<div class="demo-notice" role="status"><b>That’s how easy booking can feel.</b><br>${serviceNames[selectedService]} · Friday at ${time.dataset.time}.<br><br>This is a preview. No appointment has been booked.</div><a class="demo-book" href="https://studio.opus.mk/signup">Create your own booking website <span>${demoIcons.arrowUpRight}</span></a><button class="demo-back" data-booking-back>${demoIcons.arrowLeft} Try another service</button>`;
         document.querySelector(".demo-book").focus();
       }
       if (event.target.closest("[data-booking-back]")) {

@@ -64,8 +64,8 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       >
         <div className="sticky top-0 h-svh min-h-[40rem] overflow-hidden">
           <Image
-            src="/images/auth/studio-team.png"
-            alt="Three beauty professionals together in a warmly lit salon"
+            src="/images/auth/studio-team-blue.png"
+            alt="Three beauty professionals together in a bright salon with cool blue interiors"
             fill
             quality={90}
             sizes="(min-width: 1024px) max(50vw, 66.67svh), 1px"

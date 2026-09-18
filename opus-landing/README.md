@@ -40,6 +40,26 @@ Privacy and terms retain their Macedonian and English document content. The cont
 
 `/pricing` redirects to the new pricing section, `/hero-original` to the homepage, and `/login` and `/signup` to the real dashboard.
 
+## PostHog
+
+Set `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` and `NEXT_PUBLIC_POSTHOG_HOST` to the
+same values used by `opus-dashboard`, in `.env.local` for local development and
+in the separate `opus-landing` Vercel project before building. Missing either
+value disables PostHog. These are public browser settings; do not use a personal
+PostHog API key.
+
+The landing and dashboard use the same consent controller in
+`shared/analytics/posthog-consent.ts`. PostHog initializes only after analytics
+consent, captures pageviews (including client-side navigation), interactions,
+and browser exceptions, and stops capturing when consent is withdrawn. Session
+recording remains disabled. The existing cookie banner and footer settings
+control analytics independently from Meta advertising consent.
+
+Using the same project keeps both apps' events together; filter by `$host` to
+separate `opus.mk` traffic from `studio.opus.mk`. No second PostHog provider or
+manual route tracker is needed. Initialization follows the
+[PostHog Next.js integration](https://posthog.com/docs/libraries/next-js).
+
 ## Editing
 
 - `app/page.tsx`: homepage markup.

@@ -1,8 +1,6 @@
 import posthog from "posthog-js";
 import { createPostHogConsent } from "../../shared/analytics/posthog-consent";
 
-export { canCaptureAnalytics } from "../../shared/analytics/posthog-consent";
-
 export const { syncPostHogConsent, initializeAnalyticsConsent } =
   createPostHogConsent(
     posthog,

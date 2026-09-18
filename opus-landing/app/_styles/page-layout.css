@@ -43,6 +43,14 @@
   border-color: #ffffff33;
 }
 
+.site-shell:has(.hero) .header .mobile-locale-toggle {
+  border-top-color: #ffffff33;
+}
+
+.site-shell:has(.hero) .header .mobile-locale-toggle span {
+  color: #ffffff;
+}
+
 @media (max-width: 760px) {
   :root {
     --site-header-height: 78px;

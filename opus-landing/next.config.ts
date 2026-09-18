@@ -4,6 +4,8 @@ import path from "node:path";
 const nextConfig: NextConfig = {
   // Consent utilities are shared with the dashboard from the monorepo root.
   outputFileTracingRoot: path.resolve(__dirname, ".."),
+  // Webpack must also transpile shared TypeScript used by client instrumentation.
+  experimental: { externalDir: true },
   async redirects() {
     return [
       { source: "/pricing", destination: "/#pricing", permanent: true },

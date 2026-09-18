@@ -68,8 +68,9 @@ export function CookieConsent() {
     setOpen(false);
   };
   if (snapshot !== null && !open) {
-    // Dashboard preferences are available from the account menu.
-    if (layoutSegment === "(dashboard)") return null;
+    // Preferences remain available in the dashboard menu and onboarding header.
+    if (layoutSegment === "(dashboard)" || pathname === "/onboarding")
+      return null;
 
     return (
       <div className="fixed bottom-3 left-3 z-40">

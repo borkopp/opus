@@ -386,10 +386,11 @@ describe("beauty activation engine", () => {
       api.activation.startBeautyBusiness,
       { name: "Studio North", category: "beauty_salon" },
     );
-    const { orgId: repeatedOrgId, created: repeatedCreated } = await owner.mutation(
-      api.activation.startBeautyBusiness,
-      { name: "Studio North", category: "beauty_salon" },
-    );
+    const { orgId: repeatedOrgId, created: repeatedCreated } =
+      await owner.mutation(api.activation.startBeautyBusiness, {
+        name: "Studio North",
+        category: "beauty_salon",
+      });
     expect(repeatedOrgId).toBe(firstOrgId);
     expect(firstCreated).toBe(true);
     expect(repeatedCreated).toBe(false);
@@ -556,6 +557,7 @@ describe("beauty activation engine", () => {
     expect(state?.operationalSetupComplete).toBe(true);
     expect(state?.nextStep).toBe("review");
     expect(state?.allWebsiteRequirementsComplete).toBe(false);
+    expect(state?.onboardingComplete).toBe(false);
     expect(
       state?.websiteRequirements
         .filter((requirement) => !requirement.complete)
@@ -695,6 +697,11 @@ describe("beauty activation engine", () => {
   test("publishes a website independently, freezes its slug, and is idempotent", async () => {
     const { owner, orgId } = await completeBeautySetup(t);
 
+    expect(await owner.query(api.activation.getState, {})).toMatchObject({
+      allWebsiteRequirementsComplete: true,
+      onboardingComplete: false,
+    });
+
     const firstPublishResult = await owner.mutation(api.website.publish, {
       orgId,
     });
@@ -705,6 +712,10 @@ describe("beauty activation engine", () => {
       orgId,
     });
 
+    expect(await owner.query(api.activation.getState, {})).toMatchObject({
+      allWebsiteRequirementsComplete: true,
+      onboardingComplete: true,
+    });
     expect(firstPublishResult).toBe(orgId);
     expect(repeatedPublishResult).toBe(orgId);
     expect(firstPublishedOrg).toMatchObject({
@@ -743,6 +754,19 @@ describe("beauty activation engine", () => {
       slug: "atelier-one",
       listingStatus: "unpublished",
       websiteStatus: "published",
+    });
+  });
+
+  test("keeps onboarding incomplete when a published studio has an unfinished checklist", async () => {
+    const { owner, orgId } = await completeBeautySetup(t);
+    await owner.mutation(api.website.publish, { orgId });
+    await t.run(async (ctx) => {
+      await ctx.db.patch(orgId, { phone: undefined });
+    });
+    expect(await owner.query(api.activation.getState, {})).toMatchObject({
+      org: { websiteStatus: "published" },
+      allWebsiteRequirementsComplete: false,
+      onboardingComplete: false,
     });
   });
 

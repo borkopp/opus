@@ -7,6 +7,7 @@ import Map, {
 } from "react-map-gl/mapbox";
 import type { MarkerDragEvent, MapMouseEvent } from "react-map-gl/mapbox";
 import { MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -24,6 +25,7 @@ const NORTH_MACEDONIA_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 interface LocationMapPickerProps {
+  className?: string;
   coords?: { lat: number; lng: number } | null;
   onChange: (coords: { lat: number; lng: number }) => void;
 }
@@ -31,6 +33,7 @@ interface LocationMapPickerProps {
 export default function LocationMapPicker({
   coords,
   onChange,
+  className,
 }: LocationMapPickerProps) {
   const { t } = useDashboardI18n();
   const { resolvedTheme } = useTheme();
@@ -70,7 +73,12 @@ export default function LocationMapPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative h-80 w-full overflow-hidden rounded-2xl border bg-muted">
+      <div
+        className={cn(
+          "relative h-80 w-full overflow-hidden rounded-2xl border bg-muted",
+          className,
+        )}
+      >
         <Map
           key={mapKey}
           mapboxAccessToken={TOKEN}

@@ -43,6 +43,7 @@ export interface BeautyActivationState {
   allRequiredComplete: boolean;
   allWebsiteRequirementsComplete: boolean;
   operationalSetupComplete: boolean;
+  onboardingComplete: boolean;
   nextStep: ActivationStep;
 }
 
@@ -247,6 +248,10 @@ export async function getBeautyActivationState(
 
   const allRequiredComplete = requirements.every((item) => item.complete);
 
+  const allWebsiteRequirementsComplete = websiteRequirements.every(
+    (item) => item.complete,
+  );
+
   return {
     org,
     owner,
@@ -257,9 +262,9 @@ export async function getBeautyActivationState(
     requirements,
     websiteRequirements,
     allRequiredComplete,
-    allWebsiteRequirementsComplete: websiteRequirements.every(
-      (item) => item.complete,
-    ),
+    allWebsiteRequirementsComplete,
+    onboardingComplete:
+      org.websiteStatus === "published" && allWebsiteRequirementsComplete,
     operationalSetupComplete: allRequiredComplete,
     nextStep,
   };

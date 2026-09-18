@@ -1,10 +1,12 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import { api } from "@/convex/_generated/api";
+import { authDestination } from "@/lib/auth-destination";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,13 +52,6 @@ const stepTransition = {
   ease: [0.23, 1, 0.32, 1] as const,
 };
 
-function safeCallbackUrl(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/onboarding";
-  }
-  return value;
-}
-
 function accountName(email: string) {
   const [localPart = ""] = email.split("@");
   const readable = localPart.replace(/[._-]+/g, " ").trim();
@@ -76,7 +71,22 @@ export function EmailOtpForm({
 }: EmailOtpFormProps) {
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
-  const destination = safeCallbackUrl(callbackUrl);
+  const profile = useQuery(
+    api.users.getMyProfile,
+    isAuthenticated ? {} : "skip",
+  );
+  const activation = useQuery(
+    api.activation.getState,
+    profile?.orgId ? {} : "skip",
+  );
+  const destination = authDestination(
+    callbackUrl,
+    activation?.onboardingComplete ?? false,
+  );
+  const readyToRedirect =
+    isAuthenticated &&
+    Boolean(profile) &&
+    (!profile?.orgId || Boolean(activation));
   const [step, setStep] = useState<"email" | "code">("email");
   const [direction, setDirection] = useState(0);
   const [email, setEmail] = useState("");
@@ -86,10 +96,10 @@ export function EmailOtpForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (readyToRedirect) {
       router.replace(destination);
     }
-  }, [destination, isAuthenticated, router]);
+  }, [destination, readyToRedirect, router]);
 
   const sendCode = async (event?: FormEvent) => {
     event?.preventDefault();
@@ -160,6 +170,19 @@ export function EmailOtpForm({
       setIsSubmitting(false);
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <section
+        className="flex min-h-40 items-center justify-center gap-3"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <Spinner />
+        <p className="text-sm text-muted-foreground">Opening your studio…</p>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full overflow-x-clip">

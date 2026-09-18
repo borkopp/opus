@@ -8,15 +8,9 @@ import type { InputHTMLAttributes } from "react";
 import type { FunctionReturnType } from "convex/server";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Clock3,
-  Search,
-  Store,
-} from "lucide-react";
+import { Check, Clock3, Cookie, Search, Store } from "lucide-react";
 import { api } from "@/convex/_generated/api";
+import { openCookiePreferences } from "../../../../shared/analytics/consent";
 import { trackStudioRegistration } from "../../../../shared/analytics/meta-pixel";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -24,10 +18,8 @@ import {
   Field,
   FieldDescription,
   FieldError,
-  FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -43,7 +35,8 @@ import {
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+import { HoursStep, DAYS, type OpeningHour } from "./HoursStep";
+import { StepFrame, WizardActions } from "./OnboardingStep";
 import { cn } from "@/lib/utils";
 import {
   getBusinessLocationError,
@@ -59,7 +52,7 @@ const LocationMapPicker = dynamic(
   () => import("@/components/dashboard/LocationMapPicker"),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-80 rounded-2xl" />,
+    loading: () => <Skeleton className="h-60 rounded-2xl sm:h-80" />,
   },
 );
 
@@ -111,23 +104,6 @@ const beautyCategories = [
   ["wellness_center", "Wellness center"],
   ["personal_trainer", "Personal trainer"],
 ] as const;
-
-interface OpeningHour {
-  dayOfWeek: number;
-  open: string;
-  close: string;
-  isClosed: boolean;
-}
-
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 
 const DEFAULT_HOURS: OpeningHour[] = DAYS.map((_, dayOfWeek) => ({
   dayOfWeek,
@@ -195,87 +171,11 @@ function firstStepForSection(section: string): WizardStep {
   return "business-name";
 }
 
-function StepHeading({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      <h1 className="max-w-4xl text-balance font-display text-4xl font-semibold leading-[1.04] tracking-tight sm:text-5xl">
-        {title}
-      </h1>
-      <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function StepFrame({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex w-full flex-col items-center">
-      <StepHeading title={title} description={description} />
-      <div className="mt-12 w-full max-w-xl">{children}</div>
-    </div>
-  );
-}
-
-function WizardActions({
-  canGoBack,
-  onBack,
-  isSubmitting = false,
-  disabled = false,
-  label = "Next",
-}: {
-  canGoBack: boolean;
-  onBack: () => void;
-  isSubmitting?: boolean;
-  disabled?: boolean;
-  label?: string;
-}) {
-  return (
-    <div className="relative mt-8 flex w-full items-center justify-center gap-4 sm:mt-10">
-      {canGoBack ? (
-        <Button
-          type="button"
-          variant="ghost"
-          className="absolute left-0 border-0 bg-transparent px-0 shadow-none hover:bg-transparent hover:text-foreground"
-          onClick={onBack}
-        >
-          <ArrowLeft data-icon="inline-start" />
-          Back
-        </Button>
-      ) : null}
-      <Button
-        type="submit"
-        variant="default"
-        size="lg"
-        className="min-w-28 shadow-none"
-        disabled={disabled || isSubmitting}
-      >
-        {isSubmitting && <Spinner />}
-        {label}
-        <ArrowRight data-icon="inline-end" />
-      </Button>
-    </div>
-  );
-}
-
 function TextInputStep({
   id,
   title,
   description,
+  unit,
   value,
   placeholder,
   canGoBack,
@@ -289,7 +189,8 @@ function TextInputStep({
 }: {
   id: string;
   title: string;
-  description: string;
+  description?: string;
+  unit?: string;
   value: string;
   placeholder: string;
   canGoBack: boolean;
@@ -319,7 +220,7 @@ function TextInputStep({
     try {
       await onSaved(normalizedValue);
     } catch (caught) {
-      toast.error(errorMessage(caught));
+      setError(errorMessage(caught));
     } finally {
       setIsSubmitting(false);
     }
@@ -332,22 +233,28 @@ function TextInputStep({
           <FieldLabel className="sr-only" htmlFor={id}>
             {title}
           </FieldLabel>
-          <Input
-            id={id}
-            autoFocus
-            type={type}
-            inputMode={inputMode}
-            min={min}
-            step={step}
-            value={inputValue}
-            placeholder={placeholder}
-            aria-invalid={Boolean(error)}
-            variant="prominent"
-            onChange={(event) => {
-              setInputValue(event.target.value);
-              setError(null);
-            }}
-          />
+          <InputGroup variant="prominent" className="px-4 sm:px-5">
+            <InputGroupInput
+              id={id}
+              type={type}
+              inputMode={inputMode}
+              min={min}
+              step={step}
+              value={inputValue}
+              placeholder={placeholder}
+              aria-invalid={Boolean(error)}
+              aria-describedby={unit ? `${id}-unit` : undefined}
+              onChange={(event) => {
+                setInputValue(event.target.value);
+                setError(null);
+              }}
+            />
+            {unit && (
+              <InputGroupAddon align="inline-end" id={`${id}-unit`}>
+                {unit}
+              </InputGroupAddon>
+            )}
+          </InputGroup>
           <div className="min-h-5">
             <FieldError className="text-center" aria-live="polite">
               {error}
@@ -358,6 +265,7 @@ function TextInputStep({
           canGoBack={canGoBack}
           onBack={onBack}
           isSubmitting={isSubmitting}
+          disabled={!inputValue.trim()}
         />
       </StepFrame>
     </form>
@@ -392,10 +300,7 @@ function BusinessCategoryStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepFrame
-        title="What kind of studio is this?"
-        description="This helps customers understand what your studio offers."
-      >
+      <StepFrame title="What kind of studio is this?">
         <Field>
           <FieldLabel className="sr-only" htmlFor="business-category">
             Beauty category
@@ -569,10 +474,7 @@ function LocationStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepFrame
-        title="Where is your studio?"
-        description="Choose the matching address, then confirm the exact entrance on the map."
-      >
+      <StepFrame title="Where is your studio?">
         <Field data-invalid={Boolean(selectionError || searchError)}>
           <FieldLabel className="sr-only" htmlFor="location-search">
             Studio address
@@ -584,7 +486,6 @@ function LocationStep({
               </InputGroupAddon>
               <InputGroupInput
                 id="location-search"
-                autoFocus
                 value={searchQuery}
                 autoComplete="off"
                 placeholder="Start typing your address"
@@ -638,7 +539,7 @@ function LocationStep({
               <div
                 id="onboarding-address-results"
                 role="listbox"
-                className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-lg"
+                className="absolute inset-x-0 top-full z-10 mt-2 max-h-[40dvh] overflow-y-auto overscroll-contain rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-lg"
               >
                 {results.map((feature, index) => (
                   <button
@@ -655,7 +556,7 @@ function LocationStep({
                     onClick={() => selectFeature(feature)}
                   >
                     <span className="text-sm font-medium">{feature.text}</span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="line-clamp-2 text-xs text-muted-foreground">
                       {feature.place_name}
                     </span>
                   </button>
@@ -679,6 +580,7 @@ function LocationStep({
           <Field className="mt-2" data-invalid={Boolean(pinError)}>
             <FieldLabel>Exact map pin</FieldLabel>
             <LocationMapPicker
+              className="h-60 sm:h-80"
               coords={selectedLocation.coordinates}
               onChange={updatePin}
             />
@@ -699,167 +601,18 @@ function LocationStep({
           canGoBack={canGoBack}
           onBack={onBack}
           isSubmitting={isSubmitting}
-          disabled={isSearching || isResolvingPin}
+          disabled={
+            !selectedLocation ||
+            isSearching ||
+            isResolvingPin ||
+            Boolean(pinError)
+          }
         />
         <p className="mt-5 text-center text-xs text-muted-foreground">
           {state.org.address
             ? "You can search again or adjust the pin to update this location."
             : "You can adjust this address and pin later in Settings."}
         </p>
-      </StepFrame>
-    </form>
-  );
-}
-
-function parseHoursRange(
-  value: string,
-): { open: string; close: string } | null {
-  const match = value
-    .trim()
-    .match(/^([01]\d|2[0-3]):([0-5]\d)\s*[-–—]\s*([01]\d|2[0-3]):([0-5]\d)$/);
-  if (!match) return null;
-
-  const open = `${match[1]}:${match[2]}`;
-  const close = `${match[3]}:${match[4]}`;
-  return open < close ? { open, close } : null;
-}
-
-function formatHoursRange(day: OpeningHour): string {
-  return `${day.open} – ${day.close}`;
-}
-
-function HoursStep({
-  hours,
-  canGoBack,
-  onBack,
-  onSaved,
-}: {
-  hours: OpeningHour[];
-  canGoBack: boolean;
-  onBack: () => void;
-  onSaved: (hours: OpeningHour[]) => Promise<void>;
-}) {
-  const [draftHours, setDraftHours] = useState(hours);
-  const [rangeValues, setRangeValues] = useState(
-    hours.map((day) => (day.isClosed ? "" : formatHoursRange(day))),
-  );
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const parsedHours = draftHours.map((day, index) => {
-      const parsed = day.isClosed
-        ? null
-        : parseHoursRange(rangeValues[index] ?? "");
-      return {
-        ...day,
-        open: parsed?.open ?? day.open,
-        close: parsed?.close ?? day.close,
-      };
-    });
-    const invalidDay = draftHours.find(
-      (day, index) =>
-        !day.isClosed && !parseHoursRange(rangeValues[index] ?? ""),
-    );
-    if (invalidDay) {
-      setError(
-        `Use a range like 09:00 – 18:00 for ${DAYS[invalidDay.dayOfWeek]}.`,
-      );
-      return;
-    }
-    if (draftHours.every((day) => day.isClosed)) {
-      setError("Choose at least one day when your studio is open.");
-      return;
-    }
-
-    setError(null);
-    setIsSubmitting(true);
-    try {
-      await onSaved(parsedHours);
-    } catch (caught) {
-      toast.error(errorMessage(caught));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form className="w-full" onSubmit={submit}>
-      <StepFrame
-        title="When can customers book?"
-        description="Set your weekly hours once. You can fine-tune individual days later."
-      >
-        <FieldGroup className="gap-2">
-          {draftHours.map((day, index) => (
-            <Field
-              key={day.dayOfWeek}
-              orientation="horizontal"
-              variant="surface"
-              data-disabled={day.isClosed}
-              data-invalid={Boolean(error) && !day.isClosed}
-              className="grid grid-cols-[4.75rem_minmax(0,1fr)_auto] items-center gap-3 sm:grid-cols-[6rem_minmax(0,1fr)_auto]"
-            >
-              <FieldLabel htmlFor={`hours-${day.dayOfWeek}`}>
-                {DAYS[day.dayOfWeek]}
-              </FieldLabel>
-              <Input
-                id={`hours-${day.dayOfWeek}`}
-                value={day.isClosed ? "" : (rangeValues[index] ?? "")}
-                placeholder="09:00 – 18:00"
-                disabled={day.isClosed}
-                aria-label={`${DAYS[day.dayOfWeek]} opening hours`}
-                aria-invalid={Boolean(error) && !day.isClosed}
-                variant="surface"
-                className="text-center tabular"
-                onChange={(event) => {
-                  setRangeValues((current) =>
-                    current.map((value, valueIndex) =>
-                      valueIndex === index ? event.target.value : value,
-                    ),
-                  );
-                  setError(null);
-                }}
-              />
-              <div className="flex items-center justify-end gap-2">
-                <span className="hidden text-xs text-muted-foreground sm:inline">
-                  {day.isClosed ? "Closed" : "Open"}
-                </span>
-                <Switch
-                  checked={!day.isClosed}
-                  aria-label={`${day.isClosed ? "Open" : "Close"} ${DAYS[day.dayOfWeek]}`}
-                  onCheckedChange={() => {
-                    setDraftHours((current) =>
-                      current.map((currentDay) =>
-                        currentDay.dayOfWeek === day.dayOfWeek
-                          ? { ...currentDay, isClosed: !currentDay.isClosed }
-                          : currentDay,
-                      ),
-                    );
-                    setRangeValues((current) =>
-                      current.map((value, valueIndex) =>
-                        valueIndex === index
-                          ? day.isClosed
-                            ? formatHoursRange(day)
-                            : ""
-                          : value,
-                      ),
-                    );
-                    setError(null);
-                  }}
-                />
-              </div>
-            </Field>
-          ))}
-        </FieldGroup>
-        <div className="mt-3 min-h-5 text-center">
-          <FieldError aria-live="polite">{error}</FieldError>
-        </div>
-        <WizardActions
-          canGoBack={canGoBack}
-          onBack={onBack}
-          isSubmitting={isSubmitting}
-        />
       </StepFrame>
     </form>
   );
@@ -902,13 +655,12 @@ function ReviewStep({
             ? "Your studio is live"
             : "A quick final check"
         }
-        description={
-          state.operationalSetupComplete
-            ? "Your dashboard is ready. Complete every item below before you can publish your studio website."
-            : "Complete every item below before you can publish your studio website."
-        }
       >
         <div>
+          <p className="mb-4 text-center text-sm text-muted-foreground">
+            {state.websiteRequirements.filter((item) => item.complete).length}{" "}
+            of {state.websiteRequirements.length} ready
+          </p>
           <ul className="flex flex-col gap-2">
             {state.websiteRequirements.map((requirement) => (
               <li
@@ -923,6 +675,9 @@ function ReviewStep({
                       : "bg-secondary text-muted-foreground",
                   )}
                 >
+                  <span className="sr-only">
+                    {requirement.complete ? "Complete" : "Required"}
+                  </span>
                   {requirement.complete ? (
                     <Check className="size-3.5" />
                   ) : (
@@ -931,60 +686,84 @@ function ReviewStep({
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">{requirement.label}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                    {requirement.description}
-                  </p>
+                  {!requirement.complete && (
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                      {requirement.description}
+                    </p>
+                  )}
                 </div>
                 {!requirement.complete && (
                   <Button
                     asChild
                     variant="link"
                     size="sm"
-                    className="h-auto shrink-0 px-0 shadow-none"
+                    className="min-h-11 min-w-11 shrink-0 px-2 shadow-none"
                   >
-                    <Link href={requirement.actionHref}>Fix</Link>
+                    <Link
+                      href={requirement.actionHref}
+                      aria-label={`Fix ${requirement.label}`}
+                    >
+                      Fix
+                    </Link>
                   </Button>
                 )}
               </li>
             ))}
           </ul>
 
-          <form onSubmit={handlePublish}>
-            <WizardActions
-              canGoBack={canGoBack}
-              onBack={onBack}
-              isSubmitting={isPublishing}
-              disabled={
-                !state.allWebsiteRequirementsComplete ||
-                state.org.websiteStatus === "published"
-              }
-              label={
-                state.org.websiteStatus === "published"
-                  ? "Website published"
-                  : "Publish website"
-              }
-            />
-          </form>
+          {state.org.websiteStatus === "published" ? (
+            <Button asChild className="mt-6 h-12 w-full">
+              <Link href="/beauty">
+                <Store />
+                Open dashboard
+              </Link>
+            </Button>
+          ) : (
+            <form onSubmit={handlePublish}>
+              <WizardActions
+                canGoBack={canGoBack}
+                onBack={onBack}
+                isSubmitting={isPublishing}
+                disabled={!state.allWebsiteRequirementsComplete}
+                label="Publish website"
+              />
+            </form>
+          )}
         </div>
       </StepFrame>
 
-      {state.operationalSetupComplete && (
-        <div className="mt-8 text-center">
-          <Button asChild variant="link" className="shadow-none">
-            <Link href="/beauty">
-              <Store data-icon="inline-start" />
-              Open dashboard
-            </Link>
-          </Button>
-        </div>
-      )}
+      {state.operationalSetupComplete &&
+        state.org.websiteStatus !== "published" && (
+          <div className="mt-8 text-center">
+            <Button asChild variant="link" className="shadow-none">
+              <Link href="/beauty">
+                <Store data-icon="inline-start" />
+                Open dashboard
+              </Link>
+            </Button>
+          </div>
+        )}
     </div>
   );
 }
 
 export function OnboardingWizard() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedStep = STEP_ALIASES[searchParams.get("step") ?? ""] ?? null;
+  return (
+    <OnboardingFlow
+      key={requestedStep ?? "default"}
+      requestedStep={requestedStep}
+    />
+  );
+}
+
+function OnboardingFlow({
+  requestedStep,
+}: {
+  requestedStep: WizardStep | null;
+}) {
+  const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
     api.users.getMyProfile,
@@ -992,9 +771,8 @@ export function OnboardingWizard() {
   );
   const state = useQuery(api.activation.getState, profile?.orgId ? {} : "skip");
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
-  const requestedStep = searchParams.get("step");
   const [manualStep, setManualStep] = useState<WizardStep | null>(
-    requestedStep ? (STEP_ALIASES[requestedStep] ?? null) : null,
+    requestedStep,
   );
 
   const startBusiness = useMutation(api.activation.startBeautyBusiness);
@@ -1006,7 +784,18 @@ export function OnboardingWizard() {
     if (!isLoading && !isAuthenticated) router.replace("/login");
   }, [isAuthenticated, isLoading, router]);
 
-  if (isLoading || !isAuthenticated || !profile || (profile?.orgId && !state)) {
+  const shouldOpenDashboard = state?.onboardingComplete && !requestedStep;
+  useEffect(() => {
+    if (shouldOpenDashboard) router.replace("/beauty");
+  }, [shouldOpenDashboard, router]);
+
+  if (
+    isLoading ||
+    !isAuthenticated ||
+    !profile ||
+    (profile?.orgId && !state) ||
+    shouldOpenDashboard
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner className="size-8" />
@@ -1018,7 +807,10 @@ export function OnboardingWizard() {
   const derivedStep = profile?.orgId
     ? firstStepForSection(state?.nextStep ?? "business")
     : "business-name";
-  const step = manualStep ?? derivedStep;
+  const step =
+    !profile.orgId && manualStep !== "business-category"
+      ? "business-name"
+      : (manualStep ?? derivedStep);
   const stepIndex = STEP_ORDER.indexOf(step);
   const canGoBack = stepIndex > 0;
 
@@ -1110,32 +902,73 @@ export function OnboardingWizard() {
   };
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="px-6 py-6 sm:px-10">
+    <main className="min-h-dvh bg-background">
+      <header className="px-4 py-4 sm:px-8 sm:py-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Logo className="text-2xl" />
-          {state?.operationalSetupComplete && (
-            <Button asChild variant="link" className="shadow-none">
-              <Link href="/beauty">Dashboard</Link>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-11"
+              aria-label="Cookie settings"
+              onClick={openCookiePreferences}
+            >
+              <Cookie />
             </Button>
-          )}
+            {state?.operationalSetupComplete && (
+              <Button asChild variant="ghost" className="min-h-11 shadow-none">
+                <Link href="/beauty">Dashboard</Link>
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
-      <div className="mx-auto flex min-h-[calc(100vh-92px)] max-w-6xl flex-col items-center px-6 pb-16 pt-8 sm:px-10 sm:pt-16">
-        <div className="flex w-full flex-1 items-start justify-center">
+      <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-8">
+        <div
+          className="mb-8 w-full max-w-xl sm:mb-12"
+          role="progressbar"
+          aria-label="Studio setup"
+          aria-valuemin={1}
+          aria-valuemax={STEP_ORDER.length}
+          aria-valuenow={stepIndex + 1}
+        >
+          <div className="mb-3 flex justify-between text-xs font-medium text-muted-foreground">
+            <span>Studio setup</span>
+            <span>
+              Step {stepIndex + 1} of {STEP_ORDER.length}
+            </span>
+          </div>
+          <div className="flex gap-1.5" aria-hidden="true">
+            {STEP_ORDER.map((item, index) => (
+              <span
+                key={item}
+                className={cn(
+                  "h-1 flex-1 rounded-full",
+                  index <= stepIndex ? "bg-primary" : "bg-secondary",
+                )}
+              />
+            ))}
+          </div>
+        </div>
+        <div
+          key={step}
+          className="flex w-full min-w-0 flex-1 items-start justify-center"
+        >
           {step === "business-name" && (
             <TextInputStep
               id="business-name"
               title="Enter your business name"
-              description="Use the name your customers already know you by."
               value={currentDraft.name}
               placeholder="King Cuts"
               canGoBack={canGoBack}
               onBack={goBack}
+              validate={(name) =>
+                name.length < 2 ? "Enter at least 2 characters." : null
+              }
               onSaved={(name) => {
-                if (name.length < 2)
-                  throw new Error("Enter at least 2 characters.");
                 updateDraft({ name });
                 goNext();
               }}
@@ -1165,7 +998,6 @@ export function OnboardingWizard() {
             <TextInputStep
               id="service-name"
               title="What should customers book?"
-              description="Start with the service you want to fill first."
               value={currentDraft.service.name}
               placeholder="Signature haircut"
               canGoBack={canGoBack}
@@ -1181,9 +1013,9 @@ export function OnboardingWizard() {
             <TextInputStep
               id="service-price"
               title="What does it cost?"
-              description="Enter the price customers will see."
               value={currentDraft.service.price}
-              placeholder="25.00 MKD"
+              placeholder="500.00"
+              unit="MKD"
               inputMode="decimal"
               canGoBack={canGoBack}
               onBack={goBack}
@@ -1200,13 +1032,13 @@ export function OnboardingWizard() {
             <TextInputStep
               id="service-duration"
               title="How long does it take?"
-              description="Most appointment slots work best in 15-minute increments."
+              unit="minutes"
               value={String(currentDraft.service.durationMins)}
               placeholder="30"
               type="number"
               inputMode="numeric"
-              min={15}
-              step={15}
+              min={state?.settings?.slotDurationMins ?? 15}
+              step={state?.settings?.slotDurationMins ?? 15}
               canGoBack={canGoBack}
               onBack={goBack}
               validate={(value) => {
@@ -1236,7 +1068,7 @@ export function OnboardingWizard() {
               state={state}
               canGoBack={canGoBack}
               onBack={goBack}
-              onPublished={() => router.push("/beauty")}
+              onPublished={() => router.replace("/beauty")}
             />
           )}
         </div>

@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
+import { Spinner } from "@/components/ui/spinner";
 import { OnboardingWizard } from "./_components/OnboardingWizard";
 
 export default function OnboardingPage() {
@@ -6,11 +8,13 @@ export default function OnboardingPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-background">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <Spinner className="size-8" />
         </div>
       }
     >
-      <OnboardingWizard />
+      <DashboardI18nProvider locale="en">
+        <OnboardingWizard />
+      </DashboardI18nProvider>
     </Suspense>
   );
 }

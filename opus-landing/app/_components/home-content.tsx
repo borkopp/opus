@@ -70,10 +70,7 @@ export function HomeContent() {
               <br className="desktop-break" /> {t.hero.descriptionLine2}
             </p>
             <div className="hero-actions">
-              <a
-                className="button button-dark"
-                href="https://studio.opus.mk/signup"
-              >
+              <a className="button button-dark" href="https://studio.opus.mk/">
                 {t.hero.createWebsite}{" "}
                 <span>
                   <ArrowUpRight aria-hidden="true" />
@@ -422,8 +419,7 @@ export function HomeContent() {
           </div>
           <div className="feature-summary">
             <span>
-              <Infinity aria-hidden="true" />{" "}
-              {t.featuresBento.summaryUnlimited}
+              <Infinity aria-hidden="true" /> {t.featuresBento.summaryUnlimited}
             </span>
             <span>
               <Infinity aria-hidden="true" /> {t.featuresBento.summaryServices}
@@ -633,9 +629,7 @@ export function HomeContent() {
                 </span>
               </a>
               <div className="plan-divider"></div>
-              <strong className="included-label">
-                {t.pricing.free.label}
-              </strong>
+              <strong className="included-label">{t.pricing.free.label}</strong>
               <ul className="plan-features">
                 {t.pricing.free.features.map((feature, i) => (
                   <li key={i}>

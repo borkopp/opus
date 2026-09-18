@@ -1,6 +1,7 @@
 "use client";
 
-import { type ComponentProps, useSyncExternalStore } from "react";
+import { type ComponentProps } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   Drawer,
   DrawerContent,
@@ -10,31 +11,11 @@ import {
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { BookingSidebar } from "./BookingSidebar";
 
-const DESKTOP_QUERY = "(min-width: 1024px)";
-
-function subscribeToViewport(onChange: () => void) {
-  const query = window.matchMedia(DESKTOP_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-function getDesktopSnapshot() {
-  return window.matchMedia(DESKTOP_QUERY).matches;
-}
-
-function getServerSnapshot() {
-  return false;
-}
-
 export function BookingDetailsPanel(
   props: ComponentProps<typeof BookingSidebar>,
 ) {
   const { t } = useDashboardI18n();
-  const isDesktop = useSyncExternalStore(
-    subscribeToViewport,
-    getDesktopSnapshot,
-    getServerSnapshot,
-  );
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   if (isDesktop) {
     return (
@@ -52,7 +33,7 @@ export function BookingDetailsPanel(
         if (!open) props.onClose();
       }}
     >
-      <DrawerContent className="h-[90dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
+      <DrawerContent className="dashboard-panel h-[90dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
         <DrawerTitle className="sr-only">
           {t("Booking details", "Детали за термин")}
         </DrawerTitle>

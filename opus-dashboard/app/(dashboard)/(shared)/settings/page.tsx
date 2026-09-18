@@ -19,6 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
+import { SettingsSectionPicker } from "./_components/SettingsSectionPicker";
 import { AiOperatorTab } from "./_components/tabs/AiOperatorTab";
 import { BookingOperationsTab } from "./_components/tabs/BookingOperationsTab";
 import { DynamicSurgePricingTab } from "./_components/tabs/DynamicSurgePricingTab";
@@ -188,7 +189,12 @@ export default function SettingsPage() {
         className="w-full gap-6"
       >
         <div className="sticky top-0 z-20 -mx-1 bg-background/95 px-1 py-2 backdrop-blur-sm">
-          <div className="max-w-full overflow-x-auto overscroll-x-contain rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <SettingsSectionPicker
+            sections={SETTINGS_TABS}
+            value={activeTab}
+            onValueChange={handleTabChange}
+          />
+          <div className="hidden md:block max-w-full overflow-x-auto overscroll-x-contain rounded-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <TabsList
               aria-label={t("Settings sections", "Секции за поставки")}
               className="h-auto w-max min-w-full justify-start gap-1 rounded-xl p-1 bg-muted/80 border border-border/70 shadow-2xs dark:bg-muted/70 dark:border-transparent dark:shadow-none"

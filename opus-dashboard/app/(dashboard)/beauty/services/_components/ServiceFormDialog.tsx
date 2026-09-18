@@ -304,7 +304,7 @@ export function ServiceFormDialog({
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="dashboard-panel sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="sr-only">
               {t("Loading service", "Вчитување услуга")}
@@ -327,7 +327,7 @@ export function ServiceFormDialog({
   if (orgSettings === null || (isEdit && existingService === null)) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="dashboard-panel sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {t("Service unavailable", "Услугата не е достапна")}
@@ -372,7 +372,7 @@ export function ServiceFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-lg">
+      <DialogContent className="dashboard-panel max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {isEdit

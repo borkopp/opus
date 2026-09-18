@@ -382,3 +382,36 @@
     width: 0%;
   }
 }
+
+/* Dashboard touch controls stay legible without triggering iOS input zoom. */
+@media (max-width: 767px) {
+  :is(.dashboard-workspace, .dashboard-panel)
+    :is(
+      [data-slot="button"],
+      [data-slot="select-trigger"],
+      [data-slot="input-group"]
+    ) {
+    min-height: 2.75rem;
+  }
+
+  :is(.dashboard-workspace, .dashboard-panel)
+    :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+    font-size: 1rem;
+  }
+
+  :is(.dashboard-workspace, .dashboard-panel)
+    [data-slot="button"][data-size^="icon"] {
+    min-width: 2.75rem;
+  }
+
+  .dashboard-panel[data-slot="dialog-content"] {
+    max-height: calc(100dvh - 2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-panel[data-slot="drawer-content"] {
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+  }
+}

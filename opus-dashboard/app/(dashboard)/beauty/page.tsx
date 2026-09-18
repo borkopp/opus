@@ -158,37 +158,37 @@ export default function DashboardHome() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 flex-1 min-h-0"
+        className="grid grid-flow-row-dense grid-cols-1 gap-6 md:grid-cols-2 md:auto-rows-[minmax(320px,auto)] xl:auto-rows-auto xl:grid-cols-4 xl:grid-rows-2 xl:min-h-[700px] xl:flex-1"
       >
         {/* ── Row 1: Schedule + plan-specific insights + Latest Activity ── */}
-        <div className="md:col-span-2 md:h-full md:min-h-0">
+        <div className="md:col-span-2 min-w-0 md:h-full xl:min-h-0">
           <LiveScheduleWidget
             groupedByStaff={groupedByStaff}
             onComplete={handleComplete}
           />
         </div>
-        <div className="md:col-span-1 md:h-full md:min-h-0">
+        <div className="md:col-span-1 min-w-0 md:h-full xl:min-h-0">
           {isPaid ? (
             <GapOptimizerWidget orgId={orgId} isPaid={isPaid} />
           ) : (
             <ServicePerformanceWidget formatMoney={formatMoney} />
           )}
         </div>
-        <div className="md:col-span-1 md:h-full md:min-h-0">
+        <div className="md:col-span-1 min-w-0 md:h-full xl:min-h-0">
           <LatestActivityWidget orgId={orgId} />
         </div>
 
         {/* ── Row 2: Staff Capacity + Revenue Chart + plan-specific insights ── */}
-        <div className="md:col-span-1 md:h-full md:min-h-0">
+        <div className="md:col-span-1 min-w-0 md:h-full xl:min-h-0">
           <StaffUtilisationWidget staffUtilisation={staffUtilisation} />
         </div>
-        <div className="md:col-span-2 md:h-full md:min-h-0">
+        <div className="md:col-span-2 min-w-0 md:h-full xl:min-h-0">
           <RevenueChartWidget
             revenueData={weeklyRevenueChart}
             formatMoney={formatMoney}
           />
         </div>
-        <div className="md:col-span-1 md:h-full md:min-h-0">
+        <div className="md:col-span-1 min-w-0 md:h-full xl:min-h-0">
           {isPaid ? (
             <AIPerformanceWidget
               aiPerformance={aiPerformance ?? null}

@@ -181,12 +181,12 @@ export default function NotificationsPage() {
         className="w-full"
       >
         <div className="overflow-x-auto pb-1">
-          <TabsList className="h-9">
+          <TabsList className="h-12 md:h-9">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.id}
                 value={tab.id}
-                className="cursor-pointer px-3 text-xs"
+                className="min-h-11 cursor-pointer px-3 text-xs md:min-h-0"
               >
                 {tab.label}
               </TabsTrigger>
@@ -269,7 +269,7 @@ export default function NotificationsPage() {
                   </p>
                 </div>
                 {!n.isRead && (
-                  <div className="absolute right-10 top-5 h-2 w-2 rounded-full bg-primary" />
+                  <div className="absolute right-14 top-5 md:right-10 h-2 w-2 rounded-full bg-primary" />
                 )}
                 <button
                   type="button"
@@ -277,7 +277,7 @@ export default function NotificationsPage() {
                     e.stopPropagation();
                     dismiss({ orgId, notificationId: n._id });
                   }}
-                  className="absolute right-4 top-4.5 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 cursor-pointer"
+                  className="absolute right-2 top-3 flex size-11 items-center justify-center opacity-100 md:right-4 md:top-4.5 md:size-7 md:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 cursor-pointer"
                   aria-label={t("Dismiss notification", "Отфрли известување")}
                 >
                   <IconX size={15} />

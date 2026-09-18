@@ -16,7 +16,11 @@ import { Id } from "@/convex/_generated/dataModel";
 import { BookingView, StaffView } from "./types";
 import { bookingServiceLabel } from "./service-label";
 import { bookingTimeLabel } from "@/lib/booking-wall-clock";
-import { getServiceTheme, PILL_STRIPE_STYLE, MUTED_STRIPE_STYLE } from "./service-theme";
+import {
+  getServiceTheme,
+  PILL_STRIPE_STYLE,
+  MUTED_STRIPE_STYLE,
+} from "./service-theme";
 import { getImageStorageUrl } from "@/lib/file-validation";
 import { BookingPopoverCard } from "./BookingPopoverCard";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -54,11 +58,14 @@ export function BookingsList({
   }, [staffMembers]);
 
   return (
-    <div className="flex flex-col w-full h-full p-3 sm:p-5 gap-3 custom-scrollbar">
+    <div className="flex min-w-0 flex-col w-full p-3 sm:p-5 gap-3 custom-scrollbar">
       {sortedBookings.map((booking) => {
         const startLabel = bookingTimeLabel(booking.startAt);
         const endLabel = bookingTimeLabel(booking.endAt);
-        const serviceName = bookingServiceLabel(booking, t("Service", "Услуга"));
+        const serviceName = bookingServiceLabel(
+          booking,
+          t("Service", "Услуга"),
+        );
         const theme = getServiceTheme(booking.service?.name || serviceName);
 
         const isSelected = selectedBookingId === booking._id;
@@ -72,7 +79,9 @@ export function BookingsList({
           ? getImageStorageUrl(staffMember.avatarUrl)
           : null;
 
-        const stripeStyle = isCancelled ? MUTED_STRIPE_STYLE : PILL_STRIPE_STYLE;
+        const stripeStyle = isCancelled
+          ? MUTED_STRIPE_STYLE
+          : PILL_STRIPE_STYLE;
 
         return (
           <BookingPopoverCard
@@ -89,20 +98,11 @@ export function BookingsList({
             side="bottom"
             align="center"
           >
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() =>
-                onSelectBooking(isSelected ? null : booking._id)
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelectBooking(isSelected ? null : booking._id);
-                }
-              }}
+            <button
+              type="button"
+              aria-pressed={isSelected}
               className={cn(
-                "group flex w-full min-w-0 items-center justify-between rounded-2xl border px-4 sm:px-6 py-4 sm:py-5 min-h-[72px] sm:min-h-[76px] text-left transition-all duration-150 cursor-pointer select-none",
+                "group grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 rounded-2xl border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-150 cursor-pointer select-none motion-reduce:transition-none lg:flex lg:justify-between lg:gap-4 lg:px-5 lg:py-5",
                 "bg-card hover:bg-muted/30 hover:border-border/80 hover:shadow-xs active:scale-[0.99]",
                 isSelected
                   ? "border-primary ring-2 ring-primary/20 bg-muted/20 shadow-xs"
@@ -111,11 +111,11 @@ export function BookingsList({
               )}
             >
               {/* Left Column: Time & Service Pill & Client & Staff */}
-              <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1">
+              <div className="contents lg:flex lg:items-center lg:gap-4 lg:min-w-0 lg:flex-1">
                 {/* Time Badge */}
-                <div className="flex items-center gap-2 shrink-0 text-muted-foreground w-28 sm:w-32">
+                <div className="row-start-1 col-start-1 flex min-w-0 items-center gap-2 text-muted-foreground lg:w-32 lg:shrink-0">
                   <IconClock className="size-4 opacity-60 shrink-0" />
-                  <span className="font-mono font-semibold text-xs sm:text-sm text-foreground tabular-nums tracking-tight">
+                  <span className="whitespace-nowrap font-mono font-semibold text-xs sm:text-sm text-foreground tabular-nums tracking-tight">
                     {startLabel}–{endLabel}
                   </span>
                 </div>
@@ -124,28 +124,28 @@ export function BookingsList({
                 <div
                   style={stripeStyle}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold shrink-0 transition-transform shadow-2xs",
+                    "col-span-2 row-start-3 flex min-w-0 max-w-full w-fit items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold shadow-2xs lg:max-w-44",
                     isCancelled
                       ? "bg-muted text-muted-foreground line-through"
                       : theme.pillBg,
                   )}
                 >
-                  <span className="truncate max-w-[140px] sm:max-w-[220px]">
+                  <span className="line-clamp-2 break-words lg:truncate">
                     {serviceName}
                   </span>
                 </div>
 
                 {/* Client Information */}
-                <div className="hidden md:flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="col-span-2 row-start-2 flex items-center gap-2.5 min-w-0 lg:flex-1">
                   <div className="size-7 sm:size-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 ring-1 ring-border/40">
                     <IconUser className="size-4" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="font-semibold text-foreground truncate text-xs sm:text-sm tracking-tight">
+                    <span className="font-semibold text-foreground break-words text-base lg:truncate lg:text-sm tracking-tight">
                       {booking.customer?.name || t("Guest", "Гостин")}
                     </span>
                     {booking.customer?.phone && (
-                      <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1 truncate font-mono">
+                      <span className="hidden lg:flex text-xs text-muted-foreground items-center gap-1 truncate font-mono">
                         <IconPhone className="size-3 shrink-0 opacity-60" />
                         {booking.customer.phone}
                       </span>
@@ -154,7 +154,7 @@ export function BookingsList({
                 </div>
 
                 {/* Staff Member */}
-                <div className="hidden lg:flex items-center gap-2.5 shrink-0 text-muted-foreground">
+                <div className="col-start-1 row-start-4 flex min-w-0 items-center gap-2 text-muted-foreground lg:hidden xl:flex">
                   <div className="size-7 sm:size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold overflow-hidden shrink-0 ring-1 ring-border/40">
                     {staffAvatarUrl ? (
                       <Image
@@ -176,9 +176,9 @@ export function BookingsList({
               </div>
 
               {/* Right Column: Price & Status Indicator */}
-              <div className="flex items-center gap-3 sm:gap-6 shrink-0 pl-3">
+              <div className="contents lg:flex lg:items-center lg:gap-4 lg:shrink-0">
                 {/* Price */}
-                <div className="text-right font-bold text-sm sm:text-base text-foreground font-mono">
+                <div className="col-start-2 row-start-1 text-right font-semibold text-sm text-foreground tabular-nums">
                   <Price
                     amount={booking.priceMinorUnits || 0}
                     showDecimals={false}
@@ -186,7 +186,7 @@ export function BookingsList({
                 </div>
 
                 {/* Status Badge */}
-                <div className="flex items-center justify-end w-20 sm:w-24">
+                <div className="col-start-2 row-start-4 flex items-center justify-end lg:min-w-24">
                   {isCompleted && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                       <IconCircleCheck className="size-3.5 shrink-0" />
@@ -219,7 +219,7 @@ export function BookingsList({
                   )}
                 </div>
               </div>
-            </div>
+            </button>
           </BookingPopoverCard>
         );
       })}

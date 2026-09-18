@@ -101,13 +101,16 @@ export default function DashboardLayout({
     <DashboardI18nProvider locale={locale}>
       <SidebarProvider>
         <QuickBookingProvider orgId={profile.orgId}>
-          <div className="flex h-screen w-full flex-col md:flex-row overflow-hidden bg-background">
+          <div className="flex h-dvh w-full flex-col md:flex-row overflow-hidden bg-background">
             <AppSidebar
               profile={profile}
-              primaryLinks={primaryLinks.filter(link => profile.role !== "staff" || link.href !== "/beauty/assistant")}
+              primaryLinks={primaryLinks.filter(
+                (link) =>
+                  profile.role !== "staff" || link.href !== "/beauty/assistant",
+              )}
               industryBase={industryBase}
             />
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full bg-background relative z-0 flex flex-col">
+            <main className="dashboard-workspace min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:p-8 w-full bg-background relative z-0 flex flex-col">
               {children}
             </main>
           </div>

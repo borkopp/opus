@@ -10,16 +10,18 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconCalendarOff,
-  IconLayoutList,
-  IconLayoutColumns,
-  IconLayoutRows,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { BookingsHorizontalTimeline } from "./BookingsHorizontalTimeline";
 import { BookingsTimeline } from "./BookingsTimeline";
 import { BookingsList } from "./BookingsList";
-import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import {
+  BookingsToolbar,
+  type BookingStatusFilter,
+  type BookingViewVariant,
+} from "./BookingsToolbar";
 import { Price } from "@/components/ui/price";
 import { BookingView, StaffView } from "./types";
 import { useQuickBooking } from "./QuickBookingProvider";
@@ -44,6 +46,17 @@ export function BookingsSplitView({
   orgId: Id<"orgs">;
 }) {
   const { locale, t } = useDashboardI18n();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isMobile = !isDesktop;
+  const [mobileVariant, setMobileVariant] = useState<"vertical" | "list">(
+    "list",
+  );
+  const [mobileStaffId, setMobileStaffId] = useState<string>("");
+  const activeStaffId = staffMembers.some(
+    (staff) => staff._id === mobileStaffId,
+  )
+    ? mobileStaffId
+    : (staffMembers[0]?._id ?? "");
   const rescheduleBooking = useMutation(api.bookings.rescheduleBooking);
   const cancelBooking = useMutation(api.bookings.cancelBooking);
   const completeBooking = useMutation(api.bookings.completeBooking);
@@ -66,15 +79,21 @@ export function BookingsSplitView({
   });
 
   const handleVariantChange = (variant: "horizontal" | "vertical" | "list") => {
+    setSelectedBookingId(null);
+    if (isMobile) {
+      if (variant !== "horizontal") setMobileVariant(variant);
+      return;
+    }
     setViewVariant(variant);
     if (typeof window !== "undefined") {
       localStorage.setItem("opus_bookings_timeline_variant", variant);
     }
   };
 
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "upcoming" | "completed" | "no-show"
-  >("all");
+  const activeVariant: BookingViewVariant = isMobile
+    ? mobileVariant
+    : viewVariant;
+  const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>("all");
 
   const quickBookingSlots = useQuery(api.slots.getQuickBookingSlots, {
     orgId,
@@ -184,9 +203,9 @@ export function BookingsSplitView({
   );
 
   return (
-    <div className="flex h-full min-w-0 flex-col gap-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 md:h-full md:gap-4">
       {/* Top Header: Title, Live Stats & Date Navigator */}
-      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-5 md:flex md:flex-wrap md:justify-between md:gap-4">
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <h1 className="text-2xl font-display font-semibold tracking-tight text-foreground sm:text-3xl">
             {t("Bookings", "Термини")}
@@ -226,14 +245,17 @@ export function BookingsSplitView({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="contents md:flex md:items-center md:gap-3">
           {/* Date Navigator */}
-          <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 shadow-2xs">
+          <div className="order-3 col-span-2 flex w-full items-center gap-1 rounded-xl border border-border/50 bg-card p-1 shadow-2xs md:order-none md:w-auto">
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => setCurrentDate(subDays(currentDate, 1))}
+              className="size-11 rounded-lg text-muted-foreground hover:text-foreground md:size-8"
+              onClick={() => {
+                setSelectedBookingId(null);
+                setCurrentDate(subDays(currentDate, 1));
+              }}
               aria-label={t("Previous day", "Претходен ден")}
             >
               <IconChevronLeft className="size-4" />
@@ -242,22 +264,28 @@ export function BookingsSplitView({
             {!isToday(currentDate) && (
               <button
                 type="button"
-                onClick={() => setCurrentDate(startOfDay(new Date()))}
-                className="px-2 py-0.5 text-xs font-semibold rounded-md bg-muted/60 text-foreground hover:bg-muted transition-colors"
+                onClick={() => {
+                  setSelectedBookingId(null);
+                  setCurrentDate(startOfDay(new Date()));
+                }}
+                className="min-h-11 px-3 md:min-h-0 md:px-2 py-0.5 text-xs font-semibold rounded-md bg-muted/60 text-foreground hover:bg-muted transition-colors"
               >
                 {t("Today", "Денес")}
               </button>
             )}
 
-            <span className="text-xs font-semibold px-2 text-center select-none tracking-tight min-w-[105px]">
+            <span className="min-w-0 flex-1 px-2 text-center text-sm font-semibold select-none tracking-tight md:min-w-[105px] md:text-xs">
               {formatHeaderDate(currentDate, locale)}
             </span>
 
             <Button
               variant="ghost"
               size="icon"
-              className="size-8 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => setCurrentDate(addDays(currentDate, 1))}
+              className="size-11 rounded-lg text-muted-foreground hover:text-foreground md:size-8"
+              onClick={() => {
+                setSelectedBookingId(null);
+                setCurrentDate(addDays(currentDate, 1));
+              }}
               aria-label={t("Next day", "Следен ден")}
             >
               <IconChevronRight className="size-4" />
@@ -267,7 +295,7 @@ export function BookingsSplitView({
           {/* New Booking Action */}
           <Button
             variant="default"
-            className="rounded-xl shadow-xs"
+            className="min-h-11 rounded-xl shadow-xs md:min-h-9"
             onClick={() => openQuickBooking({ date: currentDate })}
           >
             <IconPlus data-icon="inline-start" />
@@ -277,121 +305,31 @@ export function BookingsSplitView({
       </div>
 
       {/* Main Schedule Canvas Container */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
-        {/* Action & Filter Toolbar */}
-        <div className="p-2.5 sm:p-3 border-b border-border/40 flex flex-wrap justify-between items-center gap-3 bg-muted/[0.04]">
-          {/* Left: Status Filter Pills */}
-          <div className="flex items-center gap-1 overflow-hidden text-xs font-medium">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={cn(
-                "px-3 py-1.5 rounded-xl transition-all",
-                statusFilter === "all"
-                  ? "bg-foreground text-background font-semibold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              {t("All", "Сите")}
-            </button>
-            <button
-              onClick={() => setStatusFilter("upcoming")}
-              className={cn(
-                "px-3 py-1.5 rounded-xl transition-all",
-                statusFilter === "upcoming"
-                  ? "bg-foreground text-background font-semibold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              {t("Upcoming", "Претстојни")}
-            </button>
-            <button
-              onClick={() => setStatusFilter("completed")}
-              className={cn(
-                "px-3 py-1.5 rounded-xl transition-all",
-                statusFilter === "completed"
-                  ? "bg-foreground text-background font-semibold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              {t("Completed", "Завршени")}
-            </button>
-            <button
-              onClick={() => setStatusFilter("no-show")}
-              className={cn(
-                "px-3 py-1.5 rounded-xl transition-all",
-                statusFilter === "no-show"
-                  ? "bg-foreground text-background font-semibold shadow-2xs"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-              )}
-            >
-              {t("No-Show", "Не се појави")}
-            </button>
-          </div>
-
-          {/* Right: Variant Switcher Toggle (Horizontal / Vertical / List) */}
-          <div className="flex items-center gap-1.5">
-            <div className="flex items-center rounded-xl bg-muted/60 p-1 text-xs font-medium">
-              <button
-                type="button"
-                onClick={() => handleVariantChange("horizontal")}
-                title={t(
-                  "Horizontal Timeline (Staff rows, Time columns)",
-                  "Хоризонтален приказ (Тим редови, време колони)",
-                )}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
-                  viewVariant === "horizontal"
-                    ? "bg-card text-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <IconLayoutColumns className="size-3.5" />
-                <span>{t("Horizontal", "Хоризонтално")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleVariantChange("vertical")}
-                title={t(
-                  "Vertical Timeline (Staff columns, Time rows)",
-                  "Вертикален приказ (Тим колони, време редови)",
-                )}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
-                  viewVariant === "vertical"
-                    ? "bg-card text-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <IconLayoutRows className="size-3.5" />
-                <span>{t("Vertical", "Вертикално")}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleVariantChange("list")}
-                title={t("List View", "Листа")}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all text-xs font-medium",
-                  viewVariant === "list"
-                    ? "bg-card text-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <IconLayoutList className="size-3.5" />
-                <span>{t("List", "Листа")}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
+        <BookingsToolbar
+          isMobile={isMobile}
+          variant={activeVariant}
+          onVariantChange={handleVariantChange}
+          status={statusFilter}
+          onStatusChange={(value) => {
+            setSelectedBookingId(null);
+            setStatusFilter(value);
+          }}
+          staffMembers={staffMembers}
+          staffId={activeStaffId}
+          onStaffChange={(value) => {
+            setSelectedBookingId(null);
+            setMobileStaffId(value);
+          }}
+        />
 
         {/* Content Area */}
         <div
           data-scroll-container
-          className="flex-1 overflow-y-auto overflow-x-auto relative bg-background/50"
+          className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-background/50"
         >
           {staffMembers.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12">
+            <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
               <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
               <p className="font-semibold text-foreground text-base">
                 {t(
@@ -400,7 +338,7 @@ export function BookingsSplitView({
                 )}
               </p>
             </div>
-          ) : viewVariant === "horizontal" ? (
+          ) : activeVariant === "horizontal" ? (
             <BookingsHorizontalTimeline
               bookings={filteredBookings}
               staffMembers={staffMembers}
@@ -409,7 +347,9 @@ export function BookingsSplitView({
                 setSelectedBookingId(id === selectedBookingId ? null : id)
               }
               onReschedule={handleReschedule}
-              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onComplete={(bookingId) =>
+                runBookingAction("complete", bookingId)
+              }
               onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
               onMarkNoShow={(bookingId) =>
                 runBookingAction("no-show", bookingId)
@@ -419,16 +359,22 @@ export function BookingsSplitView({
               slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
               onQuickBooking={(slot) => openQuickBooking({ slot })}
             />
-          ) : viewVariant === "vertical" ? (
+          ) : activeVariant === "vertical" ? (
             <BookingsTimeline
               bookings={filteredBookings}
-              staffMembers={staffMembers}
+              staffMembers={
+                isMobile
+                  ? staffMembers.filter((staff) => staff._id === activeStaffId)
+                  : staffMembers
+              }
               selectedBookingId={selectedBookingId}
               onSelectBooking={(id) =>
                 setSelectedBookingId(id === selectedBookingId ? null : id)
               }
               onReschedule={handleReschedule}
-              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onComplete={(bookingId) =>
+                runBookingAction("complete", bookingId)
+              }
               onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
               onMarkNoShow={(bookingId) =>
                 runBookingAction("no-show", bookingId)
@@ -439,7 +385,7 @@ export function BookingsSplitView({
               onQuickBooking={(slot) => openQuickBooking({ slot })}
             />
           ) : filteredBookings.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12">
+            <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
               <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
               <p className="font-semibold text-foreground text-base">
                 {t("No bookings found", "Нема пронајдени термини")}
@@ -459,7 +405,9 @@ export function BookingsSplitView({
               onSelectBooking={(id) =>
                 setSelectedBookingId(id === selectedBookingId ? null : id)
               }
-              onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+              onComplete={(bookingId) =>
+                runBookingAction("complete", bookingId)
+              }
               onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
               onMarkNoShow={(bookingId) =>
                 runBookingAction("no-show", bookingId)

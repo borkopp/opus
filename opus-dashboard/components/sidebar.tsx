@@ -4,6 +4,13 @@ import React, { createContext, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
+import {
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { useTheme } from "next-themes";
 import {
   IconMenu2,
@@ -148,7 +155,7 @@ export function AppSidebar({
   const showProUpgrade = Boolean(profile?.orgId && profile.plan !== "paid");
 
   return (
-    <>
+    <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
       {/* ── Desktop Sidebar ───────────────────────────────────── */}
       <motion.aside
         aria-label={t("Main Navigation", "Главна навигација")}
@@ -207,7 +214,7 @@ export function AppSidebar({
                   <button
                     type="button"
                     onClick={() => setIsCollapsed(true)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors active:scale-95 shrink-0"
+                    className="flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 transition-colors active:scale-95 shrink-0"
                     aria-label={t("Collapse sidebar", "Склопи странично мени")}
                   >
                     <IconLayoutSidebarLeftCollapse className="h-4.5 w-4.5" />
@@ -443,14 +450,15 @@ export function AppSidebar({
       {/* ── Mobile Top Header Bar (< md) ──────────────────────── */}
       <header className="flex md:hidden h-16 w-full shrink-0 items-center justify-between px-4 border-b border-sidebar-border bg-sidebar/95 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setIsMobileOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors border border-border/40 active:scale-95 cursor-pointer"
-            aria-label={t("Open menu", "Отвори мени")}
-          >
-            <IconMenu2 className="h-5 w-5" />
-          </button>
+          <SheetTrigger asChild>
+            <button
+              type="button"
+              className="flex size-11 items-center justify-center rounded-xl bg-secondary/80 text-foreground hover:bg-secondary transition-colors border border-border/40 active:scale-95 cursor-pointer"
+              aria-label={t("Open menu", "Отвори мени")}
+            >
+              <IconMenu2 className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
           <Link
             href={industryBase}
             aria-label={t("OPUS dashboard", "OPUS контролна табла")}
@@ -561,148 +569,135 @@ export function AppSidebar({
         </div>
       </header>
 
-      {/* ── Mobile Slide-out Drawer ───────────────────────────── */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setIsMobileOpen(false)}
-              className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs md:hidden"
-            />
+      <SheetContent
+        side="left"
+        showCloseButton={false}
+        className="dashboard-panel flex h-dvh w-[320px] max-w-[88vw] flex-col gap-0 bg-sidebar p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] data-[state=open]:duration-250 data-[state=closed]:duration-200 motion-reduce:animate-none"
+      >
+        <SheetTitle className="sr-only">
+          {t("Main navigation", "Главна навигација")}
+        </SheetTitle>
+        <SheetDescription className="sr-only">
+          {t(
+            "Navigate your studio dashboard.",
+            "Навигација низ контролната табла на студиото.",
+          )}
+        </SheetDescription>
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-sidebar-border/60">
+          <Link
+            href={industryBase}
+            onClick={() => setIsMobileOpen(false)}
+            aria-label={t("OPUS dashboard", "OPUS контролна табла")}
+            className="flex items-center gap-2.5"
+          >
+            <SidebarLogo className="text-xl" markClassName="h-7" />
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen(false)}
+            className="flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+            aria-label={t("Close menu", "Затвори мени")}
+          >
+            <IconX className="h-5 w-5" />
+          </button>
+        </div>
 
-            {/* Slide-out Drawer panel */}
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
-              className="fixed inset-y-0 left-0 z-50 flex h-full w-[280px] max-w-[85vw] flex-col justify-between bg-sidebar border-r border-sidebar-border p-4 shadow-2xl md:hidden"
-            >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-sidebar-border/60">
+        {/* Drawer Nav links */}
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain py-5">
+          {primaryLinks.map((link) => {
+            const isActive =
+              pathname === link.href ||
+              (link.href !== industryBase &&
+                link.href !== "/settings" &&
+                pathname.startsWith(link.href));
+            const isSettings = link.href === "/settings";
+
+            return (
+              <React.Fragment key={link.href}>
+                {isSettings && profile?.orgId && (
+                  <NotificationBell
+                    orgId={profile.orgId}
+                    placement="drawer-nav"
+                  />
+                )}
                 <Link
-                  href={industryBase}
+                  href={link.href}
                   onClick={() => setIsMobileOpen(false)}
-                  aria-label={t("OPUS dashboard", "OPUS контролна табла")}
-                  className="flex items-center gap-2.5"
+                  className={cn(
+                    "flex min-h-12 items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all active:scale-[0.98]",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+                  )}
                 >
-                  <SidebarLogo className="text-xl" markClassName="h-7" />
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  aria-label={t("Close menu", "Затвори мени")}
-                >
-                  <IconX className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Drawer Nav links */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-1.5">
-                {primaryLinks.map((link) => {
-                  const isActive =
-                    pathname === link.href ||
-                    (link.href !== industryBase &&
-                      link.href !== "/settings" &&
-                      pathname.startsWith(link.href));
-                  const isSettings = link.href === "/settings";
-
-                  return (
-                    <React.Fragment key={link.href}>
-                      {isSettings && profile?.orgId && (
-                        <NotificationBell
-                          orgId={profile.orgId}
-                          placement="drawer-nav"
-                        />
-                      )}
-                      <Link
-                        href={link.href}
-                        onClick={() => setIsMobileOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98]",
-                          isActive
-                            ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "shrink-0",
-                            isActive
-                              ? "text-primary-foreground"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          {link.icon}
-                        </div>
-                        <span>{link.label}</span>
-                      </Link>
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-
-              {/* Drawer Footer */}
-              <div className="pt-4 border-t border-sidebar-border/60 space-y-3">
-                {profile?.orgId && <WebsiteBanner orgId={profile.orgId} />}
-
-                <div className="flex items-center gap-3 px-1">
-                  <Avatar className="h-10 w-10 border border-border/60">
-                    <AvatarImage
-                      src={profile?.user?.avatarUrl}
-                      alt={profile?.user?.name ?? t("User", "Корисник")}
-                    />
-                    <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
-                      {(profile?.user?.name ?? "U").charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {profile?.user?.name ?? t("Account", "Профил")}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {profile?.user?.email}
-                    </p>
+                  <div
+                    className={cn(
+                      "shrink-0",
+                      isActive
+                        ? "text-primary-foreground"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {link.icon}
                   </div>
-                </div>
+                  <span>{link.label}</span>
+                </Link>
+              </React.Fragment>
+            );
+          })}
+        </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMobileOpen(false);
-                      router.push("/settings");
-                    }}
-                    className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
-                  >
-                    <IconSettings className="h-4 w-4" />
-                    <span>{t("Settings", "Поставки")}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMobileOpen(false);
-                      void authClient
-                        .signOut()
-                        .then(() => router.replace("/login"));
-                    }}
-                    className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
-                  >
-                    <IconLogout className="h-4 w-4" />
-                    <span>{t("Log out", "Одјава")}</span>
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+        {/* Drawer Footer */}
+        <div className="flex shrink-0 flex-col gap-3 pt-4 border-t border-sidebar-border/60">
+          {profile?.orgId && <WebsiteBanner orgId={profile.orgId} />}
+
+          <div className="flex items-center gap-3 px-1">
+            <Avatar className="h-10 w-10 border border-border/60">
+              <AvatarImage
+                src={profile?.user?.avatarUrl}
+                alt={profile?.user?.name ?? t("User", "Корисник")}
+              />
+              <AvatarFallback className="font-semibold text-xs bg-primary/10 text-primary">
+                {(profile?.user?.name ?? "U").charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">
+                {profile?.user?.name ?? t("Account", "Профил")}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {profile?.user?.email}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileOpen(false);
+                router.push("/settings");
+              }}
+              className="flex items-center justify-center gap-1.5 h-11 rounded-lg bg-secondary text-foreground text-xs font-medium hover:bg-secondary/80 transition-colors"
+            >
+              <IconSettings className="h-4 w-4" />
+              <span>{t("Settings", "Поставки")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileOpen(false);
+                void authClient.signOut().then(() => router.replace("/login"));
+              }}
+              className="flex items-center justify-center gap-1.5 h-11 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors"
+            >
+              <IconLogout className="h-4 w-4" />
+              <span>{t("Log out", "Одјава")}</span>
+            </button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useMediaQuery } from "@/hooks/use-media-query";
+
 import {
   createContext,
   useCallback,
@@ -154,6 +156,7 @@ export function QuickBookingProvider({
   orgId: Id<"orgs">;
   children: ReactNode;
 }) {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const { t } = useDashboardI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [requestDate, setRequestDate] = useState(() => dateKey(new Date()));
@@ -231,9 +234,13 @@ export function QuickBookingProvider({
   return (
     <QuickBookingContext.Provider value={value}>
       {children}
-      <Drawer direction="right" open={isOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-md">
-          <DrawerHeader className="border-b border-border px-5 py-5">
+      <Drawer
+        direction={isDesktop ? "right" : "bottom"}
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+      >
+        <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-md data-[vaul-drawer-direction=bottom]:h-[94dvh] data-[vaul-drawer-direction=bottom]:max-h-[94dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:rounded-t-3xl">
+          <DrawerHeader className="shrink-0 border-b border-border px-5 py-5 text-left">
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 flex-col gap-1">
                 <DrawerTitle className="font-display text-xl">
@@ -856,7 +863,7 @@ function QuickBookingForm({
         </FieldGroup>
       </div>
 
-      <DrawerFooter className="border-t border-border px-5 py-4">
+      <DrawerFooter className="shrink-0 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center justify-between gap-4 text-sm">
           <span className="text-muted-foreground">
             {totalDurationMins > 0

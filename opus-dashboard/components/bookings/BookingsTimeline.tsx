@@ -442,7 +442,10 @@ export function BookingsTimeline({
     <>
       <div
         ref={scrollContainerRef}
-        className={cn("flex relative min-w-max pb-10", drag && "select-none")}
+        className={cn(
+          "flex relative min-w-0 md:min-w-max pb-10",
+          drag && "select-none",
+        )}
       >
         {/* Left Time Axis */}
         <div className="w-12 shrink-0 border-r border-border/50 sticky left-0 bg-card z-20">
@@ -496,7 +499,7 @@ export function BookingsTimeline({
             return (
               <div
                 key={staff._id}
-                className="flex-1 min-w-[220px] relative group/column"
+                className="flex-1 min-w-0 md:min-w-[220px] relative group/column"
                 data-staff-calendar-column={staff._id}
                 aria-label={t(
                   `${staff.displayName} calendar`,

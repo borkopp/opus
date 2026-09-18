@@ -267,7 +267,7 @@ export function ServiceList({
                 <div
                   key={service._id}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5",
+                    "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-5 sm:flex sm:gap-4 sm:px-5",
                     !service.isActive && "bg-muted/20",
                   )}
                 >
@@ -288,10 +288,10 @@ export function ServiceList({
                     </Avatar>
 
                     <div className="min-w-0 flex-1">
-                      <span className="flex min-w-0 items-center gap-2">
+                      <span className="flex min-w-0 flex-wrap items-center gap-2">
                         <span
                           className={cn(
-                            "truncate font-medium text-foreground",
+                            "break-words font-medium text-foreground sm:truncate",
                             !service.isActive && "text-muted-foreground",
                           )}
                         >
@@ -309,7 +309,7 @@ export function ServiceList({
                     </div>
                   </button>
 
-                  <div className="shrink-0 text-right text-sm font-medium tabular-nums text-foreground sm:text-base">
+                  <div className="col-start-1 row-start-2 pl-[3.875rem] text-sm font-medium tabular-nums text-foreground sm:shrink-0 sm:pl-0 sm:text-right sm:text-base">
                     <Price amount={service.priceMinorUnits} />
                   </div>
 
@@ -318,6 +318,7 @@ export function ServiceList({
                       <Button
                         variant="ghost"
                         size="icon-sm"
+                        className="col-start-2 row-start-1 size-11 self-start sm:size-8 sm:self-auto"
                         aria-label={t(
                           `Actions for ${service.name}`,
                           `Опции за ${service.name}`,

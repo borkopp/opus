@@ -35,6 +35,7 @@ export const mkMessages = {
     language: "Јазик",
   },
   hero: {
+    previewLabel: "Илустративен приказ на календарот и веб-сајтот за закажување на OPUS.",
     titleLine1: "Вашето студио,",
     titleLine2: "Со модерен начин на закажување",
     descriptionLine1:
@@ -488,6 +489,7 @@ export const enMessages: Messages = {
     language: "Language",
   },
   hero: {
+    previewLabel: "Illustrative preview of the OPUS calendar and booking website.",
     titleLine1: "Your craft. Your studio.",
     titleLine2: "A little more effortless.",
     descriptionLine1:

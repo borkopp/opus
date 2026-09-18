@@ -1,0 +1,350 @@
+/* A single, composed product illustration. All overrides stay inside the hero. */
+.hero-stage.hero-showcase {
+  width: 1040px;
+  max-width: calc(100% - 32px);
+  height: 580px;
+  margin: 48px auto 0;
+  left: auto;
+  transform: none;
+}
+
+.hero-showcase-canvas {
+  position: absolute;
+  width: 1040px;
+  height: 580px;
+  left: 50%;
+  margin-left: -520px;
+  transform-origin: top center;
+}
+
+.hero-showcase-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 65px 18px 28px;
+  border: 1px solid #ffffff50;
+  border-radius: 40px;
+  background: linear-gradient(135deg, #ffffff24, #ffffff08);
+  box-shadow: inset 0 1px 0 #ffffff3d;
+}
+
+.hero-showcase .calendar-window {
+  left: 62px;
+  top: 105px;
+  width: 656px;
+  padding: 0;
+  border: 1px solid #ffffff;
+  border-radius: 18px;
+  background: #fcfdff;
+  transform: none;
+  box-shadow: 0 32px 64px -24px #21486c45, 0 4px 12px #2447670d;
+}
+
+.hero-showcase .window-toolbar {
+  height: 52px;
+  padding: 0 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.hero-showcase .window-dots {
+  color: #9ba8b6;
+}
+
+.showcase-sidebar {
+  position: absolute;
+  top: 52px;
+  bottom: 0;
+  left: 0;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 21px 0 16px;
+  background: #f7f9fc;
+  border-right: 1px solid #edf1f5;
+  color: #99a6b6;
+}
+
+.showcase-sidebar > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-size: 17px;
+}
+
+.showcase-sidebar .showcase-sidebar-active {
+  color: #397ca6;
+  background: #e5eff7;
+  box-shadow: inset 0 0 0 1px #d6e6f1;
+}
+
+.showcase-sidebar .showcase-sidebar-bottom {
+  margin-top: auto;
+}
+
+.showcase-calendar-content {
+  margin-left: 58px;
+  padding: 20px 24px 16px;
+}
+
+.hero-showcase .calendar-title {
+  margin: 0;
+}
+
+.hero-showcase .calendar-title h3 {
+  color: #314252;
+  font-size: 19px;
+  letter-spacing: -.6px;
+}
+
+.hero-showcase .calendar-title h3 span {
+  color: #d6aa68;
+}
+
+.hero-showcase .calendar-date {
+  padding: 7px 10px;
+  border: 1px solid #e8edf3;
+  border-radius: 7px;
+  color: #718191;
+  font-size: 10px;
+  background: white;
+}
+
+.hero-showcase .calendar-team {
+  margin-top: 14px;
+  color: #516579;
+  font-size: 12px;
+}
+
+.hero-showcase .calendar-grid {
+  height: 198px;
+  margin-top: 13px;
+  grid-template-columns: 38px 1fr 1fr;
+  gap: 10px;
+}
+
+.hero-showcase .day-column {
+  padding: 0 8px;
+  border-color: #ecf0f5;
+  background: repeating-linear-gradient(transparent 0 45px, #edf1f6 45px 46px);
+}
+
+.hero-showcase .staff {
+  height: 32px;
+  color: #687b8f;
+  font-size: 11px;
+  text-align: left;
+}
+
+.hero-showcase .time-column {
+  color: #97a5b3;
+}
+
+.hero-showcase .appointment {
+  border-left-width: 3px;
+  border-radius: 7px;
+  padding: 12px 10px;
+  gap: 7px;
+}
+
+.hero-showcase .appointment b {
+  font-size: 11px;
+}
+
+.hero-showcase .appointment span {
+  font-size: 9px;
+  opacity: .8;
+}
+
+.hero-showcase .apt-blue { background: #e9f2fc; border-color: #83acd5; color: #416786; height: 65px; }
+.hero-showcase .apt-cream { background: #f7f1e7; border-color: #cdb48a; color: #8b7355; }
+.hero-showcase .apt-purple { background: #efedf8; border-color: #b4a7d6; color: #776590; height: 65px; }
+.hero-showcase .apt-green { background: #eaf3ef; border-color: #92b5a4; color: #557e6a; }
+
+.hero-showcase .calendar-footer {
+  margin-top: 12px;
+  padding-top: 10px;
+  font-size: 9px;
+  color: #8595a5;
+}
+
+.hero-showcase .phone-hero {
+  left: 727px;
+  top: 16px;
+  width: 258px;
+  height: 522px;
+  border: 4px solid #f9fbfd;
+  border-radius: 34px;
+  transform: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px #dce5ed, 0 0 0 5px #ffffff40, 0 32px 60px -18px #21486c50;
+}
+
+.hero-showcase .phone-island {
+  width: 62px;
+  height: 17px;
+  top: 8px;
+  background: #283540;
+}
+
+.hero-showcase .phone-status {
+  padding: 12px 17px 8px;
+  color: #435466;
+  font-size: 10px;
+}
+
+.hero-showcase .phone-url {
+  padding: 7px 9px;
+  margin: 8px 12px 11px;
+  border-radius: 8px;
+  background: #f3f6f8;
+  color: #7c8c99;
+}
+
+.hero-showcase .studio-cover {
+  height: 128px;
+  margin: 0 9px;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.hero-showcase .studio-cover-shade {
+  background: linear-gradient(180deg, #20312805, #20312865);
+}
+
+.hero-showcase .phone-content {
+  padding: 15px 17px 0;
+}
+
+.hero-showcase .phone-content h3 {
+  font-size: 21px;
+  margin-top: 8px;
+  color: #34473e;
+}
+
+.hero-showcase .phone-tabs {
+  margin-top: 14px;
+  padding-bottom: 9px;
+}
+
+.hero-showcase .phone-service {
+  padding: 11px 0;
+}
+
+.hero-showcase .service-plus {
+  background: #f1f5f3;
+  color: #61766a;
+  border-radius: 50%;
+}
+
+.hero-showcase .mock-button {
+  padding: 11px 12px;
+  border-radius: 9px;
+  background: #334c40;
+}
+
+.hero-showcase .phone-home {
+  background: #8b9992;
+  height: 3px;
+}
+
+.hero-showcase .floating-note {
+  padding: 16px 18px;
+  gap: 12px;
+  border-radius: 15px;
+  background: #ffffffed;
+  border: 1px solid #ffffff;
+  box-shadow: 0 12px 32px -12px #284b7440, inset 0 1px 0 white;
+  transform: none;
+}
+
+.hero-showcase .note-left {
+  left: 34px;
+  top: 18px;
+}
+
+.hero-showcase .note-right {
+  right: auto;
+  left: 359px;
+  bottom: 13px;
+}
+
+.hero-showcase .floating-note strong {
+  font-size: 12px;
+  color: #3c5063;
+  font-weight: 600;
+}
+
+.hero-showcase .floating-note small {
+  font-size: 10px;
+  color: #7d8c9b;
+  margin-top: 5px;
+}
+
+.hero-showcase .note-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #eaf3ee;
+  color: #648e78;
+}
+
+.hero-showcase .ai-note-icon {
+  background: #edf2fa;
+  color: #7794ba;
+}
+
+.hero-showcase .note-time {
+  margin-left: 18px;
+}
+
+.hero-showcase:hover .phone-hero,
+.hero-showcase:hover .calendar-window {
+  transform: none;
+}
+
+/* Scale the whole illustration together so its hierarchy survives narrow screens. */
+@media (max-width: 1100px) {
+  .hero-stage.hero-showcase { height: 510px; }
+  .hero-showcase-canvas { transform: scale(.86); }
+}
+
+@media (max-width: 930px) {
+  .hero-stage.hero-showcase { height: 420px; }
+  .hero-showcase-canvas { transform: scale(.70); }
+}
+
+@media (max-width: 760px) {
+  .hero-stage.hero-showcase { height: 330px; margin-top: 36px; margin-bottom: 0; }
+  .hero-showcase-canvas { transform: scale(.54); }
+}
+
+@media (max-width: 600px) {
+  .hero-stage.hero-showcase { height: 270px; }
+  .hero-showcase-canvas { transform: scale(.44); }
+}
+
+@media (max-width: 490px) {
+  .hero-stage.hero-showcase { height: 218px; }
+  .hero-showcase-canvas { transform: scale(.35); }
+}
+
+@media (max-width: 390px) {
+  .hero-stage.hero-showcase { height: 190px; }
+  .hero-showcase-canvas { transform: scale(.30); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage.hero-showcase,
+  .hero-showcase .floating-note {
+    animation: none;
+  }
+
+  .hero-showcase .phone-hero,
+  .hero-showcase .calendar-window {
+    transition: none;
+  }
+}

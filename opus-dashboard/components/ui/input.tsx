@@ -9,11 +9,11 @@ const inputVariants = cva(
     variants: {
       variant: {
         default:
-          "h-9 rounded-md bg-card dark:bg-input/30 px-3 py-1 text-base shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 md:text-sm",
+          "h-9 rounded-lg bg-card dark:bg-input/30 px-3 py-1 text-base shadow-2xs transition-[border-color,box-shadow] focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 md:text-sm",
         surface:
-          "h-11 rounded-xl border-transparent bg-secondary px-4 py-2 text-sm shadow-none transition-[background-color,border-color,box-shadow] focus-visible:border-ring focus-visible:bg-card focus-visible:ring-3 focus-visible:ring-ring/20",
+          "h-11 rounded-xl border-transparent bg-secondary px-4 py-2 text-sm shadow-none transition-[background-color,border-color,box-shadow] focus-visible:border-ring focus-visible:bg-card focus-visible:ring-2 focus-visible:ring-ring/20",
         prominent:
-          "h-16 rounded-2xl bg-card px-5 py-3 text-lg shadow-s transition-[background-color,border-color,box-shadow] placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 sm:h-[4.5rem] sm:px-6 sm:text-xl"
+          "h-16 rounded-2xl bg-card px-5 py-3 text-lg shadow-xs transition-[background-color,border-color,box-shadow] placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/20 sm:h-[4.5rem] sm:px-6 sm:text-xl"
       }
     },
     defaultVariants: {

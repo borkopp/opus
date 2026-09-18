@@ -3,8 +3,11 @@
 import { ArrowUpRight, ArrowUp } from "lucide-react";
 import Link from "next/link";
 import { openCookiePreferences } from "../../../shared/analytics/consent";
+import { useI18n } from "@/lib/i18n/context";
 
 export function SiteFooter() {
+  const { t } = useI18n();
+
   return (
     <footer className="footer">
       <div className="footer-main">
@@ -20,43 +23,47 @@ export function SiteFooter() {
             <span className="opus-wordmark">OPUS</span>
           </Link>
           <p>
-            A little more time
+            {t.footer.sloganLine1}
             <br />
-            for what you love.
+            {t.footer.sloganLine2}
           </p>
         </div>
         <div className="footer-links">
-          <b>Meet OPUS</b>
-          <Link href="/#features">Features</Link>
-          <Link href="/#intelligence">OPUS Intelligence</Link>
-          <Link href="/#pricing">Pricing</Link>
+          <b>{t.footer.meetOpus}</b>
+          <Link href="/#features">{t.footer.features}</Link>
+          <Link href="/#intelligence">{t.footer.intelligence}</Link>
+          <Link href="/#pricing">{t.footer.pricing}</Link>
         </div>
         <div className="footer-links">
-          <b>Your next chapter</b>
-          <Link href="/#how-it-works">How it works</Link>
-          <Link href="/#faq">Common questions</Link>
-          <a href="https://studio.opus.mk/signup">Create your website <ArrowUpRight aria-hidden="true" /></a>
+          <b>{t.footer.nextChapter}</b>
+          <Link href="/#how-it-works">{t.footer.howItWorks}</Link>
+          <Link href="/#faq">{t.footer.faq}</Link>
+          <a href="https://studio.opus.mk/signup">
+            {t.footer.createWebsite} <ArrowUpRight aria-hidden="true" />
+          </a>
         </div>
         <div className="footer-statement">
-          <h3>Made for you.</h3>
+          <h3>{t.footer.madeForYou}</h3>
           <p>
-            Thoughtfully built for beauty
+            {t.footer.madeForYouSub1}
             <br />
-            businesses in Macedonia.
+            {t.footer.madeForYouSub2}
           </p>
         </div>
       </div>
       <div className="footer-bottom">
-        <span>© 2026 OPUS. A little more possibility.</span>
-        <span>Beauty is your business. Simplicity is ours.</span>
+        <span>{t.footer.copyright}</span>
+        <span>{t.footer.tagline}</span>
         <div className="footer-legal">
-          <Link href="/contact">Contact</Link>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
+          <Link href="/contact">{t.footer.contact}</Link>
+          <Link href="/privacy">{t.footer.privacy}</Link>
+          <Link href="/terms">{t.footer.terms}</Link>
           <button type="button" onClick={openCookiePreferences}>
-            Cookie settings
+            {t.footer.cookieSettings}
           </button>
-          <Link href="/#">Back to top <ArrowUp aria-hidden="true" /></Link>
+          <Link href="/#">
+            {t.footer.backToTop} <ArrowUp aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </footer>

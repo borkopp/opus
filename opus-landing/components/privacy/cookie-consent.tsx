@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
+import { useI18n } from "@/lib/i18n/context";
 import {
   consentCopy,
   DENIED_CONSENT,
@@ -29,7 +30,8 @@ import { observePixel } from "../../../shared/analytics/meta-pixel";
 const serverSnapshot = () => "server";
 
 export function CookieConsent() {
-  const copy = consentCopy.en;
+  const { locale } = useI18n();
+  const copy = consentCopy[locale] || consentCopy.mk;
   const pathname = usePathname();
   const snapshot = useSyncExternalStore(
     subscribeConsent,

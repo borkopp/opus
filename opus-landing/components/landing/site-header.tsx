@@ -2,18 +2,12 @@
 /* eslint-disable @next/next/no-img-element */
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import Link from "next/link";
-
 import { useEffect, useState } from "react";
-
-const links = [
-  { href: "/#features", label: "Features" },
-  { href: "/#intelligence", label: "OPUS AI" },
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#pricing", label: "Pricing" },
-  { href: "/contact", label: "Contact" },
-];
+import { useI18n } from "@/lib/i18n/context";
+import { LanguageToggle } from "./language-toggle";
 
 export function SiteHeader() {
+  const { messages, t } = useI18n();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -23,6 +17,14 @@ export function SiteHeader() {
     document.addEventListener("keydown", close);
     return () => document.removeEventListener("keydown", close);
   }, []);
+
+  const links = [
+    { href: "/#features", label: t.nav.features },
+    { href: "/#intelligence", label: t.nav.ai },
+    { href: "/#how-it-works", label: t.nav.howItWorks },
+    { href: "/#pricing", label: t.nav.pricing },
+    { href: "/contact", label: t.nav.contact },
+  ];
 
   return (
     <header className="header">
@@ -36,33 +38,41 @@ export function SiteHeader() {
         />
         <span className="opus-wordmark">OPUS</span>
       </Link>
-      <nav className="desktop-nav" aria-label="Main navigation">
+      <nav className="desktop-nav" aria-label={messages.accessibility.openMenu}>
         {links.map((link) => (
           <Link key={link.href} href={link.href}>
             {link.label}
-            {link.label === "OPUS AI" && (
+            {link.href === "/#intelligence" && (
               <>
                 {" "}
-                <span className="tiny-pill">NEW</span>
+                <span className="tiny-pill">{t.nav.newBadge}</span>
               </>
             )}
           </Link>
         ))}
       </nav>
       <div className="nav-actions">
+        <LanguageToggle />
         <a className="login" href="https://studio.opus.mk/login">
-          Log in
+          {t.nav.login}
         </a>
         <a
           className="button button-dark button-small"
           href="https://studio.opus.mk/signup"
         >
-          Start for free <span><ArrowUpRight aria-hidden="true" /></span>
+          {t.nav.startFree}{" "}
+          <span>
+            <ArrowUpRight aria-hidden="true" />
+          </span>
         </a>
         <button
           type="button"
           className="menu-toggle"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={
+            open
+              ? messages.accessibility.closeMenu
+              : messages.accessibility.openMenu
+          }
           aria-expanded={open}
           aria-controls="mobile-nav"
           onClick={() => setOpen(!open)}
@@ -82,7 +92,14 @@ export function SiteHeader() {
             {link.label}
           </Link>
         ))}
-        <a href="https://studio.opus.mk/login">Log in</a>
+        <a href="https://studio.opus.mk/login">{t.nav.login}</a>
+        <div
+          className="mobile-locale-toggle"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span>{t.nav.language}</span>
+          <LanguageToggle />
+        </div>
       </nav>
     </header>
   );

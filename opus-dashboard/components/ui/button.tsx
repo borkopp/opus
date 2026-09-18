@@ -5,29 +5,45 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] motion-reduce:transform-none outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default:
+          "bg-primary text-primary-foreground shadow-xs shadow-black/5 hover:bg-primary/90",
+        dark:
+          "bg-[#25292f] text-white shadow-[0_3px_1px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.17)] hover:bg-[#3b424c] hover:shadow-[0_5px_15px_rgba(24,46,66,0.12)] dark:bg-foreground dark:text-background",
+        brand:
+          "bg-brand text-white shadow-xs hover:bg-brand/90 hover:shadow-sm",
+        navSolid:
+          "bg-foreground text-background hover:bg-foreground/90",
+        navGlass:
+          "border border-foreground/15 bg-foreground/10 text-foreground backdrop-blur-md hover:bg-foreground/15",
+        hero:
+          "bg-white text-neutral-900 shadow-xs hover:bg-white/90 focus-visible:outline-white",
+        heroGlass:
+          "border border-white/15 bg-white/20 text-white backdrop-blur-md hover:bg-white/30 focus-visible:outline-white",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
+          "bg-destructive text-destructive-foreground shadow-xs shadow-black/5 hover:bg-destructive/90 focus-visible:outline-destructive",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-input bg-card text-foreground shadow-xs shadow-black/5 hover:bg-secondary hover:text-foreground dark:bg-card/40 dark:hover:bg-card",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "border border-[#e6eef4] bg-secondary text-secondary-foreground shadow-xs shadow-black/5 hover:bg-[#e8f2f9] dark:border-border dark:hover:bg-secondary/80",
+        ghost:
+          "text-foreground hover:bg-secondary/80 hover:text-foreground",
+        link:
+          "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
         xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
+        sm: "h-8 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5 text-xs",
+        lg: "h-10 rounded-lg px-6 has-[>svg]:px-4 text-sm font-medium",
+        hero: "min-h-11 rounded-full px-5 py-3 text-sm",
+        icon: "size-9 rounded-lg",
         "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        "icon-sm": "size-8 rounded-lg",
+        "icon-lg": "size-10 rounded-lg",
       },
     },
     defaultVariants: {

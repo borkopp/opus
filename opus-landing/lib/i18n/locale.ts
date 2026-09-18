@@ -9,6 +9,31 @@ export function isLocale(value: string | null | undefined): value is Locale {
   return SUPPORTED_LOCALES.includes(value as Locale);
 }
 
+export function getClientLocale(): Locale {
+  if (typeof document === "undefined") return DEFAULT_LOCALE;
+  try {
+    const match = document.cookie.match(
+      new RegExp(`(?:^|;\\s*)${LOCALE_COOKIE_NAME}=([^;]*)`),
+    );
+    const value = match ? decodeURIComponent(match[1]) : null;
+    return isLocale(value) ? value : DEFAULT_LOCALE;
+  } catch {
+    return DEFAULT_LOCALE;
+  }
+}
+
+export function setClientLocale(locale: Locale) {
+  if (typeof document === "undefined") return;
+  try {
+    const isHttps = window.location.protocol === "https:";
+    document.cookie = `${LOCALE_COOKIE_NAME}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax${
+      isHttps ? "; Secure" : ""
+    }`;
+  } catch {
+    // Cookies may be blocked or restricted
+  }
+}
+
 export function resolveLocale(acceptLanguage: string | null): Locale {
   if (!acceptLanguage) {
     return DEFAULT_LOCALE;

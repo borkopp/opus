@@ -5,9 +5,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-manrope);
-  --font-mono: var(--font-ibm-plex-mono);
-  --font-display: var(--font-commissioner);
+  --font-sans: var(--font-dm-sans), var(--font-manrope), sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), monospace;
+  --font-display: var(--font-manrope), sans-serif;
+  --font-heading: var(--font-manrope), sans-serif;
+  --font-audiowide: var(--font-audiowide), sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -74,8 +76,9 @@
      border       #DCE7EF  → structural borders & dividers
      muted text   #697580  → secondary metadata & placeholder
    Fonts:
-     Commissioner    → display headings, large numbers             [--font-commissioner]
-     Manrope         → UI & body copy                              [--font-manrope]
+     DM Sans         → UI & body copy                              [--font-dm-sans]
+     Manrope         → display headings, widget titles             [--font-manrope]
+     Audiowide       → OPUS brand wordmark                         [--font-audiowide]
      IBM Plex Mono   → appointment times, compact metadata          [--font-ibm-plex-mono]
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
@@ -100,9 +103,9 @@
 
   /* Brand Soft & Secondary */
   --secondary: #f1f7fb;
-  --secondary-foreground: var(--foreground);
+  --secondary-foreground: #3c5265;
 
-  --muted: #e6eef4;
+  --muted: #eaf6ff;
   --muted-foreground: #697580;
 
   --accent: var(--brand-soft);
@@ -140,13 +143,14 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
 
-  /* Shadows */
+  /* Shadows - clean, light, matching landing page */
   --shadow-s:
-    inset 0 1px 2px #ffffff30, 0 1px 2px #24282f15, 0 2px 4px #24282f08;
+    inset 0 1px 2px #ffffff30, 0 1px 2px #24282f0a, 0 2px 4px #24282f05;
   --shadow-m:
-    inset 0 1px 2px #ffffff50, 0 2px 4px #24282f20, 0 4px 8px #24282f10;
+    inset 0 1px 2px #ffffff50, 0 2px 4px #24282f10, 0 4px 8px #24282f08;
   --shadow-l:
-    inset 0 1px 2px #ffffff70, 0 4px 6px #24282f20, 0 6px 12px #24282f10;
+    inset 0 1px 2px #ffffff70, 0 4px 6px #24282f15, 0 6px 12px #24282f0a;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -224,19 +228,121 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-dm-sans), var(--font-manrope), sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-manrope), sans-serif;
+  }
+
+  h1 {
+    letter-spacing: -0.035em;
+    font-weight: 600;
+  }
+
+  h2 {
+    letter-spacing: -0.025em;
+    font-weight: 600;
+  }
+
+  h3 {
+    letter-spacing: -0.015em;
+    font-weight: 600;
   }
 
   .font-display,
   [data-display] {
-    font-family: var(--font-commissioner), sans-serif;
-    letter-spacing: -0.01em;
+    font-family: var(--font-manrope), sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  .font-heading {
+    font-family: var(--font-manrope), sans-serif;
+    letter-spacing: -0.02em;
   }
 
   .font-mono,
   .tabular {
     font-variant-numeric: tabular-nums;
     font-family: var(--font-ibm-plex-mono), monospace;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.125rem;
+    border-radius: 0.5625rem;
+    font-size: 0.875rem;
+    font-weight: 550;
+    line-height: 1.15;
+    transition:
+      transform 0.2s var(--ease),
+      box-shadow 0.2s,
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s;
+    white-space: nowrap;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .button:active {
+    transform: scale(0.97);
+  }
+
+  .button-dark {
+    color: #fff;
+    background: #25292f;
+    box-shadow:
+      0 3px 1px #00000012,
+      inset 0 1px 1px #ffffff2b;
+  }
+
+  .button-dark:hover {
+    background: #3b424c;
+    box-shadow: 0 5px 15px #182e4220;
+  }
+
+  .button-light {
+    background: #f1f7fb;
+    color: #3c5265;
+    border: 1px solid #e6eef4;
+  }
+
+  .button-light:hover {
+    background: #e8f2f9;
+  }
+
+  .button-small {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    border-radius: 0.5rem;
+  }
+
+  .opus-wordmark {
+    font-family: var(--font-audiowide), sans-serif;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: inherit;
   }
 }
 

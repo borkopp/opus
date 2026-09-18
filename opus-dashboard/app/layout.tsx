@@ -4,24 +4,33 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
-import { Commissioner, Manrope, IBM_Plex_Mono } from "next/font/google";
+import { DM_Sans, Manrope, Audiowide, IBM_Plex_Mono } from "next/font/google";
 
-const commissioner = Commissioner({
-  subsets: ["latin", "cyrillic"],
-  weight: ["500", "600", "700"],
-  variable: "--font-commissioner",
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
 });
 
 const manrope = Manrope({
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-manrope",
+  display: "swap",
+});
+
+const audiowide = Audiowide({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-audiowide",
+  display: "swap",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin", "cyrillic"],
   weight: ["400", "500"],
   variable: "--font-ibm-plex-mono",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -44,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="mk" suppressHydrationWarning>
       <body
-        className={`${commissioner.variable} ${manrope.variable} ${ibmPlexMono.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${manrope.variable} ${audiowide.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

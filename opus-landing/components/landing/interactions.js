@@ -17,13 +17,6 @@ export function initializeLanding() {
   const studioCarousel = document.querySelector(".studio-carousel");
   if (studioCarousel) {
     const slides = [...studioCarousel.querySelectorAll(".studio-slide")];
-    const studioNames = [
-      "Hair salons",
-      "Barbershops",
-      "Nail studios",
-      "Makeup artists",
-      "Massage studios",
-    ];
     let activeStudio = 0;
     function showStudio(index, moveFocus = false) {
       activeStudio = (index + slides.length) % slides.length;
@@ -37,14 +30,17 @@ export function initializeLanding() {
           .querySelector(".studio-slide-copy")
           .setAttribute("aria-hidden", String(offset !== 0));
       });
-      studioCarousel.querySelector(".studio-carousel-count b").textContent =
-        String(activeStudio + 1).padStart(2, "0");
-      studioCarousel.querySelector(".studio-carousel-status").textContent =
-        studioNames[activeStudio] +
-        ", " +
-        (activeStudio + 1) +
-        " of " +
-        slides.length;
+      const countB = studioCarousel.querySelector(".studio-carousel-count b");
+      if (countB) {
+        countB.textContent = String(activeStudio + 1).padStart(2, "0");
+      }
+      const slideTitle =
+        slides[activeStudio]?.querySelector(".studio-slide-title")?.textContent ||
+        "";
+      const statusEl = studioCarousel.querySelector(".studio-carousel-status");
+      if (statusEl) {
+        statusEl.textContent = `${slideTitle}, ${activeStudio + 1} / ${slides.length}`;
+      }
       if (moveFocus) slides[activeStudio].focus({ preventScroll: true });
     }
     studioCarousel

@@ -41,11 +41,6 @@ export function ServiceSelectionStep({
   return (
     <BookingStepShell
       title="Изберете услуга"
-      description={
-        selectedStaff
-          ? `Прикажани се услугите што ги нуди ${selectedStaff.displayName}.`
-          : "Започнете со услугата што сакате да ја резервирате."
-      }
       backLabel={`Назад кон ${site.name}`}
       onBack={onBack}
     >

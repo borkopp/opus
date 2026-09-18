@@ -377,7 +377,7 @@ export function BookingForm({
 
   if (bookingResult) {
     return (
-      <main className="min-h-[calc(100vh-9rem)] bg-secondary/45">
+      <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
         <BookingConfirmationStep
           site={site}
           result={bookingResult}
@@ -410,7 +410,7 @@ export function BookingForm({
         ?.displayName || "Специјалист";
 
     return (
-      <main className="min-h-[calc(100vh-9rem)] bg-secondary/45">
+      <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
         <OtpVerificationStep
           customerEmail={pendingBooking.customerEmail}
           serviceName={selectedService?.name || "Услуга"}
@@ -439,7 +439,7 @@ export function BookingForm({
   }
 
   return (
-    <main className="min-h-[calc(100vh-9rem)] bg-secondary/45">
+    <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
       {!recoveryOffer && (
         <BookingStepProgress
           currentStep={currentStep}

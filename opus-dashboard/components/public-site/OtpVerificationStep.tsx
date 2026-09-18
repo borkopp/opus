@@ -87,11 +87,6 @@ export function OtpVerificationStep({
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           Проверете ја е-поштата
         </h1>
-        <p className="leading-7 text-muted-foreground">
-          Испративме шестцифрен код на{" "}
-          <span className="font-medium text-foreground">{customerEmail}</span>.
-          Терминот ќе биде зачуван откако ќе го внесете кодот.
-        </p>
       </div>
 
       <dl className="grid gap-4 rounded-2xl border bg-card p-5 text-sm shadow-s sm:grid-cols-2">
@@ -115,6 +110,13 @@ export function OtpVerificationStep({
       <form onSubmit={onSubmit} className="flex flex-col gap-7">
         <Field data-invalid={Boolean(error)}>
           <FieldLabel htmlFor="booking-otp-input">Код за потврда</FieldLabel>
+          <FieldDescription>
+            Испратен на{" "}
+            <span className="break-all font-medium text-foreground">
+              {customerEmail}
+            </span>
+            .
+          </FieldDescription>
           <InputOTP
             id="booking-otp-input"
             maxLength={6}

@@ -79,11 +79,6 @@ export function BookingConfirmationStep({
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
           Терминот е зачуван
         </h1>
-        <p className="max-w-xl leading-7 text-muted-foreground">
-          Терминот е додаден во календарот на {site.name}. Потврдата е завршена
-          преку{" "}
-          <span className="font-medium text-foreground">{customerEmail}</span>.
-        </p>
       </div>
 
       <div className="rounded-2xl border bg-card p-5 shadow-s sm:p-6">
@@ -120,6 +115,12 @@ export function BookingConfirmationStep({
                 site.bookingSettings.locale,
               )}
             </dd>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
+            <dt className="text-xs text-muted-foreground">
+              Потврдено преку е-пошта
+            </dt>
+            <dd className="break-all font-medium">{customerEmail}</dd>
           </div>
         </dl>
 

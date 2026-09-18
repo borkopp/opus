@@ -95,7 +95,11 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
           </div>
 
           <div className="flex w-full flex-col gap-4 sm:w-auto sm:min-w-60 lg:items-end">
-            <Button asChild size="lg" className="w-full sm:w-auto shadow-s">
+            <Button
+              asChild
+              size="lg"
+              className="hidden w-full shadow-s md:inline-flex md:w-auto"
+            >
               <Link href="/book">
                 Резервирај термин
                 <ArrowRight data-icon="inline-end" />
@@ -103,28 +107,32 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
             </Button>
 
             {(location || site.phone || instagramHandle) && (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground lg:justify-end">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground lg:justify-end">
                 {location &&
                   (googleMapsUrl ? (
                     <a
                       href={googleMapsUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <MapPin className="size-3.5" aria-hidden="true" />
-                      <span className="line-clamp-1 max-w-[200px]">{location}</span>
+                      <span className="line-clamp-1 max-w-[200px]">
+                        {location}
+                      </span>
                     </a>
                   ) : (
                     <span className="inline-flex items-center gap-1.5">
                       <MapPin className="size-3.5" aria-hidden="true" />
-                      <span className="line-clamp-1 max-w-[200px]">{location}</span>
+                      <span className="line-clamp-1 max-w-[200px]">
+                        {location}
+                      </span>
                     </span>
                   ))}
                 {site.phone && (
                   <a
                     href={`tel:${site.phone.replace(/[^\d+]/g, "")}`}
-                    className="inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Phone className="size-3.5" aria-hidden="true" />
                     <span>{site.phone}</span>
@@ -135,7 +143,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                     href={`https://instagram.com/${encodeURIComponent(instagramHandle)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Instagram className="size-3.5" aria-hidden="true" />
                     <span>@{instagramHandle}</span>
@@ -193,16 +201,13 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
         )}
       </section>
 
-      <section id="services" className="bg-secondary/55">
+      <section id="services" className="scroll-mt-20 bg-secondary/55">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-14 sm:px-6 sm:py-16">
           <div className="flex max-w-2xl flex-col gap-2">
             <p className="micro-label text-muted-foreground">Услуги</p>
             <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
               Изберете ја вашата услуга
             </h2>
-            <p className="text-muted-foreground">
-              Отворете ги слободните термини директно од менито.
-            </p>
           </div>
 
           <div
@@ -274,7 +279,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
       {(site.bio || gallery.length > 0) && (
         <section
           id="about"
-          className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[0.72fr_1.28fr]"
+          className="scroll-mt-20 mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[0.72fr_1.28fr]"
         >
           <div className="flex flex-col gap-4">
             <p className="micro-label text-muted-foreground">За студиото</p>
@@ -295,6 +300,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                   key={item._id}
                   className={cn(
                     "relative min-h-36 overflow-hidden rounded-xl bg-card",
+                    gallery.length === 1 && "col-span-2",
                     index === 0 && "row-span-2",
                   )}
                 >
@@ -313,7 +319,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
         </section>
       )}
 
-      <section id="info" className="bg-secondary/55">
+      <section id="info" className="scroll-mt-20 bg-secondary/55">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 sm:py-16">
           <div className="flex max-w-2xl flex-col gap-2">
             <p className="micro-label text-muted-foreground">Информации</p>
@@ -339,7 +345,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                       <dt className="text-muted-foreground">
                         {DAYS[day.dayOfWeek]}
                       </dt>
-                      <dd className="font-mono font-medium">
+                      <dd className="shrink-0 font-mono font-medium">
                         {day.isClosed
                           ? "Затворено"
                           : `${day.open}–${day.close}`}
@@ -378,7 +384,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                             href={googleMapsUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex w-fit items-center gap-1 rounded-md text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="inline-flex min-h-11 max-w-full w-fit break-words items-center gap-1 rounded-md text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             Отвори насоки
                             <ArrowUpRight
@@ -393,7 +399,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                   {site.phone && (
                     <a
                       href={`tel:${site.phone.replace(/[^\d+]/g, "")}`}
-                      className="inline-flex w-fit items-center gap-3 rounded-md hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-11 max-w-full w-fit break-words items-center gap-3 rounded-md hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <Phone
                         className="size-4 text-muted-foreground"
@@ -407,7 +413,7 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
                       href={`https://instagram.com/${encodeURIComponent(instagramHandle)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex w-fit items-center gap-3 rounded-md hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex min-h-11 max-w-full w-fit break-words items-center gap-3 rounded-md hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <Instagram
                         className="size-4 text-muted-foreground"

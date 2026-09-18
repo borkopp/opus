@@ -40,13 +40,12 @@ export function StaffSelectionStep({
   return (
     <BookingStepShell
       title="Изберете специјалист"
-      description="Изберете член од тимот или оставете студиото да го додели првиот достапен."
       backLabel="Назад кон услуги"
       onBack={onBack}
     >
-      <div className="flex items-center justify-between gap-4 rounded-xl bg-secondary px-4 py-3 text-sm">
+      <div className="flex flex-col gap-1 rounded-xl sm:flex-row sm:items-center sm:justify-between sm:gap-4 bg-secondary px-4 py-3 text-sm">
         <span className="text-muted-foreground">Избрана услуга</span>
-        <span className="font-medium text-right">{service?.name}</span>
+        <span className="font-medium sm:text-right">{service?.name}</span>
       </div>
 
       <div className="grid gap-3">
@@ -113,7 +112,7 @@ export function StaffSelectionStep({
                   {member.displayName}
                 </span>
                 {member.specialties.length > 0 && (
-                  <span className="mt-1 block truncate text-sm text-muted-foreground">
+                  <span className="mt-1 block text-pretty text-sm text-muted-foreground">
                     {member.specialties.join(" · ")}
                   </span>
                 )}

@@ -74,16 +74,15 @@ export function CustomerDetailsStep({
   return (
     <BookingStepShell
       title="Ваши податоци"
-      description="Ќе испратиме еднократен код на е-пошта пред да го зачуваме терминот."
       backLabel="Назад кон термини"
       onBack={onBack}
     >
-      <dl className="grid gap-4 rounded-2xl border bg-card p-5 text-sm shadow-s sm:grid-cols-2">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-5 rounded-2xl border bg-card p-5 text-sm shadow-s sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <dt className="text-xs text-muted-foreground">Услуга</dt>
           <dd className="font-medium">{service?.name}</dd>
         </div>
-        <div className="flex flex-col gap-1 sm:text-right">
+        <div className="flex min-w-0 flex-col gap-1 text-right">
           <dt className="text-xs text-muted-foreground">Специјалист</dt>
           <dd className="font-medium">{staff?.displayName}</dd>
         </div>
@@ -97,7 +96,7 @@ export function CustomerDetailsStep({
             {formatBookingTime(endAt)}
           </dd>
         </div>
-        <div className="flex flex-col gap-1 sm:text-right">
+        <div className="flex min-w-0 flex-col gap-1 text-right">
           <dt className="text-xs text-muted-foreground">Цена</dt>
           <dd className="font-mono font-medium">
             {service &&
@@ -133,6 +132,8 @@ export function CustomerDetailsStep({
               name="email"
               type="email"
               autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
               value={customerEmail}
               onChange={(event) => onChangeEmail(event.target.value)}
               required

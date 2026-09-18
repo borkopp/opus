@@ -1,14 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
-import { mk } from "date-fns/locale";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -22,23 +18,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  dateFromKey,
-  dateKey,
-  monthFromKey,
-  monthKey,
-} from "@/lib/booking-wall-clock";
 import { formatPrice } from "@/lib/format-price";
 import {
-  addDays,
-  dateInTimezone,
   formatBookingDateValue,
   formatBookingTime,
 } from "@/lib/public-booking-format";
 import { cn } from "@/lib/utils";
+import { PublicBookingDatePicker } from "./PublicBookingDatePicker";
 import { BookingStepShell } from "./BookingStepShell";
 import type { PublicSite } from "./types";
 
@@ -72,37 +59,6 @@ export function DateTimeSelectionStep({
     selectedStaffId === "any"
       ? null
       : site.staff.find((member) => member._id === selectedStaffId);
-  const today = useMemo(
-    () => dateInTimezone(new Date(), site.bookingSettings.timezone),
-    [site.bookingSettings.timezone],
-  );
-  const maxDate = useMemo(
-    () =>
-      addDays(today, Math.max(site.bookingSettings.bookingWindowDays, 1) - 1),
-    [site.bookingSettings.bookingWindowDays, today],
-  );
-  const [pickerMonth, setPickerMonth] = useState(() =>
-    selectedDate.slice(0, 7),
-  );
-  const availableDates = useQuery(
-    api.publicBooking.getPublicAvailableDates,
-    service
-      ? {
-          orgId: site._id,
-          serviceId: service._id,
-          staffId:
-            selectedStaffId === "any"
-              ? "any"
-              : (selectedStaffId as Id<"staff_members">),
-          month: pickerMonth,
-        }
-      : "skip",
-  );
-  const availableDateSet = useMemo(
-    () => new Set(availableDates ?? []),
-    [availableDates],
-  );
-  const selectedCalendarDate = dateFromKey(selectedDate);
   const slots = useQuery(
     api.publicBooking.getPublicSlots,
     service
@@ -121,56 +77,38 @@ export function DateTimeSelectionStep({
   return (
     <BookingStepShell
       title="Изберете термин"
-      description="Одберете датум, па изберете едно од достапните времиња."
       backLabel="Назад кон специјалисти"
       onBack={onBack}
     >
-      <FieldGroup className="gap-6">
+      <div
+        className="flex items-start justify-between gap-4 rounded-2xl border bg-card p-4 text-sm"
+        data-booking-selection-summary="true"
+      >
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="font-medium">{service?.name}</p>
+          <p className="text-muted-foreground">
+            {staff?.displayName || "Прв достапен"} · {service?.durationMins} мин
+          </p>
+        </div>
+        <p className="shrink-0 font-mono font-medium">
+          {service &&
+            formatPrice(
+              service.priceMinorUnits,
+              service.currency,
+              site.bookingSettings.locale,
+            )}
+        </p>
+      </div>
+      <FieldGroup className="gap-6 md:grid md:grid-cols-2 md:items-start md:gap-8">
         <Field>
-          <FieldLabel id="booking-date-label">Датум</FieldLabel>
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border bg-card shadow-s">
-            <Calendar
-              mode="single"
-              month={monthFromKey(pickerMonth)}
-              selected={
-                selectedCalendarDate && availableDateSet.has(selectedDate)
-                  ? selectedCalendarDate
-                  : undefined
-              }
-              onMonthChange={(date) => setPickerMonth(monthKey(date))}
-              onSelect={(date) => {
-                if (!date) return;
-                const value = dateKey(date);
-                setPickerMonth(value.slice(0, 7));
-                onSelectDate(value);
-              }}
-              disabled={(date) =>
-                availableDates === undefined ||
-                !availableDateSet.has(dateKey(date))
-              }
-              startMonth={dateFromKey(today)}
-              endMonth={dateFromKey(maxDate)}
-              locale={mk}
-              showOutsideDays={false}
-              aria-labelledby="booking-date-label"
-              className="w-full p-4"
-              classNames={{ root: "w-full" }}
-            />
-            <Separator />
-            <div
-              className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground"
-              role="status"
-              aria-live="polite"
-            >
-              {availableDates === undefined && <Spinner />}
-              {availableDates === undefined
-                ? "Ги проверуваме слободните датуми…"
-                : "Датумите без слободен термин се оневозможени."}
-            </div>
-          </div>
-          <FieldDescription>
-            Достапни датуми до {formatBookingDateValue(maxDate)}.
-          </FieldDescription>
+          <FieldLabel className="hidden md:block">Датум</FieldLabel>
+          <PublicBookingDatePicker
+            site={site}
+            selectedServiceId={selectedServiceId}
+            selectedStaffId={selectedStaffId}
+            selectedDate={selectedDate}
+            onSelectDate={onSelectDate}
+          />
         </Field>
 
         <Field>
@@ -182,7 +120,7 @@ export function DateTimeSelectionStep({
           {slots === undefined ? (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {Array.from({ length: 8 }).map((_, index) => (
-                <Skeleton key={index} className="h-10 w-full" />
+                <Skeleton key={index} className="h-12 w-full" />
               ))}
             </div>
           ) : slots.length === 0 ? (
@@ -200,7 +138,7 @@ export function DateTimeSelectionStep({
           ) : (
             <div
               className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-              role="listbox"
+              role="group"
               aria-label="Слободни термини"
             >
               {slots.map((slot) => {
@@ -211,15 +149,14 @@ export function DateTimeSelectionStep({
                   <button
                     key={slot.startAt}
                     type="button"
-                    role="option"
-                    aria-selected={isSelected}
+                    aria-pressed={isSelected}
                     disabled={!availableStaffId}
                     onClick={() =>
                       availableStaffId &&
                       onSelectSlot(slot.startAt, availableStaffId)
                     }
                     className={cn(
-                      "rounded-md border px-3 py-2.5 font-mono text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
+                      "min-h-12 rounded-xl border px-3 py-3 font-mono text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
                       isSelected
                         ? "border-primary bg-primary text-primary-foreground"
                         : "border-border bg-card hover:border-primary hover:bg-accent",
@@ -234,59 +171,34 @@ export function DateTimeSelectionStep({
         </Field>
       </FieldGroup>
 
-      <Card
-        className="gap-0 rounded-2xl shadow-s"
+      <div
+        className="sticky bottom-0 z-20 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:mx-0 md:rounded-2xl md:border md:p-5"
         data-booking-action-card="true"
       >
-        <CardContent className="py-5">
-          <dl
-            className="grid gap-4 text-sm sm:grid-cols-3"
-            data-booking-selection-summary="true"
-          >
-            <div className="flex flex-col gap-1">
-              <dt className="text-xs text-muted-foreground">Услуга</dt>
-              <dd className="font-medium">{service?.name}</dd>
-            </div>
-            <div className="flex flex-col gap-1">
-              <dt className="text-xs text-muted-foreground">Специјалист</dt>
-              <dd className="font-medium">
-                {staff?.displayName || "Прв достапен"}
-              </dd>
-            </div>
-            <div className="flex flex-col gap-1 sm:text-right">
-              <dt className="text-xs text-muted-foreground">
-                {service?.durationMins} мин
-              </dt>
-              <dd className="font-mono font-medium">
-                {service &&
-                  formatPrice(
-                    service.priceMinorUnits,
-                    service.currency,
-                    site.bookingSettings.locale,
-                  )}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-        <Separator />
-        <CardFooter className="flex-col gap-3 py-4 sm:flex-row sm:justify-between sm:py-5">
-          <p className="w-full text-sm text-muted-foreground sm:w-auto">
-            {selectedSlotTimestamp
-              ? `Избрано време: ${formatBookingTime(selectedSlotTimestamp)}`
-              : "Изберете време за да продолжите."}
-          </p>
-          <Button
-            type="button"
-            size="lg"
-            disabled={!selectedSlotTimestamp}
-            onClick={onContinue}
-            className="w-full sm:w-auto"
-          >
-            Продолжи
-            <ArrowRight data-icon="inline-end" />
-          </Button>
-        </CardFooter>
-      </Card>
+        <p className="min-w-0 text-sm" role="status" aria-live="polite">
+          {selectedSlotTimestamp ? (
+            <>
+              <span className="block text-xs text-muted-foreground">
+                Избрано време
+              </span>
+              <span className="font-mono text-lg font-semibold">
+                {formatBookingTime(selectedSlotTimestamp)}
+              </span>
+            </>
+          ) : (
+            "Изберете време за да продолжите."
+          )}
+        </p>
+        <Button
+          type="button"
+          size="lg"
+          disabled={!selectedSlotTimestamp}
+          onClick={onContinue}
+          className="min-h-12 shrink-0"
+        >
+          Продолжи <ArrowRight data-icon="inline-end" />
+        </Button>
+      </div>
     </BookingStepShell>
   );
 }

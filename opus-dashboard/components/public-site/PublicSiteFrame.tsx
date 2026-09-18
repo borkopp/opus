@@ -16,7 +16,9 @@ export function PublicSiteFrame({
   mode?: "site" | "booking";
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div
+      className={`public-site flex min-h-dvh flex-col bg-background text-foreground ${mode === "site" ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
+    >
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
@@ -44,7 +46,7 @@ export function PublicSiteFrame({
 
           {mode === "site" ? (
             <nav
-              className="flex items-center gap-2 sm:gap-4"
+              className="flex shrink-0 items-center gap-2 sm:gap-4"
               aria-label="Главна навигација"
             >
               <div className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
@@ -70,7 +72,7 @@ export function PublicSiteFrame({
                 </Link>
               </div>
               <ThemeToggle />
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="hidden md:inline-flex">
                 <Link href="/book">
                   <CalendarDays data-icon="inline-start" />
                   Резервирај
@@ -88,7 +90,18 @@ export function PublicSiteFrame({
         </div>
       </header>
 
-      <div className="flex-1">{children}</div>
+      {mode === "site" && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-lg md:hidden">
+          <Button asChild size="lg" className="min-h-12 w-full">
+            <Link href="/book">
+              <CalendarDays data-icon="inline-start" />
+              Резервирај термин
+            </Link>
+          </Button>
+        </div>
+      )}
+
+      <div className="min-w-0 flex-1">{children}</div>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-7 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">

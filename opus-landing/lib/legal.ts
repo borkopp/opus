@@ -544,7 +544,7 @@ const mkPrivacy: LegalDocument = {
           items: [
             "Неопходни колачиња за сесија и безбедност на studio.opus.mk, за да се најавите и да останете безбедно најавени.",
             "opus_consent_v1 го памети вашиот избор до 180 дена на opus.mk и studio.opus.mk. Локален сигнал ги известува другите отворени картички за промена на изборот.",
-            "PostHog: аналитички колачиња со префикс ph_ и локална меморија, само со аналитичка согласност. Периодот на колачињата е поставен на 180 дена; локалната меморија останува до повлекување на согласноста или бришење. Снимањето сесии е исклучено.",
+            "PostHog: аналитички колачиња со префикс ph_ и локална меморија, само со аналитичка согласност. Периодот на колачињата е поставен на 180 дена; локалната меморија останува до повлекување на согласноста или бришење. На маркетинг-страницата opus.mk може да снимаме сесии со аналитичка согласност за да разбереме како ја користите страницата. Внесените вредности во полињата се маскирани. Снимањето сесии во студискиот контролен панел останува исклучено.",
             "Meta Pixel: _fbp и, кога постои идентификатор на рекламен клик, _fbc, вообичаено до 90 дена и обновувани при користење. Се вчитува само по рекламна согласност, на маркетинг и регистрациските страници на OPUS. Не го вчитуваме на јавните веб-сајтови за закажување на студијата или на приватните страници на контролниот панел.",
             "Колачето opus_locale, кое се поставува кога самите ќе го смените јазикот и го памети изборот до една година.",
             "Локална меморија за избраната светла или темна тема и за одредени поставки на интерфејсот. Овие вредности остануваат на уредот додека не ги исчистите.",
@@ -1140,7 +1140,7 @@ const enPrivacy: LegalDocument = {
           items: [
             "Necessary session and security cookies on studio.opus.mk so you can sign in and remain securely signed in.",
             "opus_consent_v1 remembers your choice for up to 180 days across opus.mk and studio.opus.mk. A local storage signal informs other open tabs when your choice changes.",
-            "PostHog: analytics cookies beginning with ph_ and local storage, only with analytics consent. Cookie expiry is configured to 180 days; local storage remains until consent is withdrawn or storage is cleared. Session recording is disabled.",
+            "PostHog: analytics cookies beginning with ph_ and local storage, only with analytics consent. Cookie expiry is configured to 180 days; local storage remains until consent is withdrawn or storage is cleared. On the opus.mk marketing website, we may record sessions with analytics consent to understand how you use the site. Input field values are masked. Session recording in the studio dashboard remains disabled.",
             "Meta Pixel: _fbp and, when an ad-click identifier is present, _fbc, typically lasting up to 90 days and renewed with use. It loads only after advertising consent on OPUS marketing and registration pages. We do not load it on studios' public booking websites or private dashboard pages.",
             "The opus_locale cookie, set when you choose another language, which remembers that choice for up to one year.",
             "Local storage for your light or dark theme and certain interface preferences. These values stay on your device until you clear them.",

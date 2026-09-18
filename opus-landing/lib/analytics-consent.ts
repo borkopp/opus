@@ -6,4 +6,5 @@ export const { syncPostHogConsent, initializeAnalyticsConsent } =
     posthog,
     process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
     process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    { sessionReplay: true },
   );

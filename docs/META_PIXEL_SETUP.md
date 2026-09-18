@@ -36,7 +36,7 @@ Select **Production**. For local testing, add the same variable to each app's ig
 
 Redeploy both projects after setting the variable: `NEXT_PUBLIC_*` values are embedded at build time. The dashboard's existing Vercel build deploys Convex first, including the creation-status response needed by the new registration event. Include files outside the Vercel app root so both projects can import `shared/analytics/` (Vercel's **Include source files outside of the Root Directory** setting).
 
-The existing PostHog token and host remain configured as before. Analytics and advertising are separate, off by default, and the shared consent cookie lasts up to 180 days across `opus.mk` and `studio.opus.mk`. Session replay is disabled. Do not put Meta access tokens in any `NEXT_PUBLIC_*` variable.
+The existing PostHog token and host remain configured as before. Analytics and advertising are separate, off by default, and the shared consent cookie lasts up to 180 days across `opus.mk` and `studio.opus.mk`. Landing-page session replay is enabled after analytics consent, with input values masked, subject to the PostHog project recording settings. Dashboard session replay remains disabled. Do not put Meta access tokens in any `NEXT_PUBLIC_*` variable.
 
 ## Verify events before running the story ad
 

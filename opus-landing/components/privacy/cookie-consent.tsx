@@ -39,11 +39,13 @@ export function CookieConsent() {
     serverSnapshot,
   );
   const [open, setOpen] = useState(false);
+  const [isConfiguring, setIsConfiguring] = useState(false);
   const [draft, setDraft] = useState<Consent>(DENIED_CONSENT);
 
   useEffect(() => {
     const show = () => {
       setDraft(getConsent());
+      setIsConfiguring(true);
       setOpen(true);
     };
     window.addEventListener(PREFERENCES_EVENT, show);
@@ -60,55 +62,94 @@ export function CookieConsent() {
   const save = (choice: Consent) => {
     saveConsent(choice);
     setDraft(choice);
+    setIsConfiguring(false);
     setOpen(false);
   };
+
+  const handleBack = () => {
+    if (snapshot !== null) {
+      setOpen(false);
+    } else {
+      setIsConfiguring(false);
+    }
+  };
+
   if (snapshot !== null && !open) return null;
 
   return (
     <aside
-      aria-label={copy.title}
+      aria-label={isConfiguring ? copy.preferences : copy.title}
       className="cookie-consent fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl"
     >
       <Card className="max-h-[80dvh] overflow-y-auto shadow-xl">
         <CardHeader>
-          <CardTitle>{copy.title}</CardTitle>
+          <CardTitle>{isConfiguring ? copy.preferences : copy.title}</CardTitle>
           <CardDescription>{copy.description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <FieldGroup className="gap-4">
-            {(["analytics", "marketing"] as const).map((category) => (
-              <Field key={category} orientation="horizontal">
-                <FieldLabel htmlFor={`cookie-${category}`}>
-                  {copy[category]}
-                </FieldLabel>
-                <Switch
-                  id={`cookie-${category}`}
-                  checked={draft[category]}
-                  onCheckedChange={(checked) =>
-                    setDraft({ ...draft, [category]: checked })
-                  }
-                />
-              </Field>
-            ))}
-          </FieldGroup>
+          {isConfiguring && (
+            <FieldGroup className="mb-4 gap-4">
+              {(["analytics", "marketing"] as const).map((category) => (
+                <Field key={category} orientation="horizontal">
+                  <FieldLabel htmlFor={`cookie-${category}`}>
+                    {copy[category]}
+                  </FieldLabel>
+                  <Switch
+                    id={`cookie-${category}`}
+                    checked={draft[category]}
+                    onCheckedChange={(checked) =>
+                      setDraft({ ...draft, [category]: checked })
+                    }
+                  />
+                </Field>
+              ))}
+            </FieldGroup>
+          )}
           <a
-            className="mt-4 inline-block text-sm underline underline-offset-4"
+            className="inline-block text-sm underline underline-offset-4"
             href="/privacy#cookies"
           >
             {copy.privacy}
           </a>
         </CardContent>
-        <CardFooter className="flex-wrap gap-2">
-          <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
-            {copy.reject}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => save({ analytics: true, marketing: true })}
-          >
-            {copy.accept}
-          </Button>
-          <Button onClick={() => save(draft)}>{copy.save}</Button>
+        <CardFooter className="flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+          {isConfiguring ? (
+            <>
+              <Button
+                variant="ghost"
+                className="justify-start px-2 text-muted-foreground hover:text-foreground sm:justify-center"
+                onClick={handleBack}
+              >
+                {copy.back}
+              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
+                  {copy.reject}
+                </Button>
+                <Button onClick={() => save(draft)}>{copy.save}</Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                className="justify-start px-2 text-muted-foreground hover:text-foreground sm:justify-center"
+                onClick={() => setIsConfiguring(true)}
+              >
+                {copy.preferences}
+              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
+                  {copy.reject}
+                </Button>
+                <Button
+                  onClick={() => save({ analytics: true, marketing: true })}
+                >
+                  {copy.accept}
+                </Button>
+              </div>
+            </>
+          )}
         </CardFooter>
       </Card>
     </aside>

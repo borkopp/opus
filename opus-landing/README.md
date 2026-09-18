@@ -52,7 +52,10 @@ The landing and dashboard use the same consent controller in
 `shared/analytics/posthog-consent.ts`. PostHog initializes only after analytics
 consent, captures pageviews (including client-side navigation), interactions,
 and browser exceptions, and stops capturing when consent is withdrawn. Session
-recording remains disabled. The existing cookie banner and footer settings
+replay is enabled for the landing app with input values masked; it remains
+disabled by default for the dashboard. Enable web recording in the PostHog
+project's Session Replay settings as well; sampling and recording rules still
+apply. The existing cookie banner and footer settings
 control analytics independently from Meta advertising consent.
 
 Using the same project keeps both apps' events together; filter by `$host` to

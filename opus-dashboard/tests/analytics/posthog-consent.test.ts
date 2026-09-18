@@ -7,6 +7,7 @@ const sdk = vi.hoisted(() => ({
       id: string,
       config: {
         disable_session_recording: boolean;
+        session_recording: { maskAllInputs: boolean };
         before_send: (event: unknown) => unknown;
       },
     ) => void
@@ -37,6 +38,37 @@ beforeEach(() => {
   vi.stubGlobal("window", {
     location: new URL("https://studio.opus.mk/signup"),
   });
+});
+
+test("landing replay is opt-in, masks inputs, and respects consent withdrawal", async () => {
+  const { createPostHogConsent } = await import(
+    "../../../shared/analytics/posthog-consent"
+  );
+  const { syncPostHogConsent } = createPostHogConsent(
+    sdk,
+    "test-token",
+    "https://analytics.example.com",
+    { sessionReplay: true },
+  );
+
+  syncPostHogConsent();
+  expect(sdk.init).not.toHaveBeenCalled();
+  state.allowed = true;
+  syncPostHogConsent();
+  const config = sdk.init.mock.calls[0][1];
+  expect(config.disable_session_recording).toBe(false);
+  expect(config.session_recording.maskAllInputs).toBe(true);
+  expect(sdk.opt_in_capturing).toHaveBeenCalledOnce();
+
+  state.allowed = false;
+  syncPostHogConsent();
+  expect(sdk.opt_out_capturing).toHaveBeenCalledOnce();
+  expect(config.before_send({ event: "$snapshot" })).toBeNull();
+
+  state.allowed = true;
+  syncPostHogConsent();
+  expect(sdk.init).toHaveBeenCalledOnce();
+  expect(sdk.opt_in_capturing).toHaveBeenCalledTimes(2);
 });
 
 afterEach(() => {

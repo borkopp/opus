@@ -117,7 +117,7 @@ export const consentCopy = {
   mk: {
     title: "Вашиот избор за колачиња",
     description:
-      "Неопходните колачиња го овозможуваат работењето на OPUS. Со ваша согласност користиме PostHog за подобрување на платформата и Meta Pixel за мерење на рекламите за OPUS. Изборот важи и при регистрација на studio.opus.mk.",
+      "Неопходните колачиња го овозможуваат работењето на OPUS. Со ваша согласност користиме PostHog за аналитика и снимање сесии на маркетинг-страницата со маскирани внесени вредности и Meta Pixel за мерење на рекламите за OPUS. Изборот важи и при регистрација на studio.opus.mk.",
     analytics: "Аналитика · PostHog",
     marketing: "Рекламирање · Meta",
     accept: "Прифати ги сите",
@@ -125,11 +125,12 @@ export const consentCopy = {
     save: "Зачувај избор",
     preferences: "Поставки за колачиња",
     privacy: "Политика за приватност",
+    back: "Назад",
   },
   en: {
     title: "Your cookie choices",
     description:
-      "Necessary cookies keep OPUS working. With your permission, we use PostHog to improve the platform and Meta Pixel to measure OPUS ads. Your choice also applies when you register at studio.opus.mk.",
+      "Necessary cookies keep OPUS working. With your permission, we use PostHog for analytics and session replay on the marketing website with masked input values, and Meta Pixel to measure OPUS ads. Your choice also applies when you register at studio.opus.mk.",
     analytics: "Analytics · PostHog",
     marketing: "Advertising · Meta",
     accept: "Accept all",
@@ -137,5 +138,6 @@ export const consentCopy = {
     save: "Save choices",
     preferences: "Cookie settings",
     privacy: "Privacy policy",
+    back: "Back",
   },
 } as const;

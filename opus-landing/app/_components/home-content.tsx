@@ -1,6 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
+import Link from "next/link";
 import {
   ArrowUpRight,
   Check,
@@ -460,15 +461,12 @@ export function HomeContent() {
                 {t.pricing.pro.price} <span>{t.pricing.pro.currency}</span>
               </div>
               <p>{t.pricing.pro.desc}</p>
-              <a
-                className="button button-dark"
-                href="https://studio.opus.mk/signup"
-              >
+              <Link className="button button-dark" href="/contact">
                 {t.pricing.pro.cta}{" "}
                 <span>
                   <ArrowUpRight aria-hidden="true" />
                 </span>
-              </a>
+              </Link>
               <div className="plan-divider"></div>
               <strong className="included-label">{t.pricing.pro.label}</strong>
               <ul className="plan-features">

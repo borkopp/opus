@@ -310,7 +310,7 @@ export const mkMessages = {
       price: "1.190",
       currency: "ден. / месечно",
       desc: "Сите основни алатки, плус паметни алатки за раст.",
-      cta: "Започнете со Pro",
+      cta: "Контактирајте нè за Pro",
       label: "Сè од бесплатниот план, плус:",
       features: [
         "Поголем тим",
@@ -414,6 +414,9 @@ export const mkMessages = {
     heroSubLine1:
       "Започнувате, го развивате или го планирате следното поглавје?",
     heroSubLine2: "Тука сме за вашето студио.",
+    proTitle: "Заинтересирани за Pro?",
+    proDescription:
+      "Пишете ни за вашето студио и прашајте за функциите, цената и активирањето на Pro планот.",
     detailsTitle: "Ајде да разговараме.",
     emailLabel: "Претпочитате е-пошта?",
     phoneLabel: "Јавете ни се",
@@ -761,7 +764,7 @@ export const enMessages: Messages = {
       price: "1,190",
       currency: "MKD / month",
       desc: "The everyday essentials, plus intelligence to grow.",
-      cta: "Get started with Pro",
+      cta: "Contact us about Pro",
       label: "Everything in Free, plus:",
       features: [
         "A larger team",
@@ -863,6 +866,9 @@ export const enMessages: Messages = {
     heroSubLine1:
       "Getting started, finding your feet, or planning your next chapter?",
     heroSubLine2: "We’re here for your studio.",
+    proTitle: "Interested in Pro?",
+    proDescription:
+      "Tell us about your studio and ask about Pro features, pricing, and getting started.",
     detailsTitle: "Let’s talk.",
     emailLabel: "Prefer email?",
     phoneLabel: "Give us a call",

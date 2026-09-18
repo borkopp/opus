@@ -31,6 +31,31 @@
   color: var(--muted);
 }
 
+.contact-pro-note {
+  max-width: 620px;
+  margin: 28px auto 0;
+  padding: 20px 24px;
+  border: 1px solid #d5e8f6;
+  border-radius: 18px;
+  background: #e6f3fc;
+  text-align: left;
+}
+
+.contact-pro-note h2 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: normal;
+  color: var(--ink);
+}
+
+.contact-pro-note p {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
 .contact-content {
   position: relative;
   width: calc(100% - 96px);

@@ -17,6 +17,10 @@ export function ContactHero() {
           {t.contactPage.heroSubLine1}
           <br className="desktop-break" /> {t.contactPage.heroSubLine2}
         </p>
+        <aside className="contact-pro-note" aria-labelledby="contact-pro-title">
+          <h2 id="contact-pro-title">{t.contactPage.proTitle}</h2>
+          <p>{t.contactPage.proDescription}</p>
+        </aside>
       </div>
     </section>
   );

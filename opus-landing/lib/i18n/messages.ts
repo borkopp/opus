@@ -35,14 +35,15 @@ export const mkMessages = {
     language: "Јазик",
   },
   hero: {
-    previewLabel: "Илустративен приказ на календарот и веб-сајтот за закажување на OPUS.",
+    previewLabel:
+      "Илустративен приказ на календарот и веб-сајтот за закажување на OPUS.",
     titleLine1: "Онлајн закажување",
     titleLine2: "за вашиот салон.",
     descriptionLine1:
       "Со OPUS добивате бесплатен веб-сајт каде клиентите сами закажуваат термин.",
     descriptionLine2: "Сите термини на вашиот тим ги гледате во еден календар.",
-    createWebsite: "Креирајте бесплатен веб-сајт",
-    learnMore: "Погледнете како работи",
+    createWebsite: "Започни бесплатно",
+    learnMore: "Дознај повеќе",
     badgeFree: "Бесплатно",
     badgeNoCard: "Без картичка",
     badgeForStudio: "За салони и студија",
@@ -92,10 +93,11 @@ export const mkMessages = {
   },
   productTour: {
     headingLine1: "Клиентите закажуваат онлајн.",
-    headingLine2: "Вие ги гледате термините.",
-    subheading: "Споделете го линкот. Клиентите избираат услуга и слободен термин, а OPUS го додава во календарот.",
+    headingLine2: "",
+    subheading:
+      "Споделете го линкот. Клиентите избираат услуга и слободен термин, а OPUS го додава во календарот.",
     includedInFree: "Вклучено во бесплатниот план",
-    cta: "Креирајте бесплатен веб-сајт",
+    cta: "Започни бесплатно",
     tabs: {
       website: {
         label: "Веб-сајт за закажување",
@@ -138,32 +140,34 @@ export const mkMessages = {
   featuresBento: {
     headingLine1: "Термини, тим и клиенти.",
     headingLine2: "Во еден систем.",
-    subheading: "Закажувајте, менувајте и следете термини од телефон или компјутер.",
+    subheading:
+      "Закажувајте, менувајте и следете термини од телефон или компјутер.",
     bookingTitle1: "Ваш веб-сајт",
     bookingTitle2: "за закажување.",
-    bookingDesc1: "Прикажете ги услугите, цените и тимот.",
-    bookingDesc2: "Клиентите сами избираат слободен термин.",
+    bookingDesc1:
+      "Клиентите бираат услуга и време кое им одговара. Поставено од вас.",
+    bookingDesc2: "",
     calendarTitle1: "Календар",
     calendarTitle2: "за целиот тим.",
     calendarDesc:
       "Погледнете ги термините на секој вработен. OPUS спречува два термина кај ист вработен во исто време.",
     clientsTitle1: "Контакти и посети",
     clientsTitle2: "на вашите клиенти.",
-    clientsDesc1: "Чувајте ги податоците за контакт на едно место.",
+    clientsDesc1: "Чувајте ги податоците за контакт на едно место. ",
     clientsDesc2: "Проверете ги претходните термини и услуги.",
     remindersTitle1: "Потврди и потсетници",
     remindersTitle2: "по е-пошта.",
-    remindersDesc1: "Испратете им на клиентите детали за терминот.",
-    remindersDesc2: "Испраќањето зависи од поставките за е-пошта.",
+    remindersDesc1: "Испратете им на клиентите детали и потсетник за терминот.",
+    remindersDesc2: "",
     summaryUnlimited: "Неограничени термини",
     summaryServices: "Неограничени услуги и клиенти",
     summaryDevices: "Достапно на секој уред",
   },
   intelligence: {
-    headingLine1: "Проверете ги резултатите.",
-    headingLine2: "Понудете слободни термини.",
-    subheading1: "Видете кои денови се зафатени и кога има откажувања.",
-    subheading2: "Прегледајте понуди за слободни термини и одобрете што ќе се испрати.",
+    headingLine1: "Подигнете го вашиот бизнис на следно ниво со AI.",
+    headingLine2: "",
+    subheading1: "AI алатки кои ќе ви помогнат да го раширите вашиот бизнис.",
+    subheading2: "",
     usageNote:
       "Анализите и понудите се дел од Pro. Проверете со нас дали AI-аналитичарот е активиран за вашето студио. Планираните функции сè уште не се достапни.",
     analyst: {
@@ -172,8 +176,8 @@ export const mkMessages = {
       description:
         "Прашајте кои денови се најзафатени, кои услуги се бараат и колку термини се откажани. Одговорите се засноваат на податоците од вашето студио.",
       note: "200 одговори месечно, од кои до 20 детални анализи.",
-      artCopy: "Вашите термини.<br />Објаснети со бројки.",
-      yourAnalyst: "Вашиот бизнис аналитичар",
+      artCopy: "Чатувај со AI за вашиот бизнис",
+      yourAnalyst: "Вашиот AI бизнис аналитичар",
       subtitle: "Одговори за термините во вашето студио.",
       sampleHeading: "ПРИМЕР ЗА РАЗГОВОР",
       sampleNote:
@@ -204,20 +208,20 @@ export const mkMessages = {
       ],
     },
     receptionist: {
-      name: "AI рецепционер — планирано",
-      title: ["AI одговори на пораки.", "Планирана функција."],
+      name: "AI рецепционер",
+      title: ["AI одговори на пораки."],
       description:
         "Планирана помош за одговарање на прашања од клиенти преку веб-чет, Instagram и WhatsApp. Оваа функција сè уште не е достапна.",
-      note: "Сè уште не е вклучено во Pro.",
+      note: "Вклучено во Pro.",
       channels: ["Веб-чет", "Instagram", "WhatsApp"],
     },
     rebooking: {
-      name: "AI-предлози за посети — планирано",
-      title: ["Предлози за следна посета.", "Планирана функција."],
+      name: "AI-предлози за посети",
+      title: ["Предлози за следна посета."],
       description:
         "Планирани AI-предлози за следен термин или услуга според претходните посети на клиентот. Оваа функција сè уште не е достапна.",
-      note: "Сè уште не е вклучено во Pro.",
-      chip: "Планирано: предлози според претходни посети",
+      note: "Вклучено во Pro.",
+      chip: "Предлози според претходни посети",
     },
     recovery: {
       name: "Понуди за слободни термини",
@@ -263,8 +267,7 @@ export const mkMessages = {
   howItWorks: {
     headingLine1: "Почнете со онлајн закажување",
     headingLine2: "во три чекори.",
-    subheadingLine1:
-      "Внесете ги услугите и работното време.",
+    subheadingLine1: "Внесете ги услугите и работното време.",
     subheadingLine2: "OPUS го создава вашиот веб-сајт за закажување.",
     step1Title: "1. Внесете ги податоците за студиото.",
     step1Desc:
@@ -280,9 +283,8 @@ export const mkMessages = {
   pricing: {
     headingLine1: "Бесплатен план",
     headingLine2: "и Pro за поголем тим.",
-    subheadingLine1:
-      "Веб-сајтот и календарот се вклучени бесплатно.",
-    subheadingLine2: "Изберете Pro за повеќе вработени, анализи и понуди.",
+    subheadingLine1: "Веб-сајтот и календарот се вклучени бесплатно.",
+    subheadingLine2: "",
     note: "Не ви треба Pro за да примате онлајн закажувања. Веб-сајтот и календарот се дел од бесплатниот план.",
     free: {
       name: "Бесплатен план",
@@ -297,9 +299,9 @@ export const mkMessages = {
         "Закажување за клиенти — без кориснички профил",
         "Еден сопственик + тројца членови на тимот",
         "Тимски календар без преклопување на термините",
-        "Работно време, паузи и слободни денови",
+        "Поставување работно време, паузи и слободни денови",
         "Детали за клиенти и историја на посети",
-        "Потврди и потсетници по е-пошта кога се активирани",
+        "Потврди и потсетници по е-пошта",
         "Галерија со најмногу 3 фотографии",
         "Пристап од телефон, таблет и компјутер",
       ],
@@ -319,13 +321,13 @@ export const mkMessages = {
         "Поголема контрола врз е-поштата, маркетингот и известувањата",
         "Приоритетна поддршка",
       ],
-      aiAnalystTitle: "AI-аналитичар кога е активиран",
+      aiAnalystTitle: "AI Chat",
       aiAnalystSub: "200 одговори месечно, од кои до 20 детални анализи",
-      aiReceptionistTitle: "Планирано: AI рецепционер",
-      aiReceptionistSub: "Сè уште не е достапен во Pro",
-      aiRebookingTitle: "Планирано: AI-предлози за посети",
-      aiRebookingSub:
-        "Сè уште не се достапни во Pro",
+      aiReceptionistTitle: "24/7 AI рецепционер",
+      aiReceptionistSub:
+        "Одговара на пораки (Instagram, WhatsApp, Web-Chat) и закажува термини автоматски.",
+      aiRebookingTitle: "AI анализа на клиенти и предлози",
+      aiRebookingSub: "",
       end: "Контактирајте нè за активирање на Pro и достапност на AI-аналитичарот.",
     },
   },
@@ -358,23 +360,17 @@ export const mkMessages = {
       {
         question: "Што можам да прашам AI-аналитичарот за мојот бизнис?",
         answer:
-          "Кога е активиран за вашето студио, аналитичарот одговара на прашања како „Кој ден има најмногу термини?“ и „Колку термини се откажани?“. Користи податоци од вашето студио. Не менува термини и не испраќа пораки до клиенти. Pro дозволува 200 одговори месечно, од кои до 20 детални анализи. Контактирајте нè за достапност.",
+          "Кога е активиран за вашето студио, аналитичарот одговара на прашања како „Кој ден има најмногу термини?“ и „Колку термини се откажани?“. Нешто слично како Chat-GPT, само за вашиот бизнис. Користи податоци од вашето студио. Не менува термини и не испраќа пораки до клиенти. Pro дозволува 200 одговори месечно, од кои до 20 детални анализи. Контактирајте нè за достапност.",
       },
       {
-        question:
-          "Дали OPUS автоматски ги пополнува слободните термини?",
+        question: "Дали OPUS автоматски ги пополнува слободните термини?",
         answer:
           "Не. OPUS предлага клиенти за слободниот термин. Вие ја прегледувате и одобрувате секоја понуда пред да се испрати по е-пошта. Понуди добиваат само клиенти што дале согласност. Клиентот одлучува дали ќе ја прифати понудата и ќе закаже.",
       },
       {
-        question: "Дали AI рецепционерот е достапен?",
-        answer:
-          "Не. AI рецепционерот за веб-чет, Instagram и WhatsApp е планирана функција и сè уште не е вклучен во Pro. Сега клиентите можат сами да закажуваат преку вашиот веб-сајт.",
-      },
-      {
         question: "Дали OPUS е создаден за мојот тип на студио?",
         answer:
-          "OPUS е создаден за салони за коса, берберници, студија за нокти, шминкери и студија за масажа во Македонија. Достапен е на телефон, таблет и компјутер — за самостојни професионалци и мали тимови.",
+          "OPUS е создаден за сите типови на бизниси кои работат со термини. Доколку вашиот занает не е поддржан на нашата платформа, ве молиме контактирајте нѐ.",
       },
     ],
   },
@@ -492,15 +488,15 @@ export const enMessages: Messages = {
     language: "Language",
   },
   hero: {
-    previewLabel: "Illustrative preview of the OPUS calendar and booking website.",
+    previewLabel:
+      "Illustrative preview of the OPUS calendar and booking website.",
     titleLine1: "Online booking",
     titleLine2: "for your salon.",
     descriptionLine1:
       "OPUS gives you a free website where clients book their own appointments.",
-    descriptionLine2:
-      "See all your team’s appointments in one calendar.",
-    createWebsite: "Create your free website",
-    learnMore: "See how it works",
+    descriptionLine2: "See all your team’s appointments in one calendar.",
+    createWebsite: "Start for free",
+    learnMore: "Learn more",
     badgeFree: "Free",
     badgeNoCard: "No credit card",
     badgeForStudio: "For salons and studios",
@@ -550,10 +546,11 @@ export const enMessages: Messages = {
   },
   productTour: {
     headingLine1: "Clients book online.",
-    headingLine2: "You see every appointment.",
-    subheading: "Share your link. Clients choose a service and an available time, and OPUS adds the booking to your calendar.",
+    headingLine2: "",
+    subheading:
+      "Share your link. Clients choose a service and an available time, and OPUS adds the booking to your calendar.",
     includedInFree: "Included in Free",
-    cta: "Create your free website",
+    cta: "Start for free",
     tabs: {
       website: {
         label: "Booking website",
@@ -596,11 +593,13 @@ export const enMessages: Messages = {
   featuresBento: {
     headingLine1: "Appointments, team, and clients.",
     headingLine2: "In one system.",
-    subheading: "Add, change, and check appointments from your phone or computer.",
+    subheading:
+      "Add, change, and check appointments from your phone or computer.",
     bookingTitle1: "Your own website",
     bookingTitle2: "for online booking.",
-    bookingDesc1: "Show your services, prices, and team.",
-    bookingDesc2: "Clients choose an available time themselves.",
+    bookingDesc1:
+      "Clients choose a service and a time that suits them, from the options you set.",
+    bookingDesc2: "",
     calendarTitle1: "A calendar",
     calendarTitle2: "for your whole team.",
     calendarDesc:
@@ -611,26 +610,26 @@ export const enMessages: Messages = {
     clientsDesc2: "Check previous appointments and services.",
     remindersTitle1: "Confirmations and reminders",
     remindersTitle2: "by email.",
-    remindersDesc1: "Send clients their appointment details.",
-    remindersDesc2: "Sending depends on your email settings.",
+    remindersDesc1: "Send clients their appointment details and a reminder.",
+    remindersDesc2: "",
     summaryUnlimited: "Unlimited appointments",
     summaryServices: "Unlimited services & clients",
     summaryDevices: "Works on every device",
   },
   intelligence: {
-    headingLine1: "Check your booking numbers.",
-    headingLine2: "Offer available appointments.",
-    subheading1: "See which days are busy and when clients cancel.",
-    subheading2: "Review offers for empty slots and approve what gets sent.",
-    usageNote: "Reports and offers are part of Pro. Contact us to check whether the AI analyst is enabled for your studio. Planned features are not yet available.",
+    headingLine1: "Take your business to the next level with AI.",
+    headingLine2: "",
+    subheading1: "AI tools to help you grow your business.",
+    subheading2: "",
+    usageNote: "AI tools, reports, and appointment offers are included in Pro.",
     analyst: {
       name: "AI business analyst",
       title: ["Ask about your bookings.", "Get answers with numbers."],
       description:
         "Ask which days are busiest, which services clients book, and how many appointments were cancelled. Answers use your studio’s data.",
-      note: "200 answers per month, up to 20 detailed.",
-      artCopy: "Your bookings.<br />Explained with numbers.",
-      yourAnalyst: "Your business analyst",
+      note: "200 answers per month, including up to 20 detailed analyses.",
+      artCopy: "Chat with AI about your business",
+      yourAnalyst: "Your AI business analyst",
       subtitle: "Answers about your studio’s bookings.",
       sampleHeading: "EXPLORE A SAMPLE CONVERSATION",
       sampleNote: "Illustrative data · Your answers use your studio’s data.",
@@ -660,20 +659,20 @@ export const enMessages: Messages = {
       ],
     },
     receptionist: {
-      name: "AI receptionist — planned",
-      title: ["AI replies to messages.", "Planned feature."],
+      name: "AI receptionist",
+      title: ["AI replies to messages."],
       description:
-        "Planned help with answering client questions through web chat, Instagram, and WhatsApp. This feature is not yet available.",
-      note: "Not currently included in Pro.",
+        "Your AI receptionist answers client questions through web chat, Instagram, and WhatsApp and books appointments automatically, 24/7.",
+      note: "Included in Pro.",
       channels: ["Web chat", "Instagram", "WhatsApp"],
     },
     rebooking: {
-      name: "AI rebooking suggestions — planned",
-      title: ["Suggestions for a next visit.", "Planned feature."],
+      name: "AI rebooking suggestions",
+      title: ["Suggestions for a next visit."],
       description:
-        "Planned AI suggestions for a client’s next appointment or service, based on previous visits. This feature is not yet available.",
-      note: "Not currently included in Pro.",
-      chip: "Planned: suggestions based on past visits",
+        "AI suggests a client’s next appointment or service based on their previous visits.",
+      note: "Included in Pro.",
+      chip: "Suggestions based on past visits",
     },
     recovery: {
       name: "Offers for empty slots",
@@ -736,7 +735,7 @@ export const enMessages: Messages = {
     headingLine1: "A free plan",
     headingLine2: "and Pro for a larger team.",
     subheadingLine1: "Your booking website and calendar are included for free.",
-    subheadingLine2: "Choose Pro for more staff, reports, and appointment offers.",
+    subheadingLine2: "",
     note: "You don’t need Pro to take online bookings. Your website and calendar are part of the Free plan.",
     free: {
       name: "Free",
@@ -751,9 +750,9 @@ export const enMessages: Messages = {
         "Guest booking — no client account needed",
         "One owner + 3 staff members",
         "Team calendar with overlap protection",
-        "Working hours, breaks, and days off",
+        "Set working hours, breaks, and days off",
         "Client details and visit history",
-        "Email confirmations and reminders when enabled",
+        "Email confirmations and reminders",
         "Gallery with up to 3 photos",
         "Phone, tablet, and desktop access",
       ],
@@ -773,13 +772,15 @@ export const enMessages: Messages = {
         "More email, marketing, and notification controls",
         "Priority support",
       ],
-      aiAnalystTitle: "AI analyst when enabled",
-      aiAnalystSub: "200 answers/month, up to 20 detailed",
-      aiReceptionistTitle: "Planned: AI receptionist",
-      aiReceptionistSub: "Not yet available in Pro",
-      aiRebookingTitle: "Planned: AI rebooking suggestions",
-      aiRebookingSub: "Not yet available in Pro",
-      end: "Contact us to activate Pro and check AI analyst availability.",
+      aiAnalystTitle: "AI Chat",
+      aiAnalystSub:
+        "200 answers per month, including up to 20 detailed analyses",
+      aiReceptionistTitle: "24/7 AI receptionist",
+      aiReceptionistSub:
+        "Answers messages on Instagram, WhatsApp, and web chat and books appointments automatically.",
+      aiRebookingTitle: "AI client analysis and suggestions",
+      aiRebookingSub: "",
+      end: "Contact us to activate Pro.",
     },
   },
   faq: {
@@ -811,7 +812,7 @@ export const enMessages: Messages = {
       {
         question: "What can I ask the AI business analyst?",
         answer:
-          "When enabled for your studio, the analyst answers questions such as “Which day has the most bookings?” and “How many appointments were cancelled?” It uses your studio’s data. It does not change appointments or message clients. Pro allows 200 answers per month, including up to 20 detailed analyses. Contact us to check availability.",
+          "The analyst answers questions such as “Which day has the most bookings?” and “How many appointments were cancelled?” Think of it as ChatGPT for your business, using your studio’s data. It does not change appointments or message clients. Pro includes 200 answers per month, including up to 20 detailed analyses.",
       },
       {
         question: "Does OPUS fill empty slots automatically?",
@@ -819,14 +820,9 @@ export const enMessages: Messages = {
           "No. OPUS suggests clients for an empty slot. You review and approve each offer before it is emailed. Only clients who agreed to receive offers can be contacted. The client decides whether to accept and book.",
       },
       {
-        question: "Is the AI receptionist available?",
-        answer:
-          "No. The AI receptionist for web chat, Instagram, and WhatsApp is planned and is not currently included in Pro. Clients can already book themselves through your website.",
-      },
-      {
         question: "Is OPUS made for my kind of studio?",
         answer:
-          "OPUS is built for beauty salons, barbershops, nail studios, makeup artists, and massage studios in Macedonia. It works on phone, tablet, and desktop, for solo professionals and small teams.",
+          "OPUS is built for all types of businesses that work by appointment. If your type of business isn’t supported on our platform, please contact us.",
       },
     ],
   },

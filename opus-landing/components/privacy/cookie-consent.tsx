@@ -82,11 +82,13 @@ export function CookieConsent() {
       className="cookie-consent fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl"
     >
       <Card className="max-h-[80dvh] overflow-y-auto shadow-xl">
-        <CardHeader>
+        <CardHeader className="px-4 pb-3 sm:px-6">
           <CardTitle>{isConfiguring ? copy.preferences : copy.title}</CardTitle>
-          <CardDescription>{copy.description}</CardDescription>
+          <CardDescription>
+            {isConfiguring ? copy.description : copy.summary}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 pb-3 sm:px-6">
           {isConfiguring && (
             <FieldGroup className="mb-4 gap-4">
               {(["analytics", "marketing"] as const).map((category) => (
@@ -105,51 +107,40 @@ export function CookieConsent() {
               ))}
             </FieldGroup>
           )}
-          <a
-            className="inline-block text-sm underline underline-offset-4"
-            href="/privacy#cookies"
-          >
-            {copy.privacy}
-          </a>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <a
+              className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+              href="/privacy#cookies"
+            >
+              {copy.privacy}
+            </a>
+            <Button
+              variant="ghost"
+              className="ml-auto min-h-11 px-2"
+              onClick={
+                isConfiguring ? handleBack : () => setIsConfiguring(true)
+              }
+            >
+              {isConfiguring ? copy.back : copy.preferences}
+            </Button>
+          </div>
         </CardContent>
-        <CardFooter className="flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-          {isConfiguring ? (
-            <>
-              <Button
-                variant="ghost"
-                className="justify-start px-2 text-muted-foreground hover:text-foreground sm:justify-center"
-                onClick={handleBack}
-              >
-                {copy.back}
-              </Button>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
-                  {copy.reject}
-                </Button>
-                <Button onClick={() => save(draft)}>{copy.save}</Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                className="justify-start px-2 text-muted-foreground hover:text-foreground sm:justify-center"
-                onClick={() => setIsConfiguring(true)}
-              >
-                {copy.preferences}
-              </Button>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
-                  {copy.reject}
-                </Button>
-                <Button
-                  onClick={() => save({ analytics: true, marketing: true })}
-                >
-                  {copy.accept}
-                </Button>
-              </div>
-            </>
-          )}
+        <CardFooter className="flex flex-wrap justify-end gap-2 px-4 sm:px-6">
+          <Button
+            variant="outline"
+            className="min-h-11 px-3"
+            onClick={() => save(DENIED_CONSENT)}
+          >
+            {copy.reject}
+          </Button>
+          <Button
+            className="min-h-11 px-3"
+            onClick={() =>
+              save(isConfiguring ? draft : { analytics: true, marketing: true })
+            }
+          >
+            {isConfiguring ? copy.save : copy.accept}
+          </Button>
         </CardFooter>
       </Card>
     </aside>

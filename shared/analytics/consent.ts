@@ -116,6 +116,8 @@ export function openCookiePreferences() {
 export const consentCopy = {
   mk: {
     title: "Вашиот избор за колачиња",
+    summary:
+      "Неопходните колачиња го овозможуваат работењето на OPUS. Вие избирате дали да дозволите аналитика, снимање сесии и рекламирање.",
     description:
       "Неопходните колачиња го овозможуваат работењето на OPUS. Со ваша согласност користиме PostHog за аналитика и снимање сесии на маркетинг-страницата со маскирани внесени вредности и Meta Pixel за мерење на рекламите за OPUS. Изборот важи и при регистрација на studio.opus.mk.",
     analytics: "Аналитика · PostHog",
@@ -129,6 +131,8 @@ export const consentCopy = {
   },
   en: {
     title: "Your cookie choices",
+    summary:
+      "Essential cookies keep OPUS working. You choose whether to allow analytics, session replay, and advertising.",
     description:
       "Necessary cookies keep OPUS working. With your permission, we use PostHog for analytics and session replay on the marketing website with masked input values, and Meta Pixel to measure OPUS ads. Your choice also applies when you register at studio.opus.mk.",
     analytics: "Analytics · PostHog",

@@ -74,7 +74,7 @@ const CURRENCIES = [
 
 export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
   const isMounted = useRef(true);
-  const { t } = useDashboardI18n();
+  const { t, setLanguage, locale } = useDashboardI18n();
 
   useEffect(() => {
     return () => {
@@ -89,7 +89,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
   }>({
     timezone: initialData.timezone,
     currency: initialData.currency,
-    locale: normalizeDashboardLocale(initialData.locale),
+    locale: normalizeDashboardLocale(locale),
   });
   const [bookingRules] = useState({
     slotDurationMins: initialData.slotDurationMins,
@@ -105,9 +105,9 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
     setGeneral({
       timezone: initialData.timezone,
       currency: initialData.currency,
-      locale: normalizeDashboardLocale(initialData.locale),
+      locale: normalizeDashboardLocale(locale),
     });
-  }, [initialData.currency, initialData.locale, initialData.timezone]);
+  }, [initialData.currency, locale, initialData.timezone]);
 
   const updateOrgSettings = useMutation(api.orgSettings.updateOrgSettings);
 
@@ -153,6 +153,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
     setIsSaving(true);
     try {
       await updateOrgSettings({ orgId, ...general, ...bookingRules });
+      setLanguage(general.locale.startsWith("mk") ? "mk" : "en");
       if (isMounted.current)
         toast.success(t("Settings saved", "Поставките се зачувани"));
     } catch (error) {

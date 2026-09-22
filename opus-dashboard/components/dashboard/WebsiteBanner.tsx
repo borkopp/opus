@@ -26,36 +26,14 @@ import {
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
 import { LogoMark } from "../Logo";
+import { requirementCopy } from "@/lib/i18n/onboarding";
 
 function getRequirementLabel(
   code: string,
   fallbackLabel: string,
   t: (en: string, mk: string) => string,
 ): string {
-  switch (code) {
-    case "business_identity":
-      return t("Business identity", "Идентитет на бизнисот");
-    case "location":
-      return t("Confirmed location", "Потврдена локација");
-    case "provider":
-      return t("Active provider", "Активен извршител");
-    case "service":
-      return t("Bookable service", "Услуга за закажување");
-    case "availability":
-      return t("Bookable hours", "Работни часови");
-    case "booking_settings":
-      return t("Booking settings", "Поставки за закажување");
-    case "website_logo":
-      return t("Website logo", "Лого на веб-страницата");
-    case "website_banner":
-      return t("Website cover photo", "Насловна слика на веб-страницата");
-    case "website_tagline":
-      return t("Studio tagline", "Слоган на студиото");
-    case "website_phone":
-      return t("Contact phone", "Контакт телефон");
-    default:
-      return fallbackLabel;
-  }
+  return t(fallbackLabel, requirementCopy[code]?.[0] ?? fallbackLabel);
 }
 
 export function WebsiteBanner({

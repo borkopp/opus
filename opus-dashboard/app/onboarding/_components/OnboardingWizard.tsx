@@ -25,14 +25,13 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { inputVariants } from "@/components/ui/input";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  beautyCategories,
+  onboardingError,
+  requirementCopy,
+} from "@/lib/i18n/onboarding";
 import { Spinner } from "@/components/ui/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HoursStep, DAYS, type OpeningHour } from "./HoursStep";
@@ -91,20 +90,6 @@ const STEP_ALIASES: Record<string, WizardStep> = {
   review: "review",
 };
 
-const beautyCategories = [
-  ["barbershop", "Barbershop"],
-  ["hair_salon", "Hair salon"],
-  ["nail_salon", "Nail salon"],
-  ["spa", "Spa"],
-  ["beauty_salon", "Beauty salon"],
-  ["lash_studio", "Lash studio"],
-  ["brow_bar", "Brow bar"],
-  ["tattoo_studio", "Tattoo studio"],
-  ["massage_therapy", "Massage therapy"],
-  ["wellness_center", "Wellness center"],
-  ["personal_trainer", "Personal trainer"],
-] as const;
-
 const DEFAULT_HOURS: OpeningHour[] = DAYS.map((_, dayOfWeek) => ({
   dayOfWeek,
   open: "09:00",
@@ -124,10 +109,6 @@ interface OnboardingDraft {
   location: BusinessLocation | null;
   service: ServiceDraft;
   hours: OpeningHour[];
-}
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong.";
 }
 
 function createLocationFromState(
@@ -152,7 +133,7 @@ function createDraft(state: ActivationState | undefined): OnboardingDraft {
 
   return {
     name: state?.org.name ?? "",
-    category: state?.org.beautyCategory ?? "barbershop",
+    category: state?.org.beautyCategory ?? "beauty_salon",
     location: state ? createLocationFromState(state) : null,
     service: {
       name: service?.name ?? "",
@@ -202,6 +183,7 @@ function TextInputStep({
   min?: number;
   step?: number;
 }) {
+  const { language } = useDashboardI18n();
   const [inputValue, setInputValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -220,7 +202,7 @@ function TextInputStep({
     try {
       await onSaved(normalizedValue);
     } catch (caught) {
-      setError(errorMessage(caught));
+      setError(onboardingError(caught, language));
     } finally {
       setIsSubmitting(false);
     }
@@ -283,6 +265,7 @@ function BusinessCategoryStep({
   onBack: () => void;
   onSaved: (value: BeautyCategory) => Promise<void>;
 }) {
+  const { t, language } = useDashboardI18n();
   const [category, setCategory] = useState<BeautyCategory>(value);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -292,7 +275,7 @@ function BusinessCategoryStep({
     try {
       await onSaved(category);
     } catch (caught) {
-      toast.error(errorMessage(caught));
+      toast.error(onboardingError(caught, language));
     } finally {
       setIsSubmitting(false);
     }
@@ -300,41 +283,27 @@ function BusinessCategoryStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepFrame title="What kind of studio is this?">
+      <StepFrame
+        title={t("What kind of studio is this?", "Каков тип студио имате?")}
+      >
         <Field>
           <FieldLabel className="sr-only" htmlFor="business-category">
-            Beauty category
+            {t("Beauty category", "Категорија на студиото")}
           </FieldLabel>
-          <Select
+          <select
+            id="business-category"
+            className={inputVariants({ variant: "prominent" })}
             value={category}
-            onValueChange={(next) => setCategory(next as BeautyCategory)}
+            onChange={(event) =>
+              setCategory(event.target.value as BeautyCategory)
+            }
           >
-            <SelectTrigger
-              id="business-category"
-              variant="prominent"
-              aria-label="Beauty category"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent
-              variant="prominent"
-              position="popper"
-              align="start"
-              sideOffset={8}
-            >
-              <SelectGroup>
-                {beautyCategories.map(([itemValue, label]) => (
-                  <SelectItem
-                    key={itemValue}
-                    value={itemValue}
-                    variant="prominent"
-                  >
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            {beautyCategories.map(([itemValue, english, macedonian]) => (
+              <option key={itemValue} value={itemValue}>
+                {t(english, macedonian)}
+              </option>
+            ))}
+          </select>
         </Field>
         <WizardActions
           canGoBack={canGoBack}
@@ -359,6 +328,8 @@ function LocationStep({
   onBack: () => void;
   onSaved: (value: BusinessLocation) => Promise<void>;
 }) {
+  const { t, language } = useDashboardI18n();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const initialQuery = value?.displayName ?? "";
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedLocation, setSelectedLocation] =
@@ -381,6 +352,13 @@ function LocationStep({
     return () => reverseGeocodeControllerRef.current?.abort();
   }, []);
 
+  useEffect(() => {
+    if (activeResultIndex >= 0)
+      document
+        .getElementById(`onboarding-address-result-${activeResultIndex}`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [activeResultIndex]);
+
   const selectFeature = (feature: MapboxFeature) => {
     try {
       const location = parseMapboxFeature(feature);
@@ -392,6 +370,7 @@ function LocationStep({
 
       reverseGeocodeControllerRef.current?.abort();
       confirmedLocationRef.current = location;
+      searchInputRef.current?.blur();
       setSelectedLocation(location);
       setSearchQuery(location.displayName);
       clearResults();
@@ -399,7 +378,9 @@ function LocationStep({
       setSelectionError(null);
       setPinError(null);
     } catch (caught) {
-      setSelectionError(errorMessage(caught));
+      setSelectionError(
+        caught instanceof Error ? caught.message : "Something went wrong.",
+      );
     }
   };
 
@@ -436,7 +417,9 @@ function LocationStep({
       if (caught instanceof DOMException && caught.name === "AbortError")
         return;
       setSelectedLocation(previousLocation);
-      setPinError(errorMessage(caught));
+      setPinError(
+        caught instanceof Error ? caught.message : "Something went wrong.",
+      );
     } finally {
       if (reverseGeocodeControllerRef.current === controller) {
         reverseGeocodeControllerRef.current = null;
@@ -466,7 +449,7 @@ function LocationStep({
     try {
       await onSaved(selectedLocation);
     } catch (caught) {
-      toast.error(errorMessage(caught));
+      toast.error(onboardingError(caught, language));
     } finally {
       setIsSubmitting(false);
     }
@@ -474,10 +457,16 @@ function LocationStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepFrame title="Where is your studio?">
+      <StepFrame
+        title={t("Where is your studio?", "Каде се наоѓа вашето студио?")}
+        description={t(
+          "Choose an address from the suggestions to show the map, then adjust the pin to your entrance.",
+          "Изберете адреса од предлозите за да се прикаже мапата, па означете го влезот на студиото.",
+        )}
+      >
         <Field data-invalid={Boolean(selectionError || searchError)}>
           <FieldLabel className="sr-only" htmlFor="location-search">
-            Studio address
+            {t("Studio address", "Адреса на студиото")}
           </FieldLabel>
           <div className="relative">
             <InputGroup variant="prominent">
@@ -486,9 +475,20 @@ function LocationStep({
               </InputGroupAddon>
               <InputGroupInput
                 id="location-search"
+                ref={searchInputRef}
+                enterKeyHint="search"
+                onFocus={() =>
+                  searchInputRef.current?.scrollIntoView({
+                    block: "start",
+                    behavior: "smooth",
+                  })
+                }
                 value={searchQuery}
                 autoComplete="off"
-                placeholder="Start typing your address"
+                placeholder={t(
+                  "Enter street, number and city",
+                  "Внесете улица, број и град",
+                )}
                 role="combobox"
                 aria-autocomplete="list"
                 aria-controls="onboarding-address-results"
@@ -539,7 +539,7 @@ function LocationStep({
               <div
                 id="onboarding-address-results"
                 role="listbox"
-                className="absolute inset-x-0 top-full z-10 mt-2 max-h-[40dvh] overflow-y-auto overscroll-contain rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-lg"
+                className="mt-2 max-h-56 overflow-y-auto overscroll-contain touch-pan-y rounded-2xl border border-input bg-popover p-1.5 text-popover-foreground shadow-lg"
               >
                 {results.map((feature, index) => (
                   <button
@@ -567,18 +567,23 @@ function LocationStep({
           <div className="min-h-5 text-center">
             {selectionError || searchError ? (
               <FieldError aria-live="polite">
-                {selectionError ?? searchError}
+                {onboardingError(selectionError ?? searchError, language)}
               </FieldError>
             ) : selectedLocation ? (
               <FieldDescription className="text-success">
-                Address selected. Confirm the pin below.
+                {t(
+                  "Address selected. Confirm the pin below.",
+                  "Адресата е избрана. Проверете ја ознаката на мапата.",
+                )}
               </FieldDescription>
             ) : null}
           </div>
         </Field>
         {selectedLocation && (
           <Field className="mt-2" data-invalid={Boolean(pinError)}>
-            <FieldLabel>Exact map pin</FieldLabel>
+            <FieldLabel>
+              {t("Exact map pin", "Точна локација на мапата")}
+            </FieldLabel>
             <LocationMapPicker
               className="h-60 sm:h-80"
               coords={selectedLocation.coordinates}
@@ -586,12 +591,20 @@ function LocationStep({
             />
             <div className="min-h-5">
               {pinError ? (
-                <FieldError aria-live="polite">{pinError}</FieldError>
+                <FieldError aria-live="polite">
+                  {onboardingError(pinError, language)}
+                </FieldError>
               ) : (
                 <FieldDescription aria-live="polite">
                   {isResolvingPin
-                    ? "Checking the updated pin…"
-                    : "Drag the pin or click the map if the entrance is not exact."}
+                    ? t(
+                        "Checking the updated pin…",
+                        "Ја проверуваме локацијата…",
+                      )
+                    : t(
+                        "Drag the pin or click the map if the entrance is not exact.",
+                        "Повлечете ја ознаката или допрете на мапата за да го означите влезот.",
+                      )}
                 </FieldDescription>
               )}
             </div>
@@ -610,8 +623,14 @@ function LocationStep({
         />
         <p className="mt-5 text-center text-xs text-muted-foreground">
           {state.org.address
-            ? "You can search again or adjust the pin to update this location."
-            : "You can adjust this address and pin later in Settings."}
+            ? t(
+                "You can search again or adjust the pin to update this location.",
+                "Пребарајте повторно или поместете ја ознаката за да ја смените локацијата.",
+              )
+            : t(
+                "You can adjust this address and pin later in Settings.",
+                "Адресата и ознаката можете да ги смените подоцна во Поставки.",
+              )}
         </p>
       </StepFrame>
     </form>
@@ -629,6 +648,7 @@ function ReviewStep({
   onBack: () => void;
   onPublished: () => void;
 }) {
+  const { t, language } = useDashboardI18n();
   const publish = useMutation(api.website.publish);
   const [isPublishing, setIsPublishing] = useState(false);
 
@@ -638,10 +658,10 @@ function ReviewStep({
     try {
       await publish({});
       posthog.capture("website_published");
-      toast.success("Website published");
+      toast.success(t("Website published", "Веб-страницата е објавена"));
       onPublished();
     } catch (caught) {
-      toast.error(errorMessage(caught));
+      toast.error(onboardingError(caught, language));
     } finally {
       setIsPublishing(false);
     }
@@ -652,14 +672,16 @@ function ReviewStep({
       <StepFrame
         title={
           state.org.websiteStatus === "published"
-            ? "Your studio is live"
-            : "A quick final check"
+            ? t("Your studio is live", "Вашето студио е објавено")
+            : t("A quick final check", "Уште една кратка проверка")
         }
       >
         <div>
           <p className="mb-4 text-center text-sm text-muted-foreground">
-            {state.websiteRequirements.filter((item) => item.complete).length}{" "}
-            of {state.websiteRequirements.length} ready
+            {t(
+              `${state.websiteRequirements.filter((item) => item.complete).length} of ${state.websiteRequirements.length} ready`,
+              `${state.websiteRequirements.filter((item) => item.complete).length} од ${state.websiteRequirements.length} завршени`,
+            )}
           </p>
           <ul className="flex flex-col gap-2">
             {state.websiteRequirements.map((requirement) => (
@@ -676,7 +698,9 @@ function ReviewStep({
                   )}
                 >
                   <span className="sr-only">
-                    {requirement.complete ? "Complete" : "Required"}
+                    {requirement.complete
+                      ? t("Complete", "Завршено")
+                      : t("Required", "Задолжително")}
                   </span>
                   {requirement.complete ? (
                     <Check className="size-3.5" />
@@ -685,10 +709,20 @@ function ReviewStep({
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{requirement.label}</p>
+                  <p className="text-sm font-medium">
+                    {t(
+                      requirement.label,
+                      requirementCopy[requirement.code]?.[0] ??
+                        requirement.label,
+                    )}
+                  </p>
                   {!requirement.complete && (
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {requirement.description}
+                      {t(
+                        requirement.description,
+                        requirementCopy[requirement.code]?.[1] ??
+                          requirement.description,
+                      )}
                     </p>
                   )}
                 </div>
@@ -701,9 +735,9 @@ function ReviewStep({
                   >
                     <Link
                       href={requirement.actionHref}
-                      aria-label={`Fix ${requirement.label}`}
+                      aria-label={`Fix ${t(requirement.label, requirementCopy[requirement.code]?.[0] ?? requirement.label)}`}
                     >
-                      Fix
+                      {t("Fix", "Дополни")}
                     </Link>
                   </Button>
                 )}
@@ -715,7 +749,7 @@ function ReviewStep({
             <Button asChild className="mt-6 h-12 w-full">
               <Link href="/beauty">
                 <Store />
-                Open dashboard
+                {t("Open dashboard", "Отвори контролна табла")}
               </Link>
             </Button>
           ) : (
@@ -725,7 +759,7 @@ function ReviewStep({
                 onBack={onBack}
                 isSubmitting={isPublishing}
                 disabled={!state.allWebsiteRequirementsComplete}
-                label="Publish website"
+                label={t("Publish website", "Објави веб-страница")}
               />
             </form>
           )}
@@ -738,7 +772,7 @@ function ReviewStep({
             <Button asChild variant="link" className="shadow-none">
               <Link href="/beauty">
                 <Store data-icon="inline-start" />
-                Open dashboard
+                {t("Open dashboard", "Отвори контролна табла")}
               </Link>
             </Button>
           </div>
@@ -763,6 +797,7 @@ function OnboardingFlow({
 }: {
   requestedStep: WizardStep | null;
 }) {
+  const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
@@ -804,6 +839,9 @@ function OnboardingFlow({
   }
 
   const currentDraft = draft ?? createDraft(state);
+  const serviceExample =
+    beautyCategories.find(([category]) => category === currentDraft.category) ??
+    beautyCategories[0];
   const derivedStep = profile?.orgId
     ? firstStepForSection(state?.nextStep ?? "business")
     : "business-name";
@@ -886,7 +924,7 @@ function OnboardingFlow({
           Number(service.price.replace(",", ".")) * 100,
         ),
       });
-      toast.success("First service saved");
+      toast.success(t("First service saved", "Првата услуга е зачувана"));
     }
     goNext();
   };
@@ -897,7 +935,7 @@ function OnboardingFlow({
       open_day_count: hours.filter((day) => !day.isClosed).length,
     });
     updateDraft({ hours });
-    toast.success("Opening hours saved");
+    toast.success(t("Opening hours saved", "Работното време е зачувано"));
     goNext();
   };
 
@@ -910,16 +948,30 @@ function OnboardingFlow({
             <Button
               type="button"
               variant="ghost"
+              className="min-h-11"
+              onClick={() => setLanguage(language === "mk" ? "en" : "mk")}
+              aria-label={t("Switch to Macedonian", "Промени на англиски")}
+            >
+              {language === "mk" ? "EN" : "МК"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
               size="icon"
               className="size-11"
-              aria-label="Cookie settings"
+              aria-label={t("Cookie settings", "Поставки за колачиња")}
               onClick={openCookiePreferences}
             >
               <Cookie />
             </Button>
             {state?.operationalSetupComplete && (
               <Button asChild variant="ghost" className="min-h-11 shadow-none">
-                <Link href="/beauty">Dashboard</Link>
+                <Link href="/beauty">
+                  <Store aria-hidden="true" />
+                  <span className="sr-only sm:not-sr-only">
+                    {t("Dashboard", "Контролна табла")}
+                  </span>
+                </Link>
               </Button>
             )}
           </div>
@@ -930,15 +982,18 @@ function OnboardingFlow({
         <div
           className="mb-8 w-full max-w-xl sm:mb-12"
           role="progressbar"
-          aria-label="Studio setup"
+          aria-label={t("Studio setup", "Поставување на студиото")}
           aria-valuemin={1}
           aria-valuemax={STEP_ORDER.length}
           aria-valuenow={stepIndex + 1}
         >
           <div className="mb-3 flex justify-between text-xs font-medium text-muted-foreground">
-            <span>Studio setup</span>
+            <span>{t("Studio setup", "Поставување на студиото")}</span>
             <span>
-              Step {stepIndex + 1} of {STEP_ORDER.length}
+              {t(
+                `Step ${stepIndex + 1} of ${STEP_ORDER.length}`,
+                `Чекор ${stepIndex + 1} од ${STEP_ORDER.length}`,
+              )}
             </span>
           </div>
           <div className="flex gap-1.5" aria-hidden="true">
@@ -960,13 +1015,21 @@ function OnboardingFlow({
           {step === "business-name" && (
             <TextInputStep
               id="business-name"
-              title="Enter your business name"
+              title={t(
+                "Enter your business name",
+                "Како се вика вашето студио?",
+              )}
               value={currentDraft.name}
-              placeholder="King Cuts"
+              placeholder={t("e.g. Studio Luna", "На пр. Студио Луна")}
               canGoBack={canGoBack}
               onBack={goBack}
               validate={(name) =>
-                name.length < 2 ? "Enter at least 2 characters." : null
+                name.length < 2
+                  ? t(
+                      "Enter at least 2 characters.",
+                      "Внесете најмалку 2 знаци.",
+                    )
+                  : null
               }
               onSaved={(name) => {
                 updateDraft({ name });
@@ -997,13 +1060,25 @@ function OnboardingFlow({
           {step === "service-name" && (
             <TextInputStep
               id="service-name"
-              title="What should customers book?"
+              title={t(
+                "Enter your first service",
+                "Внесете ја вашата прва услуга",
+              )}
+              description={t(
+                "Start with one service. You can add more later.",
+                "Започнете со една услуга. Подоцна можете да додадете повеќе.",
+              )}
               value={currentDraft.service.name}
-              placeholder="Signature haircut"
+              placeholder={t(
+                `e.g. ${serviceExample[3]}`,
+                `На пр. ${serviceExample[4]}`,
+              )}
               canGoBack={canGoBack}
               onBack={goBack}
               validate={(value) =>
-                value.length < 2 ? "Enter a service name." : null
+                value.length < 2
+                  ? t("Enter a service name.", "Внесете име на услугата.")
+                  : null
               }
               onSaved={(value) => handleServiceSaved("name", value)}
             />
@@ -1012,17 +1087,20 @@ function OnboardingFlow({
           {step === "service-price" && (
             <TextInputStep
               id="service-price"
-              title="What does it cost?"
+              title={t(
+                `What does ${currentDraft.service.name} cost?`,
+                `Колку чини ${currentDraft.service.name}?`,
+              )}
               value={currentDraft.service.price}
-              placeholder="500.00"
-              unit="MKD"
+              placeholder={t("e.g. 500", "На пр. 500")}
+              unit={t("MKD", "ден.")}
               inputMode="decimal"
               canGoBack={canGoBack}
               onBack={goBack}
               validate={(value) => {
                 return /^\d+([.,]\d{1,2})?$/.test(value)
                   ? null
-                  : "Enter a valid price.";
+                  : t("Enter a valid price.", "Внесете валидна цена.");
               }}
               onSaved={(value) => handleServiceSaved("price", value)}
             />
@@ -1031,10 +1109,13 @@ function OnboardingFlow({
           {step === "service-duration" && (
             <TextInputStep
               id="service-duration"
-              title="How long does it take?"
-              unit="minutes"
+              title={t(
+                `How long does ${currentDraft.service.name} take?`,
+                `Колку трае ${currentDraft.service.name}?`,
+              )}
+              unit={t("minutes", "минути")}
               value={String(currentDraft.service.durationMins)}
-              placeholder="30"
+              placeholder={t("e.g. 30", "На пр. 30")}
               type="number"
               inputMode="numeric"
               min={state?.settings?.slotDurationMins ?? 15}
@@ -1045,9 +1126,15 @@ function OnboardingFlow({
                 const duration = Number(value);
                 const slotDuration = state?.settings?.slotDurationMins ?? 15;
                 return !Number.isInteger(duration) || duration <= 0
-                  ? "Enter a whole number of minutes."
+                  ? t(
+                      "Enter a whole number of minutes.",
+                      "Внесете цел број минути.",
+                    )
                   : duration % slotDuration !== 0
-                    ? `Use a multiple of ${slotDuration} minutes.`
+                    ? t(
+                        `Use a multiple of ${slotDuration} minutes.`,
+                        `Внесете времетраење во интервали од ${slotDuration} минути.`,
+                      )
                     : null;
               }}
               onSaved={(value) => handleServiceSaved("durationMins", value)}

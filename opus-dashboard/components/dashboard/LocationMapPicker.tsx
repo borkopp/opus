@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import Map, {
   AttributionControl,
   Marker,
@@ -30,12 +33,25 @@ interface LocationMapPickerProps {
   onChange: (coords: { lat: number; lng: number }) => void;
 }
 
-export default function LocationMapPicker({
+export default function LocationMapPicker(props: LocationMapPickerProps) {
+  return (
+    <LocationMapPickerContent
+      key={`${props.coords?.lat}:${props.coords?.lng}`}
+      {...props}
+    />
+  );
+}
+
+function LocationMapPickerContent({
   coords,
   onChange,
   className,
 }: LocationMapPickerProps) {
   const { t } = useDashboardI18n();
+  const [attempt, setAttempt] = useState(0);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error">(
+    "loading",
+  );
   const { resolvedTheme } = useTheme();
   const hasValidCoords = Boolean(
     coords && isCoordinateInNorthMacedonia(coords),
@@ -46,6 +62,15 @@ export default function LocationMapPicker({
     lng: DEFAULT_CENTER.lng,
   };
   const mapKey = `${center.lat.toFixed(5)}:${center.lng.toFixed(5)}`;
+
+  useEffect(() => {
+    const timeout = window.setTimeout(
+      () =>
+        setLoadState((current) => (current === "loading" ? "error" : current)),
+      15000,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [mapKey, attempt]);
 
   const placePin = (event: MapMouseEvent | MarkerDragEvent) => {
     const next = { lat: event.lngLat.lat, lng: event.lngLat.lng };
@@ -63,8 +88,8 @@ export default function LocationMapPicker({
         </AlertTitle>
         <AlertDescription>
           {t(
-            "Mapbox is not configured for this deployment. Search and pinning are temporarily unavailable.",
-            "Mapbox не е конфигуриран за оваа инсталација. Пребарувањето и означувањето се привремено недостапни.",
+            "The map is temporarily unavailable. Please try again later.",
+            "Мапата е привремено недостапна. Обидете се повторно подоцна.",
           )}
         </AlertDescription>
       </Alert>
@@ -80,7 +105,9 @@ export default function LocationMapPicker({
         )}
       >
         <Map
-          key={mapKey}
+          key={`${mapKey}:${attempt}`}
+          onLoad={() => setLoadState("ready")}
+          onError={() => setLoadState("error")}
           mapboxAccessToken={TOKEN}
           mapStyle={
             resolvedTheme === "dark"
@@ -120,7 +147,41 @@ export default function LocationMapPicker({
             </Marker>
           )}
         </Map>
-        {!confirmedCoords && (
+        {loadState !== "ready" && (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/95 p-5 text-center"
+            role="status"
+          >
+            {loadState === "loading" ? (
+              <>
+                <Spinner />
+                <p className="text-sm">
+                  {t("Loading map…", "Мапата се вчитува…")}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">
+                  {t(
+                    "The map could not load. Check your connection and try again.",
+                    "Мапата не се вчита. Проверете ја врската и обидете се повторно.",
+                  )}
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setLoadState("loading");
+                    setAttempt((current) => current + 1);
+                  }}
+                >
+                  {t("Retry map", "Вчитај повторно")}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+        {loadState === "ready" && !confirmedCoords && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="rounded-full bg-background/90 px-4 py-2 text-sm text-muted-foreground shadow-lg backdrop-blur">
               {t(

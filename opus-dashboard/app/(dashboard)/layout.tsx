@@ -9,8 +9,8 @@ import React from "react";
 import { getNavLinks } from "@/lib/vertical-nav-config";
 import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
-import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
-import { resolveDashboardLanguage } from "@/lib/i18n/types";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { MobileSetupBanner } from "@/components/dashboard/MobileSetupBanner";
 
 export default function DashboardLayout({
   children,
@@ -19,6 +19,7 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
+  const { language } = useDashboardI18n();
   const pathname = usePathname();
 
   const profile = useQuery(
@@ -86,9 +87,6 @@ export default function DashboardLayout({
 
   if (!profile?.orgId) return null;
 
-  const locale = orgSettingsData?.settings?.locale ?? "mk-MK";
-  const language = resolveDashboardLanguage(locale);
-
   // ── Resolve nav links from vertical config ──────────────
   const industry =
     profile?.industry === ACTIVE_INDUSTRY ? profile.industry : ACTIVE_INDUSTRY;
@@ -98,24 +96,23 @@ export default function DashboardLayout({
   );
 
   return (
-    <DashboardI18nProvider locale={locale}>
-      <SidebarProvider>
-        <QuickBookingProvider orgId={profile.orgId}>
-          <div className="flex h-dvh w-full flex-col md:flex-row overflow-hidden bg-background">
-            <AppSidebar
-              profile={profile}
-              primaryLinks={primaryLinks.filter(
-                (link) =>
-                  profile.role !== "staff" || link.href !== "/beauty/assistant",
-              )}
-              industryBase={industryBase}
-            />
-            <main className="dashboard-workspace min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:p-8 w-full bg-background relative z-0 flex flex-col">
-              {children}
-            </main>
-          </div>
-        </QuickBookingProvider>
-      </SidebarProvider>
-    </DashboardI18nProvider>
+    <SidebarProvider>
+      <QuickBookingProvider orgId={profile.orgId}>
+        <div className="flex h-dvh w-full flex-col md:flex-row overflow-hidden bg-background">
+          <AppSidebar
+            profile={profile}
+            primaryLinks={primaryLinks.filter(
+              (link) =>
+                profile.role !== "staff" || link.href !== "/beauty/assistant",
+            )}
+            industryBase={industryBase}
+          />
+          <main className="dashboard-workspace min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:p-8 w-full bg-background relative z-0 flex flex-col">
+            <MobileSetupBanner orgId={profile.orgId} />
+            {children}
+          </main>
+        </div>
+      </QuickBookingProvider>
+    </SidebarProvider>
   );
 }

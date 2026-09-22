@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { usePathname } from "next/navigation";
 import {
   getDashboardPageTitle,
@@ -10,7 +17,10 @@ import {
   type DashboardLanguage,
 } from "@/lib/i18n/types";
 
+import { setClientLocale } from "../../shared/i18n/locale";
+
 export interface DashboardI18nContextValue {
+  setLanguage: (language: DashboardLanguage) => void;
   language: DashboardLanguage;
   locale: string;
   t: (english: string, macedonian: string) => string;
@@ -28,8 +38,14 @@ export function DashboardI18nProvider({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const language = resolveDashboardLanguage(locale);
-  const activeLocale = normalizeDashboardLocale(locale);
+  const [language, setLanguageState] = useState(() =>
+    resolveDashboardLanguage(locale),
+  );
+  const activeLocale = normalizeDashboardLocale(language);
+  const setLanguage = useCallback((next: DashboardLanguage) => {
+    setClientLocale(next);
+    setLanguageState(next);
+  }, []);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -42,11 +58,12 @@ export function DashboardI18nProvider({
   const value = useMemo<DashboardI18nContextValue>(() => {
     return {
       language,
+      setLanguage,
       locale: activeLocale,
       t: (english: string, macedonian: string) =>
         translate(language, english, macedonian),
     };
-  }, [language, activeLocale]);
+  }, [language, activeLocale, setLanguage]);
 
   return (
     <DashboardI18nContext.Provider value={value}>

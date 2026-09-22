@@ -21,6 +21,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Spinner } from "@/components/ui/spinner";
 
 type EmailOtpFormProps = {
@@ -69,6 +70,7 @@ export function EmailOtpForm({
   description,
   callbackUrl,
 }: EmailOtpFormProps) {
+  const { t } = useDashboardI18n();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(
@@ -117,7 +119,10 @@ export function EmailOtpForm({
 
       if (result.error) {
         setError(
-          result.error.message || "We could not send a code. Try again.",
+          t(
+            result.error.message || "We could not send a code. Try again.",
+            "Кодот не се испрати. Проверете ја е-поштата и обидете се повторно.",
+          ),
         );
         return;
       }
@@ -126,9 +131,14 @@ export function EmailOtpForm({
       setCode("");
       setDirection(1);
       setStep("code");
-      setStatus("A fresh code was sent.");
+      setStatus(t("A fresh code was sent.", "Испратен е нов код."));
     } catch (caught) {
-      setError(networkErrorMessage(caught));
+      setError(
+        t(
+          networkErrorMessage(caught),
+          "Врската не успеа. Обидете се повторно.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -137,7 +147,7 @@ export function EmailOtpForm({
   const verifyCode = async (event: FormEvent) => {
     event.preventDefault();
     if (code.length !== 6) {
-      setError("Enter the six-digit code.");
+      setError(t("Enter the six-digit code.", "Внесете го шестцифрениот код."));
       return;
     }
 
@@ -153,19 +163,38 @@ export function EmailOtpForm({
 
       if (result.error) {
         setError(
-          result.error.message || "That code is not valid. Request a new one.",
+          t(
+            result.error.message ||
+              "That code is not valid. Request a new one.",
+            "Кодот не е валиден или е истечен. Побарајте нов код.",
+          ),
         );
         return;
       }
 
       if (!result.data?.user) {
-        setError("Sign-in could not be confirmed. Try again.");
+        setError(
+          t(
+            "Sign-in could not be confirmed. Try again.",
+            "Најавата не успеа. Обидете се повторно.",
+          ),
+        );
         return;
       }
 
-      setStatus("Signed in. Opening your studio…");
+      setStatus(
+        t(
+          "Signed in. Opening your studio…",
+          "Успешна најава. Го отвораме вашето студио…",
+        ),
+      );
     } catch (caught) {
-      setError(networkErrorMessage(caught));
+      setError(
+        t(
+          networkErrorMessage(caught),
+          "Врската не успеа. Обидете се повторно.",
+        ),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -179,7 +208,9 @@ export function EmailOtpForm({
         aria-live="polite"
       >
         <Spinner />
-        <p className="text-sm text-muted-foreground">Opening your studio…</p>
+        <p className="text-sm text-muted-foreground">
+          {t("Opening your studio…", "Го отвораме вашето студио…")}
+        </p>
       </section>
     );
   }
@@ -199,12 +230,17 @@ export function EmailOtpForm({
         >
           <header className="text-center">
             <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-4xl">
-              {step === "email" ? title : "Check your email"}
+              {step === "email"
+                ? title
+                : t("Check your email", "Проверете ја вашата е-пошта")}
             </h1>
             <p className="mx-auto mt-3 max-w-sm text-pretty text-sm leading-6 text-muted-foreground">
               {step === "email"
                 ? description
-                : `Enter the six-digit code sent to ${email}.`}
+                : t(
+                    `Enter the six-digit code sent to ${email}.`,
+                    `Внесете го шестцифрениот код испратен на ${email}.`,
+                  )}
             </p>
           </header>
 
@@ -212,7 +248,9 @@ export function EmailOtpForm({
             <form onSubmit={sendCode} className="mt-8">
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
-                  <FieldLabel htmlFor="auth-email">Email address</FieldLabel>
+                  <FieldLabel htmlFor="auth-email">
+                    {t("Email address", "Е-пошта")}
+                  </FieldLabel>
                   <Input
                     id="auth-email"
                     type="email"
@@ -227,7 +265,10 @@ export function EmailOtpForm({
                     className="h-12"
                   />
                   <FieldDescription id="auth-email-hint">
-                    We’ll email you a six-digit code. No password needed.
+                    {t(
+                      "We’ll email you a six-digit code. No password needed.",
+                      "Ќе ви испратиме шестцифрен код по е-пошта. Не ви треба лозинка.",
+                    )}
                   </FieldDescription>
                 </Field>
                 <Button
@@ -239,10 +280,10 @@ export function EmailOtpForm({
                   {isSubmitting ? (
                     <>
                       <Spinner data-icon="inline-start" />
-                      Sending code…
+                      {t("Sending code…", "Испраќање код…")}
                     </>
                   ) : (
-                    "Continue with email"
+                    t("Continue with email", "Продолжи со е-пошта")
                   )}
                 </Button>
               </FieldGroup>
@@ -255,7 +296,7 @@ export function EmailOtpForm({
                     htmlFor="auth-code"
                     className="w-full justify-center text-center"
                   >
-                    Sign-in code
+                    {t("Sign-in code", "Код за најава")}
                   </FieldLabel>
                   <InputOTP
                     id="auth-code"
@@ -291,10 +332,10 @@ export function EmailOtpForm({
                   {isSubmitting ? (
                     <>
                       <Spinner data-icon="inline-start" />
-                      Checking code…
+                      {t("Checking code…", "Проверка на кодот…")}
                     </>
                   ) : (
-                    "Verify and continue"
+                    t("Verify and continue", "Потврди и продолжи")
                   )}
                 </Button>
                 <div className="flex items-center justify-between gap-3">
@@ -310,7 +351,7 @@ export function EmailOtpForm({
                       setStatus(null);
                     }}
                   >
-                    Change email
+                    {t("Change email", "Промени е-пошта")}
                   </Button>
                   <Button
                     type="button"
@@ -320,7 +361,7 @@ export function EmailOtpForm({
                     onClick={() => void sendCode()}
                     disabled={isSubmitting}
                   >
-                    Send again
+                    {t("Send again", "Испрати повторно")}
                   </Button>
                 </div>
               </FieldGroup>

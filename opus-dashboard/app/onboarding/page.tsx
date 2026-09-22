@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
 import { Spinner } from "@/components/ui/spinner";
 import { OnboardingWizard } from "./_components/OnboardingWizard";
 
@@ -12,9 +11,7 @@ export default function OnboardingPage() {
         </div>
       }
     >
-      <DashboardI18nProvider locale="en">
-        <OnboardingWizard />
-      </DashboardI18nProvider>
+      <OnboardingWizard />
     </Suspense>
   );
 }

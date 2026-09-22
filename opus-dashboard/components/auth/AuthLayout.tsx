@@ -1,3 +1,6 @@
+"use client";
+
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
@@ -6,17 +9,18 @@ import { Logo } from "@/components/Logo";
 import { Separator } from "@/components/ui/separator";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
+  const { t } = useDashboardI18n();
   return (
     <main className="grid min-h-svh bg-background lg:grid-cols-2">
       <div className="flex min-h-svh min-w-0 flex-col px-6 sm:px-12 lg:px-14 xl:px-20">
         <header className="flex items-center justify-between gap-4 py-7 sm:py-9">
           <a
             href="https://opus.mk"
-            aria-label="Back to OPUS"
+            aria-label={t("Back to OPUS", "Назад кон OPUS")}
             className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            <span>Back to OPUS</span>
+            <span>{t("Back to OPUS", "Назад кон OPUS")}</span>
           </a>
         </header>
 
@@ -31,7 +35,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             {children}
             <Separator className="mt-5" />
             <p className="mt-6 text-center text-sm leading-6 text-muted-foreground">
-              A space for your studio, your team, and your clients.
+              {t(
+                "A space for your studio, your team, and your clients.",
+                "Простор за вашето студио, вашиот тим и вашите клиенти.",
+              )}
             </p>
           </div>
         </div>
@@ -41,31 +48,37 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href="https://opus.mk/privacy"
           >
-            Privacy policy
+            {t("Privacy policy", "Политика за приватност")}
           </a>
           <a
             className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href="https://opus.mk/terms"
           >
-            Terms of service
+            {t("Terms of service", "Услови за користење")}
           </a>
           <a
             className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href="https://opus.mk/contact"
           >
-            Need a hand?
+            {t("Need a hand?", "Ви треба помош?")}
           </a>
         </footer>
       </div>
 
       <aside
         className="relative hidden bg-ink-surface lg:block"
-        aria-label="Made for beauty professionals"
+        aria-label={t(
+          "Made for beauty professionals",
+          "За професионалци во индустријата за убавина",
+        )}
       >
         <div className="sticky top-0 h-svh min-h-[40rem] overflow-hidden">
           <Image
             src="/images/auth/studio-team-blue.png"
-            alt="Three beauty professionals together in a bright salon with cool blue interiors"
+            alt={t(
+              "Three beauty professionals together in a bright salon with cool blue interiors",
+              "Тројца професионалци за убавина во светол салон со син ентериер",
+            )}
             fill
             quality={90}
             sizes="(min-width: 1024px) max(50vw, 66.67svh), 1px"
@@ -85,7 +98,12 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             {/* <p className="max-w-xs text-balance font-display text-2xl font-medium leading-snug tracking-tight xl:text-3xl">
               More time for what you love.
             </p> */}
-            <p className="text-sm text-white/75">Your studio. In good hands.</p>
+            <p className="text-sm text-white/75">
+              {t(
+                "Your studio. In good hands.",
+                "Вашето студио. Во добри раце.",
+              )}
+            </p>
           </div>
         </div>
       </aside>

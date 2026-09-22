@@ -1,3 +1,5 @@
+import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
+import { getRequestLocale } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
@@ -45,13 +47,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
   return (
-    <html lang="mk" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${manrope.variable} ${audiowide.variable} ${ibmPlexMono.variable} font-sans antialiased`}
       >
@@ -62,9 +65,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ConvexClientProvider>
-            {children}
-            <Toaster richColors position="bottom-right" />
-            <CookieConsent />
+            <DashboardI18nProvider locale={locale}>
+              {children}
+              <Toaster richColors position="bottom-right" />
+              <CookieConsent />
+            </DashboardI18nProvider>
           </ConvexClientProvider>
         </ThemeProvider>
       </body>

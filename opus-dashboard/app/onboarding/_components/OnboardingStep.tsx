@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { cn } from "@/lib/utils";
 
 export function StepFrame({
@@ -44,7 +45,7 @@ export function WizardActions({
   onBack,
   isSubmitting = false,
   disabled = false,
-  label = "Next",
+  label,
 }: {
   canGoBack: boolean;
   onBack: () => void;
@@ -52,10 +53,11 @@ export function WizardActions({
   disabled?: boolean;
   label?: string;
 }) {
+  const { t } = useDashboardI18n();
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 mt-6 grid w-full items-center gap-3 border-t border-border/50 bg-background/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:mt-8 sm:flex sm:justify-center sm:gap-6 sm:border-0 sm:bg-transparent sm:pb-0",
+        "mt-6 grid w-full items-center gap-3 border-t border-border/50 bg-background/95 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 backdrop-blur-sm sm:static sm:mt-8 sm:flex sm:justify-center sm:gap-6 sm:border-0 sm:bg-transparent sm:pb-0",
         canGoBack && "grid-cols-[auto_minmax(0,1fr)]",
       )}
     >
@@ -68,7 +70,7 @@ export function WizardActions({
           onClick={onBack}
         >
           <ArrowLeft data-icon="inline-start" />
-          Back
+          {t("Back", "Назад")}
         </Button>
       )}
       <Button
@@ -78,7 +80,7 @@ export function WizardActions({
         disabled={disabled || isSubmitting}
       >
         {isSubmitting ? <Spinner /> : null}
-        {label}
+        {label ?? t("Next", "Следно")}
         <ArrowRight data-icon="inline-end" />
       </Button>
     </div>

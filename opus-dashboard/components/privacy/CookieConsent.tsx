@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,7 +40,8 @@ export function CookieConsent() {
   );
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Consent>(DENIED_CONSENT);
-  const copy = consentCopy.mk;
+  const { language } = useDashboardI18n();
+  const copy = consentCopy[language];
 
   useEffect(() => {
     const show = () => {

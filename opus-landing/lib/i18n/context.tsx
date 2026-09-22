@@ -3,17 +3,14 @@
 import {
   createContext,
   useCallback,
+  useEffect,
   useContext,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import {
-  DEFAULT_LOCALE,
-  setClientLocale,
-  type Locale,
-} from "./locale";
+import { DEFAULT_LOCALE, setClientLocale, type Locale } from "./locale";
 import { getMessages, type Messages } from "./messages";
 
 interface I18nContextValue {
@@ -42,17 +39,17 @@ export function I18nProvider({
     setLocaleState(initialLocale);
   }
 
+  useEffect(() => {
+    setClientLocale(locale);
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const setLocale = useCallback(
     (newLocale: Locale) => {
-      setLocaleState((prev) => {
-        if (prev === newLocale) return prev;
-        setClientLocale(newLocale);
-        if (typeof document !== "undefined") {
-          document.documentElement.lang = newLocale;
-        }
-        router.refresh();
-        return newLocale;
-      });
+      setClientLocale(newLocale);
+      setLocaleState(newLocale);
+      document.documentElement.lang = newLocale;
+      router.refresh();
     },
     [router],
   );

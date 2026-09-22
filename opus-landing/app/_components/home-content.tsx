@@ -13,6 +13,7 @@ import {
   Sparkle,
   Sparkles,
 } from "lucide-react";
+import { CustomSoftwarePlan } from "./custom-software-plan";
 import { HeroShowcase } from "./hero-showcase";
 import { ProductTour } from "./product-tour";
 import { IntelligenceRotation } from "./intelligence-rotation";
@@ -506,6 +507,7 @@ export function HomeContent() {
               </ul>
               <span className="plan-end">{t.pricing.pro.end}</span>
             </article>
+            <CustomSoftwarePlan />
           </div>
           <p className="pricing-note">{t.pricing.note}</p>
         </section>

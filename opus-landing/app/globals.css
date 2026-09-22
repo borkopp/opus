@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./_styles/styles.css" layer(components);
 @import "./_styles/readability.css" layer(components);
+@import "./_styles/pricing.css" layer(components);
 @import "./_styles/features-bento.css" layer(components);
 @import "./_styles/studio-carousel.css" layer(components);
 @import "./_styles/support.css" layer(components);

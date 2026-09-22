@@ -1,0 +1,82 @@
+/* Three studio options, with custom development following Pro. */
+.pricing-section {
+  max-width: 1240px;
+  padding-inline: 32px;
+}
+
+.pricing-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.price-card {
+  min-width: 0;
+  padding-inline: 24px;
+}
+
+.price-card > .button {
+  min-height: 48px;
+  white-space: normal;
+  text-align: left;
+}
+
+.price-custom .plan-symbol {
+  color: #2588c8;
+}
+
+.price-custom .custom-price {
+  display: flex;
+  align-items: center;
+  min-height: 62px;
+  font-size: clamp(25px, 2.2vw, 30px);
+  line-height: 1.2;
+  letter-spacing: -0.8px;
+  white-space: normal;
+}
+
+.custom-monthly {
+  align-self: flex-start;
+  margin-top: auto;
+  margin-bottom: 18px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  background: #eaf6ff;
+  color: #1b689b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.price-custom .plan-end {
+  margin-top: 0;
+}
+
+@media (min-width: 761px) and (max-width: 1099px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .price-custom {
+    grid-column: 1 / -1;
+  }
+
+  .price-custom .plan-features {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .pricing-section {
+    padding-inline: 17px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .price-custom .custom-price {
+    min-height: 54px;
+    font-size: 28px;
+  }
+}

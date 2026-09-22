@@ -34,8 +34,10 @@ describe("transactional email templates", () => {
 
     expect(email.subject).toBe("Appointment confirmed · Atelier & Co");
     expect(email.html).toContain("OPUS");
-    expect(email.html).toContain("#ff814a");
-    expect(email.html).toContain("https://studio.opus.mk/opus-logo.png");
+    expect(email.html).toContain("#2588c8");
+    expect(email.html).toContain(
+      "https://studio.opus.mk/opus-email-logo-blue.png",
+    );
     expect(email.html).not.toContain("#6d4aff");
     expect(email.html).toContain("&lt;script&gt;");
     expect(email.html).not.toContain("<script>alert");
@@ -59,7 +61,7 @@ describe("transactional email templates", () => {
     const email = renderStaffNewBookingEmail(appointment);
 
     expect(email.subject).toContain("Atelier & Co");
-    expect(email.html).toContain("#ff814a");
+    expect(email.html).toContain("#2588c8");
     expect(email.html).not.toContain("#6d4aff");
     expect(email.html).toContain("Open appointment");
     expect(email.html).toContain("&lt;script&gt;");
@@ -77,7 +79,7 @@ describe("transactional email templates", () => {
     expect(email.subject).toBe("Appointment rescheduled · Atelier & Co");
     expect(email.html).toContain("Previous time");
     expect(email.html).toContain("New time");
-    expect(email.html).toContain("#ff814a");
+    expect(email.html).toContain("#2588c8");
     expect(email.html).toContain("Add new time to calendar");
     expect(email.text).toContain("Previous:");
     expect(email.text).toContain("New time:");

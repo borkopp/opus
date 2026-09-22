@@ -70,8 +70,13 @@ export function CookieConsent() {
     setOpen(false);
   };
   if (snapshot !== null && !open) {
-    // Preferences remain available in the dashboard menu and onboarding header.
-    if (layoutSegment === "(dashboard)" || pathname === "/onboarding")
+    // Keep the shortcut off auth and onboarding; the dashboard menu provides it.
+    if (
+      layoutSegment === "(dashboard)" ||
+      ["/login", "/signup", "/onboarding"].some(
+        (route) => pathname === route || pathname.startsWith(`${route}/`),
+      )
+    )
       return null;
 
     return (

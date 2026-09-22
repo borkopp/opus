@@ -8,9 +8,8 @@ import type { InputHTMLAttributes } from "react";
 import type { FunctionReturnType } from "convex/server";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { toast } from "sonner";
-import { Check, Clock3, Cookie, Search, Store } from "lucide-react";
+import { Check, Clock3, Search, Store } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { openCookiePreferences } from "../../../../shared/analytics/consent";
 import { trackStudioRegistration } from "../../../../shared/analytics/meta-pixel";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -953,16 +952,6 @@ function OnboardingFlow({
               aria-label={t("Switch to Macedonian", "Промени на англиски")}
             >
               {language === "mk" ? "EN" : "МК"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-11"
-              aria-label={t("Cookie settings", "Поставки за колачиња")}
-              onClick={openCookiePreferences}
-            >
-              <Cookie />
             </Button>
             {state?.operationalSetupComplete && (
               <Button asChild variant="ghost" className="min-h-11 shadow-none">

@@ -53,17 +53,20 @@ type ShellOptions = {
   language?: "mk" | "en";
 };
 
+// Keep email-safe inline colors aligned with app/globals.css.
 const EMAIL_COLORS = {
-  ink: "#20211f",
-  muted: "#686a65",
-  line: "#dcddd7",
-  paper: "#f6f6f3",
+  ink: "#24282f",
+  muted: "#697580",
+  line: "#dce7ef",
+  paper: "#eaf4fc",
   white: "#ffffff",
-  brand: "#ff814a",
-  brandSoft: "#fff0ea",
+  brand: "#2588c8",
+  brandSoft: "#eaf6ff",
+  primary: "#1d76b0",
+  subtle: "#f1f7fb",
 };
 
-const EMAIL_BRAND_LOGO_URL = "https://studio.opus.mk/opus-logo.png";
+const EMAIL_BRAND_LOGO_URL = "https://studio.opus.mk/opus-email-logo-blue.png";
 
 function escapeHtml(value: string | number | undefined | null) {
   return String(value ?? "")
@@ -159,7 +162,7 @@ function renderShell(options: ShellOptions) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${EMAIL_COLORS.paper};">
       <tr>
         <td align="center" style="padding:32px 12px;">
-          <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;background:${EMAIL_COLORS.white};border:1px solid ${EMAIL_COLORS.line};border-radius:24px;overflow:hidden;box-shadow:0 16px 50px rgba(32,33,31,.08);">
+          <table role="presentation" class="email-shell" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;background:${EMAIL_COLORS.white};border:1px solid ${EMAIL_COLORS.line};border-radius:24px;overflow:hidden;box-shadow:0 16px 50px rgba(36,40,47,.08);">
             <tr><td style="height:5px;background:${EMAIL_COLORS.brand};font-size:0;line-height:0;">&nbsp;</td></tr>
             <tr>
               <td class="email-pad" style="padding:38px 42px 18px;">
@@ -175,16 +178,16 @@ function renderShell(options: ShellOptions) {
             </tr>
             <tr>
               <td class="email-pad" style="padding:18px 42px 6px;">
-                <div style="font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:${EMAIL_COLORS.brand};">${escapeHtml(options.eyebrow)}</div>
+                <div style="font-size:11px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:${EMAIL_COLORS.primary};">${escapeHtml(options.eyebrow)}</div>
                 <h1 class="email-title" style="margin:12px 0 12px;font-size:38px;line-height:43px;letter-spacing:-.045em;font-weight:700;color:${EMAIL_COLORS.ink};">${escapeHtml(options.title)}</h1>
                 <p style="margin:0;font-size:16px;line-height:25px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.intro)}</p>
               </td>
             </tr>
             <tr><td class="email-pad" style="padding:26px 42px 40px;">${options.content}</td></tr>
             <tr>
-              <td class="email-pad" style="padding:22px 42px 28px;border-top:1px solid ${EMAIL_COLORS.line};background:#fbfbf9;">
+              <td class="email-pad" style="padding:22px 42px 28px;border-top:1px solid ${EMAIL_COLORS.line};background:${EMAIL_COLORS.subtle};">
                 <p style="margin:0 0 6px;font-size:12px;line-height:18px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.finePrint ?? `Sent securely by OPUS for ${options.studioName}.`)}</p>
-                <p style="margin:0;font-size:11px;line-height:17px;color:#85877f;">${escapeHtml(options.footerLabel ?? "Transactional appointment email · No marketing subscription")}</p>
+                <p style="margin:0;font-size:11px;line-height:17px;color:${EMAIL_COLORS.muted};">${escapeHtml(options.footerLabel ?? "Transactional appointment email · No marketing subscription")}</p>
               </td>
             </tr>
           </table>
@@ -209,7 +212,7 @@ function appointmentCard(data: AppointmentEmailData) {
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid ${EMAIL_COLORS.line};border-radius:18px;overflow:hidden;">
     <tr>
       <td width="112" align="center" style="width:112px;padding:22px 12px;background:${EMAIL_COLORS.brandSoft};border-right:1px solid ${EMAIL_COLORS.line};">
-        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:${EMAIL_COLORS.brand};">${escapeHtml(formatShortMonth(data.startAt, locale))}</div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:.12em;color:${EMAIL_COLORS.primary};">${escapeHtml(formatShortMonth(data.startAt, locale))}</div>
         <div style="margin-top:4px;font-size:38px;line-height:40px;font-weight:750;letter-spacing:-.05em;color:${EMAIL_COLORS.ink};">${escapeHtml(formatDay(data.startAt))}</div>
         <div style="margin-top:6px;font-size:13px;font-weight:650;color:${EMAIL_COLORS.ink};">${escapeHtml(formatTime(data.startAt, locale))}</div>
       </td>
@@ -226,7 +229,7 @@ function appointmentCard(data: AppointmentEmailData) {
 }
 
 function button(href: string, label: string, primary = false) {
-  return `<a class="action" href="${escapeHtml(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 18px;border:1px solid ${primary ? EMAIL_COLORS.brand : EMAIL_COLORS.line};border-radius:12px;background:${primary ? EMAIL_COLORS.brand : EMAIL_COLORS.white};color:${primary ? EMAIL_COLORS.white : EMAIL_COLORS.ink};font-size:13px;font-weight:700;text-decoration:none;">${escapeHtml(label)}</a>`;
+  return `<a class="action" href="${escapeHtml(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:13px 18px;border:1px solid ${primary ? EMAIL_COLORS.primary : EMAIL_COLORS.line};border-radius:12px;background:${primary ? EMAIL_COLORS.primary : EMAIL_COLORS.white};color:${primary ? EMAIL_COLORS.white : EMAIL_COLORS.ink};font-size:13px;font-weight:700;text-decoration:none;">${escapeHtml(label)}</a>`;
 }
 
 function directionsUrl(data: AppointmentEmailData) {
@@ -495,7 +498,7 @@ export function renderClientRescheduledEmail(
     ...(call ? [button(call, mk ? "Јавете се" : "Call studio")] : []),
   ].join("");
   const content = `${previousTime}
-    <div style="margin:0 0 8px;font-size:11px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:${EMAIL_COLORS.brand};">${escapeHtml(mk ? "Нов термин" : "New time")}</div>
+    <div style="margin:0 0 8px;font-size:11px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:${EMAIL_COLORS.primary};">${escapeHtml(mk ? "Нов термин" : "New time")}</div>
     ${appointmentCard(data)}
     <div style="padding-top:22px;">${actions}</div>
     <p style="margin:10px 0 0;font-size:12px;line-height:19px;color:${EMAIL_COLORS.muted};">${escapeHtml(mk ? "Во прилог има ажурирана календарска датотека за Apple Calendar, Outlook и други апликации." : "An updated calendar file for Apple Calendar, Outlook, and other apps is attached.")}</p>`;
@@ -668,7 +671,7 @@ export function renderGapOfferEmail(
       preheader: data.draftedMessage,
       intro: data.draftedMessage,
       content: `${appointmentCard(data)}<p style="font-size:14px;line-height:22px;">${escapeHtml(notice)}</p>
-        <p><a class="action" href="${escapeHtml(data.bookingLink)}" style="display:inline-block;background:${EMAIL_COLORS.brand};color:${EMAIL_COLORS.ink};padding:14px 22px;border-radius:10px;text-decoration:none;font-weight:700;">${escapeHtml(cta)}</a></p>
+        <p><a class="action" href="${escapeHtml(data.bookingLink)}" style="display:inline-block;background:${EMAIL_COLORS.primary};color:${EMAIL_COLORS.white};padding:14px 22px;border-radius:10px;text-decoration:none;font-weight:700;">${escapeHtml(cta)}</a></p>
         <p style="font-size:12px;"><a href="${escapeHtml(data.bookingLink)}">${escapeHtml(preferences)}</a></p>`,
       finePrint: mk
         ? "Ја добивате оваа порака затоа што дозволивте понуди за слободни термини од ова студио."

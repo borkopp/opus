@@ -6,7 +6,11 @@ import {
   IconSettings,
   IconChartBar,
 } from "@tabler/icons-react";
-import { ACTIVE_CAPABILITIES, ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
+import {
+  ACTIVE_CAPABILITIES,
+  ACTIVE_DASHBOARD_PATH,
+  ACTIVE_INDUSTRY,
+} from "@/lib/product-scope";
 import {
   resolveDashboardLanguage,
   type DashboardLanguage,
@@ -58,7 +62,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
         icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Bookings", mk: "Термини" },
+        label: { en: "Calendar", mk: "Календар" },
         href: "{base}/bookings",
         icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" />,
       },
@@ -77,11 +81,15 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
         href: "/settings",
         icon: <IconSettings className="h-5 w-5 flex-shrink-0" />,
       },
-      ...(ACTIVE_CAPABILITIES.businessAnalyst ? [{
-        label: { en: "Business assistant", mk: "Деловен асистент" },
-        href: "{base}/assistant",
-        icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
-      }] : []),
+      ...(ACTIVE_CAPABILITIES.businessAnalyst
+        ? [
+            {
+              label: { en: "Business assistant", mk: "Деловен асистент" },
+              href: "{base}/assistant",
+              icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
+            },
+          ]
+        : []),
     ],
   },
 };

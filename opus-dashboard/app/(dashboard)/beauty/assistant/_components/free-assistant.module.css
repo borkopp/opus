@@ -1,0 +1,64 @@
+.messageEnter {
+  animation: message-enter 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+}
+.typing i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: typing-pulse 900ms ease-in-out infinite;
+}
+.typing i:nth-child(2) {
+  animation-delay: 120ms;
+}
+.typing i:nth-child(3) {
+  animation-delay: 240ms;
+}
+.cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: cursor-blink 650ms steps(2, start) infinite;
+}
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes typing-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-2px);
+  }
+}
+@keyframes cursor-blink {
+  to {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .messageEnter,
+  .typing i,
+  .cursor {
+    animation: none;
+  }
+}

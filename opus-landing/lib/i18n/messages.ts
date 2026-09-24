@@ -37,11 +37,9 @@ export const mkMessages = {
   hero: {
     previewLabel:
       "Илустративен приказ на календарот и веб-сајтот за закажување на OPUS.",
-    titleLine1: "Онлајн закажување",
-    titleLine2: "за вашиот салон.",
-    descriptionLine1:
-      "Со OPUS добивате бесплатен веб-сајт каде клиентите сами закажуваат термин.",
-    descriptionLine2: "Сите термини на вашиот тим ги гледате во еден календар.",
+    title: "Онлајн закажување за вашиот салон.",
+    description:
+      "Со OPUS добивате бесплатен веб-сајт каде клиентите сами закажуваат термин. Сите термини на вашиот тим ги гледате во еден календар.",
     createWebsite: "Започни бесплатно",
     learnMore: "Дознај повеќе",
     badgeFree: "Бесплатно",
@@ -92,8 +90,7 @@ export const mkMessages = {
     ],
   },
   productTour: {
-    headingLine1: "Клиентите закажуваат онлајн.",
-    headingLine2: "",
+    heading: "Клиентите закажуваат онлајн.",
     subheading:
       "Споделете го линкот. Клиентите избираат услуга и слободен термин, а OPUS го додава во календарот.",
     includedInFree: "Вклучено во бесплатниот план",
@@ -138,8 +135,7 @@ export const mkMessages = {
     },
   },
   featuresBento: {
-    headingLine1: "Термини, тим и клиенти.",
-    headingLine2: "Во еден систем.",
+    heading: "Термини, тим и клиенти. Во еден систем.",
     subheading:
       "Закажувајте, менувајте и следете термини од телефон или компјутер.",
     bookingTitle1: "Ваш веб-сајт",
@@ -164,15 +160,13 @@ export const mkMessages = {
     summaryDevices: "Достапно на секој уред",
   },
   intelligence: {
-    headingLine1: "Подигнете го вашиот бизнис на следно ниво со AI.",
-    headingLine2: "",
-    subheading1: "AI алатки кои ќе ви помогнат да го раширите вашиот бизнис.",
-    subheading2: "",
+    heading: "Подигнете го вашиот бизнис на следно ниво со AI.",
+    subheading: "AI алатки кои ќе ви помогнат да го раширите вашиот бизнис.",
     usageNote:
       "Анализите и понудите се дел од Pro. Проверете со нас дали AI-аналитичарот е активиран за вашето студио. Планираните функции сè уште не се достапни.",
     analyst: {
       name: "AI-аналитичар",
-      title: ["Прашајте за термините.", "Добијте одговор со бројки."],
+      title: ["Прашајте за термините.", " Добијте одговор со бројки."],
       description:
         "Прашајте кои денови се најзафатени, кои услуги се бараат и колку термини се откажани. Одговорите се засноваат на податоците од вашето студио.",
       note: "200 одговори месечно, од кои до 20 детални анализи.",
@@ -233,8 +227,7 @@ export const mkMessages = {
     },
   },
   carousel: {
-    headingLine1: "За салони и студија",
-    headingLine2: "што работат со термини.",
+    heading: "За салони и студија што работат со термини.",
     subheading:
       "За фризери, бербери, студија за нокти, шминкери и масери. Користете го сами или со мал тим.",
     footer: "Онлајн закажување и календар за вашиот тим.",
@@ -265,10 +258,9 @@ export const mkMessages = {
     statusOf: "од",
   },
   howItWorks: {
-    headingLine1: "Почнете со онлајн закажување",
-    headingLine2: "во три чекори.",
-    subheadingLine1: "Внесете ги услугите и работното време.",
-    subheadingLine2: "OPUS го создава вашиот веб-сајт за закажување.",
+    heading: "Почнете со онлајн закажување во три чекори.",
+    subheading:
+      "Внесете ги услугите и работното време. OPUS го создава вашиот веб-сајт за закажување.",
     step1Title: "1. Внесете ги податоците за студиото.",
     step1Desc:
       "Внесете ги услугите, цените, тимот и работното време. Поставете ги вашите паузи и слободни денови.",
@@ -281,10 +273,8 @@ export const mkMessages = {
     cta: "Креирајте бесплатен веб-сајт",
   },
   pricing: {
-    headingLine1: "Изберете што му треба",
-    headingLine2: "на вашето студио.",
-    subheadingLine1: "Веб-сајтот и календарот се вклучени бесплатно.",
-    subheadingLine2: "",
+    heading: "Изберете што му треба на вашето студио.",
+    subheading: "Веб-сајтот и календарот се вклучени бесплатно.",
     note: "Не ви треба Pro за да примате онлајн закажувања. Веб-сајтот и календарот се дел од бесплатниот план.",
     free: {
       name: "Бесплатен план",
@@ -349,10 +339,8 @@ export const mkMessages = {
     },
   },
   faq: {
-    headingLine1: "Прашања за OPUS.",
-    headingLine2: "Кратки одговори.",
-    subheadingLine1: "За цената, закажувањето",
-    subheadingLine2: "и користењето со вашиот тим.",
+    heading: "Прашања за OPUS. Кратки одговори.",
+    subheading: "За цената, закажувањето и користењето со вашиот тим.",
     items: [
       {
         question: "Дали бесплатниот план е навистина бесплатен?",
@@ -392,10 +380,9 @@ export const mkMessages = {
     ],
   },
   finalCta: {
-    headingLine1: "Креирајте веб-сајт.",
-    headingLine2: "Примајте термини онлајн.",
-    subheadingLine1: "Внесете ги услугите, цените и работното време.",
-    subheadingLine2: "Споделете го линкот со клиентите за да закажат.",
+    heading: "Креирајте веб-сајт. Примајте термини онлајн.",
+    subheading:
+      "Внесете ги услугите, цените и работното време. Споделете го линкот со клиентите за да закажат.",
     cta: "Креирајте бесплатен веб-сајт",
     small: "Бесплатно. Не е потребна кредитна картичка.",
   },
@@ -412,7 +399,7 @@ export const mkMessages = {
     createWebsite: "Креирајте го вашиот веб-сајт",
     madeForYou: "За салони и студија.",
     madeForYouSub1: "Систем за закажување за бизниси",
-    madeForYouSub2: "за убавина во Македонија.",
+    madeForYouSub2: " за убавина.",
     copyright: "© 2026 OPUS.",
     tagline: "Веб-сајт за закажување и календар за вашиот тим.",
     contact: "Контакт",
@@ -507,11 +494,9 @@ export const enMessages: Messages = {
   hero: {
     previewLabel:
       "Illustrative preview of the OPUS calendar and booking website.",
-    titleLine1: "Online booking",
-    titleLine2: "for your salon.",
-    descriptionLine1:
-      "OPUS gives you a free website where clients book their own appointments.",
-    descriptionLine2: "See all your team’s appointments in one calendar.",
+    title: "Online booking for your salon.",
+    description:
+      "OPUS gives you a free website where clients book their own appointments. See all your team’s appointments in one calendar.",
     createWebsite: "Start for free",
     learnMore: "Learn more",
     badgeFree: "Free",
@@ -562,8 +547,7 @@ export const enMessages: Messages = {
     ],
   },
   productTour: {
-    headingLine1: "Clients book online.",
-    headingLine2: "",
+    heading: "Clients book online.",
     subheading:
       "Share your link. Clients choose a service and an available time, and OPUS adds the booking to your calendar.",
     includedInFree: "Included in Free",
@@ -608,8 +592,7 @@ export const enMessages: Messages = {
     },
   },
   featuresBento: {
-    headingLine1: "Appointments, team, and clients.",
-    headingLine2: "In one system.",
+    heading: "Appointments, team, and clients. In one system.",
     subheading:
       "Add, change, and check appointments from your phone or computer.",
     bookingTitle1: "Your own website",
@@ -634,10 +617,8 @@ export const enMessages: Messages = {
     summaryDevices: "Works on every device",
   },
   intelligence: {
-    headingLine1: "Take your business to the next level with AI.",
-    headingLine2: "",
-    subheading1: "AI tools to help you grow your business.",
-    subheading2: "",
+    heading: "Take your business to the next level with AI.",
+    subheading: "AI tools to help you grow your business.",
     usageNote: "AI tools, reports, and appointment offers are included in Pro.",
     analyst: {
       name: "AI business analyst",
@@ -701,8 +682,7 @@ export const enMessages: Messages = {
     },
   },
   carousel: {
-    headingLine1: "For salons and studios",
-    headingLine2: "that work by appointment.",
+    heading: "For salons and studios that work by appointment.",
     subheading:
       "For hairdressers, barbers, nail artists, makeup artists, and massage therapists. Use it on your own or with a small team.",
     footer: "Online booking and a calendar for your team.",
@@ -733,10 +713,9 @@ export const enMessages: Messages = {
     statusOf: "of",
   },
   howItWorks: {
-    headingLine1: "Start taking online bookings",
-    headingLine2: "in three steps.",
-    subheadingLine1: "Add your services and working hours.",
-    subheadingLine2: "OPUS creates your booking website.",
+    heading: "Start taking online bookings in three steps.",
+    subheading:
+      "Add your services and working hours. OPUS creates your booking website.",
     step1Title: "1. Add your studio details.",
     step1Desc:
       "Add your services, prices, team, and working hours. Set your breaks and days off.",
@@ -749,10 +728,8 @@ export const enMessages: Messages = {
     cta: "Create your free website",
   },
   pricing: {
-    headingLine1: "Choose what works",
-    headingLine2: "for your studio.",
-    subheadingLine1: "Your booking website and calendar are included for free.",
-    subheadingLine2: "",
+    heading: "Choose what works for your studio.",
+    subheading: "Your booking website and calendar are included for free.",
     note: "You don’t need Pro to take online bookings. Your website and calendar are part of the Free plan.",
     free: {
       name: "Free",
@@ -818,10 +795,8 @@ export const enMessages: Messages = {
     },
   },
   faq: {
-    headingLine1: "Questions about OPUS.",
-    headingLine2: "Short answers.",
-    subheadingLine1: "About pricing, booking,",
-    subheadingLine2: "and using OPUS with your team.",
+    heading: "Questions about OPUS. Short answers.",
+    subheading: "About pricing, booking, and using OPUS with your team.",
     items: [
       {
         question: "Is the Free plan really free?",
@@ -861,10 +836,9 @@ export const enMessages: Messages = {
     ],
   },
   finalCta: {
-    headingLine1: "Create your website.",
-    headingLine2: "Take bookings online.",
-    subheadingLine1: "Add your services, prices, and working hours.",
-    subheadingLine2: "Share your link so clients can book.",
+    heading: "Create your website. Take bookings online.",
+    subheading:
+      "Add your services, prices, and working hours. Share your link so clients can book.",
     cta: "Create your free website",
     small: "Free. No credit card needed.",
   },

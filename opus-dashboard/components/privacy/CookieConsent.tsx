@@ -70,10 +70,10 @@ export function CookieConsent() {
     setOpen(false);
   };
   if (snapshot !== null && !open) {
-    // Keep the shortcut off auth and onboarding; the dashboard menu provides it.
+    // Keep the shortcut off previews, auth, and onboarding; the dashboard menu provides it.
     if (
       layoutSegment === "(dashboard)" ||
-      ["/login", "/signup", "/onboarding"].some(
+      ["/login", "/signup", "/onboarding", "/dashboard-preview"].some(
         (route) => pathname === route || pathname.startsWith(`${route}/`),
       )
     )

@@ -57,15 +57,8 @@ export function HomeContent() {
             <CloudShader />
           </div>
           <div className="hero-copy">
-            <h1 id="hero-title">
-              {t.hero.titleLine1}
-              <br />
-              <span>{t.hero.titleLine2}</span>
-            </h1>
-            <p>
-              {t.hero.descriptionLine1}
-              <br className="desktop-break" /> {t.hero.descriptionLine2}
-            </p>
+            <h1 id="hero-title">{t.hero.title}</h1>
+            <p>{t.hero.description}</p>
             <div className="hero-actions">
               <a className="button button-dark" href="https://studio.opus.mk/">
                 {t.hero.createWebsite}{" "}
@@ -108,11 +101,7 @@ export function HomeContent() {
 
         <section className="section product-section" id="product">
           <div className="section-heading centered reveal">
-            <h2>
-              {t.productTour.headingLine1}
-              <br />
-              {t.productTour.headingLine2}
-            </h2>
+            <h2>{t.productTour.heading}</h2>
             <p>{t.productTour.subheading}</p>
           </div>
           <ProductTour />
@@ -121,11 +110,7 @@ export function HomeContent() {
         <section className="section features-section" id="features">
           <div className="split-heading reveal">
             <div>
-              <h2>
-                {t.featuresBento.headingLine1}
-                <br />
-                {t.featuresBento.headingLine2}
-              </h2>
+              <h2>{t.featuresBento.heading}</h2>
             </div>
             <p>{t.featuresBento.subheading}</p>
           </div>
@@ -244,16 +229,8 @@ export function HomeContent() {
 
         <section className="intelligence-section" id="intelligence">
           <div className="section-heading centered reveal">
-            <h2>
-              {t.intelligence.headingLine1}
-              <br />
-              {t.intelligence.headingLine2}
-            </h2>
-            <p>
-              {t.intelligence.subheading1}
-              <br />
-              {t.intelligence.subheading2}
-            </p>
+            <h2>{t.intelligence.heading}</h2>
+            <p>{t.intelligence.subheading}</p>
           </div>
           <IntelligenceRotation />
           <p className="ai-usage-note">{t.intelligence.usageNote}</p>
@@ -262,11 +239,7 @@ export function HomeContent() {
         <section className="section studio-carousel-section" id="your-studio">
           <div className="split-heading reveal">
             <div>
-              <h2>
-                {t.carousel.headingLine1}
-                <br />
-                {t.carousel.headingLine2}
-              </h2>
+              <h2>{t.carousel.heading}</h2>
             </div>
             <p>{t.carousel.subheading}</p>
           </div>
@@ -274,7 +247,7 @@ export function HomeContent() {
             className="studio-carousel reveal"
             role="region"
             aria-roledescription="carousel"
-            aria-label={t.carousel.headingLine1}
+            aria-label={t.carousel.heading}
           >
             <div className="studio-carousel-stage">
               {t.carousel.slides.map((slide, index) => (
@@ -342,16 +315,8 @@ export function HomeContent() {
 
         <section className="section steps-section" id="how-it-works">
           <div className="section-heading centered reveal">
-            <h2>
-              {t.howItWorks.headingLine1}
-              <br />
-              {t.howItWorks.headingLine2}
-            </h2>
-            <p>
-              {t.howItWorks.subheadingLine1}
-              <br />
-              {t.howItWorks.subheadingLine2}
-            </p>
+            <h2>{t.howItWorks.heading}</h2>
+            <p>{t.howItWorks.subheading}</p>
           </div>
           <div className="steps-grid">
             <article className="step reveal">
@@ -407,16 +372,8 @@ export function HomeContent() {
 
         <section className="pricing-section" id="pricing">
           <div className="section-heading centered reveal">
-            <h2>
-              {t.pricing.headingLine1}
-              <br />
-              {t.pricing.headingLine2}
-            </h2>
-            <p>
-              {t.pricing.subheadingLine1}
-              <br />
-              {t.pricing.subheadingLine2}
-            </p>
+            <h2>{t.pricing.heading}</h2>
+            <p>{t.pricing.subheading}</p>
           </div>
           <div className="pricing-grid">
             <article className="price-card reveal">
@@ -514,16 +471,8 @@ export function HomeContent() {
 
         <section className="section faq-section" id="faq">
           <div className="faq-intro reveal">
-            <h2>
-              {t.faq.headingLine1}
-              <br />
-              {t.faq.headingLine2}
-            </h2>
-            <p>
-              {t.faq.subheadingLine1}
-              <br />
-              {t.faq.subheadingLine2}
-            </p>
+            <h2>{t.faq.heading}</h2>
+            <p>{t.faq.subheading}</p>
           </div>
           <div className="faq-list reveal">
             {t.faq.items.map((item, index) => (
@@ -557,16 +506,8 @@ export function HomeContent() {
             />
           </picture>
           <div className="cta-content">
-            <h2>
-              {t.finalCta.headingLine1}
-              <br />
-              {t.finalCta.headingLine2}
-            </h2>
-            <p>
-              {t.finalCta.subheadingLine1}
-              <br />
-              {t.finalCta.subheadingLine2}
-            </p>
+            <h2>{t.finalCta.heading}</h2>
+            <p>{t.finalCta.subheading}</p>
             <a
               className="button button-dark"
               href="https://studio.opus.mk/signup"

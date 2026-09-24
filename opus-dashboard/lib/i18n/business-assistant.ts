@@ -75,8 +75,8 @@ const warnings: Record<string, { en: string; mk: string }> = {
 
 const errors: Record<string, { en: string; mk: string }> = {
   ANALYST_NOT_CONFIGURED: {
-    en: "The business assistant is not available yet. Please try again later.",
-    mk: "Деловниот асистент сè уште не е достапен. Обидете се подоцна.",
+    en: "The business assistant could not start a new analysis. Please try again later.",
+    mk: "Деловниот асистент не успеа да започне нова анализа. Обидете се подоцна.",
   },
   ANALYST_BUSY: {
     en: "An analysis is already running for your studio. Please wait for it to finish.",

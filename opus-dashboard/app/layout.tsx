@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ThemeProvider } from "@/components/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
 import { CookieConsent } from "@/components/privacy/CookieConsent";
 import { DM_Sans, Manrope, Audiowide, IBM_Plex_Mono } from "next/font/google";
@@ -66,7 +67,7 @@ export default async function RootLayout({
         >
           <ConvexClientProvider>
             <DashboardI18nProvider locale={locale}>
-              {children}
+              <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
               <Toaster richColors position="bottom-right" />
               <CookieConsent />
             </DashboardI18nProvider>

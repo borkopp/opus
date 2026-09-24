@@ -19,7 +19,7 @@ export default function StaffPage() {
 
   if (profile === undefined) {
     return (
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-2">
             <Skeleton className="h-8 w-32" />
@@ -37,10 +37,10 @@ export default function StaffPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-auto flex min-h-full w-full max-w-5xl flex-1 flex-col gap-6"
+      transition={{ duration: 0.18 }}
+      className="flex min-h-full w-full flex-1 flex-col gap-6"
     >
       <StaffPageHeader onAddClick={() => setIsAddStaffOpen(true)} />
 

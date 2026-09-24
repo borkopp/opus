@@ -1,5 +1,6 @@
 "use client";
 
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useQuery } from "convex/react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,19 +12,14 @@ export function StaffPageHeader({ onAddClick }: { onAddClick: () => void }) {
   const planStatus = useQuery(api.staff.getStaffPlanStatus, {});
 
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">
-          {t("Staff", "Вработени")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t(
-            "Add team members and manage when customers can book them.",
-            "Додајте членови на тимот и управувајте со нивното работно време за закажување.",
-          )}
-        </p>
-      </div>
-
+    <DashboardPageHeader
+      title={t("Staff", "Тим")}
+      eyebrow={t("THE PEOPLE BEHIND YOUR STUDIO", "ЛУЃЕТО ВО ВАШЕТО СТУДИО")}
+      description={t(
+        "Add team members and manage when customers can book them.",
+        "Додајте членови на тимот и управувајте со нивното работно време.",
+      )}
+    >
       <Button
         onClick={onAddClick}
         disabled={!planStatus?.canUseStaffRole}
@@ -33,6 +29,6 @@ export function StaffPageHeader({ onAddClick }: { onAddClick: () => void }) {
         <PlusIcon data-icon="inline-start" />
         {t("Add staff member", "Додај вработен")}
       </Button>
-    </header>
+    </DashboardPageHeader>
   );
 }

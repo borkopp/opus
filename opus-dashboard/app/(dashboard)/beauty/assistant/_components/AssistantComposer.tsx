@@ -28,7 +28,7 @@ export function AssistantComposer({
   setDepth: (value: "standard" | "deep") => void;
   disabled: boolean;
   pending: boolean;
-  deepRemaining: number;
+  deepRemaining: number | null;
   onSend: () => void;
 }) {
   const { t } = useDashboardI18n();
@@ -45,7 +45,7 @@ export function AssistantComposer({
           <FieldLabel htmlFor="business-question" className="sr-only">
             {t("Ask about your studio", "Прашајте за вашето студио")}
           </FieldLabel>
-          <InputGroup>
+          <InputGroup className="dashboard-assistant-composer">
             <InputGroupTextarea
               id="business-question"
               value={question}
@@ -102,10 +102,17 @@ export function AssistantComposer({
                   value="deep"
                   className="group/mode h-10 gap-2 rounded-full px-3 text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none sm:px-4"
                   disabled={deepRemaining === 0}
-                  title={t(
-                    `More context and recommendations · ${deepRemaining} remaining`,
-                    `Повеќе детали и препораки · Преостанати: ${deepRemaining}`,
-                  )}
+                  title={
+                    deepRemaining === null
+                      ? t(
+                          "More context and recommendations",
+                          "Повеќе детали и препораки",
+                        )
+                      : t(
+                          `More context and recommendations · ${deepRemaining} remaining`,
+                          `Повеќе детали и препораки · Преостанати: ${deepRemaining}`,
+                        )
+                  }
                 >
                   <span className="flex size-6 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors group-data-[state=on]/mode:bg-primary/15 group-data-[state=on]/mode:text-primary motion-reduce:transition-none">
                     <BrainCircuit aria-hidden className="size-3.5" />
@@ -122,6 +129,7 @@ export function AssistantComposer({
                 variant="default"
                 disabled={
                   disabled ||
+                  pending ||
                   !question.trim() ||
                   (depth === "deep" && deepRemaining === 0)
                 }
@@ -137,12 +145,6 @@ export function AssistantComposer({
           </InputGroup>
         </Field>
       </FieldGroup>
-      <p className="mt-2 text-center text-xs text-muted-foreground">
-        {t(
-          "Recommendations are suggestions. Your appointments stay under your control.",
-          "Препораките се предлози. Вие управувате со вашите термини.",
-        )}
-      </p>
     </form>
   );
 }

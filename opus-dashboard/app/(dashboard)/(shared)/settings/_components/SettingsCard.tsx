@@ -32,12 +32,12 @@ export function SettingsCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm",
+        "overflow-hidden rounded-[25px] border-0 bg-card shadow-none",
         className,
       )}
     >
-      <CardHeader className="border-b border-border/50 px-5 pb-5 sm:px-6 sm:pt-6">
-        <CardTitle className="font-display text-lg font-semibold tracking-tight">
+      <CardHeader className="px-5 pb-2 sm:px-6 sm:pt-6">
+        <CardTitle className="text-xl font-medium tracking-tight">
           {title}
         </CardTitle>
         <CardDescription className="max-w-2xl leading-5">
@@ -45,11 +45,17 @@ export function SettingsCard({
         </CardDescription>
         {action && <CardAction>{action}</CardAction>}
       </CardHeader>
-      <CardContent className={cn("px-5 pb-6 sm:px-6", contentClassName)}>
+      <CardContent
+        className={cn(
+          "px-5 sm:px-6",
+          footer ? "pb-2" : "pb-6",
+          contentClassName,
+        )}
+      >
         {children}
       </CardContent>
       {footer && (
-        <CardFooter className="justify-end border-t border-border/50 bg-muted/20 px-5 pb-5 sm:px-6">
+        <CardFooter className="flex-wrap justify-start gap-3 px-5 pb-5 sm:px-6 sm:pb-6 [&>button]:w-full sm:[&>button]:w-auto">
           {footer}
         </CardFooter>
       )}
@@ -73,7 +79,7 @@ export function SettingsToggleRow({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-5 rounded-xl border border-border/50 bg-muted/30 p-4 sm:items-center",
+        "flex items-start justify-between gap-5 rounded-2xl bg-secondary p-4 sm:items-center",
         className,
       )}
     >

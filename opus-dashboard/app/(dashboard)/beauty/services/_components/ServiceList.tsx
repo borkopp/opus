@@ -197,7 +197,7 @@ export function ServiceList({
 
   if (services.length === 0) {
     return (
-      <Empty className="min-h-[360px] border">
+      <Empty className="min-h-[360px] rounded-[25px] bg-card">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <ScissorsIcon />
@@ -225,7 +225,7 @@ export function ServiceList({
 
   if (serviceGroups.length === 0) {
     return (
-      <Empty className="min-h-[280px] border">
+      <Empty className="min-h-[280px] rounded-[25px] bg-card">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <SearchXIcon />
@@ -251,7 +251,7 @@ export function ServiceList({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border bg-card shadow-s">
+      <div className="dashboard-record-list">
         {serviceGroups.map((group, groupIndex) => (
           <section key={group.key} className={cn(groupIndex > 0 && "border-t")}>
             {(serviceGroups.length > 1 || group.key !== "uncategorized") && (

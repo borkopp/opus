@@ -48,7 +48,7 @@ export function DevDataControls({
         error instanceof Error
           ? error.message
           : t(
-              "Failed to add mock data.",
+              "Failed to add test data.",
               "Не успеа додавањето на тест податоци.",
             ),
       );
@@ -72,7 +72,7 @@ export function DevDataControls({
         error instanceof Error
           ? error.message
           : t(
-              "Failed to clear mock data.",
+              "Failed to clear test data.",
               "Не успеа бришењето на тест податоци.",
             ),
       );
@@ -84,7 +84,7 @@ export function DevDataControls({
   const controls = [
     {
       id: "seed",
-      label: t("Add mock data", "Додај тест податоци"),
+      label: t("Add test data", "Додај тест податоци"),
       icon: IconDatabasePlus,
       action: handleSeed,
       pending: pendingAction === "seed",
@@ -92,7 +92,7 @@ export function DevDataControls({
     },
     {
       id: "clear",
-      label: t("Clear mock data", "Избриши тест податоци"),
+      label: t("Clear test data", "Избриши тест податоци"),
       icon: IconTrash,
       action: handleClear,
       pending: pendingAction === "clear",

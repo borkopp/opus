@@ -4,12 +4,11 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { AppSidebar, SidebarProvider } from "@/components/sidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import s from "@/components/dashboard/clarity.module.css";
 import React from "react";
-import { getNavLinks } from "@/lib/vertical-nav-config";
-import { ACTIVE_DASHBOARD_PATH, ACTIVE_INDUSTRY } from "@/lib/product-scope";
+import { ACTIVE_DASHBOARD_PATH } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { MobileSetupBanner } from "@/components/dashboard/MobileSetupBanner";
 
 export default function DashboardLayout({
@@ -19,7 +18,6 @@ export default function DashboardLayout({
 }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
-  const { language } = useDashboardI18n();
   const pathname = usePathname();
 
   const profile = useQuery(
@@ -87,32 +85,28 @@ export default function DashboardLayout({
 
   if (!profile?.orgId) return null;
 
-  // ── Resolve nav links from vertical config ──────────────
-  const industry =
-    profile?.industry === ACTIVE_INDUSTRY ? profile.industry : ACTIVE_INDUSTRY;
-  const { basePath: industryBase, links: primaryLinks } = getNavLinks(
-    industry,
-    language,
-  );
-
   return (
-    <SidebarProvider>
-      <QuickBookingProvider orgId={profile.orgId}>
-        <div className="flex h-dvh w-full flex-col md:flex-row overflow-hidden bg-background">
-          <AppSidebar
-            profile={profile}
-            primaryLinks={primaryLinks.filter(
-              (link) =>
-                profile.role !== "staff" || link.href !== "/beauty/assistant",
-            )}
-            industryBase={industryBase}
-          />
-          <main className="dashboard-workspace min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] md:p-8 w-full bg-background relative z-0 flex flex-col">
-            <MobileSetupBanner orgId={profile.orgId} />
-            {children}
-          </main>
+    <QuickBookingProvider key={profile.orgId} orgId={profile.orgId}>
+      <div
+        className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
+      >
+        <a className="dashboard-skip-link" href="#dashboard-content">
+          Skip to content
+        </a>
+        <div className={s.stage}>
+          <div className={s.dashboard}>
+            <DashboardHeader profile={profile} />
+            <main
+              id="dashboard-content"
+              tabIndex={-1}
+              className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
+            >
+              <MobileSetupBanner orgId={profile.orgId} />
+              {children}
+            </main>
+          </div>
         </div>
-      </QuickBookingProvider>
-    </SidebarProvider>
+      </div>
+    </QuickBookingProvider>
   );
 }

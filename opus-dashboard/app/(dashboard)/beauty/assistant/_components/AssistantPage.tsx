@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { ChartNoAxesCombined, History, Plus, LockKeyhole } from "lucide-react";
+import { History, Plus, LockKeyhole } from "lucide-react";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { analystError } from "@/lib/i18n/business-assistant";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ConversationPanel } from "./ConversationPanel";
 import { AssistantComposer } from "./AssistantComposer";
+import { FreeAssistantPage } from "./FreeAssistantPage";
 
 type Access = FunctionReturnType<typeof api.analyst.conversations.getAccess>;
 
@@ -41,28 +42,24 @@ export function AssistantPage() {
         <Skeleton className="h-96 w-full" />
       </div>
     );
-  if (!access.allowed || !access.paid)
+  if (!access.allowed)
     return (
       <Empty className="m-auto max-w-xl">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            {access.allowed ? <ChartNoAxesCombined /> : <LockKeyhole />}
+            <LockKeyhole />
           </EmptyMedia>
           <EmptyTitle>{t("Business assistant", "Деловен асистент")}</EmptyTitle>
           <EmptyDescription>
-            {!access.allowed
-              ? t(
-                  "Business analysis is available to studio owners and managers.",
-                  "Деловната анализа е достапна за сопственици и менаџери.",
-                )
-              : t(
-                  "Available with OPUS Pro: answers about your appointments, service performance, repeat visits, and capacity, with reports you can inspect.",
-                  "Достапно со OPUS Pro: одговори за термините, услугите, редовните клиенти и зафатеноста, со извештаи што можете да ги проверите.",
-                )}
+            {t(
+              "Business analysis is available to studio owners and managers.",
+              "Деловната анализа е достапна за сопственици и менаџери.",
+            )}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
+  if (!access.paid) return <FreeAssistantPage />;
   return <AssistantWorkspace key={access.orgId} access={access} />;
 }
 
@@ -150,7 +147,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
   };
   return (
     <section
-      className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col"
+      className="flex min-h-0 w-full flex-1 flex-col"
       aria-label={t("Business assistant", "Деловен асистент")}
     >
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
@@ -215,7 +212,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
           </Button>
         </div>
       </header>
-      <div className="flex h-[calc(100dvh-15rem)] min-h-96 min-w-0 flex-1 flex-col md:h-[calc(100dvh-12rem)]">
+      <div className="dashboard-assistant-surface flex h-[calc(100dvh-19rem)] min-h-[520px] min-w-0 flex-1 flex-col">
         {!access.configured && (
           <Alert>
             <AlertDescription>

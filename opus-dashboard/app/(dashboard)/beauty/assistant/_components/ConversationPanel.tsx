@@ -115,7 +115,7 @@ export function ConversationPanel({
               <Button
                 key={question}
                 variant="outline"
-                className="h-auto min-h-20 justify-start whitespace-normal p-4 text-left"
+                className="dashboard-assistant-prompt h-auto min-h-20 justify-start whitespace-normal p-4 text-left"
                 disabled={disabled}
                 onClick={() => onPrompt(question)}
               >

@@ -62,7 +62,7 @@ export function StaffList({
 
   if (staff === undefined) {
     return (
-      <div className="overflow-hidden rounded-xl border bg-card">
+      <div className="dashboard-record-list">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
@@ -88,7 +88,7 @@ export function StaffList({
 
   if (staff.length === 0) {
     return (
-      <Empty className="min-h-[360px] border">
+      <Empty className="min-h-[360px] rounded-[25px] bg-card">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <UsersIcon />
@@ -179,7 +179,7 @@ export function StaffList({
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border bg-card shadow-s">
+      <div className="dashboard-record-list">
         {staff.map((member) => (
           <div
             key={member._id}

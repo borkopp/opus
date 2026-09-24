@@ -1,3 +1,4 @@
+import { wallClockNow } from "./lib/bookingTime";
 import { query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
 import { Id } from "./_generated/dataModel";
@@ -9,567 +10,653 @@ import type { AnalysisRequest } from "./analyst/contracts";
 import { buildDashboardAnalytics } from "./lib/dashboardAnalytics";
 
 export const getFreePlanAnalytics = query({
-    args: { endMs: v.number() },
-    handler: async (ctx, args) => {
-        const { orgId } = await requireAuth(ctx);
-        if (!Number.isFinite(args.endMs) || args.endMs <= 0) {
-            throw new ConvexError("Invalid reporting period");
-        }
-        const [bookings, services] = await Promise.all([
-            ctx.db.query("bookings")
-                .withIndex("by_org_status", (q) => q.eq("orgId", orgId).eq("status", "completed"))
-                .collect(),
-            ctx.db.query("services")
-                .withIndex("by_org", (q) => q.eq("orgId", orgId))
-                .collect(),
-        ]);
+  args: { endMs: v.number() },
+  handler: async (ctx, args) => {
+    const { orgId } = await requireAuth(ctx);
+    if (!Number.isFinite(args.endMs) || args.endMs <= 0) {
+      throw new ConvexError("Invalid reporting period");
+    }
+    const [bookings, services, settings] = await Promise.all([
+      ctx.db
+        .query("bookings")
+        .withIndex("by_org_status", (q) =>
+          q.eq("orgId", orgId).eq("status", "completed"),
+        )
+        .collect(),
+      ctx.db
+        .query("services")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+      ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .first(),
+    ]);
 
-        return buildDashboardAnalytics(bookings, services, Math.min(args.endMs, Date.now()));
-    },
+    return buildDashboardAnalytics(
+      bookings,
+      services,
+      wallClockNow(
+        settings?.timezone ?? "Europe/Skopje",
+        Math.min(args.endMs, Date.now()),
+      ),
+    );
+  },
 });
 
 export const getDailySchedule = query({
-    args: {
-        orgId: v.id("orgs"),
-        startOfDayMs: v.number(),
-        endOfDayMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startOfDayMs)
-                    .lt("startAt", args.endOfDayMs)
-            )
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startOfDayMs: v.number(),
+    endOfDayMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startOfDayMs)
+          .lt("startAt", args.endOfDayMs),
+      )
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        const populated = await Promise.all(bookings.map(async (b) => {
-            const staff = await ctx.db.get(b.staffId);
-            const customer = await ctx.db.get(b.customerId);
-            const service = await ctx.db.get(b.serviceId);
-            return {
-                ...b,
-                staffName: staff?.displayName || "Unknown",
-                customerName: customer?.name || "Unknown",
-                serviceName: service?.name || "Unknown",
-            };
-        }));
+    const populated = await Promise.all(
+      bookings.map(async (b) => {
+        const staff = await ctx.db.get(b.staffId);
+        const customer = await ctx.db.get(b.customerId);
+        const service = await ctx.db.get(b.serviceId);
+        return {
+          ...b,
+          staffName: staff?.displayName || "Unknown",
+          customerName: customer?.name || "Unknown",
+          serviceName: service?.name || "Unknown",
+        };
+      }),
+    );
 
-        populated.sort((a, b) => a.startAt - b.startAt);
-        return populated;
-    }
+    populated.sort((a, b) => a.startAt - b.startAt);
+    return populated;
+  },
 });
 
 export const getUpcomingBookings = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-        limit: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startMs)
-                    .lt("startAt", args.endMs)
-            )
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.neq(q.field("status"), "cancelled"),
-                q.neq(q.field("status"), "no_show")
-            ))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startMs)
+          .lt("startAt", args.endMs),
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.neq(q.field("status"), "cancelled"),
+          q.neq(q.field("status"), "no_show"),
+        ),
+      )
+      .collect();
 
-        const populated = await Promise.all(bookings.map(async (b) => {
-            const customer = await ctx.db.get(b.customerId);
-            const service = await ctx.db.get(b.serviceId);
-            return {
-                id: b._id,
-                startAt: b.startAt,
-                customerName: customer?.name || "Unknown",
-                serviceName: service?.name || "Unknown",
-                status: b.status,
-            };
-        }));
+    const populated = await Promise.all(
+      bookings.map(async (b) => {
+        const customer = await ctx.db.get(b.customerId);
+        const service = await ctx.db.get(b.serviceId);
+        return {
+          id: b._id,
+          startAt: b.startAt,
+          customerName: customer?.name || "Unknown",
+          serviceName: service?.name || "Unknown",
+          status: b.status,
+        };
+      }),
+    );
 
-        populated.sort((a, b) => a.startAt - b.startAt);
-        if (args.limit) {
-            return populated.slice(0, args.limit);
-        }
-        return populated;
+    populated.sort((a, b) => a.startAt - b.startAt);
+    if (args.limit) {
+      return populated.slice(0, args.limit);
     }
+    return populated;
+  },
 });
 
 export const getRevenueStats = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startMs)
-                    .lt("startAt", args.endMs)
-            )
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.eq(q.field("status"), "completed")
-            ))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startMs)
+          .lt("startAt", args.endMs),
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.eq(q.field("status"), "completed"),
+        ),
+      )
+      .collect();
 
-        const totalRevenueMinorUnits = bookings.reduce((sum, b) => sum + b.priceMinorUnits, 0);
-        return { totalRevenueMinorUnits };
-    }
+    const totalRevenueMinorUnits = bookings.reduce(
+      (sum, b) => sum + b.priceMinorUnits,
+      0,
+    );
+    return { totalRevenueMinorUnits };
+  },
 });
 
 export const getBookingStats = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startMs)
-                    .lt("startAt", args.endMs)
-            )
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startMs)
+          .lt("startAt", args.endMs),
+      )
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        const total = bookings.length;
-        const cancelled = bookings.filter(b => b.status === "cancelled").length;
-        const noShow = bookings.filter(b => b.status === "no_show").length;
+    const total = bookings.length;
+    const cancelled = bookings.filter((b) => b.status === "cancelled").length;
+    const noShow = bookings.filter((b) => b.status === "no_show").length;
 
-        return {
-            total,
-            cancelled,
-            noShow,
-            cancellationRate: total > 0 ? (cancelled / total) * 100 : 0,
-            noShowRate: total > 0 ? (noShow / total) * 100 : 0,
-        };
-    }
+    return {
+      total,
+      cancelled,
+      noShow,
+      cancellationRate: total > 0 ? (cancelled / total) * 100 : 0,
+      noShowRate: total > 0 ? (noShow / total) * 100 : 0,
+    };
+  },
 });
 
 export const getNoShowStats = query({
-    args: {
-        orgId: v.id("orgs"),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        // Find customers with > 0 no shows
-        const customers = await ctx.db
-            .query("customers")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.gte(q.field("noShowRiskScore"), 0.7)
-            ))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    // Find customers with > 0 no shows
+    const customers = await ctx.db
+      .query("customers")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.gte(q.field("noShowRiskScore"), 0.7),
+        ),
+      )
+      .collect();
 
-        customers.sort((a, b) => b.noShowCount - a.noShowCount);
+    customers.sort((a, b) => b.noShowCount - a.noShowCount);
 
-        return {
-            customers: customers.slice(0, 10).map(c => ({
-                id: c._id,
-                name: c.name,
-                count: c.noShowCount,
-                riskScore: c.noShowRiskScore
-            }))
-        };
-    }
+    return {
+      customers: customers.slice(0, 10).map((c) => ({
+        id: c._id,
+        name: c.name,
+        count: c.noShowCount,
+        riskScore: c.noShowRiskScore,
+      })),
+    };
+  },
 });
 
 export const getStaffUtilisation = query({
-    args: {},
-    handler: async (ctx) => {
-        const { orgId } = await requireAuth(ctx);
-        const settings = await ctx.db.query("org_settings")
-            .withIndex("by_org", q => q.eq("orgId", orgId)).first();
-        const timezone = settings?.timezone ?? "Europe/Skopje";
-        const now = Date.now();
-        const request: AnalysisRequest = {
-            metric: "utilisation", groupBy: "staff",
-            period: { preset: "this_week", startDate: null, endDate: null },
-            comparison: null, staffName: null, serviceName: null,
-        };
-        const range = resolvePeriod(request.period, timezone, now);
-        const data = await loadAnalyticsData(ctx, orgId, request, range, null);
-        const report = buildReport(request, data, range, {
-            asOf: now, localNow: range.localNow, timezone, language: "en", key: "capacity",
-        });
-        return report.rows.map(row => ({
-            staffName: row.label, bookedMins: row.bookedMinutes,
-            availableMins: row.availableMinutes, utilisationPct: row.value,
-        })).sort((a, b) => (b.utilisationPct ?? -1) - (a.utilisationPct ?? -1));
-    },
+  args: {},
+  handler: async (ctx) => {
+    const { orgId } = await requireAuth(ctx);
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", orgId))
+      .first();
+    const timezone = settings?.timezone ?? "Europe/Skopje";
+    const now = Date.now();
+    const request: AnalysisRequest = {
+      metric: "utilisation",
+      groupBy: "staff",
+      period: { preset: "this_week", startDate: null, endDate: null },
+      comparison: null,
+      staffName: null,
+      serviceName: null,
+    };
+    const range = resolvePeriod(request.period, timezone, now);
+    const data = await loadAnalyticsData(ctx, orgId, request, range, null);
+    const report = buildReport(request, data, range, {
+      asOf: now,
+      localNow: range.localNow,
+      timezone,
+      language: "en",
+      key: "capacity",
+    });
+    return report.rows
+      .map((row) => ({
+        staffName: row.label,
+        bookedMins: row.bookedMinutes,
+        availableMins: row.availableMinutes,
+        utilisationPct: row.value,
+      }))
+      .sort((a, b) => (b.utilisationPct ?? -1) - (a.utilisationPct ?? -1));
+  },
 });
 
 export const getTopServices = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startMs)
-                    .lt("startAt", args.endMs)
-            )
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startMs)
+          .lt("startAt", args.endMs),
+      )
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        const serviceMap = new Map<string, { count: number, revenue: number }>();
+    const serviceMap = new Map<string, { count: number; revenue: number }>();
 
-        bookings.forEach(b => {
-            if (b.status !== "cancelled" && b.status !== "no_show") {
-                const existing = serviceMap.get(b.serviceId) || { count: 0, revenue: 0 };
-                existing.count += 1;
-                if (b.status === "completed") {
-                    existing.revenue += b.priceMinorUnits;
-                }
-                serviceMap.set(b.serviceId, existing);
-            }
-        });
+    bookings.forEach((b) => {
+      if (b.status !== "cancelled" && b.status !== "no_show") {
+        const existing = serviceMap.get(b.serviceId) || {
+          count: 0,
+          revenue: 0,
+        };
+        existing.count += 1;
+        if (b.status === "completed") {
+          existing.revenue += b.priceMinorUnits;
+        }
+        serviceMap.set(b.serviceId, existing);
+      }
+    });
 
-        const services = await Promise.all(
-            Array.from(serviceMap.keys()).map(async (id) => {
-                const srv = await ctx.db.get(id as Id<"services">);
-                const stats = serviceMap.get(id)!;
-                return {
-                    id,
-                    name: srv?.name || "Unknown",
-                    count: stats.count,
-                    revenueMinorUnits: stats.revenue,
-                };
-            })
-        );
+    const services = await Promise.all(
+      Array.from(serviceMap.keys()).map(async (id) => {
+        const srv = await ctx.db.get(id as Id<"services">);
+        const stats = serviceMap.get(id)!;
+        return {
+          id,
+          name: srv?.name || "Unknown",
+          count: stats.count,
+          revenueMinorUnits: stats.revenue,
+        };
+      }),
+    );
 
-        services.sort((a, b) => b.revenueMinorUnits - a.revenueMinorUnits);
-        return services;
-    }
+    services.sort((a, b) => b.revenueMinorUnits - a.revenueMinorUnits);
+    return services;
+  },
 });
 
 import { paginationOptsValidator } from "convex/server";
 
 export const getNotificationLog = query({
-    args: {
-        orgId: v.id("orgs"),
-        paginationOpts: paginationOptsValidator,
-        status: v.optional(v.string())
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        let q = ctx.db
-            .query("notifications")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId));
+  args: {
+    orgId: v.id("orgs"),
+    paginationOpts: paginationOptsValidator,
+    status: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    let q = ctx.db
+      .query("notifications")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId));
 
-        if (args.status) {
-            q = q.filter(query => query.eq(query.field("status"), args.status));
-        }
-
-        const paginated = await q.order("desc").paginate(args.paginationOpts);
-
-        // Populate details if needed, e.g. customer name
-        const page = await Promise.all(paginated.page.map(async (doc) => {
-            const customer = doc.customerId ? await ctx.db.get(doc.customerId) : null;
-            return {
-                ...doc,
-                customerName: customer?.name
-            };
-        }));
-
-        return { ...paginated, page };
+    if (args.status) {
+      q = q.filter((query) => query.eq(query.field("status"), args.status));
     }
+
+    const paginated = await q.order("desc").paginate(args.paginationOpts);
+
+    // Populate details if needed, e.g. customer name
+    const page = await Promise.all(
+      paginated.page.map(async (doc) => {
+        const customer = doc.customerId
+          ? await ctx.db.get(doc.customerId)
+          : null;
+        return {
+          ...doc,
+          customerName: customer?.name,
+        };
+      }),
+    );
+
+    return { ...paginated, page };
+  },
 });
 
 // --- NEW DASHBOARD METRICS ---
 
 export const getDashboardMetrics = query({
-    args: {
-        orgId: v.id("orgs"),
-        startOfDayMs: v.number(),
-        endOfDayMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", (q) =>
-                q.eq("orgId", args.orgId)
-                    .gte("startAt", args.startOfDayMs)
-                    .lt("startAt", args.endOfDayMs)
-            )
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startOfDayMs: v.number(),
+    endOfDayMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startOfDayMs)
+          .lt("startAt", args.endOfDayMs),
+      )
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        let totalBookingsToday = 0;
-        let revenueToday = 0;
+    let totalBookingsToday = 0;
+    let revenueToday = 0;
 
-        bookings.forEach(b => {
-            if (["confirmed", "checked_in", "completed"].includes(b.status)) {
-                totalBookingsToday++;
-                if (b.status === "completed") {
-                    revenueToday += b.priceMinorUnits;
-                }
-            }
-        });
+    bookings.forEach((b) => {
+      if (["confirmed", "checked_in", "completed"].includes(b.status)) {
+        totalBookingsToday++;
+        if (b.status === "completed") {
+          revenueToday += b.priceMinorUnits;
+        }
+      }
+    });
 
-        return {
-            totalBookingsToday,
-            revenueToday
-        };
-    }
+    return {
+      totalBookingsToday,
+      revenueToday,
+    };
+  },
 });
 
 export const getWeeklyComparison = query({
-    args: {
-        orgId: v.id("orgs"),
-        thisWeekStartMs: v.number(),
-        thisWeekEndMs: v.number(),
-        lastWeekStartMs: v.number(),
-        lastWeekEndMs: v.number(),
-        thisMonthStartMs: v.number(),
-        thisMonthEndMs: v.number(),
-        lastMonthStartMs: v.number(),
-        lastMonthEndMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const fetchStats = async (startMs: number, endMs: number) => {
-            const bookings = await ctx.db
-                .query("bookings")
-                .withIndex("by_org_start", q => q.eq("orgId", args.orgId).gte("startAt", startMs).lt("startAt", endMs))
-                .filter(q => q.eq(q.field("isDeleted"), false))
-                .collect();
+  args: {
+    orgId: v.id("orgs"),
+    thisWeekStartMs: v.number(),
+    thisWeekEndMs: v.number(),
+    lastWeekStartMs: v.number(),
+    lastWeekEndMs: v.number(),
+    thisMonthStartMs: v.number(),
+    thisMonthEndMs: v.number(),
+    lastMonthStartMs: v.number(),
+    lastMonthEndMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const fetchStats = async (startMs: number, endMs: number) => {
+      const bookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_org_start", (q) =>
+          q
+            .eq("orgId", args.orgId)
+            .gte("startAt", startMs)
+            .lt("startAt", endMs),
+        )
+        .filter((q) => q.eq(q.field("isDeleted"), false))
+        .collect();
 
-            let revenue = 0;
-            let count = 0;
-            bookings.forEach(b => {
-                if (b.status === "completed") {
-                    revenue += b.priceMinorUnits;
-                }
-                if (["confirmed", "checked_in", "completed"].includes(b.status)) {
-                    count++;
-                }
-            });
-            return { revenue, count };
-        };
+      let revenue = 0;
+      let count = 0;
+      bookings.forEach((b) => {
+        if (b.status === "completed") {
+          revenue += b.priceMinorUnits;
+        }
+        if (["confirmed", "checked_in", "completed"].includes(b.status)) {
+          count++;
+        }
+      });
+      return { revenue, count };
+    };
 
-        const [thisWeek, lastWeek, thisMonth, lastMonth] = await Promise.all([
-            fetchStats(args.thisWeekStartMs, args.thisWeekEndMs),
-            fetchStats(args.lastWeekStartMs, args.lastWeekEndMs),
-            fetchStats(args.thisMonthStartMs, args.thisMonthEndMs),
-            fetchStats(args.lastMonthStartMs, args.lastMonthEndMs),
-        ]);
+    const [thisWeek, lastWeek, thisMonth, lastMonth] = await Promise.all([
+      fetchStats(args.thisWeekStartMs, args.thisWeekEndMs),
+      fetchStats(args.lastWeekStartMs, args.lastWeekEndMs),
+      fetchStats(args.thisMonthStartMs, args.thisMonthEndMs),
+      fetchStats(args.lastMonthStartMs, args.lastMonthEndMs),
+    ]);
 
-        return {
-            week: { current: thisWeek, previous: lastWeek },
-            month: { current: thisMonth, previous: lastMonth }
-        };
-    }
+    return {
+      week: { current: thisWeek, previous: lastWeek },
+      month: { current: thisMonth, previous: lastMonth },
+    };
+  },
 });
 
 export const getRevenueByStaff = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const bookings = await ctx.db
-            .query("bookings")
-            .withIndex("by_org_start", q => q.eq("orgId", args.orgId).gte("startAt", args.startMs).lt("startAt", args.endMs))
-            .filter(q => q.and(
-                q.eq(q.field("isDeleted"), false),
-                q.eq(q.field("status"), "completed")
-            ))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org_start", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .gte("startAt", args.startMs)
+          .lt("startAt", args.endMs),
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isDeleted"), false),
+          q.eq(q.field("status"), "completed"),
+        ),
+      )
+      .collect();
 
-        const staffMap = new Map<string, number>();
-        bookings.forEach(b => {
-            const current = staffMap.get(b.staffId) || 0;
-            staffMap.set(b.staffId, current + b.priceMinorUnits);
-        });
+    const staffMap = new Map<string, number>();
+    bookings.forEach((b) => {
+      const current = staffMap.get(b.staffId) || 0;
+      staffMap.set(b.staffId, current + b.priceMinorUnits);
+    });
 
-        const results = await Promise.all(Array.from(staffMap.entries()).map(async ([staffId, revenue]) => {
-            const staff = await ctx.db.get(staffId as Id<"staff_members">);
-            return {
-                staffId,
-                staffName: staff?.displayName || "Unknown",
-                revenue
-            };
-        }));
+    const results = await Promise.all(
+      Array.from(staffMap.entries()).map(async ([staffId, revenue]) => {
+        const staff = await ctx.db.get(staffId as Id<"staff_members">);
+        return {
+          staffId,
+          staffName: staff?.displayName || "Unknown",
+          revenue,
+        };
+      }),
+    );
 
-        results.sort((a, b) => b.revenue - a.revenue);
-        return results;
-    }
+    results.sort((a, b) => b.revenue - a.revenue);
+    return results;
+  },
 });
 
 export const getCustomerInsights = query({
-    args: {
-        orgId: v.id("orgs"),
-        monthStartMs: v.number(),
-        monthEndMs: v.number()
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const customers = await ctx.db
-            .query("customers")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+    monthStartMs: v.number(),
+    monthEndMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const customers = await ctx.db
+      .query("customers")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        let newThisMonth = 0;
-        let returningThisMonth = 0;
-        let atRiskChurn = 0; // lastVisit < 60 days ago
+    let newThisMonth = 0;
+    let returningThisMonth = 0;
+    let atRiskChurn = 0; // lastVisit < 60 days ago
 
-        const sixtyDaysAgoMs = Date.now() - (60 * 24 * 60 * 60 * 1000);
+    const sixtyDaysAgoMs = Date.now() - 60 * 24 * 60 * 60 * 1000;
 
-        customers.forEach(c => {
-            if (c.createdAt >= args.monthStartMs && c.createdAt <= args.monthEndMs) {
-                newThisMonth++;
-            } else if (c.lastVisitAt && c.lastVisitAt >= args.monthStartMs && c.lastVisitAt <= args.monthEndMs) {
-                returningThisMonth++;
-            }
+    customers.forEach((c) => {
+      if (c.createdAt >= args.monthStartMs && c.createdAt <= args.monthEndMs) {
+        newThisMonth++;
+      } else if (
+        c.lastVisitAt &&
+        c.lastVisitAt >= args.monthStartMs &&
+        c.lastVisitAt <= args.monthEndMs
+      ) {
+        returningThisMonth++;
+      }
 
-            if (c.lastVisitAt && c.lastVisitAt < sixtyDaysAgoMs) {
-                atRiskChurn++;
-            }
-        });
+      if (c.lastVisitAt && c.lastVisitAt < sixtyDaysAgoMs) {
+        atRiskChurn++;
+      }
+    });
 
-        return {
-            newThisMonth,
-            returningThisMonth,
-            atRiskChurn
-        };
-    }
+    return {
+      newThisMonth,
+      returningThisMonth,
+      atRiskChurn,
+    };
+  },
 });
 
 export const getTopCustomers = query({
-    args: {
-        orgId: v.id("orgs")
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const customers = await ctx.db
-            .query("customers")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .filter(q => q.eq(q.field("isDeleted"), false))
-            .collect();
+  args: {
+    orgId: v.id("orgs"),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const customers = await ctx.db
+      .query("customers")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .filter((q) => q.eq(q.field("isDeleted"), false))
+      .collect();
 
-        customers.sort((a, b) => b.totalSpendMinorUnits - a.totalSpendMinorUnits);
-        return customers.slice(0, 5).map(c => ({
-            id: c._id,
-            name: c.name,
-            totalVisits: c.totalVisits,
-            totalSpendMinorUnits: c.totalSpendMinorUnits,
-            avatarUrl: c.avatarUrl
-        }));
-    }
+    customers.sort((a, b) => b.totalSpendMinorUnits - a.totalSpendMinorUnits);
+    return customers.slice(0, 5).map((c) => ({
+      id: c._id,
+      name: c.name,
+      totalVisits: c.totalVisits,
+      totalSpendMinorUnits: c.totalSpendMinorUnits,
+      avatarUrl: c.avatarUrl,
+    }));
+  },
 });
 
 export const getAIPerformance = query({
-    args: {
-        orgId: v.id("orgs"),
-        startMs: v.number(),
-        endMs: v.number()
-    },
-    handler: async (ctx, args) => {
-        const { org } = await requireAuth(ctx, args.orgId);
-        requirePaidPlan(org, "AI front desk");
-        const settings = await ctx.db
-            .query("org_settings")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .first();
+  args: {
+    orgId: v.id("orgs"),
+    startMs: v.number(),
+    endMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const { org } = await requireAuth(ctx, args.orgId);
+    requirePaidPlan(org, "AI front desk");
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
 
-        const aiEnabled = !!(settings?.aiEnabled);
+    const aiEnabled = !!settings?.aiEnabled;
 
-        const conversations = await ctx.db
-            .query("ai_conversations")
-            .withIndex("by_org", q => q.eq("orgId", args.orgId))
-            .collect();
+    const conversations = await ctx.db
+      .query("ai_conversations")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .collect();
 
-        // Filter in memory for time range just based on createdAt
-        const recentConvs = conversations.filter(c => c.createdAt >= args.startMs && c.createdAt <= args.endMs);
+    // Filter in memory for time range just based on createdAt
+    const recentConvs = conversations.filter(
+      (c) => c.createdAt >= args.startMs && c.createdAt <= args.endMs,
+    );
 
-        const total = recentConvs.length;
-        let handoffCount = 0;
-        let bookingsCreated = 0;
+    const total = recentConvs.length;
+    let handoffCount = 0;
+    let bookingsCreated = 0;
 
-        recentConvs.forEach(c => {
-            if (c.status === "handed_off") handoffCount++;
-            if (c.bookingIds && c.bookingIds.length > 0) bookingsCreated++;
-        });
+    recentConvs.forEach((c) => {
+      if (c.status === "handed_off") handoffCount++;
+      if (c.bookingIds && c.bookingIds.length > 0) bookingsCreated++;
+    });
 
-        return {
-            aiEnabled,
-            totalConversations: total,
-            handoffRate: total > 0 ? (handoffCount / total) * 100 : 0,
-            bookingRate: total > 0 ? (bookingsCreated / total) * 100 : 0
-        };
-    }
+    return {
+      aiEnabled,
+      totalConversations: total,
+      handoffRate: total > 0 ? (handoffCount / total) * 100 : 0,
+      bookingRate: total > 0 ? (bookingsCreated / total) * 100 : 0,
+    };
+  },
 });
 
-
 export const getWeeklyRevenueChart = query({
-    args: {
-        orgId: v.id("orgs"),
-        currentWeekStartMs: v.number(),
-        currentWeekEndMs: v.number(),
-        previousWeekStartMs: v.number(),
-        previousWeekEndMs: v.number(),
-    },
-    handler: async (ctx, args) => {
-        await requireAuth(ctx, args.orgId);
-        const fetchDaily = async (startMs: number, endMs: number) => {
-            const bookings = await ctx.db
-                .query("bookings")
-                .withIndex("by_org_start", q => q.eq("orgId", args.orgId).gte("startAt", startMs).lt("startAt", endMs))
-                .filter(q => q.and(
-                    q.eq(q.field("isDeleted"), false),
-                    q.eq(q.field("status"), "completed")
-                ))
-                .collect();
-            
-            const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-            const dailyData = days.map(day => ({ day, revenue: 0 }));
-            
-            bookings.forEach(b => {
-                let dayIndex = new Date(b.startAt).getDay() - 1;
-                if (dayIndex === -1) dayIndex = 6; // Sunday
-                if (dayIndex >= 0 && dayIndex < 7) {
-                    dailyData[dayIndex].revenue += b.priceMinorUnits / 100; // Return absolute values
-                }
-            });
-            return dailyData;
-        };
+  args: {
+    orgId: v.id("orgs"),
+    currentWeekStartMs: v.number(),
+    currentWeekEndMs: v.number(),
+    previousWeekStartMs: v.number(),
+    previousWeekEndMs: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
+    const fetchDaily = async (startMs: number, endMs: number) => {
+      const bookings = await ctx.db
+        .query("bookings")
+        .withIndex("by_org_start", (q) =>
+          q
+            .eq("orgId", args.orgId)
+            .gte("startAt", startMs)
+            .lt("startAt", endMs),
+        )
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("isDeleted"), false),
+            q.eq(q.field("status"), "completed"),
+          ),
+        )
+        .collect();
 
-        const currentWeekData = await fetchDaily(args.currentWeekStartMs, args.currentWeekEndMs);
-        const previousWeekData = await fetchDaily(args.previousWeekStartMs, args.previousWeekEndMs);
+      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const dailyData = days.map((day) => ({ day, revenue: 0 }));
 
-        return currentWeekData.map((d, i) => ({
-            day: d.day,
-            currentWeek: d.revenue,
-            previousWeek: previousWeekData[i].revenue
-        }));
-    }
+      bookings.forEach((b) => {
+        let dayIndex = new Date(b.startAt).getDay() - 1;
+        if (dayIndex === -1) dayIndex = 6; // Sunday
+        if (dayIndex >= 0 && dayIndex < 7) {
+          dailyData[dayIndex].revenue += b.priceMinorUnits / 100; // Return absolute values
+        }
+      });
+      return dailyData;
+    };
+
+    const currentWeekData = await fetchDaily(
+      args.currentWeekStartMs,
+      args.currentWeekEndMs,
+    );
+    const previousWeekData = await fetchDaily(
+      args.previousWeekStartMs,
+      args.previousWeekEndMs,
+    );
+
+    return currentWeekData.map((d, i) => ({
+      day: d.day,
+      currentWeek: d.revenue,
+      previousWeek: previousWeekData[i].revenue,
+    }));
+  },
 });

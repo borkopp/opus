@@ -6,6 +6,7 @@ import {
   IconLayoutColumns,
   IconLayoutRows,
   IconLayoutList,
+  IconPlus,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +22,16 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import type { StaffView } from "./types";
+import { BookingsDateNavigation } from "./BookingsDateNavigation";
 
 export type BookingStatusFilter = "all" | "upcoming" | "completed" | "no-show";
 export type BookingViewVariant = "horizontal" | "vertical" | "list";
 
 export function BookingsToolbar({
+  currentDate,
+  bookingDateCounts,
+  onDateChange,
+  onNewBooking,
   isMobile,
   variant,
   onVariantChange,
@@ -35,6 +41,10 @@ export function BookingsToolbar({
   staffId,
   onStaffChange,
 }: {
+  currentDate: Date;
+  bookingDateCounts: ReadonlyMap<string, number>;
+  onDateChange: (date: Date) => void;
+  onNewBooking: () => void;
   isMobile: boolean;
   variant: BookingViewVariant;
   onVariantChange: (value: BookingViewVariant) => void;
@@ -77,7 +87,12 @@ export function BookingsToolbar({
 
   return (
     <div className="flex shrink-0 flex-col gap-3 border-b border-border/40 p-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto]">
+        <BookingsDateNavigation
+          date={currentDate}
+          bookingDateCounts={bookingDateCounts}
+          onDateChange={onDateChange}
+        />
         {isMobile ? (
           <Drawer autoFocus open={filtersOpen} onOpenChange={setFiltersOpen}>
             <DrawerTrigger asChild>
@@ -121,6 +136,7 @@ export function BookingsToolbar({
           }}
           spacing={1}
           aria-label={t("Calendar view", "Приказ на календар")}
+          className="justify-self-end"
         >
           {!isMobile && (
             <ToggleGroupItem
@@ -140,7 +156,7 @@ export function BookingsToolbar({
             className="min-h-11 md:min-h-9"
           >
             <IconLayoutRows />
-            <span className="hidden min-[360px]:inline md:hidden xl:inline">
+            <span className="hidden xl:inline">
               {t("Calendar", "Календар")}
             </span>
           </ToggleGroupItem>
@@ -150,11 +166,19 @@ export function BookingsToolbar({
             className="min-h-11 md:min-h-9"
           >
             <IconLayoutList />
-            <span className="hidden min-[360px]:inline md:hidden xl:inline">
-              {t("Agenda", "Листа")}
-            </span>
+            <span className="hidden xl:inline">{t("Agenda", "Листа")}</span>
           </ToggleGroupItem>
         </ToggleGroup>
+        <Button
+          className="size-11 shrink-0 md:h-9 md:w-auto"
+          onClick={onNewBooking}
+          aria-label={t("New Booking", "Нов термин")}
+        >
+          <IconPlus data-icon="inline-start" />
+          <span className="hidden md:inline">
+            {t("New Booking", "Нов термин")}
+          </span>
+        </Button>
       </div>
       {isMobile && variant === "vertical" && staffMembers.length > 1 && (
         <div className="min-w-0 overflow-x-auto overscroll-x-contain pb-1">

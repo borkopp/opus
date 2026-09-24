@@ -24,7 +24,7 @@ export default function BookingsPage() {
   if (!orgId || bookings === undefined || staffMembers === undefined) {
     return (
       <div
-        className="flex items-center justify-center p-12 min-h-[60vh]"
+        className="flex min-h-0 flex-1 items-center justify-center p-12"
         role="status"
         aria-label={t("Loading bookings…", "Вчитување термини…")}
       >
@@ -34,7 +34,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-[1700px] mx-auto flex-1 min-h-0">
+    <div className="flex flex-col gap-6 w-full flex-1 min-h-0">
       <BookingsSplitView
         bookings={bookings}
         staffMembers={staffMembers}

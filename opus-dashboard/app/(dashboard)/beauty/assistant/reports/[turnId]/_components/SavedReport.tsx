@@ -21,7 +21,7 @@ export function SavedReport({ turnId }: { turnId: string }) {
       : "skip",
   );
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <Button variant="outline" className="self-start" asChild>
         <Link href="/beauty/assistant">
           <ArrowLeft data-icon="inline-start" />

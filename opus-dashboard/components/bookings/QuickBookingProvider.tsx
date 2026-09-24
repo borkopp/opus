@@ -13,19 +13,11 @@ import {
 } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import {
-  CalendarClock,
-  CalendarDays,
-  Clock,
-  Mail,
-  Phone,
-  UserRound,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
+import { enGB, mk } from "date-fns/locale";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,18 +25,10 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import {
   Field,
   FieldContent,
@@ -55,18 +39,8 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
@@ -110,27 +84,6 @@ type QuickBookingSlots = FunctionReturnType<
   typeof api.slots.getQuickBookingSlots
 >["slots"];
 
-function datePickerLabel(value: string, locale: string, placeholder: string) {
-  const date = dateFromKey(value);
-  if (!date) return placeholder;
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
-function formatBookingDate(timestamp: number, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(timestamp));
-}
-
 function quickSlotValue(slot: QuickBookingSelection) {
   return `${slot.staffId}:${slot.startAt}`;
 }
@@ -161,7 +114,6 @@ export function QuickBookingProvider({
   const [isOpen, setIsOpen] = useState(false);
   const [requestDate, setRequestDate] = useState(() => dateKey(new Date()));
   const [pickerMonth, setPickerMonth] = useState(() => monthKey(new Date()));
-  const [isScheduleEditable, setIsScheduleEditable] = useState(false);
   const [selection, setSelection] = useState<QuickBookingSelection | null>(
     null,
   );
@@ -177,19 +129,17 @@ export function QuickBookingProvider({
   );
   const automaticSlots = useQuery(
     api.slots.getQuickBookingSlots,
-    isOpen && isScheduleEditable ? { orgId, date: requestDate } : "skip",
+    isOpen ? { orgId, date: requestDate } : "skip",
   );
   const availableDates = useQuery(
     api.slots.getQuickBookingAvailableDates,
-    isOpen && isScheduleEditable ? { orgId, month: pickerMonth } : "skip",
+    isOpen ? { orgId, month: pickerMonth } : "skip",
   );
 
   const resolvedSelection =
     selection ??
-    (isScheduleEditable
-      ? (automaticSlots?.slots.find((slot) => !slot.isFallback) ??
-        automaticSlots?.slots[0])
-      : null) ??
+    automaticSlots?.slots.find((slot) => !slot.isFallback) ??
+    automaticSlots?.slots[0] ??
     null;
 
   const openQuickBooking = useCallback(
@@ -205,7 +155,6 @@ export function QuickBookingProvider({
           : dateKey(new Date());
       setRequestDate(nextDate);
       setPickerMonth(nextDate.slice(0, 7));
-      setIsScheduleEditable(!options.slot);
       setSelection(options.slot ?? null);
       setOpenSequence((current) => current + 1);
       setIsOpen(true);
@@ -239,20 +188,15 @@ export function QuickBookingProvider({
         open={isOpen}
         onOpenChange={handleOpenChange}
       >
-        <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-md data-[vaul-drawer-direction=bottom]:h-[94dvh] data-[vaul-drawer-direction=bottom]:max-h-[94dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:rounded-t-3xl">
-          <DrawerHeader className="shrink-0 border-b border-border px-5 py-5 text-left">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-col gap-1">
-                <DrawerTitle className="font-display text-xl">
-                  {t("New booking", "Нов термин")}
-                </DrawerTitle>
-                <DrawerDescription>
-                  {t(
-                    "Add the customer and choose the services for this time.",
-                    "Внесете клиент и изберете услуги за овој термин.",
-                  )}
-                </DrawerDescription>
-              </div>
+        <DrawerContent
+          aria-describedby={undefined}
+          className="dashboard-panel data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-md data-[vaul-drawer-direction=bottom]:h-[94dvh] data-[vaul-drawer-direction=bottom]:max-h-[94dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:rounded-t-3xl"
+        >
+          <DrawerHeader className="shrink-0 px-5 py-5 text-left">
+            <div className="flex items-center justify-between gap-4">
+              <DrawerTitle className="font-display text-xl">
+                {t("New Booking", "Нов термин")}
+              </DrawerTitle>
               <DrawerClose asChild>
                 <Button
                   variant="ghost"
@@ -273,18 +217,13 @@ export function QuickBookingProvider({
             orgId={orgId}
             requestDate={requestDate}
             selection={resolvedSelection}
-            isScheduleEditable={isScheduleEditable}
             pickerMonth={pickerMonth}
             availableDates={availableDates?.availableDates}
             availableSlots={automaticSlots?.slots}
             services={services}
             staffMembers={staffMembers}
-            isLoadingAutomaticSlot={
-              isScheduleEditable && automaticSlots === undefined
-            }
-            isLoadingAvailableDates={
-              isScheduleEditable && availableDates === undefined
-            }
+            isLoadingAutomaticSlot={automaticSlots === undefined}
+            isLoadingAvailableDates={availableDates === undefined}
             onPickerMonthChange={(date) => setPickerMonth(monthKey(date))}
             onDateSelect={handleDateSelect}
             onSlotSelect={handleSlotSelect}
@@ -321,8 +260,7 @@ function QuickBookingSchedulePicker({
   onDateSelect: (date: Date) => void;
   onSlotSelect: (slot: QuickBookingSelection) => void;
 }) {
-  const { locale, t } = useDashboardI18n();
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const { language, t } = useDashboardI18n();
   const availableDateSet = useMemo(
     () => new Set(availableDates ?? []),
     [availableDates],
@@ -332,161 +270,108 @@ function QuickBookingSchedulePicker({
   const showStaffNames =
     new Set(availableSlots?.map((slot) => slot.staffId) ?? []).size > 1;
 
-  const dateLabel = datePickerLabel(
-    requestDate,
-    locale,
-    t("Choose an available date", "Изберете слободен датум"),
-  );
-
   return (
-    <FieldSet>
-      <FieldLegend variant="label">{t("Appointment", "Термин")}</FieldLegend>
-      <FieldDescription>
-        {t(
-          "Choose an available date and start time.",
-          "Изберете слободен датум и почетно време.",
+    <div className="flex flex-col gap-6">
+      <Calendar
+        mode="single"
+        locale={language === "mk" ? mk : enGB}
+        month={monthFromKey(pickerMonth)}
+        selected={
+          selectedDate && availableDateSet.has(requestDate)
+            ? selectedDate
+            : undefined
+        }
+        onMonthChange={onPickerMonthChange}
+        onSelect={(date) => {
+          if (date) onDateSelect(date);
+        }}
+        disabled={(date) =>
+          isLoadingAvailableDates || !availableDateSet.has(dateKey(date))
+        }
+        showOutsideDays={false}
+        aria-label={t(
+          "Available booking dates",
+          "Слободни датуми за закажување",
         )}
-      </FieldDescription>
-      <FieldGroup className="gap-4">
-        <Field>
-          <FieldLabel>{t("Booking date", "Датум на термин")}</FieldLabel>
-          <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full justify-start font-normal"
-                aria-label={`${t("Booking date", "Датум на термин")}: ${dateLabel}`}
-              >
-                <CalendarDays data-icon="inline-start" />
-                {dateLabel}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                month={monthFromKey(pickerMonth)}
-                selected={
-                  selectedDate && availableDateSet.has(requestDate)
-                    ? selectedDate
-                    : undefined
-                }
-                onMonthChange={onPickerMonthChange}
-                onSelect={(date) => {
-                  if (!date) return;
-                  onDateSelect(date);
-                  setIsDatePickerOpen(false);
-                }}
-                disabled={(date) =>
-                  isLoadingAvailableDates ||
-                  !availableDateSet.has(dateKey(date))
-                }
-                showOutsideDays={false}
-                aria-label={t(
-                  "Available booking dates",
-                  "Слободни датуми за закажување",
-                )}
-              />
-              <Separator />
-              <div className="flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground">
-                {isLoadingAvailableDates && <Spinner />}
-                {isLoadingAvailableDates
-                  ? t(
-                      "Checking date availability…",
-                      "Проверка на достапност на датуми…",
-                    )
-                  : t(
-                      "Dates without an available time are disabled.",
-                      "Датумите без слободен термин се оневозможени.",
-                    )}
-              </div>
-            </PopoverContent>
-          </Popover>
-        </Field>
-
-        <Field>
-          <FieldLabel id="quick-booking-time-label">
-            {t("Available times", "Слободни термини")}
-          </FieldLabel>
-          <FieldDescription>
-            {t(
-              "Only free start times are shown.",
-              "Се прикажуваат само слободните почетни времиња.",
-            )}
-          </FieldDescription>
-          {isLoadingSlots ? (
-            <div
-              className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
-              role="status"
+        aria-busy={isLoadingAvailableDates}
+        labels={{
+          labelNext: () => t("Next month", "Следен месец"),
+          labelPrevious: () => t("Previous month", "Претходен месец"),
+        }}
+        classNames={{
+          root: "w-full max-w-[308px]",
+          weekdays: "grid grid-cols-7",
+          week: "mt-2 grid grid-cols-7",
+          day: "group/day relative h-11 min-w-0 p-0 text-center select-none",
+          day_button: "h-11 min-w-0 aspect-auto",
+          today:
+            "rounded-full bg-accent text-accent-foreground data-[selected=true]:bg-transparent",
+        }}
+        className="mx-auto p-0 [--cell-size:2.5rem]"
+      />
+      <Field>
+        <FieldLabel id="quick-booking-time-label">
+          {t("Time", "Време")}
+        </FieldLabel>
+        {isLoadingSlots ? (
+          <div
+            className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
+            role="status"
+          >
+            <Spinner />
+            {t("Checking available times…", "Проверка на слободни термини…")}
+          </div>
+        ) : availableSlots && availableSlots.length > 0 ? (
+          <ScrollArea className="h-44">
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              spacing={2}
+              value={selectedSlotValue}
+              onValueChange={(value) => {
+                const slot = availableSlots.find(
+                  (candidate) => quickSlotValue(candidate) === value,
+                );
+                if (slot) onSlotSelect(slot);
+              }}
+              aria-labelledby="quick-booking-time-label"
+              className="grid w-full grid-cols-2 gap-2 pr-3"
             >
-              <Spinner />
-              {t("Checking available times…", "Проверка на слободни термини…")}
-            </div>
-          ) : availableSlots && availableSlots.length > 0 ? (
-            <ScrollArea className="h-44">
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                spacing={2}
-                value={selectedSlotValue}
-                onValueChange={(value) => {
-                  const slot = availableSlots.find(
-                    (candidate) => quickSlotValue(candidate) === value,
-                  );
-                  if (slot) onSlotSelect(slot);
-                }}
-                aria-labelledby="quick-booking-time-label"
-                className="grid w-full grid-cols-2 gap-2 pr-3"
-              >
-                {availableSlots.map((slot) => {
-                  const staff = staffMembers?.find(
-                    (member) => member._id === slot.staffId,
-                  );
-                  return (
-                    <ToggleGroupItem
-                      key={quickSlotValue(slot)}
-                      value={quickSlotValue(slot)}
-                      className="h-auto min-h-10 w-full flex-col gap-0.5 py-2"
-                      aria-label={t(
-                        `${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`,
-                        `${bookingTimeLabel(slot.startAt)} до ${bookingTimeLabel(slot.endAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
-                      )}
-                    >
-                      <span className="tabular-nums">
-                        {bookingTimeLabel(slot.startAt)}–
-                        {bookingTimeLabel(slot.endAt)}
+              {availableSlots.map((slot) => {
+                const staff = staffMembers?.find(
+                  (member) => member._id === slot.staffId,
+                );
+                return (
+                  <ToggleGroupItem
+                    key={quickSlotValue(slot)}
+                    value={quickSlotValue(slot)}
+                    className="h-auto min-h-10 w-full flex-col gap-0.5 py-2"
+                    aria-label={t(
+                      `${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`,
+                      `${bookingTimeLabel(slot.startAt)} до ${bookingTimeLabel(slot.endAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
+                    )}
+                  >
+                    <span className="tabular-nums">
+                      {bookingTimeLabel(slot.startAt)}–
+                      {bookingTimeLabel(slot.endAt)}
+                    </span>
+                    {showStaffNames && staff && (
+                      <span className="max-w-full truncate text-xs font-normal text-muted-foreground">
+                        {staff.displayName}
                       </span>
-                      {showStaffNames && staff && (
-                        <span className="max-w-full truncate text-xs font-normal text-muted-foreground">
-                          {staff.displayName}
-                        </span>
-                      )}
-                    </ToggleGroupItem>
-                  );
-                })}
-              </ToggleGroup>
-            </ScrollArea>
-          ) : (
-            <Empty className="border p-4 md:p-4">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Clock />
-                </EmptyMedia>
-                <EmptyTitle>
-                  {t("No times available", "Нема слободни термини")}
-                </EmptyTitle>
-                <EmptyDescription>
-                  {t(
-                    "Choose another enabled date in the calendar.",
-                    "Изберете друг овозможен датум во календарот.",
-                  )}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </Field>
-      </FieldGroup>
-    </FieldSet>
+                    )}
+                  </ToggleGroupItem>
+                );
+              })}
+            </ToggleGroup>
+          </ScrollArea>
+        ) : (
+          <p className="py-3 text-sm text-muted-foreground" role="status">
+            {t("No times available", "Нема слободни термини")}
+          </p>
+        )}
+      </Field>
+    </div>
   );
 }
 
@@ -494,7 +379,6 @@ function QuickBookingForm({
   orgId,
   requestDate,
   selection,
-  isScheduleEditable,
   pickerMonth,
   availableDates,
   availableSlots,
@@ -510,7 +394,6 @@ function QuickBookingForm({
   orgId: Id<"orgs">;
   requestDate: string;
   selection: QuickBookingSelection | null;
-  isScheduleEditable: boolean;
   pickerMonth: string;
   availableDates: string[] | undefined;
   availableSlots: QuickBookingSlots | undefined;
@@ -534,9 +417,13 @@ function QuickBookingForm({
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedStaff = staffMembers?.find(
-    (staff) => staff._id === selection?.staffId,
-  );
+  const orderedServices = services
+    ? [...services].sort(
+        (a, b) =>
+          Number(Boolean(selection && b.staffIds.includes(selection.staffId))) -
+          Number(Boolean(selection && a.staffIds.includes(selection.staffId))),
+      )
+    : undefined;
   const selectedServices =
     services?.filter((service) => selectedServiceIds.includes(service._id)) ??
     [];
@@ -550,9 +437,6 @@ function QuickBookingForm({
   );
   const selectedCurrency =
     selectedServices[0]?.currency ?? services?.[0]?.currency;
-  const actualEndAt = selection
-    ? selection.startAt + (totalDurationMins || selection.durationMins) * 60_000
-    : null;
   const servicesFit = Boolean(
     selection &&
     totalDurationMins > 0 &&
@@ -620,81 +504,23 @@ function QuickBookingForm({
 
   return (
     <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 py-5">
-        {isScheduleEditable && (
-          <QuickBookingSchedulePicker
-            requestDate={requestDate}
-            pickerMonth={pickerMonth}
-            availableDates={availableDates}
-            availableSlots={availableSlots}
-            selection={selection}
-            staffMembers={staffMembers}
-            isLoadingAvailableDates={isLoadingAvailableDates}
-            isLoadingSlots={isLoadingAutomaticSlot}
-            onPickerMonthChange={onPickerMonthChange}
-            onDateSelect={onDateSelect}
-            onSlotSelect={onSlotSelect}
-          />
-        )}
-
-        {selection ? (
-          <section className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-4">
-            <div className="flex items-start gap-3">
-              <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">
-                  {formatBookingDate(selection.startAt, locale)}
-                </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {bookingTimeLabel(selection.startAt)}–
-                  {bookingTimeLabel(actualEndAt ?? selection.endAt)}
-                  {selectedStaff ? ` · ${selectedStaff.displayName}` : ""}
-                </p>
-              </div>
-            </div>
-            {selection.isFallback && (
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {t(
-                  "The preferred quick-booking duration does not fit here, so the smallest available slot is selected.",
-                  "Претпочитаното времетраење за брзо закажување не одговара тука, па затоа е избран најмалиот слободен термин.",
-                )}
-              </p>
-            )}
-          </section>
-        ) : !isScheduleEditable && isLoadingAutomaticSlot ? (
-          <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-            <Spinner />
-            {t(
-              "Finding the next available time…",
-              "Пронаоѓање на следниот слободен термин…",
-            )}
-          </div>
-        ) : !isScheduleEditable ? (
-          <Alert>
-            <Clock />
-            <AlertTitle>
-              {t(
-                "No quick-booking time available",
-                "Нема слободен термин за брзо закажување",
-              )}
-            </AlertTitle>
-            <AlertDescription>
-              {t(
-                `There is no available slot on ${requestDate}. Choose another day or click an available time in the calendar.`,
-                `Нема слободен термин на ${requestDate}. Изберете друг ден или кликнете на слободно време во календарот.`,
-              )}
-            </AlertDescription>
-          </Alert>
-        ) : null}
+      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-5">
+        <QuickBookingSchedulePicker
+          requestDate={requestDate}
+          pickerMonth={pickerMonth}
+          availableDates={availableDates}
+          availableSlots={availableSlots}
+          selection={selection}
+          staffMembers={staffMembers}
+          isLoadingAvailableDates={isLoadingAvailableDates}
+          isLoadingSlots={isLoadingAutomaticSlot}
+          onPickerMonthChange={onPickerMonthChange}
+          onDateSelect={onDateSelect}
+          onSlotSelect={onSlotSelect}
+        />
 
         <FieldSet>
           <FieldLegend variant="label">{t("Services", "Услуги")}</FieldLegend>
-          <FieldDescription>
-            {t(
-              "Select one or more services. Their durations are combined.",
-              "Изберете една или повеќе услуги. Нивното времетраење се комбинира.",
-            )}
-          </FieldDescription>
           <FieldGroup data-slot="checkbox-group" className="gap-2">
             {services === undefined ? (
               <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
@@ -709,7 +535,7 @@ function QuickBookingForm({
                 )}
               </p>
             ) : (
-              services.map((service) => {
+              orderedServices?.map((service) => {
                 const isAvailableForStaff = Boolean(
                   selection && service.staffIds.includes(selection.staffId),
                 );
@@ -763,10 +589,7 @@ function QuickBookingForm({
                                 `${service.durationMins} minutes`,
                                 `${service.durationMins} минути`,
                               )
-                            : t(
-                                `Not available with ${selectedStaff?.displayName ?? "this staff member"}`,
-                                `Не е достапно со ${selectedStaff?.displayName ?? "овој член на тим"}`,
-                              )}
+                            : t("Unavailable", "Недостапно")}
                         </FieldDescription>
                       </FieldContent>
                     </Field>
@@ -787,17 +610,12 @@ function QuickBookingForm({
           </FieldError>
         </FieldSet>
 
-        <Separator />
-
         <FieldGroup className="gap-4">
           <Field data-invalid={nameError}>
             <FieldLabel htmlFor="quick-customer-name">
               {t("Customer name", "Име на клиент")}
             </FieldLabel>
             <InputGroup>
-              <InputGroupAddon>
-                <UserRound />
-              </InputGroupAddon>
               <InputGroupInput
                 id="quick-customer-name"
                 value={customerName}
@@ -824,9 +642,6 @@ function QuickBookingForm({
                 </span>
               </FieldLabel>
               <InputGroup>
-                <InputGroupAddon>
-                  <Phone />
-                </InputGroupAddon>
                 <InputGroupInput
                   id="quick-customer-phone"
                   value={customerPhone}
@@ -845,9 +660,6 @@ function QuickBookingForm({
                 </span>
               </FieldLabel>
               <InputGroup>
-                <InputGroupAddon>
-                  <Mail />
-                </InputGroupAddon>
                 <InputGroupInput
                   id="quick-customer-email"
                   type="email"
@@ -864,18 +676,17 @@ function QuickBookingForm({
       </div>
 
       <DrawerFooter className="shrink-0 border-t border-border px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="flex items-center justify-between gap-4 text-sm">
-          <span className="text-muted-foreground">
-            {totalDurationMins > 0
-              ? `${totalDurationMins} ${t("min", "мин")}`
-              : t("No services selected", "Нема избрано услуги")}
-          </span>
-          <span className="font-semibold">
-            {selectedCurrency && totalPriceMinorUnits > 0
-              ? formatPrice(totalPriceMinorUnits, selectedCurrency, locale)
-              : "—"}
-          </span>
-        </div>
+        {totalDurationMins > 0 && (
+          <div className="flex items-center justify-between gap-4 text-sm">
+            <span className="text-muted-foreground">
+              {totalDurationMins} {t("min", "мин")}
+            </span>
+            <span className="font-semibold">
+              {selectedCurrency &&
+                formatPrice(totalPriceMinorUnits, selectedCurrency, locale)}
+            </span>
+          </div>
+        )}
         <Button type="submit" disabled={submitDisabled} size="lg">
           {isSubmitting && <Spinner data-icon="inline-start" />}
           {isSubmitting

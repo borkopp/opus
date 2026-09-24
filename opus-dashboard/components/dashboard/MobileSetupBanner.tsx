@@ -19,7 +19,7 @@ export function MobileSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
   return (
     <Link
       href="/onboarding?step=review"
-      className="-mx-4 -mt-5 mb-5 flex min-h-12 shrink-0 items-center gap-3 border-b border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning md:hidden"
+      className="dashboard-setup-banner mb-4 flex min-h-12 shrink-0 items-center gap-3 rounded-2xl bg-warning/10 px-4 py-3 text-sm text-warning md:hidden"
     >
       <AlertTriangle className="size-4 shrink-0" />
       <span className="min-w-0 flex-1">

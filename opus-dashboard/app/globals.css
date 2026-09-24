@@ -455,3 +455,383 @@
     animation-duration: 0.01ms;
   }
 }
+
+/* Clarity: shared dashboard tokens. Portalled forms, menus and drawers inherit
+   the same appearance; tenant websites and authentication pages stay scoped out. */
+body:has(.dashboard-shell),
+.dashboard-shell {
+  --background: #f5f6f8;
+  --foreground: #1e2229;
+  --card: #fff;
+  --card-foreground: #1e2229;
+  --popover: #fff;
+  --popover-foreground: #1e2229;
+  --primary: #3679f6;
+  --primary-foreground: #fff;
+  --secondary: #f1f3f6;
+  --secondary-foreground: #59616d;
+  --muted: #f1f3f6;
+  --muted-foreground: #747b85;
+  --accent: #eaf1ff;
+  --accent-foreground: #245dc3;
+  --brand-soft: #eaf1ff;
+  --border: #eceef2;
+  --input: #e4e7ec;
+  --ring: #3679f6;
+  --radius: 1rem;
+  --chart-1: #3679f6;
+  --chart-2: #90b5f7;
+  --chart-3: #c4d6f2;
+  --font-display: var(--font-dm-sans), sans-serif;
+  --font-heading: var(--font-dm-sans), sans-serif;
+  --shadow-s: none;
+  --shadow-m: 0 8px 30px #1d284108;
+  --shadow-l: 0 16px 60px #1d284112;
+  color-scheme: light;
+}
+body:has(.dashboard-shell) {
+  background: #e8ebef;
+}
+.dashboard-shell {
+  /* Keep navigation, overview widgets and route content on the same edges. */
+  --dashboard-gutter: 32px;
+}
+.dashboard-workspace {
+  min-width: 0;
+  min-height: calc(100dvh - 180px);
+}
+.dashboard-page {
+  padding: 16px var(--dashboard-gutter) 32px;
+  display: flex;
+  flex-direction: column;
+}
+.dashboard-overview > .dashboard-setup-banner {
+  margin-inline: var(--dashboard-gutter);
+}
+.dashboard-shell :is(h1, h2, h3, h4, h5, h6),
+body:has(.dashboard-shell) [role="dialog"] :is(h1, h2, h3) {
+  font-family: var(--font-dm-sans), sans-serif;
+}
+.dashboard-page h1 {
+  font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+.dashboard-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  border-radius: 99px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.dashboard-skip-link {
+  position: fixed;
+  left: 16px;
+  top: -100px;
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: 30px;
+  background: var(--primary);
+  color: white;
+}
+.dashboard-skip-link:focus {
+  top: 12px;
+}
+
+body:has(.dashboard-shell) [data-slot="card"] {
+  border: 0;
+  border-radius: 25px;
+  box-shadow: none;
+  background: var(--card);
+}
+body:has(.dashboard-shell) [data-slot="card-title"] {
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+body:has(.dashboard-shell) [data-slot="button"] {
+  border-radius: 99px;
+  box-shadow: none;
+  font-weight: 500;
+}
+body:has(.dashboard-shell)
+  :is(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"]
+  ) {
+  border-radius: 13px;
+  background-color: var(--secondary);
+  box-shadow: none;
+  border-color: transparent;
+}
+body:has(.dashboard-shell)
+  :is(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"]
+  ):focus-visible {
+  border-color: var(--primary);
+}
+body:has(.dashboard-shell)
+  :is(
+    [data-slot="dialog-content"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="sheet-content"]
+  ) {
+  border-radius: 26px;
+  border-color: var(--border);
+  box-shadow: var(--shadow-l);
+}
+body:has(.dashboard-shell)
+  :is(
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"],
+    [data-slot="popover-content"],
+    [data-slot="select-content"]
+  ) {
+  border-radius: 17px;
+  border-color: var(--border);
+  padding: 7px;
+  box-shadow: var(--shadow-m);
+}
+body:has(.dashboard-shell)
+  :is(
+    [data-slot="dropdown-menu-item"],
+    [data-slot="dropdown-menu-radio-item"],
+    [data-slot="dropdown-menu-sub-trigger"]
+  ) {
+  border-radius: 10px;
+  min-height: 36px;
+}
+body:has(.dashboard-shell) [data-slot="tabs-list"] {
+  border: 0;
+  border-radius: 99px;
+  background: white;
+  padding: 5px;
+  box-shadow: none;
+}
+body:has(.dashboard-shell) [data-slot="tabs-trigger"] {
+  border: 0;
+  border-radius: 99px;
+  box-shadow: none;
+  min-height: 38px;
+}
+body:has(.dashboard-shell) [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--primary);
+  color: white;
+  box-shadow: none;
+}
+.dashboard-page [data-slot="badge"] {
+  border-radius: 99px;
+  font-weight: 500;
+}
+.dashboard-settings-nav {
+  background: white;
+  border-radius: 25px;
+  padding: 12px;
+  align-self: start;
+  position: sticky;
+  top: 24px;
+}
+.dashboard-settings-nav [data-slot="tabs-list"] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  align-items: stretch;
+  gap: 5px;
+  padding: 0;
+}
+.dashboard-settings-nav [data-slot="tabs-trigger"] {
+  justify-content: flex-start;
+  flex: none;
+  min-height: 44px;
+  padding: 10px 15px;
+}
+.dashboard-settings-tabs {
+  display: grid !important;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 24px !important;
+  align-items: start;
+}
+.dashboard-assistant-surface {
+  background: white;
+  border-radius: 25px;
+  padding: 24px;
+}
+@media (max-width: 1250px) {
+  .dashboard-shell {
+    --dashboard-gutter: 24px;
+  }
+  .dashboard-account-trigger > span:last-child {
+    display: none;
+  }
+}
+@media (max-width: 1020px) {
+  .dashboard-page {
+    padding-bottom: 28px;
+  }
+}
+@media (max-width: 760px) {
+  .dashboard-shell {
+    --dashboard-gutter: 20px;
+  }
+  .dashboard-page {
+    padding-block: 12px 24px;
+  }
+  .dashboard-assistant-link {
+    display: none !important;
+  }
+  .dashboard-account-trigger {
+    gap: 0;
+  }
+  .dashboard-settings-tabs {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px !important;
+  }
+  .dashboard-settings-nav {
+    position: static;
+    padding: 0;
+    background: transparent;
+    width: 100%;
+  }
+  .dashboard-settings-tabs > :last-child {
+    width: 100%;
+  }
+  body:has(.dashboard-shell) [data-slot="sheet-content"] {
+    border-radius: 24px 0 0 24px;
+  }
+}
+@media (max-width: 520px) {
+  .dashboard-shell {
+    --dashboard-gutter: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell *,
+  body:has(.dashboard-shell) [role="dialog"] * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+.dashboard-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 8px 0 4px;
+}
+.dashboard-page-eyebrow {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px !important;
+}
+.dashboard-page-description {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 640px;
+  margin-top: 8px !important;
+}
+.dashboard-page-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+}
+.dashboard-record-list {
+  overflow: hidden;
+  border-radius: 25px;
+  background: var(--card);
+  padding: 8px;
+}
+.dashboard-record-list > div {
+  border-color: var(--border);
+}
+.dashboard-record-list > section > div:first-child {
+  border-radius: 16px;
+}
+.dashboard-calendar-surface {
+  border-radius: 25px;
+}
+.dashboard-booking-date-dot button {
+  position: relative;
+}
+.dashboard-booking-date-dot button::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translateX(-50%);
+}
+.dashboard-booking-date-dot button[data-selected-single="true"]::after {
+  background: var(--primary-foreground);
+}
+.dashboard-shell header [data-slot="dropdown-menu-trigger"] {
+  box-shadow: none;
+}
+@media (max-width: 760px) {
+  .dashboard-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .dashboard-page-actions {
+    width: 100%;
+  }
+  .dashboard-record-list {
+    padding: 4px;
+    border-radius: 22px;
+  }
+  .dashboard-calendar-surface {
+    border-radius: 22px;
+  }
+}
+body:has(.dashboard-shell) .dashboard-assistant-prompt {
+  border-radius: 18px;
+  border: 0;
+  background: var(--secondary);
+}
+body:has(.dashboard-shell) .dashboard-assistant-composer {
+  border-radius: 22px;
+  border-color: var(--border);
+  background: var(--background);
+  padding: 6px;
+  box-shadow: none;
+}
+body:has(.dashboard-shell)
+  .dashboard-assistant-composer:has(
+    [data-slot="input-group-control"]:focus-visible
+  ) {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+body:has(.dashboard-shell)
+  .dashboard-assistant-composer
+  [data-slot="input-group-control"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+@media (min-width: 761px) and (max-width: 767px) {
+  .dashboard-settings-tabs {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .dashboard-settings-nav {
+    position: static;
+    padding: 0;
+    background: transparent;
+    width: 100%;
+  }
+  .dashboard-settings-tabs > :last-child {
+    width: 100%;
+  }
+}

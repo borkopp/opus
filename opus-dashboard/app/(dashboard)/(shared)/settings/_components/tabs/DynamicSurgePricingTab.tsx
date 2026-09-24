@@ -30,6 +30,7 @@ export function DynamicSurgePricingTab({
 
   return (
     <TabsContent value="surge" className="m-0">
+      {/* TODO: Wire pricing controls only when dynamic pricing is authorized and operational. */}
       <ComingSoonOverlay
         icon={Flame}
         badgeLabel={t("Coming Soon", "Наскоро")}
@@ -49,7 +50,7 @@ export function DynamicSurgePricingTab({
               variant="outline"
               className="border-border/80 bg-muted/60 text-xs font-medium text-muted-foreground"
             >
-              {t("Coming soon", "Наскоро")}
+              {t("Coming Soon", "Наскоро")}
             </Badge>
           }
           footer={

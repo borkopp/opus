@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
+import { useRetainedQueryResult } from "./use-retained-query-result";
 import { api } from "@/convex/_generated/api";
 
 const MINUTE_MS = 60_000;
@@ -22,5 +23,7 @@ export function useFreePlanAnalytics() {
     };
   }, []);
 
-  return useQuery(api.dashboard.getFreePlanAnalytics, { endMs });
+  return useRetainedQueryResult(
+    useQuery(api.dashboard.getFreePlanAnalytics, { endMs }),
+  );
 }

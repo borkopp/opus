@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { startOfDay, addDays, subDays, isToday } from "date-fns";
-import {
-  IconPlus,
-  IconChevronLeft,
-  IconChevronRight,
-  IconCalendarOff,
-} from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
+import { startOfDay } from "date-fns";
+import { IconCalendarOff } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { BookingsHorizontalTimeline } from "./BookingsHorizontalTimeline";
 import { BookingsTimeline } from "./BookingsTimeline";
@@ -22,19 +16,18 @@ import {
   type BookingStatusFilter,
   type BookingViewVariant,
 } from "./BookingsToolbar";
-import { Price } from "@/components/ui/price";
 import { BookingView, StaffView } from "./types";
 import { useQuickBooking } from "./QuickBookingProvider";
-import { dateKey, isBookingOnDate } from "@/lib/booking-wall-clock";
+import {
+  dateKey,
+  isBookingOnDate,
+  dateFromKey,
+} from "@/lib/booking-wall-clock";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-
-function formatHeaderDate(date: Date, locale: string) {
-  return new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
+import {
+  getBookingDateCounts,
+  isVisibleCalendarBooking,
+} from "@/lib/booking-calendar";
 
 export function BookingsSplitView({
   bookings,
@@ -45,7 +38,7 @@ export function BookingsSplitView({
   staffMembers: StaffView[];
   orgId: Id<"orgs">;
 }) {
-  const { locale, t } = useDashboardI18n();
+  const { t } = useDashboardI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const isMobile = !isDesktop;
   const [mobileVariant, setMobileVariant] = useState<"vertical" | "list">(
@@ -64,8 +57,23 @@ export function BookingsSplitView({
   const { openQuickBooking } = useQuickBooking();
 
   const [selectedBookingId, setSelectedBookingId] =
-    useState<Id<"bookings"> | null>(null);
-  const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
+    useState<Id<"bookings"> | null>(() => {
+      if (typeof window === "undefined") return null;
+      const requested = new URLSearchParams(window.location.search).get(
+        "booking",
+      );
+      return bookings.find((booking) => booking._id === requested)?._id ?? null;
+    });
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (typeof window !== "undefined") {
+      const requested = new URLSearchParams(window.location.search).get("date");
+      if (requested) {
+        const parsed = dateFromKey(requested);
+        if (parsed) return startOfDay(parsed);
+      }
+    }
+    return startOfDay(new Date());
+  });
   const [viewVariant, setViewVariant] = useState<
     "horizontal" | "vertical" | "list"
   >(() => {
@@ -94,6 +102,10 @@ export function BookingsSplitView({
     ? mobileVariant
     : viewVariant;
   const [statusFilter, setStatusFilter] = useState<BookingStatusFilter>("all");
+  const bookingDateCounts = useMemo(
+    () => getBookingDateCounts(bookings),
+    [bookings],
+  );
 
   const quickBookingSlots = useQuery(api.slots.getQuickBookingSlots, {
     orgId,
@@ -103,27 +115,8 @@ export function BookingsSplitView({
   // Exclude bookings that were cancelled as part of a reschedule
   const todayBookings = bookings.filter(
     (b) =>
-      isBookingOnDate(b.startAt, currentDate) &&
-      !(b.status === "cancelled" && b.cancellationReason === "Rescheduled"),
+      isBookingOnDate(b.startAt, currentDate) && isVisibleCalendarBooking(b),
   );
-
-  // Day Summary Calculations
-  const totalBookingsCount = todayBookings.length;
-
-  const projectedRevenueMinorUnits = todayBookings.reduce(
-    (sum, b) =>
-      b.status !== "cancelled" && b.status !== "no_show"
-        ? sum + (b.priceMinorUnits || 0)
-        : sum,
-    0,
-  );
-
-  const completedValue = todayBookings.reduce((sum, b) => {
-    if (b.status === "completed") {
-      return sum + (b.priceMinorUnits || 0);
-    }
-    return sum;
-  }, 0);
 
   // Filtering logic for the main view
   const filteredBookings = todayBookings.filter((b) => {
@@ -203,218 +196,107 @@ export function BookingsSplitView({
   );
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-5 md:h-full md:gap-4">
-      {/* Top Header: Title, Live Stats & Date Navigator */}
-      <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-5 md:flex md:flex-wrap md:justify-between md:gap-4">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          <h1 className="text-2xl font-display font-semibold tracking-tight text-foreground sm:text-3xl">
-            {t("Bookings", "Термини")}
-          </h1>
+    <div className="dashboard-calendar-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card">
+      <BookingsToolbar
+        currentDate={currentDate}
+        bookingDateCounts={bookingDateCounts}
+        onDateChange={(date) => {
+          setSelectedBookingId(null);
+          setCurrentDate(date);
+        }}
+        onNewBooking={() => openQuickBooking({ date: currentDate })}
+        isMobile={isMobile}
+        variant={activeVariant}
+        onVariantChange={handleVariantChange}
+        status={statusFilter}
+        onStatusChange={(value) => {
+          setSelectedBookingId(null);
+          setStatusFilter(value);
+        }}
+        staffMembers={staffMembers}
+        staffId={activeStaffId}
+        onStaffChange={(value) => {
+          setSelectedBookingId(null);
+          setMobileStaffId(value);
+        }}
+      />
 
-          <div className="hidden xl:flex h-7 w-[1px] bg-border/60 mx-1" />
-
-          {/* Quick Metrics */}
-          <div className="hidden xl:flex items-center gap-3 text-sm">
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-semibold text-foreground tracking-tight">
-                {totalBookingsCount}
-              </span>
-              <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">
-                {t("Bookings", "Термини")}
-              </span>
-            </div>
-
-            <span className="text-border px-1">·</span>
-
-            <div className="flex items-baseline gap-1.5 line-clamp-1">
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                <Price amount={completedValue} showDecimals={false} />
-              </span>
-              <span className="text-muted-foreground font-medium text-xs uppercase tracking-wider">
-                <span className="lowercase font-normal opacity-70">
-                  {t("completed", "завршени")} /{" "}
-                  <Price
-                    amount={projectedRevenueMinorUnits}
-                    showDecimals={false}
-                  />{" "}
-                  {t("scheduled", "закажани")}
-                </span>
-              </span>
-            </div>
+      {/* Content Area */}
+      <div
+        data-scroll-container
+        className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-card"
+      >
+        {staffMembers.length === 0 ? (
+          <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
+            <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
+            <p className="font-semibold text-foreground text-base">
+              {t("No staff members found", "Не се пронајдени членови на тимот")}
+            </p>
           </div>
-        </div>
-
-        {/* Action Controls */}
-        <div className="contents md:flex md:items-center md:gap-3">
-          {/* Date Navigator */}
-          <div className="order-3 col-span-2 flex w-full items-center gap-1 rounded-xl border border-border/50 bg-card p-1 shadow-2xs md:order-none md:w-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-11 rounded-lg text-muted-foreground hover:text-foreground md:size-8"
-              onClick={() => {
-                setSelectedBookingId(null);
-                setCurrentDate(subDays(currentDate, 1));
-              }}
-              aria-label={t("Previous day", "Претходен ден")}
-            >
-              <IconChevronLeft className="size-4" />
-            </Button>
-
-            {!isToday(currentDate) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedBookingId(null);
-                  setCurrentDate(startOfDay(new Date()));
-                }}
-                className="min-h-11 px-3 md:min-h-0 md:px-2 py-0.5 text-xs font-semibold rounded-md bg-muted/60 text-foreground hover:bg-muted transition-colors"
-              >
-                {t("Today", "Денес")}
-              </button>
-            )}
-
-            <span className="min-w-0 flex-1 px-2 text-center text-sm font-semibold select-none tracking-tight md:min-w-[105px] md:text-xs">
-              {formatHeaderDate(currentDate, locale)}
-            </span>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-11 rounded-lg text-muted-foreground hover:text-foreground md:size-8"
-              onClick={() => {
-                setSelectedBookingId(null);
-                setCurrentDate(addDays(currentDate, 1));
-              }}
-              aria-label={t("Next day", "Следен ден")}
-            >
-              <IconChevronRight className="size-4" />
-            </Button>
+        ) : activeVariant === "horizontal" ? (
+          <BookingsHorizontalTimeline
+            bookings={filteredBookings}
+            staffMembers={staffMembers}
+            selectedBookingId={selectedBookingId}
+            onSelectBooking={(id) =>
+              setSelectedBookingId(id === selectedBookingId ? null : id)
+            }
+            onReschedule={handleReschedule}
+            onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+            onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+            onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+            currentDate={currentDate}
+            quickBookingSlots={quickBookingSlots?.slots ?? []}
+            slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
+            onQuickBooking={(slot) => openQuickBooking({ slot })}
+          />
+        ) : activeVariant === "vertical" ? (
+          <BookingsTimeline
+            bookings={filteredBookings}
+            staffMembers={
+              isMobile
+                ? staffMembers.filter((staff) => staff._id === activeStaffId)
+                : staffMembers
+            }
+            selectedBookingId={selectedBookingId}
+            onSelectBooking={(id) =>
+              setSelectedBookingId(id === selectedBookingId ? null : id)
+            }
+            onReschedule={handleReschedule}
+            onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+            onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+            onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+            currentDate={currentDate}
+            quickBookingSlots={quickBookingSlots?.slots ?? []}
+            slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
+            onQuickBooking={(slot) => openQuickBooking({ slot })}
+          />
+        ) : filteredBookings.length === 0 ? (
+          <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
+            <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
+            <p className="font-semibold text-foreground text-base">
+              {t("No bookings found", "Нема пронајдени термини")}
+            </p>
+            <p className="text-xs mt-1">
+              {t(
+                "Try a different filter or date.",
+                "Обидете се со друг филтер или датум.",
+              )}
+            </p>
           </div>
-
-          {/* New Booking Action */}
-          <Button
-            variant="default"
-            className="min-h-11 rounded-xl shadow-xs md:min-h-9"
-            onClick={() => openQuickBooking({ date: currentDate })}
-          >
-            <IconPlus data-icon="inline-start" />
-            {t("New Booking", "Нов термин")}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Schedule Canvas Container */}
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xs">
-        <BookingsToolbar
-          isMobile={isMobile}
-          variant={activeVariant}
-          onVariantChange={handleVariantChange}
-          status={statusFilter}
-          onStatusChange={(value) => {
-            setSelectedBookingId(null);
-            setStatusFilter(value);
-          }}
-          staffMembers={staffMembers}
-          staffId={activeStaffId}
-          onStaffChange={(value) => {
-            setSelectedBookingId(null);
-            setMobileStaffId(value);
-          }}
-        />
-
-        {/* Content Area */}
-        <div
-          data-scroll-container
-          className="relative min-h-0 flex-1 overflow-auto overscroll-contain bg-background/50"
-        >
-          {staffMembers.length === 0 ? (
-            <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
-              <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
-              <p className="font-semibold text-foreground text-base">
-                {t(
-                  "No staff members found",
-                  "Не се пронајдени членови на тимот",
-                )}
-              </p>
-            </div>
-          ) : activeVariant === "horizontal" ? (
-            <BookingsHorizontalTimeline
-              bookings={filteredBookings}
-              staffMembers={staffMembers}
-              selectedBookingId={selectedBookingId}
-              onSelectBooking={(id) =>
-                setSelectedBookingId(id === selectedBookingId ? null : id)
-              }
-              onReschedule={handleReschedule}
-              onComplete={(bookingId) =>
-                runBookingAction("complete", bookingId)
-              }
-              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-              onMarkNoShow={(bookingId) =>
-                runBookingAction("no-show", bookingId)
-              }
-              currentDate={currentDate}
-              quickBookingSlots={quickBookingSlots?.slots ?? []}
-              slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
-              onQuickBooking={(slot) => openQuickBooking({ slot })}
-            />
-          ) : activeVariant === "vertical" ? (
-            <BookingsTimeline
-              bookings={filteredBookings}
-              staffMembers={
-                isMobile
-                  ? staffMembers.filter((staff) => staff._id === activeStaffId)
-                  : staffMembers
-              }
-              selectedBookingId={selectedBookingId}
-              onSelectBooking={(id) =>
-                setSelectedBookingId(id === selectedBookingId ? null : id)
-              }
-              onReschedule={handleReschedule}
-              onComplete={(bookingId) =>
-                runBookingAction("complete", bookingId)
-              }
-              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-              onMarkNoShow={(bookingId) =>
-                runBookingAction("no-show", bookingId)
-              }
-              currentDate={currentDate}
-              quickBookingSlots={quickBookingSlots?.slots ?? []}
-              slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
-              onQuickBooking={(slot) => openQuickBooking({ slot })}
-            />
-          ) : filteredBookings.length === 0 ? (
-            <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
-              <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
-              <p className="font-semibold text-foreground text-base">
-                {t("No bookings found", "Нема пронајдени термини")}
-              </p>
-              <p className="text-xs mt-1">
-                {t(
-                  "Try a different filter or date.",
-                  "Обидете се со друг филтер или датум.",
-                )}
-              </p>
-            </div>
-          ) : (
-            <BookingsList
-              bookings={filteredBookings}
-              staffMembers={staffMembers}
-              selectedBookingId={selectedBookingId}
-              onSelectBooking={(id) =>
-                setSelectedBookingId(id === selectedBookingId ? null : id)
-              }
-              onComplete={(bookingId) =>
-                runBookingAction("complete", bookingId)
-              }
-              onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
-              onMarkNoShow={(bookingId) =>
-                runBookingAction("no-show", bookingId)
-              }
-            />
-          )}
-        </div>
+        ) : (
+          <BookingsList
+            bookings={filteredBookings}
+            staffMembers={staffMembers}
+            selectedBookingId={selectedBookingId}
+            onSelectBooking={(id) =>
+              setSelectedBookingId(id === selectedBookingId ? null : id)
+            }
+            onComplete={(bookingId) => runBookingAction("complete", bookingId)}
+            onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
+            onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+          />
+        )}
       </div>
     </div>
   );

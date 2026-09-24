@@ -73,6 +73,8 @@
 .contact-details {
   position: relative;
   isolation: isolate;
+  width: 100%;
+  min-width: 0;
   aspect-ratio: 2 / 3;
   min-height: 700px;
   overflow: hidden;
@@ -87,7 +89,7 @@
   z-index: -1;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center bottom;
 }
 
@@ -158,7 +160,9 @@
   flex-direction: column;
   min-width: 0;
   backdrop-filter: blur(20px);
-  box-shadow: 0 16px 60px rgb(39 92 133 / 7%), 0 2px 8px rgb(39 92 133 / 3%);
+  box-shadow:
+    0 16px 60px rgb(39 92 133 / 7%),
+    0 2px 8px rgb(39 92 133 / 3%);
 }
 
 .contact-form-card > :last-child {

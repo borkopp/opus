@@ -1,0 +1,137 @@
+.chart {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 32px;
+  color: var(--muted-foreground, #818895);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.axis {
+  position: relative;
+  height: 200px;
+  text-align: right;
+}
+.axis span {
+  position: absolute;
+  right: 0;
+  top: 0;
+  transform: translateY(-50%);
+}
+.axis span:nth-child(2) {
+  top: 50%;
+}
+.axis span:last-child {
+  top: 100%;
+}
+.plot {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: clamp(6px, 2vw, 24px);
+}
+.grid {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.grid i {
+  border-top: 1px solid var(--border, #e9edf3);
+}
+.column {
+  position: relative;
+  min-width: 0;
+  outline: none;
+}
+.track {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bar {
+  width: 100%;
+  max-width: 72px;
+  border-radius: 9px 9px 0 0;
+  background-color: color-mix(
+    in srgb,
+    var(--primary, #3478f6) 55%,
+    var(--background, white)
+  );
+  border: 1px solid color-mix(in srgb, var(--primary, #3478f6) 22%, transparent);
+  border-bottom: 0;
+}
+.bar[data-peak="true"] {
+  background-color: var(--primary, #3478f6);
+}
+.zero {
+  padding-bottom: 7px;
+  opacity: 0.7;
+}
+.label {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 220px;
+  padding: 9px 12px;
+  border: 1px solid var(--border, #e9edf3);
+  border-radius: 10px;
+  background: var(--popover, white);
+  color: var(--popover-foreground, #202630);
+  box-shadow: 0 4px 16px #0000000a;
+  pointer-events: none;
+}
+.column:nth-child(2) .tooltip {
+  left: 0;
+  transform: none;
+}
+.column:last-child .tooltip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+.column:focus-visible {
+  outline: 2px solid var(--primary, #3478f6);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.column:focus-visible .tooltip {
+  display: block;
+}
+@media (hover: hover) {
+  .column:hover .tooltip {
+    display: block;
+  }
+}
+@media (max-width: 600px) {
+  .chart {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 8px;
+    font-size: 10px;
+  }
+  .axis,
+  .grid,
+  .track {
+    height: 160px;
+  }
+  .bar {
+    border-radius: 5px 5px 0 0;
+  }
+  .tooltip {
+    max-width: 150px;
+  }
+}

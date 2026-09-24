@@ -131,7 +131,7 @@ export function IntelligenceRotation() {
       ref={rootRef}
       className="intelligence-rotation"
       role="region"
-      aria-label={t.intelligence.headingLine1}
+      aria-label={t.intelligence.heading}
     >
       <div
         ref={gridRef}

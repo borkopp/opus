@@ -1,5 +1,7 @@
 "use client";
 
+import { Appear } from "@/components/ui/appear";
+import { appearStep } from "@/lib/appear";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
@@ -10,19 +12,19 @@ import {
   ExternalLink,
   Globe2,
   Rocket,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Tooltip,
-  TooltipContent,
   TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
+
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
 import { LogoMark } from "../Logo";
@@ -36,13 +38,7 @@ function getRequirementLabel(
   return t(fallbackLabel, requirementCopy[code]?.[0] ?? fallbackLabel);
 }
 
-export function WebsiteBanner({
-  orgId,
-  collapsed = false,
-}: {
-  orgId: Id<"orgs">;
-  collapsed?: boolean;
-}) {
+export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
   const { t } = useDashboardI18n();
   const readiness = useQuery(api.website.getReadiness, { orgId });
   const publish = useMutation(api.website.publish);
@@ -103,69 +99,15 @@ export function WebsiteBanner({
     }
   };
 
-  if (collapsed) {
-    return (
-      <div className="flex justify-center">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <a
-              href={websiteUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="group relative flex h-10 w-10 items-center justify-center rounded-lg border border-border/40 bg-secondary/50 text-foreground hover:bg-secondary hover:text-primary transition-all active:scale-95"
-              aria-label={t(
-                "Open studio website",
-                "Отвори веб-страница на студиото",
-              )}
-            >
-              {isPublished ? (
-                <Globe2 className="h-4.5 w-4.5 text-primary" />
-              ) : readiness.allBlockingMet ? (
-                <Rocket className="h-4.5 w-4.5 text-accent-foreground" />
-              ) : (
-                <Sparkles className="h-4.5 w-4.5 text-muted-foreground" />
-              )}
-              {isPublished && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-sidebar" />
-              )}
-            </a>
-          </TooltipTrigger>
-          <TooltipContent
-            side="right"
-            sideOffset={10}
-            className="flex flex-col gap-1 max-w-xs"
-          >
-            <p className="font-semibold text-xs leading-tight">
-              {isPublished
-                ? t(
-                    "Studio website is live",
-                    "Веб-страницата на студиото е активна",
-                  )
-                : t(
-                    "Studio website setup",
-                    "Поставување на веб-страницата на студиото",
-                  )}
-            </p>
-            <p className="text-[11px] text-muted-foreground font-mono truncate">
-              {readiness.slug}.{rootDomain}
-            </p>
-            {!isPublished && (
-              <p className="text-[10px] text-muted-foreground">
-                {t("Readiness: ", "Подготвеност: ")}
-                {completeCount}/{readiness.requirements.length}
-              </p>
-            )}
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-lg border border-border/60 bg-secondary/30 p-2.5 space-y-2.5 transition-colors hover:bg-secondary/50">
-      <div className="flex items-center justify-between gap-2">
+    <Appear delay={90} className="rounded-[25px] bg-card p-6 space-y-4">
+      <div
+        data-appear="item"
+        style={appearStep(1)}
+        className="flex items-center justify-between gap-2"
+      >
         <div className="flex items-center gap-2 min-w-0">
-          <div className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-background/80 border border-border/40 text-primary">
+          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-primary">
             {readiness.websiteStatus === "suspended" ? (
               <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
             ) : isPublished ? (
@@ -173,7 +115,7 @@ export function WebsiteBanner({
             ) : readiness.allBlockingMet ? (
               <Rocket className="h-3.5 w-3.5" />
             ) : (
-              <LogoMark className="h-3.5 w-3.5 text-brand-primary" />
+              <LogoMark className="h-3.5 w-3.5 text-brand" />
             )}
             {isPublished && (
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-1 ring-background" />
@@ -260,7 +202,11 @@ export function WebsiteBanner({
       </div>
 
       {!isPublished && (
-        <div className="space-y-1.5 pt-0.5">
+        <div
+          data-appear="item"
+          style={appearStep(2)}
+          className="space-y-1.5 pt-0.5"
+        >
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span className="font-medium">
               {t("Readiness", "Подготвеност")}
@@ -275,7 +221,11 @@ export function WebsiteBanner({
 
       {!isPublished && incompleteRequirements.length > 0 && (
         <div className="space-y-1 pt-1 border-t border-border/40">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 pb-0.5">
+          <div
+            data-appear="item"
+            style={appearStep(3)}
+            className="flex items-center justify-between text-[10px] text-muted-foreground/80 pb-0.5"
+          >
             <span className="font-medium uppercase tracking-wider text-[9px]">
               {t("To complete", "За завршување")}
             </span>
@@ -287,9 +237,11 @@ export function WebsiteBanner({
             </Link>
           </div>
           <div className="flex flex-col gap-0.5">
-            {visibleIncomplete.map((req) => (
+            {visibleIncomplete.map((req, index) => (
               <Link
                 key={req.code}
+                data-appear="item"
+                style={appearStep(3 + index)}
                 href={req.actionHref}
                 className="group flex items-center justify-between gap-1.5 rounded-md px-1.5 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground"
               >
@@ -314,6 +266,6 @@ export function WebsiteBanner({
           </div>
         </div>
       )}
-    </div>
+    </Appear>
   );
 }

@@ -10,6 +10,8 @@ import React from "react";
 import { ACTIVE_DASHBOARD_PATH } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
 import { MobileSetupBanner } from "@/components/dashboard/MobileSetupBanner";
+import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
+import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 
 export default function DashboardLayout({
   children,
@@ -86,27 +88,32 @@ export default function DashboardLayout({
   if (!profile?.orgId) return null;
 
   return (
-    <QuickBookingProvider key={profile.orgId} orgId={profile.orgId}>
-      <div
-        className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
-      >
-        <a className="dashboard-skip-link" href="#dashboard-content">
-          Skip to content
-        </a>
-        <div className={s.stage}>
-          <div className={s.dashboard}>
-            <DashboardHeader profile={profile} />
-            <main
-              id="dashboard-content"
-              tabIndex={-1}
-              className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
-            >
-              <MobileSetupBanner orgId={profile.orgId} />
-              {children}
-            </main>
+    <DashboardAppearanceProvider
+      theme={resolveDashboardTheme(profile.dashboardTheme)}
+    >
+      <QuickBookingProvider key={profile.orgId} orgId={profile.orgId}>
+        <div
+          data-dashboard-theme={resolveDashboardTheme(profile.dashboardTheme)}
+          className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
+        >
+          <a className="dashboard-skip-link" href="#dashboard-content">
+            Skip to content
+          </a>
+          <div className={s.stage}>
+            <div className={s.dashboard}>
+              <DashboardHeader profile={profile} />
+              <main
+                id="dashboard-content"
+                tabIndex={-1}
+                className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
+              >
+                <MobileSetupBanner orgId={profile.orgId} />
+                {children}
+              </main>
+            </div>
           </div>
         </div>
-      </div>
-    </QuickBookingProvider>
+      </QuickBookingProvider>
+    </DashboardAppearanceProvider>
   );
 }

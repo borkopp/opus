@@ -9,19 +9,21 @@ export function ThemeProvider({
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   const pathname = usePathname();
-  // Clarity is the dashboard's single production appearance. Studio remains
-  // a design reference until theme switching is implemented separately.
-  const clarity = [
+  // Both dashboard appearances have their own light palette. Keep system dark
+  // mode from overriding their tokens, including portal-based dialogs.
+  const dashboard = [
     "/beauty",
     "/settings",
     "/notifications",
     "/gap-optimizer",
     "/ai-inbox",
+    "/onboarding",
+    "/dashboard-preview",
   ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
   return (
     <NextThemesProvider
       {...props}
-      forcedTheme={clarity ? "light" : props.forcedTheme}
+      forcedTheme={dashboard ? "light" : props.forcedTheme}
     >
       {children}
     </NextThemesProvider>

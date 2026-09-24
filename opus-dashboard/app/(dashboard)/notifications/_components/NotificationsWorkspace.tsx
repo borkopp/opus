@@ -30,10 +30,17 @@ type FilterTab =
   | "unread"
   | "new_booking"
   | "booking_cancelled"
+  | "ai_handoff"
   | "no_show";
 
 function getTypeConfig(type: string, t: (en: string, mk: string) => string) {
   switch (type) {
+    case "ai_handoff":
+      return {
+        icon: <IconBellRinging size={18} stroke={2} />,
+        iconBg: "bg-warning/15 text-warning",
+        label: t("AI handoff", "Преземи разговор"),
+      };
     case "new_booking":
       return {
         icon: <IconCalendarPlus size={18} stroke={2} />,
@@ -85,6 +92,7 @@ export function NotificationsWorkspace() {
   const tabs: { id: FilterTab; label: string }[] = [
     { id: "all", label: t("All", "Сите") },
     { id: "unread", label: t("Unread", "Непрочитани") },
+    { id: "ai_handoff", label: t("AI handoffs", "AI разговори") },
     { id: "new_booking", label: t("New Bookings", "Нови термини") },
     { id: "booking_cancelled", label: t("Cancellations", "Откажани") },
     { id: "no_show", label: t("No-Shows", "Непојавувања") },
@@ -134,7 +142,9 @@ export function NotificationsWorkspace() {
   const handleClick = (n: (typeof filtered)[0]) => {
     if (!orgId) return;
     if (!n.isRead) markRead({ orgId, notificationId: n._id });
-    if (n.bookingId) router.push("/beauty/bookings");
+    if (n.conversationId)
+      router.push(`/ai-inbox?conversation=${n.conversationId}`);
+    else if (n.bookingId) router.push("/beauty/bookings");
   };
 
   return (

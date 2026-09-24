@@ -463,6 +463,7 @@ body:has(.dashboard-shell),
 .auth-shell {
   --studio-frame: #e8ebef;
   --studio-blue: #dce9fb;
+  --brand: #2588c8;
   --background: #f5f6f8;
   --foreground: #1e2229;
   --card: #fff;
@@ -493,7 +494,32 @@ body:has(.dashboard-shell),
   color-scheme: light;
 }
 body:has(.dashboard-shell) {
-  background: #e8ebef;
+  background: var(--studio-frame);
+}
+
+/* Body tokens also reach portaled menus, booking forms, and notifications. */
+body:has(.dashboard-shell[data-dashboard-theme="studio"]),
+.dashboard-shell[data-dashboard-theme="studio"] {
+  --studio-frame: #dedbe7;
+  --background: #f6f5f9;
+  --foreground: #252330;
+  --card-foreground: #252330;
+  --popover-foreground: #252330;
+  --primary: #ad547b;
+  --brand: #c66f96;
+  --brand-soft: #f7eaf1;
+  --secondary: #eeedf2;
+  --secondary-foreground: #62596e;
+  --muted: #eeedf2;
+  --muted-foreground: #797281;
+  --accent: #f7eaf1;
+  --accent-foreground: #914064;
+  --border: #e9e3ed;
+  --input: #ddd3e2;
+  --ring: #ad547b;
+  --chart-1: #ad547b;
+  --chart-2: #ba94ad;
+  --chart-3: #dfc6d6;
 }
 .dashboard-shell {
   /* Keep navigation, overview widgets and route content on the same edges. */

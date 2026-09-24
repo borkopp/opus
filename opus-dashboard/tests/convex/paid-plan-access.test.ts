@@ -77,39 +77,14 @@ describe("paid-plan feature access", () => {
     ).rejects.toThrow("AI front desk requires the paid plan");
 
     await expect(
-      t.mutation(api.ai.conversations.createConversation, {
-        orgId,
-        channel: "webchat",
-        channelThreadId: "free-plan-session",
-      }),
+      owner.query(api.ai.conversations.listConversations, { orgId }),
     ).rejects.toThrow("AI front desk requires the paid plan");
-
-    const existingConversationId = await t.run(async (ctx) => {
-      const now = Date.now();
-      return await ctx.db.insert("ai_conversations", {
-        orgId,
-        channel: "webchat",
-        channelThreadId: "pre-downgrade-session",
-        status: "active",
-        bookingIds: [],
-        totalInputTokens: 0,
-        totalOutputTokens: 0,
-        createdAt: now,
-        updatedAt: now,
-      });
-    });
-
     await expect(
-      t.action(api.ai.agent.processMessagePublic, {
-        orgId,
-        conversationId: existingConversationId,
-        userMessage: "Can I book tomorrow?",
-        channel: "webchat",
-      }),
+      owner.action(api.ai.agent.preview, { question: "Hello" }),
     ).rejects.toThrow("AI front desk requires the paid plan");
   });
 
-  test("manually setting paid unlocks settings, queries, and AI runtime creation", async () => {
+  test("manually setting paid unlocks authenticated settings and inbox queries", async () => {
     const { owner, orgId } = await createStudio(t);
 
     await t.run(async (ctx) => {
@@ -152,11 +127,10 @@ describe("paid-plan feature access", () => {
     ).resolves.toMatchObject({ aiEnabled: true });
 
     await expect(
-      t.mutation(api.ai.conversations.createConversation, {
-        orgId,
-        channel: "webchat",
-        channelThreadId: "paid-plan-session",
-      }),
-    ).resolves.toBeDefined();
+      owner.query(api.ai.conversations.listConversations, { orgId }),
+    ).resolves.toEqual([]);
+    await expect(
+      t.query(api.ai.conversations.listConversations, { orgId }),
+    ).rejects.toThrow("Unauthenticated");
   });
 });

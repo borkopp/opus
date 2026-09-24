@@ -212,6 +212,8 @@ describe("beauty activation engine", () => {
 
   test("prevents managers from creating, promoting, inviting, or deactivating owners", async () => {
     const { owner, orgId } = await completeBeautySetup(t);
+    // This role-boundary fixture needs a second owner seat, beyond Free limits.
+    await t.run((ctx) => ctx.db.patch(orgId, { plan: "paid" }));
     const { authenticated: manager } = await createAuthenticatedStaff(
       t,
       orgId,

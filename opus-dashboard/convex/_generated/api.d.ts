@@ -10,10 +10,20 @@
 
 import type * as activation from "../activation.js";
 import type * as ai_agent from "../ai/agent.js";
+import type * as ai_booking from "../ai/booking.js";
+import type * as ai_connections from "../ai/connections.js";
+import type * as ai_context from "../ai/context.js";
 import type * as ai_conversations from "../ai/conversations.js";
+import type * as ai_delivery from "../ai/delivery.js";
 import type * as ai_gapOptimizer from "../ai/gapOptimizer.js";
 import type * as ai_gapOptimizerHelpers from "../ai/gapOptimizerHelpers.js";
+import type * as ai_instagram from "../ai/instagram.js";
 import type * as ai_messages from "../ai/messages.js";
+import type * as ai_previewData from "../ai/previewData.js";
+import type * as ai_queue from "../ai/queue.js";
+import type * as ai_rules from "../ai/rules.js";
+import type * as ai_state from "../ai/state.js";
+import type * as ai_webhooks from "../ai/webhooks.js";
 import type * as analyst_access from "../analyst/access.js";
 import type * as analyst_agent from "../analyst/agent.js";
 import type * as analyst_analytics from "../analyst/analytics.js";
@@ -47,6 +57,7 @@ import type * as lib_bookingEmailNotifications from "../lib/bookingEmailNotifica
 import type * as lib_bookingEmailSecurity from "../lib/bookingEmailSecurity.js";
 import type * as lib_bookingTime from "../lib/bookingTime.js";
 import type * as lib_dashboardAnalytics from "../lib/dashboardAnalytics.js";
+import type * as lib_dashboardTheme from "../lib/dashboardTheme.js";
 import type * as lib_emailDelivery from "../lib/emailDelivery.js";
 import type * as lib_emailDeliveryTypes from "../lib/emailDeliveryTypes.js";
 import type * as lib_emailTemplates from "../lib/emailTemplates.js";
@@ -105,10 +116,20 @@ import type {
 declare const fullApi: ApiFromModules<{
   activation: typeof activation;
   "ai/agent": typeof ai_agent;
+  "ai/booking": typeof ai_booking;
+  "ai/connections": typeof ai_connections;
+  "ai/context": typeof ai_context;
   "ai/conversations": typeof ai_conversations;
+  "ai/delivery": typeof ai_delivery;
   "ai/gapOptimizer": typeof ai_gapOptimizer;
   "ai/gapOptimizerHelpers": typeof ai_gapOptimizerHelpers;
+  "ai/instagram": typeof ai_instagram;
   "ai/messages": typeof ai_messages;
+  "ai/previewData": typeof ai_previewData;
+  "ai/queue": typeof ai_queue;
+  "ai/rules": typeof ai_rules;
+  "ai/state": typeof ai_state;
+  "ai/webhooks": typeof ai_webhooks;
   "analyst/access": typeof analyst_access;
   "analyst/agent": typeof analyst_agent;
   "analyst/analytics": typeof analyst_analytics;
@@ -142,6 +163,7 @@ declare const fullApi: ApiFromModules<{
   "lib/bookingEmailSecurity": typeof lib_bookingEmailSecurity;
   "lib/bookingTime": typeof lib_bookingTime;
   "lib/dashboardAnalytics": typeof lib_dashboardAnalytics;
+  "lib/dashboardTheme": typeof lib_dashboardTheme;
   "lib/emailDelivery": typeof lib_emailDelivery;
   "lib/emailDeliveryTypes": typeof lib_emailDeliveryTypes;
   "lib/emailTemplates": typeof lib_emailTemplates;

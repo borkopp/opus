@@ -11,10 +11,12 @@ export function StepFrame({
   title,
   description,
   children,
+  wide = false,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
+  wide?: boolean;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -35,7 +37,14 @@ export function StepFrame({
           {description}
         </p>
       )}
-      <div className="mt-8 w-full min-w-0 max-w-xl sm:mt-10">{children}</div>
+      <div
+        className={cn(
+          "mt-8 w-full min-w-0 sm:mt-10",
+          wide ? "max-w-4xl" : "max-w-xl",
+        )}
+      >
+        {children}
+      </div>
     </section>
   );
 }

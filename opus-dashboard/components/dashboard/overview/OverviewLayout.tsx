@@ -14,6 +14,7 @@ import { NextClientWidget } from "./widgets/NextClientWidget";
 import { ReturningClientsWidget } from "./widgets/ReturningClientsWidget";
 import { FrontDeskWidget } from "./widgets/FrontDeskWidget";
 import s from "../clarity.module.css";
+import { useDashboardAppearance } from "../DashboardAppearanceProvider";
 
 import type { ReactNode } from "react";
 import type {
@@ -52,6 +53,7 @@ export function OverviewLayout({
   website?: ReactNode;
 }) {
   const { t, locale } = useDashboardI18n();
+  const studio = useDashboardAppearance() === "studio";
   const hour = new Date(data.now).getUTCHours();
   const greeting =
     hour < 12
@@ -72,8 +74,12 @@ export function OverviewLayout({
               }).format(data.today)}
             </div>
             <h1 data-appear="item" style={appearStep(2)}>
-              {greeting}
-              {firstName ? `, ${firstName}` : ""}
+              {studio
+                ? t(
+                    "A good day starts with a little clarity",
+                    "Добриот ден почнува со јасен преглед",
+                  )
+                : `${greeting}${firstName ? `, ${firstName}` : ""}`}
               <span>.</span>
             </h1>
             <p data-appear="item" style={appearStep(3)}>
@@ -98,17 +104,46 @@ export function OverviewLayout({
             {t("New appointment", "Нов термин")}
           </button>
         </Appear>
-        <div className={s.metrics}>
-          <AppointmentsMetric data={data} />
-          <RevenueMetric revenue={data.revenue} />
-          <OccupancyMetric utilisation={utilisation} />
+        <div className={studio ? s.studioMetrics : undefined}>
+          <div className={s.metrics}>
+            <AppointmentsMetric data={data} />
+            <RevenueMetric revenue={data.revenue} />
+            <OccupancyMetric utilisation={utilisation} />
+          </div>
+          {studio && (
+            <button
+              type="button"
+              className={s.studioQuickAdd}
+              onClick={onNewAppointment}
+            >
+              <span className={s.roundIcon}>
+                <Plus size={24} />
+              </span>
+              <span>{t("Book a client", "Закажи термин")}</span>
+            </button>
+          )}
         </div>
-        <RevenueWidget revenue={data.revenue} onDaysChange={onDaysChange} />
-        <div className={s.bottomPair}>
-          <TeamWidget staff={data.staff} utilisation={utilisation} />
-          <ServicesWidget analytics={analytics} />
-        </div>
+        {studio ? (
+          <div className={s.studioMiddle}>
+            <ReturningClientsWidget analytics={analytics} />
+            <ServicesWidget analytics={analytics} tiles />
+          </div>
+        ) : (
+          <>
+            <RevenueWidget revenue={data.revenue} onDaysChange={onDaysChange} />
+            <div className={s.bottomPair}>
+              <TeamWidget staff={data.staff} utilisation={utilisation} />
+              <ServicesWidget analytics={analytics} />
+            </div>
+          </>
+        )}
         <ScheduleWidget data={data} onDateChange={onDateChange} />
+        {studio && (
+          <div className={s.bottomPair}>
+            <RevenueWidget revenue={data.revenue} onDaysChange={onDaysChange} />
+            <TeamWidget staff={data.staff} utilisation={utilisation} />
+          </div>
+        )}
         <div className={s.bottomPair}>
           {assistant}
           {recovery}
@@ -122,9 +157,9 @@ export function OverviewLayout({
           </span>
           <Scissors size={15} />
         </Appear>
-        <NextClientWidget booking={data.next} />
+        <NextClientWidget booking={data.next} featured={studio} />
         {openings}
-        <ReturningClientsWidget analytics={analytics} />
+        {!studio && <ReturningClientsWidget analytics={analytics} />}
         <FrontDeskWidget paid={paid} />
         {website}
       </aside>

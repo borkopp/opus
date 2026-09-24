@@ -7,6 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { toast } from "sonner";
 import { MessageBubble } from "./MessageBubble";
 import { ConversationStatusBadge } from "./ConversationStatusBadge";
+import { StaffReply } from "./StaffReply";
 import { Button } from "@/components/ui/button";
 import {
   Instagram,
@@ -18,6 +19,7 @@ import { format } from "date-fns";
 import { mk } from "date-fns/locale";
 import posthog from "posthog-js";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { getHandoffReason } from "@/lib/i18n/ai-frontdesk";
 
 interface Props {
   orgId: Id<"orgs">;
@@ -37,6 +39,9 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   const resolveConversation = useMutation(
     api.ai.conversations.resolveConversation,
   );
+  const resumeConversation = useMutation(
+    api.ai.conversations.resumeConversation,
+  );
   const handoffConversation = useMutation(
     api.ai.conversations.handoffConversation,
   );
@@ -48,7 +53,13 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
     }
   }, [messages]);
 
-  if (!conversation) {
+  if (conversation === null)
+    return (
+      <p className="p-5 text-sm text-muted-foreground">
+        {t("Conversation not found.", "Разговорот не е пронајден.")}
+      </p>
+    );
+  if (conversation === undefined) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -111,22 +122,25 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
     conversation.channel === "instagram" ? Instagram : BotMessageSquare;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-0 min-w-0 flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border/40 shrink-0 bg-muted/10">
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-border/40 shrink-0 bg-muted/10">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center">
             <User size={16} className="text-muted-foreground" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">
+              <span className="break-words [overflow-wrap:anywhere] font-medium text-sm">
                 {conversation.customer?.name ??
                   t("Unknown customer", "Непознат клиент")}
               </span>
-              <ChannelIcon size={13} className="text-muted-foreground" />
+              <ChannelIcon
+                size={13}
+                className="shrink-0 text-muted-foreground"
+              />
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex flex-wrap items-center gap-2 mt-0.5">
               <ConversationStatusBadge status={conversation.status} />
               <span className="text-[11px] text-muted-foreground">
                 {t("Started", "Започнат на")}{" "}
@@ -149,7 +163,32 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         {/* Action buttons */}
         {(conversation.status === "active" ||
           conversation.status === "handed_off") && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {conversation.status === "handed_off" && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await resumeConversation({ orgId, conversationId });
+                    toast.success(
+                      t(
+                        "AI will reply to the next message",
+                        "AI ќе одговори на следната порака",
+                      ),
+                    );
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : t("Unable to resume AI", "AI не може да продолжи"),
+                    );
+                  }
+                }}
+              >
+                {t("Resume AI", "Продолжи со AI")}
+              </Button>
+            )}
             {conversation.status === "active" && (
               <Button size="sm" variant="outline" onClick={handleTakeOver}>
                 {t("Take Over", "Преземи")}
@@ -185,10 +224,18 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
             <span className="font-medium">
               {t("Handed off:", "Преземено:")}
             </span>{" "}
-            {conversation.handoffReason}
+            {getHandoffReason(language, conversation.handoffReason)}
           </p>
         </div>
       )}
+      {conversation.channel === "instagram" &&
+        conversation.status !== "resolved" && (
+          <StaffReply
+            key={conversationId}
+            orgId={orgId}
+            conversationId={conversationId}
+          />
+        )}
     </div>
   );
 }

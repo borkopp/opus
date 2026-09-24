@@ -726,7 +726,7 @@ describe("public booking email flow", () => {
       subject: "Презакажан термин · Atelier Email",
       to: ["rescheduled@example.com"],
     });
-    expect(rescheduleBody?.html).toContain("#ff814a");
+    expect(rescheduleBody?.html).toContain("opus-email-logo-blue.png");
   });
 
   test("locks a verification challenge after five incorrect codes", async () => {
@@ -772,35 +772,28 @@ describe("public booking email flow", () => {
     expect(state.bookings).toHaveLength(0);
   });
 
-  test("allows public booking when phone number is omitted", async () => {
+  test("rejects public booking when the required phone number is omitted", async () => {
     const fixture = await setupPublishedStudio(t);
-    const args = {
-      ...bookingArgs(fixture),
-      customerEmail: "no-phone@example.com",
-      customerPhone: undefined,
-    };
+    const args = { ...bookingArgs(fixture), customerPhone: undefined };
     const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
       orgId: fixture.orgId,
       email: args.customerEmail,
     });
-    const booking = await t.action(api.publicBooking.confirmPublicBooking, {
-      ...args,
-      challengeId: challenge.challengeId,
-      otp: TEST_OTP,
-    });
-    expect(booking).toMatchObject({
-      serviceName: "Signature Treatment",
-      staffName: "Ada Owner",
-      startAt: fixture.slot.startAt,
-    });
-
-    const savedCustomer = await t.run(async (ctx) => {
-      const b = await ctx.db.get(booking.bookingId);
-      return b ? await ctx.db.get(b.customerId) : null;
-    });
-    expect(savedCustomer).toMatchObject({
-      name: "Elena Client",
-      email: "no-phone@example.com",
-    });
+    await expect(
+      // @ts-expect-error Deliberately invalid transport payload verifies the server boundary.
+      t.action(api.publicBooking.confirmPublicBooking, {
+        ...args,
+        challengeId: challenge.challengeId,
+        otp: TEST_OTP,
+      }),
+    ).rejects.toThrow("customerPhone");
+    expect(
+      await t.run((ctx) =>
+        ctx.db
+          .query("bookings")
+          .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+          .collect(),
+      ),
+    ).toHaveLength(0);
   });
 });

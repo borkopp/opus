@@ -45,6 +45,8 @@ import {
 } from "@/lib/mapbox";
 import { useMapboxSearch } from "@/hooks/use-mapbox-search";
 import posthog from "posthog-js";
+import { ThemeStep } from "./ThemeStep";
+import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 
 const LocationMapPicker = dynamic(
   () => import("@/components/dashboard/LocationMapPicker"),
@@ -64,6 +66,7 @@ type WizardStep =
   | "service-price"
   | "service-duration"
   | "hours"
+  | "theme"
   | "review";
 
 const STEP_ORDER: WizardStep[] = [
@@ -74,6 +77,7 @@ const STEP_ORDER: WizardStep[] = [
   "service-price",
   "service-duration",
   "hours",
+  "theme",
   "review",
 ];
 
@@ -85,6 +89,7 @@ const STEP_ALIASES: Record<string, WizardStep> = {
   "service-name": "service-name",
   hours: "hours",
   "hours-0": "hours",
+  theme: "theme",
   storefront: "review",
   review: "review",
 };
@@ -842,7 +847,9 @@ function OnboardingFlow({
     beautyCategories.find(([category]) => category === currentDraft.category) ??
     beautyCategories[0];
   const derivedStep = profile?.orgId
-    ? firstStepForSection(state?.nextStep ?? "business")
+    ? state?.nextStep === "review" && !profile.dashboardTheme
+      ? "theme"
+      : firstStepForSection(state?.nextStep ?? "business")
     : "business-name";
   const step =
     !profile.orgId && manualStep !== "business-category"
@@ -1136,6 +1143,14 @@ function OnboardingFlow({
               canGoBack={canGoBack}
               onBack={goBack}
               onSaved={handleHoursSaved}
+            />
+          )}
+
+          {step === "theme" && (
+            <ThemeStep
+              value={resolveDashboardTheme(profile.dashboardTheme)}
+              onBack={goBack}
+              onSaved={goNext}
             />
           )}
 

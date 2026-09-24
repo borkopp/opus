@@ -446,18 +446,7 @@ export function IdentityProfileTab({
                   }
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="settings-page-id">
-                  {t("Instagram page ID", "ID на Instagram страница")}
-                </FieldLabel>
-                <Input
-                  id="settings-page-id"
-                  value={branding.instagramPageId}
-                  onChange={(event) =>
-                    update("instagramPageId", event.target.value)
-                  }
-                />
-              </Field>
+
               <Field>
                 <FieldLabel htmlFor="settings-website">
                   {t("Website", "Веб-страница")}

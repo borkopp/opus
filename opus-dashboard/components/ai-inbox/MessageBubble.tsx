@@ -25,15 +25,10 @@ export function MessageBubble({ message }: { message: Message }) {
     };
     return (
       <div className="flex justify-center my-3">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs border border-border/50">
+        <div className="inline-flex flex-wrap justify-center items-center gap-1.5 px-3 py-1.5 rounded-xl bg-muted text-muted-foreground text-xs border border-border/50">
           <span className="font-medium">
             {actionLabels[message.actionType!] ?? message.actionType}
           </span>
-          {message.actionReferenceId && (
-            <span className="opacity-60">
-              · {message.actionReferenceId.slice(0, 8)}
-            </span>
-          )}
           <span className="opacity-50">· {time}</span>
         </div>
       </div>
@@ -43,8 +38,8 @@ export function MessageBubble({ message }: { message: Message }) {
   return (
     <div
       className={cn(
-        "flex gap-2 max-w-[80%] mb-3",
-        isUser ? "ml-auto flex-row-reverse" : "mr-auto",
+        "flex min-w-0 flex-col gap-2 max-w-[90%] mb-3 sm:max-w-[80%]",
+        isUser ? "ml-auto" : "mr-auto",
       )}
     >
       <div
@@ -55,7 +50,30 @@ export function MessageBubble({ message }: { message: Message }) {
             : "bg-muted border border-border/50 rounded-tl-sm",
         )}
       >
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+          {message.content}
+        </p>
+        {!isUser && message.deliveryStatus && (
+          <p className="mt-2 text-xs opacity-70">
+            {message.author === "staff" ? t("Team", "Тим") : "AI"} ·{" "}
+            {
+              {
+                queued: t("Queued", "Во редица"),
+                sending: t("Sending", "Се испраќа"),
+                sent: t("Accepted by Instagram", "Прифатено од Instagram"),
+                failed: t("Not sent", "Не е испратено"),
+                uncertain: t(
+                  "Check delivery in Instagram",
+                  "Проверете ја испораката во Instagram",
+                ),
+                withheld: t(
+                  "Not sent · needs team review",
+                  "Не е испратено · потребен е преглед од тимот",
+                ),
+              }[message.deliveryStatus]
+            }
+          </p>
+        )}
       </div>
       <div
         className={cn(

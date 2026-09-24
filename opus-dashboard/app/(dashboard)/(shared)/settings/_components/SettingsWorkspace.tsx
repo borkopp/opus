@@ -11,6 +11,7 @@ import {
   MapPin,
   Palette,
   Settings2,
+  SwatchBook,
   Sparkles,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -29,9 +30,11 @@ import { GeneralTab } from "./tabs/GeneralTab";
 import { IdentityProfileTab } from "./tabs/IdentityProfileTab";
 import { LocationTab } from "./tabs/LocationTab";
 import { NotificationsQueueTab } from "./tabs/NotificationsQueueTab";
+import { ThemeTab } from "./tabs/ThemeTab";
 
 const SETTINGS_TABS = [
   { value: "general", labelEn: "General", labelMk: "Општо", icon: Settings2 },
+  { value: "themes", labelEn: "Themes", labelMk: "Теми", icon: SwatchBook },
   {
     value: "branding",
     labelEn: "Branding",
@@ -208,6 +211,7 @@ export function SettingsWorkspace() {
         </div>
 
         <div className="min-w-0">
+          <ThemeTab />
           <GeneralTab
             key={`general-${settings.updatedAt}`}
             orgId={orgId}
@@ -313,6 +317,7 @@ export function SettingsWorkspace() {
               aiWebchatEnabled: settings.aiWebchatEnabled ?? false,
               aiInstagramEnabled: settings.aiInstagramEnabled ?? false,
               aiSystemPrompt: settings.aiSystemPrompt ?? "",
+              aiStudioContext: settings.aiStudioContext ?? "",
               aiGreetingMessage: settings.aiGreetingMessage ?? "",
               aiTone: settings.aiTone ?? "friendly",
               aiLanguage: settings.aiLanguage ?? "auto",

@@ -1,6 +1,12 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { answerValidator, depthValidator, reportValidator, scheduleValidator } from "./analyst/contracts";
+import { dashboardThemeValidator } from "./lib/dashboardTheme";
+import {
+  answerValidator,
+  depthValidator,
+  reportValidator,
+  scheduleValidator,
+} from "./analyst/contracts";
 import {
   emailDeliveryStatusValidator,
   emailProviderAttemptValidator,
@@ -37,42 +43,73 @@ import {
 
 export default defineSchema({
   analyst_conversations: defineTable({
-    orgId: v.id("orgs"), userId: v.id("users"), title: v.string(),
-    createdAt: v.number(), updatedAt: v.number(),
-    isDeleted: v.boolean(), deletedAt: v.optional(v.number()),
-  }).index("by_org", ["orgId"])
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    title: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_org", ["orgId"])
     .index("by_org_user", ["orgId", "userId", "updatedAt"]),
 
   analyst_turns: defineTable({
-    orgId: v.id("orgs"), userId: v.id("users"),
-    conversationId: v.id("analyst_conversations"), requestId: v.string(),
-    question: v.string(), language: v.union(v.literal("en"), v.literal("mk")),
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    conversationId: v.id("analyst_conversations"),
+    requestId: v.string(),
+    question: v.string(),
+    language: v.union(v.literal("en"), v.literal("mk")),
     depth: depthValidator,
-    status: v.union(v.literal("pending"), v.literal("running"), v.literal("completed"), v.literal("failed")),
-    model: v.string(), answer: v.optional(answerValidator), reports: v.array(reportValidator),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    model: v.string(),
+    answer: v.optional(answerValidator),
+    reports: v.array(reportValidator),
     errorCode: v.optional(v.string()),
-    inputTokens: v.number(), outputTokens: v.number(), costMicroUsd: v.number(),
-    reservationMicroUsd: v.number(), usageMonthMs: v.number(),
-    createdAt: v.number(), expiresAt: v.number(), completedAt: v.optional(v.number()),
-    isDeleted: v.boolean(), deletedAt: v.optional(v.number()),
-  }).index("by_org", ["orgId"])
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costMicroUsd: v.number(),
+    reservationMicroUsd: v.number(),
+    usageMonthMs: v.number(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    completedAt: v.optional(v.number()),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+  })
+    .index("by_org", ["orgId"])
     .index("by_org_conversation", ["orgId", "conversationId", "createdAt"])
     .index("by_org_request", ["orgId", "userId", "requestId"])
     .index("by_org_created", ["orgId", "createdAt"]),
 
   analyst_usage: defineTable({
-    orgId: v.id("orgs"), monthStartMs: v.number(),
-    answers: v.number(), deepAnswers: v.number(),
-    spentMicroUsd: v.number(), reservedMicroUsd: v.number(), updatedAt: v.number(),
-  }).index("by_org", ["orgId"])
+    orgId: v.id("orgs"),
+    monthStartMs: v.number(),
+    answers: v.number(),
+    deepAnswers: v.number(),
+    spentMicroUsd: v.number(),
+    reservedMicroUsd: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
     .index("by_org_month", ["orgId", "monthStartMs"]),
 
   // Append-only schedule versions. Dates preceding the first version have
   // unknown historical capacity, rather than today's hours applied backwards.
   analyst_schedule_versions: defineTable({
-    orgId: v.id("orgs"), effectiveFrom: v.number(), recordedAt: v.number(),
-    complete: v.boolean(), schedule: scheduleValidator,
-  }).index("by_org", ["orgId"])
+    orgId: v.id("orgs"),
+    effectiveFrom: v.number(),
+    recordedAt: v.number(),
+    complete: v.boolean(),
+    schedule: scheduleValidator,
+  })
+    .index("by_org", ["orgId"])
     .index("by_org_effective", ["orgId", "effectiveFrom"]),
 
   // ─────────────────────────────────────────────────────
@@ -135,7 +172,8 @@ export default defineSchema({
     // ── Contact & social ──
     phone: v.optional(v.string()), // "+38972xxxxxxx" E.164
     instagramHandle: v.optional(v.string()), // "kingcuts_sk"
-    instagramPageId: v.optional(v.string()), // numeric Meta PSID e.g. "123456789012345"
+    instagramPageId: v.optional(v.string()), // legacy branding field; never used for routing
+    instagramFrontdeskAccountId: v.optional(v.string()), // verified by Instagram Login only
     websiteUrl: v.optional(v.string()),
 
     // ── Opening hours (display hours for opus.mk — separate from per-staff availability) ──
@@ -239,6 +277,7 @@ export default defineSchema({
     .index("by_listing_status", ["listingStatus"])
     .index("by_listing_status_deleted", ["listingStatus", "isDeleted"])
     .index("by_instagram_page_id", ["instagramPageId"])
+    .index("by_frontdesk_instagram", ["instagramFrontdeskAccountId"])
     .index("by_city_listing", ["city", "listingStatus"])
     .index("by_source", ["source"])
     .index("by_google_place", ["googlePlaceId"])
@@ -343,6 +382,7 @@ export default defineSchema({
 
     // AI conversation style
     aiSystemPrompt: v.optional(v.string()), // custom instructions for the AI
+    aiStudioContext: v.optional(v.string()), // owner-supplied products, aftercare, FAQs and policies
     aiGreetingMessage: v.optional(v.string()), // first message when conversation starts
     aiTone: v.optional(
       v.union(
@@ -380,7 +420,16 @@ export default defineSchema({
     gapOptimizerMinGapMins: v.optional(v.number()),
     gapRecoveryLastScanAt: v.optional(v.number()),
     gapRecoveryLastScanDate: v.optional(v.string()),
-    gapRecoveryScanHistory: v.optional(v.array(v.object({ serviceDate: v.string(), scannedAt: v.number(), gapsFound: v.number(), eligibleCustomers: v.number() }))),
+    gapRecoveryScanHistory: v.optional(
+      v.array(
+        v.object({
+          serviceDate: v.string(),
+          scannedAt: v.number(),
+          gapsFound: v.number(),
+          eligibleCustomers: v.number(),
+        }),
+      ),
+    ),
 
     updatedAt: v.number(),
   }).index("by_org", ["orgId"]),
@@ -467,6 +516,9 @@ export default defineSchema({
 
     // Role
     role: v.union(v.literal("owner"), v.literal("manager"), v.literal("staff")),
+
+    // Personal dashboard appearance within this business. Legacy seats use Clarity.
+    dashboardTheme: v.optional(dashboardThemeValidator),
 
     // No-show risk score
     noShowRiskScore: v.optional(v.number()), // 0–1
@@ -600,7 +652,13 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_staff", ["staffId"])
     .index("by_staff_day", ["staffId", "dayOfWeek"])
-    .index("by_org_staff_day_active", ["orgId", "staffId", "dayOfWeek", "isDeleted", "isActive"])
+    .index("by_org_staff_day_active", [
+      "orgId",
+      "staffId",
+      "dayOfWeek",
+      "isDeleted",
+      "isActive",
+    ])
     .index("by_staff_day_active", [
       "staffId",
       "dayOfWeek",
@@ -629,7 +687,12 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_staff_date", ["staffId", "date"])
     .index("by_staff_date_active", ["staffId", "date", "isDeleted"])
-    .index("by_org_staff_date_active", ["orgId", "staffId", "date", "isDeleted"])
+    .index("by_org_staff_date_active", [
+      "orgId",
+      "staffId",
+      "date",
+      "isDeleted",
+    ])
     .index("by_org_active", ["orgId", "isDeleted"]),
 
   // ─────────────────────────────────────────────────────
@@ -740,7 +803,14 @@ export default defineSchema({
     marketingOptIn: v.boolean(),
     gapRecoveryEmailOptIn: v.optional(v.boolean()),
     gapRecoveryConsentAt: v.optional(v.number()),
-    gapRecoveryConsentSource: v.optional(v.union(v.literal("guest_booking"), v.literal("staff_recorded"), v.literal("offer_unsubscribe"), v.literal("provider_feedback"))),
+    gapRecoveryConsentSource: v.optional(
+      v.union(
+        v.literal("guest_booking"),
+        v.literal("staff_recorded"),
+        v.literal("offer_unsubscribe"),
+        v.literal("provider_feedback"),
+      ),
+    ),
     gapRecoveryUndeliverableEmail: v.optional(v.string()),
     gapRecoveryLastContactAt: v.optional(v.number()),
 
@@ -821,6 +891,7 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   ai_conversations: defineTable({
     orgId: v.id("orgs"),
+    isPreview: v.optional(v.boolean()),
     customerId: v.optional(v.id("customers")),
 
     channel: v.union(
@@ -830,6 +901,23 @@ export default defineSchema({
       v.literal("webchat"),
     ),
     channelThreadId: v.string(),
+    lastInboundAt: v.optional(v.number()),
+    processingMessageId: v.optional(v.id("ai_messages")),
+    processingLease: v.optional(v.string()),
+    processingUntil: v.optional(v.number()),
+    pendingBooking: v.optional(
+      v.object({
+        serviceId: v.id("services"),
+        staffId: v.id("staff_members"),
+        startAt: v.number(),
+        priceMinorUnits: v.number(),
+        customerName: v.string(),
+        customerPhone: v.string(),
+        summary: v.string(),
+        proposedByMessageId: v.id("ai_messages"),
+        expiresAt: v.number(),
+      }),
+    ),
 
     status: v.union(
       v.literal("active"),
@@ -851,6 +939,9 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_status", ["orgId", "status"])
+    .index("by_org_channel_thread", ["orgId", "channel", "channelThreadId"])
+    .index("by_org_updated", ["orgId", "updatedAt"])
+    .index("by_org_status_updated", ["orgId", "status", "updatedAt"])
     .index("by_channel_thread", ["channel", "channelThreadId"])
     .index("by_customer", ["customerId"]),
 
@@ -867,6 +958,28 @@ export default defineSchema({
       v.literal("system"),
     ),
     content: v.string(),
+
+    providerMessageId: v.optional(v.string()),
+    providerTimestamp: v.optional(v.number()),
+    author: v.optional(v.union(v.literal("ai"), v.literal("staff"))),
+    processingStatus: v.optional(
+      v.union(v.literal("pending"), v.literal("processing"), v.literal("done")),
+    ),
+    deliveryStatus: v.optional(
+      v.union(
+        v.literal("queued"),
+        v.literal("sending"),
+        v.literal("sent"),
+        v.literal("failed"),
+        v.literal("uncertain"),
+        v.literal("withheld"),
+      ),
+    ),
+    deliveryError: v.optional(v.string()),
+    sentAt: v.optional(v.number()),
+    handoffNotice: v.optional(v.boolean()),
+    replyToMessageId: v.optional(v.id("ai_messages")),
+    bookingId: v.optional(v.id("bookings")),
 
     model: v.optional(v.string()),
     confidenceScore: v.optional(v.number()),
@@ -887,7 +1000,43 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_conversation", ["conversationId"])
+    .index("by_org_conversation", ["orgId", "conversationId"])
+    .index("by_org_provider_message", ["orgId", "providerMessageId"])
+    .index("by_org_pending", ["orgId", "conversationId", "processingStatus"])
+    .index("by_org_reply", ["orgId", "replyToMessageId"])
     .index("by_org", ["orgId"]),
+
+  // Tokens are encrypted and readable only by internal provider actions.
+  ai_instagram_connections: defineTable({
+    orgId: v.id("orgs"),
+    accountId: v.optional(v.string()),
+    username: v.optional(v.string()),
+    tokenCiphertext: v.optional(v.string()),
+    tokenExpiresAt: v.optional(v.number()),
+    status: v.union(
+      v.literal("connected"),
+      v.literal("disconnected"),
+      v.literal("error"),
+    ),
+    error: v.optional(v.string()),
+    oauthStateHash: v.optional(v.string()),
+    oauthExpiresAt: v.optional(v.number()),
+    oauthUserId: v.optional(v.id("users")),
+    lastInboundAt: v.optional(v.number()),
+    lastSentAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org", ["orgId"]),
+
+  ai_daily_usage: defineTable({
+    orgId: v.id("orgs"),
+    date: v.string(),
+    replies: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_date", ["orgId", "date"]),
 
   // ─────────────────────────────────────────────────────
   // NOTIFICATIONS
@@ -989,11 +1138,13 @@ export default defineSchema({
       v.literal("new_booking"),
       v.literal("booking_cancelled"),
       v.literal("no_show"),
+      v.literal("ai_handoff"),
     ),
     title: v.string(),
     body: v.string(),
     bookingId: v.optional(v.id("bookings")),
     customerId: v.optional(v.id("customers")),
+    conversationId: v.optional(v.id("ai_conversations")),
     isRead: v.boolean(),
     isDismissed: v.boolean(),
     createdAt: v.number(),
@@ -1053,7 +1204,11 @@ export default defineSchema({
       v.literal("expired"),
       v.literal("dismissed"),
     ),
-    detectedBy: v.union(v.literal("manual_scan"), v.literal("cancellation"), v.literal("calendar_change")),
+    detectedBy: v.union(
+      v.literal("manual_scan"),
+      v.literal("cancellation"),
+      v.literal("calendar_change"),
+    ),
     triggeredByBookingId: v.optional(v.id("bookings")),
     outreachSentAt: v.optional(v.number()),
     filledByBookingId: v.optional(v.id("bookings")),

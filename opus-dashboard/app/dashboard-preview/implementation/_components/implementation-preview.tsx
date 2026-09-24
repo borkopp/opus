@@ -1,5 +1,6 @@
 "use client";
 import { Badge } from "@/components/ui/badge";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -10,6 +11,20 @@ import { OverviewLayout } from "@/components/dashboard/overview/OverviewLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { OpenSlotsCard } from "@/components/dashboard/overview/widgets/OpenSlotsCard";
 import { WidgetFrame } from "@/components/dashboard/overview/WidgetFrame";
+import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
+import { DashboardThemePicker } from "@/components/dashboard/DashboardThemePicker";
+import {
+  type DashboardTheme,
+  dashboardThemeDetails,
+  isDashboardTheme,
+} from "@/lib/dashboard-theme";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import {
   appointments,
   staff as sampleStaff,
@@ -89,6 +104,9 @@ const analytics: ClientAnalytics = {
   },
 };
 export function ImplementationPreview() {
+  const { language, setLanguage, t } = useDashboardI18n();
+  const [theme, setTheme] = useState<DashboardTheme>("clarity");
+  const [showThemes, setShowThemes] = useState(false);
   const [days, setDays] = useState<7 | 30>(7);
   const [selected, setSelected] = useState(today);
   const mockAction = () =>
@@ -130,84 +148,146 @@ export function ImplementationPreview() {
     };
   });
   return (
-    <div className={`dashboard-shell ${s.scope}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white px-6 py-3 text-xs">
-        <span className="flex items-center gap-3">
-          <Badge variant="secondary">Sample</Badge>
-          Production Clarity components · sample data
-        </span>
-        <div className="flex gap-4">
-          <Link href="/dashboard-preview">Design references</Link>
-          <Link href="/beauty">Open live dashboard ↗</Link>
+    <DashboardAppearanceProvider theme={theme}>
+      <div
+        className={`dashboard-shell ${s.scope}`}
+        data-dashboard-theme={theme}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-card px-6 py-3 text-xs">
+          <span className="flex items-center gap-3">
+            <Badge variant="secondary">Sample</Badge>
+            {dashboardThemeDetails[theme].name} components · sample data
+          </span>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2">
+              Language
+              <select
+                aria-label="Preview language"
+                value={language}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (value === "en" || value === "mk") setLanguage(value);
+                }}
+              >
+                <option value="en">English</option>
+                <option value="mk">Македонски</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-2">
+              Preview theme
+              <select
+                aria-label="Preview theme"
+                value={theme}
+                onChange={(event) => {
+                  if (isDashboardTheme(event.target.value))
+                    setTheme(event.target.value);
+                }}
+              >
+                <option value="clarity">Clarity</option>
+                <option value="studio">Studio</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              aria-pressed={showThemes}
+              onClick={() => setShowThemes(!showThemes)}
+            >
+              Theme settings preview
+            </button>
+            <Link href="/dashboard-preview">Design references</Link>
+            <Link href="/beauty">Open live dashboard ↗</Link>
+          </div>
         </div>
-      </div>
-      <div className={s.stage}>
-        <div className={s.dashboard}>
-          <DashboardHeader
-            activePath="/beauty"
-            profile={{
-              user: { name: "Elena Petrova" },
-              role: "owner",
-              plan: "paid",
-            }}
-          />
-          <main className="dashboard-workspace dashboard-overview">
-            <OverviewLayout
-              data={data}
-              firstName="Elena"
-              utilisation={team.map((p, i) => ({
-                staffName: p.name,
-                bookedMins: 78 - i * 8,
-                availableMins: 100,
-                utilisationPct: 78 - i * 8,
-              }))}
-              analytics={analytics}
-              onDaysChange={setDays}
-              onDateChange={(date) =>
-                setSelected(Date.parse(`${date}T00:00:00Z`))
-              }
-              onNewAppointment={mockAction}
-              openings={
-                <OpenSlotsCard
-                  loaded
-                  available={slots}
-                  staff={team}
-                  onBook={mockAction}
-                />
-              }
-              assistant={
-                <WidgetFrame
-                  title="Business assistant"
-                  subtitle="A clearer view of your studio"
-                  action={<Badge variant="secondary">Sample</Badge>}
-                >
-                  <p className="mb-5 text-sm text-muted-foreground">
-                    Ask about your bookings, clients, or capacity.
-                  </p>
-                  <button className={s.clientButton} onClick={mockAction}>
-                    Open assistant ↗
-                  </button>
-                </WidgetFrame>
-              }
-              recovery={
-                <WidgetFrame
-                  title="Opening recovery"
-                  subtitle="A cancellation can become a booking"
-                  action={<Badge variant="secondary">Sample</Badge>}
-                >
-                  <p className="mb-5 text-sm text-muted-foreground">
-                    Review openings, choose a client, and share an invitation
-                    yourself.
-                  </p>
-                  <button className={s.clientButton} onClick={mockAction}>
-                    Review openings ↗
-                  </button>
-                </WidgetFrame>
-              }
+        <div className={s.stage}>
+          <div className={s.dashboard}>
+            <DashboardHeader
+              activePath="/beauty"
+              profile={{
+                user: { name: "Elena Petrova" },
+                role: "owner",
+                plan: "paid",
+              }}
             />
-          </main>
+            <main className="dashboard-workspace dashboard-overview">
+              {showThemes ? (
+                <div className="mx-auto max-w-6xl p-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t("Themes", "Теми")}</CardTitle>
+                      <CardDescription>
+                        {t(
+                          "Choose a style that feels like you.",
+                          "Изберете изглед што ви одговара.",
+                        )}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <DashboardThemePicker
+                        value={theme}
+                        onValueChange={setTheme}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <OverviewLayout
+                  data={data}
+                  firstName="Elena"
+                  utilisation={team.map((p, i) => ({
+                    staffName: p.name,
+                    bookedMins: 78 - i * 8,
+                    availableMins: 100,
+                    utilisationPct: 78 - i * 8,
+                  }))}
+                  analytics={analytics}
+                  onDaysChange={setDays}
+                  onDateChange={(date) =>
+                    setSelected(Date.parse(`${date}T00:00:00Z`))
+                  }
+                  onNewAppointment={mockAction}
+                  openings={
+                    <OpenSlotsCard
+                      loaded
+                      available={slots}
+                      staff={team}
+                      onBook={mockAction}
+                    />
+                  }
+                  assistant={
+                    <WidgetFrame
+                      title="Business assistant"
+                      subtitle="A clearer view of your studio"
+                      action={<Badge variant="secondary">Sample</Badge>}
+                    >
+                      <p className="mb-5 text-sm text-muted-foreground">
+                        Ask about your bookings, clients, or capacity.
+                      </p>
+                      <button className={s.clientButton} onClick={mockAction}>
+                        Open assistant ↗
+                      </button>
+                    </WidgetFrame>
+                  }
+                  recovery={
+                    <WidgetFrame
+                      title="Opening recovery"
+                      subtitle="A cancellation can become a booking"
+                      action={<Badge variant="secondary">Sample</Badge>}
+                    >
+                      <p className="mb-5 text-sm text-muted-foreground">
+                        Review openings, choose a client, and share an
+                        invitation yourself.
+                      </p>
+                      <button className={s.clientButton} onClick={mockAction}>
+                        Review openings ↗
+                      </button>
+                    </WidgetFrame>
+                  }
+                />
+              )}
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardAppearanceProvider>
   );
 }

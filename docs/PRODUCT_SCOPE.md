@@ -74,7 +74,7 @@ Reliability of this path takes priority over optional features:
 
 ### P2 — explicitly deferred
 
-- AI front desk and autonomous AI actions;
+- autonomous AI campaigns and channels beyond the authorized Instagram frontdesk;
 - automated gap analysis and campaigns;
 - loyalty;
 - international expansion;
@@ -115,6 +115,28 @@ New analyses require the Convex `BUSINESS_ANALYST_ENABLED=true` flag and a
 `BUSINESS_ANALYST_OPENAI_API_KEY`. Availability must be verified before marketing it as live.
 See [BUSINESS_ASSISTANT.md](BUSINESS_ASSISTANT.md) for metric definitions,
 allowances, configuration, and rollout checks.
+
+### Authorized Instagram AI frontdesk
+
+Instagram frontdesk implementation was explicitly authorized on September 24,
+2026, including appointment creation in DMs after a separate customer
+confirmation, and owner-written studio context for product, aftercare and policy
+questions. The user selected OpenAI GPT-6 Luna for this workload.
+
+Paid beauty studios can configure context and connect their own professional
+Instagram account under Settings → AI front desk. A signed webhook durably
+records messages; the assistant answers from studio facts, checks live slots,
+and proposes appointments. Only a later explicit customer confirmation can
+create a booking, after atomic availability and price checks. Missing facts,
+low-confidence answers, attachments and provider failures require human review
+in the AI inbox. Owners and staff can take over and reply there.
+
+This is a configured-provider capability, not an unconditional live promise.
+`AI_FRONTDESK_ENABLED`, OpenAI access, Meta app configuration and a verified
+studio connection must all be ready before automatic replies operate. WhatsApp,
+voice, public web chat, campaigns, cancellations and rescheduling by AI are not
+enabled by this authorization. The former unauthenticated web-chat endpoints
+are retired. See [AI_FRONTDESK.md](AI_FRONTDESK.md) for setup and rollout checks.
 
 ## Hospitality freeze
 

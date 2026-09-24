@@ -87,7 +87,7 @@ npm run build
 | Backend / DB         | Convex (real-time DB, mutations, queries, actions, scheduled jobs)                                              |
 | Frontend             | Next.js 16 (App Router, PPR)                                                                                    |
 | Auth                 | Better Auth email OTP through Convex (`staff_members` is the permission boundary)                               |
-| Deferred foundations | AI actions and provider-backed messaging; preserve code but do not present these as active without verification |
+| AI frontdesk | OpenAI Luna with Instagram Login messaging; availability requires verified provider configuration |
 | Styling              | Tailwind CSS v4, shadcn/ui                                                                                      |
 
 ---
@@ -105,18 +105,18 @@ proxy.ts (opus-dashboard/proxy.ts)
 Next.js App Router
   ├── (dashboard)/   — authenticated owner/staff UI (Better Auth)
   ├── (website)/     — public studio website and guest booking flow
-  └── api/           — integration endpoints, including deferred AI foundations
+  └── api/           — integration endpoints, including the Instagram webhook proxy
       │
       ▼
 Convex Backend (convex/)
   ├── schema.ts      — single source of truth for all data shapes
   ├── bookings/      — booking mutations, slot conflict checks
-  ├── ai/            — deferred AI foundations
+  ├── ai/            — configured Instagram frontdesk, studio context and confirmed DM bookings
   ├── notifications/ — provider-backed queue; availability depends on configuration
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend plus Sender for production transactional email, with optional/deferred Twilio and Anthropic integrations
+External APIs: Resend plus Sender for production transactional email; configured OpenAI and Meta integrations for the Instagram frontdesk; deferred Twilio integrations
 ```
 
 ---
@@ -192,16 +192,16 @@ lib/                     — Pure functions, configs, type helpers — no React,
 
 ---
 
-## Dormant AI Agent Foundations
+## AI Frontdesk
 
-AI front-desk functionality is P2 and is not part of the active product promise. Preserve the foundations below, but do not expand or market them without explicit authorization and verified provider configuration.
+Instagram AI frontdesk implementation was explicitly authorized on September 24, 2026. It uses OpenAI Luna and may complete new bookings only after the customer confirms the exact appointment summary. See [docs/AI_FRONTDESK.md](docs/AI_FRONTDESK.md) for setup and validation boundaries. Keep claims conditional on verified provider configuration.
 
-The dormant AI front-desk foundation is designed to handle inbound WhatsApp, Instagram DM, and web-chat messages.
+WhatsApp remains deferred, and the removed public web-chat API must stay disabled. Broader AI campaigns still require explicit authorization.
 
 - Every AI response must include a `confidenceScore` (0–1). Below `org_settings.aiConfidenceThreshold` (default `0.7`) → flag as `handed_off`, notify a human.
 - AI must never directly mutate bookings. AI calls Convex Actions, which validate and call mutations.
 - Every AI message and action must be written to both `ai_messages` and `audit_log`.
-- Never inject raw database IDs into Codex prompts — resolve to human-readable labels first.
+- Never inject raw database IDs into model prompts — resolve to human-readable labels and temporary references first.
 
 ---
 

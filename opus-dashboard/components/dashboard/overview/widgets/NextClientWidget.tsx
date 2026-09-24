@@ -13,8 +13,10 @@ import { WidgetFrame, WidgetEmpty } from "../WidgetFrame";
 import s from "../../clarity.module.css";
 export function NextClientWidget({
   booking,
+  featured = false,
 }: {
   booking: OverviewData["next"];
+  featured?: boolean;
 }) {
   const { t, locale } = useDashboardI18n();
   return (
@@ -35,14 +37,32 @@ export function NextClientWidget({
     >
       {booking ? (
         <>
+          {featured && (
+            <div className={s.clientArtwork} aria-hidden="true">
+              <span className={s.artPetals}>
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className={s.clientMonogram}>
+                {initials(booking.customerName)}
+              </span>
+              <span className={s.artCaption}>
+                {t("A little time for you.", "Малку време за себе.")}
+              </span>
+            </div>
+          )}
           <div
             data-appear="item"
             style={appearStep(3)}
             className={s.clientIdentity}
           >
-            <span className={s.avatar} data-tone="peach">
-              {initials(booking.customerName)}
-            </span>
+            {!featured && (
+              <span className={s.avatar} data-tone="peach">
+                {initials(booking.customerName)}
+              </span>
+            )}
             <div>
               <h3>{booking.customerName}</h3>
               <p>{booking.serviceName}</p>

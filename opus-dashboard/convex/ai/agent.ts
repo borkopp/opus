@@ -1,519 +1,351 @@
 "use node";
 
-import Anthropic from "@anthropic-ai/sdk";
-import { v, ConvexError } from "convex/values";
-import { action, internalAction, ActionCtx } from "../_generated/server";
-import { internal, api } from "../_generated/api";
-import { Id } from "../_generated/dataModel";
+import { randomUUID } from "node:crypto";
+import OpenAI from "openai";
+import { zodResponsesFunction, zodTextFormat } from "openai/helpers/zod";
+import type { ResponseInput } from "openai/resources/responses/responses";
+import { z } from "zod";
+import { ConvexError, v } from "convex/values";
+import { action, internalAction } from "../_generated/server";
+import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
+import { buildSystemPrompt, type StudioContext } from "./context";
+import {
+  aiReplySchema,
+  handoffReply,
+  parseReply,
+  responseLanguage,
+  withinReplyHours,
+} from "./rules";
 
-type ToolInput = Record<string, unknown>;
-type AvailabilitySlot = {
-  startAt: number;
-  availableStaffIds: Id<"staff_members">[];
-};
-
-function requiredString(input: ToolInput, key: string): string {
-  const value = input[key];
-  if (typeof value !== "string" || value.length === 0) {
-    throw new ConvexError(`Missing or invalid ${key}`);
-  }
-  return value;
-}
-
-function requiredNumber(input: ToolInput, key: string): number {
-  const value = input[key];
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new ConvexError(`Missing or invalid ${key}`);
-  }
-  return value;
-}
-
-// ── Tool definitions ────────────────────────────────────────────────────────
-
-const AI_TOOLS: Anthropic.Tool[] = [
-  {
-    name: "list_services",
-    description:
-      "List all services this business offers, including name, duration, and price. Call this first to understand what can be booked.",
-    input_schema: { type: "object", properties: {}, required: [] },
-  },
-  {
+export const FRONTDESK_MODEL = "gpt-6-luna";
+const availabilitySchema = z.object({
+  service: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+const proposalSchema = z.object({
+  service: z.string(),
+  slot: z.string(),
+  customerName: z.string().min(1).max(100),
+  customerPhone: z.string().min(7).max(30),
+});
+const tools = [
+  zodResponsesFunction({
     name: "check_availability",
+    parameters: availabilitySchema,
     description:
-      "Check available booking slots for a specific service on a given date. Returns a list of available times. You MUST call list_services first and use the exact serviceId value returned — never invent or guess the serviceId.",
-    input_schema: {
-      type: "object",
-      properties: {
-        serviceId: {
-          type: "string",
-          description: "The exact serviceId value returned by list_services. Copy it verbatim — do not derive it from the service name.",
-        },
-        date: {
-          type: "string",
-          description: "Date in YYYY-MM-DD format",
-        },
-      },
-      required: ["serviceId", "date"],
-    },
-  },
-  {
-    name: "create_booking",
+      "Look up current available appointments for a service reference from the studio facts, and a local date YYYY-MM-DD. Returns ephemeral slot references and actual prices.",
+  }),
+  zodResponsesFunction({
+    name: "prepare_booking",
+    parameters: proposalSchema,
     description:
-      "Create a booking for a customer. Only call this after confirming the customer's full name, phone number, desired service, and the specific time slot they want.",
-    input_schema: {
-      type: "object",
-      properties: {
-        serviceId: { type: "string", description: "The exact serviceId value returned by list_services — copy verbatim." },
-        staffId: {
-          type: "string",
-          description: "Staff member id from check_availability availableStaffIds",
-        },
-        startAt: {
-          type: "number",
-          description: "Unix timestamp in milliseconds for the start of the booking",
-        },
-        customerName: { type: "string", description: "Customer's full name" },
-        customerPhone: {
-          type: "string",
-          description: "Customer's phone number in E.164 format (e.g. +38971234567)",
-        },
-      },
-      required: ["serviceId", "staffId", "startAt", "customerName", "customerPhone"],
-    },
-  },
-  {
-    name: "get_customer_bookings",
-    description:
-      "Look up a customer's upcoming bookings by their phone number. Use this when a customer asks about their existing appointments.",
-    input_schema: {
-      type: "object",
-      properties: {
-        customerPhone: {
-          type: "string",
-          description: "Customer's phone number in E.164 format",
-        },
-      },
-      required: ["customerPhone"],
-    },
-  },
+      "Propose (not create) an appointment after the customer has chosen it and supplied their name and phone. Use a slot reference returned by check_availability in this turn. The server asks for a separate confirmation.",
+  }),
 ];
 
-// Timezone used for all human-readable date/time formatting in AI responses.
-// Convex action runtime runs in UTC — without this, times appear 2 h early for MK (UTC+2 CEST).
-const ORG_TIMEZONE = "Europe/Skopje";
-
-// ── System prompt builder ────────────────────────────────────────────────────
-
-function buildSystemPrompt(settings: {
-  aiPersonaName: string;
-  aiTone?: string;
-  aiSystemPrompt?: string;
-  aiLanguage?: string;
-}): string {
-  const tone = settings.aiTone ?? "friendly";
-  const name = settings.aiPersonaName ?? "Aria";
-  const custom = settings.aiSystemPrompt ? `\nAdditional instructions: ${settings.aiSystemPrompt}` : "";
-
-  const now = new Date();
-  const dateStr = now.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: ORG_TIMEZONE });
-  const todayInstruction = `\nToday's date is ${dateStr}. Use this to resolve relative dates like "tomorrow", "next Monday", etc. Dates for check_availability must be in YYYY-MM-DD format.`;
-
-  const mkVocab = `
-MACEDONIAN VOCABULARY — use ONLY these forms (never the Serbian/Bulgarian equivalents):
-- "Се извинувам" NOT "Извинувам се" (SR)
-- "Двете / двајцата" NOT "Обе / оба" (SR)
-- "Еве" NOT "Ево" (SR)
-- "Јас" NOT "Ја" (SR) or "Аз" (BG)
-- "Тие" NOT "Они" (SR)
-- "Каде" NOT "Где" (SR)
-- "Зошто" NOT "Зашто" (SR)
-- "Убаво" NOT "Лепо" (SR)
-- "Денес" NOT "Данас" (SR) or "Днес" (BG)
-- "Утре" NOT "Сутра" (SR)
-- "Благодарам" NOT "Хвала" (SR) or "Благодаря" (BG)
-- "Ве молам" NOT "Молим" (SR)
-- "Да" / "Не" (same in MK — OK)
-- "Резервација" or "Термин" for booking (both valid in MK)
-- "Достапен" NOT "Slobodan" (SR)
-- "Слободен термин" for available slot`.trim();
-
-  const languageInstruction =
-    settings.aiLanguage === "en"
-      ? "\nLanguage: Always respond in English, regardless of what language the customer writes in."
-      : settings.aiLanguage === "mk"
-      ? `\nЈазик: Секогаш одговарај на стандарден македонски јазик, пишувај на кирилица. НЕ користи српски, хрватски, босански или бугарски зборови — тие се различни јазици.\n${mkVocab}`
-      : `\nLanguage: Detect the language of the customer's message and respond in the same language.\n- If the message is in Macedonian (Cyrillic script or Macedonian words), reply in standard Macedonian using Cyrillic. Do NOT mix in Serbian, Croatian, Bosnian, or Bulgarian words.\n${mkVocab}\n- If the message is in English, reply in English.`;
-
-  return `You are ${name}, the AI front-desk assistant for this business. You help customers book appointments, check availability, and answer questions.
-
-Tone: ${tone}. Keep responses concise and helpful. Never be overly formal or robotic.${todayInstruction}${languageInstruction}${custom}
-
-IMPORTANT — You must ALWAYS respond with a valid JSON object and nothing else:
-{"message": "<your reply to the customer>", "confidence": <number 0.0 to 1.0>}
-
-Confidence scoring:
-- 0.9–1.0: Request is clear, you have all information needed, action taken or answer given with certainty
-- 0.7–0.9: Request understood, minor ambiguity or waiting on customer confirmation
-- Below 0.7: Request unclear, information missing, situation complex — a human should take over
-
-Rules:
-- CRITICAL: When calling check_availability or create_booking, you MUST copy the exact serviceId value returned by list_services. Never invent, shorten, or derive an ID from the service name. IDs are long opaque strings like "jx76abc123...".
-- CRITICAL: When calling create_booking, copy the exact staffId and startAt values returned by check_availability. Never invent these values.
-- Never include raw database IDs in your message to the customer. Use human-readable names (service name, staff name, date/time).
-- Never promise policy exceptions or other things outside your capabilities.
-- If you cannot help confidently, set confidence below the threshold so a human can assist.
-- When creating a booking, always confirm the details with the customer before calling create_booking.
-- Format dates and times clearly (e.g. "Monday, 14 April at 10:00 AM").`;
+function client() {
+  const apiKey =
+    process.env.AI_FRONTDESK_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+  if (process.env.AI_FRONTDESK_ENABLED !== "true" || !apiKey)
+    throw new ConvexError("The AI frontdesk provider is not configured yet.");
+  return new OpenAI({ apiKey, timeout: 30_000, maxRetries: 0 });
 }
 
-// ── Working hours check ──────────────────────────────────────────────────────
-
-function isWithinWorkingHours(settings: {
-  aiWorkingHoursEnabled?: boolean;
-  aiWorkingHours?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>;
-}): boolean {
-  if (!settings.aiWorkingHoursEnabled || !settings.aiWorkingHours?.length) return true;
-
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Sun … 6 = Sat
-  const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-
-  return settings.aiWorkingHours.some(
-    h => h.dayOfWeek === dayOfWeek && timeStr >= h.startTime && timeStr < h.endTime
-  );
-}
-
-// ── Tool dispatch ────────────────────────────────────────────────────────────
-
-async function dispatchTool(
-  ctx: ActionCtx,
-  orgId: Id<"orgs">,
-  conversationId: Id<"ai_conversations">,
-  channel: "instagram" | "webchat",
-  tool: Anthropic.ToolUseBlock
-): Promise<string> {
-  const input = tool.input as ToolInput;
-
-  switch (tool.name) {
-    case "list_services": {
-      const services = await ctx.runQuery(internal.services.listServicesForAI, { orgId });
-      if (!services.length) return "No services are currently available.";
-      return JSON.stringify(services);
-    }
-
-    case "check_availability": {
-      const serviceId = requiredString(input, "serviceId") as Id<"services">;
-      const date = requiredString(input, "date");
-      let slots: AvailabilitySlot[];
-      try {
-        slots = await ctx.runQuery(internal.slots.getAvailableSlotsForAI, {
-          orgId,
-          serviceId,
-          date,
+export const processConversation = internalAction({
+  args: { orgId: v.id("orgs"), conversationId: v.id("ai_conversations") },
+  handler: async (ctx, args): Promise<void> => {
+    const lease = randomUUID(),
+      work = { ...args, lease };
+    const messageId = await ctx.runMutation(internal.ai.queue.claim, work);
+    if (!messageId) return;
+    const model = process.env.AI_FRONTDESK_MODEL || FRONTDESK_MODEL;
+    try {
+      const runtime = await ctx.runQuery(internal.ai.queue.runtime, work);
+      if (!runtime) return;
+      const { settings, org, message } = runtime;
+      const finish = async (
+        reply: string,
+        confidenceScore = 1,
+        needsHandoff = false,
+        reason?: string,
+      ) => {
+        const replyId = await ctx.runMutation(internal.ai.queue.finish, {
+          ...work,
+          reply,
+          confidenceScore,
+          needsHandoff,
+          model,
+          reason,
         });
-      } catch {
-        return "Invalid serviceId. Please call list_services first and use the exact serviceId value returned.";
-      }
-
-      if (!slots.length) return `No available slots on ${date}.`;
-
-      // Return slots formatted for Claude — include startAt for create_booking
-      const formatted = slots.map((s) => {
-        const d = new Date(s.startAt);
-        const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: ORG_TIMEZONE });
-        const staffId = s.availableStaffIds[0];
-        return { time, startAt: s.startAt, staffId };
-      });
-      return JSON.stringify(formatted);
-    }
-
-    case "create_booking": {
-      const customerName = requiredString(input, "customerName");
-      const customerPhone = requiredString(input, "customerPhone");
-      const staffId = requiredString(input, "staffId") as Id<"staff_members">;
-      const serviceId = requiredString(input, "serviceId") as Id<"services">;
-      const startAt = requiredNumber(input, "startAt");
-
-      // Find or create customer
-      const customerId = await ctx.runMutation(internal.customers.findOrCreateCustomerForAI, {
-        orgId,
-        name: customerName,
-        phone: customerPhone,
-      });
-
-      // Create the booking
-      let bookingId: Id<"bookings">;
-      try {
-        bookingId = await ctx.runMutation(internal.bookings.createBookingForAI, {
-          orgId,
-          staffId,
-          serviceId,
-          customerId,
-          startAt,
-          conversationId,
-          channel,
-        });
-      } catch (error: unknown) {
-        const message = error instanceof Error
-          ? error.message
-          : "Invalid service or staff ID. Use exact IDs from list_services and check_availability.";
-        return `Booking failed: ${message}`;
-      }
-
-      // Log the booking action in ai_messages
-      await ctx.runMutation(internal.ai.messages.saveMessage, {
-        orgId,
-        conversationId,
-        role: "assistant",
-        content: `Booking created for ${customerName}`,
-        actionType: "booking_created",
-        actionReferenceId: bookingId,
-      });
-
-      // Link booking to conversation
-      await ctx.runMutation(internal.ai.conversations.addBookingToConversation, {
-        conversationId,
-        bookingId,
-      });
-
-      const d = new Date(startAt);
-      const readableDate = d.toLocaleDateString("en-GB", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        timeZone: ORG_TIMEZONE,
-      });
-      const readableTime = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: ORG_TIMEZONE });
-
-      return `Booking confirmed for ${customerName} on ${readableDate} at ${readableTime}.`;
-    }
-
-    case "get_customer_bookings": {
-      const customerPhone = requiredString(input, "customerPhone");
-      const bookings = await ctx.runQuery(internal.bookings.getCustomerBookingsForAI, {
-        orgId,
-        customerPhone,
-      });
-
-      if (!bookings.length) return "No upcoming bookings found for that phone number.";
-      return JSON.stringify(bookings);
-    }
-
-    default:
-      return "Unknown tool.";
-  }
-}
-
-// ── Main AI action (internal) ────────────────────────────────────────────────
-
-export const processMessage = internalAction({
-  args: {
-    orgId: v.id("orgs"),
-    conversationId: v.id("ai_conversations"),
-    userMessage: v.string(),
-    channel: v.union(v.literal("instagram"), v.literal("webchat")),
-  },
-  handler: async (ctx, args): Promise<{ reply: string; confidence: number; handedOff: boolean }> => {
-    await ctx.runQuery(internal.auth.assertPaidOrg, {
-      orgId: args.orgId,
-      feature: "AI front desk",
-    });
-
-    const settings = await ctx.runQuery(internal.orgSettings.getOrgSettingsInternal, {
-      orgId: args.orgId,
-    });
-
-    if (!settings) {
-      return { reply: "Service temporarily unavailable.", confidence: 0, handedOff: false };
-    }
-
-    // Check working hours
-    if (!isWithinWorkingHours(settings)) {
-      const awayMessage = settings.aiAwayMessage ?? "We're currently outside of business hours. Please reach out again during our working hours.";
-
-      await ctx.runMutation(internal.ai.messages.saveMessage, {
-        orgId: args.orgId,
-        conversationId: args.conversationId,
-        role: "user",
-        content: args.userMessage,
-      });
-
-      await ctx.runMutation(internal.ai.messages.saveMessage, {
-        orgId: args.orgId,
-        conversationId: args.conversationId,
-        role: "assistant",
-        content: awayMessage,
-        confidenceScore: 1.0,
-      });
-
-      return { reply: awayMessage, confidence: 1.0, handedOff: false };
-    }
-
-    // Load conversation history (last 20 messages)
-    const history = await ctx.runQuery(internal.ai.messages.listMessagesInternal, {
-      conversationId: args.conversationId,
-      limit: 20,
-    });
-
-    // Save incoming user message
-    await ctx.runMutation(internal.ai.messages.saveMessage, {
-      orgId: args.orgId,
-      conversationId: args.conversationId,
-      role: "user",
-      content: args.userMessage,
-    });
-
-    // Build message history for Claude
-    const messages: Anthropic.MessageParam[] = history
-      .filter((message) => message.role === "user" || message.role === "assistant")
-      .map((message) => ({
-        role: message.role as "user" | "assistant",
-        content: message.content,
-      }));
-    messages.push({ role: "user", content: args.userMessage });
-
-    const systemPrompt = buildSystemPrompt(settings);
-    const client = new Anthropic();
-
-    let finalReply = "I'm sorry, I couldn't process your request. Please try again.";
-    let finalConfidence = 0.5;
-    let totalInputTokens = 0;
-    let totalOutputTokens = 0;
-    let continueLoop = true;
-    let iterations = 0;
-    const MAX_ITERATIONS = 8;
-
-    while (continueLoop && iterations < MAX_ITERATIONS) {
-      iterations++;
-
-      const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        system: systemPrompt,
-        tools: AI_TOOLS,
-        messages,
-      });
-
-      totalInputTokens += response.usage.input_tokens;
-      totalOutputTokens += response.usage.output_tokens;
-
-      if (response.stop_reason === "tool_use") {
-        const assistantContent = response.content;
-        messages.push({ role: "assistant", content: assistantContent });
-
-        const toolResults: Anthropic.ToolResultBlockParam[] = [];
-        for (const block of assistantContent) {
-          if (block.type === "tool_use") {
-            const result = await dispatchTool(
-              ctx,
-              args.orgId,
-              args.conversationId,
-              args.channel,
-              block
-            );
-            toolResults.push({
-              type: "tool_result",
-              tool_use_id: block.id,
-              content: result,
-            });
-          }
-        }
-        messages.push({ role: "user", content: toolResults });
-      } else {
-        // end_turn — extract JSON response
-        const textBlock = response.content.find(
-          (block): block is Anthropic.TextBlock => block.type === "text",
+        if (replyId)
+          await ctx.runAction(internal.ai.instagram.sendMessage, {
+            orgId: args.orgId,
+            messageId: replyId,
+          });
+      };
+      if (!withinReplyHours(settings)) {
+        await finish(
+          settings.aiAwayMessage ||
+            handoffReply(
+              responseLanguage(settings.aiLanguage, message.content),
+              settings.aiHandoffPhoneNumber,
+            ),
         );
-        if (textBlock) {
-          try {
-            // Claude may wrap JSON in markdown code fences
-            const rawText = textBlock.text.trim().replace(/^```json\s*/, "").replace(/\s*```$/, "");
-            const parsed = JSON.parse(rawText);
-            if (typeof parsed.message === "string" && typeof parsed.confidence === "number") {
-              finalReply = parsed.message;
-              finalConfidence = Math.max(0, Math.min(1, parsed.confidence));
-            }
-          } catch {
-            // Claude returned plain text — use it as-is with reduced confidence
-            finalReply = textBlock.text;
-            finalConfidence = 0.6;
-          }
-        }
-        continueLoop = false;
+        return;
       }
-    }
-
-    // Update token usage
-    await ctx.runMutation(internal.ai.conversations.updateTokenUsage, {
-      conversationId: args.conversationId,
-      inputTokens: totalInputTokens,
-      outputTokens: totalOutputTokens,
-    });
-
-    // Save assistant response
-    await ctx.runMutation(internal.ai.messages.saveMessage, {
-      orgId: args.orgId,
-      conversationId: args.conversationId,
-      role: "assistant",
-      content: finalReply,
-      model: "claude-haiku-4-5-20251001",
-      confidenceScore: finalConfidence,
-      inputTokens: totalInputTokens,
-      outputTokens: totalOutputTokens,
-    });
-
-    // Write to audit_log
-    await ctx.runMutation(internal.auditLog.insertAuditLog, {
-      orgId: args.orgId,
-      actorType: "ai",
-      actorId: "claude-haiku-4-5-20251001",
-      action: "ai.message_sent",
-      resourceType: "ai_conversations",
-      resourceId: args.conversationId,
-      after: { confidence: finalConfidence, channel: args.channel },
-    });
-
-    // Check confidence threshold — trigger handoff if needed
-    const threshold = settings.aiConfidenceThreshold ?? 0.7;
-    const handedOff = finalConfidence < threshold;
-
-    if (handedOff) {
-      await ctx.runMutation(api.ai.conversations.handoffConversation, {
-        orgId: args.orgId,
-        conversationId: args.conversationId,
-        reason: `AI confidence ${(finalConfidence * 100).toFixed(0)}% below threshold ${(threshold * 100).toFixed(0)}%`,
+      const confirmation = await ctx.runMutation(
+        internal.ai.booking.confirm,
+        work,
+      );
+      if (confirmation) {
+        await finish(confirmation);
+        return;
+      }
+      await ctx.runMutation(internal.ai.booking.clearProposal, work);
+      const services = runtime.services.map((s, i) => ({
+        reference: `service_${i + 1}`,
+        name: s.name,
+        description: s.description,
+        durationMins: s.durationMins,
+        priceMinorUnits: s.priceMinorUnits,
+        currency: s.currency,
+      }));
+      const studio: StudioContext = {
+        name: org.name,
+        address: org.address,
+        city: org.city,
+        phone: org.phone,
+        bio: org.bio,
+        openingHours: org.openingHours,
+        services,
+        ...(org.websiteStatus === "published"
+          ? {
+              bookingUrl: `https://${org.slug}.${process.env.ROOT_DOMAIN || "opus.mk"}`,
+            }
+          : {}),
+      };
+      const input: ResponseInput = [
+        ...runtime.history,
+        { role: "user", content: message.content },
+      ];
+      if (
+        JSON.stringify(input).length +
+          buildSystemPrompt(settings, studio).length >
+        80_000
+      )
+        throw new Error("Frontdesk context limit reached");
+      const provider = client();
+      const slots = new Map<
+        string,
+        {
+          serviceId: Id<"services">;
+          staffId: Id<"staff_members">;
+          startAt: number;
+        }
+      >();
+      let slotSequence = 0;
+      for (let step = 0; step < 4; step++) {
+        if (!(await ctx.runQuery(internal.ai.queue.runtime, work))) return;
+        const response = await provider.responses.create({
+          model,
+          instructions: buildSystemPrompt(settings, studio),
+          input,
+          tools,
+          tool_choice: step === 3 ? "none" : "auto",
+          parallel_tool_calls: false,
+          store: false,
+          reasoning: { effort: "low" },
+          include: ["reasoning.encrypted_content"],
+          max_output_tokens: 2_048,
+          text: { format: zodTextFormat(aiReplySchema, "frontdesk_reply") },
+        });
+        if (response.usage)
+          await ctx.runMutation(internal.ai.queue.recordUsage, {
+            ...args,
+            input: response.usage.input_tokens,
+            output: response.usage.output_tokens,
+          });
+        if (response.status !== "completed")
+          throw new Error("Incomplete model response");
+        const calls = response.output.filter(
+          (item) => item.type === "function_call",
+        );
+        if (!calls.length) {
+          const reply = parseReply(response.output_text);
+          if (!reply) throw new Error("Invalid model response");
+          await finish(reply.message, reply.confidenceScore, reply.handoff);
+          return;
+        }
+        input.push(
+          ...response.output.filter(
+            (item) =>
+              item.type === "function_call" ||
+              item.type === "message" ||
+              item.type === "reasoning",
+          ),
+        );
+        for (const call of calls.slice(0, 4)) {
+          let output: unknown;
+          try {
+            if (call.name === "check_availability") {
+              const request = availabilitySchema.parse(
+                JSON.parse(call.arguments),
+              );
+              const index = services.findIndex(
+                (s) => s.reference === request.service,
+              );
+              const service = runtime.services[index];
+              if (!service) throw new Error("Unknown service reference");
+              const available = await ctx.runQuery(
+                internal.ai.booking.availability,
+                { ...work, serviceId: service._id, date: request.date },
+              );
+              output = available.map((slot) => {
+                const reference = `slot_${++slotSequence}`;
+                slots.set(reference, {
+                  serviceId: service._id,
+                  staffId: slot.staffId,
+                  startAt: slot.startAt,
+                });
+                return {
+                  reference,
+                  date: request.date,
+                  time: slot.time,
+                  staff: slot.staffName,
+                  priceMinorUnits: slot.priceMinorUnits,
+                  currency: service.currency,
+                };
+              });
+            } else if (call.name === "prepare_booking") {
+              const request = proposalSchema.parse(JSON.parse(call.arguments));
+              const slot = slots.get(request.slot),
+                serviceIndex = services.findIndex(
+                  (s) => s.reference === request.service,
+                );
+              if (
+                !slot ||
+                runtime.services[serviceIndex]?._id !== slot.serviceId
+              )
+                throw new Error(
+                  "Check availability in this turn before proposing a booking",
+                );
+              const replyId = await ctx.runMutation(
+                internal.ai.booking.prepare,
+                {
+                  ...work,
+                  ...slot,
+                  customerName: request.customerName,
+                  customerPhone: request.customerPhone,
+                },
+              );
+              await ctx.runAction(internal.ai.instagram.sendMessage, {
+                orgId: args.orgId,
+                messageId: replyId,
+              });
+              return;
+            } else throw new Error("Unknown tool");
+          } catch {
+            output = {
+              error:
+                "This request could not be completed. Check the service and availability again or ask the customer to clarify. Do not claim a booking was created.",
+            };
+          }
+          input.push({
+            type: "function_call_output",
+            call_id: call.call_id,
+            output: JSON.stringify(output),
+          });
+        }
+      }
+      throw new Error("Tool limit reached");
+    } catch {
+      const replyId = await ctx.runMutation(internal.ai.queue.finish, {
+        ...work,
+        reply: "",
+        confidenceScore: 0,
+        needsHandoff: true,
+        model,
+        reason:
+          "The assistant could not complete this request. Please review the conversation.",
       });
+      if (replyId)
+        await ctx.runAction(internal.ai.instagram.sendMessage, {
+          orgId: args.orgId,
+          messageId: replyId,
+        });
+    } finally {
+      await ctx.runMutation(internal.ai.queue.release, work);
     }
-
-    return { reply: finalReply, confidence: finalConfidence, handedOff };
   },
 });
 
-// ── Public wrapper ────────────────────────────────────────────────────────────
-// Called from API routes (webchat, Instagram webhook)
-
-export const processMessagePublic = action({
-  args: {
-    orgId: v.id("orgs"),
-    conversationId: v.id("ai_conversations"),
-    userMessage: v.string(),
-    channel: v.union(v.literal("instagram"), v.literal("webchat")),
-  },
-  handler: async (ctx, args): Promise<{ reply: string; confidence: number; handedOff: boolean }> => {
-    await ctx.runQuery(internal.auth.assertPaidOrg, {
-      orgId: args.orgId,
-      feature: "AI front desk",
+// A private setup check, not a public web chat. Uses saved context and has no
+// booking tools, sends no DM, and shares the per-studio daily cost allowance.
+export const preview = action({
+  args: { question: v.string() },
+  handler: async (
+    ctx,
+    { question },
+  ): Promise<{
+    message: string;
+    confidenceScore: number;
+    handoff: boolean;
+  }> => {
+    if (!question.trim() || question.length > 2_000)
+      throw new ConvexError("Enter a question of up to 2,000 characters.");
+    const runtime = await ctx.runMutation(internal.ai.previewData.reserve, {
+      question: question.trim(),
     });
-
-    // Validate AI is enabled
-    const settings = await ctx.runQuery(internal.orgSettings.getOrgSettingsInternal, {
-      orgId: args.orgId,
-    });
-
-    if (!settings?.aiEnabled) {
-      throw new ConvexError("AI front-desk is not enabled.");
+    const model = process.env.AI_FRONTDESK_MODEL || FRONTDESK_MODEL;
+    let inputTokens = 0,
+      outputTokens = 0;
+    try {
+      const response = await client().responses.create({
+        model,
+        instructions: `${buildSystemPrompt(runtime.settings, runtime.studio)}\nThis is a setup test. For appointments, explain that this preview does not make bookings.`,
+        input: [{ role: "user", content: question.trim() }],
+        store: false,
+        reasoning: { effort: "low" },
+        max_output_tokens: 2_048,
+        text: { format: zodTextFormat(aiReplySchema, "frontdesk_preview") },
+      });
+      inputTokens = response.usage?.input_tokens ?? 0;
+      outputTokens = response.usage?.output_tokens ?? 0;
+      const reply =
+        response.status === "completed"
+          ? parseReply(response.output_text)
+          : null;
+      if (!reply) throw new Error("Incomplete preview response");
+      await ctx.runMutation(internal.ai.previewData.complete, {
+        orgId: runtime.orgId,
+        conversationId: runtime.conversationId,
+        content: reply.message,
+        confidenceScore: reply.confidenceScore,
+        inputTokens,
+        outputTokens,
+        model,
+        failed: false,
+      });
+      return {
+        ...reply,
+        handoff:
+          reply.handoff ||
+          reply.confidenceScore <
+            Math.max(0.7, runtime.settings.aiConfidenceThreshold),
+      };
+    } catch {
+      await ctx.runMutation(internal.ai.previewData.complete, {
+        orgId: runtime.orgId,
+        conversationId: runtime.conversationId,
+        content: "Preview could not be completed.",
+        confidenceScore: 0,
+        inputTokens,
+        outputTokens,
+        model,
+        failed: true,
+      });
+      throw new ConvexError("The AI could not answer. Please try again.");
     }
-
-    return await ctx.runAction(internal.ai.agent.processMessage, args);
   },
 });

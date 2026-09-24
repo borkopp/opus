@@ -1,4 +1,4 @@
-/* Clarity layout, extracted from the approved 01 reference. */
+/* Shared live dashboard. Clarity is the default; Studio overrides below. */
 .scope {
   --navy: #071a2c;
   --blue: #dce9fb;
@@ -6,7 +6,7 @@
   --sage: #dce9df;
   --peach: #f2e2d7;
   min-height: 100dvh;
-  background: #e8ebef;
+  background: var(--studio-frame);
   color: var(--foreground);
   font-family: var(--font-dm-sans), sans-serif;
   font-size: 14px;
@@ -113,7 +113,20 @@
   display: block;
   width: 29px;
   height: 35px;
-  color: #2588c8;
+  color: var(--brand);
+}
+.brandLockup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.themeName {
+  padding-left: 37px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--muted-foreground);
 }
 .navigation {
   display: flex;
@@ -866,11 +879,14 @@
   width: 87px;
   height: 87px;
   flex-shrink: 0;
-  background: conic-gradient(var(--primary) var(--progress), #edf1f7 0);
+  background: conic-gradient(
+    from -90deg,
+    var(--primary) var(--progress),
+    #edf1f7 0
+  );
   border-radius: 50%;
   display: grid;
   place-items: center;
-  transform: rotate(-90deg);
 }
 .returningRing > span {
   width: 72px;
@@ -884,7 +900,6 @@
   border-radius: 50%;
   font-size: 25px;
   letter-spacing: -0.06em;
-  transform: rotate(90deg);
 }
 .returningRing small {
   font-size: 12px;
@@ -1837,5 +1852,438 @@
   .navigation a svg {
     width: 15px;
     height: 15px;
+  }
+}
+
+/* Studio keeps the same live widgets and actions with the approved softer layout. */
+.scope[data-dashboard-theme="studio"] .dashboard {
+  border-radius: 38px;
+}
+.scope[data-dashboard-theme="studio"] .navigation {
+  background: transparent;
+  gap: 7px;
+}
+.scope[data-dashboard-theme="studio"] .navigation a {
+  background: var(--secondary);
+}
+.scope[data-dashboard-theme="studio"] .navigation a[aria-current] {
+  background: #252330;
+  color: white;
+}
+.scope[data-dashboard-theme="studio"] .greeting {
+  padding-block: 18px 12px;
+}
+.scope[data-dashboard-theme="studio"] .greeting h1 {
+  max-width: 16ch;
+  font-size: clamp(31px, 3vw, 44px);
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 1.13;
+}
+.scope[data-dashboard-theme="studio"] .greeting .primaryButton {
+  background: var(--card);
+  color: var(--secondary-foreground);
+}
+.studioMetrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 126px;
+  gap: 13px;
+}
+.studioMetrics .metrics {
+  gap: 13px;
+}
+.studioMetrics .metricCard {
+  padding: 20px 18px;
+  border-radius: 28px;
+  min-height: 194px;
+}
+.studioMetrics .metricTop svg {
+  color: #b6a3dc;
+}
+.studioMetrics .metricValue {
+  font-size: clamp(24px, 15cqi, 36px);
+}
+.studioMetrics .metricValue .metricBadge {
+  display: none;
+}
+.studioMetrics .metricFoot {
+  font-size: 11px;
+  gap: 5px;
+  padding-top: 8px;
+}
+.studioMetrics .accentMetric {
+  background: var(--card);
+  color: var(--foreground);
+}
+.studioMetrics .accentMetric .metricTop,
+.studioMetrics .accentMetric .metricFoot,
+.studioMetrics .accentMetric .metricValue small {
+  color: var(--muted-foreground);
+}
+.studioMetrics .accentMetric .metricValue {
+  order: 2;
+  margin-top: auto;
+  padding-top: 10px;
+}
+.studioMetrics .accentMetric .metricFoot {
+  order: 3;
+}
+.studioMetrics .accentMetric .metricFoot > span:first-child {
+  color: var(--primary);
+}
+.studioMetrics .miniBars {
+  order: 1;
+  height: 45px;
+  margin: 18px 0 3px;
+  opacity: 1;
+}
+.studioMetrics .miniBars i {
+  background: #efadb5;
+}
+.studioMetrics .occupancyBar {
+  order: 1;
+  height: 25px;
+  margin: 23px 0 8px;
+  flex-shrink: 0;
+  border-radius: 40px;
+}
+.studioMetrics .occupancyBar span {
+  background: #7db9d8;
+  border-radius: 40px;
+}
+.studioMetrics .metricCard:nth-child(3) .metricValue {
+  order: 2;
+  margin-top: auto;
+}
+.studioMetrics .metricCard:nth-child(3) .metricFoot {
+  order: 3;
+}
+.studioQuickAdd {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 130px;
+  padding: 20px 14px;
+  border: 1px dashed #d1c8df;
+  border-radius: 28px;
+  background: #efecf5;
+  color: var(--muted-foreground);
+  text-align: center;
+  font-size: 12px !important;
+}
+.studioQuickAdd .roundIcon {
+  width: 46px;
+  height: 46px;
+  background: #252330;
+  color: white;
+}
+.studioMiddle {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.3fr);
+  gap: 20px;
+}
+.studioMiddle > .returning {
+  background: #ece9f2;
+}
+.studioMiddle .returningBody {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  margin-top: 30px;
+}
+.studioMiddle .returningRing {
+  width: 126px;
+  height: 126px;
+  align-self: center;
+  background: conic-gradient(from -90deg, #a591cc var(--progress), #ded9e7 0);
+}
+.studioMiddle .returningRing > span {
+  width: 104px;
+  height: 104px;
+  background: #ece9f2;
+  font-size: 36px;
+}
+.studioMiddle .returningBody > div:last-child > strong {
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.studioMiddle .returningBody p {
+  margin-top: 16px;
+  font-size: 12px;
+}
+.serviceTiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 23px 16px;
+  margin-top: 23px;
+}
+.serviceTile {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border-radius: 17px;
+}
+.serviceTileArt {
+  display: block;
+  width: 100%;
+  height: 113px;
+  border-radius: 17px;
+  position: relative;
+  overflow: hidden;
+}
+.serviceNumber {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.serviceTileArt > svg {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+.serviceTile > strong {
+  font-size: 13px;
+  font-weight: 450;
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+}
+.serviceTile > span:last-child {
+  font-size: 11px;
+  margin-top: 4px;
+  color: var(--muted-foreground);
+}
+.serviceSculpture {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  top: 22px;
+  left: calc(50% - 36px);
+  border: 16px solid #ffffff85;
+  border-radius: 50% 50% 25% 50%;
+  transform: rotate(-35deg);
+  box-shadow:
+    5px 7px 11px #64557912,
+    inset 3px 3px 7px #6455790d;
+}
+.serviceSculpture[data-shape="1"] {
+  width: 44px;
+  left: calc(50% - 22px);
+  border: 0;
+  border-radius: 24px 24px 12px 12px;
+  background: linear-gradient(110deg, #fdf9ff, #c7b4dc);
+  transform: rotate(25deg);
+}
+.serviceSculpture[data-shape="2"] {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border-width: 12px;
+  border-color: #fff6;
+  transform: rotate(-20deg);
+  box-shadow:
+    8px 8px 0 -3px #ba92712b,
+    16px 16px 0 -6px #ba92711a;
+}
+.serviceSculpture[data-shape="3"] {
+  width: 43px;
+  height: 70px;
+  left: calc(50% - 22px);
+  border: 0;
+  border-radius: 80% 0 80% 0;
+  background: linear-gradient(140deg, #fafffa, #adc5b1);
+  transform: rotate(28deg);
+}
+.scope[data-dashboard-theme="studio"] .nextClient {
+  border-radius: 29px;
+  background: linear-gradient(170deg, white 8%, #f5f0ff 68%, #eae3f5);
+}
+.scope[data-dashboard-theme="studio"] .nextClient .panelHeading h2 {
+  font-size: 20px;
+  font-weight: 400;
+}
+.scope[data-dashboard-theme="studio"] .livePill {
+  background: #ffffffa8;
+  color: #79648e;
+}
+.scope[data-dashboard-theme="studio"] .livePill i {
+  background: #a08abd;
+}
+.clientArtwork {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 250px;
+  overflow: hidden;
+  margin: 24px -5px 16px;
+  border-radius: 23px;
+  background: #e9e0f7;
+}
+.artPetals {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-25deg);
+}
+.artPetals i {
+  position: absolute;
+  width: 105px;
+  height: 230px;
+  left: calc(50% - 52px);
+  top: 10px;
+  border-radius: 100%;
+  background: #b5a1d529;
+}
+.artPetals i:nth-child(2) {
+  transform: rotate(45deg);
+}
+.artPetals i:nth-child(3) {
+  transform: rotate(90deg);
+}
+.artPetals i:nth-child(4) {
+  transform: rotate(135deg);
+}
+.clientMonogram {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 119px;
+  height: 119px;
+  border: 1px solid #ffffffaa;
+  border-radius: 50%;
+  font-size: 41px;
+  font-weight: 350;
+  letter-spacing: -0.08em;
+  color: #9377b4;
+  background: #f7f1fe8f;
+  backdrop-filter: blur(8px);
+}
+.artCaption {
+  position: absolute;
+  bottom: 16px;
+  left: 18px;
+  font-size: 14px;
+  color: #79648e;
+}
+.scope[data-dashboard-theme="studio"] .clientIdentity {
+  margin: 21px 1px;
+}
+.scope[data-dashboard-theme="studio"] .clientIdentity h3 {
+  font-size: 25px;
+  font-weight: 400;
+  letter-spacing: -0.05em;
+}
+.scope[data-dashboard-theme="studio"] .clientFacts svg {
+  color: #a38bbb;
+}
+.scope[data-dashboard-theme="studio"] .clientNote {
+  background: #ffffff75;
+}
+.scope[data-dashboard-theme="studio"] .nextClient .clientButton {
+  background: #252330;
+  color: white;
+  padding: 15px;
+}
+.scope[data-dashboard-theme="studio"] .openSlots {
+  background: white;
+  border: 1px dashed #d1c8df;
+}
+.scope[data-dashboard-theme="studio"] .openSlots h2 {
+  color: var(--foreground);
+}
+.scope[data-dashboard-theme="studio"]
+  :is(.openSlotsTitle, .openSlots p, .openSlotsFooter, .openingList span) {
+  color: var(--muted-foreground);
+}
+.scope[data-dashboard-theme="studio"] .openingList button {
+  background: #f5f1fa;
+  color: #69577e;
+}
+@media (max-width: 1250px) {
+  .studioMetrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studioQuickAdd {
+    flex-direction: row;
+    min-height: 64px;
+    padding: 12px 18px;
+    border-radius: 20px;
+  }
+  .studioQuickAdd .roundIcon {
+    width: 34px;
+    height: 34px;
+  }
+  .studioMiddle {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studioMiddle .returningBody {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .scope[data-dashboard-theme="studio"] .dashboard {
+    border-radius: 25px;
+  }
+  .scope[data-dashboard-theme="studio"] .greeting h1 {
+    font-size: 32px;
+  }
+  .scope[data-dashboard-theme="studio"] .clarityAside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studioMetrics .metricCard {
+    padding: 20px 16px;
+    border-radius: 24px;
+  }
+  .studioMetrics .metricValue {
+    font-size: clamp(23px, 20cqi, 34px);
+  }
+  .studioMetrics .metricFoot {
+    flex-wrap: wrap;
+  }
+  .studioMiddle .returningRing {
+    width: 104px;
+    height: 104px;
+  }
+  .studioMiddle .returningRing > span {
+    width: 86px;
+    height: 86px;
+    font-size: 30px;
+  }
+  .studioMiddle .returningBody > div:last-child > strong {
+    font-size: 19px;
+  }
+  .scope[data-dashboard-theme="studio"] .clientArtwork {
+    height: 240px;
+  }
+}
+@media (max-width: 520px) {
+  .scope[data-dashboard-theme="studio"] .dashboard {
+    border-radius: 0;
+  }
+  .scope[data-dashboard-theme="studio"] .greeting h1 {
+    font-size: 30px;
+  }
+  .studioMetrics .metricCard {
+    min-height: 184px;
+    padding: 18px 14px;
+  }
+  .studioMiddle .panel {
+    padding: 22px 18px;
+  }
+  .studioMiddle .returningBody {
+    gap: 18px;
+  }
+  .serviceTiles {
+    gap: 18px 12px;
+  }
+  .serviceTileArt {
+    height: 108px;
   }
 }

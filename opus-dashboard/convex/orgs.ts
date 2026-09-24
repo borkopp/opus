@@ -56,7 +56,7 @@ export const getBySlug = query({
 
 // Public query for Instagram webhook — look up org by Meta page ID
 // (instagramPageId is not a secret; it's the public Facebook page ID)
-export const getByInstagramPageId = query({
+export const getByInstagramPageId = internalQuery({
     args: { instagramPageId: v.string() },
     handler: async (ctx, args) => {
         const org = await ctx.db

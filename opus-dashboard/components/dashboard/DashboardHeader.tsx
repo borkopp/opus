@@ -12,6 +12,8 @@ import {
   type DashboardProfile,
 } from "./DashboardAccountMenu";
 import s from "./clarity.module.css";
+import { useDashboardAppearance } from "./DashboardAppearanceProvider";
+import { dashboardThemeDetails } from "@/lib/dashboard-theme";
 export function DashboardHeader({
   profile,
   activePath,
@@ -22,6 +24,7 @@ export function DashboardHeader({
   const currentPath = usePathname();
   const pathname = activePath ?? currentPath;
   const { language, t } = useDashboardI18n();
+  const theme = useDashboardAppearance();
   const links = getNavLinks(ACTIVE_INDUSTRY, language).links.filter(
     (link) => link.href !== "/settings" && link.href !== "/beauty/assistant",
   );
@@ -31,7 +34,12 @@ export function DashboardHeader({
         href="/beauty"
         aria-label={t("OPUS dashboard", "OPUS контролна табла")}
       >
-        <Logo className={s.brand} markClassName={s.brandMark} />
+        <span className={s.brandLockup}>
+          <Logo className={s.brand} markClassName={s.brandMark} />
+          <span className={s.themeName}>
+            {dashboardThemeDetails[theme].name}
+          </span>
+        </span>
       </Link>
       <nav
         className={s.navigation}

@@ -6,6 +6,7 @@ import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requirePaidPlan, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
+import { aiSettingsError } from "./ai/rules";
 import {
   canonicalLocale,
   operationalSettingsError,
@@ -370,6 +371,7 @@ export const updateAiSettings = mutation({
     aiWebchatEnabled: v.optional(v.boolean()),
     aiInstagramEnabled: v.optional(v.boolean()),
     aiSystemPrompt: v.optional(v.string()),
+    aiStudioContext: v.optional(v.string()),
     aiGreetingMessage: v.optional(v.string()),
     aiTone: v.optional(
       v.union(
@@ -395,8 +397,10 @@ export const updateAiSettings = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const { org } = await requireRole(ctx, args.orgId, "owner");
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
     requirePaidPlan(org, "AI front desk");
+    if (org.industry !== "beauty_wellness")
+      throw new ConvexError("AI frontdesk is available for beauty studios.");
 
     const settings = await ctx.db
       .query("org_settings")
@@ -405,23 +409,65 @@ export const updateAiSettings = mutation({
 
     if (!settings) throw new Error("Settings not found");
 
-    await ctx.db.patch(settings._id, {
+    const updates = {
       aiEnabled: args.aiEnabled,
-      aiPersonaName: args.aiPersonaName,
+      aiPersonaName: args.aiPersonaName.trim(),
       aiConfidenceThreshold: args.aiConfidenceThreshold,
-      aiHandoffPhoneNumber: args.aiHandoffPhoneNumber,
-      aiWebchatEnabled: args.aiWebchatEnabled,
-      aiInstagramEnabled: args.aiInstagramEnabled,
-      aiSystemPrompt: args.aiSystemPrompt,
-      aiGreetingMessage: args.aiGreetingMessage,
-      aiTone: args.aiTone,
-      aiWorkingHoursEnabled: args.aiWorkingHoursEnabled,
-      aiWorkingHours: args.aiWorkingHours,
-      aiAwayMessage: args.aiAwayMessage,
-      aiLanguage: args.aiLanguage,
+      aiHandoffPhoneNumber: (
+        args.aiHandoffPhoneNumber ?? settings.aiHandoffPhoneNumber
+      )?.trim(),
+      aiWebchatEnabled: false,
+      aiInstagramEnabled:
+        args.aiInstagramEnabled ?? settings.aiInstagramEnabled ?? false,
+      aiStudioContext: (
+        args.aiStudioContext ??
+        settings.aiStudioContext ??
+        ""
+      ).trim(),
+      aiSystemPrompt: (
+        args.aiSystemPrompt ??
+        settings.aiSystemPrompt ??
+        ""
+      ).trim(),
+      aiGreetingMessage: (
+        args.aiGreetingMessage ??
+        settings.aiGreetingMessage ??
+        ""
+      ).trim(),
+      aiTone: args.aiTone ?? settings.aiTone,
+      aiWorkingHoursEnabled:
+        args.aiWorkingHoursEnabled ?? settings.aiWorkingHoursEnabled ?? false,
+      aiWorkingHours: args.aiWorkingHours ?? settings.aiWorkingHours,
+      aiAwayMessage: (
+        args.aiAwayMessage ??
+        settings.aiAwayMessage ??
+        ""
+      ).trim(),
+      aiLanguage: args.aiLanguage ?? settings.aiLanguage,
       updatedAt: Date.now(),
+    };
+    const error = aiSettingsError(updates);
+    if (error) throw new ConvexError(error);
+    await ctx.db.patch(settings._id, updates);
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "ai.settings_updated",
+      resourceType: "org_settings",
+      resourceId: settings._id,
+      before: {
+        enabled: settings.aiEnabled,
+        contextLength: settings.aiStudioContext?.length ?? 0,
+      },
+      after: {
+        enabled: updates.aiEnabled,
+        instagram: updates.aiInstagramEnabled,
+        confidenceThreshold: updates.aiConfidenceThreshold,
+        contextLength: updates.aiStudioContext.length,
+      },
+      createdAt: updates.updatedAt,
     });
-
     return true;
   },
 });

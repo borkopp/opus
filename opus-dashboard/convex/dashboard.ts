@@ -583,7 +583,7 @@ export const getAIPerformance = query({
 
     // Filter in memory for time range just based on createdAt
     const recentConvs = conversations.filter(
-      (c) => c.createdAt >= args.startMs && c.createdAt <= args.endMs,
+      (c) => !c.isPreview && c.createdAt >= args.startMs && c.createdAt <= args.endMs,
     );
 
     const total = recentConvs.length;

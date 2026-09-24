@@ -28,7 +28,7 @@ Do not infer active product scope from dormant schemas or old integrations. The 
 | Frontend       | Next.js 16 (App Router) with PPR (Partial Prerendering)                                        |
 | Deferred       | Native clients and autonomous AI foundations; preserve but do not expose or expand             |
 | Auth           | Better Auth email OTP through Convex                                                           |
-| AI             | Anthropic Claude (`claude-sonnet-4-6`) via the Anthropic SDK                                   |
+| AI             | OpenAI Luna (`gpt-6-luna`) via the Responses API for the configured Instagram frontdesk          |
 | Voice AI       | Vapi or Retell AI (future)                                                                     |
 | Messaging      | Twilio (SMS + WhatsApp), Resend + Sender (transactional email)                                 |
 | Domain routing | Vercel — `proxy.ts` handles white-label subdomain routing                                      |
@@ -190,9 +190,9 @@ Website publication uses `websiteStatus` and is independent from dormant marketp
 
 ---
 
-## Dormant AI Agent Foundations
+## AI Frontdesk
 
-AI front-desk work is P2 and not part of the active product promise. Preserve the existing safety rules, but do not expand or market this foundation without explicit authorization and verified provider configuration.
+Instagram AI frontdesk implementation was explicitly authorized on September 24, 2026. Use OpenAI Luna, owner-supplied studio context, and explicit customer confirmation before creating a new booking. Follow [../docs/AI_FRONTDESK.md](../docs/AI_FRONTDESK.md). Keep claims conditional on verified provider configuration. WhatsApp and broader AI campaigns remain deferred; the removed public web-chat API stays disabled.
 
 ### Confidence threshold
 
@@ -208,10 +208,11 @@ Every message the AI sends and every action it triggers (booking created, resche
 
 ### System prompt context
 
-When calling Claude, always inject:
+When calling Luna, include:
 
-- Current shop schedule and available slots
-- Customer history (visits, no-show score, preferred staff)
+- Current studio details, service prices, and owner-supplied studio context
+- Available slots returned by the validated availability tool
+- Customer-provided details from this conversation; never disclose private booking history based only on an unverified phone number
 - Business tone guidelines from `org_settings.aiPersonaName`
 - Cancellation policy
 - Never inject raw database IDs into the prompt — resolve them to human-readable labels first.

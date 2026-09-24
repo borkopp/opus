@@ -8,6 +8,8 @@ import {
   Languages,
   ChartNoAxesCombined,
   CalendarClock,
+  MessagesSquare,
+  SwatchBook,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FunctionReturnType } from "convex/server";
@@ -108,6 +110,12 @@ export function DashboardAccountMenu({
               {t("Settings", "Поставки")}
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/settings?tab=themes">
+              <SwatchBook />
+              {t("Dashboard theme", "Тема на контролната табла")}
+            </Link>
+          </DropdownMenuItem>
           {profile.role !== "staff" && (
             <DropdownMenuItem asChild>
               <Link href="/beauty/assistant">
@@ -120,6 +128,12 @@ export function DashboardAccountMenu({
             <Link href="/gap-optimizer">
               <CalendarClock />
               {t("Opening recovery", "Пополнување слободни термини")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/ai-inbox">
+              <MessagesSquare />
+              {t("AI frontdesk inbox", "Сандаче на AI рецепција")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSub>

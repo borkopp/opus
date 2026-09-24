@@ -75,6 +75,12 @@ export function getNotificationTypeConfig(
   t?: (en: string, mk: string) => string,
 ) {
   switch (type) {
+    case "ai_handoff":
+      return {
+        icon: <BellRing size={16} strokeWidth={2} />,
+        iconBg: "bg-highlight/15 text-warning",
+        label: t ? t("AI handoff", "Преземи разговор") : "AI handoff",
+      };
     case "new_booking":
       return {
         icon: <CalendarPlus size={16} strokeWidth={2} />,
@@ -121,6 +127,10 @@ function NotificationItem({
 
   const handleClick = () => {
     onRead(notification._id);
+    if (notification.conversationId) {
+      router.push(`/ai-inbox?conversation=${notification.conversationId}`);
+      return;
+    }
     if (notification.bookingId) {
       router.push(`/beauty/bookings`);
     }
@@ -650,7 +660,11 @@ export function NotificationBell({
           notification={toastNotification}
           onDismiss={() => setToastNotification(null)}
           onClick={() => {
-            if (toastNotification.bookingId) {
+            if (toastNotification.conversationId) {
+              router.push(
+                `/ai-inbox?conversation=${toastNotification.conversationId}`,
+              );
+            } else if (toastNotification.bookingId) {
               router.push("/beauty/bookings");
             } else {
               setOpen(true);

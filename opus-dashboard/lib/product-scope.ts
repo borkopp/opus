@@ -3,7 +3,7 @@ export const ACTIVE_DASHBOARD_PATH = "/beauty" as const;
 
 export const ACTIVE_CAPABILITIES = {
   businessAnalyst: true,
-  aiFrontDesk: false,
+  aiFrontDesk: true,
   // Legacy flag name: enables staff-approved opening recovery, never autonomous campaigns.
   automatedGapOptimizer: true,
 } as const;

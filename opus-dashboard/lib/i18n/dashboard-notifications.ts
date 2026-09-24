@@ -13,6 +13,8 @@ interface DashboardNotificationCopy {
 
 function translateNotificationTitle(type: string, fallback: string): string {
   switch (type) {
+    case "ai_handoff":
+      return "Разговорот бара внимание";
     case "new_booking":
       return fallback === "Booking Rescheduled"
         ? "Презакажан термин"
@@ -59,6 +61,8 @@ function translateAppointmentLabel(label: string): string {
 }
 
 function translateNotificationBody(type: string, body: string): string {
+  if (type === "ai_handoff")
+    return "Клиент чека одговор од вашиот тим. Отворете го разговорот во AI сандачето.";
   if (type === "new_booking") {
     const match = body.match(/^(.+?) booked (.+?) with (.+?) for (.+)$/);
     if (match) {

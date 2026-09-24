@@ -1,0 +1,253 @@
+.stage {
+  min-height: 100svh;
+  padding: 30px;
+  background: var(--studio-frame);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), var(--font-manrope), sans-serif;
+}
+.workspace {
+  display: flex;
+  flex-direction: column;
+  max-width: 1380px;
+  min-height: calc(100svh - 60px);
+  margin-inline: auto;
+  padding: 0 32px;
+  border-radius: 32px;
+  background: var(--background);
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-block: 28px;
+}
+.brand {
+  font-size: 21px;
+}
+.backLink {
+  min-height: 44px;
+  border: 0;
+}
+.content {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+.formCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 56px 40px;
+  border-radius: 25px;
+  background: var(--card);
+}
+.formContent {
+  width: 100%;
+  max-width: 380px;
+}
+.form {
+  width: 100%;
+}
+.stepIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 28px;
+  border-radius: 17px;
+  background: var(--accent);
+  color: var(--primary);
+}
+.form h1 {
+  margin: 0;
+  font-family: inherit;
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+.description {
+  margin-top: 16px;
+  color: var(--secondary-foreground);
+  font-size: 14px;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+.form :global([data-slot="input"]) {
+  min-height: 52px;
+  border-radius: 13px;
+  font-size: 16px;
+}
+.form :global([data-slot="field-description"]) {
+  color: var(--secondary-foreground);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.form :global([data-slot="input-otp-group"]) {
+  gap: 8px;
+}
+.form :global([data-slot="input-otp-slot"]) {
+  min-width: 0;
+  height: 52px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: var(--secondary);
+  box-shadow: none;
+}
+.form :global([data-slot="input-otp-slot"][data-active="true"]) {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+}
+.form :global([data-slot="input-otp-slot"][aria-invalid="true"]) {
+  border-color: var(--destructive);
+}
+.form :global([data-slot="button"]) {
+  min-height: 44px;
+}
+.form :global(button[type="submit"]) {
+  min-height: 52px;
+}
+.studioCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 25px;
+  background: var(--studio-blue);
+}
+.portrait {
+  position: relative;
+  flex: 1;
+  min-height: 340px;
+  overflow: hidden;
+  border-radius: 18px;
+}
+.photo {
+  object-fit: cover;
+  object-position: 50% 20%;
+}
+.studioCopy {
+  padding: 30px 24px 24px;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+}
+.studioCopy h2 {
+  margin-top: 12px;
+  font-family: inherit;
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.045em;
+}
+.studioDescription {
+  max-width: 350px;
+  margin-top: 12px;
+  color: var(--secondary-foreground);
+  font-size: 14px;
+  line-height: 1.75;
+}
+.footer,
+.footer nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.footer {
+  justify-content: space-between;
+  padding-block: 20px;
+  color: var(--secondary-foreground);
+  font-size: 12px;
+}
+.footer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 44px;
+}
+.footer a:hover {
+  color: var(--foreground);
+}
+.stage a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+@media (max-width: 1023px) {
+  .stage {
+    padding: 20px;
+  }
+  .workspace {
+    max-width: 720px;
+    min-height: calc(100svh - 40px);
+    padding-inline: 24px;
+  }
+  .content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studioCard {
+    display: none;
+  }
+  .formCard {
+    padding-block: 56px;
+  }
+  .footer {
+    justify-content: center;
+    padding-block: 16px;
+  }
+  .footer > p {
+    display: none;
+  }
+  .footer nav {
+    justify-content: center;
+  }
+}
+@media (max-width: 520px) {
+  .stage {
+    padding: 10px;
+  }
+  .workspace {
+    min-height: calc(100svh - 20px);
+    padding-inline: 12px;
+    border-radius: 26px;
+  }
+  .topbar {
+    padding: 18px 6px;
+    gap: 12px;
+  }
+  .brand {
+    font-size: 18px;
+  }
+  .backLink {
+    padding-inline: 12px;
+    font-size: 12px;
+  }
+  .formCard {
+    padding: 36px 24px;
+    border-radius: 22px;
+  }
+  .stepIcon {
+    margin-bottom: 24px;
+  }
+  .footer nav {
+    column-gap: 16px;
+  }
+}
+@media (max-width: 360px) {
+  .formCard {
+    padding-inline: 18px;
+  }
+  .form :global([data-slot="input-otp-group"]) {
+    gap: 5px;
+  }
+  .backLink {
+    padding-inline: 10px;
+  }
+}

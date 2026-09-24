@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { CustomSoftwarePlan } from "./custom-software-plan";
 import { HeroShowcase } from "./hero-showcase";
+import { DashboardPreview } from "./dashboard-preview";
 import { ProductTour } from "./product-tour";
 import { IntelligenceRotation } from "./intelligence-rotation";
 import { CloudShader } from "@/components/landing/cloud-shader";
@@ -98,6 +99,8 @@ export function HomeContent() {
             </div>
           </div>
         </section>
+
+        <DashboardPreview />
 
         <section className="section product-section" id="product">
           <div className="section-heading centered reveal">

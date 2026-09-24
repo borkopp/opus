@@ -89,6 +89,12 @@ export const mkMessages = {
       "Студија за масажа",
     ],
   },
+  dashboardPreview: {
+    heading: "Вашето студио, на еден поглед.",
+    description: "Термини, клиенти и слободни места — сè на едно место.",
+    imageAlt:
+      "Пример на OPUS контролната табла со денешни термини, пополнетост на календарот и вредност на завршените термини.",
+  },
   productTour: {
     heading: "Клиентите закажуваат онлајн.",
     subheading:
@@ -545,6 +551,12 @@ export const enMessages: Messages = {
       "Makeup artists",
       "Massage studios",
     ],
+  },
+  dashboardPreview: {
+    heading: "Your studio, at a glance.",
+    description: "Appointments, clients, and available slots — all in one place.",
+    imageAlt:
+      "Sample OPUS dashboard showing today's appointments, calendar occupancy, and completed appointment value.",
   },
   productTour: {
     heading: "Clients book online.",

@@ -60,3 +60,47 @@
     font-family: var(--font-dm-sans), var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
+
+@layer components {
+  .section.dashboard-preview {
+    max-width: 1200px;
+  }
+
+  .dashboard-preview .section-heading {
+    margin-bottom: 40px;
+  }
+
+  .dashboard-preview-frame {
+    margin: 0;
+    overflow: hidden;
+    border-radius: 24px;
+    background: var(--color-secondary);
+    box-shadow: 0 24px 64px -32px rgb(36 70 96 / 25%);
+  }
+
+  .dashboard-preview-frame picture,
+  .dashboard-preview-frame img {
+    display: block;
+    width: 100%;
+  }
+
+  .dashboard-preview-frame img {
+    height: auto;
+  }
+
+  @media (max-width: 760px) {
+    .dashboard-preview .section-heading {
+      margin-bottom: 28px;
+    }
+
+    .dashboard-preview-frame {
+      max-width: 440px;
+      margin-inline: auto;
+      border-radius: 20px;
+    }
+
+    .dashboard-preview-frame img {
+      aspect-ratio: 1000 / 1872;
+    }
+  }
+}

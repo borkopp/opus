@@ -23,6 +23,20 @@ function requiresSession(pathname: string): boolean {
 }
 
 export default function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (
+    pathname === "/dashboard-preview" ||
+    pathname.startsWith("/dashboard-preview/")
+  ) {
+    const host = request.headers.get("host") ?? "";
+    if (
+      process.env.NODE_ENV !== "development" ||
+      !/^localhost(?::\d+)?$/i.test(host)
+    ) {
+      return new NextResponse(null, { status: 404 });
+    }
+  }
+
   const tenantSlug = tenantSlugFromHost(
     request.headers.get("host"),
     rootDomain,
@@ -56,6 +70,7 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/dashboard-preview/:path*",
     "/((?!api|_next/static|_next/image|favicon.ico|icon.svg|opus-mark.svg|.*\\..*).*)",
   ],
 };

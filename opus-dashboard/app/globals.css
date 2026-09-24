@@ -456,10 +456,13 @@
   }
 }
 
-/* Clarity: shared dashboard tokens. Portalled forms, menus and drawers inherit
-   the same appearance; tenant websites and authentication pages stay scoped out. */
+/* Clarity: shared studio tokens. Authentication uses the same palette;
+   tenant websites retain their own theme. */
 body:has(.dashboard-shell),
-.dashboard-shell {
+.dashboard-shell,
+.auth-shell {
+  --studio-frame: #e8ebef;
+  --studio-blue: #dce9fb;
   --background: #f5f6f8;
   --foreground: #1e2229;
   --card: #fff;
@@ -551,7 +554,8 @@ body:has(.dashboard-shell) [data-slot="card-title"] {
   font-weight: 500;
   letter-spacing: -0.025em;
 }
-body:has(.dashboard-shell) [data-slot="button"] {
+body:has(.dashboard-shell) [data-slot="button"],
+.auth-shell [data-slot="button"] {
   border-radius: 99px;
   box-shadow: none;
   font-weight: 500;

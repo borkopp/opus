@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { ArrowRight, Mail, MailCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { authDestination } from "@/lib/auth-destination";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/input-otp";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Spinner } from "@/components/ui/spinner";
+import s from "./auth.module.css";
 
 type EmailOtpFormProps = {
   title: string;
@@ -71,6 +73,7 @@ export function EmailOtpForm({
   callbackUrl,
 }: EmailOtpFormProps) {
   const { t } = useDashboardI18n();
+  const reduceMotion = useReducedMotion();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(
@@ -216,25 +219,28 @@ export function EmailOtpForm({
   }
 
   return (
-    <section className="w-full overflow-x-clip">
+    <section className={s.form} aria-busy={isSubmitting}>
       <AnimatePresence mode="wait" custom={direction} initial={false}>
         <motion.div
           key={step}
           custom={direction}
-          variants={stepVariants}
+          variants={reduceMotion ? undefined : stepVariants}
           initial="enter"
           animate="center"
           exit="exit"
           transition={stepTransition}
           className="w-full"
         >
-          <header className="text-center">
-            <h1 className="font-display text-[2rem] font-semibold leading-tight tracking-[-0.04em] text-foreground sm:text-4xl">
+          <header>
+            <div className={s.stepIcon} aria-hidden="true">
+              {step === "email" ? <Mail size={23} /> : <MailCheck size={23} />}
+            </div>
+            <h1>
               {step === "email"
                 ? title
                 : t("Check your email", "Проверете ја вашата е-пошта")}
             </h1>
-            <p className="mx-auto mt-3 max-w-sm text-pretty text-sm leading-6 text-muted-foreground">
+            <p className={s.description}>
               {step === "email"
                 ? description
                 : t(
@@ -254,11 +260,13 @@ export function EmailOtpForm({
                   <Input
                     id="auth-email"
                     type="email"
+                    variant="surface"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@studio.mk"
                     autoComplete="email"
                     required
+                    disabled={isSubmitting}
                     autoFocus
                     aria-invalid={Boolean(error)}
                     aria-describedby="auth-email-hint"
@@ -283,7 +291,10 @@ export function EmailOtpForm({
                       {t("Sending code…", "Испраќање код…")}
                     </>
                   ) : (
-                    t("Continue with email", "Продолжи со е-пошта")
+                    <>
+                      {t("Continue with email", "Продолжи со е-пошта")}
+                      <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                    </>
                   )}
                 </Button>
               </FieldGroup>
@@ -292,10 +303,7 @@ export function EmailOtpForm({
             <form onSubmit={verifyCode} className="mt-8">
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
-                  <FieldLabel
-                    htmlFor="auth-code"
-                    className="w-full justify-center text-center"
-                  >
+                  <FieldLabel htmlFor="auth-code">
                     {t("Sign-in code", "Код за најава")}
                   </FieldLabel>
                   <InputOTP
@@ -335,7 +343,10 @@ export function EmailOtpForm({
                       {t("Checking code…", "Проверка на кодот…")}
                     </>
                   ) : (
-                    t("Verify and continue", "Потврди и продолжи")
+                    <>
+                      {t("Verify and continue", "Потврди и продолжи")}
+                      <ArrowRight data-icon="inline-end" aria-hidden="true" />
+                    </>
                   )}
                 </Button>
                 <div className="flex items-center justify-between gap-3">
@@ -343,6 +354,7 @@ export function EmailOtpForm({
                     type="button"
                     variant="ghost"
                     size="sm"
+                    disabled={isSubmitting}
                     onClick={() => {
                       setDirection(-1);
                       setStep("email");
@@ -370,7 +382,7 @@ export function EmailOtpForm({
         </motion.div>
       </AnimatePresence>
 
-      <div aria-live="polite" className="mt-5 min-h-5 text-center text-sm">
+      <div aria-live="polite" className="mt-5 min-h-5 text-sm">
         {error ? <p className="text-destructive">{error}</p> : null}
         {!error && status ? (
           <p className="text-muted-foreground">{status}</p>

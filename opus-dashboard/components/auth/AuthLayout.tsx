@@ -1,112 +1,85 @@
 "use client";
 
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { ArrowLeft } from "lucide-react";
-
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Logo } from "@/components/Logo";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import s from "./auth.module.css";
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   const { t } = useDashboardI18n();
+
   return (
-    <main className="grid min-h-svh bg-background lg:grid-cols-2">
-      <div className="flex min-h-svh min-w-0 flex-col px-6 sm:px-12 lg:px-14 xl:px-20">
-        <header className="flex items-center justify-between gap-4 py-7 sm:py-9">
-          <a
-            href="https://opus.mk"
-            aria-label={t("Back to OPUS", "Назад кон OPUS")}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            <span>{t("Back to OPUS", "Назад кон OPUS")}</span>
+    <main className={`auth-shell ${s.stage}`}>
+      <div className={s.workspace}>
+        <header className={s.topbar}>
+          <a href="https://opus.mk" aria-label={t("OPUS home", "OPUS почетна")}>
+            <Logo className={s.brand} />
           </a>
+          <Button asChild variant="outline" className={s.backLink}>
+            <a href="https://opus.mk">
+              <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+              {t("Back to OPUS", "Назад кон OPUS")}
+            </a>
+          </Button>
         </header>
 
-        <div className="flex flex-1 items-center justify-center py-12 sm:py-16">
-          <div className="w-full max-w-[25rem]">
-            <div className="mb-10 flex flex-col items-center gap-1">
-              <Logo className="text-3xl" />
-              <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                Studio
+        <div className={s.content}>
+          <div className={s.formCard}>
+            <div className={s.formContent}>{children}</div>
+          </div>
+          <aside className={s.studioCard}>
+            <div className={s.portrait}>
+              <Image
+                src="/images/auth/studio-team-blue.png"
+                alt={t(
+                  "Three beauty professionals together in a bright salon with cool blue interiors",
+                  "Тројца професионалци за убавина во светол салон со син ентериер",
+                )}
+                fill
+                quality={90}
+                sizes="(min-width: 1440px) 622px, (min-width: 1024px) 44vw, 1px"
+                className={s.photo}
+              />
+            </div>
+            <div className={s.studioCopy}>
+              <p className={s.eyebrow}>
+                {t("YOUR STUDIO, CONNECTED", "ВАШЕТО СТУДИО, ПОВРЗАНО")}
+              </p>
+              <h2>{t("Everything in its place.", "Сè на свое место.")}</h2>
+              <p className={s.studioDescription}>
+                {t(
+                  "Your appointments, your team, and your clients. Together in one simple workspace.",
+                  "Вашите термини, вашиот тим и вашите клиенти. Заедно на едно место.",
+                )}
               </p>
             </div>
-            {children}
-            <Separator className="mt-5" />
-            <p className="mt-6 text-center text-sm leading-6 text-muted-foreground">
-              {t(
-                "A space for your studio, your team, and your clients.",
-                "Простор за вашето студио, вашиот тим и вашите клиенти.",
-              )}
-            </p>
-          </div>
+          </aside>
         </div>
 
-        <footer className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pb-7 text-xs text-muted-foreground sm:pb-9">
-          <a
-            className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            href="https://opus.mk/privacy"
-          >
-            {t("Privacy policy", "Политика за приватност")}
-          </a>
-          <a
-            className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            href="https://opus.mk/terms"
-          >
-            {t("Terms of service", "Услови за користење")}
-          </a>
-          <a
-            className="rounded-sm underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            href="https://opus.mk/contact"
-          >
-            {t("Need a hand?", "Ви треба помош?")}
-          </a>
+        <footer className={s.footer}>
+          <p>
+            {t(
+              "A little more room for your day.",
+              "Повеќе простор во вашиот ден.",
+            )}
+          </p>
+          <nav aria-label={t("Support and legal", "Помош и правни информации")}>
+            <a href="https://opus.mk/privacy">
+              {t("Privacy policy", "Политика за приватност")}
+            </a>
+            <a href="https://opus.mk/terms">
+              {t("Terms of service", "Услови за користење")}
+            </a>
+            <a href="https://opus.mk/contact">
+              {t("Need a hand?", "Ви треба помош?")}
+              <ArrowUpRight size={14} aria-hidden="true" />
+            </a>
+          </nav>
         </footer>
       </div>
-
-      <aside
-        className="relative hidden bg-ink-surface lg:block"
-        aria-label={t(
-          "Made for beauty professionals",
-          "За професионалци во индустријата за убавина",
-        )}
-      >
-        <div className="sticky top-0 h-svh min-h-[40rem] overflow-hidden">
-          <Image
-            src="/images/auth/studio-team-blue.png"
-            alt={t(
-              "Three beauty professionals together in a bright salon with cool blue interiors",
-              "Тројца професионалци за убавина во светол салон со син ентериер",
-            )}
-            fill
-            quality={90}
-            sizes="(min-width: 1024px) max(50vw, 66.67svh), 1px"
-            className="object-cover object-[50%_30%]"
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-ink-surface/90 via-ink-surface/5 to-transparent" />
-          <svg
-            viewBox="0 0 100 1000"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 -left-px h-full w-16 fill-background xl:w-20"
-          >
-            <path d="M0 0H34C4 300 4 640 100 1000H0Z" />
-          </svg>
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-5 px-14 pb-14 text-center text-white xl:pb-16">
-            <Logo className="text-4xl text-white" />
-            {/* <p className="max-w-xs text-balance font-display text-2xl font-medium leading-snug tracking-tight xl:text-3xl">
-              More time for what you love.
-            </p> */}
-            <p className="text-sm text-white/75">
-              {t(
-                "Your studio. In good hands.",
-                "Вашето студио. Во добри раце.",
-              )}
-            </p>
-          </div>
-        </div>
-      </aside>
     </main>
   );
 }

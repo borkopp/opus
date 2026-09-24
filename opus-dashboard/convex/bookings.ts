@@ -14,9 +14,10 @@ import { requireAuth, requireRole } from "./lib/auth";
 import type { Doc } from "./_generated/dataModel";
 import { computeFreeIntervalsForStaffDate } from "./slots";
 import {
-  queueBookingEmailNotifications,
-  queueBookingRescheduledEmail,
-} from "./lib/bookingEmailNotifications";
+  queueBookingNotifications,
+  queueBookingRescheduledNotifications,
+  queueBookingSms,
+} from "./lib/bookingNotifications";
 import {
   formatBookingNotificationDateTime,
   wallClockNow,
@@ -232,7 +233,7 @@ export const createBooking = mutation({
     // 7. Transactional email confirmation and reminder schedule.
     const booking = await ctx.db.get(bookingId);
     if (!booking) throw new Error("Created booking was not found.");
-    await queueBookingEmailNotifications(ctx, {
+    await queueBookingNotifications(ctx, {
       org,
       settings: orgSettings,
       booking,
@@ -543,7 +544,7 @@ export const createManualBooking = mutation({
       durationMins,
       priceMinorUnits,
     };
-    await queueBookingEmailNotifications(ctx, {
+    await queueBookingNotifications(ctx, {
       org,
       settings,
       booking,
@@ -695,15 +696,14 @@ export const cancelBooking = mutation({
         .query("org_settings")
         .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
         .first();
-      const contact = getPrimaryContact(customer);
-      if (contact) {
+      if (customer.email) {
         await ctx.runMutation(internal.notifications.scheduleNotification, {
           orgId: args.orgId,
           customerId: customer._id,
           bookingId: booking._id,
-          channel: contact.channel,
+          channel: "email",
           type: "booking_cancelled",
-          recipientAddress: contact.address,
+          recipientAddress: customer.email,
           templateData: {
             customerName: customer.name,
             serviceName: service.name,
@@ -713,6 +713,14 @@ export const cancelBooking = mutation({
           },
         });
       }
+
+      const org = await ctx.db.get(args.orgId);
+      if (org && orgSettings)
+        await queueBookingSms(
+          ctx,
+          { org, settings: orgSettings, booking, customer, service, staff },
+          "booking_cancelled",
+        );
 
       // Dashboard notification
       const cancelDateLabel = formatBookingNotificationDateTime(
@@ -961,7 +969,7 @@ export const rescheduleBooking = mutation({
         durationMins,
         priceMinorUnits: newBooking.priceMinorUnits,
       };
-      await queueBookingRescheduledEmail(ctx, {
+      await queueBookingRescheduledNotifications(ctx, {
         org,
         settings,
         booking: newBooking,
@@ -973,7 +981,7 @@ export const rescheduleBooking = mutation({
       });
 
       if (newBooking.status === "confirmed") {
-        await queueBookingEmailNotifications(ctx, {
+        await queueBookingNotifications(ctx, {
           org,
           settings,
           booking: newBooking,

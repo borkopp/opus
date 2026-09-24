@@ -119,8 +119,179 @@ describe("public booking email flow", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.unstubAllEnvs();
+  });
+
+  test("Free owners cannot enable or change client reminders through either settings API", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const emailSettings = {
+      orgId: fixture.orgId,
+      customerReminderEmailEnabled: false,
+      customerReminderHoursBefore: [24, 2],
+      staffNewBookingEmailEnabled: true,
+      staffReminderEmailEnabled: true,
+      staffReminderHoursBefore: [3],
+      staffEmailRecipientUserIds: [fixture.ownerUserId],
+    };
+    const legacySettings = {
+      orgId: fixture.orgId,
+      smsEnabled: false,
+      emailEnabled: false,
+      whatsappEnabled: false,
+      reminderHoursBefore: [24, 2],
+    };
+    for (const [enabled, hours] of [
+      [true, [24, 2]],
+      [false, [1]],
+    ] as const) {
+      await expect(
+        fixture.owner.mutation(
+          api.orgSettings.updateEmailNotificationSettings,
+          {
+            ...emailSettings,
+            customerReminderEmailEnabled: enabled,
+            customerReminderHoursBefore: [...hours],
+          },
+        ),
+      ).rejects.toThrow("Client email reminders requires the paid plan");
+      await expect(
+        fixture.owner.mutation(api.orgSettings.updateNotificationSettings, {
+          ...legacySettings,
+          emailEnabled: enabled,
+          reminderHoursBefore: [...hours],
+        }),
+      ).rejects.toThrow("Client email reminders requires the paid plan");
+    }
+
+    // Saving the independent team settings still works on Free, including
+    // switching off a legacy client-reminder preference.
+    await expect(
+      fixture.owner.mutation(
+        api.orgSettings.updateEmailNotificationSettings,
+        emailSettings,
+      ),
+    ).resolves.toBe(true);
+    const data = await fixture.owner.query(api.orgSettings.getOrgSettings, {
+      orgId: fixture.orgId,
+    });
+    expect(data?.settings).toMatchObject({
+      emailEnabled: false,
+      reminderHoursBefore: [24, 2],
+      staffReminderEmailEnabled: true,
+      staffReminderHoursBefore: [3],
+    });
+  });
+
+  test("Free bookings keep confirmation and team emails but never queue client reminders", async () => {
+    const fixture = await setupPublishedStudio(t);
+    vi.useFakeTimers();
+    vi.setSystemTime(
+      wallClockTimestampToInstant(fixture.slot.startAt, "Europe/Belgrade") -
+        26 * 3_600_000,
+    );
+    const bookingId = await fixture.owner.mutation(
+      api.bookings.createManualBooking,
+      {
+        orgId: fixture.orgId,
+        staffId: fixture.staffId,
+        serviceIds: [fixture.serviceId],
+        startAt: fixture.slot.startAt,
+        customerName: "Free Client",
+        customerEmail: "free-client@example.com",
+      },
+    );
+    // Legacy settings have emailEnabled=true, which must not bypass the plan.
+    await t.mutation(internal.notifications.reconcileBookingRemindersForOrg, {
+      orgId: fixture.orgId,
+    });
+    const queued = await t.run((ctx) =>
+      ctx.db
+        .query("notifications")
+        .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+        .collect(),
+    );
+    const types = queued
+      .filter((n) => n.bookingId === bookingId)
+      .map((n) => n.type);
+    expect(types).toContain("booking_confirmation");
+    expect(types).toContain("staff_booking_reminder");
+    expect(types).not.toContain("booking_reminder");
+    const confirmation = queued.find((n) => n.type === "booking_confirmation")!;
+    await expect(
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId: confirmation._id,
+      }),
+    ).resolves.toBe("sent");
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  test("Pro schedules selected reminder times and a downgrade blocks queued delivery and reconciliation", async () => {
+    const fixture = await setupPublishedStudio(t);
+    vi.useFakeTimers();
+    vi.setSystemTime(
+      wallClockTimestampToInstant(fixture.slot.startAt, "Europe/Belgrade") -
+        26 * 3_600_000,
+    );
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
+    await fixture.owner.mutation(
+      api.orgSettings.updateEmailNotificationSettings,
+      {
+        orgId: fixture.orgId,
+        customerReminderEmailEnabled: true,
+        customerReminderHoursBefore: [1, 24, 3, 2, 24],
+        staffNewBookingEmailEnabled: false,
+        staffReminderEmailEnabled: false,
+        staffReminderHoursBefore: [2],
+        staffEmailRecipientUserIds: [],
+      },
+    );
+    await fixture.owner.mutation(api.bookings.createManualBooking, {
+      orgId: fixture.orgId,
+      staffId: fixture.staffId,
+      serviceIds: [fixture.serviceId],
+      startAt: fixture.slot.startAt,
+      customerName: "Pro Client",
+      customerEmail: "pro-client@example.com",
+    });
+    const reminders = await t.run(async (ctx) =>
+      (
+        await ctx.db
+          .query("notifications")
+          .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+          .collect()
+      ).filter((n) => n.type === "booking_reminder"),
+    );
+    expect(reminders.map((n) => n.templateData.hoursBefore)).toEqual([
+      24, 3, 2, 1,
+    ]);
+    await expect(
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId: reminders[0]._id,
+      }),
+    ).resolves.toBe("sent");
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "free" }));
+    for (const reminder of reminders.slice(1)) {
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId: reminder._id,
+        }),
+      ).resolves.toBe("cancelled");
+    }
+    await expect(
+      t.mutation(internal.notifications.reconcileBookingRemindersForOrg, {
+        orgId: fixture.orgId,
+      }),
+    ).resolves.toBe(0);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const cancelled = await t.run((ctx) => ctx.db.get(reminders[1]._id));
+    expect(cancelled).toMatchObject({
+      status: "cancelled",
+      failureReason: "Client email reminders require Pro",
+    });
   });
 
   test("sends an OTP, creates nothing for a wrong code, then books once and sends the premium confirmation", async () => {
@@ -130,7 +301,7 @@ describe("public booking email flow", () => {
       {
         orgId: fixture.orgId,
         customerReminderEmailEnabled: false,
-        customerReminderHoursBefore: [24],
+        customerReminderHoursBefore: [24, 2],
         staffNewBookingEmailEnabled: false,
         staffReminderEmailEnabled: false,
         staffReminderHoursBefore: [2],
@@ -329,8 +500,9 @@ describe("public booking email flow", () => {
     });
   });
 
-  test("lets owners choose exact team recipients and independent reminder schedules", async () => {
+  test("lets Pro owners choose exact team recipients and independent reminder schedules", async () => {
     const fixture = await setupPublishedStudio(t);
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
     const manager = t.withIdentity({
       subject: "email-manager",
       email: "manager@atelier.example",
@@ -446,7 +618,7 @@ describe("public booking email flow", () => {
       {
         orgId: fixture.orgId,
         customerReminderEmailEnabled: false,
-        customerReminderHoursBefore: [24],
+        customerReminderHoursBefore: [24, 2],
         staffNewBookingEmailEnabled: false,
         staffReminderEmailEnabled: false,
         staffReminderHoursBefore: [2],
@@ -497,7 +669,7 @@ describe("public booking email flow", () => {
       {
         orgId: fixture.orgId,
         customerReminderEmailEnabled: false,
-        customerReminderHoursBefore: [24],
+        customerReminderHoursBefore: [24, 2],
         staffNewBookingEmailEnabled: true,
         staffReminderEmailEnabled: true,
         staffReminderHoursBefore: [2],
@@ -630,7 +802,7 @@ describe("public booking email flow", () => {
       {
         orgId: fixture.orgId,
         customerReminderEmailEnabled: false,
-        customerReminderHoursBefore: [24],
+        customerReminderHoursBefore: [24, 2],
         staffNewBookingEmailEnabled: false,
         staffReminderEmailEnabled: false,
         staffReminderHoursBefore: [2],
@@ -727,6 +899,62 @@ describe("public booking email flow", () => {
       to: ["rescheduled@example.com"],
     });
     expect(rescheduleBody?.html).toContain("opus-email-logo-blue.png");
+  });
+
+  test("adds Pro SMS to a verified public booking while preserving email", async () => {
+    const fixture = await setupPublishedStudio(t);
+    for (const [key, value] of Object.entries({
+      SMS_ENABLED: "true",
+      TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
+      TWILIO_AUTH_TOKEN: "test-token",
+      TWILIO_FROM_NUMBER: "+15005550006",
+      TWILIO_MESSAGING_SERVICE_SID: "",
+      TWILIO_STATUS_CALLBACK_URL: "https://test.convex.site/webhooks/twilio",
+    }))
+      vi.stubEnv(key, value);
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
+    await fixture.owner.mutation(
+      api.orgSettings.updateSmsNotificationSettings,
+      { orgId: fixture.orgId, smsEnabled: true, smsReminderHoursBefore: [2] },
+    );
+    const args = {
+      ...bookingArgs(fixture),
+      customerEmail: "sms-public@example.com",
+    };
+    const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
+      orgId: fixture.orgId,
+      email: args.customerEmail,
+    });
+    const result = await t.action(api.publicBooking.confirmPublicBooking, {
+      ...args,
+      challengeId: challenge.challengeId,
+      otp: TEST_OTP,
+    });
+    const notifications = await t.run((ctx) =>
+      ctx.db
+        .query("notifications")
+        .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+        .collect(),
+    );
+    const bookingNotifications = notifications.filter(
+      (n) => n.bookingId === result.bookingId,
+    );
+    expect(
+      bookingNotifications
+        .filter((n) => n.channel === "sms")
+        .map((n) => n.type)
+        .sort(),
+    ).toEqual(["booking_confirmation", "booking_reminder"]);
+    expect(
+      bookingNotifications.some(
+        (n) => n.channel === "email" && n.type === "booking_confirmation",
+      ),
+    ).toBe(true);
+    expect(
+      notifications
+        .filter((n) => n.type === "booking_verification")
+        .every((n) => n.channel === "email"),
+    ).toBe(true);
   });
 
   test("locks a verification challenge after five incorrect codes", async () => {

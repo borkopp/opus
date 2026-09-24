@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { ChartNoAxesCombined } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { api } from "@/convex/_generated/api";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { WidgetFrame } from "../WidgetFrame";
@@ -17,14 +17,14 @@ export function AssistantWidget() {
         "A clearer view of your studio",
         "Појасен поглед на вашето студио",
       )}
-      action={<ChartNoAxesCombined size={19} className="text-primary" />}
+      action={<Badge variant="pro">Pro</Badge>}
     >
       <FeatureCardContent
         status={
           !access
             ? t("Checking availability…", "Се проверува достапноста…")
             : !access.paid
-              ? t("Available with OPUS Pro", "Достапно со OPUS Pro")
+              ? null
               : !access.configured
                 ? t("Temporarily unavailable", "Привремено недостапно")
                 : t(

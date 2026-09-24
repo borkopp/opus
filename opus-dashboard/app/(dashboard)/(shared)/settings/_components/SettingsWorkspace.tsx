@@ -14,7 +14,7 @@ import {
   SwatchBook,
   Sparkles,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/ui/spinner";
@@ -95,19 +95,17 @@ export function SettingsWorkspace() {
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const tabFromUrl = searchParams.get("tab");
   const activeTab = isSettingsTab(tabFromUrl) ? tabFromUrl : "general";
 
-  const handleTabChange = useCallback(
-    (value: string) => {
-      if (!isSettingsTab(value)) return;
-      const url = value === "general" ? "/settings" : `/settings?tab=${value}`;
-      router.replace(url, { scroll: false });
-    },
-    [router],
-  );
+  const handleTabChange = useCallback((value: string) => {
+    if (!isSettingsTab(value)) return;
+    const url = value === "general" ? "/settings" : `/settings?tab=${value}`;
+    // Tabs use already-loaded client data. Avoid a server navigation for a
+    // local panel switch; Next keeps useSearchParams in sync with history.
+    window.history.replaceState(null, "", url);
+  }, []);
 
   const data = useQuery(
     api.orgSettings.getOrgSettings,
@@ -270,7 +268,11 @@ export function SettingsWorkspace() {
           <NotificationsQueueTab
             key={`notifications-${settings.updatedAt}`}
             orgId={orgId}
+            isPaid={org.plan === "paid"}
+            smsAvailable={data.smsAvailable}
             initialData={{
+              smsEnabled: settings.smsEnabled,
+              smsReminderHoursBefore: settings.smsReminderHoursBefore ?? [24],
               emailEnabled: settings.emailEnabled,
               reminderHoursBefore: settings.reminderHoursBefore,
               staffNewBookingEmailEnabled:

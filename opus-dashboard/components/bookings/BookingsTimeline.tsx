@@ -690,7 +690,7 @@ export function BookingsTimeline({
                         onComplete={onComplete}
                         onCancel={onCancel}
                         onMarkNoShow={onMarkNoShow}
-                        side="right"
+                        side="bottom"
                         align="start"
                       >
                         <div className="w-full h-full">

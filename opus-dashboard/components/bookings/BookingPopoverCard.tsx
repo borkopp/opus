@@ -339,7 +339,8 @@ export function BookingPopoverCard({
         side={side}
         align={align}
         sideOffset={8}
-        className="w-88 max-w-[calc(100vw-2rem)] rounded-3xl p-5 shadow-2xl"
+        collisionPadding={16}
+        className="w-88 max-w-[calc(100vw-2rem)] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto overscroll-contain rounded-3xl p-5 shadow-2xl"
       >
         {content}
       </PopoverContent>

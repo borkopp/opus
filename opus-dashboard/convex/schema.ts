@@ -354,6 +354,7 @@ export default defineSchema({
     // Notifications
     reminderHoursBefore: v.array(v.number()), // e.g. [24, 2]
     smsEnabled: v.boolean(),
+    smsReminderHoursBefore: v.optional(v.array(v.number())),
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
 
@@ -1083,13 +1084,16 @@ export default defineSchema({
     deliveredAt: v.optional(v.number()),
     failureReason: v.optional(v.string()),
     externalMessageId: v.optional(v.string()),
-    deliveryProvider: v.optional(emailProviderValidator),
+    deliveryProvider: v.optional(
+      v.union(emailProviderValidator, v.literal("twilio")),
+    ),
     deliveryStatus: v.optional(emailDeliveryStatusValidator),
     deliveryUpdatedAt: v.optional(v.number()),
     providerAttempts: v.optional(v.array(emailProviderAttemptValidator)),
     attemptCount: v.optional(v.number()),
     lastAttemptAt: v.optional(v.number()),
     processingStartedAt: v.optional(v.number()),
+    smsDispatchStartedAt: v.optional(v.number()),
     dedupeKey: v.optional(v.string()),
 
     createdAt: v.number(),

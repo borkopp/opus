@@ -290,7 +290,7 @@ export async function queueBookingEmailNotifications(
 
   if (!(args.scheduleReminders ?? true)) return;
 
-  if (args.settings.emailEnabled && customerEmail) {
+  if (args.org.plan === "paid" && args.settings.emailEnabled && customerEmail) {
     for (const hoursBefore of normalizeReminderHours(
       args.settings.reminderHoursBefore,
     )) {

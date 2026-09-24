@@ -82,13 +82,13 @@ npm run build
 
 ## Tech Stack
 
-| Layer                | Technology                                                                                                      |
-| -------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Backend / DB         | Convex (real-time DB, mutations, queries, actions, scheduled jobs)                                              |
-| Frontend             | Next.js 16 (App Router, PPR)                                                                                    |
-| Auth                 | Better Auth email OTP through Convex (`staff_members` is the permission boundary)                               |
+| Layer        | Technology                                                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------- |
+| Backend / DB | Convex (real-time DB, mutations, queries, actions, scheduled jobs)                                |
+| Frontend     | Next.js 16 (App Router, PPR)                                                                      |
+| Auth         | Better Auth email OTP through Convex (`staff_members` is the permission boundary)                 |
 | AI frontdesk | OpenAI Luna with Instagram Login messaging; availability requires verified provider configuration |
-| Styling              | Tailwind CSS v4, shadcn/ui                                                                                      |
+| Styling      | Tailwind CSS v4, shadcn/ui                                                                        |
 
 ---
 
@@ -116,7 +116,7 @@ Convex Backend (convex/)
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend plus Sender for production transactional email; configured OpenAI and Meta integrations for the Instagram frontdesk; deferred Twilio integrations
+External APIs: Resend plus Sender for production transactional email; configured Twilio for Pro appointment SMS; configured OpenAI and Meta integrations for the Instagram frontdesk; WhatsApp remains deferred
 ```
 
 ---
@@ -208,6 +208,11 @@ WhatsApp remains deferred, and the removed public web-chat API must stay disable
 ## Notifications
 
 Never call Twilio, Resend, or Sender directly from mutations. Write to the `notifications` queue table; a scheduled Convex Action handles delivery and retries.
+
+Pro client appointment SMS was authorized on September 24, 2026. See
+[`docs/SMS_NOTIFICATIONS.md`](docs/SMS_NOTIFICATIONS.md) for setup and delivery
+boundaries. SMS requires configured Twilio and an enabled studio setting; verify
+the Pro plan before queueing and sending. SMS campaigns and WhatsApp remain deferred.
 
 ---
 

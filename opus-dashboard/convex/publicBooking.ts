@@ -24,7 +24,7 @@ import {
   isValidBookingEmail,
   normalizeBookingEmail,
 } from "./lib/bookingEmailSecurity";
-import { queueBookingEmailNotifications } from "./lib/bookingEmailNotifications";
+import { queueBookingNotifications } from "./lib/bookingNotifications";
 import { formatBookingNotificationDateTime } from "./lib/bookingTime";
 import {
   isValidPublicBookingPhone,
@@ -475,7 +475,7 @@ async function createPublicBookingRecord(
     throw new Error("Created booking email context was not found.");
   }
   await recordRecoveryBooking(ctx, booking, recoveryCandidateId);
-  await queueBookingEmailNotifications(ctx, {
+  await queueBookingNotifications(ctx, {
     org,
     settings: orgSettings,
     booking,

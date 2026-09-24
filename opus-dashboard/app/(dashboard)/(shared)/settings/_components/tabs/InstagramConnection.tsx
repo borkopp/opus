@@ -13,7 +13,11 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { SettingsSection } from "../SettingsCard";
 
-export function InstagramConnection() {
+export function InstagramConnection({
+  disabled = false,
+}: {
+  disabled?: boolean;
+}) {
   const { t } = useDashboardI18n();
   const status = useQuery(api.ai.connections.getStatus, {});
   const connect = useAction(api.ai.instagram.startConnection);
@@ -100,7 +104,12 @@ export function InstagramConnection() {
           <Button
             type="button"
             variant="outline"
-            disabled={!status?.canManage || !status.provider.instagram || busy}
+            disabled={
+              disabled ||
+              !status?.canManage ||
+              !status.provider.instagram ||
+              busy
+            }
             onClick={handleConnect}
           >
             {busy && <Spinner />}
@@ -112,15 +121,21 @@ export function InstagramConnection() {
             <Button
               type="button"
               variant="ghost"
-              disabled={!status.canManage || busy}
+              disabled={disabled || !status.canManage || busy}
               onClick={handleDisconnect}
             >
               {t("Disconnect", "Исклучи")}
             </Button>
           )}
-          <Button asChild variant="ghost">
-            <Link href="/ai-inbox">{t("Open inbox", "Отвори сандаче")}</Link>
-          </Button>
+          {disabled ? (
+            <Button variant="ghost" disabled>
+              {t("Open inbox", "Отвори сандаче")}
+            </Button>
+          ) : (
+            <Button asChild variant="ghost">
+              <Link href="/ai-inbox">{t("Open inbox", "Отвори сандаче")}</Link>
+            </Button>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">
           {t(

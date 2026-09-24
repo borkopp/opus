@@ -519,80 +519,109 @@ describe("Instagram frontdesk", () => {
     });
   });
 
-  test("confirms a quoted slot atomically, books once, and does not inflate completed visits", async () => {
-    const t = createBackend(),
-      a = await studio(t);
-    const conv = await a.ingest(
-      "mid-1",
-      "Please book Gel nails. My name is Ana and my phone is +38970111222.",
-    );
-    const work = {
-      orgId: a.orgId,
-      conversationId: conv._id,
-      lease: "proposal",
-    };
-    await t.mutation(internal.ai.queue.claim, work);
-    const slots = await t.query(internal.ai.booking.availability, {
-      ...work,
-      serviceId: a.serviceId,
-      date: "2026-09-29",
-    });
-    expect(slots.length).toBeGreaterThan(0);
-    const reply = await t.mutation(internal.ai.booking.prepare, {
-      ...work,
-      serviceId: a.serviceId,
-      staffId: a.staffId,
-      startAt: slots[0].startAt,
-      customerName: "Ana",
-      customerPhone: "+38970111222",
-    });
-    expect(
-      await t.run((ctx) =>
+  test.each([false, true])(
+    "confirms a quoted slot atomically once, with SMS enabled: %s",
+    async (smsEnabled) => {
+      const t = createBackend(),
+        a = await studio(t);
+      for (const [key, value] of Object.entries({
+        SMS_ENABLED: "true",
+        TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
+        TWILIO_AUTH_TOKEN: "test-token",
+        TWILIO_FROM_NUMBER: "+15005550006",
+        TWILIO_MESSAGING_SERVICE_SID: "",
+        TWILIO_STATUS_CALLBACK_URL: "https://test.convex.site/webhooks/twilio",
+      }))
+        vi.stubEnv(key, value);
+      await a.owner.mutation(api.orgSettings.updateSmsNotificationSettings, {
+        orgId: a.orgId,
+        smsEnabled,
+        smsReminderHoursBefore: [2],
+      });
+      const conv = await a.ingest(
+        "mid-1",
+        "Please book Gel nails. My name is Ana and my phone is +38970111222.",
+      );
+      const work = {
+        orgId: a.orgId,
+        conversationId: conv._id,
+        lease: "proposal",
+      };
+      await t.mutation(internal.ai.queue.claim, work);
+      const slots = await t.query(internal.ai.booking.availability, {
+        ...work,
+        serviceId: a.serviceId,
+        date: "2026-09-29",
+      });
+      expect(slots.length).toBeGreaterThan(0);
+      const reply = await t.mutation(internal.ai.booking.prepare, {
+        ...work,
+        serviceId: a.serviceId,
+        staffId: a.staffId,
+        startAt: slots[0].startAt,
+        customerName: "Ana",
+        customerPhone: "+38970111222",
+      });
+      expect(
+        await t.run((ctx) =>
+          ctx.db
+            .query("bookings")
+            .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
+            .collect(),
+        ),
+      ).toHaveLength(0);
+      await t.mutation(internal.ai.delivery.complete, {
+        orgId: a.orgId,
+        messageId: reply,
+        status: "sent",
+        providerMessageId: "proposal-sent",
+      });
+      await t.mutation(internal.ai.queue.release, work);
+      vi.setSystemTime(NOW + 2_000);
+      await a.ingest("confirm-1", "Confirm");
+      const confirmationWork = { ...work, lease: "confirmation" };
+      await t.mutation(internal.ai.queue.claim, confirmationWork);
+      expect(
+        await t.mutation(internal.ai.booking.confirm, confirmationWork),
+      ).toContain("appointment is confirmed");
+      expect(
+        await t.mutation(internal.ai.booking.confirm, confirmationWork),
+      ).toContain("already confirmed");
+      await a.ingest("confirm-1", "Confirm");
+      const bookings = await t.run((ctx) =>
         ctx.db
           .query("bookings")
           .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
           .collect(),
-      ),
-    ).toHaveLength(0);
-    await t.mutation(internal.ai.delivery.complete, {
-      orgId: a.orgId,
-      messageId: reply,
-      status: "sent",
-      providerMessageId: "proposal-sent",
-    });
-    await t.mutation(internal.ai.queue.release, work);
-    vi.setSystemTime(NOW + 2_000);
-    await a.ingest("confirm-1", "Confirm");
-    const confirmationWork = { ...work, lease: "confirmation" };
-    await t.mutation(internal.ai.queue.claim, confirmationWork);
-    expect(
-      await t.mutation(internal.ai.booking.confirm, confirmationWork),
-    ).toContain("appointment is confirmed");
-    expect(
-      await t.mutation(internal.ai.booking.confirm, confirmationWork),
-    ).toContain("already confirmed");
-    await a.ingest("confirm-1", "Confirm");
-    const bookings = await t.run((ctx) =>
-      ctx.db
-        .query("bookings")
-        .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
-        .collect(),
-    );
-    expect(bookings).toHaveLength(1);
-    expect(bookings[0]).toMatchObject({
-      source: "ai_instagram",
-      status: "confirmed",
-      startAt: slots[0].startAt,
-      priceMinorUnits: 120_000,
-    });
-    expect(
-      await t.run((ctx) => ctx.db.get(bookings[0].customerId)),
-    ).toMatchObject({
-      totalVisits: 0,
-      totalSpendMinorUnits: 0,
-      marketingOptIn: false,
-    });
-  });
+      );
+      expect(bookings).toHaveLength(1);
+      expect(bookings[0]).toMatchObject({
+        source: "ai_instagram",
+        status: "confirmed",
+        startAt: slots[0].startAt,
+        priceMinorUnits: 120_000,
+      });
+      expect(
+        await t.run((ctx) => ctx.db.get(bookings[0].customerId)),
+      ).toMatchObject({
+        totalVisits: 0,
+        totalSpendMinorUnits: 0,
+        marketingOptIn: false,
+      });
+      const notifications = await t.run((ctx) =>
+        ctx.db
+          .query("notifications")
+          .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
+          .collect(),
+      );
+      expect(notifications).toHaveLength(smsEnabled ? 2 : 0);
+      if (smsEnabled)
+        expect(notifications.map((n) => n.type).sort()).toEqual([
+          "booking_confirmation",
+          "booking_reminder",
+        ]);
+    },
+  );
 
   test("rechecks availability and price at confirmation and rejects unsent proposals", async () => {
     const t = createBackend(),

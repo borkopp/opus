@@ -297,7 +297,7 @@ export const mkMessages = {
         "Тимски календар без преклопување на термините",
         "Поставување работно време, паузи и слободни денови",
         "Детали за клиенти и историја на посети",
-        "Потврди и потсетници по е-пошта",
+        "Потврди за термини по е-пошта",
         "Галерија со најмногу 3 фотографии",
         "Пристап од телефон, таблет и компјутер",
       ],
@@ -312,7 +312,9 @@ export const mkMessages = {
       label: "Сè од бесплатниот план, плус:",
       features: [
         "Поголем тим",
-        "Понуди по е-пошта за слободни и откажани термини",
+        "Потсетници за клиенти по е-пошта пред терминот",
+        "SMS потврди и потсетници за термини",
+        "Понуди по е-пошта и SMS за слободни и откажани термини",
         "Детални извештаи за термините во студиото",
         "Поголема контрола врз е-поштата, маркетингот и известувањата",
         "Приоритетна поддршка",
@@ -554,7 +556,8 @@ export const enMessages: Messages = {
   },
   dashboardPreview: {
     heading: "Your studio, at a glance.",
-    description: "Appointments, clients, and available slots — all in one place.",
+    description:
+      "Appointments, clients, and available slots — all in one place.",
     imageAlt:
       "Sample OPUS dashboard showing today's appointments, calendar occupancy, and completed appointment value.",
   },
@@ -758,7 +761,7 @@ export const enMessages: Messages = {
         "Team calendar with overlap protection",
         "Set working hours, breaks, and days off",
         "Client details and visit history",
-        "Email confirmations and reminders",
+        "Appointment confirmations by email",
         "Gallery with up to 3 photos",
         "Phone, tablet, and desktop access",
       ],
@@ -773,6 +776,8 @@ export const enMessages: Messages = {
       label: "Everything in Free, plus:",
       features: [
         "A larger team",
+        "Client email reminders before appointments",
+        "SMS confirmations and appointment reminders",
         "Email offers for empty and cancelled slots",
         "Detailed reports on your studio’s appointments",
         "More email, marketing, and notification controls",

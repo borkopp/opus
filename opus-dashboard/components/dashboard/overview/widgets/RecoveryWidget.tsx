@@ -1,5 +1,5 @@
 import { useQuery } from "convex/react";
-import { CalendarClock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -26,7 +26,7 @@ export function RecoveryWidget({
         "A cancellation can become a booking",
         "Откажан термин може повторно да се пополни",
       )}
-      action={<CalendarClock size={19} className="text-primary" />}
+      action={<Badge variant="pro">Pro</Badge>}
     >
       <FeatureCardContent
         status={
@@ -35,7 +35,7 @@ export function RecoveryWidget({
                 `${summary?.openCount ?? "—"} openings to review`,
                 `${summary?.openCount ?? "—"} слободни термини за преглед`,
               )
-            : t("Available with OPUS Pro", "Достапно со OPUS Pro")
+            : null
         }
         description={t(
           "Review openings, choose a client, and share an invitation yourself.",

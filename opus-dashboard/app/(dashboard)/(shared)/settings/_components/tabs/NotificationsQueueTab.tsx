@@ -31,6 +31,8 @@ import {
   SettingsToggleRow,
 } from "../SettingsCard";
 import { parseReminderHours } from "../validation";
+import { SmsNotificationsCard } from "./SmsNotificationsCard";
+import { ClientEmailReminders } from "./ClientEmailReminders";
 
 type EmailRecipient = {
   userId: Id<"users">;
@@ -42,7 +44,11 @@ type EmailRecipient = {
 
 interface NotificationsQueueTabProps {
   orgId: Id<"orgs">;
+  isPaid: boolean;
+  smsAvailable: boolean;
   initialData: {
+    smsEnabled: boolean;
+    smsReminderHoursBefore: number[];
     emailEnabled: boolean;
     reminderHoursBefore: number[];
     staffNewBookingEmailEnabled: boolean;
@@ -84,6 +90,8 @@ const ROLE_LABELS: Record<EmailRecipient["role"], { en: string; mk: string }> =
 
 export function NotificationsQueueTab({
   orgId,
+  isPaid,
+  smsAvailable,
   initialData,
 }: NotificationsQueueTabProps) {
   const { t } = useDashboardI18n();
@@ -96,7 +104,7 @@ export function NotificationsQueueTab({
 
   const [email, setEmail] = useState({
     customerReminderEmailEnabled: initialData.emailEnabled,
-    customerReminderHours: initialData.reminderHoursBefore.join(", "),
+    customerReminderHours: initialData.reminderHoursBefore,
     staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
     staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
     staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
@@ -114,7 +122,7 @@ export function NotificationsQueueTab({
   useEffect(() => {
     setEmail({
       customerReminderEmailEnabled: initialData.emailEnabled,
-      customerReminderHours: initialData.reminderHoursBefore.join(", "),
+      customerReminderHours: initialData.reminderHoursBefore,
       staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
       staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
       staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
@@ -135,19 +143,20 @@ export function NotificationsQueueTab({
   );
 
   const handleSave = async () => {
-    const customerReminderHours = parseReminderHours(
-      email.customerReminderHours,
-    );
+    const customerReminderHours = isPaid
+      ? email.customerReminderHours
+      : initialData.reminderHoursBefore;
     const staffReminderHours = parseReminderHours(email.staffReminderHours);
     let invalid = false;
     if (
-      !customerReminderHours ||
-      (email.customerReminderEmailEnabled && customerReminderHours.length === 0)
+      isPaid &&
+      email.customerReminderEmailEnabled &&
+      customerReminderHours.length === 0
     ) {
       setCustomerReminderError(
         t(
-          "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
-          "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
+          "Select at least one reminder time.",
+          "Изберете барем едно време за потсетување.",
         ),
       );
       invalid = true;
@@ -168,13 +177,14 @@ export function NotificationsQueueTab({
     } else {
       setStaffReminderError(undefined);
     }
-    if (invalid || !customerReminderHours || !staffReminderHours) return;
+    if (invalid || !staffReminderHours) return;
 
     setIsSaving(true);
     try {
       await updateEmailNotificationSettings({
         orgId,
-        customerReminderEmailEnabled: email.customerReminderEmailEnabled,
+        customerReminderEmailEnabled:
+          isPaid && email.customerReminderEmailEnabled,
         customerReminderHoursBefore: customerReminderHours,
         staffNewBookingEmailEnabled: email.staffNewBookingEmailEnabled,
         staffReminderEmailEnabled: email.staffReminderEmailEnabled,
@@ -207,7 +217,14 @@ export function NotificationsQueueTab({
   };
 
   return (
-    <TabsContent value="notifications" className="m-0">
+    <TabsContent value="notifications" className="m-0 flex flex-col gap-5">
+      <SmsNotificationsCard
+        orgId={orgId}
+        isPaid={isPaid}
+        available={smsAvailable}
+        initialEnabled={initialData.smsEnabled}
+        initialReminderHours={initialData.smsReminderHoursBefore}
+      />
       <SettingsCard
         title={t("Email & alerts", "Е-пошта и известувања")}
         description={t(
@@ -265,65 +282,29 @@ export function NotificationsQueueTab({
                 </Badge>
               }
             />
-            <SettingsToggleRow
-              title={t("Client reminders", "Потсетници за клиенти")}
-              description={t(
-                "Email clients before confirmed appointments using the schedule below.",
-                "Испраќа е-пошта на клиентите пред потврдените термини според распоредот подолу.",
-              )}
-              control={
-                <Switch
-                  id="customer-reminder-email-enabled"
-                  aria-label={t(
-                    "Client reminder emails",
-                    "Е-пораки за потсетување на клиенти",
-                  )}
-                  checked={email.customerReminderEmailEnabled}
-                  onCheckedChange={(checked) =>
-                    setEmail((current) => ({
-                      ...current,
-                      customerReminderEmailEnabled: checked,
-                    }))
-                  }
-                />
-              }
-            />
           </div>
 
-          {email.customerReminderEmailEnabled && (
-            <FieldGroup className="max-w-xl">
-              <Field data-invalid={Boolean(customerReminderError)}>
-                <FieldLabel htmlFor="customer-reminder-hours">
-                  {t(
-                    "Client reminder schedule (hours before)",
-                    "Распоред за потсетување на клиенти (часови однапред)",
-                  )}
-                </FieldLabel>
-                <DebouncedInput
-                  id="customer-reminder-hours"
-                  value={email.customerReminderHours}
-                  maxLength={64}
-                  aria-describedby="customer-reminder-description"
-                  aria-invalid={Boolean(customerReminderError)}
-                  onChange={(value) => {
-                    setEmail((current) => ({
-                      ...current,
-                      customerReminderHours: value,
-                    }));
-                    setCustomerReminderError(undefined);
-                  }}
-                  placeholder="24, 2"
-                />
-                <FieldDescription id="customer-reminder-description">
-                  {t(
-                    "For example, 24, 2 sends one email a day before and another two hours before.",
-                    "На пример, 24, 2 испраќа една порака еден ден однапред и друга два часа однапред.",
-                  )}
-                </FieldDescription>
-                <FieldError>{customerReminderError}</FieldError>
-              </Field>
-            </FieldGroup>
-          )}
+          <ClientEmailReminders
+            isPaid={isPaid}
+            enabled={email.customerReminderEmailEnabled}
+            hours={email.customerReminderHours}
+            saving={isSaving}
+            error={customerReminderError}
+            onEnabledChange={(enabled) => {
+              setEmail((current) => ({
+                ...current,
+                customerReminderEmailEnabled: enabled,
+              }));
+              setCustomerReminderError(undefined);
+            }}
+            onHoursChange={(hours) => {
+              setEmail((current) => ({
+                ...current,
+                customerReminderHours: hours,
+              }));
+              setCustomerReminderError(undefined);
+            }}
+          />
         </SettingsSection>
 
         <Separator />

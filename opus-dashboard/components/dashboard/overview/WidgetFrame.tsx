@@ -13,7 +13,7 @@ export function WidgetHeading({
 }) {
   return (
     <div className={s.panelHeading}>
-      <div>
+      <div className="min-w-0">
         <h2 data-appear="item">{title}</h2>
         {subtitle && (
           <p data-appear="item" style={appearStep(2)}>
@@ -22,7 +22,11 @@ export function WidgetHeading({
         )}
       </div>
       {children && (
-        <span data-appear="scale" style={appearStep(2)}>
+        <span
+          className="shrink-0 self-start"
+          data-appear="scale"
+          style={appearStep(2)}
+        >
           {children}
         </span>
       )}

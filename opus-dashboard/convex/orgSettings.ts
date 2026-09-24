@@ -6,6 +6,7 @@ import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requirePaidPlan, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
+import type { Doc } from "./_generated/dataModel";
 import { aiSettingsError } from "./ai/rules";
 import {
   canonicalLocale,
@@ -17,6 +18,21 @@ import {
   reminderHoursValidationError,
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
+import { smsProviderConfigured } from "./lib/sms";
+
+function requireClientReminderAccess(
+  org: Doc<"orgs">,
+  settings: Doc<"org_settings">,
+  enabled: boolean,
+  hours: number[],
+) {
+  const scheduleChanged =
+    JSON.stringify(normalizeReminderHours(hours)) !==
+    JSON.stringify(normalizeReminderHours(settings.reminderHoursBefore));
+  if (enabled || scheduleChanged) {
+    requirePaidPlan(org, "Client email reminders");
+  }
+}
 
 export const getOrgSettings = query({
   args: { orgId: v.id("orgs") },
@@ -46,6 +62,7 @@ export const getOrgSettings = query({
       settings,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
       emailRecipients,
+      smsAvailable: smsProviderConfigured(),
     };
   },
 });
@@ -167,7 +184,16 @@ export const updateNotificationSettings = mutation({
     reminderHoursBefore: v.array(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, args.orgId, "owner");
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
+    if (args.smsEnabled) {
+      requirePaidPlan(org, "SMS notifications");
+      if (!smsProviderConfigured())
+        throw new ConvexError(
+          "SMS delivery is not configured. Contact OPUS to activate it.",
+        );
+    }
+    const error = reminderHoursValidationError(args.reminderHoursBefore);
+    if (error) throw new ConvexError(error);
 
     const settings = await ctx.db
       .query("org_settings")
@@ -176,14 +202,95 @@ export const updateNotificationSettings = mutation({
 
     if (!settings) throw new Error("Settings not found");
 
-    await ctx.db.patch(settings._id, {
+    requireClientReminderAccess(
+      org,
+      settings,
+      args.emailEnabled,
+      args.reminderHoursBefore,
+    );
+
+    const updates = {
       smsEnabled: args.smsEnabled,
       emailEnabled: args.emailEnabled,
       whatsappEnabled: args.whatsappEnabled,
-      reminderHoursBefore: args.reminderHoursBefore,
+      reminderHoursBefore: normalizeReminderHours(args.reminderHoursBefore),
       updatedAt: Date.now(),
+    };
+    await ctx.db.patch(settings._id, updates);
+    await ctx.db.insert("audit_log", {
+      orgId: org._id,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "org_settings.notifications_updated",
+      resourceType: "org_settings",
+      resourceId: settings._id,
+      before: {
+        smsEnabled: settings.smsEnabled,
+        emailEnabled: settings.emailEnabled,
+        whatsappEnabled: settings.whatsappEnabled,
+        reminderHoursBefore: settings.reminderHoursBefore,
+      },
+      after: updates,
+      createdAt: updates.updatedAt,
     });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.reconcileBookingRemindersForOrg,
+      { orgId: org._id },
+    );
+    return true;
+  },
+});
 
+export const updateSmsNotificationSettings = mutation({
+  args: {
+    orgId: v.id("orgs"),
+    smsEnabled: v.boolean(),
+    smsReminderHoursBefore: v.array(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
+    if (args.smsEnabled) {
+      requirePaidPlan(org, "SMS notifications");
+      if (!smsProviderConfigured())
+        throw new ConvexError(
+          "SMS delivery is not configured. Contact OPUS to activate it.",
+        );
+    }
+    const error = reminderHoursValidationError(args.smsReminderHoursBefore);
+    if (error) throw new ConvexError(error);
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", org._id))
+      .first();
+    if (!settings) throw new ConvexError("Settings not found.");
+    const updates = {
+      smsEnabled: args.smsEnabled,
+      smsReminderHoursBefore: normalizeReminderHours(
+        args.smsReminderHoursBefore,
+      ),
+      updatedAt: Date.now(),
+    };
+    await ctx.db.patch(settings._id, updates);
+    await ctx.db.insert("audit_log", {
+      orgId: org._id,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "org_settings.sms_notifications_updated",
+      resourceType: "org_settings",
+      resourceId: settings._id,
+      before: {
+        smsEnabled: settings.smsEnabled,
+        smsReminderHoursBefore: settings.smsReminderHoursBefore,
+      },
+      after: updates,
+      createdAt: updates.updatedAt,
+    });
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.reconcileBookingRemindersForOrg,
+      { orgId: org._id },
+    );
     return true;
   },
 });
@@ -199,7 +306,7 @@ export const updateEmailNotificationSettings = mutation({
     staffEmailRecipientUserIds: v.array(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "owner");
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
     const customerReminderError = reminderHoursValidationError(
       args.customerReminderHoursBefore,
     );
@@ -241,6 +348,13 @@ export const updateEmailNotificationSettings = mutation({
       .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
       .first();
     if (!settings) throw new Error("Settings not found");
+
+    requireClientReminderAccess(
+      org,
+      settings,
+      args.customerReminderEmailEnabled,
+      args.customerReminderHoursBefore,
+    );
 
     const updatedAt = Date.now();
     const updates = {

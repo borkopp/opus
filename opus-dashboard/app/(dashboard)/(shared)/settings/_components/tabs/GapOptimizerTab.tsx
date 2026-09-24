@@ -15,7 +15,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
+import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TabsContent } from "@/components/ui/tabs";
@@ -48,6 +48,7 @@ export function GapOptimizerTab({
   );
 
   const handleSave = async () => {
+    if (!isPaid || isSaving) return;
     if (
       !Number.isInteger(optimizer.minGapMins) ||
       optimizer.minGapMins < 15 ||
@@ -92,36 +93,41 @@ export function GapOptimizerTab({
 
   return (
     <TabsContent value="gaps" className="m-0">
-      <PaidFeatureOverlay
-        locked={!isPaid}
-        featureLabel={t(
-          "Gap optimizer requires OPUS Pro",
-          "Оптимизаторот на празни термини бара OPUS Pro",
-        )}
-      >
+      <fieldset disabled={!isPaid || isSaving} className="min-w-0">
         <SettingsCard
           title={t("Gap optimizer", "Оптимизатор на празни термини")}
+          action={<Badge variant="pro">Pro</Badge>}
           description={t(
             "Find bookable openings in the next seven days. Review a client and approve each email offer before sending.",
             "Пронајдете слободни термини во следните седум дена. Изберете клиент и одобрете ја секоја понуда по е-пошта пред испраќање.",
           )}
           contentClassName="flex flex-col gap-6"
           footer={
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <Save data-icon="inline-start" />
-              )}
-              {isSaving
-                ? t("Saving…", "Се зачувува…")
-                : t(
-                    "Save optimizer settings",
-                    "Зачувај поставки за оптимизатор",
-                  )}
-            </Button>
+            isPaid && (
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <Save data-icon="inline-start" />
+                )}
+                {isSaving
+                  ? t("Saving…", "Се зачувува…")
+                  : t(
+                      "Save optimizer settings",
+                      "Зачувај поставки за оптимизатор",
+                    )}
+              </Button>
+            )
           }
         >
+          {!isPaid && (
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "Gap optimizer is included in Pro. Contact OPUS to upgrade and activate it for your studio.",
+                "Оптимизаторот на празни термини е дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
+              )}
+            </p>
+          )}
           <SettingsToggleRow
             title={t(
               "Enable gap optimizer",
@@ -138,7 +144,8 @@ export function GapOptimizerTab({
                   "Enable gap optimizer",
                   "Овозможи оптимизатор на празни термини",
                 )}
-                checked={optimizer.enabled}
+                checked={isPaid && optimizer.enabled}
+                disabled={!isPaid || isSaving}
                 onCheckedChange={(checked) =>
                   setOptimizer((current) => ({
                     ...current,
@@ -166,7 +173,7 @@ export function GapOptimizerTab({
                 value={optimizer.minGapMins}
                 aria-describedby="min-gap-description"
                 aria-invalid={Boolean(error)}
-                disabled={!optimizer.enabled}
+                disabled={!isPaid || isSaving || !optimizer.enabled}
                 onChange={(event) => {
                   setOptimizer((current) => ({
                     ...current,
@@ -185,7 +192,7 @@ export function GapOptimizerTab({
             </Field>
           </FieldGroup>
         </SettingsCard>
-      </PaidFeatureOverlay>
+      </fieldset>
     </TabsContent>
   );
 }

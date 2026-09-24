@@ -19,13 +19,15 @@ export function FeatureCardContent({
 }) {
   return (
     <div className="mt-5 flex flex-1 flex-col gap-4">
-      <div
-        data-appear="item"
-        style={appearStep(3)}
-        className="text-sm font-medium text-primary"
-      >
-        {status}
-      </div>
+      {status != null && (
+        <div
+          data-appear="item"
+          style={appearStep(3)}
+          className="text-sm font-medium text-primary"
+        >
+          {status}
+        </div>
+      )}
       <p
         data-appear="item"
         style={appearStep(4)}

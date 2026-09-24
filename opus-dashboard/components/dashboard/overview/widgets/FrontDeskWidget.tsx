@@ -1,6 +1,6 @@
 import { appearStep } from "@/lib/appear";
 import Link from "next/link";
-import { ArrowUpRight, MessageCircle } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { WidgetFrame } from "../WidgetFrame";
 import { Badge } from "@/components/ui/badge";
@@ -17,19 +17,9 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
         "Client conversations and team handoffs",
         "Разговори со клиенти и предавање на тимот",
       )}
-      action={
-        <span
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary"
-          aria-hidden="true"
-        >
-          <MessageCircle size={19} strokeWidth={1.75} />
-        </span>
-      }
+      action={<Badge variant="pro">Pro</Badge>}
     >
       <div className="mt-5 flex flex-col items-start gap-3">
-        <Badge data-appear="item" style={appearStep(3)} variant="secondary">
-          {paid ? "Pro" : t("Available with OPUS Pro", "Достапно со OPUS Pro")}
-        </Badge>
         <p
           data-appear="item"
           style={appearStep(4)}

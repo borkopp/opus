@@ -1,4 +1,10 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+
+/* Watch UI source only, not Convex's local database, tests, or sibling apps. */
+@source ".";
+@source "../components";
+@source "../hooks";
+@source "../lib";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -83,6 +89,24 @@
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
   --radius: 1rem;
+
+  /* Pro accents echo the sky-blue brand with cyan and soft lavender. */
+  --pro-sky: #2588c8;
+  --pro-cyan: #64c9df;
+  --pro-ice: #b2ddf5;
+  --pro-lavender: #a7a4e8;
+  --pro-blue: #5795db;
+  --pro-foreground: #ffffff;
+  --pro-fill: linear-gradient(115deg, #124c80, #236caa, #5550a0, #124c80);
+  --pro-gradient: linear-gradient(
+    90deg,
+    var(--pro-sky),
+    var(--pro-cyan),
+    var(--pro-ice),
+    var(--pro-lavender),
+    var(--pro-blue),
+    var(--pro-sky)
+  );
 
   /* Canvas & Ink */
   --background: #eaf4fc;
@@ -863,5 +887,67 @@ body:has(.dashboard-shell)
   }
   .dashboard-settings-tabs > :last-child {
     width: 100%;
+  }
+}
+
+/* Rich animated fill, luminous rim, and a soft glow for settings Pro badges. */
+.pro-badge {
+  border: 1.5px solid transparent;
+  padding: 0.2rem 0.7rem;
+  color: var(--pro-foreground);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 18%);
+  background-image:
+    linear-gradient(
+      115deg,
+      transparent 30%,
+      rgb(255 255 255 / 22%) 48%,
+      transparent 66%
+    ),
+    var(--pro-fill), var(--pro-gradient);
+  background-origin: border-box;
+  background-clip: padding-box, padding-box, border-box;
+  background-size:
+    250% 100%,
+    200% 100%,
+    200% 100%;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 20%),
+    0 2px 8px color-mix(in srgb, var(--pro-sky) 28%, transparent);
+  animation: pro-rainbow 2.5s ease-in-out infinite alternate;
+}
+
+.pro-badge::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  bottom: -20%;
+  left: 50%;
+  z-index: -1;
+  width: 75%;
+  height: 30%;
+  transform: translateX(-50%);
+  border-radius: inherit;
+  background: var(--pro-gradient);
+  background-size: 200% 100%;
+  filter: blur(5px);
+  opacity: 0.85;
+  animation: pro-rainbow 2.5s ease-in-out infinite alternate;
+}
+
+@keyframes pro-rainbow {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pro-badge,
+  .pro-badge::before {
+    animation: none;
   }
 }

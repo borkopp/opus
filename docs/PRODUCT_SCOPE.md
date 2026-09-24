@@ -101,6 +101,27 @@ names this manual capability; it does not authorize campaigns.
 
 See [GAP_RECOVERY.md](GAP_RECOVERY.md) for configuration, limits, and validation.
 
+### Authorized Pro appointment SMS
+
+Client appointment SMS was explicitly authorized on September 24, 2026 for
+the Pro plan. Pro beauty studios can enable confirmations, reschedules,
+cancellations, and configurable reminders under Settings → Notifications.
+SMS requires a configured Twilio provider and explicit studio activation.
+Free studios cannot enable or send SMS, including after a plan downgrade.
+Email reminders remain independently configurable on Pro. This authorization does
+not enable SMS campaigns, recovery offers, WhatsApp, or SMS verification.
+
+See [SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md) for setup and validation.
+
+### Pro client email reminders
+
+Client appointment reminders by email are Pro-only, as authorized on September
+24, 2026. Settings offers 24, 3, 2, and 1 hour before the appointment. Free
+studios cannot enable or change client reminder schedules. Booking and reminder
+reconciliation skip Free studios' client reminders, and delivery checks the
+current plan so queued reminders stop after a downgrade. Email verification,
+appointment confirmations and changes, and team emails remain available on Free.
+
 ### Authorized business analyst
 
 The read-only business analyst was explicitly authorized on September 16, 2026.

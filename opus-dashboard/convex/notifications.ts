@@ -8,10 +8,18 @@ import {
 } from "./_generated/server";
 import {
   normalizeReminderHours,
-  queueBookingEmailNotifications,
   resolveAssignedStaffEmailRecipient,
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
+import { queueBookingNotifications } from "./lib/bookingNotifications";
+import {
+  deliverSms,
+  isBookingSmsType,
+  normalizeSmsPhone,
+  renderBookingSms,
+  SmsDeliveryFailure,
+  smsDeliverySkipReason,
+} from "./lib/sms";
 import { decryptBookingOtp } from "./lib/bookingEmailSecurity";
 import { wallClockNow } from "./lib/bookingTime";
 import {
@@ -122,6 +130,32 @@ export const scheduleNotification = internalMutation({
     dedupeKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    let recipientAddress = args.recipientAddress.trim().toLowerCase();
+    let smsSkipReason: string | null = null;
+    if (args.channel === "sms") {
+      const phone = normalizeSmsPhone(args.recipientAddress);
+      const org = await ctx.db.get(args.orgId);
+      const settings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+        .first();
+      const booking = args.bookingId ? await ctx.db.get(args.bookingId) : null;
+      const customer = args.customerId
+        ? await ctx.db.get(args.customerId)
+        : null;
+      smsSkipReason = phone
+        ? smsDeliverySkipReason({
+            org,
+            settings,
+            booking,
+            customer,
+            type: args.type,
+            recipientAddress: phone,
+            templateData: args.templateData,
+          })
+        : "Client phone number is invalid.";
+      recipientAddress = phone ?? recipientAddress;
+    }
     if (args.dedupeKey) {
       const matching = await ctx.db
         .query("notifications")
@@ -144,9 +178,10 @@ export const scheduleNotification = internalMutation({
       gapRecoveryCandidateId: args.gapRecoveryCandidateId,
       channel: args.channel,
       type: args.type,
-      recipientAddress: args.recipientAddress.trim().toLowerCase(),
+      recipientAddress,
       templateData: args.templateData,
-      status: "pending",
+      status: smsSkipReason ? "cancelled" : "pending",
+      ...(smsSkipReason ? { failureReason: smsSkipReason } : {}),
       scheduledFor,
       attemptCount: 0,
       dedupeKey: args.dedupeKey,
@@ -156,7 +191,11 @@ export const scheduleNotification = internalMutation({
     // Booking OTP delivery is awaited by the requesting action so the browser
     // only advances after a configured provider accepts it. Scheduling it here as well would
     // create a race between two workers for the same one-time challenge.
-    if (args.channel === "email" && args.type !== "booking_verification") {
+    if (
+      !smsSkipReason &&
+      (args.channel === "email" || args.channel === "sms") &&
+      args.type !== "booking_verification"
+    ) {
       await ctx.scheduler.runAfter(
         Math.max(0, scheduledFor - Date.now()),
         internal.notifications.processIndividualNotification,
@@ -263,6 +302,16 @@ function deliverySkipReason(context: DeliveryContext) {
     staffRecipientEmails,
   } = context;
   if (!org || org.isDeleted || !settings) return "Organization unavailable";
+  if (notification.channel === "sms")
+    return smsDeliverySkipReason({
+      org,
+      settings,
+      booking,
+      customer: context.customer,
+      type: notification.type,
+      recipientAddress: notification.recipientAddress,
+      templateData: notification.templateData,
+    });
   if (context.gapOfferError) return context.gapOfferError;
 
   if (notification.type === "booking_verification") {
@@ -303,8 +352,9 @@ function deliverySkipReason(context: DeliveryContext) {
     }
   }
 
-  if (notification.type === "booking_reminder" && !settings.emailEnabled) {
-    return "Client reminders are disabled";
+  if (notification.type === "booking_reminder") {
+    if (org.plan !== "paid") return "Client email reminders require Pro";
+    if (!settings.emailEnabled) return "Client reminders are disabled";
   }
 
   if (notification.bookingId) {
@@ -497,6 +547,7 @@ export const claimNotificationForProcessing = internalMutation({
       return false;
     }
     const now = Date.now();
+    if (existing.channel === "sms" && existing.scheduledFor > now) return false;
     if (
       existing.processingStartedAt !== undefined &&
       existing.processingStartedAt > now - NOTIFICATION_PROCESSING_LEASE_MS
@@ -504,6 +555,48 @@ export const claimNotificationForProcessing = internalMutation({
       return false;
     }
     await ctx.db.patch(args.notificationId, { processingStartedAt: now });
+    return true;
+  },
+});
+
+// A durable marker prevents a worker crash or an ambiguous HTTP response from
+// causing a second charge/send. Only a definite rate-limit rejection clears it.
+export const beginSmsDispatch = internalMutation({
+  args: { notificationId: v.id("notifications"), orgId: v.id("orgs") },
+  handler: async (ctx, args): Promise<boolean> => {
+    const existing = await ctx.db.get(args.notificationId);
+    if (
+      !existing ||
+      existing.orgId !== args.orgId ||
+      existing.channel !== "sms" ||
+      existing.status !== "pending" ||
+      existing.smsDispatchStartedAt !== undefined
+    )
+      return false;
+    const org = await ctx.db.get(args.orgId);
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+    const booking = existing.bookingId
+      ? await ctx.db.get(existing.bookingId)
+      : null;
+    const customer = existing.customerId
+      ? await ctx.db.get(existing.customerId)
+      : null;
+    if (
+      smsDeliverySkipReason({
+        org,
+        settings,
+        booking,
+        customer,
+        type: existing.type,
+        recipientAddress: existing.recipientAddress,
+        templateData: existing.templateData,
+      })
+    )
+      return false;
+    await ctx.db.patch(existing._id, { smsDispatchStartedAt: Date.now() });
     return true;
   },
 });
@@ -519,7 +612,9 @@ export const updateNotificationStatus = internalMutation({
     ),
     sentAt: v.optional(v.number()),
     externalMessageId: v.optional(v.string()),
-    deliveryProvider: v.optional(emailProviderValidator),
+    deliveryProvider: v.optional(
+      v.union(emailProviderValidator, v.literal("twilio")),
+    ),
     deliveryStatus: v.optional(emailDeliveryStatusValidator),
     providerAttempts: v.optional(v.array(emailProviderAttemptValidator)),
     failureReason: v.optional(v.string()),
@@ -652,6 +747,9 @@ export const recordNotificationFailure = internalMutation({
       lastAttemptAt: Date.now(),
       scheduledFor,
       processingStartedAt: undefined,
+      ...(existing.channel === "sms"
+        ? { smsDispatchStartedAt: undefined }
+        : {}),
     });
     await ctx.scheduler.runAfter(
       retryDelay,
@@ -706,12 +804,61 @@ export const processIndividualNotification = internalAction({
       return "cancelled";
     }
 
+    if (context.notification.channel === "sms") {
+      try {
+        if (!isBookingSmsType(context.notification.type))
+          throw new SmsDeliveryFailure("Unsupported SMS notification.");
+        const body = renderBookingSms(
+          context.notification.type,
+          appointmentData(context),
+        );
+        const reserved = await ctx.runMutation(
+          internal.notifications.beginSmsDispatch,
+          {
+            notificationId: args.notificationId,
+            orgId: context.notification.orgId,
+          },
+        );
+        if (!reserved)
+          throw new SmsDeliveryFailure(
+            "Previous SMS submission is unconfirmed. Check Twilio before retrying.",
+          );
+        const externalMessageId = await deliverSms({
+          to: context.notification.recipientAddress,
+          body,
+          notificationId: args.notificationId,
+          orgId: context.notification.orgId,
+        });
+        await ctx.runMutation(internal.notifications.updateNotificationStatus, {
+          notificationId: args.notificationId,
+          orgId: context.notification.orgId,
+          status: "sent",
+          sentAt: Date.now(),
+          externalMessageId,
+          deliveryProvider: "twilio",
+          deliveryStatus: "accepted",
+        });
+        return "sent";
+      } catch (error) {
+        return await ctx.runMutation(
+          internal.notifications.recordNotificationFailure,
+          {
+            notificationId: args.notificationId,
+            orgId: context.notification.orgId,
+            failureReason:
+              error instanceof Error ? error.message : "SMS delivery failed.",
+            retryable: error instanceof SmsDeliveryFailure && error.retryable,
+          },
+        );
+      }
+    }
+
     if (context.notification.channel !== "email") {
       await ctx.runMutation(internal.notifications.updateNotificationStatus, {
         notificationId: args.notificationId,
         orgId: context.notification.orgId,
         status: "failed",
-        failureReason: "SMS, WhatsApp, and push delivery are not configured.",
+        failureReason: "WhatsApp and push delivery are not configured.",
       });
       return "failed";
     }
@@ -790,16 +937,21 @@ export const reconcileBookingRemindersForOrg = internalMutation({
       .first();
     if (!settings) return 0;
 
-    const customerHours = settings.emailEnabled
-      ? normalizeReminderHours(settings.reminderHoursBefore)
-      : [];
+    const customerHours =
+      org.plan === "paid" && settings.emailEnabled
+        ? normalizeReminderHours(settings.reminderHoursBefore)
+        : [];
     const staffHours =
       (settings.staffReminderEmailEnabled ?? true)
         ? normalizeReminderHours(
             settings.staffReminderHoursBefore ?? settings.reminderHoursBefore,
           )
         : [];
-    const allHours = [...customerHours, ...staffHours];
+    const smsHours =
+      org.plan === "paid" && settings.smsEnabled
+        ? normalizeReminderHours(settings.smsReminderHoursBefore ?? [24])
+        : [];
+    const allHours = [...customerHours, ...staffHours, ...smsHours];
     if (allHours.length === 0) return 0;
 
     const now = wallClockNow(settings.timezone);
@@ -823,7 +975,7 @@ export const reconcileBookingRemindersForOrg = internalMutation({
         ctx.db.get(booking.staffId),
       ]);
       if (!customer || !service || !staff) continue;
-      await queueBookingEmailNotifications(ctx, {
+      await queueBookingNotifications(ctx, {
         org,
         settings,
         booking,

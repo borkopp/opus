@@ -1,9 +1,16 @@
 import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./betterAuth";
 import { resendWebhook } from "./emailWebhooks";
+import { twilioWebhook } from "./smsWebhooks";
 import { verify, receive, callback } from "./ai/webhooks";
 
 const http = httpRouter();
+
+http.route({
+  path: "/webhooks/twilio",
+  method: "POST",
+  handler: twilioWebhook,
+});
 
 authComponent.registerRoutes(http, createAuth);
 

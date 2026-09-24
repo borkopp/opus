@@ -7,6 +7,7 @@ import {
   isValidPublicBookingPhone,
 } from "../../lib/public-booking-phone";
 import { recordRecoveryBooking } from "../lib/gapRecovery";
+import { queueBookingSmsNotifications } from "../lib/bookingNotifications";
 import { automationReady, leasedConversation, storeReply } from "./queue";
 import { isExplicitConfirmation, responseLanguage } from "./rules";
 import { logEvent } from "./state";
@@ -343,7 +344,20 @@ export const confirm = internalMutation({
       createdAt: now,
     });
     const booking = await ctx.db.get(bookingId);
-    if (booking) await recordRecoveryBooking(ctx, booking);
+    if (booking) {
+      await recordRecoveryBooking(ctx, booking);
+      const bookingCustomer = await ctx.db.get(customerId);
+      const staff = await ctx.db.get(booking.staffId);
+      if (bookingCustomer && staff)
+        await queueBookingSmsNotifications(ctx, {
+          org: ready.org,
+          settings: ready.settings,
+          booking,
+          customer: bookingCustomer,
+          service,
+          staff,
+        });
+    }
     return language === "mk"
       ? `Вашиот термин е потврден!\n${proposal.summary}`
       : `Your appointment is confirmed!\n${proposal.summary}`;

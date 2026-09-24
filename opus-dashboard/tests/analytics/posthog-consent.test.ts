@@ -7,7 +7,10 @@ const sdk = vi.hoisted(() => ({
       id: string,
       config: {
         disable_session_recording: boolean;
-        session_recording: { maskAllInputs: boolean };
+        session_recording: {
+          maskAllInputs: boolean;
+          maskTextSelector?: string;
+        };
         before_send: (event: unknown) => unknown;
       },
     ) => void
@@ -35,15 +38,15 @@ beforeEach(() => {
   state.status = "pending";
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN", "test-token");
   vi.stubEnv("NEXT_PUBLIC_POSTHOG_HOST", "https://analytics.example.com");
+  vi.stubEnv("NEXT_PUBLIC_ANALYTICS_IN_DEV", "false");
   vi.stubGlobal("window", {
     location: new URL("https://studio.opus.mk/signup"),
   });
 });
 
 test("landing replay is opt-in, masks inputs, and respects consent withdrawal", async () => {
-  const { createPostHogConsent } = await import(
-    "../../../shared/analytics/posthog-consent"
-  );
+  const { createPostHogConsent } =
+    await import("../../../shared/analytics/posthog-consent");
   const { syncPostHogConsent } = createPostHogConsent(
     sdk,
     "test-token",
@@ -58,6 +61,7 @@ test("landing replay is opt-in, masks inputs, and respects consent withdrawal", 
   const config = sdk.init.mock.calls[0][1];
   expect(config.disable_session_recording).toBe(false);
   expect(config.session_recording.maskAllInputs).toBe(true);
+  expect(config.session_recording.maskTextSelector).toBeUndefined();
   expect(sdk.opt_in_capturing).toHaveBeenCalledOnce();
 
   state.allowed = false;
@@ -77,6 +81,7 @@ afterEach(() => {
 });
 
 test("does not initialise PostHog until analytics consent and opts out on withdrawal", async () => {
+  vi.stubEnv("NODE_ENV", "production");
   const { syncPostHogConsent } = await import("../../lib/analytics-consent");
   syncPostHogConsent();
   expect(sdk.init).not.toHaveBeenCalled();
@@ -85,11 +90,38 @@ test("does not initialise PostHog until analytics consent and opts out on withdr
   expect(sdk.init).toHaveBeenCalledOnce();
   expect(sdk.opt_in_capturing).toHaveBeenCalledOnce();
   const config = sdk.init.mock.calls[0][1];
-  expect(config.disable_session_recording).toBe(true);
+  expect(config.disable_session_recording).toBe(false);
+  expect(config.session_recording.maskAllInputs).toBe(true);
+  expect(config.session_recording.maskTextSelector).toBe("*");
   state.allowed = false;
   expect(config.before_send({ event: "should-not-send" })).toBeNull();
   syncPostHogConsent();
   expect(sdk.opt_out_capturing).toHaveBeenCalledOnce();
+});
+
+test("does not initialise analytics in development even with existing consent", async () => {
+  vi.stubEnv("NODE_ENV", "development");
+  state.allowed = true;
+  const { syncPostHogConsent, canCaptureAnalytics } =
+    await import("../../lib/analytics-consent");
+  syncPostHogConsent();
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(sdk.capture).not.toHaveBeenCalled();
+  expect(canCaptureAnalytics()).toBe(false);
+});
+
+test("an explicit development opt-in still requires analytics consent", async () => {
+  vi.stubEnv("NODE_ENV", "development");
+  vi.stubEnv("NEXT_PUBLIC_ANALYTICS_IN_DEV", "true");
+  const { syncPostHogConsent, canCaptureAnalytics } =
+    await import("../../lib/analytics-consent");
+  syncPostHogConsent();
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(canCaptureAnalytics()).toBe(false);
+  state.allowed = true;
+  syncPostHogConsent();
+  expect(sdk.init).toHaveBeenCalledOnce();
+  expect(canCaptureAnalytics()).toBe(true);
 });
 
 test("reapplies consent after an identity reset without reinitialising the SDK", async () => {

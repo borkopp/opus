@@ -9,14 +9,21 @@ export function canCaptureAnalytics() {
   );
 }
 
-function postHogConfig(host: string, sessionReplay: boolean) {
+function postHogConfig(
+  host: string,
+  sessionReplay: boolean,
+  maskReplayText: boolean,
+) {
   return {
     api_host: host,
     defaults: "2026-01-30" as const,
     opt_out_capturing_by_default: true,
     opt_out_persistence_by_default: true,
     disable_session_recording: !sessionReplay,
-    session_recording: { maskAllInputs: true },
+    session_recording: {
+      maskAllInputs: true,
+      ...(maskReplayText ? { maskTextSelector: "*" } : {}),
+    },
     capture_exceptions: true,
     cookie_expiration: 180,
     before_send: <T>(event: T) => (canCaptureAnalytics() ? event : null),
@@ -38,7 +45,7 @@ export function createPostHogConsent(
   posthog: PostHogClient,
   projectToken: string | undefined,
   host: string | undefined,
-  options: { sessionReplay?: boolean } = {},
+  options: { sessionReplay?: boolean; maskReplayText?: boolean } = {},
 ) {
   let initialized = false;
 
@@ -48,7 +55,14 @@ export function createPostHogConsent(
     if (!initialized) {
       if (!allowed) return;
       initialized = true;
-      posthog.init(projectToken, postHogConfig(host, options.sessionReplay === true));
+      posthog.init(
+        projectToken,
+        postHogConfig(
+          host,
+          options.sessionReplay === true,
+          options.maskReplayText === true,
+        ),
+      );
     }
     if (allowed && posthog.get_explicit_consent_status() !== "granted") {
       posthog.opt_in_capturing({ captureEventName: false });

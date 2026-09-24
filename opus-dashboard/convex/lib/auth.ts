@@ -6,6 +6,7 @@ export type PaidFeature =
   | "Gap optimizer"
   | "AI front desk"
   | "SMS notifications"
+  | "Client directory"
   | "Client email reminders";
 
 export function requirePaidPlan(

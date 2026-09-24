@@ -41,6 +41,7 @@ import type * as availability from "../availability.js";
 import type * as availabilityOverrides from "../availabilityOverrides.js";
 import type * as betterAuth from "../betterAuth.js";
 import type * as bookings from "../bookings.js";
+import type * as clients from "../clients.js";
 import type * as crons from "../crons.js";
 import type * as customers from "../customers.js";
 import type * as dashboard from "../dashboard.js";
@@ -57,6 +58,7 @@ import type * as lib_bookingEmailNotifications from "../lib/bookingEmailNotifica
 import type * as lib_bookingEmailSecurity from "../lib/bookingEmailSecurity.js";
 import type * as lib_bookingNotifications from "../lib/bookingNotifications.js";
 import type * as lib_bookingTime from "../lib/bookingTime.js";
+import type * as lib_clientDirectory from "../lib/clientDirectory.js";
 import type * as lib_dashboardAnalytics from "../lib/dashboardAnalytics.js";
 import type * as lib_dashboardTheme from "../lib/dashboardTheme.js";
 import type * as lib_emailDelivery from "../lib/emailDelivery.js";
@@ -150,6 +152,7 @@ declare const fullApi: ApiFromModules<{
   availabilityOverrides: typeof availabilityOverrides;
   betterAuth: typeof betterAuth;
   bookings: typeof bookings;
+  clients: typeof clients;
   crons: typeof crons;
   customers: typeof customers;
   dashboard: typeof dashboard;
@@ -166,6 +169,7 @@ declare const fullApi: ApiFromModules<{
   "lib/bookingEmailSecurity": typeof lib_bookingEmailSecurity;
   "lib/bookingNotifications": typeof lib_bookingNotifications;
   "lib/bookingTime": typeof lib_bookingTime;
+  "lib/clientDirectory": typeof lib_clientDirectory;
   "lib/dashboardAnalytics": typeof lib_dashboardAnalytics;
   "lib/dashboardTheme": typeof lib_dashboardTheme;
   "lib/emailDelivery": typeof lib_emailDelivery;

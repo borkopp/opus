@@ -60,13 +60,18 @@ export function translate(
 }
 
 const DASHBOARD_PAGE_TITLES = [
-  { path: "/beauty/assistant", en: "Business assistant", mk: "Деловен асистент" },
+  {
+    path: "/beauty/assistant",
+    en: "Business assistant",
+    mk: "Деловен асистент",
+  },
   {
     path: "/beauty/bookings",
     en: "Appointments",
     mk: "Термини",
   },
   { path: "/beauty/services", en: "Services", mk: "Услуги" },
+  { path: "/beauty/clients", en: "Clients", mk: "Клиенти" },
   { path: "/beauty/staff", en: "Team", mk: "Тим" },
   {
     path: "/gap-optimizer",

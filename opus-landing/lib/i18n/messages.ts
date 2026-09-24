@@ -296,7 +296,7 @@ export const mkMessages = {
         "Еден сопственик + тројца членови на тимот",
         "Тимски календар без преклопување на термините",
         "Поставување работно време, паузи и слободни денови",
-        "Детали за клиенти и историја на посети",
+        "Контакт на клиентот во секој термин",
         "Потврди за термини по е-пошта",
         "Галерија со најмногу 3 фотографии",
         "Пристап од телефон, таблет и компјутер",
@@ -312,6 +312,7 @@ export const mkMessages = {
       label: "Сè од бесплатниот план, плус:",
       features: [
         "Поголем тим",
+        "Именик на клиенти со историја и статистика на посети",
         "Потсетници за клиенти по е-пошта пред терминот",
         "SMS потврди и потсетници за термини",
         "Понуди по е-пошта и SMS за слободни и откажани термини",
@@ -760,7 +761,7 @@ export const enMessages: Messages = {
         "One owner + 3 staff members",
         "Team calendar with overlap protection",
         "Set working hours, breaks, and days off",
-        "Client details and visit history",
+        "Client contact details on every appointment",
         "Appointment confirmations by email",
         "Gallery with up to 3 photos",
         "Phone, tablet, and desktop access",
@@ -776,6 +777,7 @@ export const enMessages: Messages = {
       label: "Everything in Free, plus:",
       features: [
         "A larger team",
+        "Client directory with visit history and statistics",
         "Client email reminders before appointments",
         "SMS confirmations and appointment reminders",
         "Email offers for empty and cancelled slots",

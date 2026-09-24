@@ -113,6 +113,17 @@ not enable SMS campaigns, recovery offers, WhatsApp, or SMS verification.
 
 See [SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md) for setup and validation.
 
+### Pro client directory
+
+The staff client directory was authorized on September 24, 2026. Active staff,
+managers and owners of Pro beauty studios can search their studio's clients by
+name, email or phone and view contact details, appointment history and upcoming
+appointments. Visit totals and appointment value use completed, non-deleted
+appointments only; appointment value is not a payment balance. Multiple currencies
+remain separate. Read access is checked against the current studio and plan on
+the server. Free studios retain client contact details needed for booking, but
+cannot access the directory or its statistics.
+
 ### Pro client email reminders
 
 Client appointment reminders by email are Pro-only, as authorized on September

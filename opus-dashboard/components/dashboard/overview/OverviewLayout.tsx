@@ -13,6 +13,7 @@ import { ScheduleWidget } from "./widgets/ScheduleWidget";
 import { NextClientWidget } from "./widgets/NextClientWidget";
 import { ReturningClientsWidget } from "./widgets/ReturningClientsWidget";
 import { FrontDeskWidget } from "./widgets/FrontDeskWidget";
+import { PromotionWidget } from "./widgets/PromotionWidget";
 import s from "../clarity.module.css";
 import { useDashboardAppearance } from "../DashboardAppearanceProvider";
 
@@ -138,6 +139,7 @@ export function OverviewLayout({
           </>
         )}
         <ScheduleWidget data={data} onDateChange={onDateChange} />
+        <PromotionWidget />
         {studio && (
           <div className={s.bottomPair}>
             <RevenueWidget revenue={data.revenue} onDaysChange={onDaysChange} />

@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Empty,
   EmptyDescription,
@@ -39,6 +40,7 @@ interface DateTimeSelectionStepProps {
   onSelectSlot: (startAt: number, staffId: string) => void;
   onContinue: () => void;
   onBack: () => void;
+  sharedOpeningStartAt?: number;
 }
 
 export function DateTimeSelectionStep({
@@ -51,6 +53,7 @@ export function DateTimeSelectionStep({
   onSelectSlot,
   onContinue,
   onBack,
+  sharedOpeningStartAt,
 }: DateTimeSelectionStepProps) {
   const service = site.services.find(
     (candidate) => candidate._id === selectedServiceId,
@@ -116,6 +119,15 @@ export function DateTimeSelectionStep({
           <FieldDescription>
             {formatBookingDateValue(selectedDate)}
           </FieldDescription>
+          {sharedOpeningStartAt && slots !== undefined && (
+            <Alert>
+              <AlertDescription>
+                {slots.some((slot) => slot.startAt === sharedOpeningStartAt)
+                  ? `Терминот од објавата е во ${formatBookingTime(sharedOpeningStartAt)}. Изберете го времето за да продолжите.`
+                  : "Терминот од објавата веќе не е достапен за овој избор. Изберете друго слободно време или датум."}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {slots === undefined ? (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">

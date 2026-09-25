@@ -48,7 +48,6 @@
   transform: scale(0.98);
 }
 .scope a {
-  color: inherit;
   text-decoration: none;
 }
 .scope svg {
@@ -859,6 +858,15 @@
 }
 .openingList svg {
   margin-left: auto;
+}
+.openingList button[data-slot="button"] {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 10px;
+}
+.openingList button[data-slot="button"] svg {
+  margin-left: 0;
 }
 .openSlotsFooter {
   display: block;
@@ -1840,8 +1848,10 @@
   .navigation {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-columns: minmax(70px, 1fr);
     min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
     border-radius: 22px;
   }
   .navigation a {

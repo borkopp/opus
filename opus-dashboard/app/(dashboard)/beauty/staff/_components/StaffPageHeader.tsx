@@ -14,7 +14,6 @@ export function StaffPageHeader({ onAddClick }: { onAddClick: () => void }) {
   return (
     <DashboardPageHeader
       title={t("Staff", "Тим")}
-      eyebrow={t("THE PEOPLE BEHIND YOUR STUDIO", "ЛУЃЕТО ВО ВАШЕТО СТУДИО")}
       description={t(
         "Add team members and manage when customers can book them.",
         "Додајте членови на тимот и управувајте со нивното работно време.",

@@ -157,7 +157,6 @@ export function NotificationsWorkspace() {
       {/* Header */}
       <DashboardPageHeader
         title={t("Notifications", "Известувања")}
-        eyebrow={t("STUDIO UPDATES", "НОВОСТИ ОД СТУДИОТО")}
         description={t(
           `${unreadCount ?? 0} unread notifications. Your latest booking updates, in one place.`,
           `${unreadCount ?? 0} непрочитани известувања. Сите новости за термините на едно место.`,

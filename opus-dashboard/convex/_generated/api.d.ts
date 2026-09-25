@@ -73,6 +73,7 @@ import type * as lib_orgSettingsValidation from "../lib/orgSettingsValidation.js
 import type * as lib_overviewMetrics from "../lib/overviewMetrics.js";
 import type * as lib_ownerAuth from "../lib/ownerAuth.js";
 import type * as lib_productScope from "../lib/productScope.js";
+import type * as lib_promotionTemplates from "../lib/promotionTemplates.js";
 import type * as lib_publicBookingRules from "../lib/publicBookingRules.js";
 import type * as lib_publicProfile from "../lib/publicProfile.js";
 import type * as lib_publication from "../lib/publication.js";
@@ -99,6 +100,7 @@ import type * as orgMedia from "../orgMedia.js";
 import type * as orgSettings from "../orgSettings.js";
 import type * as orgs from "../orgs.js";
 import type * as ownerAnalytics from "../ownerAnalytics.js";
+import type * as promotions from "../promotions.js";
 import type * as public_ from "../public.js";
 import type * as publicBooking from "../publicBooking.js";
 import type * as publicSite from "../publicSite.js";
@@ -184,6 +186,7 @@ declare const fullApi: ApiFromModules<{
   "lib/overviewMetrics": typeof lib_overviewMetrics;
   "lib/ownerAuth": typeof lib_ownerAuth;
   "lib/productScope": typeof lib_productScope;
+  "lib/promotionTemplates": typeof lib_promotionTemplates;
   "lib/publicBookingRules": typeof lib_publicBookingRules;
   "lib/publicProfile": typeof lib_publicProfile;
   "lib/publication": typeof lib_publication;
@@ -210,6 +213,7 @@ declare const fullApi: ApiFromModules<{
   orgSettings: typeof orgSettings;
   orgs: typeof orgs;
   ownerAnalytics: typeof ownerAnalytics;
+  promotions: typeof promotions;
   public: typeof public_;
   publicBooking: typeof publicBooking;
   publicSite: typeof publicSite;

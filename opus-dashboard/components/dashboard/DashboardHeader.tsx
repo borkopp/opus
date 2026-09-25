@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Settings2, ChartNoAxesCombined } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -25,6 +26,25 @@ export function DashboardHeader({
   const pathname = activePath ?? currentPath;
   const { language, t } = useDashboardI18n();
   const theme = useDashboardAppearance();
+  const navigationRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navigationRef.current;
+    if (!nav) return;
+    const keepActiveVisible = () => {
+      const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!active || nav.scrollWidth <= nav.clientWidth) return;
+      const navBounds = nav.getBoundingClientRect();
+      const bounds = active.getBoundingClientRect();
+      if (bounds.right > navBounds.right)
+        nav.scrollLeft += bounds.right - navBounds.right;
+      else if (bounds.left < navBounds.left)
+        nav.scrollLeft -= navBounds.left - bounds.left;
+    };
+    keepActiveVisible();
+    const observer = new ResizeObserver(keepActiveVisible);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  }, [pathname, language]);
   const links = getNavLinks(ACTIVE_INDUSTRY, language).links.filter(
     (link) => link.href !== "/settings" && link.href !== "/beauty/assistant",
   );
@@ -42,6 +62,7 @@ export function DashboardHeader({
         </span>
       </Link>
       <nav
+        ref={navigationRef}
         className={s.navigation}
         aria-label={t("Main navigation", "Главна навигација")}
       >

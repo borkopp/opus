@@ -104,7 +104,6 @@ export function ClientsView({
       <div className="relative">
         <DashboardPageHeader
           title={t("Clients", "Клиенти")}
-          eyebrow={t("YOUR CLIENT BOOK", "ВАШИТЕ КЛИЕНТИ")}
           description={t(
             "Contact details, past visits and the next appointment.",
             "Контакт, претходни посети и следниот закажан термин.",

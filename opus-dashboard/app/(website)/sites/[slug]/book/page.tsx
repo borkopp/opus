@@ -5,6 +5,7 @@ import { BookingForm } from "@/components/public-site/BookingForm";
 import { PublicSiteFrame } from "@/components/public-site/PublicSiteFrame";
 import { getPublicSite } from "@/lib/public-site-server";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
+import { promotionTimestamp } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,10 @@ export default async function PublicBookingPage({
           site={site}
           initialServiceId={requestedService}
           initialStaffId={requestedStaff}
+          initialDate={typeof query.date === "string" ? query.date : undefined}
+          sharedOpeningStartAt={promotionTimestamp(
+            typeof query.at === "string" ? query.at : undefined,
+          )}
         />
       )}
     </PublicSiteFrame>

@@ -113,6 +113,28 @@ not enable SMS campaigns, recovery offers, WhatsApp, or SMS verification.
 
 See [SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md) for setup and validation.
 
+### Free studio promotion tools
+
+Manual promotion tools were authorized on September 25, 2026 for Free and Pro
+beauty studios. `/beauty/promote` provides Instagram Story PNGs for real public
+service openings, a booking QR code, an A5 counter sign, a booking Story, and
+saved replies. The overview links to all three tools, and
+available calendar openings can start a Story draft. Exported images and replies
+are downloaded, shared through the device, or copied by staff; nothing is
+published to Instagram or sent to customers automatically.
+
+Artwork supports preset palettes and custom color pickers, remembered per studio
+in the current browser. Previews and PNG exports share the same colors; text and
+QR contrast are adjusted when needed for readability.
+
+Opening graphics use the public booking engine and recheck availability before
+export. Their links prefill the service, specialist and date, and guests still
+choose a live slot and complete the normal verified booking flow. Sharing is not
+a reservation. A published, usable studio website is required for graphics and
+booking links. Saved replies are tenant-scoped; owners and managers edit team
+templates, and active staff can copy them. Starter replies support Macedonian
+and English. These tools do not enable AI generation or campaigns.
+
 ### Pro client directory
 
 The staff client directory was authorized on September 24, 2026. Active staff,

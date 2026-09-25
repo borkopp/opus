@@ -89,7 +89,6 @@ export function ServicesWorkspace() {
     >
       <DashboardPageHeader
         title={t("Services", "Услуги")}
-        eyebrow={t("YOUR SERVICE MENU", "ВАШИТЕ УСЛУГИ")}
         description={serviceSummary}
       >
         <div className="flex w-full gap-2 sm:w-auto">

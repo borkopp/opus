@@ -170,7 +170,6 @@ export function SettingsWorkspace() {
     >
       <DashboardPageHeader
         title={t("Settings", "Поставки")}
-        eyebrow={t("YOUR WORKSPACE", "ВАШИОТ РАБОТЕН ПРОСТОР")}
         description={t(
           `Keep ${org.name}'s studio details, booking rules, and team preferences in one place.`,
           `Податоците за ${org.name}, правилата за закажување и поставките на тимот на едно место.`,

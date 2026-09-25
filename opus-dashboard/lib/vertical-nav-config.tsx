@@ -6,6 +6,7 @@ import {
   IconScissors,
   IconSettings,
   IconChartBar,
+  IconSpeakerphone,
 } from "@tabler/icons-react";
 import {
   ACTIVE_CAPABILITIES,
@@ -81,6 +82,11 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
         label: { en: "Services", mk: "Услуги" },
         href: "{base}/services",
         icon: <IconScissors className="h-5 w-5 flex-shrink-0" />,
+      },
+      {
+        label: { en: "Promote", mk: "Промоција" },
+        href: "{base}/promote",
+        icon: <IconSpeakerphone className="h-5 w-5 flex-shrink-0" />,
       },
       {
         label: { en: "Settings", mk: "Поставки" },

@@ -42,6 +42,20 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
+  // Studio-owned reply templates. Available on Free and Pro; never sent automatically.
+  saved_replies: defineTable({
+    orgId: v.id("orgs"),
+    title: v.string(),
+    body: v.string(),
+    language: v.union(v.literal("mk"), v.literal("en")),
+    updatedBy: v.id("staff_members"),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_active", ["orgId", "isDeleted"]),
   analyst_conversations: defineTable({
     orgId: v.id("orgs"),
     userId: v.id("users"),

@@ -13,7 +13,8 @@ import {
   isValidPublicBookingPhone,
   normalizePublicBookingPhone,
 } from "@/lib/public-booking-phone";
-import { dateInTimezone } from "@/lib/public-booking-format";
+import { addDays, dateInTimezone } from "@/lib/public-booking-format";
+import { validPromotionDate } from "@/lib/promotions";
 import { BookingConfirmationStep } from "./BookingConfirmationStep";
 import { BookingStepProgress, type BookingStep } from "./BookingStepProgress";
 import { CustomerDetailsStep } from "./CustomerDetailsStep";
@@ -28,6 +29,8 @@ interface BookingFormProps {
   site: PublicSite;
   initialServiceId?: string;
   initialStaffId?: string;
+  initialDate?: string;
+  sharedOpeningStartAt?: number;
   recoveryOffer?: {
     token: string;
     available: boolean;
@@ -68,6 +71,8 @@ export function BookingForm({
   site,
   initialServiceId,
   initialStaffId,
+  initialDate,
+  sharedOpeningStartAt,
   recoveryOffer,
 }: BookingFormProps) {
   const router = useRouter();
@@ -109,7 +114,14 @@ export function BookingForm({
   const [selectedDate, setSelectedDate] = useState(
     recoveryOffer
       ? new Date(recoveryOffer.startAt).toISOString().slice(0, 10)
-      : today,
+      : validPromotionDate(
+          initialDate,
+          today,
+          addDays(
+            today,
+            Math.max(1, site.bookingSettings.bookingWindowDays) - 1,
+          ),
+        ),
   );
   const [selectedSlotTimestamp, setSelectedSlotTimestamp] = useState<
     number | null
@@ -476,6 +488,11 @@ export function BookingForm({
           selectedServiceId={selectedServiceId}
           selectedDate={selectedDate}
           selectedSlotTimestamp={selectedSlotTimestamp}
+          sharedOpeningStartAt={
+            selectedServiceId === initialServiceId
+              ? sharedOpeningStartAt
+              : undefined
+          }
           onSelectDate={handleSelectDate}
           onSelectSlot={handleSelectSlot}
           onContinue={handleContinueToDetails}

@@ -1,6 +1,7 @@
 import { Appear } from "@/components/ui/appear";
 import { appearStep } from "@/lib/appear";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { bookingTimeLabel } from "@/lib/booking-wall-clock";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import type { OverviewData } from "@/lib/dashboard-overview";
@@ -11,11 +12,13 @@ export function OpenSlotsCard({
   available,
   staff,
   onBook,
+  onShare,
 }: {
   loaded: boolean;
   available: QuickBookingSelection[];
   staff: OverviewData["staff"];
   onBook: (slot?: QuickBookingSelection) => void;
+  onShare?: (slot: QuickBookingSelection) => void;
 }) {
   const { t } = useDashboardI18n();
   return (
@@ -44,20 +47,39 @@ export function OpenSlotsCard({
       </p>
       <div className={s.openingList}>
         {available.slice(0, 3).map((slot, index) => (
-          <button
-            type="button"
+          <div
             key={`${slot.staffId}-${slot.startAt}`}
-            data-appear="item"
-            style={appearStep(4 + index)}
-            onClick={() => onBook(slot)}
+            className="flex min-w-0 items-center gap-1"
           >
-            <strong>{bookingTimeLabel(slot.startAt)}</strong>
-            <span>
-              {slot.durationMins} min ·{" "}
-              {staff.find((person) => person.id === slot.staffId)?.name ?? "—"}
-            </span>
-            <ArrowUpRight size={17} />
-          </button>
+            <button
+              type="button"
+              className="min-w-0 flex-1"
+              data-appear="item"
+              style={appearStep(4 + index)}
+              onClick={() => onBook(slot)}
+            >
+              <strong>{bookingTimeLabel(slot.startAt)}</strong>
+              <span>
+                {slot.durationMins} min ·{" "}
+                {staff.find((person) => person.id === slot.staffId)?.name ??
+                  "—"}
+              </span>
+              <ArrowUpRight size={17} />
+            </button>
+            {onShare && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onShare(slot)}
+                aria-label={t(
+                  `Share the ${bookingTimeLabel(slot.startAt)} opening`,
+                  `Сподели го терминот во ${bookingTimeLabel(slot.startAt)}`,
+                )}
+              >
+                <Share2 />
+              </Button>
+            )}
+          </div>
         ))}
       </div>
       <button

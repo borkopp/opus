@@ -10,6 +10,7 @@ import {
   CalendarClock,
   MessagesSquare,
   SwatchBook,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FunctionReturnType } from "convex/server";
@@ -159,6 +160,14 @@ export function DashboardAccountMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          {profile.role === "owner" && profile.plan === "paid" && (
+            <DropdownMenuItem asChild>
+              <Link href="/settings?tab=billing">
+                <CreditCard />
+                {t("Subscription", "Претплата")}
+              </Link>
+            </DropdownMenuItem>
+          )}
           {profile.plan !== "paid" && <OpusProMenuItem />}
           <DropdownMenuItem onSelect={signOut} disabled={signingOut}>
             <LogOut />

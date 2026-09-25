@@ -26,7 +26,7 @@ export function RecoveryWidget({
         "A cancellation can become a booking",
         "Откажан термин може повторно да се пополни",
       )}
-      action={<Badge variant="pro">Pro</Badge>}
+      action={!paid && <Badge variant="pro">Pro</Badge>}
     >
       <FeatureCardContent
         status={

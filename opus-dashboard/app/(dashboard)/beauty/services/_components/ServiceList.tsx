@@ -62,6 +62,7 @@ export function ServiceList({
   const { t } = useDashboardI18n();
   const categories = useQuery(api.serviceCategories.listCategories, { orgId });
   const services = useQuery(api.services.listServices, { orgId });
+  const staff = useQuery(api.staff.listStaffMembers, { orgId });
   const deactivateService = useMutation(api.services.deactivateService);
   const reorderServices = useMutation(api.services.reorderServices);
 
@@ -122,14 +123,14 @@ export function ServiceList({
             key={index}
             className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
           >
-            <div className="flex items-center gap-3.5 sm:gap-4">
-              <Skeleton className="size-12 rounded-lg sm:size-14" />
-              <div className="flex flex-col gap-2">
-                <Skeleton className="h-4 w-40" />
+            <div className="flex min-w-0 flex-1 items-center gap-3.5 sm:gap-4">
+              <Skeleton className="size-12 shrink-0 rounded-lg sm:size-14" />
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <Skeleton className="h-4 w-40 max-w-full" />
                 <Skeleton className="h-3 w-24" />
               </div>
             </div>
-            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-12 shrink-0 sm:w-16" />
           </div>
         ))}
       </div>
@@ -256,7 +257,7 @@ export function ServiceList({
           <section key={group.key} className={cn(groupIndex > 0 && "border-t")}>
             {(serviceGroups.length > 1 || group.key !== "uncategorized") && (
               <div className="bg-muted/35 px-4 py-2.5 sm:px-5">
-                <h2 className="text-sm font-medium text-muted-foreground">
+                <h2 className="text-sm font-medium text-muted-foreground wrap-anywhere">
                   {group.name}
                 </h2>
               </div>
@@ -306,6 +307,22 @@ export function ServiceList({
                       <span className="mt-1 block text-sm text-muted-foreground">
                         {service.durationMins} {t("min", "мин")}
                       </span>
+                      {staff && (
+                        <span className="mt-1 block break-words text-xs text-muted-foreground">
+                          {service.staffIds.length === 0
+                            ? t("No staff assigned", "Нема доделени вработени")
+                            : staff
+                                .filter((member) =>
+                                  service.staffIds.includes(member._id),
+                                )
+                                .map((member) => member.displayName)
+                                .join(", ") ||
+                              t(
+                                "No staff available",
+                                "Нема достапни вработени",
+                              )}
+                        </span>
+                      )}
                     </div>
                   </button>
 

@@ -6,12 +6,20 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { ConversationList } from "@/components/ai-inbox/ConversationList";
 import { ConversationDetail } from "@/components/ai-inbox/ConversationDetail";
-import { BotMessageSquare } from "lucide-react";
+import { BotMessageSquare, Settings2, ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 
@@ -36,16 +44,8 @@ export function AIInboxWorkspace() {
       : "skip",
   );
 
-  if (
-    !orgId ||
-    profile === undefined ||
-    (isPaid && conversations === undefined)
-  ) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-accent border-t-transparent" />
-      </div>
-    );
+  if (!orgId || profile === undefined) {
+    return <Skeleton className="h-[70dvh] w-full rounded-3xl" />;
   }
 
   return (
@@ -58,92 +58,87 @@ export function AIInboxWorkspace() {
       className="flex min-h-full flex-1"
       contentClassName="flex min-h-full flex-1"
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="flex min-h-0 min-w-0 flex-1 flex-col h-[calc(100dvh-9rem)]"
-      >
-        {/* Page header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border/40 shrink-0">
-          <BotMessageSquare size={20} className="text-muted-foreground" />
-          <div>
-            <h1 className="text-lg font-semibold font-display">
-              {t("AI ", "AI ")}
-              <span className="font-display italic text-primary">
-                {t("Front-desk", "Рецепција")}
-              </span>
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              {t(
-                "Conversations handled by your AI agent",
-                "Разговори управувани од вашиот AI агент",
-              )}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap justify-between gap-2 border-b p-3">
-          <Button asChild variant="ghost" size="sm">
+      <div className="flex min-w-0 flex-1 flex-col gap-6">
+        <DashboardPageHeader
+          title={t("AI inbox", "AI сандаче")}
+          description={t(
+            "Follow Instagram conversations and step in when clients need you.",
+            "Следете ги Instagram разговорите и вклучете се кога на клиентите им треба вашата помош.",
+          )}
+        >
+          <Button asChild variant="outline">
             <Link href="/settings?tab=ai">
-              {t("Frontdesk settings", "Поставки за AI рецепција")}
+              <Settings2 data-icon="inline-start" />
+              {t("Front-desk settings", "Поставки за AI рецепција")}
             </Link>
           </Button>
+        </DashboardPageHeader>
+        <div className="flex h-[72dvh] min-h-[520px] min-w-0 flex-col overflow-hidden rounded-[25px] bg-card md:h-[calc(100dvh-18rem)]">
           {selectedId && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="md:hidden"
-              onClick={() => setSelectedId(null)}
-            >
-              {t("Back to conversations", "Назад кон разговорите")}
-            </Button>
+            <div className="px-4 pt-3 md:hidden">
+              <Button variant="ghost" onClick={() => setSelectedId(null)}>
+                <ArrowLeft data-icon="inline-start" />
+                {t("Conversations", "Разговори")}
+              </Button>
+            </div>
           )}
-        </div>
-        {/* Split view */}
-        <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
-          {/* Left: conversation list */}
-          <div
-            className={cn(
-              "w-full shrink-0 md:w-80",
-              selectedId && "hidden md:block",
-            )}
-          >
-            <ConversationList
-              conversations={conversations ?? []}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              statusFilter={statusFilter}
-              onFilterChange={setStatusFilter}
-            />
-          </div>
+          {/* Split view */}
+          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+            {/* Left: conversation list */}
+            <div
+              className={cn(
+                "min-h-0 w-full shrink-0 md:w-[320px] xl:w-[360px]",
+                selectedId && "hidden md:block",
+              )}
+            >
+              <ConversationList
+                loading={isPaid && conversations === undefined}
+                conversations={conversations ?? []}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                statusFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+              />
+            </div>
 
-          {/* Right: conversation detail */}
-          <div
-            className={cn(
-              "min-w-0 flex-1 overflow-hidden",
-              !selectedId && "hidden md:block",
-            )}
-          >
-            {selectedId ? (
-              <ConversationDetail orgId={orgId} conversationId={selectedId} />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
-                <BotMessageSquare
-                  size={40}
-                  className="text-muted-foreground/30"
+            {/* Right: conversation detail */}
+            <div
+              className={cn(
+                "min-w-0 flex-1 overflow-hidden",
+                !selectedId && "hidden md:block",
+              )}
+            >
+              {selectedId ? (
+                <ConversationDetail
+                  key={selectedId}
+                  orgId={orgId}
+                  conversationId={selectedId}
                 />
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    "Select a conversation to view messages",
-                    "Изберете разговор за да ги видите пораките",
-                  )}
-                </p>
-              </div>
-            )}
+              ) : (
+                <Empty className="h-full bg-background/40">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <BotMessageSquare />
+                    </EmptyMedia>
+                    <EmptyTitle>
+                      {t(
+                        "Your conversations, in one place",
+                        "Сите разговори на едно место",
+                      )}
+                    </EmptyTitle>
+                    <EmptyDescription>
+                      {t(
+                        "Choose a conversation to read messages, review AI replies, or reply as your team.",
+                        "Изберете разговор за да ги прочитате пораките, да ги прегледате AI одговорите или да одговорите како тим.",
+                      )}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </PaidFeatureOverlay>
   );
 }

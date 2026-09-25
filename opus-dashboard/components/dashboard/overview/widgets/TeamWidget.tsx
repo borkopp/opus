@@ -24,7 +24,7 @@ export function TeamWidget({
       )}
       action={
         <Link
-          href="/beauty/staff"
+          href="/beauty/services?tab=staff"
           className={s.smallIcon}
           aria-label={t("Manage team", "Управувај со тимот")}
         >

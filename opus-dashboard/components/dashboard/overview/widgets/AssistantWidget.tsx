@@ -17,7 +17,7 @@ export function AssistantWidget() {
         "A clearer view of your studio",
         "Појасен поглед на вашето студио",
       )}
-      action={<Badge variant="pro">Pro</Badge>}
+      action={access?.paid === false && <Badge variant="pro">Pro</Badge>}
     >
       <FeatureCardContent
         status={

@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { useQuery } from "convex/react";
 import {
   BellRing,
+  CreditCard,
   Bot,
   CalendarClock,
   Flame,
@@ -24,6 +25,7 @@ import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { SettingsSectionPicker } from "./SettingsSectionPicker";
 import { AiOperatorTab } from "./tabs/AiOperatorTab";
 import { BookingOperationsTab } from "./tabs/BookingOperationsTab";
+import { BillingTab } from "./tabs/BillingTab";
 import { DynamicSurgePricingTab } from "./tabs/DynamicSurgePricingTab";
 import { GapOptimizerTab } from "./tabs/GapOptimizerTab";
 import { GeneralTab } from "./tabs/GeneralTab";
@@ -34,6 +36,12 @@ import { ThemeTab } from "./tabs/ThemeTab";
 
 const SETTINGS_TABS = [
   { value: "general", labelEn: "General", labelMk: "Општо", icon: Settings2 },
+  {
+    value: "billing",
+    labelEn: "Subscription",
+    labelMk: "Претплата",
+    icon: CreditCard,
+  },
   { value: "themes", labelEn: "Themes", labelMk: "Теми", icon: SwatchBook },
   {
     value: "branding",
@@ -208,6 +216,7 @@ export function SettingsWorkspace() {
         </div>
 
         <div className="min-w-0">
+          {activeTab === "billing" && <BillingTab key={orgId} />}
           <ThemeTab />
           <GeneralTab
             key={`general-${settings.updatedAt}`}

@@ -77,7 +77,7 @@ export function SmsNotificationsCard({
   return (
     <SettingsCard
       title={t("SMS notifications", "SMS известувања")}
-      action={<Badge variant="pro">Pro</Badge>}
+      action={!isPaid && <Badge variant="pro">Pro</Badge>}
       description={t(
         "Send clients appointment confirmations, changes, cancellations, and reminders by SMS.",
         "Испраќајте SMS потврди, промени, откажувања и потсетници за термините на клиентите.",

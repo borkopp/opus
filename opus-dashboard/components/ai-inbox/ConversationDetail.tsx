@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -20,6 +19,16 @@ import { mk } from "date-fns/locale";
 import posthog from "posthog-js";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { getHandoffReason } from "@/lib/i18n/ai-frontdesk";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  MessageScrollerProvider,
+  MessageScroller,
+  MessageScrollerViewport,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerButton,
+} from "@/components/ui/message-scroller";
 
 interface Props {
   orgId: Id<"orgs">;
@@ -45,14 +54,6 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   const handoffConversation = useMutation(
     api.ai.conversations.handoffConversation,
   );
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   if (conversation === null)
     return (
       <p className="p-5 text-sm text-muted-foreground">
@@ -62,7 +63,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   if (conversation === undefined) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <Skeleton className="h-48 w-3/4 rounded-2xl" />
       </div>
     );
   }
@@ -124,9 +125,9 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   return (
     <div className="flex min-h-0 min-w-0 flex-col h-full">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-b border-border/40 shrink-0 bg-muted/10">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-5 border-b border-border/50 shrink-0 bg-card">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center">
+          <div className="size-11 shrink-0 rounded-full bg-secondary flex items-center justify-center">
             <User size={16} className="text-muted-foreground" />
           </div>
           <div className="min-w-0">
@@ -202,19 +203,40 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4">
-        {!messages || messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
-            <MessageSquareOff size={28} className="text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              {t("No messages yet", "Сè уште нема пораки")}
-            </p>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <MessageBubble key={message._id} message={message} />
-          ))
-        )}
+      <div className="min-h-0 flex-1 bg-background/40">
+        <MessageScrollerProvider autoScroll defaultScrollPosition="end">
+          <MessageScroller>
+            <MessageScrollerViewport>
+              <MessageScrollerContent className="gap-5 p-4 sm:p-6">
+                {messages === undefined ? (
+                  <Skeleton className="h-24 w-2/3 rounded-2xl" />
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                    <MessageSquareOff
+                      size={28}
+                      className="text-muted-foreground/40"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      {t("No messages yet", "Сè уште нема пораки")}
+                    </p>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <MessageScrollerItem
+                      key={message._id}
+                      messageId={message._id}
+                    >
+                      <MessageBubble message={message} />
+                    </MessageScrollerItem>
+                  ))
+                )}
+              </MessageScrollerContent>
+            </MessageScrollerViewport>
+            <MessageScrollerButton
+              aria-label={t("Latest messages", "Најнови пораки")}
+            />
+          </MessageScroller>
+        </MessageScrollerProvider>
       </div>
 
       {/* Handed-off notice */}

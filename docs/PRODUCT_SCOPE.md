@@ -101,6 +101,16 @@ names this manual capability; it does not authorize campaigns.
 
 See [GAP_RECOVERY.md](GAP_RECOVERY.md) for configuration, limits, and validation.
 
+### Authorized Pro subscription billing
+
+Monthly Pro subscription billing through Polar was authorized on September 25, 2026. Studio owners can open hosted checkout and manage their subscription,
+payment method, invoices, and cancellation through Polar's customer portal.
+Verified provider state controls the existing Free/Pro permission boundary.
+Activation requires configured credentials, a recurring product, and signed
+webhook delivery; local implementation is not a claim of live billing.
+AI/SMS credit top-ups, yearly plans, and collecting appointment payments for
+studios are not included. See [POLAR_BILLING.md](POLAR_BILLING.md).
+
 ### Authorized Pro appointment SMS
 
 Client appointment SMS was explicitly authorized on September 24, 2026 for

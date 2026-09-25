@@ -190,7 +190,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
+          className="h-11 flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
         >
           <FolderTreeIcon data-icon="inline-start" />
           {t("Categories", "Категории")}

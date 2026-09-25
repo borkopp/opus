@@ -2,9 +2,12 @@ import { httpRouter } from "convex/server";
 import { authComponent, createAuth } from "./betterAuth";
 import { resendWebhook } from "./emailWebhooks";
 import { twilioWebhook } from "./smsWebhooks";
+import { polarWebhook } from "./billingWebhooks";
 import { verify, receive, callback } from "./ai/webhooks";
 
 const http = httpRouter();
+
+http.route({ path: "/webhooks/polar", method: "POST", handler: polarWebhook });
 
 http.route({
   path: "/webhooks/twilio",

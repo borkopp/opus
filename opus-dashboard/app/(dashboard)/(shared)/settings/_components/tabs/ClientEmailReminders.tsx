@@ -46,7 +46,7 @@ export function ClientEmailReminders({
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
             {t("Client email reminders", "Потсетници за клиенти по е-пошта")}
-            <Badge variant="pro">Pro</Badge>
+            {!isPaid && <Badge variant="pro">Pro</Badge>}
           </span>
         }
         description={

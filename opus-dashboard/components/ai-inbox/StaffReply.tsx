@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group";
+import { Send } from "lucide-react";
 import {
   Field,
   FieldDescription,
@@ -29,6 +30,7 @@ export function StaffReply({
   const reply = useMutation(api.ai.conversations.replyAsStaff);
   async function send(event: React.FormEvent) {
     event.preventDefault();
+    if (sending || !text.trim()) return;
     setSending(true);
     try {
       await reply({ orgId, conversationId, text });
@@ -45,20 +47,27 @@ export function StaffReply({
     }
   }
   return (
-    <form onSubmit={send} className="shrink-0 border-t p-4">
+    <form
+      onSubmit={send}
+      className="shrink-0 border-t border-border/50 bg-card p-4 sm:p-5"
+    >
       <FieldGroup className="gap-3">
         <Field>
           <FieldLabel htmlFor="staff-reply">
             {t("Reply as your team", "Одговорете како тим")}
           </FieldLabel>
-          <Textarea
-            id="staff-reply"
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            maxLength={1_000}
-            rows={2}
-            disabled={sending}
-          />
+          <InputGroup>
+            <InputGroupTextarea
+              id="staff-reply"
+              placeholder={t("Write a reply…", "Напишете одговор…")}
+              className="max-h-32 min-h-20"
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+              maxLength={1_000}
+              rows={2}
+              disabled={sending}
+            />
+          </InputGroup>
           <FieldDescription>
             {t(
               "Sending a reply pauses AI for this conversation. Instagram allows replies within 24 hours of the client’s last message.",
@@ -71,7 +80,11 @@ export function StaffReply({
           className="self-end"
           disabled={sending || !text.trim()}
         >
-          {sending && <Spinner />}
+          {sending ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <Send data-icon="inline-start" />
+          )}
           {t("Send reply", "Испрати одговор")}
         </Button>
       </FieldGroup>

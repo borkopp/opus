@@ -17,7 +17,7 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
         "Client conversations and team handoffs",
         "Разговори со клиенти и предавање на тимот",
       )}
-      action={<Badge variant="pro">Pro</Badge>}
+      action={!paid && <Badge variant="pro">Pro</Badge>}
     >
       <div className="mt-5 flex flex-col items-start gap-3">
         <p

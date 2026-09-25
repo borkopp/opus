@@ -1,4 +1,5 @@
 import { defineSchema, defineTable } from "convex/server";
+import { polarSubscription } from "./lib/polar";
 import { v } from "convex/values";
 import { dashboardThemeValidator } from "./lib/dashboardTheme";
 import {
@@ -42,6 +43,42 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
+  // One provider customer per studio, never per owner email. Sandbox and live
+  // billing belong on separate Convex deployments.
+  billing_accounts: defineTable({
+    orgId: v.id("orgs"),
+    externalCustomerId: v.string(),
+    environment: v.union(v.literal("sandbox"), v.literal("production")),
+    productId: v.string(),
+    customerId: v.optional(v.string()),
+    managed: v.boolean(),
+    subscription: v.optional(polarSubscription),
+    hasOpenSubscription: v.boolean(),
+    syncVersion: v.number(),
+    syncedVersion: v.number(),
+    lastSyncedAt: v.optional(v.number()),
+    syncFailed: v.optional(v.boolean()),
+    checkoutAttemptId: v.optional(v.string()),
+    checkoutLockUntil: v.optional(v.number()),
+    checkoutId: v.optional(v.string()),
+    checkoutUrl: v.optional(v.string()),
+    checkoutExpiresAt: v.optional(v.number()),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org", ["orgId"]),
+
+  // Durable receipt deduplication. No raw payment payload or card data stored.
+  billing_webhook_events: defineTable({
+    orgId: v.id("orgs"),
+    eventId: v.string(),
+    eventType: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_event", ["orgId", "eventId"]),
+
   // Studio-owned reply templates. Available on Free and Pro; never sent automatically.
   saved_replies: defineTable({
     orgId: v.id("orgs"),

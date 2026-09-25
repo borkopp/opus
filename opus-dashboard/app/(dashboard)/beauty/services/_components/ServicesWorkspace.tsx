@@ -1,147 +1,196 @@
 "use client";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
 import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
-import { PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import { PlusIcon, ScissorsIcon, UsersIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { StaffFormDialog } from "@/components/staff/StaffFormDialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/convex/_generated/api";
 import { CategoryList } from "./CategoryList";
 import { ServiceFormDialog } from "./ServiceFormDialog";
 import { ServiceList } from "./ServiceList";
+import { StaffList } from "./StaffList";
+import { StaffPlanFooter } from "./StaffPlanFooter";
+import { WorkspaceSearch } from "./WorkspaceSearch";
+import { WorkspaceSkeleton } from "./WorkspaceSkeleton";
 
 export function ServicesWorkspace() {
   const { t } = useDashboardI18n();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get("tab") === "staff" ? "staff" : "services";
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
   const services = useQuery(
     api.services.listServices,
     orgId ? { orgId } : "skip",
   );
-
-  const [searchQuery, setSearchQuery] = useState("");
+  const staff = useQuery(
+    api.staff.listStaffMembers,
+    orgId ? { orgId } : "skip",
+  );
+  const planStatus = useQuery(
+    api.staff.getStaffPlanStatus,
+    orgId ? {} : "skip",
+  );
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [staffSearch, setStaffSearch] = useState("");
   const [isAddServiceOpen, setIsAddServiceOpen] = useState(false);
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
 
-  if (profile === undefined || services === undefined) {
-    return (
-      <div className="flex w-full flex-col gap-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-          <Skeleton className="h-9 w-28" />
-        </div>
-        <div className="overflow-hidden rounded-xl border">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between gap-4 border-b px-5 py-4 last:border-b-0"
-            >
-              <div className="flex items-center gap-3.5 sm:gap-4">
-                <Skeleton className="size-12 rounded-lg sm:size-14" />
-                <div className="flex flex-col gap-2">
-                  <Skeleton className="h-4 w-40" />
-                  <Skeleton className="h-3 w-24" />
-                </div>
-              </div>
-              <Skeleton className="h-4 w-16" />
-            </div>
-          ))}
-        </div>
-      </div>
+  if (profile === undefined) return <WorkspaceSkeleton />;
+  if (!orgId) return <div>{t("Not found", "Не е пронајдено")}</div>;
+
+  const selectTab = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === "staff") params.set("tab", "staff");
+    else params.delete("tab");
+    const query = params.toString();
+    // Keep the selected tab bookmarkable and restore it with browser Back.
+    window.history.pushState(
+      null,
+      "",
+      `${pathname}${query ? `?${query}` : ""}`,
     );
-  }
-
-  if (profile === null || !orgId)
-    return <div>{t("Not found", "Не е пронајдено")}</div>;
-
-  const activeCount = services.filter((service) => service.isActive).length;
-  const serviceSummary =
-    services.length === 0
-      ? t(
-          "Add the services customers can book.",
-          "Додајте ги услугите што клиентите можат да ги закажат.",
-        )
-      : activeCount === 1
-        ? t("1 service available to book.", "1 достапна услуга за закажување.")
-        : t(
-            `${activeCount} services available to book.`,
-            `${activeCount} достапни услуги за закажување.`,
-          );
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18 }}
-      className="flex min-h-full w-full flex-1 flex-col gap-6"
-    >
+    <div className="flex min-h-full w-full min-w-0 flex-1 flex-col gap-6">
       <DashboardPageHeader
-        title={t("Services", "Услуги")}
-        description={serviceSummary}
-      >
-        <div className="flex w-full gap-2 sm:w-auto">
-          <CategoryList orgId={orgId} />
-          <Button
-            className="flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
-            onClick={() => setIsAddServiceOpen(true)}
-          >
-            <PlusIcon data-icon="inline-start" />
-            {t("Add service", "Додај услуга")}
-          </Button>
-        </div>
-      </DashboardPageHeader>
-
-      {(services.length > 6 || Boolean(searchQuery)) && (
-        <InputGroup className="w-full sm:max-w-xs">
-          <InputGroupInput
-            aria-label={t("Search services", "Пребарај услуги")}
-            placeholder={t("Search services", "Пребарај услуги")}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-          />
-          <InputGroupAddon align="inline-start">
-            <SearchIcon />
-          </InputGroupAddon>
-          {searchQuery && (
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                aria-label={t("Clear search", "Исчисти пребарување")}
-                size="icon-xs"
-                onClick={() => setSearchQuery("")}
-              >
-                <XIcon />
-              </InputGroupButton>
-            </InputGroupAddon>
-          )}
-        </InputGroup>
-      )}
-
-      <ServiceList
-        orgId={orgId}
-        searchQuery={searchQuery}
-        onAddService={() => setIsAddServiceOpen(true)}
-        onClearSearch={() => setSearchQuery("")}
+        title={t("Services & staff", "Услуги и тим")}
+        description={t(
+          "Manage what customers can book and the team behind each appointment.",
+          "Управувајте со услугите, тимот и работното време на едно место.",
+        )}
       />
+
+      <Tabs
+        value={activeTab}
+        onValueChange={selectTab}
+        className="min-w-0 flex-1 gap-6"
+      >
+        <TabsList
+          aria-label={t("Services and staff", "Услуги и тим")}
+          className="grid w-full grid-cols-2 group-data-[orientation=horizontal]/tabs:h-12 sm:w-80"
+        >
+          <TabsTrigger
+            value="services"
+            className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
+          >
+            <ScissorsIcon className="hidden sm:block" />
+            {t("Services", "Услуги")}
+            {services && <Badge variant="secondary">{services.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger
+            value="staff"
+            className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
+          >
+            <UsersIcon className="hidden sm:block" />
+            {t("Staff", "Тим")}
+            {staff && <Badge variant="secondary">{staff.length}</Badge>}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="services" className="min-w-0">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "Set prices, duration and who provides each service.",
+                  "Поставете цени, времетраење и кој ја извршува секоја услуга.",
+                )}
+              </p>
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+                <CategoryList orgId={orgId} />
+                <Button
+                  className="h-11"
+                  onClick={() => setIsAddServiceOpen(true)}
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {t("Add service", "Додај услуга")}
+                </Button>
+              </div>
+            </div>
+            {(!!services?.length || serviceSearch) && (
+              <WorkspaceSearch
+                label={t(
+                  "Search services or categories",
+                  "Пребарај услуги или категории",
+                )}
+                value={serviceSearch}
+                onChange={setServiceSearch}
+              />
+            )}
+            <ServiceList
+              orgId={orgId}
+              searchQuery={serviceSearch}
+              onAddService={() => setIsAddServiceOpen(true)}
+              onClearSearch={() => setServiceSearch("")}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="staff" className="min-w-0">
+          <div className="flex min-h-full flex-col gap-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  "Manage your team, working hours and time off.",
+                  "Управувајте со тимот, работното време и отсуствата.",
+                )}
+              </p>
+              <Button
+                onClick={() => setIsAddStaffOpen(true)}
+                disabled={!planStatus?.canUseStaffRole}
+                aria-describedby={
+                  planStatus?.isFree ? "staff-plan-limit" : undefined
+                }
+                className="h-11 w-full sm:w-fit sm:shrink-0"
+              >
+                <PlusIcon data-icon="inline-start" />
+                {t("Add staff member", "Додај вработен")}
+              </Button>
+            </div>
+            {(!!staff?.length || staffSearch) && (
+              <WorkspaceSearch
+                label={t("Search staff", "Пребарај вработени")}
+                value={staffSearch}
+                onChange={setStaffSearch}
+              />
+            )}
+            <StaffList
+              orgId={orgId}
+              searchQuery={staffSearch}
+              onClearSearch={() => setStaffSearch("")}
+              onAddClick={() => setIsAddStaffOpen(true)}
+              canManageAppointmentEmail={profile.role === "owner"}
+            />
+            <StaffPlanFooter />
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {isAddServiceOpen && (
         <ServiceFormDialog
           orgId={orgId}
-          open={isAddServiceOpen}
+          open
           onOpenChange={setIsAddServiceOpen}
         />
       )}
-    </motion.div>
+      {isAddStaffOpen && (
+        <StaffFormDialog
+          orgId={orgId}
+          open
+          canManageAppointmentEmail={profile.role === "owner"}
+          onOpenChange={setIsAddStaffOpen}
+        />
+      )}
+    </div>
   );
 }

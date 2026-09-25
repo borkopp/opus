@@ -112,6 +112,62 @@ and [Instagram Login configuration](https://developers.facebook.com/docs/instagr
 
 ## Validation and activation
 
+### Platform setup recorded September 26, 2026
+
+- Meta business portfolio: **OPUS.mk** (`2128135784578354`).
+- Parent Meta app: **OPUS** (`1381699410331038`).
+- Instagram Login app: **OPUS-IG** (`1511741730979890`). Use this Instagram
+  app ID and its corresponding secret for `INSTAGRAM_APP_ID` and
+  `INSTAGRAM_APP_SECRET`; the parent app ID is different.
+- Production Convex deployment: `calm-dachshund-294`. The Instagram app ID,
+  app secret, `INSTAGRAM_GRAPH_VERSION=v26.0`, redirect URI, webhook verify
+  token, and token-encryption secret are saved and verified there. Secret
+  values are not stored in the repository.
+- Registered OAuth redirect:
+  `https://calm-dachshund-294.convex.site/instagram/callback`.
+- Registered webhook:
+  `https://calm-dachshund-294.convex.site/webhooks/instagram`.
+  Meta accepted verification and reported a successful synthetic `messages`
+  webhook test using v26.0. This verifies the test request path, not real DM
+  ingestion, an AI response, or a booking.
+- `instagram_business_basic` and `instagram_business_manage_messages` are
+  added with **Ready for testing** status. Advanced access is not approved.
+- `@opus.mk` accepted the **OPUS-IG** Instagram tester invitation. This is a
+  tester role, not a connection to an OPUS studio's frontdesk.
+- The app has its OPUS icon, `opus.mk` domain, privacy and terms URLs, and
+  existing deletion-request instructions at `https://opus.mk/privacy#rights`.
+  Meta reports that the required basic app settings are complete.
+
+The app remains unpublished. OPUS was identified as a **Tech Provider** after
+explicit user approval of Meta's irreversible classification. Meta requires
+business verification, access verification, and App Review for serving other
+businesses. Access verification is blocked until business verification is
+complete. No verification or review was submitted.
+
+The operator currently works as an individual without a registered business.
+The North Macedonia verification form offers Sole Proprietorship, Corporation,
+Partnership, Private Company, and Institution; it does not offer an unregistered
+individual option. No business type was selected. Meta's
+[business verification guidance](https://www.facebook.com/business/help/1095661473946872)
+requires local business registration. This is a blocker for external studio
+rollout, not for continuing development with the app's accepted test roles.
+
+When legitimate registered-business details are available, resume verification
+with the matching legal name, official address/phone, website, and proof of
+connection to the business. Meta may request
+[official business documents](https://www.facebook.com/business/help/159334372093366).
+Its supported-language list does not include Macedonian; the guidance requests
+English translations bearing an official translating-agency stamp for documents
+in unsupported languages. Do not submit OPUS's brand name as a registered legal
+entity without matching evidence.
+
+Production has no `AI_FRONTDESK_OPENAI_API_KEY` or fallback `OPENAI_API_KEY`,
+and `AI_FRONTDESK_ENABLED` is not set. Automatic AI replies remain disabled.
+Remaining rollout work includes provider configuration, a deliberately selected
+Pro test studio's OAuth connection, real DM and booking/handoff checks, and
+Meta's approvals. Review public privacy disclosures for the actual Instagram
+and AI processing before submitting for external studio access.
+
 The deterministic tests cover signature verification, tenant isolation, duplicate
 events, working hours/DST, malformed and low-confidence replies, takeover races,
 delivery reconciliation, OAuth state, model/tool dispatch and atomic booking

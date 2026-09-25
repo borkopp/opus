@@ -231,11 +231,7 @@ export function AiOperatorTab({
             "Manage your assistant identity, customer channels, and team handoff preferences.",
             "Управувајте со идентитетот на асистентот, каналите за клиенти и поставките за предавање на разговорите на тимот.",
           )}
-          action={
-            <div className="flex items-center gap-2">
-              <Badge variant="pro">Pro</Badge>
-            </div>
-          }
+          action={!isPaid && <Badge variant="pro">Pro</Badge>}
           contentClassName="flex flex-col gap-7"
           footer={
             isPaid && (

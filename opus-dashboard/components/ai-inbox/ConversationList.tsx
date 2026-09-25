@@ -14,6 +14,16 @@ import { Id } from "@/convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+
 type Status = "active" | "handed_off" | "resolved";
 
 type ConversationSummary = FunctionReturnType<
@@ -21,6 +31,7 @@ type ConversationSummary = FunctionReturnType<
 >[number];
 
 interface Props {
+  loading?: boolean;
   conversations: ConversationSummary[];
   selectedId: Id<"ai_conversations"> | null;
   onSelect: (id: Id<"ai_conversations">) => void;
@@ -29,6 +40,7 @@ interface Props {
 }
 
 export function ConversationList({
+  loading = false,
   conversations,
   selectedId,
   onSelect,
@@ -45,46 +57,82 @@ export function ConversationList({
   ];
 
   return (
-    <div className="flex flex-col h-full border-r border-border/50">
-      {/* Filter tabs */}
-      <div className="flex gap-1 px-3 pt-3 pb-2 border-b border-border/40 overflow-x-auto shrink-0">
-        {filters.map((f) => (
-          <button
-            key={f.value}
-            onClick={() => onFilterChange(f.value)}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors",
-              statusFilter === f.value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
+    <div className="flex min-h-0 flex-col h-full md:border-r border-border/50">
+      <div className="flex flex-col gap-4 border-b border-border/50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-medium">
+            {t("Conversations", "Разговори")}
+          </h2>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {loading ? "…" : conversations.length}
+          </span>
+        </div>
+        <ToggleGroup
+          spacing={1}
+          type="single"
+          value={statusFilter}
+          onValueChange={(value) => {
+            if (value) onFilterChange(value as Status | "all");
+          }}
+          className="grid w-full grid-cols-2 gap-1"
+          aria-label={t("Filter conversations", "Филтрирај разговори")}
+        >
+          {filters.map((f) => (
+            <ToggleGroupItem key={f.value} value={f.value} className="min-h-10">
+              {f.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
-
       {/* List */}
-      <div className="flex-1 overflow-y-auto">
-        {conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4">
-            <IconInbox size={32} className="text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">
-              {t("No conversations yet", "Сè уште нема разговори")}
-            </p>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2">
+        {loading ? (
+          <div
+            className="flex flex-col gap-3 p-2"
+            aria-label={t("Loading conversations", "Се вчитуваат разговорите")}
+          >
+            {[0, 1, 2].map((item) => (
+              <Skeleton key={item} className="h-24 w-full rounded-2xl" />
+            ))}
           </div>
+        ) : conversations.length === 0 ? (
+          <Empty className="h-full px-4 md:px-4">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <IconInbox />
+              </EmptyMedia>
+              <EmptyTitle>
+                {statusFilter === "all"
+                  ? t("No conversations yet", "Сè уште нема разговори")
+                  : t("No conversations here", "Нема разговори тука")}
+              </EmptyTitle>
+              <EmptyDescription>
+                {statusFilter === "all"
+                  ? t(
+                      "Messages from your connected Instagram account will appear here.",
+                      "Пораките од поврзаната Instagram сметка ќе се прикажат тука.",
+                    )
+                  : t(
+                      "Try another filter to see your conversations.",
+                      "Изберете друг филтер за да ги видите разговорите.",
+                    )}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           conversations.map((conv) => (
             <button
               key={conv._id}
+              type="button"
+              aria-current={selectedId === conv._id ? "true" : undefined}
               onClick={() => onSelect(conv._id)}
               className={cn(
-                "w-full text-left px-4 py-3.5 border-b border-border/30 transition-colors hover:bg-muted/40",
-                selectedId === conv._id && "bg-muted/60",
+                "w-full rounded-2xl text-left p-4 transition-colors hover:bg-secondary/60",
+                selectedId === conv._id && "bg-secondary",
               )}
             >
               <div className="flex items-start gap-2.5">
-                <div className="mt-0.5 shrink-0 text-muted-foreground">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-background text-primary">
                   {conv.channel === "instagram" ? (
                     <IconBrandInstagram size={16} />
                   ) : (
@@ -92,12 +140,12 @@ export function ConversationList({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-1">
                     <span className="text-sm font-medium truncate">
                       {conv.customerName ??
                         t("Unknown customer", "Непознат клиент")}
                     </span>
-                    <span className="text-[10px] text-muted-foreground shrink-0">
+                    <span className="text-[11px] text-muted-foreground shrink-0">
                       {formatDistanceToNow(new Date(conv.lastMessageAt), {
                         addSuffix: true,
                         locale: language === "mk" ? mk : undefined,
@@ -105,7 +153,7 @@ export function ConversationList({
                     </span>
                   </div>
                   {conv.lastMessagePreview && (
-                    <p className="text-xs text-muted-foreground truncate mb-1">
+                    <p className="text-xs text-muted-foreground truncate mb-2">
                       {conv.lastMessagePreview}
                     </p>
                   )}

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Settings2, ChartNoAxesCombined } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { getNavLinks } from "@/lib/vertical-nav-config";
@@ -13,8 +14,6 @@ import {
   type DashboardProfile,
 } from "./DashboardAccountMenu";
 import s from "./clarity.module.css";
-import { useDashboardAppearance } from "./DashboardAppearanceProvider";
-import { dashboardThemeDetails } from "@/lib/dashboard-theme";
 export function DashboardHeader({
   profile,
   activePath,
@@ -25,7 +24,6 @@ export function DashboardHeader({
   const currentPath = usePathname();
   const pathname = activePath ?? currentPath;
   const { language, t } = useDashboardI18n();
-  const theme = useDashboardAppearance();
   const navigationRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const nav = navigationRef.current;
@@ -56,9 +54,7 @@ export function DashboardHeader({
       >
         <span className={s.brandLockup}>
           <Logo className={s.brand} markClassName={s.brandMark} />
-          <span className={s.themeName}>
-            {dashboardThemeDetails[theme].name}
-          </span>
+          {profile.plan === "paid" && <Badge variant="pro">Pro</Badge>}
         </span>
       </Link>
       <nav
@@ -74,7 +70,9 @@ export function DashboardHeader({
               (
                 link.href === "/beauty"
                   ? pathname === link.href
-                  : pathname.startsWith(link.href)
+                  : pathname.startsWith(link.href) ||
+                    (link.href === "/beauty/services" &&
+                      pathname.startsWith("/beauty/staff/"))
               )
                 ? "page"
                 : undefined

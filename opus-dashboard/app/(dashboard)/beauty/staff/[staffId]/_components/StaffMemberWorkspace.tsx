@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { StaffFormDialog } from "../../_components/StaffFormDialog";
+import { StaffFormDialog } from "@/components/staff/StaffFormDialog";
 import { TimeOffSection } from "./TimeOffSection";
 import { WeeklySchedule } from "./WeeklySchedule";
 
@@ -64,7 +64,7 @@ export function StaffMemberWorkspace({
       className="flex min-h-full w-full flex-1 flex-col gap-6"
     >
       <Link
-        href="/beauty/staff"
+        href="/beauty/services?tab=staff"
         className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
       >
         <ArrowLeftIcon className="size-4" />

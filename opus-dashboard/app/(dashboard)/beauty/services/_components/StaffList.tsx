@@ -10,6 +10,7 @@ import {
   PencilIcon,
   PlusIcon,
   RotateCcwIcon,
+  SearchXIcon,
   Trash2Icon,
   UsersIcon,
 } from "lucide-react";
@@ -41,14 +42,18 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
 import { getStaffErrorMessage } from "@/lib/staff-errors";
 import { cn } from "@/lib/utils";
-import { StaffFormDialog } from "./StaffFormDialog";
+import { StaffFormDialog } from "@/components/staff/StaffFormDialog";
 
 export function StaffList({
   orgId,
+  searchQuery,
+  onClearSearch,
   onAddClick,
   canManageAppointmentEmail,
 }: {
   orgId: Id<"orgs">;
+  searchQuery: string;
+  onClearSearch: () => void;
   onAddClick: () => void;
   canManageAppointmentEmail: boolean;
 }) {
@@ -66,7 +71,7 @@ export function StaffList({
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="grid gap-4 border-b px-4 py-4 last:border-b-0 sm:grid-cols-[minmax(0,1.2fr)_minmax(12rem,0.8fr)_auto] sm:items-center sm:px-5"
+            className="grid min-w-0 gap-4 border-b px-4 py-4 last:border-b-0 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_auto] xl:items-center sm:px-5"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="size-11 rounded-full" />
@@ -109,6 +114,34 @@ export function StaffList({
           >
             <PlusIcon data-icon="inline-start" />
             {t("Add staff member", "Додај вработен")}
+          </Button>
+        </EmptyContent>
+      </Empty>
+    );
+  }
+
+  const query = searchQuery.trim().toLocaleLowerCase();
+  const visibleStaff = staff.filter((member) =>
+    member.displayName.toLocaleLowerCase().includes(query),
+  );
+
+  if (visibleStaff.length === 0) {
+    return (
+      <Empty className="min-h-[280px] rounded-[25px] bg-card">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <SearchXIcon />
+          </EmptyMedia>
+          <EmptyTitle>
+            {t("No matching staff", "Нема пронајдени вработени")}
+          </EmptyTitle>
+          <EmptyDescription>
+            {t("Try another name.", "Обидете се со друго име.")}
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button variant="outline" onClick={onClearSearch}>
+            {t("Clear search", "Исчисти пребарување")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -180,11 +213,11 @@ export function StaffList({
   return (
     <>
       <div className="dashboard-record-list">
-        {staff.map((member) => (
+        {visibleStaff.map((member) => (
           <div
             key={member._id}
             className={cn(
-              "grid gap-4 border-b px-4 py-4 last:border-b-0 sm:grid-cols-[minmax(0,1.2fr)_minmax(12rem,0.8fr)_auto] sm:items-center sm:px-5",
+              "grid min-w-0 gap-4 border-b px-4 py-4 last:border-b-0 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_auto] xl:items-center sm:px-5",
               !member.isActive && "bg-muted/20",
             )}
           >
@@ -202,7 +235,7 @@ export function StaffList({
 
               <div className="min-w-0">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <p className="truncate font-medium text-foreground">
+                  <p className="min-w-0 break-words font-medium text-foreground">
                     {member.displayName}
                   </p>
                   {!member.isActive && (
@@ -233,7 +266,7 @@ export function StaffList({
                 variant="outline"
                 size="sm"
                 asChild
-                className="min-w-0 flex-1 sm:flex-none"
+                className="h-11 min-w-0 flex-1 xl:flex-none"
               >
                 <Link href={`/beauty/staff/${member._id}`}>
                   <CalendarClockIcon data-icon="inline-start" />
@@ -246,6 +279,7 @@ export function StaffList({
                   <Button
                     variant="ghost"
                     size="icon-sm"
+                    className="size-11 shrink-0"
                     aria-label={t(
                       `Actions for ${member.displayName}`,
                       `Опции за ${member.displayName}`,
@@ -369,7 +403,7 @@ function ScheduleSummary({
       </p>
       <p
         className={cn(
-          "mt-1 truncate text-sm font-medium",
+          "mt-1 break-words text-sm font-medium",
           activeDays.length === 0 ? "text-danger" : "text-foreground",
         )}
       >

@@ -96,7 +96,7 @@ export function GapOptimizerTab({
       <fieldset disabled={!isPaid || isSaving} className="min-w-0">
         <SettingsCard
           title={t("Gap optimizer", "Оптимизатор на празни термини")}
-          action={<Badge variant="pro">Pro</Badge>}
+          action={!isPaid && <Badge variant="pro">Pro</Badge>}
           description={t(
             "Find bookable openings in the next seven days. Review a client and approve each email offer before sending.",
             "Пронајдете слободни термини во следните седум дена. Изберете клиент и одобрете ја секоја понуда по е-пошта пред испраќање.",

@@ -70,7 +70,7 @@ const DASHBOARD_PAGE_TITLES = [
     en: "Appointments",
     mk: "Термини",
   },
-  { path: "/beauty/services", en: "Services", mk: "Услуги" },
+  { path: "/beauty/services", en: "Services & staff", mk: "Услуги и тим" },
   {
     path: "/beauty/promote",
     en: "Promote your studio",

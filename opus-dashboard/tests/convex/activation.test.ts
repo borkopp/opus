@@ -552,34 +552,96 @@ describe("beauty activation engine", () => {
     ).toHaveLength(0);
   });
 
-  test("unlocks the dashboard after operational setup but blocks website publishing until the public profile is complete", async () => {
-    const { owner, orgId } = await completeOperationalSetup(t);
-
+  test("publishes a bookable website without branding or contact extras", async () => {
+    const { owner, orgId, serviceId } = await completeOperationalSetup(t);
     const state = await owner.query(api.activation.getState, {});
-    expect(state?.operationalSetupComplete).toBe(true);
-    expect(state?.nextStep).toBe("review");
-    expect(state?.allWebsiteRequirementsComplete).toBe(false);
-    expect(state?.onboardingComplete).toBe(false);
+    expect(state).toMatchObject({
+      operationalSetupComplete: true,
+      nextStep: "review",
+      allWebsiteRequirementsComplete: true,
+      onboardingComplete: false,
+    });
     expect(
-      state?.websiteRequirements
-        .filter((requirement) => !requirement.complete)
-        .map((requirement) => requirement.code),
+      state?.websiteEnhancements
+        .filter((item) => !item.complete)
+        .map((item) => item.code),
     ).toEqual([
       "website_logo",
       "website_banner",
       "website_tagline",
       "website_phone",
     ]);
-
     const readiness = await owner.query(api.website.getReadiness, { orgId });
-    expect(readiness?.allBlockingMet).toBe(false);
-    expect(readiness?.requirements).toHaveLength(10);
-    await expect(
-      owner.mutation(api.website.publish, { orgId }),
-    ).rejects.toThrow(
-      "Cannot publish website: Website logo, Website cover photo, Studio tagline, Contact phone.",
+    expect(readiness?.allBlockingMet).toBe(true);
+    expect(readiness?.requirements).toHaveLength(6);
+    const preview = await owner.query(api.activation.getPreview, {});
+    expect(preview?.services.map((service) => service._id)).toContain(
+      serviceId,
     );
+    expect(
+      await t.query(api.publicSite.getBySlug, { slug: "atelier-one" }),
+    ).toBeNull();
+    await owner.mutation(api.website.publish, { orgId });
+    const site = await t.query(api.publicSite.getBySlug, {
+      slug: "atelier-one",
+    });
+    expect(site?.services.map((service) => service._id)).toContain(serviceId);
+    expect(site?.logoUrl).toBeUndefined();
+    expect(site?.phone).toBeUndefined();
+    expect(await owner.query(api.activation.getState, {})).toMatchObject({
+      onboardingComplete: true,
+    });
   });
+
+  test("only the studio owner can read the private launch preview", async () => {
+    const { orgId } = await completeOperationalSetup(t);
+    await expect(t.query(api.activation.getPreview, {})).rejects.toThrow(
+      "Unauthenticated",
+    );
+    const { authenticated } = await createAuthenticatedStaff(
+      t,
+      orgId,
+      "preview-staff",
+      "staff",
+    );
+    await expect(
+      authenticated.query(api.activation.getPreview, {}),
+    ).rejects.toThrow();
+  });
+
+  test.each(["location", "service", "hours", "settings"])(
+    "still blocks publishing without operational %s",
+    async (missing) => {
+      const { owner, orgId, serviceId } = await completeOperationalSetup(t);
+      await t.run(async (ctx) => {
+        if (missing === "location")
+          await ctx.db.patch(orgId, { address: undefined });
+        if (missing === "service")
+          await ctx.db.patch(serviceId, { isActive: false });
+        if (missing === "hours")
+          await ctx.db.patch(orgId, {
+            openingHours: openingHours.map((day) => ({
+              ...day,
+              isClosed: true,
+            })),
+          });
+        if (missing === "settings") {
+          const settings = await ctx.db
+            .query("org_settings")
+            .withIndex("by_org", (q) => q.eq("orgId", orgId))
+            .first();
+          await ctx.db.patch(settings!._id, { slotDurationMins: 0 });
+        }
+      });
+      await expect(
+        owner.mutation(api.website.publish, { orgId }),
+      ).rejects.toThrow("Cannot publish website");
+      expect(
+        (await owner.query(api.website.getReadiness, { orgId }))
+          ?.allBlockingMet,
+      ).toBe(false);
+    },
+  );
 
   test("publishes the marketplace only when ready and keeps it independent from website readiness", async () => {
     const owner = await createOwner(t);
@@ -759,7 +821,7 @@ describe("beauty activation engine", () => {
     });
   });
 
-  test("keeps onboarding incomplete when a published studio has an unfinished checklist", async () => {
+  test("keeps onboarding complete when a published studio removes optional contact details", async () => {
     const { owner, orgId } = await completeBeautySetup(t);
     await owner.mutation(api.website.publish, { orgId });
     await t.run(async (ctx) => {
@@ -767,8 +829,8 @@ describe("beauty activation engine", () => {
     });
     expect(await owner.query(api.activation.getState, {})).toMatchObject({
       org: { websiteStatus: "published" },
-      allWebsiteRequirementsComplete: false,
-      onboardingComplete: false,
+      allWebsiteRequirementsComplete: true,
+      onboardingComplete: true,
     });
   });
 
@@ -1148,8 +1210,8 @@ describe("beauty activation engine", () => {
     ).rejects.toThrow("no longer available");
   });
 
-  test("allows website-only guests to book and rejects a conflicting guest", async () => {
-    const { owner, orgId, serviceId } = await completeBeautySetup(t);
+  test("allows website-only guests to book without branding and rejects a conflicting guest", async () => {
+    const { owner, orgId, serviceId } = await completeOperationalSetup(t);
     await owner.mutation(api.website.publish, { orgId });
 
     const nextMonday = new Date();
@@ -1445,6 +1507,6 @@ describe("beauty activation engine", () => {
 
     const orgWithoutLogo = await t.run(async (ctx) => await ctx.db.get(orgId));
     expect(orgWithoutLogo?.logoUrl).toBeUndefined();
-    expect(orgWithoutLogo?.websiteStatus).toBe("suspended");
+    expect(orgWithoutLogo?.websiteStatus).toBe("published");
   });
 });

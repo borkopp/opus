@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   Field,
@@ -8,15 +7,13 @@ import {
   FieldGroup,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { StepFrame, WizardActions } from "./OnboardingStep";
-
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { DAYS_MK, onboardingError } from "@/lib/i18n/onboarding";
 import { applyHoursToOpenDays, type OpeningHour } from "@/lib/opening-hours";
+import { StepFrame, WizardActions } from "./OnboardingStep";
 export type { OpeningHour } from "@/lib/opening-hours";
-
 export const DAYS = [
   "Monday",
   "Tuesday",
@@ -32,206 +29,239 @@ export function HoursStep({
   canGoBack,
   onBack,
   onSaved,
+  minimumDurationMins = 15,
 }: {
   hours: OpeningHour[];
   canGoBack: boolean;
   onBack: () => void;
   onSaved: (hours: OpeningHour[]) => Promise<void>;
+  minimumDurationMins?: number;
 }) {
   const { t, language } = useDashboardI18n();
   const days = language === "mk" ? DAYS_MK : DAYS;
-  const [applied, setApplied] = useState(false);
-  const [draftHours, setDraftHours] = useState(hours);
-  const [error, setError] = useState<string | null>(null);
-  const [invalidDay, setInvalidDay] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const updateDay = (dayOfWeek: number, patch: Partial<OpeningHour>) => {
-    setDraftHours((current) =>
-      current.map((day) =>
-        day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day,
-      ),
-    );
-    setApplied(false);
-    setError(null);
-    setInvalidDay(null);
-  };
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const invalid = draftHours.find(
+  const first = hours.find((day) => !day.isClosed) ?? hours[0];
+  const [draft, setDraft] = useState(hours);
+  const [common, setCommon] = useState({
+    open: first.open,
+    close: first.close,
+  });
+  const [custom, setCustom] = useState(
+    hours.some(
       (day) =>
-        !day.isClosed && (!day.open || !day.close || day.open >= day.close),
-    );
-    if (invalid) {
-      setInvalidDay(invalid.dayOfWeek);
+        !day.isClosed && (day.open !== first.open || day.close !== first.close),
+    ),
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const effectiveHours = custom
+    ? draft
+    : applyHoursToOpenDays(draft, { ...first, ...common });
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const open = effectiveHours.filter((day) => !day.isClosed);
+    if (!open.length) {
       setError(
         t(
-          `Choose a closing time after opening for ${days[invalid.dayOfWeek]}.`,
-          `Времето на затворање мора да биде по отворањето за ${days[invalid.dayOfWeek]}.`,
-        ),
-      );
-      document.getElementById(`hours-close-${invalid.dayOfWeek}`)?.focus();
-      return;
-    }
-    if (draftHours.every((day) => day.isClosed)) {
-      setError(
-        t(
-          "Choose at least one day when your studio is open.",
+          "Choose at least one working day.",
           "Изберете барем еден работен ден.",
         ),
       );
       return;
     }
-    setIsSubmitting(true);
+    if (
+      open.some(
+        (day) =>
+          !/^\d{2}:\d{2}$/.test(day.open) ||
+          !/^\d{2}:\d{2}$/.test(day.close) ||
+          day.open >= day.close,
+      )
+    ) {
+      setError(
+        t(
+          "Closing time must be after opening time.",
+          "Времето на затворање мора да биде по отворањето.",
+        ),
+      );
+      return;
+    }
+    const minutes = (time: string) =>
+      Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
+    if (
+      !open.some(
+        (day) => minutes(day.close) - minutes(day.open) >= minimumDurationMins,
+      )
+    ) {
+      setError(
+        t(
+          "Allow enough time for at least one appointment.",
+          "Оставете доволно време за барем еден термин.",
+        ),
+      );
+      return;
+    }
+    setError(null);
+    setSaving(true);
     try {
-      await onSaved(draftHours);
+      await onSaved(effectiveHours);
     } catch (caught) {
       setError(onboardingError(caught, language));
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
     }
-  };
+  }
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
-        replayPublicDescription
         replayPublicTitle
+        replayPublicDescription
         title={t(
           "When can customers book?",
           "Кога можат клиентите да закажуваат?",
         )}
         description={t(
-          "Set your first open day, then apply those hours to the other open days.",
-          "Поставете го првиот работен ден, па применете ги часовите на останатите работни денови.",
+          "Choose your working days and confirm the hours customers can book.",
+          "Изберете работни денови и потврдете кога клиентите можат да закажуваат.",
         )}
       >
-        <FieldGroup className="gap-3">
-          {draftHours.map((day) => (
-            <fieldset
-              key={day.dayOfWeek}
-              className="min-w-0 rounded-2xl border border-border/70 bg-card px-4 pb-4 pt-2 sm:px-5"
-              disabled={isSubmitting}
+        <FieldGroup>
+          <Field>
+            <FieldLabel data-replay-public>
+              {t("Working days", "Работни денови")}
+            </FieldLabel>
+            <ToggleGroup
+              type="multiple"
+              variant="outline"
+              spacing={2}
+              className="grid w-full grid-cols-4 gap-2 sm:grid-cols-7"
+              disabled={saving}
+              value={draft
+                .filter((day) => !day.isClosed)
+                .map((day) => String(day.dayOfWeek))}
+              onValueChange={(selected) => {
+                setDraft((current) =>
+                  current.map((day) => ({
+                    ...day,
+                    isClosed: !selected.includes(String(day.dayOfWeek)),
+                  })),
+                );
+                setError(null);
+              }}
+              aria-label={t("Working days", "Работни денови")}
             >
-              <legend className="sr-only">{days[day.dayOfWeek]}</legend>
-              <div className="flex min-h-11 items-center justify-between gap-3">
-                <span className="text-sm font-medium">
-                  {days[day.dayOfWeek]}
-                </span>
-                <label
+              {days.map((day, i) => (
+                <ToggleGroupItem
                   data-replay-public
-                  className="flex min-h-11 cursor-pointer items-center gap-3 text-xs text-muted-foreground"
+                  key={day}
+                  value={String(i)}
+                  aria-label={day}
+                  className="min-h-12 w-full rounded-lg"
                 >
-                  {day.isClosed
-                    ? t("Closed", "Неработен")
-                    : t("Open", "Работен")}
-                  <Switch
-                    checked={!day.isClosed}
-                    aria-label={t(
-                      `${days[day.dayOfWeek]} open`,
-                      `${days[day.dayOfWeek]} е работен ден`,
-                    )}
-                    onCheckedChange={(open) =>
-                      updateDay(day.dayOfWeek, { isClosed: !open })
-                    }
-                  />
-                </label>
-              </div>
-              {!day.isClosed && (
-                <div className="mt-2 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                  {(["open", "close"] as const).map((edge) => (
-                    <Field
-                      key={edge}
-                      className="min-w-0 gap-2"
-                      data-invalid={invalidDay === day.dayOfWeek}
-                    >
-                      <FieldLabel
-                        data-replay-public
-                        htmlFor={`hours-${edge}-${day.dayOfWeek}`}
-                        className="text-xs text-muted-foreground"
-                      >
-                        {edge === "open"
-                          ? t("Opens", "Отворање")
-                          : t("Closes", "Затворање")}
-                      </FieldLabel>
-                      <Input
-                        id={`hours-${edge}-${day.dayOfWeek}`}
-                        type="time"
-                        required
-                        value={day[edge]}
-                        aria-label={`${days[day.dayOfWeek]} ${edge === "open" ? t("opens", "отворање") : t("closes", "затворање")}`}
-                        aria-invalid={invalidDay === day.dayOfWeek}
-                        aria-describedby={
-                          invalidDay === day.dayOfWeek
-                            ? "hours-error"
-                            : undefined
-                        }
-                        className="h-12 min-w-0 w-full max-w-full appearance-none px-3 text-base tabular-nums md:text-base [&::-webkit-date-and-time-value]:text-left"
-                        onInput={(event) =>
-                          updateDay(day.dayOfWeek, {
-                            [edge]: event.currentTarget.value,
-                          })
-                        }
-                      />
-                    </Field>
-                  ))}
-                </div>
-              )}
-              {day === draftHours.find((item) => !item.isClosed) && (
-                <div className="mt-3 flex flex-col gap-2">
-                  <Button
-                    data-replay-public
-                    type="button"
-                    variant="outline"
-                    className="min-h-11 w-full whitespace-normal"
-                    disabled={!day.open || !day.close || day.open >= day.close}
-                    onClick={() => {
-                      setDraftHours((current) =>
-                        applyHoursToOpenDays(current, day),
-                      );
+                  {day.slice(0, 3)}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </Field>
+          {!custom && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {(["open", "close"] as const).map((edge) => (
+                <Field key={edge}>
+                  <FieldLabel data-replay-public htmlFor={`hours-${edge}`}>
+                    {edge === "open"
+                      ? t("Opens", "Отворање")
+                      : t("Closes", "Затворање")}
+                  </FieldLabel>
+                  <Input
+                    id={`hours-${edge}`}
+                    type="time"
+                    value={common[edge]}
+                    required
+                    disabled={saving}
+                    className="min-h-12 min-w-0 w-full max-w-full appearance-none text-base [&::-webkit-date-and-time-value]:text-left"
+                    onChange={(e) => {
+                      setCommon({ ...common, [edge]: e.target.value });
                       setError(null);
-                      setInvalidDay(null);
-                      setApplied(true);
                     }}
+                  />
+                </Field>
+              ))}
+            </div>
+          )}
+          <Button
+            data-replay-public
+            type="button"
+            variant="outline"
+            className="min-h-11 h-auto whitespace-normal"
+            disabled={saving}
+            onClick={() => {
+              if (!custom) setDraft(effectiveHours);
+              setCustom(!custom);
+              setError(null);
+            }}
+          >
+            {custom
+              ? t(
+                  "Use the same hours on selected days",
+                  "Исто време за избраните денови",
+                )
+              : t("Set different hours per day", "Различно време по ден")}
+          </Button>
+          {custom && (
+            <div className="flex flex-col gap-4">
+              {draft
+                .filter((day) => !day.isClosed)
+                .map((day) => (
+                  <fieldset
+                    key={day.dayOfWeek}
+                    disabled={saving}
+                    className="min-w-0 rounded-2xl border border-border p-4"
                   >
-                    {t(
-                      "Apply to all open days",
-                      "Примени на сите работни денови",
-                    )}
-                  </Button>
-                  {applied && (
-                    <p
+                    <legend
                       data-replay-public
-                      role="status"
-                      className="text-xs text-muted-foreground"
+                      className="px-2 text-sm font-medium"
                     >
-                      {t(
-                        "Hours copied. Closed days stay closed.",
-                        "Часовите се копирани. Неработните денови остануваат неработни.",
-                      )}
-                    </p>
-                  )}
-                </div>
-              )}
-              {invalidDay === day.dayOfWeek && (
-                <FieldError
-                  id="hours-error"
-                  className="mt-3"
-                  aria-live="polite"
-                >
-                  {error}
-                </FieldError>
-              )}
-            </fieldset>
-          ))}
+                      {days[day.dayOfWeek]}
+                    </legend>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {(["open", "close"] as const).map((edge) => (
+                        <Field key={edge}>
+                          <FieldLabel
+                            data-replay-public
+                            htmlFor={`hours-${edge}-${day.dayOfWeek}`}
+                          >
+                            {edge === "open"
+                              ? t("Opens", "Отворање")
+                              : t("Closes", "Затворање")}
+                          </FieldLabel>
+                          <Input
+                            id={`hours-${edge}-${day.dayOfWeek}`}
+                            type="time"
+                            required
+                            value={day[edge]}
+                            className="min-h-12 min-w-0 w-full max-w-full appearance-none text-base"
+                            onChange={(e) =>
+                              setDraft((current) =>
+                                current.map((item) =>
+                                  item.dayOfWeek === day.dayOfWeek
+                                    ? { ...item, [edge]: e.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                          />
+                        </Field>
+                      ))}
+                    </div>
+                  </fieldset>
+                ))}
+            </div>
+          )}
+          {error && <FieldError role="alert">{error}</FieldError>}
         </FieldGroup>
-        {error && invalidDay === null && (
-          <FieldError className="mt-4" aria-live="polite">
-            {error}
-          </FieldError>
-        )}
         <WizardActions
           canGoBack={canGoBack}
           onBack={onBack}
-          isSubmitting={isSubmitting}
+          isSubmitting={saving}
+          label={t("Confirm working hours", "Потврди работно време")}
         />
       </StepFrame>
     </form>

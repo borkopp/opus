@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, Scissors } from "lucide-react";
+import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { initials } from "@/lib/dashboard-overview";
 import type { PublicSite } from "./types";
 
 export function PublicSiteFrame({
@@ -36,7 +37,12 @@ export function PublicSiteFrame({
                   sizes="36px"
                 />
               ) : (
-                <Scissors aria-hidden="true" className="size-4" />
+                <span
+                  aria-hidden="true"
+                  className="text-xs font-semibold text-primary"
+                >
+                  {initials(site.name)}
+                </span>
               )}
             </span>
             <span className="truncate font-display text-base font-semibold sm:text-lg">

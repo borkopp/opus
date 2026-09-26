@@ -40,6 +40,7 @@ export interface BeautyActivationState {
   media: Doc<"org_media">[];
   requirements: ActivationRequirement[];
   websiteRequirements: ActivationRequirement[];
+  websiteEnhancements: ActivationRequirement[];
   allRequiredComplete: boolean;
   allWebsiteRequirementsComplete: boolean;
   operationalSetupComplete: boolean;
@@ -207,8 +208,9 @@ export async function getBeautyActivationState(
       "/settings?tab=booking",
     ),
   ];
-  const websiteRequirements = [
-    ...requirements,
+  // Only operational booking requirements block launch. Branding is optional.
+  const websiteRequirements = requirements;
+  const websiteEnhancements = [
     requirement(
       "website_logo",
       "Website logo",
@@ -261,6 +263,7 @@ export async function getBeautyActivationState(
     media: media.sort((a, b) => a.sortOrder - b.sortOrder),
     requirements,
     websiteRequirements,
+    websiteEnhancements,
     allRequiredComplete,
     allWebsiteRequirementsComplete,
     onboardingComplete:

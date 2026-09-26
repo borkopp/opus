@@ -51,6 +51,16 @@ Reliability of this path takes priority over optional features:
 10. Authorized staff can reschedule, cancel, complete, or mark the appointment as a no-show.
 11. Customer-facing confirmation, unavailable, empty, loading, and error states resolve clearly.
 
+### Short studio launch
+
+Onboarding collects studio name/category, address, one service with price and
+duration, and confirmed working hours, then shows the real website preview.
+The owner is the initial provider and valid booking defaults are created
+automatically. Logo, cover photo, tagline, contact phone, and theme selection
+are optional; they must not block publication or suspend an otherwise bookable
+website. Branding and more services/team members can be added after launch.
+The Pro signup path still continues from operational setup to subscription review.
+
 ## Priorities
 
 ### P0 — required now

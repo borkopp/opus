@@ -39,6 +39,7 @@ export function CookieConsent() {
     serverSnapshot,
   );
   const [open, setOpen] = useState(false);
+  const [isConfiguring, setIsConfiguring] = useState(false);
   const [draft, setDraft] = useState<Consent>(DENIED_CONSENT);
   const { language } = useDashboardI18n();
   const copy = consentCopy[language];
@@ -46,6 +47,7 @@ export function CookieConsent() {
   useEffect(() => {
     const show = () => {
       setDraft(getConsent());
+      setIsConfiguring(true);
       setOpen(true);
     };
     window.addEventListener(PREFERENCES_EVENT, show);
@@ -67,8 +69,17 @@ export function CookieConsent() {
   const save = (choice: Consent) => {
     saveConsent(choice);
     setDraft(choice);
+    setIsConfiguring(false);
     setOpen(false);
   };
+  const handleBack = () => {
+    if (snapshot !== null) {
+      setOpen(false);
+    } else {
+      setIsConfiguring(false);
+    }
+  };
+
   if (snapshot !== null && !open) {
     // Keep the shortcut off previews, auth, and onboarding; the dashboard menu provides it.
     if (
@@ -86,6 +97,7 @@ export function CookieConsent() {
           variant="outline"
           onClick={() => {
             setDraft(getConsent());
+            setIsConfiguring(true);
             setOpen(true);
           }}
         >
@@ -97,51 +109,71 @@ export function CookieConsent() {
 
   return (
     <aside
-      aria-label={copy.title}
-      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-xl"
+      aria-label={isConfiguring ? copy.preferences : copy.title}
+      className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl"
     >
       <Card className="max-h-[80dvh] overflow-y-auto shadow-xl">
-        <CardHeader>
-          <CardTitle>{copy.title}</CardTitle>
-          <CardDescription>{copy.description}</CardDescription>
+        <CardHeader className="px-4 pb-3 sm:px-6">
+          <CardTitle>{isConfiguring ? copy.preferences : copy.title}</CardTitle>
+          <CardDescription>
+            {isConfiguring ? copy.description : copy.summary}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <FieldGroup className="gap-4">
-            {(["analytics", "marketing"] as const).map((category) => (
-              <Field key={category} orientation="horizontal">
-                <FieldLabel htmlFor={`cookie-${category}`}>
-                  {copy[category]}
-                </FieldLabel>
-                <Switch
-                  id={`cookie-${category}`}
-                  checked={draft[category]}
-                  onCheckedChange={(checked) =>
-                    setDraft({ ...draft, [category]: checked })
-                  }
-                />
-              </Field>
-            ))}
-          </FieldGroup>
-          <a
-            className="mt-4 inline-block text-sm underline underline-offset-4"
-            href="https://opus.mk/privacy#cookies"
-            target="_blank"
-            rel="noreferrer"
-          >
-            {copy.privacy}
-          </a>
+        <CardContent className="px-4 pb-3 sm:px-6">
+          {isConfiguring && (
+            <FieldGroup className="mb-4 gap-4">
+              {(["analytics", "marketing"] as const).map((category) => (
+                <Field key={category} orientation="horizontal">
+                  <FieldLabel htmlFor={`cookie-${category}`}>
+                    {copy[category]}
+                  </FieldLabel>
+                  <Switch
+                    id={`cookie-${category}`}
+                    checked={draft[category]}
+                    onCheckedChange={(checked) =>
+                      setDraft({ ...draft, [category]: checked })
+                    }
+                  />
+                </Field>
+              ))}
+            </FieldGroup>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <a
+              className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
+              href="https://opus.mk/privacy#cookies"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {copy.privacy}
+            </a>
+            <Button
+              variant="ghost"
+              className="ml-auto min-h-11 px-2"
+              onClick={
+                isConfiguring ? handleBack : () => setIsConfiguring(true)
+              }
+            >
+              {isConfiguring ? copy.back : copy.preferences}
+            </Button>
+          </div>
         </CardContent>
-        <CardFooter className="flex-wrap gap-2">
-          <Button variant="outline" onClick={() => save(DENIED_CONSENT)}>
+        <CardFooter className="flex flex-wrap justify-end gap-2 px-4 pb-4 sm:px-6">
+          <Button
+            variant="outline"
+            className="min-h-11 px-3"
+            onClick={() => save(DENIED_CONSENT)}
+          >
             {copy.reject}
           </Button>
           <Button
-            variant="outline"
-            onClick={() => save({ analytics: true, marketing: true })}
+            className="min-h-11 px-3"
+            onClick={() =>
+              save(isConfiguring ? draft : { analytics: true, marketing: true })
+            }
           >
-            {copy.accept}
+            {isConfiguring ? copy.save : copy.accept}
           </Button>
-          <Button onClick={() => save(draft)}>{copy.save}</Button>
         </CardFooter>
       </Card>
     </aside>

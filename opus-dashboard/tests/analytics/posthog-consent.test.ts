@@ -82,6 +82,19 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+test("the embedded website preview does not start a second replay or pageview", async () => {
+  state.allowed = true;
+  vi.stubGlobal("window", {
+    location: new URL("https://studio.opus.mk/onboarding/preview"),
+  });
+  const { syncPostHogConsent, canCaptureAnalytics } =
+    await import("../../lib/analytics-consent");
+  syncPostHogConsent();
+  expect(canCaptureAnalytics()).toBe(false);
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(sdk.capture).not.toHaveBeenCalled();
+});
+
 test("does not initialise PostHog until analytics consent and opts out on withdrawal", async () => {
   vi.stubEnv("NODE_ENV", "production");
   const { syncPostHogConsent } = await import("../../lib/analytics-consent");

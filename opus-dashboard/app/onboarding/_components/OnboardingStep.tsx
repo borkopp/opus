@@ -95,7 +95,7 @@ export function WizardActions({
         data-replay-public
         type="submit"
         size="lg"
-        className="h-12 min-w-0 px-5 shadow-none sm:min-w-36"
+        className="min-h-12 h-auto min-w-0 whitespace-normal py-3 px-5 shadow-none sm:min-w-36"
         disabled={disabled || isSubmitting}
       >
         {isSubmitting ? <Spinner /> : null}

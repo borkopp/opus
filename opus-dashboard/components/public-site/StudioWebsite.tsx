@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { initials } from "@/lib/dashboard-overview";
 import { formatPrice } from "@/lib/format-price";
 import { cn } from "@/lib/utils";
 import { StudioLocationMap } from "./StudioLocationMap";
@@ -87,10 +88,11 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
               <h1 className="text-balance font-display text-4xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
                 {site.name}
               </h1>
-              <p className="max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
-                {site.tagline ||
-                  "Изберете услуга и слободен термин што ви одговара."}
-              </p>
+              {site.tagline && (
+                <p className="max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg sm:leading-8">
+                  {site.tagline}
+                </p>
+              )}
             </div>
           </div>
 
@@ -154,6 +156,16 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
           </div>
         </div>
 
+        {!cover && (
+          <div
+            aria-hidden="true"
+            className="flex h-32 items-center justify-center rounded-2xl border border-primary/10 bg-linear-to-br from-primary/15 via-secondary to-background sm:h-44 sm:rounded-3xl"
+          >
+            <span className="font-display text-5xl font-semibold tracking-tight text-primary/25">
+              {initials(site.name)}
+            </span>
+          </div>
+        )}
         {cover && (
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-m sm:aspect-[21/9] sm:rounded-3xl lg:aspect-[2.4/1]">
             <Image

@@ -1,4 +1,7 @@
-import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
+import {
+  ensureScheduleBaseline,
+  recordScheduleVersion,
+} from "./analyst/schedules";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
@@ -82,7 +85,8 @@ export const getState = query({
 export const getPreview = query({
   args: {},
   handler: async (ctx) => {
-    const { org } = await requireActiveOrg(ctx);
+    const { org } = await requireRole(ctx, undefined, "owner");
+    if (org.industry !== "beauty_wellness") return null;
     return await buildPublicProfile(ctx, org);
   },
 });

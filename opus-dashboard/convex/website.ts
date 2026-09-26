@@ -16,6 +16,10 @@ export const getReadiness = query({
       state.websiteRequirements.map((item) => [item.code, item.complete]),
     );
     const recommended = {
+      logo: Boolean(state.org.logoUrl?.trim()),
+      cover: state.media.some((item) => item.type === "cover"),
+      tagline: Boolean(state.org.tagline?.trim()),
+      phone: Boolean(state.org.phone?.trim()),
       bio: Boolean(state.org.bio?.trim()),
       gallery: state.media.some((item) => item.type === "gallery"),
     };
@@ -25,6 +29,7 @@ export const getReadiness = query({
       websiteStatus: getWebsiteStatus(state.org),
       websitePublishedAt: state.org.websitePublishedAt,
       requirements: state.websiteRequirements,
+      enhancements: state.websiteEnhancements,
       blocking,
       recommended,
       allBlockingMet: state.allWebsiteRequirementsComplete,

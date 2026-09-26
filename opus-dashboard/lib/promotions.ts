@@ -10,7 +10,7 @@ export type PromotionOpening = FunctionReturnType<
 export type PromotionTab = "opening" | "kit" | "replies";
 
 export function promotionTab(value: string | null): PromotionTab {
-  return value === "kit" || value === "replies" ? value : "opening";
+  return value === "opening" || value === "replies" ? value : "kit";
 }
 
 export function openingBookingUrl(

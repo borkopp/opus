@@ -19,16 +19,21 @@ test.describe("beauty launch journey", () => {
     await expect(page).toHaveURL(/\/onboarding(?:\?|$)/);
   });
 
-  test("gates hospitality and resumes the beauty journey from the server", async ({
+  test("resumes the shortened beauty journey without branding steps", async ({
     page,
   }) => {
     await page.goto("/onboarding");
-    await page.getByRole("button", { name: /hospitality/i }).click();
-    await expect(page.getByText(/coming soon/i)).toBeVisible();
-
+    const progress = page.getByRole("progressbar", { name: "Studio setup" });
+    await expect(progress).toHaveAttribute("aria-valuemax", "5");
+    const currentStep = await progress.getAttribute("aria-valuenow");
     await page.reload();
-    await page.getByRole("button", { name: /beauty/i }).click();
-    await expect(page.getByText(/tell us about/i)).toBeVisible();
+    await expect(progress).toHaveAttribute("aria-valuenow", currentStep!);
+    await expect(
+      page.getByRole("button", { name: /hospitality/i }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("heading", { name: /choose your dashboard theme/i }),
+    ).toHaveCount(0);
   });
 
   test("rejects a client-supplied tenant mismatch", async ({ page }) => {

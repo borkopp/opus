@@ -1,5 +1,34 @@
 import { expect, test } from "vitest";
-import { onboardingStep, validateFirstService } from "../../lib/onboarding";
+import {
+  ONBOARDING_STEPS,
+  PRO_ONBOARDING_STEPS,
+  onboardingStep,
+  validateFirstService,
+} from "../../lib/onboarding";
+
+test("owner name is the third step in both onboarding flows", () => {
+  expect(ONBOARDING_STEPS).toEqual([
+    "business",
+    "category",
+    "owner",
+    "location",
+    "service",
+    "hours",
+    "review",
+  ]);
+  expect(PRO_ONBOARDING_STEPS).toEqual([
+    "business",
+    "category",
+    "owner",
+    "location",
+    "service",
+    "hours",
+  ]);
+  expect(onboardingStep("business-name")).toBe("business");
+  expect(onboardingStep("business-category")).toBe("category");
+  expect(onboardingStep("category")).toBe("category");
+  expect(onboardingStep("owner")).toBe("owner");
+});
 
 test.each(["service-name", "service-price", "service-duration"])(
   "old %s links reach the combined service form",

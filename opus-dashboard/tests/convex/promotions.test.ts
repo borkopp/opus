@@ -15,6 +15,7 @@ async function studio(t: Backend, name = "Luna") {
     name,
     category: "nail_salon",
   });
+  await owner.mutation(api.activation.saveOwnerName, { name: `${name} Owner` });
   const serviceId = await owner.mutation(api.activation.saveFirstService, {
     name: "Gel nails",
     durationMins: 45,

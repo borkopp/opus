@@ -92,6 +92,9 @@ async function createOwner(t: TestBackend) {
 
 async function completePublishedWebsite(t: TestBackend) {
   const { owner, orgId } = await createOwner(t);
+  await owner.mutation(api.activation.saveOwnerName, {
+    name: ownerIdentity.name,
+  });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",
     city: "Skopje",

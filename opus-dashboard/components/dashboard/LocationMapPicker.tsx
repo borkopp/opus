@@ -196,11 +196,11 @@ function LocationMapPickerContent({
           </div>
         )}
       </div>
-      <p className="px-1 text-xs text-muted-foreground">
+      {/* <p className="px-1 text-xs text-muted-foreground">
         {confirmedCoords
           ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — ${t("drag the pin or click the map to adjust", "повлечете го пинот или кликнете на мапата за прилагодување")}`
           : t("No coordinates confirmed", "Нема потврдени координати")}
-      </p>
+      </p> */}
     </div>
   );
 }

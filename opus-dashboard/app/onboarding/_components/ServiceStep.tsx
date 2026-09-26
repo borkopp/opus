@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Camera } from "lucide-react";
+import { ServicePhotoImport } from "./ServicePhotoImport";
 import {
   Field,
   FieldGroup,
@@ -25,17 +27,20 @@ export function ServiceStep({
   slotDurationMins,
   onBack,
   onSaved,
+  onImported,
 }: {
   value: ServiceDraft;
   category: BeautyCategory;
   slotDurationMins: number;
   onBack: () => void;
   onSaved: (service: ServiceDraft) => Promise<void>;
+  onImported: (service: ServiceDraft) => void;
 }) {
   const { t, language } = useDashboardI18n();
   const [draft, setDraft] = useState(value);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [photoImport, setPhotoImport] = useState(false);
   const suggestion =
     beautyCategories.find(([key]) => key === category) ?? beautyCategories[0];
   async function submit(event: React.FormEvent) {
@@ -68,6 +73,14 @@ export function ServiceStep({
       setSaving(false);
     }
   }
+  if (photoImport)
+    return (
+      <ServicePhotoImport
+        slotDurationMins={slotDurationMins}
+        onBack={() => setPhotoImport(false)}
+        onImported={onImported}
+      />
+    );
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
@@ -80,6 +93,17 @@ export function ServiceStep({
         )}
       >
         <FieldGroup>
+          <Button
+            data-replay-public
+            type="button"
+            variant="outline"
+            className="min-h-14 h-auto whitespace-normal"
+            disabled={saving}
+            onClick={() => setPhotoImport(true)}
+          >
+            <Camera data-icon="inline-start" />
+            {t("Add services from a photo", "Додај услуги од фотографија")}
+          </Button>
           <Field>
             <FieldLabel data-replay-public htmlFor="service-name">
               {t("Service name", "Име на услугата")}
@@ -88,25 +112,15 @@ export function ServiceStep({
               id="service-name"
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder={t(
+                `e.g. ${suggestion[3]}`,
+                `На пр. ${suggestion[4]}`,
+              )}
               required
               minLength={2}
               disabled={saving}
               className="min-h-12"
             />
-            {!draft.name && (
-              <Button
-                data-replay-public
-                type="button"
-                variant="outline"
-                className="min-h-11 h-auto whitespace-normal"
-                disabled={saving}
-                onClick={() =>
-                  setDraft({ ...draft, name: t(suggestion[3], suggestion[4]) })
-                }
-              >
-                {t(`Use “${suggestion[3]}”`, `Користи „${suggestion[4]}“`)}
-              </Button>
-            )}
           </Field>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <Field>

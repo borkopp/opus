@@ -94,7 +94,7 @@ export const getPreview = query({
 export const startBeautyBusiness = mutation({
   args: {
     name: v.string(),
-    category: beautyCategory,
+    category: v.optional(beautyCategory),
   },
   returns: v.object({ orgId: v.id("orgs"), created: v.boolean() }),
   handler: async (ctx, args) => {
@@ -119,10 +119,11 @@ export const startBeautyBusiness = mutation({
           ? org.slug
           : await allocateUniqueTenantSlug(ctx, name, org._id);
       const now = Date.now();
+      const category = args.category ?? org.beautyCategory;
       await ctx.db.patch(org._id, {
         name,
         slug,
-        beautyCategory: args.category,
+        beautyCategory: category,
         updatedAt: now,
       });
       await ctx.db.insert("audit_log", {
@@ -137,7 +138,7 @@ export const startBeautyBusiness = mutation({
           slug: org.slug,
           beautyCategory: org.beautyCategory,
         },
-        after: { name, slug, beautyCategory: args.category },
+        after: { name, slug, beautyCategory: category },
         createdAt: now,
       });
       await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
@@ -151,6 +152,7 @@ export const startBeautyBusiness = mutation({
     const orgId = await ctx.db.insert("orgs", {
       name,
       slug,
+      ownerNameConfirmed: false,
       industry: "beauty_wellness",
       beautyCategory: args.category,
       plan: "free",
@@ -223,6 +225,46 @@ export const startBeautyBusiness = mutation({
     });
 
     return { orgId, created: true };
+  },
+});
+
+export const saveOwnerName = mutation({
+  args: { name: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { orgId, org, user, staffMember } = await requireRole(
+      ctx,
+      undefined,
+      "owner",
+    );
+    const name = args.name.trim();
+    if (!name || name.length > 100) {
+      throw new ConvexError("Enter your name using 1 to 100 characters.");
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(user._id, { name, updatedAt: now });
+    await ctx.db.patch(staffMember._id, { displayName: name, updatedAt: now });
+    await ctx.db.patch(orgId, { ownerNameConfirmed: true, updatedAt: now });
+    await ctx.db.insert("audit_log", {
+      orgId,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "activation.owner_name_saved",
+      resourceType: "staff_members",
+      resourceId: staffMember._id,
+      before: {
+        name: user.name,
+        displayName: staffMember.displayName,
+        ownerNameConfirmed: org.ownerNameConfirmed,
+      },
+      after: { name, displayName: name, ownerNameConfirmed: true },
+      createdAt: now,
+    });
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
+      orgId,
+    });
+    return null;
   },
 });
 

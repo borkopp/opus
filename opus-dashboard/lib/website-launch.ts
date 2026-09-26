@@ -3,7 +3,7 @@ import type { ActivationRequirement } from "@/convex/lib/activation";
 const actions: Record<string, [string, string]> = {
   business_identity: ["Add studio details", "Внесете податоци за студиото"],
   location: ["Confirm your address", "Потврдете ја адресата"],
-  provider: ["Activate your provider", "Активирајте член на тимот"],
+  provider: ["Enter your name", "Внесете го вашето име"],
   service: ["Add your first service", "Додајте ја првата услуга"],
   availability: ["Set your working hours", "Поставете работно време"],
   booking_settings: [

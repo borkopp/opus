@@ -1,10 +1,12 @@
 "use client";
 import { useState } from "react";
+import { Check, Minus } from "lucide-react";
 import {
   Field,
   FieldError,
   FieldLabel,
   FieldGroup,
+  FieldDescription,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -130,7 +132,7 @@ export function HoursStep({
             </FieldLabel>
             <ToggleGroup
               type="multiple"
-              variant="outline"
+              variant="selection"
               spacing={2}
               className="grid w-full grid-cols-4 gap-2 sm:grid-cols-7"
               disabled={saving}
@@ -154,12 +156,30 @@ export function HoursStep({
                   key={day}
                   value={String(i)}
                   aria-label={day}
-                  className="min-h-12 w-full rounded-lg"
+                  className="h-auto min-h-18 w-full flex-col gap-1.5 rounded-lg px-2 py-3"
                 >
-                  {day.slice(0, 3)}
+                  <span>{day.slice(0, 3)}</span>
+                  {draft.find((item) => item.dayOfWeek === i)?.isClosed ? (
+                    <Minus aria-hidden="true" />
+                  ) : (
+                    <Check aria-hidden="true" />
+                  )}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
+            <FieldDescription
+              className="flex flex-wrap items-center gap-x-5 gap-y-2"
+              data-replay-public
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Check className="size-4 text-primary" aria-hidden="true" />
+                {t("Working day", "Работен ден")}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Minus className="size-4" aria-hidden="true" />
+                {t("Day off", "Неработен ден")}
+              </span>
+            </FieldDescription>
           </Field>
           {!custom && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

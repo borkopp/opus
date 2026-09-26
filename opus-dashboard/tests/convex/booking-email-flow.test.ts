@@ -34,6 +34,7 @@ async function setupPublishedStudio(t: TestBackend) {
     name: "Atelier Email",
     category: "beauty_salon",
   });
+  await owner.mutation(api.activation.saveOwnerName, { name: "Ada Owner" });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",
     city: "Skopje",

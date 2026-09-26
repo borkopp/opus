@@ -6,6 +6,8 @@ type ReadCtx = Pick<QueryCtx, "db">;
 
 export type ActivationStep =
   | "business"
+  | "category"
+  | "owner"
   | "location"
   | "service"
   | "hours"
@@ -34,6 +36,7 @@ export interface ActivationRequirement {
 export interface BeautyActivationState {
   org: Doc<"orgs">;
   owner: Doc<"staff_members"> | null;
+  ownerNameComplete: boolean;
   firstService: Doc<"services"> | null;
   availabilityRules: Doc<"availability_rules">[];
   settings: Doc<"org_settings"> | null;
@@ -121,17 +124,18 @@ export async function getBeautyActivationState(
     ? availabilityRules.filter((rule) => rule.staffId === owner._id)
     : [];
 
-  const identityComplete =
+  const nameComplete =
     org.industry === "beauty_wellness" &&
     hasText(org.name) &&
-    Boolean(org.beautyCategory) &&
     hasText(org.slug);
+  const identityComplete = nameComplete && Boolean(org.beautyCategory);
   const locationComplete =
     hasText(org.address) &&
     hasText(org.city) &&
     hasText(org.country) &&
     Boolean(org.coordinates);
-  const providerComplete = Boolean(owner);
+  const ownerNameComplete = Boolean(owner && org.ownerNameConfirmed !== false);
+  const providerComplete = ownerNameComplete;
   const serviceComplete = Boolean(firstService);
   const availabilityComplete = Boolean(
     firstService &&
@@ -170,7 +174,14 @@ export async function getBeautyActivationState(
       "Business identity",
       "Add your business name and beauty category.",
       identityComplete,
-      "/onboarding?step=business",
+      nameComplete ? "/onboarding?step=category" : "/onboarding?step=business",
+    ),
+    requirement(
+      "provider",
+      "Owner name",
+      "Add the name customers will see when booking with you.",
+      providerComplete,
+      "/onboarding?step=owner",
     ),
     requirement(
       "location",
@@ -178,13 +189,6 @@ export async function getBeautyActivationState(
       "Confirm a complete address and map pin.",
       locationComplete,
       "/onboarding?step=location",
-    ),
-    requirement(
-      "provider",
-      "Active provider",
-      "Your owner profile is the first service provider.",
-      providerComplete,
-      "/beauty/staff",
     ),
     requirement(
       "service",
@@ -242,7 +246,8 @@ export async function getBeautyActivationState(
   ];
 
   let nextStep: ActivationStep = "review";
-  if (!identityComplete) nextStep = "business";
+  if (!identityComplete) nextStep = nameComplete ? "category" : "business";
+  else if (!ownerNameComplete) nextStep = "owner";
   else if (!locationComplete) nextStep = "location";
   else if (!serviceComplete) nextStep = "service";
   else if (!availabilityComplete || !bookingSettingsComplete)
@@ -257,6 +262,7 @@ export async function getBeautyActivationState(
   return {
     org,
     owner,
+    ownerNameComplete,
     firstService,
     availabilityRules: ownerAvailability,
     settings,

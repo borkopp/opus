@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Check, Copy, ExternalLink, Globe2, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Appear } from "@/components/ui/appear";
@@ -14,16 +13,9 @@ import {
 } from "@/components/ui/tooltip";
 import { appearStep } from "@/lib/appear";
 
-export function LiveWebsiteCard({
-  websiteUrl,
-  showEnhancements = false,
-}: {
-  websiteUrl: string;
-  showEnhancements?: boolean;
-}) {
+export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
   const { t } = useDashboardI18n();
   const [copied, setCopied] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const address = new URL(websiteUrl).host;
   useEffect(() => {
     if (!copied) return;
@@ -155,49 +147,6 @@ export function LiveWebsiteCard({
           )}
         </Button>
       </div>
-      {showEnhancements && !dismissed && (
-        <div className="flex items-start gap-2 border-t border-border pt-3">
-          <details className="min-w-0 flex-1 text-sm text-muted-foreground">
-            <summary data-replay-public className="cursor-pointer py-3">
-              {t(
-                "Improve your website (optional)",
-                "Подобрете ја страницата (незадолжително)",
-              )}
-            </summary>
-            <div className="flex flex-col gap-1">
-              <Link
-                data-replay-public
-                className="min-h-11 py-3 hover:text-foreground"
-                href="/settings?tab=branding"
-              >
-                {t(
-                  "Add photos, a logo, or contact details",
-                  "Додајте фотографии, лого или контакт",
-                )}
-              </Link>
-              <Link
-                data-replay-public
-                className="min-h-11 py-3 hover:text-foreground"
-                href="/beauty/services"
-              >
-                {t(
-                  "Add more services or team members",
-                  "Додајте услуги или членови на тимот",
-                )}
-              </Link>
-            </div>
-          </details>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 shrink-0"
-            onClick={() => setDismissed(true)}
-            aria-label={t("Dismiss suggestions", "Сокриј предлози")}
-          >
-            <X />
-          </Button>
-        </div>
-      )}
     </Appear>
   );
 }

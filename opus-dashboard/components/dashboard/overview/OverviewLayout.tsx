@@ -83,7 +83,7 @@ export function OverviewLayout({
                 : `${greeting}${firstName ? `, ${firstName}` : ""}`}
               <span data-replay-public>.</span>
             </h1>
-            <p data-replay-public data-appear="item" style={appearStep(3)}>
+            {/* <p data-replay-public data-appear="item" style={appearStep(3)}>
               {t("You have", "Имате")}{" "}
               <strong>
                 {data.todayCount} {t("appointments", "термини")}
@@ -92,7 +92,7 @@ export function OverviewLayout({
                 "today. Let’s make it a good day.",
                 "денес. Ви посакуваме успешен ден.",
               )}
-            </p>
+            </p> */}
           </div>
           <button
             data-replay-public

@@ -9,7 +9,7 @@ import s from "@/components/dashboard/clarity.module.css";
 import React from "react";
 import { ACTIVE_DASHBOARD_PATH } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
-import { MobileSetupBanner } from "@/components/dashboard/MobileSetupBanner";
+import { WebsiteSetupBanner } from "@/components/dashboard/WebsiteSetupBanner";
 import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 
@@ -111,7 +111,7 @@ export default function DashboardLayout({
                 tabIndex={-1}
                 className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
               >
-                <MobileSetupBanner orgId={profile.orgId} />
+                <WebsiteSetupBanner key={profile.orgId} orgId={profile.orgId} />
                 {children}
               </main>
             </div>

@@ -118,6 +118,7 @@ async function completeOperationalSetup(t: TestBackend) {
     name: "Atelier One",
     category: "hair_salon",
   });
+  await owner.mutation(api.activation.saveOwnerName, { name: "Ada Owner" });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",
     city: "Skopje",
@@ -413,6 +414,181 @@ describe("beauty activation engine", () => {
     expect(orgs.find((org) => org._id === secondOrgId)?.slug).toBe(
       "studio-north-2",
     );
+  });
+
+  test("saves the name before category selection and resumes at the category step", async () => {
+    const owner = await createOwner(t);
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "  Studio Luna  ",
+    });
+    const resumed = t.withIdentity(identity("owner-1"));
+    const named = await resumed.query(api.activation.getState);
+    expect(named?.org.name).toBe("Studio Luna");
+    expect(named?.org.beautyCategory).toBeUndefined();
+    expect(named?.nextStep).toBe("category");
+    expect(named?.operationalSetupComplete).toBe(false);
+    expect(
+      named?.requirements.find((item) => item.code === "business_identity")
+        ?.complete,
+    ).toBe(false);
+
+    const categorized = await resumed.mutation(
+      api.activation.startBeautyBusiness,
+      {
+        name: "Studio Luna",
+        category: "nail_salon",
+      },
+    );
+    expect(categorized).toEqual({ orgId, created: false });
+    expect((await resumed.query(api.activation.getState))?.nextStep).toBe(
+      "owner",
+    );
+
+    await resumed.mutation(api.activation.startBeautyBusiness, {
+      name: "Luna Nails",
+    });
+    const renamed = await resumed.query(api.activation.getState);
+    expect(renamed?.org.name).toBe("Luna Nails");
+    expect(renamed?.org.beautyCategory).toBe("nail_salon");
+    const staff = await t.run((ctx) =>
+      ctx.db
+        .query("staff_members")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(staff).toHaveLength(1);
+  });
+
+  test("saves the entered owner name to the account and provider and resumes after step three", async () => {
+    const owner = t.withIdentity({
+      subject: "owner-name",
+      email: "salon.contact@example.com",
+      name: "salon contact",
+    });
+    const userId = await owner.mutation(api.users.ensureUser);
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "Studio Luna",
+      category: "nail_salon",
+    });
+    expect(await owner.query(api.activation.getState)).toMatchObject({
+      nextStep: "owner",
+      ownerNameComplete: false,
+      operationalSetupComplete: false,
+    });
+
+    await owner.mutation(api.activation.saveOwnerName, {
+      name: "  Ана Петровска  ",
+    });
+    // Signing in again still carries the old auth name, but must not undo the
+    // name the owner explicitly entered during setup.
+    await owner.mutation(api.users.ensureUser);
+    const resumed = await owner.query(api.activation.getState);
+    expect(resumed).toMatchObject({
+      nextStep: "location",
+      ownerNameComplete: true,
+      org: { ownerNameConfirmed: true },
+      owner: { userId, displayName: "Ана Петровска" },
+    });
+    expect(await t.run((ctx) => ctx.db.get(userId))).toMatchObject({
+      name: "Ана Петровска",
+    });
+    const audits = await t.run((ctx) =>
+      ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(
+      audits.find((row) => row.action === "activation.owner_name_saved"),
+    ).toMatchObject({
+      actorId: resumed?.owner?._id,
+      before: {
+        name: "salon contact",
+        displayName: "salon contact",
+        ownerNameConfirmed: false,
+      },
+      after: {
+        name: "Ана Петровска",
+        displayName: "Ана Петровска",
+        ownerNameConfirmed: true,
+      },
+    });
+
+    await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "Luna Studio",
+    });
+    expect(
+      (await owner.query(api.activation.getState))?.ownerNameComplete,
+    ).toBe(true);
+  });
+
+  test("validates owner names and restricts name changes to the current studio owner", async () => {
+    await expect(
+      t.mutation(api.activation.saveOwnerName, { name: "Owner" }),
+    ).rejects.toThrow("Unauthenticated");
+    const owner = await createOwner(t);
+    const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "Studio Luna",
+      category: "nail_salon",
+    });
+    for (const name of ["", "   ", "a".repeat(101)]) {
+      await expect(
+        owner.mutation(api.activation.saveOwnerName, { name }),
+      ).rejects.toThrow("Enter your name");
+    }
+    const secondOwner = await createOwner(t, "owner-2");
+    await secondOwner.mutation(api.activation.startBeautyBusiness, {
+      name: "Second Studio",
+      category: "hair_salon",
+    });
+    await secondOwner.mutation(api.activation.saveOwnerName, {
+      name: "Second Studio Owner",
+    });
+    expect(
+      (await owner.query(api.activation.getState))?.owner?.displayName,
+    ).toBe("Ada Owner");
+
+    for (const role of ["manager", "staff"] as const) {
+      const { authenticated } = await createAuthenticatedStaff(
+        t,
+        orgId,
+        `name-${role}`,
+        role,
+      );
+      await expect(
+        authenticated.mutation(api.activation.saveOwnerName, {
+          name: "Replacement",
+        }),
+      ).rejects.toThrow("Unauthorised");
+    }
+    expect(
+      (await owner.query(api.activation.getState))?.ownerNameComplete,
+    ).toBe(false);
+  });
+
+  test("requires new studios to confirm an owner name before publication and preserves legacy readiness", async () => {
+    const { owner, orgId } = await completeOperationalSetup(t);
+    await t.run((ctx) => ctx.db.patch(orgId, { ownerNameConfirmed: false }));
+    expect(await owner.query(api.activation.getState)).toMatchObject({
+      nextStep: "owner",
+      operationalSetupComplete: false,
+    });
+    await expect(
+      owner.mutation(api.website.publish, { orgId }),
+    ).rejects.toThrow("Cannot publish website");
+
+    // Studios created before this field existed do not lose readiness.
+    await t.run((ctx) =>
+      ctx.db.patch(orgId, { ownerNameConfirmed: undefined }),
+    );
+    expect(await owner.query(api.activation.getState)).toMatchObject({
+      nextStep: "review",
+      operationalSetupComplete: true,
+    });
+    await owner.mutation(api.website.publish, { orgId });
+    expect(
+      (await owner.query(api.activation.getState))?.onboardingComplete,
+    ).toBe(true);
   });
 
   test("generates tenant-safe slugs for reserved names and Macedonian text", async () => {

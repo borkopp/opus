@@ -30,6 +30,8 @@ import {
   UPGRADE_LOGIN_PATH,
 } from "@/lib/upgrade";
 import { BusinessStep } from "./BusinessStep";
+import { CategoryStep } from "./CategoryStep";
+import { OwnerStep } from "./OwnerStep";
 import { LocationStep } from "./LocationStep";
 import { ServiceStep } from "./ServiceStep";
 import { HoursStep, DAYS, type OpeningHour } from "./HoursStep";
@@ -38,7 +40,8 @@ import { ReviewStep } from "./ReviewStep";
 function createDraft(state: ActivationState | null | undefined) {
   return {
     name: state?.org.name ?? "",
-    category: state?.org.beautyCategory ?? ("beauty_salon" as BeautyCategory),
+    category: state?.org.beautyCategory ?? null,
+    ownerName: state?.ownerNameComplete ? (state.owner?.displayName ?? "") : "",
     location:
       state?.org.address && state.org.city && state.org.coordinates
         ? ({
@@ -103,6 +106,7 @@ function OnboardingFlow({
   );
   const [manualStep, setManualStep] = useState(requestedStep);
   const startBusiness = useMutation(api.activation.startBeautyBusiness);
+  const saveOwnerName = useMutation(api.activation.saveOwnerName);
   const saveLocation = useMutation(api.activation.saveLocation);
   const saveFirstService = useMutation(api.activation.saveFirstService);
   const saveHours = useMutation(api.activation.saveHours);
@@ -140,7 +144,15 @@ function OnboardingFlow({
   const current = draft ?? createDraft(state);
   const steps = upgrading ? PRO_ONBOARDING_STEPS : ONBOARDING_STEPS;
   const derived = state?.nextStep ?? "business";
-  const selected = !profile.orgId ? "business" : (manualStep ?? derived);
+  const selected = !profile.orgId
+    ? "business"
+    : !state?.org.beautyCategory && manualStep !== "business"
+      ? "category"
+      : !state?.ownerNameComplete &&
+          manualStep !== "business" &&
+          manualStep !== "category"
+        ? "owner"
+        : (manualStep ?? derived);
   const step =
     upgrading && selected === "review"
       ? derived === "review"
@@ -154,15 +166,20 @@ function OnboardingFlow({
   const update = (patch: Partial<ReturnType<typeof createDraft>>) =>
     setDraft({ ...current, ...patch });
 
-  async function saveBusiness(name: string, category: BeautyCategory) {
-    const result = await startBusiness({ name, category });
+  async function saveName(name: string) {
+    const result = await startBusiness({ name });
     if (result.created)
       trackStudioRegistration(
         process.env.NEXT_PUBLIC_META_PIXEL_ID,
         result.orgId,
       );
+    update({ name });
+    next();
+  }
+  async function saveCategory(category: BeautyCategory) {
+    await startBusiness({ name: current.name, category });
     posthog.capture("onboarding_business_configured", { category });
-    update({ name, category });
+    update({ category });
     next();
   }
   async function confirmLocation(location: BusinessLocation) {
@@ -179,6 +196,11 @@ function OnboardingFlow({
       has_neighborhood: Boolean(location.neighborhood),
     });
     update({ location });
+    next();
+  }
+  async function confirmOwnerName(ownerName: string) {
+    await saveOwnerName({ name: ownerName });
+    update({ ownerName });
     next();
   }
   async function confirmService(service: ServiceDraft) {
@@ -285,10 +307,20 @@ function OnboardingFlow({
           className="flex w-full min-w-0 items-start justify-center"
         >
           {step === "business" && (
-            <BusinessStep
-              name={current.name}
+            <BusinessStep name={current.name} onSaved={saveName} />
+          )}
+          {step === "category" && (
+            <CategoryStep
               category={current.category}
-              onSaved={saveBusiness}
+              onBack={back}
+              onSaved={saveCategory}
+            />
+          )}
+          {step === "owner" && (
+            <OwnerStep
+              name={current.ownerName}
+              onBack={back}
+              onSaved={confirmOwnerName}
             />
           )}
           {step === "location" && state && (
@@ -303,10 +335,14 @@ function OnboardingFlow({
           {step === "service" && (
             <ServiceStep
               value={current.service}
-              category={current.category}
+              category={current.category ?? "beauty_salon"}
               slotDurationMins={state?.settings?.slotDurationMins ?? 15}
               onBack={back}
               onSaved={confirmService}
+              onImported={(service) => {
+                update({ service });
+                next();
+              }}
             />
           )}
           {step === "hours" && (

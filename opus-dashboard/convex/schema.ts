@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { polarSubscription } from "./lib/polar";
 import { v } from "convex/values";
 import { dashboardThemeValidator } from "./lib/dashboardTheme";
+import { serviceImportRow } from "./lib/serviceImport";
 import {
   answerValidator,
   depthValidator,
@@ -173,6 +174,9 @@ export default defineSchema({
     // ── Core identity ──
     name: v.string(), // "King Cuts Barbershop"
     slug: v.string(), // "king-cuts" — used for subdomain
+    // New studios confirm the owner's name during onboarding. Legacy studios
+    // without this flag keep their existing readiness.
+    ownerNameConfirmed: v.optional(v.boolean()),
     // Legacy storage only. Custom domains are no longer configurable or routed;
     // keep the optional field temporarily so existing documents remain valid.
     customDomain: v.optional(v.string()),
@@ -632,6 +636,22 @@ export default defineSchema({
   // SERVICES
   // The bookable items. Price in minor units (MKD).
   // ─────────────────────────────────────────────────────
+  service_imports: defineTable({
+    orgId: v.id("orgs"),
+    staffId: v.id("staff_members"),
+    status: v.union(
+      v.literal("extracting"),
+      v.literal("ready"),
+      v.literal("failed"),
+      v.literal("imported"),
+    ),
+    rows: v.array(serviceImportRow),
+    serviceIds: v.array(v.id("services")),
+    isDeleted: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org", ["orgId"]),
+
   services: defineTable({
     orgId: v.id("orgs"),
     categoryId: v.optional(v.id("service_categories")),

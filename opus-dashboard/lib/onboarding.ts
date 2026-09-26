@@ -8,12 +8,16 @@ export type ActivationState = NonNullable<
 export type BeautyCategory = (typeof beautyCategories)[number][0];
 export type WizardStep =
   | "business"
+  | "category"
+  | "owner"
   | "location"
   | "service"
   | "hours"
   | "review";
 export const ONBOARDING_STEPS: WizardStep[] = [
   "business",
+  "category",
+  "owner",
   "location",
   "service",
   "hours",
@@ -25,7 +29,9 @@ export const PRO_ONBOARDING_STEPS = ONBOARDING_STEPS.slice(0, -1);
 const STEP_ALIASES: Record<string, WizardStep> = {
   business: "business",
   "business-name": "business",
-  "business-category": "business",
+  "business-category": "category",
+  category: "category",
+  owner: "owner",
   location: "location",
   service: "service",
   "service-name": "service",

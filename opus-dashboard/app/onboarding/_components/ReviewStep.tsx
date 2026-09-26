@@ -90,16 +90,32 @@ export function ReviewStep({
             </Link>
           </Button>
         ) : (
-          <WizardActions
-            canGoBack
-            onBack={onBack}
-            isSubmitting={saving}
-            disabled={!state.allWebsiteRequirementsComplete}
-            label={t(
-              "Publish my booking website",
-              "Објави ја страницата за закажување",
-            )}
-          />
+          <>
+            <WizardActions
+              canGoBack
+              onBack={onBack}
+              isSubmitting={saving}
+              disabled={!state.allWebsiteRequirementsComplete}
+              label={t(
+                "Publish my booking website",
+                "Објави ја страницата за закажување",
+              )}
+            />
+            <div className="mt-2 flex justify-center">
+              <Button
+                asChild
+                variant="outline"
+                className="min-h-12 h-auto w-full whitespace-normal sm:w-auto"
+              >
+                <Link data-replay-public href="/beauty">
+                  {t(
+                    "Proceed to the dashboard",
+                    "Продолжи кон контролната табла",
+                  )}
+                </Link>
+              </Button>
+            </div>
+          </>
         )}
       </StepFrame>
     </form>

@@ -3,33 +3,37 @@
 import { useState } from "react";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
-  FieldError,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { onboardingError } from "@/lib/i18n/onboarding";
 import { StepFrame, WizardActions } from "./OnboardingStep";
 
-export function BusinessStep({
+export function OwnerStep({
   name,
+  onBack,
   onSaved,
 }: {
   name: string;
+  onBack: () => void;
   onSaved: (name: string) => Promise<void>;
 }) {
   const { t, language } = useDashboardI18n();
   const [draftName, setName] = useState(name);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (draftName.trim().length < 2) {
+    const name = draftName.trim();
+    if (!name || name.length > 100) {
       setError(
         t(
-          "Enter at least 2 characters for your studio name.",
-          "Внесете најмалку 2 знаци за името на студиото.",
+          "Enter your name using 1 to 100 characters.",
+          "Внесете го вашето име со 1 до 100 знаци.",
         ),
       );
       return;
@@ -37,48 +41,51 @@ export function BusinessStep({
     setError(null);
     setSaving(true);
     try {
-      await onSaved(draftName.trim());
+      await onSaved(name);
     } catch (caught) {
       setError(onboardingError(caught, language));
     } finally {
       setSaving(false);
     }
   }
+
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
         replayPublicTitle
         replayPublicDescription
-        title={t("What’s your studio called?", "Како се вика вашето студио?")}
+        title={t("What’s your name?", "Како се викате?")}
         description={t(
-          "Enter the name your customers know you by.",
-          "Внесете го името по кое ве познаваат клиентите.",
+          "Customers will see this name when booking an appointment with you.",
+          "Клиентите ќе го гледаат ова име кога закажуваат термин кај вас.",
         )}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel data-replay-public htmlFor="business-name">
-              {t("Studio name", "Име на студиото")}
+          <Field data-invalid={Boolean(error)}>
+            <FieldLabel data-replay-public htmlFor="owner-name">
+              {t("Your name", "Вашето име")}
             </FieldLabel>
             <Input
-              id="business-name"
+              id="owner-name"
+              name="name"
               value={draftName}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t("e.g. Studio Luna", "На пр. Студио Луна")}
-              autoComplete="organization"
+              onChange={(event) => setName(event.target.value)}
+              autoComplete="name"
               required
-              minLength={2}
+              maxLength={100}
               disabled={saving}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "owner-name-error" : undefined}
               className="min-h-12"
             />
+            {error && (
+              <FieldError id="owner-name-error" role="alert">
+                {error}
+              </FieldError>
+            )}
           </Field>
-          {error && <FieldError role="alert">{error}</FieldError>}
         </FieldGroup>
-        <WizardActions
-          canGoBack={false}
-          onBack={() => {}}
-          isSubmitting={saving}
-        />
+        <WizardActions canGoBack onBack={onBack} isSubmitting={saving} />
       </StepFrame>
     </form>
   );

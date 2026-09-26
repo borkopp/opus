@@ -1,4 +1,5 @@
 import type { DashboardLanguage } from "./types";
+import { ConvexError } from "convex/values";
 
 export const beautyCategories = [
   ["barbershop", "Barbershop", "Берберница", "Fade haircut", "Фејд шишање"],
@@ -67,6 +68,29 @@ export const DAYS_MK = [
 ];
 
 const errors: Record<string, string> = {
+  "Enter your name using 1 to 100 characters.":
+    "Внесете го вашето име со 1 до 100 знаци.",
+  "Choose a JPG, PNG or WebP photo under 20 MB.":
+    "Изберете JPG, PNG или WebP фотографија помала од 20 MB.",
+  "Choose a smaller JPG, PNG or WebP photo.":
+    "Изберете помала фотографија во JPG, PNG или WebP формат.",
+  "This photo could not be read. Try a JPG, PNG or WebP photo.":
+    "Фотографијата не може да се прочита. Обидете се со JPG, PNG или WebP.",
+  "A photo is already being read. Try again in a moment.":
+    "Веќе се чита фотографија. Обидете се повторно за кратко.",
+  "Photo limit reached. Try again tomorrow or add services manually.":
+    "Го достигнавте дневниот лимит за фотографии. Обидете се утре или внесете ги услугите рачно.",
+  "Photo import is temporarily unavailable. You can add services manually.":
+    "Увозот од фотографија е привремено недостапен. Можете да ги внесете услугите рачно.",
+  "The photo could not be read. Try a clearer photo or add services manually.":
+    "Фотографијата не може да се прочита. Обидете се со појасна фотографија или внесете ги услугите рачно.",
+  "Review the prices and durations before adding services.":
+    "Проверете ги цените и времетраењата пред да ги додадете услугите.",
+  "Choose between 1 and 50 services.": "Изберете од 1 до 50 услуги.",
+  "Check every service name, price and duration.":
+    "Проверете ги името, цената и времетраењето на секоја услуга.",
+  "A service with this name already exists. Rename it or remove it from the import.":
+    "Веќе постои услуга со ова име. Преименувајте ја или отстранете ја од увозот.",
   "Choose an address from the suggestions.": "Изберете адреса од предлозите.",
   "Choose a result that includes both an address and city.":
     "Изберете предлог што содржи адреса и град.",
@@ -90,11 +114,13 @@ export function onboardingError(
   language: DashboardLanguage,
 ): string {
   const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "string"
-        ? error
-        : "Something went wrong. Try again.";
+    error instanceof ConvexError && typeof error.data === "string"
+      ? error.data
+      : error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : "Something went wrong. Try again.";
   return language === "mk"
     ? (errors[message] ??
         "Се појави проблем. Проверете ги податоците и обидете се повторно.")
@@ -111,8 +137,8 @@ export const requirementCopy: Record<string, [string, string]> = {
     "Потврдете ја адресата и ознаката на мапата.",
   ],
   provider: [
-    "Активен член на тимот",
-    "Вашиот профил е првиот член на тимот што нуди услуги.",
+    "Име на сопственикот",
+    "Внесете го името што клиентите ќе го гледаат кога закажуваат кај вас.",
   ],
   service: [
     "Услуга за закажување",

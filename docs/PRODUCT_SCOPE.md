@@ -53,13 +53,37 @@ Reliability of this path takes priority over optional features:
 
 ### Short studio launch
 
-Onboarding collects studio name/category, address, one service with price and
+Onboarding collects the studio name first, then a category chosen from icon
+cards, the owner's name as step three, address, one service with price and
 duration, and confirmed working hours, then shows the real website preview.
-The owner is the initial provider and valid booking defaults are created
-automatically. Logo, cover photo, tagline, contact phone, and theme selection
+The studio name is saved independently;
+the category remains unset until the owner chooses it in the second step.
+The entered owner name is saved to both the account and initial provider profile;
+new studios must confirm it before completing setup. Existing studios keep their
+current readiness. The owner is the initial provider and valid booking defaults
+are created automatically. Logo, cover photo, tagline, contact phone, and theme selection
 are optional; they must not block publication or suspend an otherwise bookable
 website. Branding and more services/team members can be added after launch.
 The Pro signup path still continues from operational setup to subscription review.
+
+### Authorized service photo import
+
+Onboarding service import from a camera or uploaded price-list photo was
+authorized on September 26, 2026. Free and Pro beauty studio owners may use
+the configured OpenAI provider to extract editable service names and prices.
+Durations read from the image are distinguished from suggested estimates;
+owners may edit durations individually or apply one duration to selected rows.
+Every import requires explicit owner review of prices and durations before
+the services become bookable. Missing or ambiguous prices must be filled in.
+Imports create services for the owner and never overwrite existing services.
+
+This non-conversation workflow records extraction drafts in `service_imports`
+and actions in `audit_log`; it does not create frontdesk conversations or
+`ai_messages`. Images are sent transiently to OpenAI and not saved to OPUS
+storage. The backend requires `OPENAI_API_KEY`; `SERVICE_IMPORT_MODEL` may
+override the default `gpt-6-luna`. Imports are limited to 50 services per photo
+and 10 extraction attempts per studio per rolling day. Implementation alone
+does not establish real photo accuracy or production availability.
 
 ## Priorities
 

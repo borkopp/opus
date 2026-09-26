@@ -24,7 +24,7 @@ test.describe("beauty launch journey", () => {
   }) => {
     await page.goto("/onboarding");
     const progress = page.getByRole("progressbar", { name: "Studio setup" });
-    await expect(progress).toHaveAttribute("aria-valuemax", "5");
+    await expect(progress).toHaveAttribute("aria-valuemax", "7");
     const currentStep = await progress.getAttribute("aria-valuenow");
     await page.reload();
     await expect(progress).toHaveAttribute("aria-valuenow", currentStep!);

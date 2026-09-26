@@ -20,14 +20,7 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
     process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk",
   );
   if (readiness.websiteStatus === "published")
-    return (
-      <LiveWebsiteCard
-        websiteUrl={url}
-        showEnhancements={
-          readiness.recommendedCount < readiness.recommendedTotal
-        }
-      />
-    );
+    return <LiveWebsiteCard websiteUrl={url} />;
   const next = nextWebsiteAction(readiness.requirements);
   return (
     <Appear

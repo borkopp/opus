@@ -103,13 +103,19 @@ export function ClientsView({
     <div className="flex min-w-0 flex-col gap-7">
       <div className="relative">
         <DashboardPageHeader
+          replayPublicDescription
+          replayPublicTitle
           title={t("Clients", "Клиенти")}
           description={t(
             "Contact details, past visits and the next appointment.",
             "Контакт, претходни посети и следниот закажан термин.",
           )}
         />
-        <Badge variant="pro" className="absolute top-0 right-0">
+        <Badge
+          data-replay-public
+          variant="pro"
+          className="absolute top-0 right-0"
+        >
           Pro
         </Badge>
       </div>
@@ -160,10 +166,10 @@ export function ClientsView({
           <Card className="min-w-0 gap-5 rounded-3xl border-0 py-5 shadow-none">
             <CardHeader className="min-w-0 grid-cols-1 gap-4 px-5 sm:px-6">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
-                <CardTitle>
+                <CardTitle data-replay-public>
                   {t("Client directory", "Именик на клиенти")}
                 </CardTitle>
-                <p className="text-xs text-muted-foreground">
+                <p data-replay-public className="text-xs text-muted-foreground">
                   {t(
                     "Visit totals count completed appointments only.",
                     "Вкупните посети ги вклучуваат само завршените термини.",
@@ -210,18 +216,21 @@ export function ClientsView({
                       aria-label={t("Filter clients", "Филтрирај клиенти")}
                     >
                       <TabsTrigger
+                        data-replay-public
                         value="all"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
                         {t("All", "Сите")}
                       </TabsTrigger>
                       <TabsTrigger
+                        data-replay-public
                         value="returning"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
                         {t("Returning", "Повторни")}
                       </TabsTrigger>
                       <TabsTrigger
+                        data-replay-public
                         value="unvisited"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
@@ -243,13 +252,13 @@ export function ClientsView({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="recent">
+                        <SelectItem data-replay-public value="recent">
                           {t("Recent visits", "Последни посети")}
                         </SelectItem>
-                        <SelectItem value="visits">
+                        <SelectItem data-replay-public value="visits">
                           {t("Most visits", "Најмногу посети")}
                         </SelectItem>
-                        <SelectItem value="name">
+                        <SelectItem data-replay-public value="name">
                           {t("Name A–Z", "Име А–Ш")}
                         </SelectItem>
                       </SelectGroup>
@@ -290,6 +299,7 @@ export function ClientsView({
                       </p>
                       <div className="flex gap-2">
                         <Button
+                          data-replay-public
                           variant="outline"
                           size="sm"
                           disabled={data.page === 0}
@@ -299,6 +309,7 @@ export function ClientsView({
                           {t("Previous", "Претходни")}
                         </Button>
                         <Button
+                          data-replay-public
                           variant="outline"
                           size="sm"
                           disabled={

@@ -96,7 +96,11 @@ export default function DashboardLayout({
           data-dashboard-theme={resolveDashboardTheme(profile.dashboardTheme)}
           className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
         >
-          <a className="dashboard-skip-link" href="#dashboard-content">
+          <a
+            data-replay-public
+            className="dashboard-skip-link"
+            href="#dashboard-content"
+          >
             Skip to content
           </a>
           <div className={s.stage}>

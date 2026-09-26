@@ -56,7 +56,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   );
   if (conversation === null)
     return (
-      <p className="p-5 text-sm text-muted-foreground">
+      <p data-replay-public className="p-5 text-sm text-muted-foreground">
         {t("Conversation not found.", "Разговорот не е пронајден.")}
       </p>
     );
@@ -167,6 +167,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
           <div className="flex flex-wrap gap-2">
             {conversation.status === "handed_off" && (
               <Button
+                data-replay-public
                 size="sm"
                 variant="outline"
                 onClick={async () => {
@@ -191,11 +192,21 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
               </Button>
             )}
             {conversation.status === "active" && (
-              <Button size="sm" variant="outline" onClick={handleTakeOver}>
+              <Button
+                data-replay-public
+                size="sm"
+                variant="outline"
+                onClick={handleTakeOver}
+              >
                 {t("Take Over", "Преземи")}
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={handleResolve}>
+            <Button
+              data-replay-public
+              size="sm"
+              variant="outline"
+              onClick={handleResolve}
+            >
               {t("Mark Resolved", "Означи како решен")}
             </Button>
           </div>
@@ -216,7 +227,10 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
                       size={28}
                       className="text-muted-foreground/40"
                     />
-                    <p className="text-sm text-muted-foreground">
+                    <p
+                      data-replay-public
+                      className="text-sm text-muted-foreground"
+                    >
                       {t("No messages yet", "Сè уште нема пораки")}
                     </p>
                   </div>
@@ -243,7 +257,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
       {conversation.status === "handed_off" && conversation.handoffReason && (
         <div className="px-5 py-3 border-t border-border/40 bg-highlight/10 shrink-0">
           <p className="text-xs text-warning">
-            <span className="font-medium">
+            <span data-replay-public className="font-medium">
               {t("Handed off:", "Преземено:")}
             </span>{" "}
             {getHandoffReason(language, conversation.handoffReason)}

@@ -143,6 +143,7 @@ export function FreeAssistantPage() {
                         </p>
                         {turn.complete && (
                           <a
+                            data-replay-public
                             href="https://opus.mk/#pricing"
                             target="_blank"
                             rel="noopener noreferrer"

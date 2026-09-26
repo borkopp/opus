@@ -53,7 +53,7 @@ export function StaffReply({
     >
       <FieldGroup className="gap-3">
         <Field>
-          <FieldLabel htmlFor="staff-reply">
+          <FieldLabel data-replay-public htmlFor="staff-reply">
             {t("Reply as your team", "Одговорете како тим")}
           </FieldLabel>
           <InputGroup>
@@ -68,7 +68,7 @@ export function StaffReply({
               disabled={sending}
             />
           </InputGroup>
-          <FieldDescription>
+          <FieldDescription data-replay-public>
             {t(
               "Sending a reply pauses AI for this conversation. Instagram allows replies within 24 hours of the client’s last message.",
               "Испраќањето одговор го паузира AI за овој разговор. Instagram дозволува одговори во рок од 24 часа од последната порака на клиентот.",

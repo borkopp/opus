@@ -96,7 +96,13 @@ export function GapOptimizerTab({
       <fieldset disabled={!isPaid || isSaving} className="min-w-0">
         <SettingsCard
           title={t("Gap optimizer", "Оптимизатор на празни термини")}
-          action={!isPaid && <Badge variant="pro">Pro</Badge>}
+          action={
+            !isPaid && (
+              <Badge data-replay-public variant="pro">
+                Pro
+              </Badge>
+            )
+          }
           description={t(
             "Find bookable openings in the next seven days. Review a client and approve each email offer before sending.",
             "Пронајдете слободни термини во следните седум дена. Изберете клиент и одобрете ја секоја понуда по е-пошта пред испраќање.",
@@ -121,7 +127,7 @@ export function GapOptimizerTab({
           }
         >
           {!isPaid && (
-            <p className="text-sm text-muted-foreground">
+            <p data-replay-public className="text-sm text-muted-foreground">
               {t(
                 "Gap optimizer is included in Pro. Contact OPUS to upgrade and activate it for your studio.",
                 "Оптимизаторот на празни термини е дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
@@ -158,7 +164,7 @@ export function GapOptimizerTab({
 
           <FieldGroup className="max-w-xl">
             <Field data-invalid={Boolean(error)}>
-              <FieldLabel htmlFor="min-gap-mins">
+              <FieldLabel data-replay-public htmlFor="min-gap-mins">
                 {t(
                   "Minimum gap duration (minutes)",
                   "Минимално времетраење на празнината (минути)",
@@ -182,7 +188,7 @@ export function GapOptimizerTab({
                   if (error) setError(undefined);
                 }}
               />
-              <FieldDescription id="min-gap-description">
+              <FieldDescription data-replay-public id="min-gap-description">
                 {t(
                   "Shorter openings are ignored so recovery stays focused on useful appointment slots.",
                   "Пократките празнини се игнорираат за пополнувањето да остане фокусирано на корисни термини.",

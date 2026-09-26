@@ -422,7 +422,10 @@ export function HomeContent() {
                 {t.pricing.pro.price} <span>{t.pricing.pro.currency}</span>
               </div>
               <p>{t.pricing.pro.desc}</p>
-              <Link className="button button-dark" href="/contact">
+              <Link
+                className="button button-dark"
+                href="https://studio.opus.mk/upgrade"
+              >
                 {t.pricing.pro.cta}{" "}
                 <span>
                   <ArrowUpRight aria-hidden="true" />

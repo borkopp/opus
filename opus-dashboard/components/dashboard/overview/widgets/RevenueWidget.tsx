@@ -42,6 +42,8 @@ export function RevenueWidget({
         }).formatRange(new Date(start), new Date(end - 1));
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={100}
       title={t("Appointment value", "Вредност на термините")}
       subtitle={t(
@@ -50,7 +52,7 @@ export function RevenueWidget({
       )}
       action={
         <label className={s.periodSelect}>
-          <span className={s.srOnly}>
+          <span data-replay-public className={s.srOnly}>
             {t("Analytics period", "Период на анализа")}
           </span>
           <select
@@ -75,7 +77,7 @@ export function RevenueWidget({
           {revenue.changePct === null
             ? "—"
             : `${revenue.changePct > 0 ? "+" : ""}${revenue.changePct.toFixed(1)}%`}
-          <small>
+          <small data-replay-public>
             {t("vs. previous period", "споредено со претходен период")}
           </small>
         </span>

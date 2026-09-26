@@ -120,7 +120,7 @@ export function AnalysisReport({
           </ChartContainer>
         )}
         {expanded && report.rows.length > 14 && (
-          <p className="text-xs text-muted-foreground">
+          <p data-replay-public className="text-xs text-muted-foreground">
             {t(
               "The chart shows the first fourteen groups. All groups appear below.",
               "Графиконот ги прикажува првите четиринаесет групи. Сите групи се во табелата.",
@@ -189,7 +189,10 @@ export function AnalysisReport({
         </p>
         {!expanded && turnId && (
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/beauty/assistant/reports/${turnId}#${report.key}`}>
+            <Link
+              data-replay-public
+              href={`/beauty/assistant/reports/${turnId}#${report.key}`}
+            >
               {t("View report", "Види извештај")}
               <ArrowUpRight data-icon="inline-end" />
             </Link>

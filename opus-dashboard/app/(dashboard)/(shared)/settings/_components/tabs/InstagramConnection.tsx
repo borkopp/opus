@@ -73,7 +73,10 @@ export function InstagramConnection({
               ? `@${status.username}`
               : t("No account connected", "Нема поврзана сметка")}
           </span>
-          <Badge variant={status?.ready ? "default" : "secondary"}>
+          <Badge
+            data-replay-public
+            variant={status?.ready ? "default" : "secondary"}
+          >
             {status?.ready
               ? t("Automatic replies on", "Автоматските одговори се вклучени")
               : status?.connected
@@ -85,7 +88,7 @@ export function InstagramConnection({
           </Badge>
         </div>
         {status && (!status.provider.instagram || !status.provider.ai) && (
-          <p className="text-sm text-muted-foreground">
+          <p data-replay-public className="text-sm text-muted-foreground">
             {t(
               "OPUS needs to finish the messaging provider setup before automatic replies can start. You can prepare and save your studio context now.",
               "OPUS треба да го заврши поврзувањето со сервисите пред да започнат автоматските одговори. Можете да го подготвите и зачувате контекстот за студиото сега.",
@@ -93,7 +96,11 @@ export function InstagramConnection({
           </p>
         )}
         {(status?.error || search.get("instagram") === "error") && (
-          <p role="alert" className="text-sm text-destructive">
+          <p
+            data-replay-public
+            role="alert"
+            className="text-sm text-destructive"
+          >
             {t(
               "Instagram could not be connected or needs to be reconnected. Try again and allow access to messages.",
               "Instagram не е поврзан или треба повторно да се поврзе. Обидете се повторно и дозволете пристап до пораките.",
@@ -119,6 +126,7 @@ export function InstagramConnection({
           </Button>
           {status?.connected && (
             <Button
+              data-replay-public
               type="button"
               variant="ghost"
               disabled={disabled || !status.canManage || busy}
@@ -128,16 +136,18 @@ export function InstagramConnection({
             </Button>
           )}
           {disabled ? (
-            <Button variant="ghost" disabled>
+            <Button data-replay-public variant="ghost" disabled>
               {t("Open inbox", "Отвори сандаче")}
             </Button>
           ) : (
             <Button asChild variant="ghost">
-              <Link href="/ai-inbox">{t("Open inbox", "Отвори сандаче")}</Link>
+              <Link data-replay-public href="/ai-inbox">
+                {t("Open inbox", "Отвори сандаче")}
+              </Link>
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p data-replay-public className="text-xs text-muted-foreground">
           {t(
             "The AI replies after a client messages you. Your team can take over at any time. WhatsApp is not connected in this release.",
             "AI одговара откако клиент ќе ви испрати порака. Вашиот тим може да го преземе разговорот во секое време. WhatsApp не е поврзан во оваа верзија.",

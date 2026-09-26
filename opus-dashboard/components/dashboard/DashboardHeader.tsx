@@ -54,7 +54,11 @@ export function DashboardHeader({
       >
         <span className={s.brandLockup}>
           <Logo className={s.brand} markClassName={s.brandMark} />
-          {profile.plan === "paid" && <Badge variant="pro">Pro</Badge>}
+          {profile.plan === "paid" && (
+            <Badge data-replay-public variant="pro">
+              Pro
+            </Badge>
+          )}
         </span>
       </Link>
       <nav
@@ -79,7 +83,7 @@ export function DashboardHeader({
             }
           >
             {link.icon}
-            <span>
+            <span data-replay-public>
               {link.href === "/beauty" ? t("Overview", "Преглед") : link.label}
             </span>
           </Link>

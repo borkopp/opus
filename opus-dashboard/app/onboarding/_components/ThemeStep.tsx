@@ -42,6 +42,8 @@ export function ThemeStep({
   return (
     <form onSubmit={submit} className="w-full">
       <StepFrame
+        replayPublicDescription
+        replayPublicTitle
         title={t(
           "Choose your dashboard theme",
           "Изберете тема за контролната табла",

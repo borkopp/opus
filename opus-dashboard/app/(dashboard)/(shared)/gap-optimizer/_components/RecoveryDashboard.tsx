@@ -38,11 +38,15 @@ export function RecoveryDashboard({
       />
       {!data.enabled && (
         <Alert>
-          <AlertTitle>
+          <AlertTitle data-replay-public>
             {t("Recovery is off", "Пополнувањето е исклучено")}
           </AlertTitle>
           <AlertDescription>
-            <Link href="/settings?tab=gaps" className="underline">
+            <Link
+              data-replay-public
+              href="/settings?tab=gaps"
+              className="underline"
+            >
               {t("Enable it in Settings", "Овозможете го во поставките")}
             </Link>
           </AlertDescription>
@@ -50,13 +54,13 @@ export function RecoveryDashboard({
       )}
       {data.enabled && !data.websitePublished && (
         <Alert>
-          <AlertTitle>
+          <AlertTitle data-replay-public>
             {t(
               "Publish your studio website",
               "Објавете ја веб-страницата на студиото",
             )}
           </AlertTitle>
-          <AlertDescription>
+          <AlertDescription data-replay-public>
             {t(
               "Clients need a published booking page to accept an offer.",
               "На клиентите им е потребна објавена страница за да ја прифатат понудата.",
@@ -66,13 +70,13 @@ export function RecoveryDashboard({
       )}
       {data.enabled && !data.emailReady && (
         <Alert>
-          <AlertTitle>
+          <AlertTitle data-replay-public>
             {t(
               "Email delivery needs configuration",
               "Потребна е конфигурација за е-пошта",
             )}
           </AlertTitle>
-          <AlertDescription>
+          <AlertDescription data-replay-public>
             {t(
               "You can review openings and clients. Email approval becomes available when delivery is configured.",
               "Може да ги разгледате термините и клиентите. Одобрувањето пораки ќе биде достапно по конфигурацијата.",

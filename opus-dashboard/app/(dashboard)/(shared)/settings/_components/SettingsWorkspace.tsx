@@ -131,7 +131,7 @@ export function SettingsWorkspace() {
   if (!orgId || !data?.settings) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">
+        <p data-replay-public className="text-sm text-muted-foreground">
           {t(
             "Unable to load settings. Please make sure onboarding is complete.",
             "Поставките не може да се вчитаат. Проверете дали воведот е завршен.",
@@ -177,6 +177,7 @@ export function SettingsWorkspace() {
       className="flex min-h-full w-full flex-1 flex-col gap-7 pb-12"
     >
       <DashboardPageHeader
+        replayPublicTitle
         title={t("Settings", "Поставки")}
         description={t(
           `Keep ${org.name}'s studio details, booking rules, and team preferences in one place.`,
@@ -203,6 +204,7 @@ export function SettingsWorkspace() {
             >
               {SETTINGS_TABS.map(({ value, labelEn, labelMk, icon: Icon }) => (
                 <TabsTrigger
+                  data-replay-public
                   key={value}
                   value={value}
                   className="h-9 min-w-max flex-1 gap-2 rounded-lg px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card/40 transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border/60 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-transparent dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground dark:data-[state=active]:shadow-none"

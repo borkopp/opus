@@ -190,31 +190,37 @@ export function BookingsList({
                   {isCompleted && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                       <IconCircleCheck className="size-3.5 shrink-0" />
-                      <span>{t("Done", "Завршен")}</span>
+                      <span data-replay-public>{t("Done", "Завршен")}</span>
                     </span>
                   )}
                   {isNoShow && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full">
                       <IconAlertTriangle className="size-3.5 shrink-0" />
-                      <span>{t("No-Show", "Не се појави")}</span>
+                      <span data-replay-public>
+                        {t("No-Show", "Не се појави")}
+                      </span>
                     </span>
                   )}
                   {isCancelled && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground bg-muted border border-border px-2.5 py-1 rounded-full">
                       <IconX className="size-3.5 shrink-0" />
-                      <span>{t("Cancelled", "Откажан")}</span>
+                      <span data-replay-public>
+                        {t("Cancelled", "Откажан")}
+                      </span>
                     </span>
                   )}
                   {!isCompleted && !isNoShow && !isCancelled && isAiBooked && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
                       <IconSparkles className="size-3.5 shrink-0" />
-                      <span>AI</span>
+                      <span data-replay-public>AI</span>
                     </span>
                   )}
                   {!isCompleted && !isNoShow && !isCancelled && !isAiBooked && (
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted/60 border border-border/60 px-2.5 py-1 rounded-full">
                       <span className="size-1.5 rounded-full bg-emerald-500" />
-                      <span>{t("Confirmed", "Потврден")}</span>
+                      <span data-replay-public>
+                        {t("Confirmed", "Потврден")}
+                      </span>
                     </span>
                   )}
                 </div>

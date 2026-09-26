@@ -15,6 +15,8 @@ export default async function SignUpPage({
   return (
     <AuthLayout>
       <EmailOtpForm
+        replayPublicTitle
+        replayPublicDescription
         title={
           locale === "mk"
             ? "Создајте простор за вашето студио"

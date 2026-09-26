@@ -10,6 +10,8 @@ export function AssistantWidget() {
   if (access && !access.allowed) return null;
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={0}
       className="flex flex-col"
       title={t("Business assistant", "Деловен асистент")}
@@ -17,7 +19,13 @@ export function AssistantWidget() {
         "A clearer view of your studio",
         "Појасен поглед на вашето студио",
       )}
-      action={access?.paid === false && <Badge variant="pro">Pro</Badge>}
+      action={
+        access?.paid === false && (
+          <Badge data-replay-public variant="pro">
+            Pro
+          </Badge>
+        )
+      }
     >
       <FeatureCardContent
         status={

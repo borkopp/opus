@@ -44,7 +44,7 @@ export function SettingsSectionPicker({
             `Секција за поставки: ${selected.labelMk}`,
           )}
         >
-          <span className="flex items-center gap-3">
+          <span data-replay-public className="flex items-center gap-3">
             <Icon />
             {t(selected.labelEn, selected.labelMk)}
           </span>
@@ -53,10 +53,10 @@ export function SettingsSectionPicker({
       </DrawerTrigger>
       <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
         <DrawerHeader>
-          <DrawerTitle>
+          <DrawerTitle data-replay-public>
             {t("Settings sections", "Секции за поставки")}
           </DrawerTitle>
-          <DrawerDescription>
+          <DrawerDescription data-replay-public>
             {t(
               "Choose what you want to manage.",
               "Изберете што сакате да уредите.",
@@ -70,6 +70,7 @@ export function SettingsSectionPicker({
           {sections.map(
             ({ value: sectionValue, labelEn, labelMk, icon: SectionIcon }) => (
               <Button
+                data-replay-public
                 key={sectionValue}
                 variant={value === sectionValue ? "secondary" : "ghost"}
                 className="min-h-12 w-full justify-start gap-3"

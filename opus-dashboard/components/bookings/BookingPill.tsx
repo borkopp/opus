@@ -179,7 +179,12 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
 
             {booking.customer?.name && orientation === "horizontal" && (
               <>
-                <span className="opacity-60 text-white text-[10px]">·</span>
+                <span
+                  data-replay-public
+                  className="opacity-60 text-white text-[10px]"
+                >
+                  ·
+                </span>
                 <span
                   className={cn(
                     "text-[11px] font-medium truncate max-w-[90px] sm:max-w-[120px] hidden xs:inline",
@@ -195,7 +200,12 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
 
             {orientation === "vertical" && priceFormatted && (
               <>
-                <span className="opacity-60 text-white text-[10px]">·</span>
+                <span
+                  data-replay-public
+                  className="opacity-60 text-white text-[10px]"
+                >
+                  ·
+                </span>
                 <span
                   className={cn(
                     "text-[10px] font-mono font-medium truncate tabular-nums",
@@ -214,9 +224,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
             <div
               className={cn(
                 "text-[11px] font-medium truncate mt-0.5 leading-tight",
-                isMuted
-                  ? "text-zinc-500 dark:text-zinc-400"
-                  : "text-white/80",
+                isMuted ? "text-zinc-500 dark:text-zinc-400" : "text-white/80",
               )}
             >
               {booking.customer.name}

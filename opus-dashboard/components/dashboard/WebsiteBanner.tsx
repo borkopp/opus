@@ -95,7 +95,10 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
             )}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-semibold text-foreground truncate leading-tight">
+            <span
+              data-replay-public
+              className="text-xs font-semibold text-foreground truncate leading-tight"
+            >
               {t("Studio Website", "Веб-страница на студиото")}
             </span>
             <span className="text-[10px] text-muted-foreground truncate leading-tight font-mono">
@@ -111,10 +114,13 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
             size="sm"
             className="h-6 px-2 text-[10px]"
           >
-            <Link href="/onboarding?step=review">{t("Setup", "Постави")}</Link>
+            <Link data-replay-public href="/onboarding?step=review">
+              {t("Setup", "Постави")}
+            </Link>
           </Button>
           {readiness.allBlockingMet && (
             <Button
+              data-replay-public
               size="sm"
               onClick={handlePublish}
               disabled={isPublishing}
@@ -136,8 +142,10 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
         className="flex flex-col gap-1.5 pt-0.5"
       >
         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-          <span className="font-medium">{t("Readiness", "Подготвеност")}</span>
-          <span className="font-mono">
+          <span data-replay-public className="font-medium">
+            {t("Readiness", "Подготвеност")}
+          </span>
+          <span data-replay-public className="font-mono">
             {completeCount}/{readiness.requirements.length}
           </span>
         </div>
@@ -151,10 +159,14 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
             style={appearStep(3)}
             className="flex items-center justify-between text-[10px] text-muted-foreground/80 pb-0.5"
           >
-            <span className="font-medium uppercase tracking-wider text-[9px]">
+            <span
+              data-replay-public
+              className="font-medium uppercase tracking-wider text-[9px]"
+            >
               {t("To complete", "За завршување")}
             </span>
             <Link
+              data-replay-public
               href="/onboarding?step=review"
               className="text-[10px] text-primary hover:underline"
             >
@@ -172,7 +184,7 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
               >
                 <div className="flex items-center gap-1.5 min-w-0 truncate">
                   <span className="size-1.5 rounded-full bg-amber-500/90 shrink-0 group-hover:bg-primary transition-colors" />
-                  <span className="truncate">
+                  <span data-replay-public className="truncate">
                     {getRequirementLabel(req.code, req.label, t)}
                   </span>
                 </div>

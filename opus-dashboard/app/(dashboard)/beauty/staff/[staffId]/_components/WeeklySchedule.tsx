@@ -266,8 +266,10 @@ export function WeeklySchedule({
       <CardHeader className="border-b">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle>{t("Regular hours", "Редовно работно време")}</CardTitle>
-            <CardDescription className="mt-1.5">
+            <CardTitle data-replay-public>
+              {t("Regular hours", "Редовно работно време")}
+            </CardTitle>
+            <CardDescription data-replay-public className="mt-1.5">
               {t(
                 "Customers can only book this team member during these hours.",
                 "Клиентите можат да закажуваат кај овој член на тимот само во ова работно време.",
@@ -415,7 +417,7 @@ function DayRow({
               onChange={(event) => onChange({ startTime: event.target.value })}
               className="w-[8.5rem] tabular-nums"
             />
-            <span className="text-sm text-muted-foreground">
+            <span data-replay-public className="text-sm text-muted-foreground">
               {t("to", "до")}
             </span>
             <Label htmlFor={`end-${day.dayOfWeek}`} className="sr-only">
@@ -429,6 +431,7 @@ function DayRow({
               className="w-[8.5rem] tabular-nums"
             />
             <Button
+              data-replay-public
               type="button"
               variant="ghost"
               size="sm"
@@ -448,7 +451,10 @@ function DayRow({
                   className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/45 px-3 py-2"
                 >
                   <CoffeeIcon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="mr-1 text-xs font-medium text-muted-foreground">
+                  <span
+                    data-replay-public
+                    className="mr-1 text-xs font-medium text-muted-foreground"
+                  >
                     {t("Break", "Пауза")}
                   </span>
                   <Label
@@ -469,7 +475,10 @@ function DayRow({
                     }
                     className="w-[8.5rem] bg-card tabular-nums"
                   />
-                  <span className="text-sm text-muted-foreground">
+                  <span
+                    data-replay-public
+                    className="text-sm text-muted-foreground"
+                  >
                     {t("to", "до")}
                   </span>
                   <Label
@@ -508,7 +517,10 @@ function DayRow({
           )}
         </div>
       ) : (
-        <p className="self-center text-sm text-muted-foreground">
+        <p
+          data-replay-public
+          className="self-center text-sm text-muted-foreground"
+        >
           {t("Not available for bookings", "Не е достапен за закажувања")}
         </p>
       )}

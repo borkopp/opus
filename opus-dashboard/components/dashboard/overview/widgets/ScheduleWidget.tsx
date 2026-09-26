@@ -47,6 +47,8 @@ export function ScheduleWidget({
   );
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={0}
       title={t("Your appointment schedule", "Вашиот распоред на термини")}
       subtitle={t("One appointment at a time.", "Секој термин на свое место.")}
@@ -126,7 +128,7 @@ export function ScheduleWidget({
           className={s.staffSelect}
         >
           <Users size={14} />
-          <span className={s.srOnly}>
+          <span data-replay-public className={s.srOnly}>
             {t("Filter by team member", "Филтрирај по член на тимот")}
           </span>
           <select value={staff} onChange={(e) => setStaff(e.target.value)}>
@@ -165,6 +167,7 @@ export function ScheduleWidget({
               </span>
             </span>
             <span
+              data-replay-public
               className={s.appointmentStatus}
               data-status={
                 booking.status === "completed"
@@ -210,10 +213,15 @@ export function ScheduleWidget({
         style={appearStep(8)}
         className={s.scheduleFooter}
       >
-        <button type="button" onClick={() => changeDate(data.today)}>
+        <button
+          data-replay-public
+          type="button"
+          onClick={() => changeDate(data.today)}
+        >
           {t("Back to today", "Назад на денес")}
         </button>
         <Link
+          data-replay-public
           href={`/beauty/bookings?date=${new Date(data.selected).toISOString().slice(0, 10)}`}
         >
           {t("Open calendar", "Отвори календар")} ↗

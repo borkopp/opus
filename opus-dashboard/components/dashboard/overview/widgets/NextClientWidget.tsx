@@ -21,6 +21,7 @@ export function NextClientWidget({
   const { t, locale } = useDashboardI18n();
   return (
     <WidgetFrame
+      replayPublicTitle
       delay={45}
       title={t("Up next", "Следен термин")}
       className={s.nextClient}
@@ -48,7 +49,7 @@ export function NextClientWidget({
               <span className={s.clientMonogram}>
                 {initials(booking.customerName)}
               </span>
-              <span className={s.artCaption}>
+              <span data-replay-public className={s.artCaption}>
                 {t("A little time for you.", "Малку време за себе.")}
               </span>
             </div>
@@ -79,7 +80,7 @@ export function NextClientWidget({
             <div data-appear="item" style={appearStep(5)}>
               <Scissors size={15} />
               <strong>{booking.staffName}</strong>
-              <span>{t("Your team", "Вашиот тим")}</span>
+              <span data-replay-public>{t("Your team", "Вашиот тим")}</span>
             </div>
             <div data-appear="item" style={appearStep(6)}>
               <Wallet size={15} />
@@ -92,7 +93,9 @@ export function NextClientWidget({
             style={appearStep(7)}
             className={s.clientNote}
           >
-            <span>{t("GOOD TO KNOW", "КОРИСНО ДА ЗНАЕТЕ")}</span>
+            <span data-replay-public>
+              {t("GOOD TO KNOW", "КОРИСНО ДА ЗНАЕТЕ")}
+            </span>
             <p>
               {booking.notes ||
                 t(
@@ -102,6 +105,7 @@ export function NextClientWidget({
             </p>
           </div>
           <Link
+            data-replay-public
             data-appear="item"
             style={appearStep(8)}
             className={s.clientButton}

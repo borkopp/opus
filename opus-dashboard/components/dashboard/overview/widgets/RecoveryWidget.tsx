@@ -19,6 +19,8 @@ export function RecoveryWidget({
   );
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={45}
       className="flex flex-col"
       title={t("Opening recovery", "Пополнување слободни термини")}
@@ -26,7 +28,13 @@ export function RecoveryWidget({
         "A cancellation can become a booking",
         "Откажан термин може повторно да се пополни",
       )}
-      action={!paid && <Badge variant="pro">Pro</Badge>}
+      action={
+        !paid && (
+          <Badge data-replay-public variant="pro">
+            Pro
+          </Badge>
+        )
+      }
     >
       <FeatureCardContent
         status={

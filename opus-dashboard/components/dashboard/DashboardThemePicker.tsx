@@ -78,7 +78,7 @@ export function DashboardThemePicker({
           );
         })}
       </ToggleGroup>
-      <FieldDescription>
+      <FieldDescription data-replay-public>
         {t(
           "Your theme is personal. You can change it anytime in Settings.",
           "Темата важи само за вас. Можете да ја промените во Поставки.",

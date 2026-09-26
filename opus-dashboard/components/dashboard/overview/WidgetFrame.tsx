@@ -6,17 +6,30 @@ export function WidgetHeading({
   title,
   subtitle,
   children,
+  replayPublicTitle = false,
+  replayPublicSubtitle = false,
 }: {
   title: string;
   subtitle?: string;
   children?: ReactNode;
+  replayPublicTitle?: boolean;
+  replayPublicSubtitle?: boolean;
 }) {
   return (
     <div className={s.panelHeading}>
       <div className="min-w-0">
-        <h2 data-appear="item">{title}</h2>
+        <h2
+          data-replay-public={replayPublicTitle || undefined}
+          data-appear="item"
+        >
+          {title}
+        </h2>
         {subtitle && (
-          <p data-appear="item" style={appearStep(2)}>
+          <p
+            data-replay-public={replayPublicSubtitle || undefined}
+            data-appear="item"
+            style={appearStep(2)}
+          >
             {subtitle}
           </p>
         )}
@@ -40,6 +53,8 @@ export function WidgetFrame({
   children,
   className = "",
   delay = 0,
+  replayPublicTitle = false,
+  replayPublicSubtitle = false,
 }: {
   title: string;
   subtitle?: string;
@@ -47,10 +62,17 @@ export function WidgetFrame({
   children: ReactNode;
   className?: string;
   delay?: number;
+  replayPublicTitle?: boolean;
+  replayPublicSubtitle?: boolean;
 }) {
   return (
     <Appear as="section" delay={delay} className={`${s.panel} ${className}`}>
-      <WidgetHeading title={title} subtitle={subtitle}>
+      <WidgetHeading
+        title={title}
+        subtitle={subtitle}
+        replayPublicTitle={replayPublicTitle}
+        replayPublicSubtitle={replayPublicSubtitle}
+      >
         {action}
       </WidgetHeading>
       {children}

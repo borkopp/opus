@@ -10,12 +10,14 @@ export function AppointmentsMetric({ data }: { data: OverviewData }) {
   return (
     <Appear as="article" delay={35} className={s.metricCard}>
       <div data-appear="item" className={s.metricTop}>
-        <span>{t("Today’s appointments", "Денешни термини")}</span>
+        <span data-replay-public>
+          {t("Today’s appointments", "Денешни термини")}
+        </span>
         <CalendarDays size={18} />
       </div>
       <div data-appear="item" style={appearStep(2)} className={s.metricValue}>
         {data.todayCount}
-        <span className={s.metricBadge}>
+        <span data-replay-public className={s.metricBadge}>
           {t("On the calendar", "На календарот")}
         </span>
       </div>

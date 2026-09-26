@@ -105,10 +105,10 @@ export function BookingsToolbar({
             </DrawerTrigger>
             <DrawerContent className="dashboard-panel">
               <DrawerHeader>
-                <DrawerTitle>
+                <DrawerTitle data-replay-public>
                   {t("Filter appointments", "Филтрирај термини")}
                 </DrawerTitle>
-                <DrawerDescription>
+                <DrawerDescription data-replay-public>
                   {t(
                     "Choose which appointments to show for this day.",
                     "Изберете кои термини да се прикажат за овој ден.",
@@ -118,7 +118,7 @@ export function BookingsToolbar({
               <div className="px-5 py-3">{statusOptions}</div>
               <DrawerFooter className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
                 <DrawerClose asChild>
-                  <Button className="min-h-11">
+                  <Button data-replay-public className="min-h-11">
                     {t("Show appointments", "Прикажи термини")}
                   </Button>
                 </DrawerClose>
@@ -145,7 +145,7 @@ export function BookingsToolbar({
               className="min-h-9"
             >
               <IconLayoutColumns />
-              <span className="hidden xl:inline">
+              <span data-replay-public className="hidden xl:inline">
                 {t("Horizontal", "Хоризонтално")}
               </span>
             </ToggleGroupItem>
@@ -156,7 +156,7 @@ export function BookingsToolbar({
             className="min-h-11 md:min-h-9"
           >
             <IconLayoutRows />
-            <span className="hidden xl:inline">
+            <span data-replay-public className="hidden xl:inline">
               {t("Calendar", "Календар")}
             </span>
           </ToggleGroupItem>
@@ -166,7 +166,9 @@ export function BookingsToolbar({
             className="min-h-11 md:min-h-9"
           >
             <IconLayoutList />
-            <span className="hidden xl:inline">{t("Agenda", "Листа")}</span>
+            <span data-replay-public className="hidden xl:inline">
+              {t("Agenda", "Листа")}
+            </span>
           </ToggleGroupItem>
         </ToggleGroup>
         <Button
@@ -175,7 +177,7 @@ export function BookingsToolbar({
           aria-label={t("New Booking", "Нов термин")}
         >
           <IconPlus data-icon="inline-start" />
-          <span className="hidden md:inline">
+          <span data-replay-public className="hidden md:inline">
             {t("New Booking", "Нов термин")}
           </span>
         </Button>

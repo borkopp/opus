@@ -27,9 +27,11 @@ export default function AssistantError({ reset }: { reset: () => void }) {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button onClick={reset}>{t("Try again", "Обидете се повторно")}</Button>
+        <Button data-replay-public onClick={reset}>
+          {t("Try again", "Обидете се повторно")}
+        </Button>
         <Button variant="outline" asChild>
-          <Link href="/beauty/assistant">
+          <Link data-replay-public href="/beauty/assistant">
             {t("Back to assistant", "Назад кон асистентот")}
           </Link>
         </Button>

@@ -22,7 +22,7 @@ export function MobileSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
       className="dashboard-setup-banner mb-4 flex min-h-12 shrink-0 items-center gap-3 rounded-2xl bg-warning/10 px-4 py-3 text-sm text-warning md:hidden"
     >
       <AlertTriangle className="size-4 shrink-0" />
-      <span className="min-w-0 flex-1">
+      <span data-replay-public className="min-w-0 flex-1">
         {remaining > 0
           ? t(
               `Finish studio setup · ${remaining} remaining`,

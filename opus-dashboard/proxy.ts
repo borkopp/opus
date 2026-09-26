@@ -9,6 +9,7 @@ const protectedPrefixes = [
   "/settings",
   "/notifications",
   "/onboarding",
+  "/upgrade",
   "/ai-inbox",
   "/gap-optimizer",
 ];

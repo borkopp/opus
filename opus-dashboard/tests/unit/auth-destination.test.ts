@@ -23,6 +23,18 @@ describe("sign-in destination", () => {
       "/settings?tab=branding",
     );
   });
+  it("keeps Pro intent through sign-in for both new and existing accounts", () => {
+    for (const complete of [true, false]) {
+      expect(authDestination("/upgrade", complete)).toBe("/upgrade");
+    }
+    expect(authDestination("/onboarding?plan=pro", false)).toBe(
+      "/onboarding?plan=pro",
+    );
+    expect(authDestination("/onboarding?plan=pro", true)).toBe("/upgrade");
+    expect(authDestination("/onboarding?step=hours&plan=pro", true)).toBe(
+      "/upgrade",
+    );
+  });
   it.each([
     "https://example.com",
     "//example.com",

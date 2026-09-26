@@ -15,13 +15,17 @@ export function OccupancyMetric({
   return (
     <Appear as="article" delay={105} className={s.metricCard}>
       <div data-appear="item" className={s.metricTop}>
-        <span>{t("Calendar occupancy", "Зафатеност на календарот")}</span>
+        <span data-replay-public>
+          {t("Calendar occupancy", "Зафатеност на календарот")}
+        </span>
         <Clock3 size={18} />
       </div>
       <div data-appear="item" style={appearStep(2)} className={s.metricValue}>
         {percent ?? "—"}
-        <small>%</small>
-        <span className={s.metricBadge}>{t("This week", "Оваа недела")}</span>
+        <small data-replay-public>%</small>
+        <span data-replay-public className={s.metricBadge}>
+          {t("This week", "Оваа недела")}
+        </span>
       </div>
       <div className={s.occupancyBar}>
         <span
@@ -30,7 +34,7 @@ export function OccupancyMetric({
         />
       </div>
       <div data-appear="item" style={appearStep(4)} className={s.metricFoot}>
-        <span>
+        <span data-replay-public>
           <i className={s.legendDot} />
           {t("Booked time", "Закажано време")}
         </span>

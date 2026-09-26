@@ -1,4 +1,5 @@
 import { getConsent, isPlatformHost, subscribeConsent } from "./consent";
+import { maskReplayText as maskPrivateReplayText } from "./replay-masking";
 
 export function canCaptureAnalytics() {
   return (
@@ -22,7 +23,9 @@ function postHogConfig(
     disable_session_recording: !sessionReplay,
     session_recording: {
       maskAllInputs: true,
-      ...(maskReplayText ? { maskTextSelector: "*" } : {}),
+      ...(maskReplayText
+        ? { maskTextSelector: "*", maskTextFn: maskPrivateReplayText }
+        : {}),
     },
     capture_exceptions: true,
     cookie_expiration: 180,

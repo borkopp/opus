@@ -13,6 +13,7 @@ import { api } from "@/convex/_generated/api";
 import { trackStudioRegistration } from "../../../../shared/analytics/meta-pixel";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Field,
   FieldDescription,
@@ -47,6 +48,11 @@ import { useMapboxSearch } from "@/hooks/use-mapbox-search";
 import posthog from "posthog-js";
 import { ThemeStep } from "./ThemeStep";
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
+import {
+  BILLING_PATH,
+  upgradeDestination,
+  UPGRADE_LOGIN_PATH,
+} from "@/lib/upgrade";
 
 const LocationMapPicker = dynamic(
   () => import("@/components/dashboard/LocationMapPicker"),
@@ -80,6 +86,7 @@ const STEP_ORDER: WizardStep[] = [
   "theme",
   "review",
 ];
+const PRO_STEP_ORDER = STEP_ORDER.slice(0, STEP_ORDER.indexOf("hours") + 1);
 
 const STEP_ALIASES: Record<string, WizardStep> = {
   business: "business-name",
@@ -167,6 +174,8 @@ function TextInputStep({
   onBack,
   onSaved,
   validate,
+  replayPublicTitle = false,
+  replayPublicDescription = false,
   type = "text",
   inputMode,
   min,
@@ -182,6 +191,8 @@ function TextInputStep({
   onBack: () => void;
   onSaved: (value: string) => Promise<void> | void;
   validate?: (value: string) => string | null;
+  replayPublicTitle?: boolean;
+  replayPublicDescription?: boolean;
   type?: InputHTMLAttributes<HTMLInputElement>["type"];
   inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   min?: number;
@@ -214,7 +225,12 @@ function TextInputStep({
 
   return (
     <form className="w-full" onSubmit={submit}>
-      <StepFrame title={title} description={description}>
+      <StepFrame
+        title={title}
+        description={description}
+        replayPublicTitle={replayPublicTitle}
+        replayPublicDescription={replayPublicDescription}
+      >
         <Field data-invalid={Boolean(error)}>
           <FieldLabel className="sr-only" htmlFor={id}>
             {title}
@@ -288,10 +304,15 @@ function BusinessCategoryStep({
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
+        replayPublicTitle
         title={t("What kind of studio is this?", "Каков тип студио имате?")}
       >
         <Field>
-          <FieldLabel className="sr-only" htmlFor="business-category">
+          <FieldLabel
+            data-replay-public
+            className="sr-only"
+            htmlFor="business-category"
+          >
             {t("Beauty category", "Категорија на студиото")}
           </FieldLabel>
           <select
@@ -462,6 +483,8 @@ function LocationStep({
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
+        replayPublicDescription
+        replayPublicTitle
         title={t("Where is your studio?", "Каде се наоѓа вашето студио?")}
         description={t(
           "Choose an address from the suggestions to show the map, then adjust the pin to your entrance.",
@@ -469,7 +492,11 @@ function LocationStep({
         )}
       >
         <Field data-invalid={Boolean(selectionError || searchError)}>
-          <FieldLabel className="sr-only" htmlFor="location-search">
+          <FieldLabel
+            data-replay-public
+            className="sr-only"
+            htmlFor="location-search"
+          >
             {t("Studio address", "Адреса на студиото")}
           </FieldLabel>
           <div className="relative">
@@ -574,7 +601,7 @@ function LocationStep({
                 {onboardingError(selectionError ?? searchError, language)}
               </FieldError>
             ) : selectedLocation ? (
-              <FieldDescription className="text-success">
+              <FieldDescription data-replay-public className="text-success">
                 {t(
                   "Address selected. Confirm the pin below.",
                   "Адресата е избрана. Проверете ја ознаката на мапата.",
@@ -585,7 +612,7 @@ function LocationStep({
         </Field>
         {selectedLocation && (
           <Field className="mt-2" data-invalid={Boolean(pinError)}>
-            <FieldLabel>
+            <FieldLabel data-replay-public>
               {t("Exact map pin", "Точна локација на мапата")}
             </FieldLabel>
             <LocationMapPicker
@@ -599,7 +626,7 @@ function LocationStep({
                   {onboardingError(pinError, language)}
                 </FieldError>
               ) : (
-                <FieldDescription aria-live="polite">
+                <FieldDescription data-replay-public aria-live="polite">
                   {isResolvingPin
                     ? t(
                         "Checking the updated pin…",
@@ -625,7 +652,10 @@ function LocationStep({
             Boolean(pinError)
           }
         />
-        <p className="mt-5 text-center text-xs text-muted-foreground">
+        <p
+          data-replay-public
+          className="mt-5 text-center text-xs text-muted-foreground"
+        >
           {state.org.address
             ? t(
                 "You can search again or adjust the pin to update this location.",
@@ -674,6 +704,7 @@ function ReviewStep({
   return (
     <div className="w-full">
       <StepFrame
+        replayPublicTitle
         title={
           state.org.websiteStatus === "published"
             ? t("Your studio is live", "Вашето студио е објавено")
@@ -681,7 +712,10 @@ function ReviewStep({
         }
       >
         <div>
-          <p className="mb-4 text-center text-sm text-muted-foreground">
+          <p
+            data-replay-public
+            className="mb-4 text-center text-sm text-muted-foreground"
+          >
             {t(
               `${state.websiteRequirements.filter((item) => item.complete).length} of ${state.websiteRequirements.length} ready`,
               `${state.websiteRequirements.filter((item) => item.complete).length} од ${state.websiteRequirements.length} завршени`,
@@ -701,7 +735,7 @@ function ReviewStep({
                       : "bg-secondary text-muted-foreground",
                   )}
                 >
-                  <span className="sr-only">
+                  <span data-replay-public className="sr-only">
                     {requirement.complete
                       ? t("Complete", "Завршено")
                       : t("Required", "Задолжително")}
@@ -713,7 +747,7 @@ function ReviewStep({
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">
+                  <p data-replay-public className="text-sm font-medium">
                     {t(
                       requirement.label,
                       requirementCopy[requirement.code]?.[0] ??
@@ -721,7 +755,10 @@ function ReviewStep({
                     )}
                   </p>
                   {!requirement.complete && (
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    <p
+                      data-replay-public
+                      className="mt-1 text-xs leading-relaxed text-muted-foreground"
+                    >
                       {t(
                         requirement.description,
                         requirementCopy[requirement.code]?.[1] ??
@@ -738,6 +775,7 @@ function ReviewStep({
                     className="min-h-11 min-w-11 shrink-0 px-2 shadow-none"
                   >
                     <Link
+                      data-replay-public
                       href={requirement.actionHref}
                       aria-label={`Fix ${t(requirement.label, requirementCopy[requirement.code]?.[0] ?? requirement.label)}`}
                     >
@@ -751,7 +789,7 @@ function ReviewStep({
 
           {state.org.websiteStatus === "published" ? (
             <Button asChild className="mt-6 h-12 w-full">
-              <Link href="/beauty">
+              <Link data-replay-public href="/beauty">
                 <Store />
                 {t("Open dashboard", "Отвори контролна табла")}
               </Link>
@@ -774,7 +812,7 @@ function ReviewStep({
         state.org.websiteStatus !== "published" && (
           <div className="mt-8 text-center">
             <Button asChild variant="link" className="shadow-none">
-              <Link href="/beauty">
+              <Link data-replay-public href="/beauty">
                 <Store data-icon="inline-start" />
                 {t("Open dashboard", "Отвори контролна табла")}
               </Link>
@@ -788,18 +826,22 @@ function ReviewStep({
 export function OnboardingWizard() {
   const searchParams = useSearchParams();
   const requestedStep = STEP_ALIASES[searchParams.get("step") ?? ""] ?? null;
+  const upgrading = searchParams.get("plan") === "pro";
   return (
     <OnboardingFlow
       key={requestedStep ?? "default"}
       requestedStep={requestedStep}
+      upgrading={upgrading}
     />
   );
 }
 
 function OnboardingFlow({
   requestedStep,
+  upgrading,
 }: {
   requestedStep: WizardStep | null;
+  upgrading: boolean;
 }) {
   const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
@@ -820,20 +862,34 @@ function OnboardingFlow({
   const saveHours = useMutation(api.activation.saveHours);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) router.replace("/login");
-  }, [isAuthenticated, isLoading, router]);
+    if (!isLoading && !isAuthenticated) {
+      router.replace(upgrading ? UPGRADE_LOGIN_PATH : "/login");
+    }
+  }, [isAuthenticated, isLoading, router, upgrading]);
 
-  const shouldOpenDashboard = state?.onboardingComplete && !requestedStep;
+  // Pro only needs an operational studio. Website branding and publication can
+  // be completed later; never send a paying owner through publication again.
+  const shouldLeaveOnboarding = upgrading
+    ? profile &&
+      upgradeDestination({
+        hasStudio: Boolean(profile.orgId),
+        role: profile.role,
+        plan: profile.plan,
+        operationalSetupComplete: state?.operationalSetupComplete ?? false,
+      }) === BILLING_PATH
+    : state?.onboardingComplete && !requestedStep;
   useEffect(() => {
-    if (shouldOpenDashboard) router.replace("/beauty");
-  }, [shouldOpenDashboard, router]);
+    if (shouldLeaveOnboarding) {
+      router.replace(upgrading ? BILLING_PATH : "/beauty");
+    }
+  }, [shouldLeaveOnboarding, router, upgrading]);
 
   if (
     isLoading ||
     !isAuthenticated ||
     !profile ||
     (profile?.orgId && !state) ||
-    shouldOpenDashboard
+    shouldLeaveOnboarding
   ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -855,17 +911,18 @@ function OnboardingFlow({
     !profile.orgId && manualStep !== "business-category"
       ? "business-name"
       : (manualStep ?? derivedStep);
-  const stepIndex = STEP_ORDER.indexOf(step);
+  const stepOrder = upgrading ? PRO_STEP_ORDER : STEP_ORDER;
+  const stepIndex = Math.min(STEP_ORDER.indexOf(step), stepOrder.length - 1);
   const canGoBack = stepIndex > 0;
 
   const goNext = () => {
     setManualStep(
-      STEP_ORDER[Math.min(stepIndex + 1, STEP_ORDER.length - 1)] ?? "review",
+      stepOrder[Math.min(stepIndex + 1, stepOrder.length - 1)] ?? "review",
     );
   };
 
   const goBack = () => {
-    if (canGoBack) setManualStep(STEP_ORDER[stepIndex - 1]);
+    if (canGoBack) setManualStep(stepOrder[stepIndex - 1]);
   };
 
   const updateDraft = (patch: Partial<OnboardingDraft>) => {
@@ -952,6 +1009,7 @@ function OnboardingFlow({
           <Logo className="text-2xl" />
           <div className="flex items-center gap-1">
             <Button
+              data-replay-public
               type="button"
               variant="ghost"
               className="min-h-11"
@@ -964,7 +1022,7 @@ function OnboardingFlow({
               <Button asChild variant="ghost" className="min-h-11 shadow-none">
                 <Link href="/beauty">
                   <Store aria-hidden="true" />
-                  <span className="sr-only sm:not-sr-only">
+                  <span data-replay-public className="sr-only sm:not-sr-only">
                     {t("Dashboard", "Контролна табла")}
                   </span>
                 </Link>
@@ -975,25 +1033,38 @@ function OnboardingFlow({
       </header>
 
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-8">
+        {upgrading && (
+          <Alert className="mb-6 max-w-xl" role="status">
+            <AlertTitle data-replay-public>OPUS Pro</AlertTitle>
+            <AlertDescription data-replay-public>
+              {t(
+                "Complete your studio setup to continue to Pro. You’ll review your subscription and confirm payment next.",
+                "Довршете го поставувањето на студиото за да продолжите кон Pro. Потоа ќе ја прегледате претплатата и ќе го потврдите плаќањето.",
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
         <div
           className="mb-8 w-full max-w-xl sm:mb-12"
           role="progressbar"
           aria-label={t("Studio setup", "Поставување на студиото")}
           aria-valuemin={1}
-          aria-valuemax={STEP_ORDER.length}
+          aria-valuemax={stepOrder.length}
           aria-valuenow={stepIndex + 1}
         >
           <div className="mb-3 flex justify-between text-xs font-medium text-muted-foreground">
-            <span>{t("Studio setup", "Поставување на студиото")}</span>
-            <span>
+            <span data-replay-public>
+              {t("Studio setup", "Поставување на студиото")}
+            </span>
+            <span data-replay-public>
               {t(
-                `Step ${stepIndex + 1} of ${STEP_ORDER.length}`,
-                `Чекор ${stepIndex + 1} од ${STEP_ORDER.length}`,
+                `Step ${stepIndex + 1} of ${stepOrder.length}`,
+                `Чекор ${stepIndex + 1} од ${stepOrder.length}`,
               )}
             </span>
           </div>
           <div className="flex gap-1.5" aria-hidden="true">
-            {STEP_ORDER.map((item, index) => (
+            {stepOrder.map((item, index) => (
               <span
                 key={item}
                 className={cn(
@@ -1010,6 +1081,7 @@ function OnboardingFlow({
         >
           {step === "business-name" && (
             <TextInputStep
+              replayPublicTitle
               id="business-name"
               title={t(
                 "Enter your business name",
@@ -1055,6 +1127,8 @@ function OnboardingFlow({
 
           {step === "service-name" && (
             <TextInputStep
+              replayPublicDescription
+              replayPublicTitle
               id="service-name"
               title={t(
                 "Enter your first service",

@@ -10,6 +10,7 @@ const sdk = vi.hoisted(() => ({
         session_recording: {
           maskAllInputs: boolean;
           maskTextSelector?: string;
+          maskTextFn?: (text: string, element?: HTMLElement) => string;
         };
         before_send: (event: unknown) => unknown;
       },
@@ -62,6 +63,7 @@ test("landing replay is opt-in, masks inputs, and respects consent withdrawal", 
   expect(config.disable_session_recording).toBe(false);
   expect(config.session_recording.maskAllInputs).toBe(true);
   expect(config.session_recording.maskTextSelector).toBeUndefined();
+  expect(config.session_recording.maskTextFn).toBeUndefined();
   expect(sdk.opt_in_capturing).toHaveBeenCalledOnce();
 
   state.allowed = false;
@@ -93,6 +95,12 @@ test("does not initialise PostHog until analytics consent and opts out on withdr
   expect(config.disable_session_recording).toBe(false);
   expect(config.session_recording.maskAllInputs).toBe(true);
   expect(config.session_recording.maskTextSelector).toBe("*");
+  const { maskReplayText } =
+    await import("../../../shared/analytics/replay-masking");
+  expect(config.session_recording.maskTextFn).toBe(maskReplayText);
+  expect(config.session_recording.maskTextFn?.("Private client")).toBe(
+    "******* ******",
+  );
   state.allowed = false;
   expect(config.before_send({ event: "should-not-send" })).toBeNull();
   syncPostHogConsent();

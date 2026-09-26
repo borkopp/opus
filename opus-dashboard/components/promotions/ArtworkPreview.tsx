@@ -95,6 +95,7 @@ export function ArtworkPreview({
           {t("Download PNG", "Преземи PNG")}
         </Button>
         <Button
+          data-replay-public
           variant="outline"
           className="min-h-11"
           disabled={busy}
@@ -108,7 +109,10 @@ export function ArtworkPreview({
           label={t("Copy booking link", "Копирај линк за закажување")}
         />
       </div>
-      <p className="text-center text-xs text-muted-foreground">
+      <p
+        data-replay-public
+        className="text-center text-xs text-muted-foreground"
+      >
         {artwork.kind === "poster"
           ? t("Print at A5 · 1748 × 2480 px", "Печатете во A5 · 1748 × 2480 px")
           : artwork.kind === "qr"

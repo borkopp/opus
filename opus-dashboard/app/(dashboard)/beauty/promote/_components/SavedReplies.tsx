@@ -106,13 +106,16 @@ export function SavedRepliesView({
     <div className="flex min-w-0 flex-col gap-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-xl">
-          <h2 className="text-xl font-medium">
+          <h2 data-replay-public className="text-xl font-medium">
             {t(
               "A thoughtful reply, without the typing.",
               "Внимателен одговор, без повторно пишување.",
             )}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <p
+            data-replay-public
+            className="mt-2 text-sm leading-relaxed text-muted-foreground"
+          >
             {t(
               "Copy a reply into Instagram or any conversation. Studio details update automatically; you choose when to send.",
               "Копирајте одговор во Instagram или во кој било разговор. Податоците за студиото се ажурираат автоматски, а вие избирате кога да испратите.",
@@ -120,14 +123,20 @@ export function SavedRepliesView({
           </p>
         </div>
         {data.canManageReplies && (
-          <Button onClick={() => setEditing({ title: "", body: "" })}>
+          <Button
+            data-replay-public
+            onClick={() => setEditing({ title: "", body: "" })}
+          >
             <Plus data-icon="inline-start" />
             {t("New reply", "Нов одговор")}
           </Button>
         )}
       </div>
       <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-muted-foreground">
+        <h3
+          data-replay-public
+          className="text-sm font-medium text-muted-foreground"
+        >
           {t("Ready to use", "Подготвени за користење")}
         </h3>
         <div className="grid min-w-0 gap-4 md:grid-cols-2">
@@ -145,7 +154,10 @@ export function SavedRepliesView({
         </div>
       </section>
       <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-muted-foreground">
+        <h3
+          data-replay-public
+          className="text-sm font-medium text-muted-foreground"
+        >
           {t("Your team's replies", "Одговори на вашиот тим")}
         </h3>
         {data.replies.length ? (
@@ -217,7 +229,7 @@ function ReplyCard({
       <CardHeader>
         <CardTitle>{reply.title}</CardTitle>
         {reply.missing.length > 0 && (
-          <CardDescription>
+          <CardDescription data-replay-public>
             {t(
               "Add the missing studio details or customize this reply before copying.",
               "Додајте ги податоците што недостигаат или приспособете го одговорот пред копирање.",
@@ -238,6 +250,7 @@ function ReplyCard({
         />
         {canEdit && (
           <Button
+            data-replay-public
             variant="ghost"
             onClick={onEdit}
             aria-label={`${t("Edit", "Уреди")}: ${reply.title}`}
@@ -327,14 +340,14 @@ function ReplyEditor({
     >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle data-replay-public>
             {confirmRemove
               ? t("Remove this reply?", "Да се отстрани одговорот?")
               : reply.id
                 ? t("Edit reply", "Уреди одговор")
                 : t("New saved reply", "Нов зачуван одговор")}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription data-replay-public>
             {confirmRemove
               ? t(
                   "It will be removed from your team's saved replies.",
@@ -356,7 +369,7 @@ function ReplyEditor({
           >
             <FieldGroup>
               <Field data-invalid={Boolean(error)}>
-                <FieldLabel htmlFor="reply-title">
+                <FieldLabel data-replay-public htmlFor="reply-title">
                   {t("Title", "Наслов")}
                 </FieldLabel>
                 <Input
@@ -371,7 +384,7 @@ function ReplyEditor({
                 />
               </Field>
               <Field data-invalid={Boolean(error)}>
-                <FieldLabel htmlFor="reply-body">
+                <FieldLabel data-replay-public htmlFor="reply-body">
                   {t("Message", "Порака")}
                 </FieldLabel>
                 <Textarea
@@ -384,7 +397,7 @@ function ReplyEditor({
                   aria-invalid={Boolean(error)}
                   onChange={(event) => setBody(event.target.value)}
                 />
-                <FieldDescription>
+                <FieldDescription data-replay-public>
                   {t(
                     "Insert a studio detail to keep it up to date automatically.",
                     "Вметнете податок за студиото за автоматски да се ажурира.",
@@ -412,12 +425,14 @@ function ReplyEditor({
               </Field>
               {body && (
                 <Field>
-                  <FieldLabel>{t("Preview", "Преглед")}</FieldLabel>
+                  <FieldLabel data-replay-public>
+                    {t("Preview", "Преглед")}
+                  </FieldLabel>
                   <p className="max-h-44 overflow-auto rounded-xl bg-muted p-4 whitespace-pre-wrap break-words text-sm leading-relaxed">
                     {preview.text}
                   </p>
                   {preview.missing.length > 0 && (
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "Some studio details are missing. Add them in Settings or edit the message before copying.",
                         "Недостигаат податоци за студиото. Додајте ги во Поставки или уредете ја пораката пред копирање.",
@@ -434,6 +449,7 @@ function ReplyEditor({
           {confirmRemove ? (
             <>
               <Button
+                data-replay-public
                 variant="outline"
                 disabled={busy}
                 onClick={() => setConfirmRemove(false)}
@@ -441,6 +457,7 @@ function ReplyEditor({
                 {t("Keep reply", "Задржи одговор")}
               </Button>
               <Button
+                data-replay-public
                 variant="destructive"
                 disabled={busy}
                 onClick={() => void submit(true)}
@@ -452,6 +469,7 @@ function ReplyEditor({
             <>
               {reply.id && (
                 <Button
+                  data-replay-public
                   variant="ghost"
                   disabled={busy}
                   onClick={() => setConfirmRemove(true)}
@@ -460,10 +478,20 @@ function ReplyEditor({
                   {t("Remove", "Отстрани")}
                 </Button>
               )}
-              <Button variant="outline" disabled={busy} onClick={onClose}>
+              <Button
+                data-replay-public
+                variant="outline"
+                disabled={busy}
+                onClick={onClose}
+              >
                 {t("Cancel", "Откажи")}
               </Button>
-              <Button form="saved-reply-form" type="submit" disabled={busy}>
+              <Button
+                data-replay-public
+                form="saved-reply-form"
+                type="submit"
+                disabled={busy}
+              >
                 {busy
                   ? t("Saving…", "Се зачувува…")
                   : t("Save reply", "Зачувај одговор")}

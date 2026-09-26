@@ -19,7 +19,7 @@ export function RevenueMetric({
       className={`${s.metricCard} ${s.accentMetric}`}
     >
       <div data-appear="item" className={s.metricTop}>
-        <span>
+        <span data-replay-public>
           {t("Completed appointment value", "Вредност на завршени термини")}
         </span>
         <ArrowUpRight size={19} />

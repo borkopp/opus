@@ -153,10 +153,15 @@ function AssistantWorkspace({ access }: { access: Access }) {
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <h1
+              data-replay-public
+              className="text-2xl font-semibold tracking-tight"
+            >
               {t("Business assistant", "Деловен асистент")}
             </h1>
-            <Badge variant="secondary">Pro</Badge>
+            <Badge data-replay-public variant="secondary">
+              Pro
+            </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
             {t(
@@ -195,7 +200,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
                     </DropdownMenuItem>
                   ))
                 ) : (
-                  <DropdownMenuItem disabled>
+                  <DropdownMenuItem data-replay-public disabled>
                     {t("No conversations yet", "Сè уште нема разговори")}
                   </DropdownMenuItem>
                 )}
@@ -203,6 +208,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
+            data-replay-public
             variant="outline"
             onClick={newConversation}
             disabled={submitting}
@@ -215,7 +221,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
       <div className="dashboard-assistant-surface flex h-[calc(100dvh-19rem)] min-h-[520px] min-w-0 flex-1 flex-col">
         {!access.configured && (
           <Alert>
-            <AlertDescription>
+            <AlertDescription data-replay-public>
               {t(
                 "New analyses are temporarily unavailable. Your saved conversations and reports remain available.",
                 "Новите анализи се привремено недостапни. Зачуваните разговори и извештаи остануваат достапни.",

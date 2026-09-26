@@ -229,7 +229,10 @@ export function BookingsSplitView({
         {staffMembers.length === 0 ? (
           <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
             <IconCalendarOff className="h-10 w-10 mb-4 opacity-50" />
-            <p className="font-semibold text-foreground text-base">
+            <p
+              data-replay-public
+              className="font-semibold text-foreground text-base"
+            >
               {t("No staff members found", "Не се пронајдени членови на тимот")}
             </p>
           </div>
@@ -274,10 +277,13 @@ export function BookingsSplitView({
         ) : filteredBookings.length === 0 ? (
           <div className="min-h-64 h-full flex flex-col items-center justify-center text-center text-muted-foreground p-6 md:p-12">
             <IconCalendarOff className="h-10 w-10 mb-4 opacity-30" />
-            <p className="font-semibold text-foreground text-base">
+            <p
+              data-replay-public
+              className="font-semibold text-foreground text-base"
+            >
               {t("No bookings found", "Нема пронајдени термини")}
             </p>
-            <p className="text-xs mt-1">
+            <p data-replay-public className="text-xs mt-1">
               {t(
                 "Try a different filter or date.",
                 "Обидете се со друг филтер или датум.",

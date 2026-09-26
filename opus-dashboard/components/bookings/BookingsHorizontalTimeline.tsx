@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { format, isSameDay } from "date-fns";
 import Image from "next/image";
 import { IconPlus, IconClock, IconGripVertical } from "@tabler/icons-react";
@@ -430,7 +436,10 @@ export function BookingsHorizontalTimeline({
     <>
       <div
         ref={scrollContainerRef}
-        className={cn("relative min-w-max pb-10 select-none", drag && "cursor-grabbing")}
+        className={cn(
+          "relative min-w-max pb-10 select-none",
+          drag && "cursor-grabbing",
+        )}
         style={{ width: STAFF_COL_WIDTH + totalTimelineWidth }}
       >
         {/* Top Header Row */}
@@ -440,7 +449,7 @@ export function BookingsHorizontalTimeline({
             className="shrink-0 flex items-center px-4 font-semibold text-sm text-foreground sticky left-0 z-40 bg-card border-r border-border/50"
             style={{ width: STAFF_COL_WIDTH, height: HEADER_HEIGHT }}
           >
-            <span>{t("Staff", "Тим")}</span>
+            <span data-replay-public>{t("Staff", "Тим")}</span>
             <span className="ml-2 text-xs font-normal text-muted-foreground">
               ({staffMembers.length})
             </span>
@@ -493,9 +502,7 @@ export function BookingsHorizontalTimeline({
             );
             const staffAvatarUrl = getImageStorageUrl(staff.avatarUrl);
             const staffQuickSlot =
-              hoveredQuickSlot?.staffId === staff._id
-                ? hoveredQuickSlot
-                : null;
+              hoveredQuickSlot?.staffId === staff._id ? hoveredQuickSlot : null;
             const quickSlotStartMinute = staffQuickSlot
               ? bookingMinuteOfDay(staffQuickSlot.startAt)
               : null;
@@ -539,7 +546,10 @@ export function BookingsHorizontalTimeline({
                     <span className="font-semibold text-sm text-foreground tracking-tight truncate">
                       {staff.displayName}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">
+                    <span
+                      data-replay-public
+                      className="text-xs text-muted-foreground truncate"
+                    >
                       {t("Availability: 8h", "Достапност: 8ч")}
                     </span>
                   </div>
@@ -591,7 +601,10 @@ export function BookingsHorizontalTimeline({
                         {bookingTimeLabel(staffQuickSlot.startAt)}–
                         {bookingTimeLabel(staffQuickSlot.endAt)}
                       </span>
-                      <span className="text-[10px] opacity-70 hidden sm:inline">
+                      <span
+                        data-replay-public
+                        className="text-[10px] opacity-70 hidden sm:inline"
+                      >
                         · {t("Open", "Слободен")}
                       </span>
                     </button>
@@ -748,7 +761,10 @@ export function BookingsHorizontalTimeline({
             >
               <IconPlus className="size-4" />
             </button>
-            <span className="ml-3 text-xs font-medium text-muted-foreground">
+            <span
+              data-replay-public
+              className="ml-3 text-xs font-medium text-muted-foreground"
+            >
               {t("Quick booking", "Брзо закажување")}
             </span>
           </div>

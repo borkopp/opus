@@ -48,13 +48,15 @@ export function PromotionsWorkspace() {
   return (
     <div className="flex min-w-0 flex-col gap-7">
       <DashboardPageHeader
+        replayPublicDescription
+        replayPublicTitle
         title={t("Promote your studio", "Промовирајте го студиото")}
         description={t(
           "Turn an opening into a Story, share your booking link, and reply in seconds.",
           "Претворете слободен термин во Story, споделете линк за закажување и одговорете за неколку секунди.",
         )}
       >
-        <Badge variant="secondary">
+        <Badge data-replay-public variant="secondary">
           {t("Included in Free", "Вклучено во Free")}
         </Badge>
       </DashboardPageHeader>
@@ -74,21 +76,21 @@ export function PromotionsWorkspace() {
           {!data.published && (
             <Alert>
               <Globe />
-              <AlertTitle>
+              <AlertTitle data-replay-public>
                 {t(
                   "Publish your booking website first",
                   "Прво објавете ја веб-страницата за закажување",
                 )}
               </AlertTitle>
               <AlertDescription>
-                <p>
+                <p data-replay-public>
                   {t(
                     "Your graphics and QR code will be ready when clients can book. You can prepare saved replies now.",
                     "Сликите и QR-кодот ќе бидат достапни кога клиентите ќе можат да закажуваат. Зачуваните одговори можете да ги подготвите сега.",
                   )}
                 </p>
                 <Button asChild variant="outline">
-                  <Link href="/onboarding?step=review">
+                  <Link data-replay-public href="/onboarding?step=review">
                     {t("Finish website setup", "Довршете ја веб-страницата")}
                     <ExternalLink data-icon="inline-end" />
                   </Link>
@@ -108,22 +110,22 @@ export function PromotionsWorkspace() {
             <div className="flex min-w-0 flex-col justify-between gap-4 xl:flex-row xl:items-end">
               <div className="min-w-0 overflow-x-auto pb-1">
                 <TabsList variant="line">
-                  <TabsTrigger value="opening">
+                  <TabsTrigger data-replay-public value="opening">
                     <ImagePlus />
                     {t("Share an opening", "Сподели термин")}
                   </TabsTrigger>
-                  <TabsTrigger value="kit">
+                  <TabsTrigger data-replay-public value="kit">
                     <QrCode />
                     {t("Booking kit", "Промотивен пакет")}
                   </TabsTrigger>
-                  <TabsTrigger value="replies">
+                  <TabsTrigger data-replay-public value="replies">
                     <MessageSquareText />
                     {t("Saved replies", "Зачувани одговори")}
                   </TabsTrigger>
                 </TabsList>
               </div>
               <Field className="w-full sm:w-52">
-                <FieldLabel htmlFor="promotion-language">
+                <FieldLabel data-replay-public htmlFor="promotion-language">
                   {t("Content language", "Јазик на содржината")}
                 </FieldLabel>
                 <Select
@@ -137,8 +139,12 @@ export function PromotionsWorkspace() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="mk">Македонски</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem data-replay-public value="mk">
+                        Македонски
+                      </SelectItem>
+                      <SelectItem data-replay-public value="en">
+                        English
+                      </SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

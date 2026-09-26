@@ -128,7 +128,10 @@ export function BookingPopoverCard({
             <span className="font-semibold text-sm tracking-tight text-foreground truncate">
               {staffDisplayName}
             </span>
-            <span className="text-[11px] text-muted-foreground font-medium truncate">
+            <span
+              data-replay-public
+              className="text-[11px] text-muted-foreground font-medium truncate"
+            >
               {staffMember?.role === "owner"
                 ? t("Studio Owner", "Сопственик")
                 : staffMember?.role === "manager"
@@ -155,7 +158,10 @@ export function BookingPopoverCard({
         {/* Card 1: Service */}
         <div className="rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border/50 p-3 flex flex-col gap-1 transition-colors">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground">
+            <span
+              data-replay-public
+              className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground"
+            >
               {t("Service", "Услуга")}
             </span>
             <span className="font-medium text-muted-foreground text-[11px]">
@@ -170,7 +176,10 @@ export function BookingPopoverCard({
         {/* Card 2: Price & Time */}
         <div className="rounded-2xl bg-muted/40 dark:bg-muted/20 border border-border/50 p-3 flex flex-col gap-1 transition-colors">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground">
+            <span
+              data-replay-public
+              className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground"
+            >
               {t("Price", "Цена")}
             </span>
             <span className="font-mono font-medium text-muted-foreground text-[11px] tabular-nums">
@@ -190,7 +199,10 @@ export function BookingPopoverCard({
                 {booking.customer.name}
               </span>
               {isAiBooked && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <span
+                  data-replay-public
+                  className="inline-flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full"
+                >
                   <IconSparkles className="size-3" />
                   AI
                 </span>
@@ -232,8 +244,8 @@ export function BookingPopoverCard({
       {/* Status indicator bar if not normal */}
       {(isCompleted || isCancelled || isNoShow) && (
         <div className="mb-3 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between bg-muted/60 text-muted-foreground">
-          <span>{t("Status", "Статус")}</span>
-          <span className="font-semibold capitalize">
+          <span data-replay-public>{t("Status", "Статус")}</span>
+          <span data-replay-public className="font-semibold capitalize">
             {isCompleted
               ? t("Completed", "Завршен")
               : isCancelled
@@ -248,6 +260,7 @@ export function BookingPopoverCard({
         <div className="sticky bottom-0 grid grid-cols-2 gap-2 bg-background pt-3 md:static md:bg-transparent border-t border-border/40">
           {!isCompleted && onComplete && (
             <Button
+              data-replay-public
               variant="outline"
               size="sm"
               className="min-h-11 md:min-h-8 text-sm md:text-xs font-medium rounded-xl hover:bg-emerald-500/10 hover:text-emerald-600 hover:border-emerald-500/30"
@@ -263,6 +276,7 @@ export function BookingPopoverCard({
 
           {onRescheduleClick && !isCompleted && !isNoShow && (
             <Button
+              data-replay-public
               variant="outline"
               size="sm"
               className="min-h-11 md:min-h-8 text-sm md:text-xs font-medium rounded-xl hover:bg-primary/10 hover:text-primary hover:border-primary/30"
@@ -278,6 +292,7 @@ export function BookingPopoverCard({
 
           {!isCompleted && !isNoShow && onMarkNoShow && (
             <Button
+              data-replay-public
               variant="ghost"
               size="sm"
               className="min-h-11 md:min-h-8 text-sm md:text-xs font-medium rounded-xl text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
@@ -293,6 +308,7 @@ export function BookingPopoverCard({
 
           {onCancel && (
             <Button
+              data-replay-public
               variant="ghost"
               size="sm"
               className="min-h-11 md:min-h-8 text-sm md:text-xs font-medium rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
@@ -315,10 +331,10 @@ export function BookingPopoverCard({
       <Drawer autoFocus open={open} onOpenChange={onOpenChange}>
         <DrawerTrigger asChild>{children}</DrawerTrigger>
         <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=bottom]:max-h-[92dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">
-          <DrawerTitle className="sr-only">
+          <DrawerTitle data-replay-public className="sr-only">
             {t("Appointment details", "Детали за термин")}
           </DrawerTitle>
-          <DrawerDescription className="sr-only">
+          <DrawerDescription data-replay-public className="sr-only">
             {t(
               "View the client, service and appointment actions.",
               "Прегледајте го клиентот, услугата и дејствата за терминот.",

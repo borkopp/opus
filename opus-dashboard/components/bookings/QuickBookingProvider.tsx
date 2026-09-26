@@ -194,7 +194,7 @@ export function QuickBookingProvider({
         >
           <DrawerHeader className="shrink-0 px-5 py-5 text-left">
             <div className="flex items-center justify-between gap-4">
-              <DrawerTitle className="font-display text-xl">
+              <DrawerTitle data-replay-public className="font-display text-xl">
                 {t("New Booking", "Нов термин")}
               </DrawerTitle>
               <DrawerClose asChild>
@@ -310,11 +310,12 @@ function QuickBookingSchedulePicker({
         className="mx-auto p-0 [--cell-size:2.5rem]"
       />
       <Field>
-        <FieldLabel id="quick-booking-time-label">
+        <FieldLabel data-replay-public id="quick-booking-time-label">
           {t("Time", "Време")}
         </FieldLabel>
         {isLoadingSlots ? (
           <div
+            data-replay-public
             className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
             role="status"
           >
@@ -366,7 +367,11 @@ function QuickBookingSchedulePicker({
             </ToggleGroup>
           </ScrollArea>
         ) : (
-          <p className="py-3 text-sm text-muted-foreground" role="status">
+          <p
+            data-replay-public
+            className="py-3 text-sm text-muted-foreground"
+            role="status"
+          >
             {t("No times available", "Нема слободни термини")}
           </p>
         )}
@@ -523,12 +528,18 @@ function QuickBookingForm({
           <FieldLegend variant="label">{t("Services", "Услуги")}</FieldLegend>
           <FieldGroup data-slot="checkbox-group" className="gap-2">
             {services === undefined ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-muted-foreground">
+              <div
+                data-replay-public
+                className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
+              >
                 <Spinner />
                 {t("Loading services…", "Вчитување услуги…")}
               </div>
             ) : services.length === 0 ? (
-              <p className="py-3 text-sm text-muted-foreground">
+              <p
+                data-replay-public
+                className="py-3 text-sm text-muted-foreground"
+              >
                 {t(
                   "Add an active service before creating a booking.",
                   "Додајте активна услуга пред да креирате термин.",
@@ -612,7 +623,7 @@ function QuickBookingForm({
 
         <FieldGroup className="gap-4">
           <Field data-invalid={nameError}>
-            <FieldLabel htmlFor="quick-customer-name">
+            <FieldLabel data-replay-public htmlFor="quick-customer-name">
               {t("Customer name", "Име на клиент")}
             </FieldLabel>
             <InputGroup>
@@ -635,9 +646,12 @@ function QuickBookingForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="quick-customer-phone">
+              <FieldLabel data-replay-public htmlFor="quick-customer-phone">
                 {t("Phone", "Телефон")}{" "}
-                <span className="font-normal text-muted-foreground">
+                <span
+                  data-replay-public
+                  className="font-normal text-muted-foreground"
+                >
                   {t("Optional", "Опционално")}
                 </span>
               </FieldLabel>
@@ -653,9 +667,12 @@ function QuickBookingForm({
               </InputGroup>
             </Field>
             <Field>
-              <FieldLabel htmlFor="quick-customer-email">
+              <FieldLabel data-replay-public htmlFor="quick-customer-email">
                 {t("Email", "Е-пошта")}{" "}
-                <span className="font-normal text-muted-foreground">
+                <span
+                  data-replay-public
+                  className="font-normal text-muted-foreground"
+                >
                   {t("Optional", "Опционално")}
                 </span>
               </FieldLabel>

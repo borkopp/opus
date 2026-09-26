@@ -195,7 +195,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
       >
         <FieldGroup className="max-w-3xl">
           <Field data-invalid={Boolean(errors.timezone)}>
-            <FieldLabel htmlFor="timezone">
+            <FieldLabel data-replay-public htmlFor="timezone">
               {t("Timezone", "Временска зона")}
             </FieldLabel>
             <DebouncedInput
@@ -210,7 +210,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                 clearError("timezone");
               }}
             />
-            <FieldDescription id="timezone-description">
+            <FieldDescription data-replay-public id="timezone-description">
               {t(
                 "Use a city-based timezone so appointment times remain accurate.",
                 "Користете временска зона според град за точни термини на закажување.",
@@ -220,7 +220,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
           </Field>
 
           <Field data-invalid={Boolean(errors.locale)}>
-            <FieldLabel htmlFor="locale-select">
+            <FieldLabel data-replay-public htmlFor="locale-select">
               {t("Language", "Јазик на платформата")}
             </FieldLabel>
             <Select
@@ -250,7 +250,7 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <FieldDescription id="locale-description">
+            <FieldDescription data-replay-public id="locale-description">
               {t(
                 "Choose the language used across the dashboard.",
                 "Изберете го јазикот што се користи на контролната табла.",
@@ -260,8 +260,10 @@ export function GeneralTab({ orgId, initialData }: GeneralTabProps) {
           </Field>
 
           <Field data-invalid={Boolean(errors.currency)}>
-            <FieldLabel>{t("Currency", "Валута")}</FieldLabel>
-            <FieldDescription>
+            <FieldLabel data-replay-public>
+              {t("Currency", "Валута")}
+            </FieldLabel>
+            <FieldDescription data-replay-public>
               {t(
                 "Used to format service prices and booking totals.",
                 "Се користи за прикажување на цените на услугите и вкупните износи.",

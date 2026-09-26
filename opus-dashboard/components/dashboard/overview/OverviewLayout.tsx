@@ -81,9 +81,9 @@ export function OverviewLayout({
                     "Добриот ден почнува со јасен преглед",
                   )
                 : `${greeting}${firstName ? `, ${firstName}` : ""}`}
-              <span>.</span>
+              <span data-replay-public>.</span>
             </h1>
-            <p data-appear="item" style={appearStep(3)}>
+            <p data-replay-public data-appear="item" style={appearStep(3)}>
               {t("You have", "Имате")}{" "}
               <strong>
                 {data.todayCount} {t("appointments", "термини")}
@@ -95,6 +95,7 @@ export function OverviewLayout({
             </p>
           </div>
           <button
+            data-replay-public
             data-appear="item"
             style={appearStep(3)}
             className={s.primaryButton}
@@ -120,7 +121,9 @@ export function OverviewLayout({
               <span className={s.roundIcon}>
                 <Plus size={24} />
               </span>
-              <span>{t("Book a client", "Закажи термин")}</span>
+              <span data-replay-public>
+                {t("Book a client", "Закажи термин")}
+              </span>
             </button>
           )}
         </div>

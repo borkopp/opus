@@ -37,7 +37,10 @@ export default function GapOptimizerPage() {
       )}
     >
       {!isPaid && (
-        <div className="flex min-h-80 items-center justify-center border p-8 text-center text-muted-foreground">
+        <div
+          data-replay-public
+          className="flex min-h-80 items-center justify-center border p-8 text-center text-muted-foreground"
+        >
           {t(
             "Find bookable openings and invite clients with your approval.",
             "Пронајдете слободни термини и поканете клиенти со ваше одобрение.",

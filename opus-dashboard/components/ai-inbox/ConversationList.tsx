@@ -60,7 +60,7 @@ export function ConversationList({
     <div className="flex min-h-0 flex-col h-full md:border-r border-border/50">
       <div className="flex flex-col gap-4 border-b border-border/50 p-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-medium">
+          <h2 data-replay-public className="text-base font-medium">
             {t("Conversations", "Разговори")}
           </h2>
           <span className="text-xs tabular-nums text-muted-foreground">

@@ -46,7 +46,11 @@ export function ClientEmailReminders({
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
             {t("Client email reminders", "Потсетници за клиенти по е-пошта")}
-            {!isPaid && <Badge variant="pro">Pro</Badge>}
+            {!isPaid && (
+              <Badge data-replay-public variant="pro">
+                Pro
+              </Badge>
+            )}
           </span>
         }
         description={
@@ -75,7 +79,7 @@ export function ClientEmailReminders({
       />
       <FieldGroup className="max-w-xl">
         <Field data-disabled={disabled} data-invalid={Boolean(error)}>
-          <FieldLabel id="customer-reminder-label">
+          <FieldLabel data-replay-public id="customer-reminder-label">
             {t("Before the appointment", "Пред терминот")}
           </FieldLabel>
           <ToggleGroup
@@ -107,7 +111,10 @@ export function ClientEmailReminders({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <FieldDescription id="customer-reminder-description">
+          <FieldDescription
+            data-replay-public
+            id="customer-reminder-description"
+          >
             {t(
               "Select one or more times. A reminder is sent at each selected time.",
               "Изберете едно или повеќе времиња. За секое избрано време се испраќа потсетник.",

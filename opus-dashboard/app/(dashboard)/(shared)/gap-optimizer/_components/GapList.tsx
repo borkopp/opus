@@ -125,10 +125,10 @@ function GapCard({
       <CardContent className="flex flex-col gap-4">
         {gap.activeOffer && (
           <Alert>
-            <AlertTitle>
+            <AlertTitle data-replay-public>
               {t("Waiting for a response", "Се чека одговор")}
             </AlertTitle>
-            <AlertDescription>
+            <AlertDescription data-replay-public>
               {t(
                 "One offer is active. You can choose another client after it expires or is declined.",
                 "Има една активна понуда. Може да изберете друг клиент по истекување или одбивање.",
@@ -137,7 +137,7 @@ function GapCard({
           </Alert>
         )}
         {gap.topCandidates.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
+          <p data-replay-public className="text-sm text-muted-foreground">
             {t(
               "No eligible clients yet. Review client permissions, then scan again or choose a client.",
               "Сè уште нема соодветни клиенти. Проверете ги дозволите, па скенирајте повторно или изберете клиент.",
@@ -166,6 +166,7 @@ function GapCard({
             disabled={gap.activeOffer}
           />
           <Button
+            data-replay-public
             variant="ghost"
             size="sm"
             onClick={dismissOpening}
@@ -250,7 +251,7 @@ function CandidateRow({
       </ul>
       {candidate.failureReason && candidate.status === "failed" && (
         <Alert variant="destructive">
-          <AlertTitle>
+          <AlertTitle data-replay-public>
             {t("The email was not delivered", "Пораката не е доставена")}
           </AlertTitle>
           <AlertDescription>{candidate.failureReason}</AlertDescription>
@@ -260,13 +261,13 @@ function CandidateRow({
         <div className="flex flex-wrap gap-2">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
+              <Button data-replay-public size="sm" variant="outline">
                 {t("Review email", "Прегледај порака")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle data-replay-public>
                   {t("Opening offer", "Понуда за слободен термин")}
                 </DialogTitle>
                 <DialogDescription>
@@ -275,7 +276,7 @@ function CandidateRow({
                 </DialogDescription>
               </DialogHeader>
               <p className="text-sm leading-6">{candidate.draftedMessage}</p>
-              <p className="text-xs text-muted-foreground">
+              <p data-replay-public className="text-xs text-muted-foreground">
                 {t(
                   "The email includes a booking link. The offer lasts up to two hours, while the appointment remains available.",
                   "Пораката содржи линк за резервирање. Понудата важи најмногу два часа, додека терминот е слободен.",
@@ -296,6 +297,7 @@ function CandidateRow({
           </Dialog>
           {candidate.canApprove && (
             <Button
+              data-replay-public
               size="sm"
               variant="ghost"
               onClick={skipClient}

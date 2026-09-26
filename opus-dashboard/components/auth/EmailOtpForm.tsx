@@ -30,6 +30,8 @@ type EmailOtpFormProps = {
   title: string;
   description: string;
   callbackUrl?: string;
+  replayPublicTitle?: boolean;
+  replayPublicDescription?: boolean;
 };
 
 const stepVariants = {
@@ -71,6 +73,8 @@ export function EmailOtpForm({
   title,
   description,
   callbackUrl,
+  replayPublicTitle = false,
+  replayPublicDescription = false,
 }: EmailOtpFormProps) {
   const { t } = useDashboardI18n();
   const reduceMotion = useReducedMotion();
@@ -211,7 +215,7 @@ export function EmailOtpForm({
         aria-live="polite"
       >
         <Spinner />
-        <p className="text-sm text-muted-foreground">
+        <p data-replay-public className="text-sm text-muted-foreground">
           {t("Opening your studio…", "Го отвораме вашето студио…")}
         </p>
       </section>
@@ -235,12 +239,21 @@ export function EmailOtpForm({
             <div className={s.stepIcon} aria-hidden="true">
               {step === "email" ? <Mail size={23} /> : <MailCheck size={23} />}
             </div>
-            <h1>
+            <h1
+              data-replay-public={
+                step !== "email" || replayPublicTitle || undefined
+              }
+            >
               {step === "email"
                 ? title
                 : t("Check your email", "Проверете ја вашата е-пошта")}
             </h1>
-            <p className={s.description}>
+            <p
+              data-replay-public={
+                (step === "email" && replayPublicDescription) || undefined
+              }
+              className={s.description}
+            >
               {step === "email"
                 ? description
                 : t(
@@ -254,7 +267,7 @@ export function EmailOtpForm({
             <form onSubmit={sendCode} className="mt-8">
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
-                  <FieldLabel htmlFor="auth-email">
+                  <FieldLabel data-replay-public htmlFor="auth-email">
                     {t("Email address", "Е-пошта")}
                   </FieldLabel>
                   <Input
@@ -272,7 +285,7 @@ export function EmailOtpForm({
                     aria-describedby="auth-email-hint"
                     className="h-12"
                   />
-                  <FieldDescription id="auth-email-hint">
+                  <FieldDescription data-replay-public id="auth-email-hint">
                     {t(
                       "We’ll email you a six-digit code. No password needed.",
                       "Ќе ви испратиме шестцифрен код по е-пошта. Не ви треба лозинка.",
@@ -303,7 +316,7 @@ export function EmailOtpForm({
             <form onSubmit={verifyCode} className="mt-8">
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
-                  <FieldLabel htmlFor="auth-code">
+                  <FieldLabel data-replay-public htmlFor="auth-code">
                     {t("Sign-in code", "Код за најава")}
                   </FieldLabel>
                   <InputOTP
@@ -351,6 +364,7 @@ export function EmailOtpForm({
                 </Button>
                 <div className="flex items-center justify-between gap-3">
                   <Button
+                    data-replay-public
                     type="button"
                     variant="ghost"
                     size="sm"
@@ -366,6 +380,7 @@ export function EmailOtpForm({
                     {t("Change email", "Промени е-пошта")}
                   </Button>
                   <Button
+                    data-replay-public
                     type="button"
                     variant="link"
                     size="sm"

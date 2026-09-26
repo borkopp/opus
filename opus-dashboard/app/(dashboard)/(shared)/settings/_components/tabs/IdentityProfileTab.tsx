@@ -266,7 +266,7 @@ export function IdentityProfileTab({
           contentClassName="grid gap-6 md:grid-cols-[208px_1fr]"
         >
           <div className="flex flex-col gap-3">
-            <FieldLabel>{t("Logo", "Лого")}</FieldLabel>
+            <FieldLabel data-replay-public>{t("Logo", "Лого")}</FieldLabel>
             <div className="group relative flex h-52 w-52 max-w-full aspect-square flex-col justify-end overflow-hidden rounded-2xl border bg-secondary md:w-full">
               {branding.logoUrl ? (
                 <Image
@@ -318,7 +318,9 @@ export function IdentityProfileTab({
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            <FieldLabel>{t("Cover photo", "Насловна слика")}</FieldLabel>
+            <FieldLabel data-replay-public>
+              {t("Cover photo", "Насловна слика")}
+            </FieldLabel>
             <div className="group relative flex h-52 w-full flex-col justify-end overflow-hidden rounded-2xl border bg-secondary">
               {cover ? (
                 <Image
@@ -394,7 +396,7 @@ export function IdentityProfileTab({
         >
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="settings-name">
+              <FieldLabel data-replay-public htmlFor="settings-name">
                 {t("Business name", "Име на бизнис")}
               </FieldLabel>
               <Input
@@ -404,7 +406,7 @@ export function IdentityProfileTab({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-tagline">
+              <FieldLabel data-replay-public htmlFor="settings-tagline">
                 {t("Tagline", "Краток опис")}
               </FieldLabel>
               <Input
@@ -414,7 +416,7 @@ export function IdentityProfileTab({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-bio">
+              <FieldLabel data-replay-public htmlFor="settings-bio">
                 {t("About", "За нас")}
               </FieldLabel>
               <Textarea
@@ -425,7 +427,7 @@ export function IdentityProfileTab({
             </Field>
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>
-                <FieldLabel htmlFor="settings-phone">
+                <FieldLabel data-replay-public htmlFor="settings-phone">
                   {t("Phone", "Телефон")}
                 </FieldLabel>
                 <Input
@@ -435,7 +437,7 @@ export function IdentityProfileTab({
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="settings-instagram">
+                <FieldLabel data-replay-public htmlFor="settings-instagram">
                   {t("Instagram", "Instagram")}
                 </FieldLabel>
                 <Input
@@ -448,7 +450,7 @@ export function IdentityProfileTab({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="settings-website">
+                <FieldLabel data-replay-public htmlFor="settings-website">
                   {t("Website", "Веб-страница")}
                 </FieldLabel>
                 <Input
@@ -514,7 +516,10 @@ export function IdentityProfileTab({
                 {uploading === "gallery" ? (
                   <>
                     <Spinner className="size-6 text-primary" />
-                    <span className="text-xs font-medium text-muted-foreground">
+                    <span
+                      data-replay-public
+                      className="text-xs font-medium text-muted-foreground"
+                    >
                       {t("Uploading…", "Се прикачува…")}
                     </span>
                   </>
@@ -523,7 +528,10 @@ export function IdentityProfileTab({
                     <div className="flex size-9 items-center justify-center rounded-full bg-secondary text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
                       <Plus className="size-5" />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground">
+                    <span
+                      data-replay-public
+                      className="text-xs font-medium text-muted-foreground group-hover:text-foreground"
+                    >
                       {t("Add photo", "Додај фотографија")}
                     </span>
                   </>
@@ -531,7 +539,7 @@ export function IdentityProfileTab({
               </button>
             )}
           </div>
-          <FieldDescription>
+          <FieldDescription data-replay-public>
             {t(
               "Images are soft-deleted so audit history remains intact.",
               "Сликите се бришат со меко бришење за историјата на ревизија да остане непроменета.",

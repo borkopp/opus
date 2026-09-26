@@ -74,7 +74,7 @@ export function BookingCard({
         >
           <IconCircleCheck className="size-3 shrink-0" />
           {!compact && (
-            <span className="hidden sm:inline font-semibold">
+            <span data-replay-public className="hidden sm:inline font-semibold">
               {t("Completed", "Завршен")}
             </span>
           )}
@@ -92,7 +92,9 @@ export function BookingCard({
           title={t("Cancelled", "Откажан")}
         >
           <IconX className="size-3 shrink-0" />
-          {!compact && <span>{t("Cancelled", "Откажан")}</span>}
+          {!compact && (
+            <span data-replay-public>{t("Cancelled", "Откажан")}</span>
+          )}
         </span>
       );
     }
@@ -107,7 +109,9 @@ export function BookingCard({
           title={t("No Show", "Не се појави")}
         >
           <IconAlertTriangle className="size-3 shrink-0" />
-          {!compact && <span>{t("No Show", "Не се појави")}</span>}
+          {!compact && (
+            <span data-replay-public>{t("No Show", "Не се појави")}</span>
+          )}
         </span>
       );
     }
@@ -122,7 +126,11 @@ export function BookingCard({
           title={t("Booked via AI Assistant", "Закажано преку AI")}
         >
           <IconSparkles className="size-3 shrink-0" />
-          {!compact && <span className="font-semibold">AI</span>}
+          {!compact && (
+            <span data-replay-public className="font-semibold">
+              AI
+            </span>
+          )}
         </span>
       );
     }
@@ -185,7 +193,9 @@ export function BookingCard({
           <div className="flex items-center justify-between gap-1.5 leading-none">
             <div className="flex items-center gap-1 font-mono font-semibold text-[10.5px] tabular-nums tracking-tight opacity-90">
               <span className={theme.timeText}>{startLabel}</span>
-              <span className="opacity-40">–</span>
+              <span data-replay-public className="opacity-40">
+                –
+              </span>
               <span className={theme.timeText}>{endLabel}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -213,7 +223,9 @@ export function BookingCard({
             >
               {customerName}
             </span>
-            <span className="opacity-40 text-[9px] shrink-0">·</span>
+            <span data-replay-public className="opacity-40 text-[9px] shrink-0">
+              ·
+            </span>
             <span
               className={cn(
                 "truncate font-medium opacity-80 text-[10.5px]",
@@ -232,7 +244,9 @@ export function BookingCard({
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1 font-mono font-semibold text-[11px] tabular-nums tracking-tight">
                 <span className={theme.timeText}>{startLabel}</span>
-                <span className="opacity-40 font-normal">–</span>
+                <span data-replay-public className="opacity-40 font-normal">
+                  –
+                </span>
                 <span className={theme.timeText}>{endLabel}</span>
               </div>
               <span

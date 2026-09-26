@@ -56,13 +56,13 @@ export function PromotionKit({
       <div className="flex min-w-0 flex-col gap-7">
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>
+            <CardTitle data-replay-public>
               {t(
                 "Your booking link, everywhere.",
                 "Вашиот линк за закажување, насекаде.",
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription data-replay-public>
               {t(
                 "Share your booking link or put a QR code at your counter. Clients book without an app or account.",
                 "Споделете го линкот за закажување или поставете QR-код на пултот. Клиентите закажуваат без апликација или профил.",
@@ -72,7 +72,7 @@ export function PromotionKit({
           <CardContent className="pb-5">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="promotion-format">
+                <FieldLabel data-replay-public htmlFor="promotion-format">
                   {t("Format", "Формат")}
                 </FieldLabel>
                 <Select
@@ -84,22 +84,22 @@ export function PromotionKit({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="poster">
+                      <SelectItem data-replay-public value="poster">
                         {t("Counter sign · A5", "Постер за пулт · A5")}
                       </SelectItem>
-                      <SelectItem value="story">
+                      <SelectItem data-replay-public value="story">
                         {t(
                           "Book online · Instagram Story",
                           "Закажи онлајн · Instagram Story",
                         )}
                       </SelectItem>
-                      <SelectItem value="qr">
+                      <SelectItem data-replay-public value="qr">
                         {t("Booking QR code", "QR-код за закажување")}
                       </SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <FieldDescription>
+                <FieldDescription data-replay-public>
                   {t(
                     "Your QR code opens your live booking page and keeps working as your availability changes.",
                     "QR-кодот ја отвора вашата страница за закажување и останува ист кога ќе се променат слободните термини.",
@@ -107,7 +107,7 @@ export function PromotionKit({
                 </FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="promotion-link">
+                <FieldLabel data-replay-public htmlFor="promotion-link">
                   {t("Booking link", "Линк за закажување")}
                 </FieldLabel>
                 <Input

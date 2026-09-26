@@ -231,7 +231,13 @@ export function AiOperatorTab({
             "Manage your assistant identity, customer channels, and team handoff preferences.",
             "Управувајте со идентитетот на асистентот, каналите за клиенти и поставките за предавање на разговорите на тимот.",
           )}
-          action={!isPaid && <Badge variant="pro">Pro</Badge>}
+          action={
+            !isPaid && (
+              <Badge data-replay-public variant="pro">
+                Pro
+              </Badge>
+            )
+          }
           contentClassName="flex flex-col gap-7"
           footer={
             isPaid && (
@@ -249,7 +255,7 @@ export function AiOperatorTab({
           }
         >
           {!isPaid && (
-            <p className="text-sm text-muted-foreground">
+            <p data-replay-public className="text-sm text-muted-foreground">
               {t(
                 "AI front desk is included in Pro. Contact OPUS to upgrade and activate it for your studio.",
                 "AI рецепцијата е дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
@@ -299,7 +305,7 @@ export function AiOperatorTab({
               >
                 <FieldGroup className="max-w-2xl">
                   <Field data-invalid={Boolean(personaError)}>
-                    <FieldLabel htmlFor="persona-name">
+                    <FieldLabel data-replay-public htmlFor="persona-name">
                       {t("Assistant name", "Име на асистент")}
                     </FieldLabel>
                     <Input
@@ -316,7 +322,10 @@ export function AiOperatorTab({
                         if (personaError) setPersonaError(undefined);
                       }}
                     />
-                    <FieldDescription id="persona-name-description">
+                    <FieldDescription
+                      data-replay-public
+                      id="persona-name-description"
+                    >
                       {t(
                         "The name customers see in automated conversations.",
                         "Името што клиентите го гледаат во автоматските разговори.",
@@ -326,7 +335,10 @@ export function AiOperatorTab({
                   </Field>
 
                   <Field data-invalid={Boolean(confidenceError)}>
-                    <FieldLabel htmlFor="confidence-threshold">
+                    <FieldLabel
+                      data-replay-public
+                      htmlFor="confidence-threshold"
+                    >
                       {t("Confidence threshold", "Праг на сигурност")}
                     </FieldLabel>
                     <Input
@@ -353,7 +365,10 @@ export function AiOperatorTab({
                       }}
                     />
                     <ConfidenceMeter value={ai.aiConfidenceThreshold} />
-                    <FieldDescription id="confidence-description">
+                    <FieldDescription
+                      data-replay-public
+                      id="confidence-description"
+                    >
                       {t(
                         "Below this score, the conversation is handed to a person.",
                         "Под оваа оцена, разговорот се пренасочува кон вработен.",
@@ -363,7 +378,7 @@ export function AiOperatorTab({
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="handoff-phone">
+                    <FieldLabel data-replay-public htmlFor="handoff-phone">
                       {t(
                         "Handoff phone number",
                         "Телефонски број за пренасочување",
@@ -380,7 +395,7 @@ export function AiOperatorTab({
                         }))
                       }
                     />
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "Customers can be directed here when the assistant cannot help.",
                         "Клиентите може да бидат пренасочени тука кога асистентот не може да помогне.",
@@ -438,7 +453,9 @@ export function AiOperatorTab({
               >
                 <FieldGroup className="max-w-2xl">
                   <Field>
-                    <FieldLabel>{t("Tone", "Тон на обраќање")}</FieldLabel>
+                    <FieldLabel data-replay-public>
+                      {t("Tone", "Тон на обраќање")}
+                    </FieldLabel>
                     <ToggleGroup
                       disabled={controlsDisabled}
                       type="single"
@@ -465,7 +482,9 @@ export function AiOperatorTab({
                   </Field>
 
                   <Field>
-                    <FieldLabel>{t("Language", "Јазик")}</FieldLabel>
+                    <FieldLabel data-replay-public>
+                      {t("Language", "Јазик")}
+                    </FieldLabel>
                     <ToggleGroup
                       disabled={controlsDisabled}
                       type="single"
@@ -495,7 +514,7 @@ export function AiOperatorTab({
                         </ToggleGroupItem>
                       ))}
                     </ToggleGroup>
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "Auto-detect replies in English or Macedonian based on the customer's message.",
                         "Автоматско одговарање на англиски или македонски јазик во зависност од пораката на клиентот.",
@@ -504,7 +523,7 @@ export function AiOperatorTab({
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="greeting-message">
+                    <FieldLabel data-replay-public htmlFor="greeting-message">
                       {t("Greeting message", "Порака за поздрав")}
                     </FieldLabel>
                     <Input
@@ -521,7 +540,7 @@ export function AiOperatorTab({
                         }))
                       }
                     />
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "A greeting preference for the assistant’s first reply.",
                         "Пример за поздрав во првиот одговор на асистентот.",
@@ -530,7 +549,10 @@ export function AiOperatorTab({
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="custom-instructions">
+                    <FieldLabel
+                      data-replay-public
+                      htmlFor="custom-instructions"
+                    >
                       {t("Custom instructions", "Прилагодени упатства")}
                     </FieldLabel>
                     <Textarea
@@ -548,7 +570,7 @@ export function AiOperatorTab({
                         }))
                       }
                     />
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "Add boundaries, special policies, or preferred wording.",
                         "Додајте ограничувања, посебни правила или претпочитани формулации.",
@@ -641,7 +663,10 @@ export function AiOperatorTab({
                                 )
                               }
                             />
-                            <span className="text-xs text-muted-foreground">
+                            <span
+                              data-replay-public
+                              className="text-xs text-muted-foreground"
+                            >
                               {t("to", "до")}
                             </span>
                             <Input
@@ -666,7 +691,7 @@ export function AiOperatorTab({
                     })}
 
                     <Field>
-                      <FieldLabel htmlFor="away-message">
+                      <FieldLabel data-replay-public htmlFor="away-message">
                         {t("Away message", "Порака за отсутност")}
                       </FieldLabel>
                       <Textarea

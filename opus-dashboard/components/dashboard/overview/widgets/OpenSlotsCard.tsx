@@ -27,7 +27,7 @@ export function OpenSlotsCard({
         <span className={s.roundIcon}>
           <ArrowDownLeft size={20} />
         </span>
-        <span>{t("AVAILABLE TODAY", "СЛОБОДНО ДЕНЕС")}</span>
+        <span data-replay-public>{t("AVAILABLE TODAY", "СЛОБОДНО ДЕНЕС")}</span>
       </div>
       <h2 data-appear="item" style={appearStep(2)}>
         {loaded
@@ -39,7 +39,7 @@ export function OpenSlotsCard({
         <br />
         {t("Make room for more.", "Место за уште еден клиент.")}
       </h2>
-      <p data-appear="item" style={appearStep(3)}>
+      <p data-replay-public data-appear="item" style={appearStep(3)}>
         {t(
           "Book a client into an available slot.",
           "Закажете клиент во слободен термин.",
@@ -83,6 +83,7 @@ export function OpenSlotsCard({
         ))}
       </div>
       <button
+        data-replay-public
         type="button"
         data-appear="item"
         style={appearStep(7)}

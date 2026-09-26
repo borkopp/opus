@@ -19,6 +19,8 @@ export function ServicesWidget({
   const services = analytics?.servicePerformance.byAppointments.slice(0, 4);
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={45}
       title={t("Popular services", "Популарни услуги")}
       subtitle={t(
@@ -87,7 +89,7 @@ export function ServicesWidget({
                 </span>
                 <strong>
                   {service.appointments}
-                  <small> {t("bookings", "термини")}</small>
+                  <small data-replay-public> {t("bookings", "термини")}</small>
                 </strong>
               </div>
               <div className={s.serviceTrack}>

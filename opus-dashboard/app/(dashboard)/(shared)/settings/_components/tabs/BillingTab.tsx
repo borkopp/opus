@@ -152,7 +152,10 @@ export function BillingTab() {
         >
           <div className="flex flex-col gap-5">
             <BillingPlanSummary data={data} />
-            <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            <p
+              data-replay-public
+              className="max-w-2xl text-sm leading-6 text-muted-foreground"
+            >
               {!data.canManage
                 ? t(
                     "Only the studio owner can change the subscription or manage payments.",
@@ -175,7 +178,7 @@ export function BillingTab() {
             </p>
             {data.subscription?.cancelAtPeriodEnd && data.plan === "paid" && (
               <Alert>
-                <AlertDescription>
+                <AlertDescription data-replay-public>
                   {t(
                     "Your subscription will not renew. Pro stays active until the end of your current billing period.",
                     "Претплатата нема да се обнови. Pro останува активен до крајот на тековниот платен период.",
@@ -185,7 +188,7 @@ export function BillingTab() {
             )}
             {data.managed && data.plan === "free" && (
               <Alert>
-                <AlertDescription>
+                <AlertDescription data-replay-public>
                   {t(
                     "Pro is not active. Open Manage billing to check your payment or subscription status.",
                     "Pro не е активен. Отворете Управување со наплата за да го проверите плаќањето или статусот на претплатата.",
@@ -198,7 +201,7 @@ export function BillingTab() {
               !data.portalAvailable &&
               data.plan === "free" && (
                 <Alert>
-                  <AlertDescription>
+                  <AlertDescription data-replay-public>
                     {t(
                       "Online subscriptions are not available yet. Your Free plan remains available.",
                       "Онлајн претплатите сè уште не се достапни. Бесплатниот план останува достапен.",
@@ -208,7 +211,7 @@ export function BillingTab() {
               )}
             {data.syncFailed && (
               <Alert variant="destructive">
-                <AlertDescription>
+                <AlertDescription data-replay-public>
                   {t(
                     "We could not confirm the latest subscription status. Please refresh or contact support.",
                     "Не можевме да го потврдиме најновиот статус на претплатата. Освежете или контактирајте со поддршката.",
@@ -217,7 +220,11 @@ export function BillingTab() {
               </Alert>
             )}
             {(returned || data.syncing) && (
-              <p role="status" className="text-sm text-muted-foreground">
+              <p
+                data-replay-public
+                role="status"
+                className="text-sm text-muted-foreground"
+              >
                 {data.plan === "paid"
                   ? t(
                       "Pro is active for your studio.",

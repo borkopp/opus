@@ -54,10 +54,16 @@ export function GapOptimizerHeader({
   return (
     <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1
+          data-replay-public
+          className="text-2xl font-semibold tracking-tight"
+        >
           {t("Fill openings", "Пополнување слободни термини")}
         </h1>
-        <p className="max-w-xl text-sm text-muted-foreground">
+        <p
+          data-replay-public
+          className="max-w-xl text-sm text-muted-foreground"
+        >
           {t(
             "Find a service that fits and review who to invite. You approve every email.",
             "Пронајдете соодветна услуга и изберете кого да поканите. Вие ја одобрувате секоја порака.",
@@ -74,7 +80,9 @@ export function GapOptimizerHeader({
       </div>
       <div className="flex items-end gap-2">
         <Field className="w-auto">
-          <FieldLabel htmlFor="recovery-date">{t("Date", "Датум")}</FieldLabel>
+          <FieldLabel data-replay-public htmlFor="recovery-date">
+            {t("Date", "Датум")}
+          </FieldLabel>
           <Input
             id="recovery-date"
             type="date"

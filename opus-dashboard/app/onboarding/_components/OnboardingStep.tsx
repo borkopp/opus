@@ -12,11 +12,15 @@ export function StepFrame({
   description,
   children,
   wide = false,
+  replayPublicTitle = false,
+  replayPublicDescription = false,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
   wide?: boolean;
+  replayPublicTitle?: boolean;
+  replayPublicDescription?: boolean;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -26,6 +30,7 @@ export function StepFrame({
   return (
     <section className="flex w-full min-w-0 flex-col items-center">
       <h1
+        data-replay-public={replayPublicTitle || undefined}
         ref={heading}
         tabIndex={-1}
         className="max-w-3xl text-balance text-center font-display text-[2rem] font-semibold leading-[1.1] tracking-tight outline-none sm:text-4xl lg:text-5xl"
@@ -33,7 +38,10 @@ export function StepFrame({
         {title}
       </h1>
       {description && (
-        <p className="mt-3 max-w-lg text-pretty text-center text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p
+          data-replay-public={replayPublicDescription || undefined}
+          className="mt-3 max-w-lg text-pretty text-center text-sm leading-relaxed text-muted-foreground sm:text-base"
+        >
           {description}
         </p>
       )}
@@ -72,6 +80,7 @@ export function WizardActions({
     >
       {canGoBack && (
         <Button
+          data-replay-public
           type="button"
           variant="ghost"
           className="h-12 px-3"
@@ -83,6 +92,7 @@ export function WizardActions({
         </Button>
       )}
       <Button
+        data-replay-public
         type="submit"
         size="lg"
         className="h-12 min-w-0 px-5 shadow-none sm:min-w-36"

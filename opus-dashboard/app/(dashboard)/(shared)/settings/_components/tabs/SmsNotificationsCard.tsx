@@ -77,7 +77,13 @@ export function SmsNotificationsCard({
   return (
     <SettingsCard
       title={t("SMS notifications", "SMS известувања")}
-      action={!isPaid && <Badge variant="pro">Pro</Badge>}
+      action={
+        !isPaid && (
+          <Badge data-replay-public variant="pro">
+            Pro
+          </Badge>
+        )
+      }
       description={t(
         "Send clients appointment confirmations, changes, cancellations, and reminders by SMS.",
         "Испраќајте SMS потврди, промени, откажувања и потсетници за термините на клиентите.",
@@ -95,7 +101,7 @@ export function SmsNotificationsCard({
       }
     >
       {!isPaid ? (
-        <p className="text-sm text-muted-foreground">
+        <p data-replay-public className="text-sm text-muted-foreground">
           {t(
             "SMS notifications are included in Pro. Contact OPUS to upgrade and activate them for your studio.",
             "SMS известувањата се дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
@@ -103,7 +109,7 @@ export function SmsNotificationsCard({
         </p>
       ) : (
         !available && (
-          <p className="text-sm text-muted-foreground">
+          <p data-replay-public className="text-sm text-muted-foreground">
             {t(
               "SMS delivery is awaiting activation. Contact OPUS to enable it for your studio.",
               "Испраќањето SMS чека активирање. Контактирајте нè за да го овозможиме за вашето студио.",
@@ -133,7 +139,7 @@ export function SmsNotificationsCard({
       {isPaid && enabled && (
         <FieldGroup className="max-w-xl">
           <Field data-invalid={Boolean(error)}>
-            <FieldLabel htmlFor="sms-reminder-hours">
+            <FieldLabel data-replay-public htmlFor="sms-reminder-hours">
               {t(
                 "SMS reminder schedule (hours before)",
                 "Распоред за SMS потсетници (часови однапред)",
@@ -152,7 +158,7 @@ export function SmsNotificationsCard({
                 setError(undefined);
               }}
             />
-            <FieldDescription id="sms-reminder-description">
+            <FieldDescription data-replay-public id="sms-reminder-description">
               {t(
                 "For example, 24, 2 sends reminders a day and two hours before. Leave empty to send only confirmations and appointment updates.",
                 "На пример, 24, 2 испраќа потсетници еден ден и два часа однапред. Оставете празно за да испраќате само потврди и промени на термините.",

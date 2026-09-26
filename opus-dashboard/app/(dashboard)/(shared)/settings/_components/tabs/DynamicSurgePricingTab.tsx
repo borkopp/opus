@@ -47,6 +47,7 @@ export function DynamicSurgePricingTab({
           )}
           action={
             <Badge
+              data-replay-public
               variant="outline"
               className="border-border/80 bg-muted/60 text-xs font-medium text-muted-foreground"
             >
@@ -54,7 +55,7 @@ export function DynamicSurgePricingTab({
             </Badge>
           }
           footer={
-            <Button disabled>
+            <Button data-replay-public disabled>
               {t("Save pricing settings", "Зачувај поставки за цени")}
             </Button>
           }
@@ -80,10 +81,13 @@ export function DynamicSurgePricingTab({
 
           <div className="flex items-center justify-between gap-4 rounded-xl border border-border/50 bg-muted/30 p-4">
             <div>
-              <p className="text-sm font-medium">
+              <p data-replay-public className="text-sm font-medium">
                 {t("Configured rules", "Конфигурирани правила")}
               </p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              <p
+                data-replay-public
+                className="mt-1 text-xs leading-5 text-muted-foreground"
+              >
                 {t(
                   "Rules are applied only while surge pricing is enabled.",
                   "Правилата се применуваат само додека се овозможени динамичните цени.",

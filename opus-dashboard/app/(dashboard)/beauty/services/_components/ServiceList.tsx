@@ -213,6 +213,7 @@ export function ServiceList({
         </EmptyHeader>
         <EmptyContent>
           <Button
+            data-replay-public
             onClick={onAddService}
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
@@ -242,7 +243,7 @@ export function ServiceList({
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" onClick={onClearSearch}>
+          <Button data-replay-public variant="outline" onClick={onClearSearch}>
             {t("Clear search", "Исчисти пребарување")}
           </Button>
         </EmptyContent>
@@ -299,7 +300,7 @@ export function ServiceList({
                           {service.name}
                         </span>
                         {!service.isActive && (
-                          <Badge variant="secondary">
+                          <Badge data-replay-public variant="secondary">
                             {t("Inactive", "Неактивна")}
                           </Badge>
                         )}
@@ -347,6 +348,7 @@ export function ServiceList({
                     <DropdownMenuContent align="end" className="w-44">
                       <DropdownMenuGroup>
                         <DropdownMenuItem
+                          data-replay-public
                           onSelect={() => setEditingServiceId(service._id)}
                         >
                           <PencilIcon />
@@ -355,6 +357,7 @@ export function ServiceList({
                         {!searchQuery.trim() && group.services.length > 1 && (
                           <>
                             <DropdownMenuItem
+                              data-replay-public
                               disabled={index === 0}
                               onSelect={() =>
                                 moveService(group.services, index, "up")
@@ -364,6 +367,7 @@ export function ServiceList({
                               {t("Move up", "Помести нагоре")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
+                              data-replay-public
                               disabled={index === group.services.length - 1}
                               onSelect={() =>
                                 moveService(group.services, index, "down")
@@ -378,6 +382,7 @@ export function ServiceList({
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
                         <DropdownMenuItem
+                          data-replay-public
                           variant="destructive"
                           onSelect={() =>
                             handleRemove(service._id, service.name)

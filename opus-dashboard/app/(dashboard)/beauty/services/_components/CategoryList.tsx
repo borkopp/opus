@@ -189,6 +189,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
     >
       <DialogTrigger asChild>
         <Button
+          data-replay-public
           variant="outline"
           className="h-11 flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
         >
@@ -198,8 +199,10 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("Categories", "Категории")}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle data-replay-public>
+            {t("Categories", "Категории")}
+          </DialogTitle>
+          <DialogDescription data-replay-public>
             {t(
               "Group related services on your booking page.",
               "Групирајте сродни услуги на вашата страница за закажување.",
@@ -246,6 +249,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     >
                       <Field orientation="horizontal">
                         <FieldLabel
+                          data-replay-public
                           htmlFor={`category-${category._id}`}
                           className="sr-only"
                         >
@@ -316,6 +320,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                         <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuGroup>
                             <DropdownMenuItem
+                              data-replay-public
                               onSelect={() => {
                                 setEditingId(category._id);
                                 setEditName(category.name);
@@ -327,6 +332,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                             {categories.length > 1 && (
                               <>
                                 <DropdownMenuItem
+                                  data-replay-public
                                   disabled={index === 0}
                                   onSelect={() => moveCategory(index, "up")}
                                 >
@@ -334,6 +340,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                                   {t("Move up", "Помести нагоре")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  data-replay-public
                                   disabled={index === categories.length - 1}
                                   onSelect={() => moveCategory(index, "down")}
                                 >
@@ -346,6 +353,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           <DropdownMenuSeparator />
                           <DropdownMenuGroup>
                             <DropdownMenuItem
+                              data-replay-public
                               variant="destructive"
                               onSelect={() =>
                                 handleDelete(category._id, category.name)
@@ -372,7 +380,11 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                 className="rounded-lg border p-2"
               >
                 <Field orientation="horizontal">
-                  <FieldLabel htmlFor="new-category" className="sr-only">
+                  <FieldLabel
+                    data-replay-public
+                    htmlFor="new-category"
+                    className="sr-only"
+                  >
                     {t("Category name", "Име на категорија")}
                   </FieldLabel>
                   <Input
@@ -416,6 +428,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
               </form>
             ) : (
               <Button
+                data-replay-public
                 variant="outline"
                 className="w-full"
                 onClick={() => {

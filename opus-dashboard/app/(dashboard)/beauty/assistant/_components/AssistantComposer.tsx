@@ -42,7 +42,11 @@ export function AssistantComposer({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="business-question" className="sr-only">
+          <FieldLabel
+            data-replay-public
+            htmlFor="business-question"
+            className="sr-only"
+          >
             {t("Ask about your studio", "Прашајте за вашето студио")}
           </FieldLabel>
           <InputGroup className="dashboard-assistant-composer">

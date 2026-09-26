@@ -19,7 +19,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
             <Logo className={s.brand} />
           </a>
           <Button asChild variant="outline" className={s.backLink}>
-            <a href="https://opus.mk">
+            <a data-replay-public href="https://opus.mk">
               <ArrowLeft data-icon="inline-start" aria-hidden="true" />
               {t("Back to OPUS", "Назад кон OPUS")}
             </a>
@@ -45,11 +45,13 @@ export function AuthLayout({ children }: { children: ReactNode }) {
               />
             </div>
             <div className={s.studioCopy}>
-              <p className={s.eyebrow}>
+              <p data-replay-public className={s.eyebrow}>
                 {t("YOUR STUDIO, CONNECTED", "ВАШЕТО СТУДИО, ПОВРЗАНО")}
               </p>
-              <h2>{t("Everything in its place.", "Сè на свое место.")}</h2>
-              <p className={s.studioDescription}>
+              <h2 data-replay-public>
+                {t("Everything in its place.", "Сè на свое место.")}
+              </h2>
+              <p data-replay-public className={s.studioDescription}>
                 {t(
                   "Your appointments, your team, and your clients. Together in one simple workspace.",
                   "Вашите термини, вашиот тим и вашите клиенти. Заедно на едно место.",
@@ -60,20 +62,20 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         </div>
 
         <footer className={s.footer}>
-          <p>
+          <p data-replay-public>
             {t(
               "A little more room for your day.",
               "Повеќе простор во вашиот ден.",
             )}
           </p>
           <nav aria-label={t("Support and legal", "Помош и правни информации")}>
-            <a href="https://opus.mk/privacy">
+            <a data-replay-public href="https://opus.mk/privacy">
               {t("Privacy policy", "Политика за приватност")}
             </a>
-            <a href="https://opus.mk/terms">
+            <a data-replay-public href="https://opus.mk/terms">
               {t("Terms of service", "Услови за користење")}
             </a>
-            <a href="https://opus.mk/contact">
+            <a data-replay-public href="https://opus.mk/contact">
               {t("Need a hand?", "Ви треба помош?")}
               <ArrowUpRight size={14} aria-hidden="true" />
             </a>

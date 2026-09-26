@@ -11,16 +11,25 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
   // and provider verification. This concept has no live conversations or actions.
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={90}
       title={t("AI front desk", "AI рецепција")}
       subtitle={t(
         "Client conversations and team handoffs",
         "Разговори со клиенти и предавање на тимот",
       )}
-      action={!paid && <Badge variant="pro">Pro</Badge>}
+      action={
+        !paid && (
+          <Badge data-replay-public variant="pro">
+            Pro
+          </Badge>
+        )
+      }
     >
       <div className="mt-5 flex flex-col items-start gap-3">
         <p
+          data-replay-public
           data-appear="item"
           style={appearStep(4)}
           className="text-sm leading-6 text-muted-foreground"
@@ -38,6 +47,7 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
           className="mt-5 flex flex-col items-start gap-2 border-t border-border/60 pt-4 text-xs leading-5 text-muted-foreground"
         >
           <a
+            data-replay-public
             href="https://opus.mk/#pricing"
             target="_blank"
             rel="noopener noreferrer"
@@ -50,6 +60,7 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
       )}
       {paid ? (
         <Link
+          data-replay-public
           data-appear="item"
           style={appearStep(6)}
           href="/settings?tab=ai"
@@ -60,6 +71,7 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
         </Link>
       ) : (
         <button
+          data-replay-public
           data-appear="item"
           style={appearStep(6)}
           disabled

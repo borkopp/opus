@@ -63,8 +63,8 @@ export function ArtworkPaletteEditor({
   return (
     <Card className="@container min-w-0">
       <CardHeader>
-        <CardTitle>{t("Colors", "Бои")}</CardTitle>
-        <CardDescription>
+        <CardTitle data-replay-public>{t("Colors", "Бои")}</CardTitle>
+        <CardDescription data-replay-public>
           {t(
             "Choose a palette or make it your own.",
             "Изберете палета или приспособете ги боите.",
@@ -165,7 +165,10 @@ export function ArtworkPaletteEditor({
               </Field>
             ))}
           </FieldGroup>
-          <p className="text-xs leading-relaxed text-muted-foreground">
+          <p
+            data-replay-public
+            className="text-xs leading-relaxed text-muted-foreground"
+          >
             {t(
               "Remembered for this studio on this browser. Text and QR contrast adjust for readability.",
               "Се запомнуваат за ова студио во овој прелистувач. Контрастот на текстот и QR-кодот се приспособува за читливост.",

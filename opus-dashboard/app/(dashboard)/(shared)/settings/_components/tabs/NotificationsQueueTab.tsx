@@ -263,7 +263,7 @@ export function NotificationsQueueTab({
                 "Потврдува дека клиентот е сопственик на е-адресата пред да се креира терминот.",
               )}
               control={
-                <Badge variant="secondary">
+                <Badge data-replay-public variant="secondary">
                   <ShieldCheck data-icon="inline-start" />
                   {t("Required", "Задолжително")}
                 </Badge>
@@ -276,7 +276,7 @@ export function NotificationsQueueTab({
                 "Испраќа преглед на терминот, датотека за календар, насоки и контакт информации за студиото.",
               )}
               control={
-                <Badge variant="secondary">
+                <Badge data-replay-public variant="secondary">
                   <MailCheck data-icon="inline-start" />
                   {t("Always on", "Секогаш вклучено")}
                 </Badge>
@@ -371,7 +371,7 @@ export function NotificationsQueueTab({
           {email.staffReminderEmailEnabled && (
             <FieldGroup className="max-w-xl">
               <Field data-invalid={Boolean(staffReminderError)}>
-                <FieldLabel htmlFor="staff-reminder-hours">
+                <FieldLabel data-replay-public htmlFor="staff-reminder-hours">
                   {t(
                     "Team reminder schedule (hours before)",
                     "Распоред за тимски потсетници (часови однапред)",
@@ -392,7 +392,10 @@ export function NotificationsQueueTab({
                   }}
                   placeholder="24, 2"
                 />
-                <FieldDescription id="staff-reminder-description">
+                <FieldDescription
+                  data-replay-public
+                  id="staff-reminder-description"
+                >
                   {t(
                     "This schedule is independent from the client reminder schedule.",
                     "Овој распоред е независен од распоредот за потсетување на клиенти.",
@@ -410,7 +413,7 @@ export function NotificationsQueueTab({
                 "Дополнителни примачи од контролната табла",
               )}
             </FieldLegend>
-            <FieldDescription>
+            <FieldDescription data-replay-public>
               {t(
                 "Staff with an appointment email receive only their assigned appointments. Select dashboard users here if they should also receive studio-wide team emails.",
                 "Вработените со е-пошта за термини ги добиваат само своите доделени термини. Изберете корисници тука доколку треба да добиваат е-пораки за целото студио.",
@@ -464,7 +467,7 @@ export function NotificationsQueueTab({
               })}
             </FieldGroup>
             {initialData.emailRecipients.length === 0 && (
-              <FieldDescription>
+              <FieldDescription data-replay-public>
                 {t(
                   "There are no active dashboard users to add. Appointment emails are linked from the Staff page.",
                   "Нема активни корисници за додавање. Е-поштата за термини се поврзува на страницата Тим.",

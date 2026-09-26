@@ -250,12 +250,12 @@ export function StaffFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="dashboard-panel max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle data-replay-public>
             {isEdit
               ? t("Edit staff details", "Уреди детали за вработен")
               : t("Add a staff member", "Додај вработен")}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription data-replay-public>
             {isEdit
               ? t(
                   "Update the information customers and your team see.",
@@ -280,7 +280,7 @@ export function StaffFormDialog({
             <form id="staff-form" onSubmit={handleSubmit}>
               <FieldGroup className="gap-5 py-2">
                 <Field>
-                  <FieldLabel>
+                  <FieldLabel data-replay-public>
                     {t("Profile photo", "Профилна слика")}
                   </FieldLabel>
                   <div className="flex items-center gap-4">
@@ -329,7 +329,7 @@ export function StaffFormDialog({
 
                 <FieldGroup className="grid gap-4 sm:grid-cols-2">
                   <Field>
-                    <FieldLabel htmlFor="staff-name">
+                    <FieldLabel data-replay-public htmlFor="staff-name">
                       {t("Display name", "Име за приказ")}
                     </FieldLabel>
                     <Input
@@ -342,7 +342,7 @@ export function StaffFormDialog({
                   </Field>
 
                   <Field>
-                    <FieldLabel htmlFor="staff-role">
+                    <FieldLabel data-replay-public htmlFor="staff-role">
                       {t("Role", "Улога")}
                     </FieldLabel>
                     <Select
@@ -359,6 +359,7 @@ export function StaffFormDialog({
                       <SelectContent>
                         <SelectGroup>
                           <SelectItem
+                            data-replay-public
                             value="staff"
                             disabled={
                               (!isEdit || isActive) &&
@@ -368,6 +369,7 @@ export function StaffFormDialog({
                             {t("Staff member", "Вработен")}
                           </SelectItem>
                           <SelectItem
+                            data-replay-public
                             value="manager"
                             disabled={
                               (!isEdit || isActive) &&
@@ -377,6 +379,7 @@ export function StaffFormDialog({
                             {t("Manager", "Менаџер")}
                           </SelectItem>
                           <SelectItem
+                            data-replay-public
                             value="owner"
                             disabled={
                               (!isEdit || isActive) &&
@@ -389,7 +392,7 @@ export function StaffFormDialog({
                       </SelectContent>
                     </Select>
                     {planStatus?.isFree && (
-                      <FieldDescription>
+                      <FieldDescription data-replay-public>
                         {t(
                           "Free: 1 owner and 3 staff. Managers use a staff slot.",
                           "Бесплатно: 1 сопственик и 3 вработени. Менаџерите зафаќаат место за вработен.",
@@ -401,9 +404,15 @@ export function StaffFormDialog({
 
                 {canManageAppointmentEmail && (
                   <Field>
-                    <FieldLabel htmlFor="staff-appointment-email">
+                    <FieldLabel
+                      data-replay-public
+                      htmlFor="staff-appointment-email"
+                    >
                       {t("Appointment email", "Е-пошта за термини")}{" "}
-                      <span className="text-muted-foreground">
+                      <span
+                        data-replay-public
+                        className="text-muted-foreground"
+                      >
                         ({t("optional", "опционално")})
                       </span>
                     </FieldLabel>
@@ -417,7 +426,7 @@ export function StaffFormDialog({
                       }
                       placeholder="ana@studio.mk"
                     />
-                    <FieldDescription>
+                    <FieldDescription data-replay-public>
                       {t(
                         "Receives new appointment and reminder emails only for bookings assigned to this person. This does not grant dashboard access.",
                         "Прима пораки за нови термини и потсетници само за закажувања доделени на ова лице. Ова не дава пристап до контролната табла.",
@@ -427,9 +436,9 @@ export function StaffFormDialog({
                 )}
 
                 <Field>
-                  <FieldLabel htmlFor="staff-specialties">
+                  <FieldLabel data-replay-public htmlFor="staff-specialties">
                     {t("Specialties", "Специјалности")}{" "}
-                    <span className="text-muted-foreground">
+                    <span data-replay-public className="text-muted-foreground">
                       ({t("optional", "опционално")})
                     </span>
                   </FieldLabel>
@@ -442,7 +451,7 @@ export function StaffFormDialog({
                       "Нокти, веѓи, шминка",
                     )}
                   />
-                  <FieldDescription>
+                  <FieldDescription data-replay-public>
                     {t(
                       "Separate multiple specialties with commas.",
                       "Одделете повеќе специјалности со запирки.",
@@ -451,9 +460,9 @@ export function StaffFormDialog({
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="staff-bio">
+                  <FieldLabel data-replay-public htmlFor="staff-bio">
                     {t("Short bio", "Кратка биографија")}{" "}
-                    <span className="text-muted-foreground">
+                    <span data-replay-public className="text-muted-foreground">
                       ({t("optional", "опционално")})
                     </span>
                   </FieldLabel>
@@ -475,7 +484,7 @@ export function StaffFormDialog({
                       <FieldTitle>
                         {t("Available for bookings", "Достапен за закажувања")}
                       </FieldTitle>
-                      <FieldDescription>
+                      <FieldDescription data-replay-public>
                         {t(
                           "Turn this off to hide this person from new bookings.",
                           "Исклучете го ова за да го сокриете ова лице од нови закажувања.",
@@ -506,6 +515,7 @@ export function StaffFormDialog({
 
         <DialogFooter>
           <Button
+            data-replay-public
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}

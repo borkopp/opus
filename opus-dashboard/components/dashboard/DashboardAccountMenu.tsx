@@ -81,7 +81,7 @@ export function DashboardAccountMenu({
           </span>
           <span className={s.profileLabel}>
             <strong>{name}</strong>
-            <span>
+            <span data-replay-public>
               {profile.role === "owner"
                 ? t("Studio owner", "Сопственик")
                 : profile.role === "manager"
@@ -95,7 +95,10 @@ export function DashboardAccountMenu({
         <DropdownMenuLabel>
           <div className="flex items-center justify-between gap-2">
             <span className="truncate">{name}</span>
-            <Badge variant={profile.plan === "paid" ? "default" : "secondary"}>
+            <Badge
+              data-replay-public
+              variant={profile.plan === "paid" ? "default" : "secondary"}
+            >
               {profile.plan === "paid" ? "Pro" : "Free"}
             </Badge>
           </div>
@@ -106,39 +109,39 @@ export function DashboardAccountMenu({
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/settings">
+            <Link data-replay-public href="/settings">
               <Settings2 />
               {t("Settings", "Поставки")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/settings?tab=themes">
+            <Link data-replay-public href="/settings?tab=themes">
               <SwatchBook />
               {t("Dashboard theme", "Тема на контролната табла")}
             </Link>
           </DropdownMenuItem>
           {profile.role !== "staff" && (
             <DropdownMenuItem asChild>
-              <Link href="/beauty/assistant">
+              <Link data-replay-public href="/beauty/assistant">
                 <ChartNoAxesCombined />
                 {t("Business assistant", "Деловен асистент")}
               </Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem asChild>
-            <Link href="/gap-optimizer">
+            <Link data-replay-public href="/gap-optimizer">
               <CalendarClock />
               {t("Opening recovery", "Пополнување слободни термини")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/ai-inbox">
+            <Link data-replay-public href="/ai-inbox">
               <MessagesSquare />
               {t("AI frontdesk inbox", "Сандаче на AI рецепција")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger data-replay-public>
               <Languages />
               {t("Language", "Јазик")}
             </DropdownMenuSubTrigger>
@@ -147,10 +150,10 @@ export function DashboardAccountMenu({
                 value={language}
                 onValueChange={(value) => setLanguage(value as "en" | "mk")}
               >
-                <DropdownMenuRadioItem value="en">
+                <DropdownMenuRadioItem data-replay-public value="en">
                   English
                 </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="mk">
+                <DropdownMenuRadioItem data-replay-public value="mk">
                   Македонски
                 </DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
@@ -162,14 +165,18 @@ export function DashboardAccountMenu({
         <DropdownMenuGroup>
           {profile.role === "owner" && profile.plan === "paid" && (
             <DropdownMenuItem asChild>
-              <Link href="/settings?tab=billing">
+              <Link data-replay-public href="/settings?tab=billing">
                 <CreditCard />
                 {t("Subscription", "Претплата")}
               </Link>
             </DropdownMenuItem>
           )}
           {profile.plan !== "paid" && <OpusProMenuItem />}
-          <DropdownMenuItem onSelect={signOut} disabled={signingOut}>
+          <DropdownMenuItem
+            data-replay-public
+            onSelect={signOut}
+            disabled={signingOut}
+          >
             <LogOut />
             {t("Sign out", "Одјави се")}
           </DropdownMenuItem>

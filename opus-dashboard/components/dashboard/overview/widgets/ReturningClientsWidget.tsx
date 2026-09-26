@@ -14,6 +14,8 @@ export function ReturningClientsWidget({
   const percent = clients ? Math.round(clients.returningClientShare) : 0;
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={70}
       title={t("Returning clients", "Редовни клиенти")}
       subtitle={t(
@@ -32,11 +34,11 @@ export function ReturningClientsWidget({
         >
           <span>
             {clients ? percent : "—"}
-            <small>%</small>
+            <small data-replay-public>%</small>
           </span>
         </div>
         <div>
-          <strong data-appear="item" style={appearStep(4)}>
+          <strong data-replay-public data-appear="item" style={appearStep(4)}>
             {t(
               "Strong relationships, built over time.",
               "Добри односи, градени со време.",

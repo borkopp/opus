@@ -85,7 +85,7 @@ export function ClientList({
         </EmptyHeader>
         {filtered && (
           <EmptyContent>
-            <Button variant="outline" onClick={onClear}>
+            <Button data-replay-public variant="outline" onClick={onClear}>
               {t("Clear filters", "Исчисти филтри")}
             </Button>
           </EmptyContent>
@@ -109,7 +109,7 @@ export function ClientList({
                 {t("Completed value", "Вредност на посетите")}
               </TableHead>
               <TableHead>
-                <span className="sr-only">
+                <span data-replay-public className="sr-only">
                   {t("Open profile", "Отвори профил")}
                 </span>
               </TableHead>
@@ -175,7 +175,10 @@ export function ClientList({
             </span>
             <span className="flex flex-wrap items-end justify-between gap-3 text-sm">
               <span className="flex flex-col gap-1">
-                <span className="text-xs text-muted-foreground">
+                <span
+                  data-replay-public
+                  className="text-xs text-muted-foreground"
+                >
                   {t("Last visit", "Последна посета")}
                 </span>
                 {clientDate(client.lastVisitAt, locale)}

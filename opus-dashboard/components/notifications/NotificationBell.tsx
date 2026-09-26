@@ -273,7 +273,10 @@ function NotificationToast({
           <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
             {copy.body}
           </p>
-          <p className="text-[10px] text-muted-foreground/50 mt-1.5 font-medium">
+          <p
+            data-replay-public
+            className="text-[10px] text-muted-foreground/50 mt-1.5 font-medium"
+          >
             {t("Just now", "Штотуку")}
           </p>
         </div>
@@ -453,7 +456,10 @@ export function NotificationBell({
             )}
           </div>
 
-          <span className="text-sm font-medium whitespace-nowrap overflow-hidden truncate">
+          <span
+            data-replay-public
+            className="text-sm font-medium whitespace-nowrap overflow-hidden truncate"
+          >
             {t("Notifications", "Известувања")}
           </span>
 
@@ -498,7 +504,7 @@ export function NotificationBell({
               <Bell className="h-5 w-5" />
             )}
           </div>
-          <span>{t("Notifications", "Известувања")}</span>
+          <span data-replay-public>{t("Notifications", "Известувања")}</span>
         </div>
 
         {hasUnread && (
@@ -585,7 +591,10 @@ export function NotificationBell({
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold font-display text-primary">
+              <span
+                data-replay-public
+                className="text-sm font-semibold font-display text-primary"
+              >
                 {t("Notifications", "Известувања")}
               </span>
               {hasUnread && (
@@ -596,6 +605,7 @@ export function NotificationBell({
             </div>
             {hasUnread && (
               <button
+                data-replay-public
                 type="button"
                 onClick={() => markAllRead({ orgId })}
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -613,10 +623,16 @@ export function NotificationBell({
                 <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-3">
                   <Bell size={18} className="text-muted-foreground/50" />
                 </div>
-                <p className="text-sm font-medium text-foreground">
+                <p
+                  data-replay-public
+                  className="text-sm font-medium text-foreground"
+                >
                   {t("All caught up", "Сè е прочитано")}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p
+                  data-replay-public
+                  className="text-xs text-muted-foreground mt-1"
+                >
                   {t(
                     "New bookings and updates will appear here.",
                     "Новите термини и известувања ќе се појават тука.",
@@ -645,7 +661,7 @@ export function NotificationBell({
               className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors"
               onClick={() => setOpen(false)}
             >
-              <span>
+              <span data-replay-public>
                 {t("View all notifications", "Види ги сите известувања")}
               </span>
               <ArrowRight className="h-3.5 w-3.5" />

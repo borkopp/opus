@@ -175,20 +175,25 @@ export function TimeOffSection({
         <CardHeader className="border-b">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>
+              <CardTitle data-replay-public>
                 {t(
                   "Time off & special hours",
                   "Отсуства и специјално работно време",
                 )}
               </CardTitle>
-              <CardDescription className="mt-1.5">
+              <CardDescription data-replay-public className="mt-1.5">
                 {t(
                   "Add one-off changes without editing the regular week.",
                   "Додајте еднократни промени без да го менувате редовниот неделен распоред.",
                 )}
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={openAddDialog}>
+            <Button
+              data-replay-public
+              variant="outline"
+              size="sm"
+              onClick={openAddDialog}
+            >
               <PlusIcon data-icon="inline-start" />
               {t("Add change", "Додај промена")}
             </Button>
@@ -198,10 +203,16 @@ export function TimeOffSection({
         <CardContent className="p-0">
           {overrides.length === 0 ? (
             <div className="px-5 py-8 text-center">
-              <p className="text-sm font-medium text-foreground">
+              <p
+                data-replay-public
+                className="text-sm font-medium text-foreground"
+              >
                 {t("No upcoming changes", "Нема претстојни промени")}
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p
+                data-replay-public
+                className="mt-1 text-sm text-muted-foreground"
+              >
                 {t(
                   "Time off and special hours will appear here.",
                   "Отсуствата и специјалното работно време ќе се прикажат тука.",
@@ -267,10 +278,10 @@ export function TimeOffSection({
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle data-replay-public>
               {t("Add a schedule change", "Додај промена на распоред")}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription data-replay-public>
               {t(
                 "Choose a day off or set different hours for one date.",
                 "Изберете слободен ден или поставете поинакво работно време за одреден датум.",
@@ -281,7 +292,7 @@ export function TimeOffSection({
           <form id="schedule-change-form" onSubmit={handleSave}>
             <FieldGroup className="gap-5 py-2">
               <Field>
-                <FieldLabel htmlFor="schedule-change-date">
+                <FieldLabel data-replay-public htmlFor="schedule-change-date">
                   {t("Date", "Датум")}
                 </FieldLabel>
                 <Input
@@ -295,7 +306,9 @@ export function TimeOffSection({
               </Field>
 
               <Field>
-                <FieldLabel>{t("What changes?", "Што се менува?")}</FieldLabel>
+                <FieldLabel data-replay-public>
+                  {t("What changes?", "Што се менува?")}
+                </FieldLabel>
                 <ToggleGroup
                   type="single"
                   variant="outline"
@@ -326,7 +339,7 @@ export function TimeOffSection({
               {type === "custom_hours" && (
                 <div className="grid grid-cols-2 gap-3 rounded-xl bg-muted/35 p-4">
                   <Field>
-                    <FieldLabel htmlFor="special-start-time">
+                    <FieldLabel data-replay-public htmlFor="special-start-time">
                       {t("Start time", "Почетно време")}
                     </FieldLabel>
                     <Input
@@ -338,7 +351,7 @@ export function TimeOffSection({
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="special-end-time">
+                    <FieldLabel data-replay-public htmlFor="special-end-time">
                       {t("End time", "Крајно време")}
                     </FieldLabel>
                     <Input
@@ -353,9 +366,9 @@ export function TimeOffSection({
               )}
 
               <Field>
-                <FieldLabel htmlFor="schedule-change-note">
+                <FieldLabel data-replay-public htmlFor="schedule-change-note">
                   {t("Note", "Забелешка")}{" "}
-                  <span className="text-muted-foreground">
+                  <span data-replay-public className="text-muted-foreground">
                     ({t("optional", "опционално")})
                   </span>
                 </FieldLabel>
@@ -368,7 +381,7 @@ export function TimeOffSection({
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
                 />
-                <FieldDescription>
+                <FieldDescription data-replay-public>
                   {t(
                     "Only your team can see this note.",
                     "Само вашиот тим може да ја види оваа забелешка.",
@@ -380,6 +393,7 @@ export function TimeOffSection({
 
           <DialogFooter>
             <Button
+              data-replay-public
               type="button"
               variant="outline"
               onClick={() => setIsAddOpen(false)}

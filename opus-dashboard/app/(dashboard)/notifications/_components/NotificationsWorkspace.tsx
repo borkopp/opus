@@ -131,7 +131,7 @@ export function NotificationsWorkspace() {
   }
 
   if (profile === null || !orgId)
-    return <div>{t("Not found", "Не е пронајдено")}</div>;
+    return <div data-replay-public>{t("Not found", "Не е пронајдено")}</div>;
 
   const filtered = (notifications ?? []).filter((n) => {
     if (activeTab === "all") return true;
@@ -156,6 +156,7 @@ export function NotificationsWorkspace() {
     >
       {/* Header */}
       <DashboardPageHeader
+        replayPublicTitle
         title={t("Notifications", "Известувања")}
         description={t(
           `${unreadCount ?? 0} unread notifications. Your latest booking updates, in one place.`,
@@ -164,6 +165,7 @@ export function NotificationsWorkspace() {
       >
         {(unreadCount ?? 0) > 0 && (
           <Button
+            data-replay-public
             variant="outline"
             size="sm"
             onClick={() => markAllRead({ orgId })}
@@ -210,10 +212,16 @@ export function NotificationsWorkspace() {
                 />
               )}
             </div>
-            <p className="font-display text-base font-semibold text-foreground">
+            <p
+              data-replay-public
+              className="font-display text-base font-semibold text-foreground"
+            >
               {t("Nothing here", "Нема ништо тука")}
             </p>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+            <p
+              data-replay-public
+              className="text-sm text-muted-foreground mt-1 max-w-sm"
+            >
               {activeTab === "unread"
                 ? t(
                     "You're all caught up on new notifications.",

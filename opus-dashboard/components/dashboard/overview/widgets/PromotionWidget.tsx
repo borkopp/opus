@@ -45,12 +45,18 @@ export function PromotionWidget() {
   ];
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       title={t("Promote your studio", "Промовирајте го студиото")}
       subtitle={t(
         "Share your booking link and fill your calendar.",
         "Олеснете им на клиентите да закажат.",
       )}
-      action={<Badge variant="secondary">Free</Badge>}
+      action={
+        <Badge data-replay-public variant="secondary">
+          Free
+        </Badge>
+      }
       delay={70}
     >
       <div className="grid mt-4 gap-3 sm:grid-cols-3">

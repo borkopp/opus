@@ -6,6 +6,18 @@ on behalf of studios. The Free plan remains available without a payment method.
 
 ## Customer journey
 
+Landing-page Pro buttons open `https://studio.opus.mk/upgrade`. Signed-out
+visitors verify their email first, retaining the upgrade destination. New owners
+complete the core studio setup at `/onboarding?plan=pro` (business, location,
+service, and hours), then continue to `/settings?tab=billing`. The plan parameter
+survives refreshes and reauthentication. Website branding and publication are not
+required before subscribing. Ordinary Free onboarding is unchanged.
+
+Existing operational studio owners go directly to Subscription. Existing Pro
+owners see their current plan, and staff/managers see the owner-only billing
+notice. Entering the flow does not create a checkout or change the plan; the
+owner explicitly selects Subscribe before proceeding to Polar.
+
 Studio owners open **Settings → Subscription**, or select OPUS Pro in their
 account menu. Subscribe opens a hosted Polar checkout. The price and taxes are
 shown before the owner confirms payment. Manage billing opens an authenticated

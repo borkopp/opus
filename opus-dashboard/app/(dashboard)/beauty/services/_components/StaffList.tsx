@@ -108,6 +108,7 @@ export function StaffList({
         </EmptyHeader>
         <EmptyContent>
           <Button
+            data-replay-public
             onClick={onAddClick}
             disabled={!planStatus?.canUseStaffRole}
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
@@ -140,7 +141,7 @@ export function StaffList({
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" onClick={onClearSearch}>
+          <Button data-replay-public variant="outline" onClick={onClearSearch}>
             {t("Clear search", "Исчисти пребарување")}
           </Button>
         </EmptyContent>
@@ -239,7 +240,7 @@ export function StaffList({
                     {member.displayName}
                   </p>
                   {!member.isActive && (
-                    <Badge variant="secondary">
+                    <Badge data-replay-public variant="secondary">
                       {t("Inactive", "Неактивен")}
                     </Badge>
                   )}
@@ -268,7 +269,7 @@ export function StaffList({
                 asChild
                 className="h-11 min-w-0 flex-1 xl:flex-none"
               >
-                <Link href={`/beauty/staff/${member._id}`}>
+                <Link data-replay-public href={`/beauty/staff/${member._id}`}>
                   <CalendarClockIcon data-icon="inline-start" />
                   {t("Manage hours", "Управувај со часови")}
                 </Link>
@@ -291,6 +292,7 @@ export function StaffList({
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuGroup>
                     <DropdownMenuItem
+                      data-replay-public
                       onSelect={() => setEditingStaffId(member._id)}
                     >
                       <PencilIcon />
@@ -298,6 +300,7 @@ export function StaffList({
                     </DropdownMenuItem>
                     {!member.isActive && (
                       <DropdownMenuItem
+                        data-replay-public
                         disabled={
                           !(member.role === "owner"
                             ? planStatus?.canUseOwnerRole
@@ -317,6 +320,7 @@ export function StaffList({
                       <DropdownMenuSeparator />
                       <DropdownMenuGroup>
                         <DropdownMenuItem
+                          data-replay-public
                           variant="destructive"
                           onSelect={() =>
                             handleRemove(member._id, member.displayName)
@@ -398,7 +402,10 @@ function ScheduleSummary({
 
   return (
     <div className="min-w-0">
-      <p className="text-xs font-medium text-muted-foreground">
+      <p
+        data-replay-public
+        className="text-xs font-medium text-muted-foreground"
+      >
         {t("Regular hours", "Редовно работно време")}
       </p>
       <p

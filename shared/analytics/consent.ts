@@ -119,7 +119,7 @@ export const consentCopy = {
     summary:
       "Неопходните колачиња го овозможуваат работењето на OPUS. Вие избирате дали да дозволите аналитика, снимање сесии и рекламирање.",
     description:
-      "Неопходните колачиња го овозможуваат работењето на OPUS. Со ваша согласност користиме PostHog за аналитика и снимање сесии на маркетинг-страницата и во контролниот панел со маскирани внесени вредности и дополнително маскиран текст во контролниот панел и Meta Pixel за мерење на рекламите за OPUS. Изборот важи и на studio.opus.mk.",
+      "Неопходните колачиња го овозможуваат работењето на OPUS. Со ваша согласност користиме PostHog за аналитика и снимање сесии на маркетинг-страницата и во контролниот панел со маскирани внесени вредности и маскирани приватни податоци во контролниот панел и Meta Pixel за мерење на рекламите за OPUS. Изборот важи и на studio.opus.mk.",
     analytics: "Аналитика · PostHog",
     marketing: "Рекламирање · Meta",
     accept: "Прифати ги сите",
@@ -134,7 +134,7 @@ export const consentCopy = {
     summary:
       "Essential cookies keep OPUS working. You choose whether to allow analytics, session replay, and advertising.",
     description:
-      "Necessary cookies keep OPUS working. With your permission, we use PostHog for analytics and session replay on the marketing website and dashboard with masked input values and additional text masking in the dashboard, and Meta Pixel to measure OPUS ads. Your choice also applies at studio.opus.mk.",
+      "Necessary cookies keep OPUS working. With your permission, we use PostHog for analytics and session replay on the marketing website and dashboard with masked input values and masked private dashboard text, and Meta Pixel to measure OPUS ads. Your choice also applies at studio.opus.mk.",
     analytics: "Analytics · PostHog",
     marketing: "Advertising · Meta",
     accept: "Accept all",

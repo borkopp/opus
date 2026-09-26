@@ -96,7 +96,10 @@ export function BookingsDateNavigation({
             }}
             className="[--cell-size:2.25rem]"
           />
-          <p className="flex items-center justify-center gap-2 px-3 pb-3 text-xs text-muted-foreground">
+          <p
+            data-replay-public
+            className="flex items-center justify-center gap-2 px-3 pb-3 text-xs text-muted-foreground"
+          >
             <span
               aria-hidden="true"
               className="size-1.5 rounded-full bg-primary"
@@ -116,6 +119,7 @@ export function BookingsDateNavigation({
       </Button>
       {!isToday(date) && (
         <Button
+          data-replay-public
           variant="secondary"
           className="min-h-11 shrink-0 px-3 md:min-h-9"
           onClick={() => onDateChange(startOfDay(new Date()))}

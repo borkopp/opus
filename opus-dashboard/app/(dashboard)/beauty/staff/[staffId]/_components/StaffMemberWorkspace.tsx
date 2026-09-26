@@ -52,7 +52,9 @@ export function StaffMemberWorkspace({
 
   if (!orgId || staffMember === null) {
     return (
-      <div>{t("Staff member not found.", "Вработениот не е пронајден.")}</div>
+      <div data-replay-public>
+        {t("Staff member not found.", "Вработениот не е пронајден.")}
+      </div>
     );
   }
 
@@ -64,6 +66,7 @@ export function StaffMemberWorkspace({
       className="flex min-h-full w-full flex-1 flex-col gap-6"
     >
       <Link
+        data-replay-public
         href="/beauty/services?tab=staff"
         className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
       >
@@ -90,12 +93,18 @@ export function StaffMemberWorkspace({
             </h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
               <Badge variant="outline">{formatRole(staffMember.role, t)}</Badge>
-              <Badge variant={staffMember.isActive ? "success" : "secondary"}>
+              <Badge
+                data-replay-public
+                variant={staffMember.isActive ? "success" : "secondary"}
+              >
                 {staffMember.isActive
                   ? t("Active", "Активен")
                   : t("Inactive", "Неактивен")}
               </Badge>
-              <span className="text-sm text-muted-foreground">
+              <span
+                data-replay-public
+                className="text-sm text-muted-foreground"
+              >
                 {staffMember.isActive
                   ? t(
                       "Manage working hours and time off.",
@@ -110,7 +119,12 @@ export function StaffMemberWorkspace({
           </div>
         </div>
 
-        <Button variant="outline" size="sm" onClick={() => setIsEditOpen(true)}>
+        <Button
+          data-replay-public
+          variant="outline"
+          size="sm"
+          onClick={() => setIsEditOpen(true)}
+        >
           <PencilIcon data-icon="inline-start" />
           {t("Edit details", "Уреди детали")}
         </Button>

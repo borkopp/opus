@@ -83,10 +83,10 @@ function LocationMapPickerContent({
     return (
       <Alert variant="destructive">
         <MapPin />
-        <AlertTitle>
+        <AlertTitle data-replay-public>
           {t("Map is unavailable", "Мапата не е достапна")}
         </AlertTitle>
-        <AlertDescription>
+        <AlertDescription data-replay-public>
           {t(
             "The map is temporarily unavailable. Please try again later.",
             "Мапата е привремено недостапна. Обидете се повторно подоцна.",
@@ -155,19 +155,20 @@ function LocationMapPickerContent({
             {loadState === "loading" ? (
               <>
                 <Spinner />
-                <p className="text-sm">
+                <p data-replay-public className="text-sm">
                   {t("Loading map…", "Мапата се вчитува…")}
                 </p>
               </>
             ) : (
               <>
-                <p className="text-sm">
+                <p data-replay-public className="text-sm">
                   {t(
                     "The map could not load. Check your connection and try again.",
                     "Мапата не се вчита. Проверете ја врската и обидете се повторно.",
                   )}
                 </p>
                 <Button
+                  data-replay-public
                   type="button"
                   variant="outline"
                   onClick={() => {
@@ -183,7 +184,10 @@ function LocationMapPickerContent({
         )}
         {loadState === "ready" && !confirmedCoords && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="rounded-full bg-background/90 px-4 py-2 text-sm text-muted-foreground shadow-lg backdrop-blur">
+            <div
+              data-replay-public
+              className="rounded-full bg-background/90 px-4 py-2 text-sm text-muted-foreground shadow-lg backdrop-blur"
+            >
               {t(
                 "Click the map to pin your location",
                 "Кликнете на мапата за да ја означите вашата локација",

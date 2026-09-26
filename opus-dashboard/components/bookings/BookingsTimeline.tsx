@@ -585,7 +585,10 @@ export function BookingsTimeline({
                       {bookingTimeLabel(staffQuickSlot.startAt)} –{" "}
                       {bookingTimeLabel(staffQuickSlot.endAt)}
                     </span>
-                    <span className="text-[10.5px] opacity-70 hidden sm:inline font-sans">
+                    <span
+                      data-replay-public
+                      className="text-[10.5px] opacity-70 hidden sm:inline font-sans"
+                    >
                       {t("· Open slot", "· Слободен")}
                     </span>
                   </button>

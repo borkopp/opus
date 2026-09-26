@@ -23,14 +23,14 @@ export function SavedReport({ turnId }: { turnId: string }) {
   return (
     <div className="flex w-full flex-col gap-6">
       <Button variant="outline" className="self-start" asChild>
-        <Link href="/beauty/assistant">
+        <Link data-replay-public href="/beauty/assistant">
           <ArrowLeft data-icon="inline-start" />
           {t("Back to assistant", "Назад кон асистентот")}
         </Link>
       </Button>
       {access && (!access.allowed || !access.paid) ? (
         <Alert>
-          <AlertDescription>
+          <AlertDescription data-replay-public>
             {t(
               "This report requires owner or manager access on OPUS Pro.",
               "Овој извештај бара пристап за сопственик или менаџер со OPUS Pro.",
@@ -44,7 +44,7 @@ export function SavedReport({ turnId }: { turnId: string }) {
           <h1 className="text-2xl font-semibold tracking-tight">
             {report.question}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p data-replay-public className="text-sm text-muted-foreground">
             {t(
               "This is the data used for the saved answer. Ask again to include changes made since then.",
               "Ова се податоците користени за зачуваниот одговор. Прашајте повторно за да ги вклучите поновите промени.",

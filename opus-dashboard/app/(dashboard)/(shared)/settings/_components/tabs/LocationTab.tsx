@@ -176,7 +176,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
       >
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="settings-address-search">
+            <FieldLabel data-replay-public htmlFor="settings-address-search">
               {t("Find an address", "Најди адреса")}
             </FieldLabel>
             <div ref={searchContainerRef} className="relative">
@@ -253,7 +253,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
           </Field>
 
           <Field>
-            <FieldLabel>
+            <FieldLabel data-replay-public>
               {t("Exact map pin", "Точна позиција на мапата")}
             </FieldLabel>
             <LocationMapPicker
@@ -264,7 +264,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="settings-address">
+              <FieldLabel data-replay-public htmlFor="settings-address">
                 {t("Street address", "Улица и број")}
               </FieldLabel>
               <Input
@@ -274,7 +274,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-city">
+              <FieldLabel data-replay-public htmlFor="settings-city">
                 {t("City", "Град")}
               </FieldLabel>
               <Input
@@ -284,7 +284,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-neighborhood">
+              <FieldLabel data-replay-public htmlFor="settings-neighborhood">
                 {t("Neighborhood", "Населба")}
               </FieldLabel>
               <Input
@@ -294,7 +294,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-postal">
+              <FieldLabel data-replay-public htmlFor="settings-postal">
                 {t("Postal code", "Поштенски број")}
               </FieldLabel>
               <Input
@@ -304,7 +304,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="settings-country">
+              <FieldLabel data-replay-public htmlFor="settings-country">
                 {t("Country code", "Код на држава")}
               </FieldLabel>
               <Input

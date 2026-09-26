@@ -199,13 +199,13 @@ export function OpeningStoryEditor({
       <div className="flex min-w-0 flex-col gap-7">
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>
+            <CardTitle data-replay-public>
               {t(
                 "A free slot. A ready-to-share Story.",
                 "Слободен термин. Story подготвено за споделување.",
               )}
             </CardTitle>
-            <CardDescription>
+            <CardDescription data-replay-public>
               {t(
                 "Choose a service and an available time. Your Story includes the current price and specialist.",
                 "Изберете услуга и слободно време. Story ќе ги содржи тековната цена и специјалистот.",
@@ -215,7 +215,7 @@ export function OpeningStoryEditor({
           <CardContent className="pb-5">
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="story-service">
+                <FieldLabel data-replay-public htmlFor="story-service">
                   {t("Service", "Услуга")}
                 </FieldLabel>
                 <Select
@@ -240,7 +240,7 @@ export function OpeningStoryEditor({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel htmlFor="story-staff">
+                <FieldLabel data-replay-public htmlFor="story-staff">
                   {t("Specialist", "Специјалист")}
                 </FieldLabel>
                 <Select
@@ -253,7 +253,7 @@ export function OpeningStoryEditor({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="any">
+                      <SelectItem data-replay-public value="any">
                         {t(
                           "Any available specialist",
                           "Кој било слободен специјалист",
@@ -269,7 +269,7 @@ export function OpeningStoryEditor({
                 </Select>
               </Field>
               <Field>
-                <FieldLabel htmlFor="story-date">
+                <FieldLabel data-replay-public htmlFor="story-date">
                   {t("Date", "Датум")}
                 </FieldLabel>
                 <Input
@@ -283,18 +283,24 @@ export function OpeningStoryEditor({
                 />
               </Field>
               <Field>
-                <FieldLabel>
+                <FieldLabel data-replay-public>
                   {t("Available times", "Слободни термини")}
                 </FieldLabel>
                 {!data.published ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p
+                    data-replay-public
+                    className="text-sm text-muted-foreground"
+                  >
                     {t(
                       "Available after your website is published.",
                       "Достапно откако ќе ја објавите веб-страницата.",
                     )}
                   </p>
                 ) : !service ? (
-                  <p className="text-sm text-muted-foreground">
+                  <p
+                    data-replay-public
+                    className="text-sm text-muted-foreground"
+                  >
                     {t(
                       "Add a public service and assign a specialist first.",
                       "Прво додајте јавна услуга и назначете специјалист.",
@@ -352,7 +358,10 @@ export function OpeningStoryEditor({
                 )}
               </Field>
             </FieldGroup>
-            <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
+            <p
+              data-replay-public
+              className="mt-6 text-sm leading-relaxed text-muted-foreground"
+            >
               {t(
                 "Download the image, add it to your Instagram Story, then paste the booking link into a Link sticker. Sharing does not reserve the appointment.",
                 "Преземете ја сликата, додајте ја во Instagram Story и залепете го линкот за закажување во налепницата Link. Споделувањето не го резервира терминот.",

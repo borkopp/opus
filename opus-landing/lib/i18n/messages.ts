@@ -308,7 +308,7 @@ export const mkMessages = {
       price: "1.190",
       currency: "ден. / месечно",
       desc: "Повеќе вработени, извештаи и понуди за слободни термини.",
-      cta: "Контактирајте нè за Pro",
+      cta: "Активирај Pro",
       label: "Сè од бесплатниот план, плус:",
       features: [
         "Поголем тим",
@@ -327,7 +327,7 @@ export const mkMessages = {
         "Одговара на пораки (Instagram, WhatsApp, Web-Chat) и закажува термини автоматски.",
       aiRebookingTitle: "AI анализа на клиенти и предлози",
       aiRebookingSub: "",
-      end: "Контактирајте нè за активирање на Pro и достапност на AI-аналитичарот.",
+      end: "Активирајте Pro од вашата сметка. Проверете со нас за достапноста на AI-аналитичарот.",
     },
     custom: {
       name: "Софтвер по мерка",
@@ -773,7 +773,7 @@ export const enMessages: Messages = {
       price: "1,190",
       currency: "MKD / month",
       desc: "More staff, reports, and offers for empty slots.",
-      cta: "Contact us about Pro",
+      cta: "Get Pro",
       label: "Everything in Free, plus:",
       features: [
         "A larger team",
@@ -793,7 +793,7 @@ export const enMessages: Messages = {
         "Answers messages on Instagram, WhatsApp, and web chat and books appointments automatically.",
       aiRebookingTitle: "AI client analysis and suggestions",
       aiRebookingSub: "",
-      end: "Contact us to activate Pro.",
+      end: "Activate Pro from your account.",
     },
     custom: {
       name: "Custom software",

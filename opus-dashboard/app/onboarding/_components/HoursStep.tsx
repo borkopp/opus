@@ -93,6 +93,8 @@ export function HoursStep({
   return (
     <form className="w-full" onSubmit={submit}>
       <StepFrame
+        replayPublicDescription
+        replayPublicTitle
         title={t(
           "When can customers book?",
           "Кога можат клиентите да закажуваат?",
@@ -114,7 +116,10 @@ export function HoursStep({
                 <span className="text-sm font-medium">
                   {days[day.dayOfWeek]}
                 </span>
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-xs text-muted-foreground">
+                <label
+                  data-replay-public
+                  className="flex min-h-11 cursor-pointer items-center gap-3 text-xs text-muted-foreground"
+                >
                   {day.isClosed
                     ? t("Closed", "Неработен")
                     : t("Open", "Работен")}
@@ -139,6 +144,7 @@ export function HoursStep({
                       data-invalid={invalidDay === day.dayOfWeek}
                     >
                       <FieldLabel
+                        data-replay-public
                         htmlFor={`hours-${edge}-${day.dayOfWeek}`}
                         className="text-xs text-muted-foreground"
                       >
@@ -172,6 +178,7 @@ export function HoursStep({
               {day === draftHours.find((item) => !item.isClosed) && (
                 <div className="mt-3 flex flex-col gap-2">
                   <Button
+                    data-replay-public
                     type="button"
                     variant="outline"
                     className="min-h-11 w-full whitespace-normal"
@@ -191,7 +198,11 @@ export function HoursStep({
                     )}
                   </Button>
                   {applied && (
-                    <p role="status" className="text-xs text-muted-foreground">
+                    <p
+                      data-replay-public
+                      role="status"
+                      className="text-xs text-muted-foreground"
+                    >
                       {t(
                         "Hours copied. Closed days stay closed.",
                         "Часовите се копирани. Неработните денови остануваат неработни.",

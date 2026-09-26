@@ -45,7 +45,8 @@ export function ServicesWorkspace() {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
 
   if (profile === undefined) return <WorkspaceSkeleton />;
-  if (!orgId) return <div>{t("Not found", "Не е пронајдено")}</div>;
+  if (!orgId)
+    return <div data-replay-public>{t("Not found", "Не е пронајдено")}</div>;
 
   const selectTab = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -63,6 +64,8 @@ export function ServicesWorkspace() {
   return (
     <div className="flex min-h-full w-full min-w-0 flex-1 flex-col gap-6">
       <DashboardPageHeader
+        replayPublicDescription
+        replayPublicTitle
         title={t("Services & staff", "Услуги и тим")}
         description={t(
           "Manage what customers can book and the team behind each appointment.",
@@ -100,7 +103,7 @@ export function ServicesWorkspace() {
         <TabsContent value="services" className="min-w-0">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p data-replay-public className="text-sm text-muted-foreground">
                 {t(
                   "Set prices, duration and who provides each service.",
                   "Поставете цени, времетраење и кој ја извршува секоја услуга.",
@@ -109,6 +112,7 @@ export function ServicesWorkspace() {
               <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
                 <CategoryList orgId={orgId} />
                 <Button
+                  data-replay-public
                   className="h-11"
                   onClick={() => setIsAddServiceOpen(true)}
                 >
@@ -139,13 +143,14 @@ export function ServicesWorkspace() {
         <TabsContent value="staff" className="min-w-0">
           <div className="flex min-h-full flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <p className="text-sm text-muted-foreground">
+              <p data-replay-public className="text-sm text-muted-foreground">
                 {t(
                   "Manage your team, working hours and time off.",
                   "Управувајте со тимот, работното време и отсуствата.",
                 )}
               </p>
               <Button
+                data-replay-public
                 onClick={() => setIsAddStaffOpen(true)}
                 disabled={!planStatus?.canUseStaffRole}
                 aria-describedby={

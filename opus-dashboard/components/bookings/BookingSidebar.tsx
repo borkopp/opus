@@ -88,10 +88,16 @@ export function BookingSidebar({
         <div className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-xs">
           <IconWand className="size-6 animate-pulse" />
         </div>
-        <h3 className="font-display text-lg font-bold text-foreground">
+        <h3
+          data-replay-public
+          className="font-display text-lg font-bold text-foreground"
+        >
           {t("Booking overview", "Преглед на термин")}
         </h3>
-        <p className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-muted-foreground">
+        <p
+          data-replay-public
+          className="mt-1.5 max-w-[240px] text-xs leading-relaxed text-muted-foreground"
+        >
           {t(
             "Click on any appointment in the calendar to view details, client history, and manage the booking.",
             "Изберете термин во календарот за да ги видите деталите, историјата на клиентот и акциите.",
@@ -117,21 +123,30 @@ export function BookingSidebar({
     switch (status) {
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+          <span
+            data-replay-public
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+          >
             <IconCircleCheck className="size-3.5" />
             {t("Completed", "Завршен")}
           </span>
         );
       case "cancelled":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
+          <span
+            data-replay-public
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border"
+          >
             <IconX className="size-3.5" />
             {t("Cancelled", "Откажан")}
           </span>
         );
       case "no_show":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+          <span
+            data-replay-public
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"
+          >
             <IconAlertTriangle className="size-3.5" />
             {t("No Show", "Не се појави")}
           </span>
@@ -139,7 +154,10 @@ export function BookingSidebar({
       case "confirmed":
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+          <span
+            data-replay-public
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
+          >
             <span className="size-2 rounded-full bg-primary animate-pulse" />
             {t("Confirmed", "Потврден")}
           </span>
@@ -169,7 +187,9 @@ export function BookingSidebar({
               />
             ) : (
               <span className="text-base font-display font-semibold">
-                {customer?.name?.charAt(0) || <IconUser className="size-5 text-muted-foreground" />}
+                {customer?.name?.charAt(0) || (
+                  <IconUser className="size-5 text-muted-foreground" />
+                )}
               </span>
             )}
           </div>
@@ -180,7 +200,10 @@ export function BookingSidebar({
                 {customer?.name ?? t("Unknown customer", "Непознат клиент")}
               </h2>
               {totalVisits >= 5 && (
-                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0 uppercase tracking-wider">
+                <span
+                  data-replay-public
+                  className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0 uppercase tracking-wider"
+                >
                   VIP
                 </span>
               )}
@@ -199,7 +222,9 @@ export function BookingSidebar({
 
               {customer?.phone && (
                 <>
-                  <span className="opacity-30">·</span>
+                  <span data-replay-public className="opacity-30">
+                    ·
+                  </span>
                   <a
                     href={`tel:${customer.phone}`}
                     className="inline-flex items-center gap-1 font-mono hover:text-foreground hover:underline transition-colors"
@@ -212,14 +237,18 @@ export function BookingSidebar({
 
               {customer?.email && (
                 <>
-                  <span className="opacity-30">·</span>
+                  <span data-replay-public className="opacity-30">
+                    ·
+                  </span>
                   <a
                     href={`mailto:${customer.email}`}
                     className="inline-flex items-center gap-1 hover:text-foreground hover:underline transition-colors"
                     title={customer.email}
                   >
                     <IconMail className="size-3 text-muted-foreground" />
-                    <span className="max-w-[130px] truncate">{customer.email}</span>
+                    <span className="max-w-[130px] truncate">
+                      {customer.email}
+                    </span>
                   </a>
                 </>
               )}
@@ -274,7 +303,10 @@ export function BookingSidebar({
 
             <div className="mt-3.5 pt-3 border-t border-border/40 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block">
+                <span
+                  data-replay-public
+                  className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block"
+                >
                   {t("Price", "Цена")}
                 </span>
                 <Price
@@ -284,7 +316,10 @@ export function BookingSidebar({
               </div>
 
               <div className="text-right">
-                <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block">
+                <span
+                  data-replay-public
+                  className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block"
+                >
                   {t("Duration", "Времетраење")}
                 </span>
                 <span className="font-mono text-sm font-semibold text-foreground">
@@ -301,7 +336,7 @@ export function BookingSidebar({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <IconCalendar className="size-3.5 text-primary" />
-                <span>{t("Date", "Датум")}</span>
+                <span data-replay-public>{t("Date", "Датум")}</span>
               </div>
               <p className="text-sm font-semibold text-foreground capitalize">
                 {formatBookingDate(startAt, locale)}
@@ -311,7 +346,7 @@ export function BookingSidebar({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <IconClock className="size-3.5 text-primary" />
-                <span>{t("Time slot", "Време")}</span>
+                <span data-replay-public>{t("Time slot", "Време")}</span>
               </div>
               <p className="font-mono text-sm font-bold text-foreground tabular-nums">
                 {bookingTimeLabel(startAt)} – {bookingTimeLabel(endAt)}
@@ -320,7 +355,10 @@ export function BookingSidebar({
           </div>
 
           <div className="flex items-center justify-between pt-0.5">
-            <span className="text-xs font-medium text-muted-foreground">
+            <span
+              data-replay-public
+              className="text-xs font-medium text-muted-foreground"
+            >
               {t("Specialist", "Специјалист")}
             </span>
             <div className="flex items-center gap-2">
@@ -350,7 +388,9 @@ export function BookingSidebar({
           <section className="rounded-xl border border-amber-300/60 dark:border-amber-900/50 bg-amber-500/[0.06] dark:bg-amber-500/[0.10] p-4">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200 mb-1.5">
               <IconMessageCircle2 className="size-4 text-amber-600 dark:text-amber-400" />
-              <span>{t("Customer note", "Белешка од клиент")}</span>
+              <span data-replay-public>
+                {t("Customer note", "Белешка од клиент")}
+              </span>
             </div>
             <p className="text-sm leading-relaxed text-foreground italic font-medium">
               &ldquo;{booking.customerNote}&rdquo;
@@ -365,13 +405,19 @@ export function BookingSidebar({
               <IconSparkles className="size-4" />
             </div>
             <div>
-              <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <p
+                data-replay-public
+                className="text-xs font-bold text-foreground flex items-center gap-1.5"
+              >
                 {t("AI-assisted booking", "Закажано преку AI Рецепција")}
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary uppercase">
                   {source?.replace("ai_", "")}
                 </span>
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p
+                data-replay-public
+                className="mt-1 text-xs leading-relaxed text-muted-foreground"
+              >
                 {t(
                   "Appointment confirmed via automated assistant chat with customer.",
                   "Терминот е автоматски потврден преку дигиталниот асистент.",
@@ -403,6 +449,7 @@ export function BookingSidebar({
         {!isTerminal && (
           <div className="flex flex-col gap-2">
             <Button
+              data-replay-public
               className="w-full gap-2 font-semibold shadow-xs"
               onClick={() => onComplete?.(booking._id)}
               disabled={!onComplete || isUpdating}
@@ -413,6 +460,7 @@ export function BookingSidebar({
 
             <div className="grid grid-cols-2 gap-2">
               <Button
+                data-replay-public
                 variant="outline"
                 size="sm"
                 className="gap-1.5 text-xs text-muted-foreground hover:text-foreground"
@@ -423,11 +471,13 @@ export function BookingSidebar({
                 {t("No-show", "Не се појави")}
               </Button>
               <Button
+                data-replay-public
                 variant={confirmingCancel ? "destructive" : "ghost"}
                 size="sm"
                 className={cn(
                   "gap-1.5 text-xs",
-                  !confirmingCancel && "text-muted-foreground hover:text-destructive",
+                  !confirmingCancel &&
+                    "text-muted-foreground hover:text-destructive",
                 )}
                 onClick={() => {
                   if (!confirmingCancel) {
@@ -449,7 +499,10 @@ export function BookingSidebar({
         )}
 
         <Button
-          variant={showReschedule ? "secondary" : isTerminal ? "outline" : "outline"}
+          data-replay-public
+          variant={
+            showReschedule ? "secondary" : isTerminal ? "outline" : "outline"
+          }
           className="w-full gap-2 text-xs font-semibold"
           onClick={() => setShowReschedule((visible) => !visible)}
           disabled={!onReschedule || isUpdating}
@@ -497,10 +550,13 @@ function ReschedulePanel({
       <div className="mb-2.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
           <IconClock className="size-4 text-primary" />
-          <span>{t("Choose a new time", "Изберете ново време")}</span>
+          <span data-replay-public>
+            {t("Choose a new time", "Изберете ново време")}
+          </span>
         </div>
         <span className="font-mono text-[11px] font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
-          {Math.round((booking.endAt - booking.startAt) / 60_000)} {t("min", "мин")}
+          {Math.round((booking.endAt - booking.startAt) / 60_000)}{" "}
+          {t("min", "мин")}
         </span>
       </div>
 
@@ -560,12 +616,18 @@ function ReschedulePanel({
           ))}
         </div>
         {availableSlots === undefined && (
-          <p className="py-3 text-center text-xs text-muted-foreground">
+          <p
+            data-replay-public
+            className="py-3 text-center text-xs text-muted-foreground"
+          >
             {t("Loading available times…", "Вчитување слободни термини…")}
           </p>
         )}
         {availableSlots?.length === 0 && (
-          <p className="py-3 text-center text-xs text-muted-foreground">
+          <p
+            data-replay-public
+            className="py-3 text-center text-xs text-muted-foreground"
+          >
             {t(
               "No available times on this date.",
               "Нема слободни термини на овој датум.",
@@ -575,6 +637,7 @@ function ReschedulePanel({
       </div>
 
       <Button
+        data-replay-public
         size="sm"
         className="mt-3 w-full font-semibold"
         disabled={!selectedStartAt}

@@ -34,10 +34,10 @@ export function BookingDetailsPanel(
       }}
     >
       <DrawerContent className="dashboard-panel h-[90dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
-        <DrawerTitle className="sr-only">
+        <DrawerTitle data-replay-public className="sr-only">
           {t("Booking details", "Детали за термин")}
         </DrawerTitle>
-        <DrawerDescription className="sr-only">
+        <DrawerDescription data-replay-public className="sr-only">
           {t(
             "View and manage the selected appointment.",
             "Прегледајте и управувајте со избраниот термин.",

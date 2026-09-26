@@ -44,6 +44,7 @@ export const LogoMark = ({ className }: LogoMarkProps) => (
 
 export const LogoWordmark = ({ className }: LogoWordmarkProps) => (
   <span
+    data-replay-public
     className={cn(
       audiowide.className,
       "uppercase leading-none tracking-wider text-current",
@@ -61,7 +62,10 @@ export const Logo = ({
 }: LogoProps) => {
   return (
     <span
-      className={cn("inline-flex items-center gap-2 text-foreground", className)}
+      className={cn(
+        "inline-flex items-center gap-2 text-foreground",
+        className,
+      )}
       aria-label="OPUS"
     >
       <LogoMark className={cn("text-brand", markClassName)} />
@@ -79,7 +83,10 @@ const LogoPlan = ({
 }: LogoProps & { plan: "Free" | "Pro"; planClassName?: string }) => {
   return (
     <span
-      className={cn("inline-flex items-center gap-2 text-foreground", className)}
+      className={cn(
+        "inline-flex items-center gap-2 text-foreground",
+        className,
+      )}
       aria-label={`OPUS ${plan}`}
     >
       <LogoMark className={cn("text-brand", markClassName)} />

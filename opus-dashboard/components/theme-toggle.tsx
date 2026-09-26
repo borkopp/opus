@@ -33,7 +33,9 @@ export function ThemeToggle({
         >
           <Sun className="size-4 rotate-0 scale-100 transition-transform duration-200 dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-4 rotate-90 scale-0 transition-transform duration-200 dark:rotate-0 dark:scale-100" />
-          <span className="sr-only">Промени тема</span>
+          <span data-replay-public className="sr-only">
+            Промени тема
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={align}>
@@ -42,21 +44,21 @@ export function ThemeToggle({
           className="flex items-center gap-2 cursor-pointer"
         >
           <Sun className="size-4 text-muted-foreground" />
-          <span>Светла</span>
+          <span data-replay-public>Светла</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("dark")}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Moon className="size-4 text-muted-foreground" />
-          <span>Темна</span>
+          <span data-replay-public>Темна</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("system")}
           className="flex items-center gap-2 cursor-pointer"
         >
           <Monitor className="size-4 text-muted-foreground" />
-          <span>Системска</span>
+          <span data-replay-public>Системска</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -64,4 +66,3 @@ export function ThemeToggle({
 }
 
 export const ModeToggle = ThemeToggle;
-

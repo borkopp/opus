@@ -105,7 +105,9 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
               className="mt-0.5 size-4 text-muted-foreground"
               aria-hidden="true"
             />
-            <span className="sr-only">{t("Email", "Е-пошта")}</span>
+            <span data-replay-public className="sr-only">
+              {t("Email", "Е-пошта")}
+            </span>
           </dt>
           <dd className="min-w-0 break-all">
             {client.email || t("No email provided", "Нема внесена е-пошта")}
@@ -117,7 +119,9 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
               className="mt-0.5 size-4 text-muted-foreground"
               aria-hidden="true"
             />
-            <span className="sr-only">{t("Phone", "Телефон")}</span>
+            <span data-replay-public className="sr-only">
+              {t("Phone", "Телефон")}
+            </span>
           </dt>
           <dd>
             {client.phone || t("No phone provided", "Нема внесен телефон")}
@@ -126,7 +130,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
       </dl>
       <dl className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-muted/60 p-4">
-          <dt className="text-xs text-muted-foreground">
+          <dt data-replay-public className="text-xs text-muted-foreground">
             {t("Total visits", "Вкупно посети")}
           </dt>
           <dd className="mt-2 text-3xl font-medium tabular-nums">
@@ -134,7 +138,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
           </dd>
         </div>
         <div className="rounded-2xl bg-muted/60 p-4">
-          <dt className="text-xs text-muted-foreground">
+          <dt data-replay-public className="text-xs text-muted-foreground">
             {t("Completed value", "Вредност на посетите")}
           </dt>
           <dd className="mt-3 text-lg font-medium tabular-nums">
@@ -142,7 +146,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
           </dd>
         </div>
       </dl>
-      <p className="-mt-3 text-xs text-muted-foreground">
+      <p data-replay-public className="-mt-3 text-xs text-muted-foreground">
         {t(
           "Value of completed appointments; not a payment balance.",
           "Вредност на завршени термини, без евиденција за наплата.",
@@ -150,7 +154,10 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
       </p>
       <dl className="flex flex-col gap-4 text-sm">
         <div className="flex items-start justify-between gap-4">
-          <dt className="flex items-center gap-2 text-muted-foreground">
+          <dt
+            data-replay-public
+            className="flex items-center gap-2 text-muted-foreground"
+          >
             <CalendarDays className="size-4" />
             {t("Last visit", "Последна посета")}
           </dt>
@@ -159,7 +166,10 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
           </dd>
         </div>
         <div className="flex items-start justify-between gap-4">
-          <dt className="flex shrink-0 items-center gap-2 text-muted-foreground">
+          <dt
+            data-replay-public
+            className="flex shrink-0 items-center gap-2 text-muted-foreground"
+          >
             <Scissors className="size-4" />
             {t("Most booked", "Најчеста услуга")}
           </dt>
@@ -168,7 +178,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
       </dl>
       {profile.upcoming.length > 0 && (
         <section className="rounded-2xl border px-4">
-          <h3 className="pt-4 text-sm font-medium">
+          <h3 data-replay-public className="pt-4 text-sm font-medium">
             {t("Upcoming appointments", "Следни термини")}
           </h3>
           <ul>
@@ -180,7 +190,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
       )}
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="font-medium">
+          <h3 data-replay-public className="font-medium">
             {t("Appointment history", "Историја на термини")}
           </h3>
           <p className="text-xs text-muted-foreground">
@@ -200,6 +210,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
             </ul>
             {visible < profile.history.length && (
               <Button
+                data-replay-public
                 variant="outline"
                 className="mt-3 w-full"
                 onClick={() => setVisible((count) => count + 20)}
@@ -209,7 +220,7 @@ function ProfileContent({ profile }: { profile: ClientProfile }) {
             )}
           </>
         ) : (
-          <p className="py-6 text-sm text-muted-foreground">
+          <p data-replay-public className="py-6 text-sm text-muted-foreground">
             {t("No past appointments yet.", "Сè уште нема претходни термини.")}
           </p>
         )}
@@ -238,8 +249,10 @@ export function ClientProfileSheet({
       >
         <SheetHeader className="flex flex-row items-center justify-between border-b px-5 py-4 sm:px-7">
           <div>
-            <SheetTitle>{t("Client profile", "Профил на клиент")}</SheetTitle>
-            <SheetDescription>
+            <SheetTitle data-replay-public>
+              {t("Client profile", "Профил на клиент")}
+            </SheetTitle>
+            <SheetDescription data-replay-public>
               {t(
                 "Contact details and appointment history",
                 "Контакт и историја на термини",
@@ -268,7 +281,7 @@ export function ClientProfileSheet({
               <Skeleton className="h-64 w-full" />
             </div>
           ) : profile === null ? (
-            <p>
+            <p data-replay-public>
               {t(
                 "This client is no longer available.",
                 "Овој клиент повеќе не е достапен.",

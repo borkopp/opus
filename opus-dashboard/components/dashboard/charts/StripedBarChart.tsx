@@ -65,6 +65,7 @@ export function StripedBarChart({
                 />
               ) : (
                 <span
+                  data-replay-public
                   data-appear="fade"
                   style={appearStep(4 + index)}
                   className={s.zero}

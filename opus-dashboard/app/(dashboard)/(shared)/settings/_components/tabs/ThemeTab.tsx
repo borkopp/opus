@@ -51,7 +51,11 @@ export function ThemeTab() {
           onValueChange={selectTheme}
           disabled={isSaving}
         />
-        <p role="status" className="mt-4 min-h-5 text-sm text-muted-foreground">
+        <p
+          data-replay-public
+          role="status"
+          className="mt-4 min-h-5 text-sm text-muted-foreground"
+        >
           {isSaving
             ? t("Saving your theme…", "Се зачувува темата…")
             : t(

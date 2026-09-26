@@ -59,7 +59,10 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           <Globe2 className="size-5 md:size-6" />
           <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-emerald-500 ring-[3px] ring-card" />
         </span>
-        <h2 className="min-w-0 flex-1 self-center text-sm font-medium leading-snug tracking-tight md:text-base">
+        <h2
+          data-replay-public
+          className="min-w-0 flex-1 self-center text-sm font-medium leading-snug tracking-tight md:text-base"
+        >
           {t("Website is live", "Веб-страницата е активна")}
         </h2>
         <Button
@@ -80,6 +83,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
       </div>
 
       <p
+        data-replay-public
         className="hidden text-sm leading-relaxed text-muted-foreground md:block"
         data-appear="item"
         style={appearStep(2)}
@@ -121,7 +125,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
               {copied ? <Check /> : <Copy />}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent data-replay-public>
             {copied ? t("Copied", "Копирано") : t("Copy link", "Копирај линк")}
           </TooltipContent>
         </Tooltip>
@@ -129,7 +133,12 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
 
       <div className="hidden md:block" data-appear="item" style={appearStep(4)}>
         <Button asChild className="min-h-11 w-full justify-between">
-          <a href={websiteUrl} target="_blank" rel="noreferrer">
+          <a
+            data-replay-public
+            href={websiteUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
             {t("Open website", "Отвори страница")}
             <ExternalLink data-icon="inline-end" />
           </a>

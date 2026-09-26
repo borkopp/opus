@@ -64,7 +64,12 @@ export function RecoveryContacts({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" disabled={disabled}>
+        <Button
+          data-replay-public
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+        >
           {gapId
             ? t("Choose another client", "Избери друг клиент")
             : t("Client permissions", "Дозволи од клиенти")}
@@ -72,7 +77,7 @@ export function RecoveryContacts({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle data-replay-public>
             {gapId
               ? t("Choose a client", "Изберете клиент")
               : t(
@@ -80,7 +85,7 @@ export function RecoveryContacts({
                   "Дозвола за понуди за слободни термини",
                 )}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription data-replay-public>
             {gapId
               ? t(
                   "Only clients who allow these emails can be selected. Availability and upcoming appointments are checked before adding them.",
@@ -94,6 +99,7 @@ export function RecoveryContacts({
         </DialogHeader>
         <Field>
           <FieldLabel
+            data-replay-public
             htmlFor={gapId ? "choose-client-search" : "permission-search"}
           >
             {t("Search clients", "Пребарај клиенти")}
@@ -108,7 +114,7 @@ export function RecoveryContacts({
           {contacts === undefined ? (
             <Skeleton className="h-24 w-full" />
           ) : contacts.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p data-replay-public className="text-sm text-muted-foreground">
               {t("No clients found.", "Нема пронајдени клиенти.")}
             </p>
           ) : (
@@ -126,6 +132,7 @@ export function RecoveryContacts({
                 </div>
                 {gapId ? (
                   <Button
+                    data-replay-public
                     size="sm"
                     variant="outline"
                     disabled={busy || !contact.optedIn || !contact.email}

@@ -16,6 +16,8 @@ export function TeamWidget({
   const { t } = useDashboardI18n();
   return (
     <WidgetFrame
+      replayPublicSubtitle
+      replayPublicTitle
       delay={0}
       title={t("Team availability", "Достапност на тимот")}
       subtitle={t(
@@ -66,7 +68,7 @@ export function TeamWidget({
               </div>
               <div className={s.teamCount}>
                 <strong>{person.todayCount}</strong>
-                <span>{t("bookings", "термини")}</span>
+                <span data-replay-public>{t("bookings", "термини")}</span>
               </div>
             </Link>
           );

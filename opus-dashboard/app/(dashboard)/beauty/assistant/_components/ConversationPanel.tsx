@@ -160,6 +160,7 @@ export function ConversationPanel({
                       {turn.status === "pending" ||
                       turn.status === "running" ? (
                         <p
+                          data-replay-public
                           role="status"
                           className="flex items-center gap-2 px-3 text-sm text-muted-foreground"
                         >
@@ -174,6 +175,7 @@ export function ConversationPanel({
                           <AlertDescription className="flex flex-col items-start gap-3">
                             {analystError(turn.errorCode, language)}
                             <Button
+                              data-replay-public
                               variant="outline"
                               size="sm"
                               disabled={disabled}

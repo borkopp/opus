@@ -59,7 +59,7 @@ export function AiStudioContext({
     >
       <FieldGroup className="max-w-2xl">
         <Field>
-          <FieldLabel htmlFor="ai-studio-context">
+          <FieldLabel data-replay-public htmlFor="ai-studio-context">
             {t(
               "What should the AI know about your studio?",
               "Што треба AI да знае за вашето студио?",
@@ -77,7 +77,7 @@ export function AiStudioContext({
               "Производи и брендови што ги користиме: …\nКолку обично траат нашите третмани за нокти: …\nНега и одржување по третманот: …\nОтстранување, поправки и правила во студиото: …\nДруги често поставувани прашања: …",
             )}
           />
-          <FieldDescription id="ai-context-help">
+          <FieldDescription data-replay-public id="ai-context-help">
             {t(
               "Write the facts you want clients to hear, such as which gel you use or when to return for maintenance. Services, prices and availability are read from OPUS. If an answer is missing, the AI asks your team instead of guessing.",
               "Напишете ги информациите што сакате да ги знаат клиентите, на пример кој гел го користите или кога да дојдат на корекција. Услугите, цените и слободните термини се преземаат од OPUS. Ако недостасува одговор, AI го препушта прашањето на вашиот тим.",
@@ -88,7 +88,7 @@ export function AiStudioContext({
           </p>
         </Field>
         <Field>
-          <FieldLabel htmlFor="ai-test-question">
+          <FieldLabel data-replay-public htmlFor="ai-test-question">
             {t("Try a customer question", "Пробајте прашање од клиент")}
           </FieldLabel>
           <Textarea
@@ -102,7 +102,7 @@ export function AiStudioContext({
               "Колку време ќе ми траат ноктите?",
             )}
           />
-          <FieldDescription>
+          <FieldDescription data-replay-public>
             {t(
               "Save your settings first. This test uses saved studio context and does not send messages or create appointments.",
               "Прво зачувајте ги поставките. Тестот го користи зачуваниот контекст и не испраќа пораки или закажува термини.",
@@ -124,7 +124,11 @@ export function AiStudioContext({
             className="flex flex-col gap-3 rounded-xl border p-4"
             aria-live="polite"
           >
-            <Badge variant="secondary" className="self-start">
+            <Badge
+              data-replay-public
+              variant="secondary"
+              className="self-start"
+            >
               {result.handoff
                 ? t("Would ask your team", "Ќе го праша вашиот тим")
                 : t("Ready to answer", "Подготвен одговор")}

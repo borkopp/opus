@@ -15,6 +15,8 @@ export default async function Login({
   return (
     <AuthLayout>
       <EmailOtpForm
+        replayPublicTitle
+        replayPublicDescription
         title={
           locale === "mk"
             ? "Добредојдовте во вашето студио"

@@ -60,6 +60,8 @@ export function AIInboxWorkspace() {
     >
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         <DashboardPageHeader
+          replayPublicDescription
+          replayPublicTitle
           title={t("AI inbox", "AI сандаче")}
           description={t(
             "Follow Instagram conversations and step in when clients need you.",
@@ -67,7 +69,7 @@ export function AIInboxWorkspace() {
           )}
         >
           <Button asChild variant="outline">
-            <Link href="/settings?tab=ai">
+            <Link data-replay-public href="/settings?tab=ai">
               <Settings2 data-icon="inline-start" />
               {t("Front-desk settings", "Поставки за AI рецепција")}
             </Link>
@@ -76,7 +78,11 @@ export function AIInboxWorkspace() {
         <div className="flex h-[72dvh] min-h-[520px] min-w-0 flex-col overflow-hidden rounded-[25px] bg-card md:h-[calc(100dvh-18rem)]">
           {selectedId && (
             <div className="px-4 pt-3 md:hidden">
-              <Button variant="ghost" onClick={() => setSelectedId(null)}>
+              <Button
+                data-replay-public
+                variant="ghost"
+                onClick={() => setSelectedId(null)}
+              >
                 <ArrowLeft data-icon="inline-start" />
                 {t("Conversations", "Разговори")}
               </Button>

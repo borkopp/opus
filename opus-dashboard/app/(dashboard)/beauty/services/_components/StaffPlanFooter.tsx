@@ -22,7 +22,7 @@ export function StaffPlanFooter() {
               `Бесплатен план · ${planStatus.staffCount}/${planStatus.staffLimit} вработени · ${planStatus.ownerCount}/${planStatus.ownerLimit} сопственик`,
             )}
           </p>
-          <p>
+          <p data-replay-public>
             {planStatus.canUseStaffRole
               ? t(
                   "1 owner + 3 staff, 4 people total. Managers count as staff; inactive members do not use a slot.",

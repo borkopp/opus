@@ -354,4 +354,168 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
       "Custom software is quoted separately. We agree on the features, integrations, timeline, and monthly plan for your project together.",
     customCta: "Talk to us",
   },
+  sq: {
+    metadata: {
+      title: "Çmimet dhe planet — OPUS",
+      description:
+        "Krahasoni planin falas, Pro për 1.190 den. në muaj dhe softuerin sipas porosisë. Shihni çfarë përfshihet për rezervime, promovim dhe menaxhim të studios.",
+    },
+    heading: "Zgjidhni atë që i nevojitet studios tuaj.",
+    description:
+      "Filloni me një faqe interneti dhe kalendar falas. Shtoni Pro kur t'ju nevojitet ekip më i madh, historia e klientëve dhe më shumë vegla.",
+    compare: "Krahasoni të gjitha funksionet",
+    comparisonHeading: "Çfarë përfshihet në secilin plan?",
+    comparisonDescription:
+      "Krahasoni planin falas dhe Pro, funksion për funksion.",
+    feature: "Funksioni",
+    free: "Falas",
+    included: "E përfshirë",
+    notIncluded: "Nuk përfshihet",
+    groups: [
+      {
+        title: "Uebfaqe dhe rezervime",
+        rows: [
+          {
+            feature: "Faqja juaj në yourstudio.opus.mk",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Termine, shërbime dhe klientë",
+            free: "Të pakufizuara",
+            pro: "Të pakufizuara",
+          },
+          {
+            feature: "Rezervim nga klienti pa llogari apo aplikacion",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Kalendar ekipi pa mbivendosje",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Orari i punës, pushimet dhe ditët e lira",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Anëtarët e ekipit",
+            free: "4",
+            pro: "Deri në 12",
+          },
+          {
+            feature: "Galeria në uebfaqe",
+            free: "Deri në 3 foto",
+            pro: "Deri në 15 foto",
+          },
+          {
+            feature: "Qasje nga telefoni, tableti dhe kompjuteri",
+            free: true,
+            pro: true,
+          },
+        ],
+      },
+      {
+        title: "Promovimi i studios",
+        rows: [
+          {
+            feature: "QR kod për rezervim dhe poster A5 për tavolinë",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Instagram Story për rezervime online",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Instagram Story për termin të lirë",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Zgjedhje ngjyrash për imazhet promovuese",
+            free: true,
+            pro: true,
+          },
+          { feature: "Përgjigje të ruajtura për klientët", free: true, pro: true },
+        ],
+      },
+      {
+        title: "Klientët dhe njoftimet",
+        rows: [
+          {
+            feature: "Kontaktet e klientit në çdo termin",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Regjistër klientësh me histori dhe statistika vizitash",
+            free: false,
+            pro: true,
+          },
+          {
+            feature: "Konfirmime dhe ndryshime të terminit me email",
+            free: true,
+            pro: true,
+          },
+          {
+            feature: "Kujtesa me email për klientët",
+            free: false,
+            pro: "1, 2, 3 ose 24 orë para",
+          },
+          {
+            feature: "Konfirmime dhe kujtesa me SMS",
+            free: false,
+            pro: "Po*",
+          },
+        ],
+      },
+      {
+        title: "Vegla AI dhe analiza",
+        rows: [
+          {
+            feature: "AI Chat",
+            description:
+              "Pyesni AI për biznesin tuaj. Merrni rekomandime, analiza dhe ide përmirësimi.",
+            free: false,
+            pro: "200 përgjigje në muaj*",
+          },
+          {
+            feature: "Raporte të hollësishme me AI",
+            description: "Numërohen brenda 200 përgjigjeve mujore.",
+            free: false,
+            pro: "Deri në 20 në muaj*",
+          },
+          {
+            feature: "Oferta me email për termine të lira",
+            description:
+              "Ju miratoni çdo ofertë. Vetëm për klientët me pëlqim.",
+            free: false,
+            pro: true,
+          },
+          {
+            feature: "AI Frontdesk",
+            description:
+              "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
+            free: false,
+            pro: true,
+          },
+        ],
+      },
+      {
+        title: "Mbështetje",
+        rows: [{ feature: "Mbështetje prioritare", free: false, pro: true }],
+      },
+    ],
+    activationTitle: "Rreth veglave SMS dhe AI",
+    activationNote:
+      "* AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për AI Frontdesk, lidhni profilin tuaj profesional të Instagram-it në cilësime. Plani nuk përfshin SMS të pakufizuara.",
+    customTitle: "Ju nevojitet diçka e përshtatur posaçërisht?",
+    customDescription:
+      "Softueri sipas porosisë ka ofertë të veçantë. Bashkërisht dakordohemi për funksionet, integrimet, afatin dhe planin mujor për projektin tuaj.",
+    customCta: "Bisedoni me ne",
+  },
 };

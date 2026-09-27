@@ -144,4 +144,19 @@ export const consentCopy = {
     privacy: "Privacy policy",
     back: "Back",
   },
+  sq: {
+    title: "Zgjedhjet tuaja për biskotat",
+    summary:
+      "Biskotat thelbësore e mbajnë OPUS në funksion. Ju zgjidhni nëse dëshironi të lejoni analizat, regjistrimin e sesioneve dhe reklamimin.",
+    description:
+      "Biskotat e nevojshme mundësojnë funksionimin e OPUS. Me lejen tuaj, përdorim PostHog për analiza dhe regjistrim të sesioneve në faqen e marketingut dhe në panel me vlera të maskuara të fushave dhe të dhëna private të maskuara në panel, dhe Meta Pixel për matjen e reklamave të OPUS. Zgjedhja vlen edhe në studio.opus.mk.",
+    analytics: "Analitikë · PostHog",
+    marketing: "Reklamim · Meta",
+    accept: "Prano të gjitha",
+    reject: "Vetëm të nevojshmet",
+    save: "Ruaj zgjedhjen",
+    preferences: "Cilësimet e biskotave",
+    privacy: "Politika e privatësisë",
+    back: "Kthehu",
+  },
 } as const;

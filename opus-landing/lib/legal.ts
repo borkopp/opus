@@ -1241,6 +1241,602 @@ const enPrivacy: LegalDocument = {
   ],
 };
 
+const sqTerms: LegalDocument = {
+  title: "Kushtet e përdorimit",
+  description:
+    "Kushtet që zbatohen gjatë përdorimit të OPUS, panelit të biznesit dhe uebfaqeve të rezervimit online të studiove.",
+  eyebrow: "Informacione ligjore · Dokumenti 01",
+  summary:
+    "OPUS ofron softuerin e rezervimit. Studioja ofron shërbimin e bukurisë dhe mbetet përgjegjëse për çmimet, disponueshmërinë, rregullat dhe marrëdhënien me klientët e saj.",
+  effectiveLabel: "Hyn në fuqi",
+  effectiveDate: "1 shtator 2026",
+  lastUpdatedLabel: "Përditësimi i fundit",
+  lastUpdatedDate: "1 shtator 2026",
+  tocLabel: "Në këtë dokument",
+  highlights: [
+    "OPUS është softuer rezervimesh, jo sallon apo ofrues trajtimesh.",
+    "OPUS aktualisht nuk përpunon pagesa për shërbimet e rezervuara.",
+    "Llogaritë e biznesit janë përgjegjëse për saktësinë e të dhënave dhe përdorimin e ligjshëm të tyre.",
+  ],
+  sections: [
+    {
+      id: "scope",
+      title: "1. Fusha e zbatimit dhe pranimi",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Këto Kushte rregullojnë përdorimin tuaj të opus.mk, studio.opus.mk, uebfaqeve të studiove në nëndomenet e opus.mk dhe funksioneve, përmbajtjeve dhe komunikimeve përkatëse (së bashku, “Shërbimi”).",
+        },
+        {
+          type: "paragraph",
+          text: "Duke hyrë në Shërbim, duke krijuar një llogari, duke iu bashkuar një ekipi studioje ose duke rezervuar një termin përmes Shërbimit, konfirmoni se i keni lexuar dhe i pranoni këto Kushte. Nëse përdorni Shërbimin për një biznes, konfirmoni se jeni të autorizuar të përfaqësoni dhe detyroni atë biznes.",
+        },
+        {
+          type: "paragraph",
+          text: "Në këto Kushte, “ju” mund të nënkuptojë një vizitor, pronar studioje ose anëtar ekipi, ose një klient që rezervon një termin, varësisht nga konteksti.",
+        },
+      ],
+    },
+    {
+      id: "operator",
+      title: "2. Rreth OPUS",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS është një platformë rezervimesh për sallone dhe studio bukurie në Maqedoninë e Veriut. Shërbimi operohet me emrin OPUS nga Shkupi, Maqedonia e Veriut.",
+        },
+        {
+          type: "contacts",
+          items: [
+            {
+              label: "Email",
+              value: "hello@opus.mk",
+              href: "mailto:hello@opus.mk",
+            },
+            {
+              label: "Telefon",
+              value: "+389 77 826 333",
+              href: "tel:+38977826333",
+            },
+            { label: "Vendndodhja", value: "Shkup, Maqedonia e Veriut" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "service",
+      title: "3. Çfarë ofron Shërbimi",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS u mundëson studiove të organizojnë shërbimet, çmimet, anëtarët e ekipit, orarin e punës, disponueshmërinë, klientët dhe terminet, si dhe të publikojnë uebfaqen e tyre për rezervime. Klientët mund të zgjedhin një shërbim, anëtar ekipi, datë dhe orar të lirë pa krijuar një llogari.",
+        },
+        {
+          type: "paragraph",
+          text: "Disa funksione, përfshirë email-et e transaksioneve, varen nga ofrues të jashtëm të konfiguruar siç duhet. Një funksion i paraqitur si i planifikuar, në testim, në pamje paraprake ose për versionet e ardhshme nuk është pjesë e detyrimit të OPUS derisa të aktivizohet realisht.",
+        },
+        {
+          type: "paragraph",
+          text: "OPUS nuk është sallon, nuk punëson personat që kryejnë trajtimet e rezervuara dhe nuk jep këshilla mjekësore, kozmetike apo profesionale. Marrëveshja për një shërbim të caktuar është midis klientit dhe studios së përzgjedhur.",
+        },
+      ],
+    },
+    {
+      id: "accounts",
+      title: "4. Llogaritë dhe qasja",
+      blocks: [
+        {
+          type: "list",
+          items: [
+            "Për të hapur një llogari biznesi, duhet të jeni të paktën 18 vjeç, të keni zotësi juridike dhe të jeni të autorizuar të veproni në emër të studios.",
+            "Duhet të jepni informacione të sakta, aktuale dhe të ruani sigurinë e llogarisë tuaj të email-it, kodeve njëpërdorimshme dhe pajisjeve tuaja.",
+            "Nuk duhet të ndani kodin e hyrjes apo të lejoni një person të paautorizuar të përdorë llogarinë me identitetin tuaj.",
+            "Pronari i studios ose menaxheri i autorizuar vendos se cilët anëtarë të ekipit kanë qasje dhe cilin rol merr çdo person.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Na njoftoni menjëherë nëse dyshoni për qasje të paautorizuar. Mund të kufizojmë përkohësisht një llogari për të mbrojtur përdoruesin, studion, klientët ose Shërbimin.",
+        },
+      ],
+    },
+    {
+      id: "studio-responsibilities",
+      title: "5. Përgjegjësitë e studios",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Çdo studio është e pavarur dhe përgjegjëse për biznesin e saj dhe marrëdhëniet me klientët. Studioja duhet:",
+        },
+        {
+          type: "list",
+          items: [
+            "të paraqesë me saktësi shërbimet, çmimet, kohëzgjatjen, stafin, adresën dhe disponueshmërinë;",
+            "të respektojë rregullat e zbatueshme për mbrojtjen e konsumatorëve, shëndetin, sigurinë, taksat, licencimin dhe standardet profesionale;",
+            "të shpjegojë rregullat e saj për anulimin, vonesat, mosparaqitjen dhe ndryshimin e terminit;",
+            "të ketë bazë ligjore dhe njoftim të përshtatshëm për të dhënat e klientëve dhe anëtarëve të ekipit që regjistron në OPUS;",
+            "të shmangë futjen e të dhënave shëndetësore ose të ndjeshme në shënime, përveç rasteve kur është vërtet e nevojshme, e ligjshme dhe e mbrojtur siç duhet; dhe",
+            "t'u përgjigjet me kohë kërkesave, ankesave dhe pyetjeve të klientëve për shërbimin e rezervuar.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "bookings",
+      title: "6. Rezervimet, çmimet dhe anulimet",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Kur një klient konfirmon një termin, OPUS e regjistron atë në kalendarin e studios dhe, kur është konfiguruar, dërgon një email transaksioni. Studioja është përgjegjëse për kryerjen e shërbimit, njoftimin e klientit për ndryshime dhe zgjidhjen e mosmarrëveshjeve rreth cilësisë, çmimit, anulimit ose mospjesëmarrjes.",
+        },
+        {
+          type: "paragraph",
+          text: "OPUS aktualisht nuk tarifon dhe nuk përpunon pagesa për shërbimet e rezervuara. Çmimi i shfaqur është informacion i vendosur nga studioja; mënyra dhe koha e pagesës rregullohen drejtpërdrejt me studion.",
+        },
+        {
+          type: "paragraph",
+          text: "Nëse një klient duhet të ndryshojë orarin ose të anulojë terminin, duhet të ndjekë opsionet në mesazhin e rezervimit ose të kontaktojë drejtpërdrejt studion. Rregullat e studios mund të zbatohen krahas këtyre Kushteve.",
+        },
+      ],
+    },
+    {
+      id: "acceptable-use",
+      title: "7. Përdorimi i lejuar",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Nuk duhet ta përdorni Shërbimin për qëllime të paligjshme, mashtruese, abuzive ose të dëmshme. Në veçanti, nuk duhet:",
+        },
+        {
+          type: "list",
+          items: [
+            "të keni qasje në llogari, organizatë ose të dhëna pa autorizim;",
+            "të dërgoni spam, kod dashakeqës ose përmbajtje që cenon të drejtat e të tjerëve;",
+            "të ndërhyni në funksionimin, sigurinë ose kufizimet e Shërbimit;",
+            "të nxirrni të dhëna në mënyrë masive, të testoni dobësi të sistemit pa leje me shkrim, ose të krijoni rezervime false; ose",
+            "të kopjoni, rishisni apo analizoni me inxhinieri të kundërt Shërbimin, përveç rasteve kur lejohet shprehimisht me ligj.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "content",
+      title: "8. Përmbajtja e studios",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Studioja ruan të gjitha të drejtat mbi emrin, logon, fotografitë, përshkrimet, çmimet dhe përmbajtjet e tjera të saj. Me vendosjen e përmbajtjes, studioja i jep OPUS një licencë të kufizuar, jo-ekskluzive dhe të revokueshme për ta ruajtur, përpunuar, përshtatur për shfaqje dhe publikuar vetëm aq sa është e nevojshme për ofrimin e Shërbimit.",
+        },
+        {
+          type: "paragraph",
+          text: "Studioja konfirmon se ka të drejtë të përdorë përmbajtjen dhe se ka lejen e nevojshme nga çdo person që mund të identifikohet në fotografi ose profil publik. Ne mund të heqim përmbajtje që është e paligjshme, e pasaktë, e pasigurt ose që shkel këto Kushte.",
+        },
+      ],
+    },
+    {
+      id: "communications",
+      title: "9. Komunikimet dhe njoftimet",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Për të mundësuar hyrjen dhe rezervimet, mund të dërgojmë kode njëpërdorimshme, konfirmime, njoftime për ndryshim ose anulim dhe rikujtues. Këto janë mesazhe shërbimi, jo marketingu. Dorëzimi varet nga saktësia e adresës, sistemi i marrësit dhe disponueshmëria e ofruesit të konfiguruar, prandaj nuk mund të garantojmë që çdo mesazh do të arrijë me kohë.",
+        },
+        {
+          type: "paragraph",
+          text: "Mesazhet e marketingut mund të dërgohen vetëm kur ekziston një bazë e veçantë ligjore, si pëlqimi i vlefshëm, dhe duhet të kenë një mënyrë të qartë për çregjistrim.",
+        },
+      ],
+    },
+    {
+      id: "fees",
+      title: "10. Ofertat falas dhe me pagesë në të ardhmen",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Funksionet që aktualisht janë shënuar si falas mund të përdoren pa kartelë pagese. OPUS nuk do t'ju tarifojë automatikisht. Nëse në të ardhmen ofrojmë funksione ose plane me pagesë, çmimi, taksat, periudha e faturimit, rinovimi dhe kushtet e anulimit do të shfaqen qartë para se të kërkojmë pranim shprehimor ose pagesë.",
+        },
+      ],
+    },
+    {
+      id: "availability",
+      title: "11. Disponueshmëria, ndryshimet dhe ndërprerja",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Ne punojmë që Shërbimi të jetë i besueshëm, por nuk premtojmë funksionim të pandërprerë ose krejtësisht pa gabime. Mund të kryejmë mirëmbajtje, të trajtojmë probleme sigurie ose të modifikojmë funksione. Kur është e arsyeshme, do të njoftojmë paraprakisht për ndryshime thelbësore që prekin përdoruesit aktivë.",
+        },
+        {
+          type: "paragraph",
+          text: "Mund të kufizojmë ose pezullojmë qasjen në rast shkeljeje të këtyre Kushteve, rreziku sigurie, aktiviteti të paligjshëm, keqpërdorimi ose kërkese ligjore. Ju mund të ndërprisni përdorimin e Shërbimit në çdo kohë dhe të kërkoni mbylljen e llogarisë në hello@opus.mk.",
+        },
+      ],
+    },
+    {
+      id: "intellectual-property",
+      title: "12. Pronësia intelektuale",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS, logoja e tij, ndërfaqja, softueri dhe përmbajtja origjinale mbrohen nga ligjet e zbatueshme të pronësisë intelektuale. Përveç të drejtës së kufizuar për të përdorur Shërbimin sipas këtyre Kushteve, ju nuk fitoni pronësi apo licencë mbi këto të drejta.",
+        },
+      ],
+    },
+    {
+      id: "liability",
+      title: "13. Garancitë dhe përgjegjësia",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Shërbimi ofrohet sipas disponueshmërisë. Në masën maksimale të lejuar me ligj, OPUS nuk mban përgjegjësi për cilësinë, sigurinë, ligjshmërinë, rezultatin ose kryerjen e shërbimit të ofruar nga një studio, as për të dhëna të pasakta të vendosura nga studioja ose klienti.",
+        },
+        {
+          type: "paragraph",
+          text: "OPUS mban përgjegjësi për dëme të drejtpërdrejta dhe të parashikueshme të shkaktuara nga shkelja jonë vetëm në masën e kërkuar nga ligji i zbatueshëm. Nuk mbajmë përgjegjësi për humbje indirekte, fitim të humbur ose ndërprerje të biznesit kur një kufizim i tillë lejohet. Asgjë në këto Kushte nuk përjashton përgjegjësinë që ligjërisht nuk mund të përjashtohet, as të drejtat e detyrueshme të konsumatorëve.",
+        },
+      ],
+    },
+    {
+      id: "privacy",
+      title: "14. Privatësia",
+      blocks: [
+        {
+          type: "link",
+          text: "Mënyra se si OPUS trajton të dhënat personale, roli i studios dhe të drejtat tuaja janë të shpjeguara në",
+          label: "Politikën e privatësisë",
+          href: "/privacy",
+        },
+      ],
+    },
+    {
+      id: "law",
+      title: "15. Ligji i zbatueshëm dhe mosmarrëveshjet",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Këto Kushte rregullohen nga ligjet e Republikës së Maqedonisë së Veriut. Na kontaktoni fillimisht në mënyrë që të përpiqemi ta zgjidhim mosmarrëveshjen drejtpërdrejt. Për përdoruesit e biznesit, kompetente janë gjykatat përkatëse në Shkup. Nëse jeni konsumator, kjo dispozitë nuk kufizon të drejtat tuaja të detyrueshme apo juridiksionin sipas ligjit të zbatueshëm.",
+        },
+      ],
+    },
+    {
+      id: "changes-contact",
+      title: "16. Ndryshimet dhe kontakti",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Mund t'i përditësojmë këto Kushte kur ndryshon Shërbimi ose ligji. Versioni i ri do të mbajë datën e përditësimit dhe, për ndryshime thelbësore, do të njoftojmë paraprakisht kur kërkohet.",
+        },
+        {
+          type: "paragraph",
+          text: "Për pyetje rreth këtyre Kushteve, shkruani në hello@opus.mk ose telefononi në +389 77 826 333.",
+        },
+      ],
+    },
+  ],
+};
+
+const sqPrivacy: LegalDocument = {
+  title: "Politika e privatësisë",
+  description:
+    "Si i mbledh, përdor, ndan dhe mbron OPUS të dhënat personale të studiove, anëtarëve të ekipit, klientëve dhe vizitorëve.",
+  eyebrow: "Informacione ligjore · Dokumenti 02",
+  summary:
+    "OPUS përdor të dhëna personale për llogaritë, rezervimet e sigurta dhe mbështetjen. Analitika fakultative dhe matja e reklamave aktivizohen vetëm me pëlqimin tuaj.",
+  effectiveLabel: "Hyn në fuqi",
+  effectiveDate: "1 shtator 2026",
+  lastUpdatedLabel: "Përditësimi i fundit",
+  lastUpdatedDate: "14 shtator 2026",
+  tocLabel: "Në këtë dokument",
+  highlights: [
+    "Studioja kontrollon të dhënat e klientëve të saj; OPUS siguron platformën.",
+    "PostHog dhe Meta Pixel kanë cilësime të veçanta, fakultative të pëlqimit.",
+    "Mund ta ndryshoni zgjedhjen tuaj te Cilësimet e biskotave në çdo kohë.",
+  ],
+  sections: [
+    {
+      id: "scope",
+      title: "1. Fusha e zbatimit dhe kontakti",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Kjo Politikë zbatohet për opus.mk, studio.opus.mk, uebfaqet e studiove në nëndomenet e opus.mk dhe funksionet, komunikimet dhe mbështetjen përkatëse (së bashku, “Shërbimi”). Ajo shpjegon se si OPUS përpunon të dhënat personale sipas Ligjit për Mbrojtjen e të Dhënave Personale të Republikës së Maqedonisë së Veriut.",
+        },
+        {
+          type: "paragraph",
+          text: "Për përpunimin ku OPUS është kontrollues, kontakti për privatësinë është OPUS, Shkup, Maqedonia e Veriut.",
+        },
+        {
+          type: "contacts",
+          items: [
+            {
+              label: "Email",
+              value: "hello@opus.mk",
+              href: "mailto:hello@opus.mk",
+            },
+            {
+              label: "Telefon",
+              value: "+389 77 826 333",
+              href: "tel:+38977826333",
+            },
+          ],
+        },
+        {
+          type: "link",
+          text: "Përdorimi i Shërbimit rregullohet gjithashtu nga",
+          label: "Kushtet tona të përdorimit",
+          href: "/terms",
+        },
+      ],
+    },
+    {
+      id: "roles",
+      title: "2. Kush vendos për përpunimin",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS është kontrollues kur përpunon të dhëna për vizitorët e opus.mk, llogaritë e biznesit, hyrjen, sigurinë, mbështetjen dhe funksionimin e platformës. Kjo do të thotë se OPUS përcakton qëllimet dhe mënyrën e atij përpunimi.",
+        },
+        {
+          type: "paragraph",
+          text: "Kur një studio përdor OPUS për të menaxhuar klientët dhe terminet, studioja është kontrolluese e atyre të dhënave të klientëve, ndërsa OPUS i përpunon ato për të siguruar platformën. Studioja vendos pse i mbledh të dhënat, sa kohë i nevojiten dhe cili anëtar i ekipit ka qasje.",
+        },
+        {
+          type: "paragraph",
+          text: "Nëse kërkesa juaj ka të bëjë me një termin të caktuar, shënim apo profil klienti, ju lutemi kontaktoni fillimisht studion. OPUS do ta ndihmojë studion të përgjigjet kur kjo është e nevojshme dhe e lejuar me ligj.",
+        },
+      ],
+    },
+    {
+      id: "data-we-collect",
+      title: "3. Të dhënat që përpunojmë",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Varësisht nga mënyra se si e përdorni Shërbimin, mund të përpunojmë kategoritë e mëposhtme:",
+        },
+        {
+          type: "list",
+          items: [
+            "Të dhëna llogarie dhe hyrjeje: emri, email-i, telefoni kur vendoset, fotografia e profilit, anëtarësimi në studio, roli dhe regjistrat e sigurisë së hyrjes.",
+            "Të dhëna për studion dhe ekipin: emri i biznesit, kontakti, adresa dhe koordinatat, shërbimet, çmimet, orari i punës, disponueshmëria, fotografitë, përshkrimi dhe profilet e anëtarëve të ekipit.",
+            "Të dhëna vendndodhjeje: koordinatat e pajisjes kur zgjidhni shprehimisht llogaritjen e rrugës deri te studioja dhe jepni leje në shfletues.",
+            "Të dhëna për klientin dhe terminin: emri, email-i, telefoni kur vendoset, shërbimi i përzgjedhur, anëtari i ekipit, data dhe ora, statusi i terminit, arsyeja e anulimit dhe shënimet e vendosura nga klienti ose anëtari i autorizuar i ekipit.",
+            "Komunikimet: mesazhet drejtuar mbështetjes, të dhënat nga formulari i kontaktit dhe regjistrat e dërgimit ose dështimit të email-eve të transaksioneve.",
+            "Të dhëna teknike dhe sigurie: adresa IP dhe user-agent kur regjistrohen për siguri ose auditim, koha e kërkesës, ngjarjet e sistemit, biskotat dhe cilësimet lokale të shfletuesit.",
+            "Me pëlqim analitik: përdorimi i platformës, faqet e vizituara dhe ngjarjet, të lidhura me identifikuesin, emrin, email-in dhe rolin e përdoruesit të biznesit të kyçur në PostHog. Me pëlqim reklamues: Meta Pixel merr vizitat në faqet e marketingut dhe regjistrimit, ngjarjen për studio të re, URL, identifikuesit e biskotave dhe klikimet e reklamave, si dhe të dhëna teknike si adresa IP dhe shfletuesi.",
+            "Përmbajtja që ngarkoni: fotografitë, përshkrimet, të dhënat publike të studios dhe informacione të tjera që vendosni vullnetarisht.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Një studio mund të vendosë manualisht edhe të dhëna që tashmë i ka nga një klient ose anëtar ekipi. Në atë rast studioja është përgjegjëse t'ju informojë dhe të ketë bazë të vlefshme ligjore.",
+        },
+      ],
+    },
+    {
+      id: "sensitive-data",
+      title: "4. Të dhëna të ndjeshme",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS nuk kërkon të dhëna shëndetësore, biometrike ose kategori të tjera të veçanta të të dhënave personale për rezervime të zakonshme. Mos vendosni diagnoza, histori mjekësore apo informacione të tjera të ndjeshme në shënime, përveç nëse është vërtet e nevojshme për ofrimin e sigurt të shërbimit dhe studioja ka bazë ligjore dhe masa të përshtatshme mbrojtjeje.",
+        },
+      ],
+    },
+    {
+      id: "purposes",
+      title: "5. Pse i përdorim të dhënat",
+      blocks: [
+        {
+          type: "list",
+          items: [
+            "Për të ofruar Shërbimin: hapja e llogarisë, kyçja, menaxhimi i studios, kontrolli i disponueshmërisë, krijimi dhe menaxhimi i terminit dhe dërgimi i mesazheve të shërbimit.",
+            "Për siguri dhe integritet: verifikimi i email-it, parandalimi i abuzimeve dhe termineve të dyfishta, kontrolli i qasjes, regjistrat e auditimit dhe zgjidhja e incidenteve.",
+            "Për mbështetje dhe komunikim: përgjigje ndaj pyetjeve, kërkesave të kontaktit, ankesave ose kërkesave për ushtrimin e të drejtave.",
+            "Për mirëmbajtje dhe përmirësim: diagnostikimi i gabimeve, besueshmëria, kapaciteti dhe përmirësimi i procesit të rezervimit pa profilizim reklamues.",
+            "Me pëlqimin tuaj: analiza e përdorimit përmes PostHog dhe matja, optimizimi dhe krijimi i audiencave reklamuese për OPUS përmes Meta Pixel. Meta mund t'i lidhë ngjarjet me llogarinë tuaj sipas kushteve dhe politikës së saj të privatësisë.",
+            "Për detyrime ligjore: veprimi sipas kërkesave të vlefshme të autoriteteve, mbrojtja e të drejtave dhe mbajtja e regjistrave që ligjërisht duhet të ruhen.",
+          ],
+        },
+      ],
+    },
+    {
+      id: "legal-bases",
+      title: "6. Bazat ligjore",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Varësisht nga qëllimi, përpunimi bazohet në një ose më shumë nga bazat e mëposhtme:",
+        },
+        {
+          type: "list",
+          items: [
+            "përmbushja e kontratës ose ndërmarrja e hapave me kërkesën tuaj, për shembull për llogarinë, rezervimin ose përgjigjen para fillimit të përdorimit;",
+            "detyrimi ligjor, për shembull kur duhet të ruajmë ose dorëzojmë një regjistrim të caktuar;",
+            "interesi legjitim për funksionim të sigurt, të besueshëm dhe të dobishëm të Shërbimit, parandalimin e abuzimeve dhe mbrojtjen e kërkesave ligjore, kur të drejtat tuaja nuk mbizotërojnë; dhe",
+            "pëlqimi për analiza fakultative, matje reklamash dhe komunikime marketingu kur është e zbatueshme. Mund ta tërhiqni pëlqimin për biskotat te Cilësimet e biskotave.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Kur OPUS përpunon të dhëna të klientëve sipas udhëzimeve të studios, bazën ligjore për mbledhjen e përcakton studioja si kontrolluese.",
+        },
+      ],
+    },
+    {
+      id: "sharing",
+      title: "7. Me kë i ndajmë të dhënat",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Të dhënat i ndajmë vetëm aq sa është e nevojshme për qëllimet e përshkruara këtu:",
+        },
+        {
+          type: "list",
+          items: [
+            "Me studion dhe anëtarët e autorizuar të ekipit: për të parë dhe përmbushur terminin dhe për të mbajtur evidencën e klientëve.",
+            "Me Vercel: për pritjen (hosting) dhe shpërndarjen e aplikacioneve të uebit, kur Shërbimi është i vendosur aty.",
+            "Me Convex: për bazën e të dhënave, ruajtjen, funksionet e serverit dhe infrastrukturën e kyçjes.",
+            "Me Resend dhe/ose Sender: për kodet njëpërdorimshme dhe email-et e transaksioneve, vetëm kur ofruesi përkatës është i konfiguruar.",
+            "Me Formspree: kur dërgoni formularin e kontaktit në opus.mk.",
+            "Me PostHog: për analizën e platformës, vetëm me pëlqim analitik. Me Meta: për matjen dhe optimizimin e reklamave të OPUS dhe audiencave të synuara, vetëm me pëlqim reklamimi. Ne nuk dërgojmë emra, email-e, numra telefoni apo përmbajtje të termineve të klientëve si parametra në Meta Pixel.",
+            "Me Mapbox: kur përdoret kërkimi i adresave, harta ose drejtimi dhe funksioni është i konfiguruar; për llogaritjen e rrugës mund të marrë koordinatat e studios dhe pajisjes suaj.",
+            "Me këshilltarë profesionalë, organe kompetente ose gjykata kur kjo kërkohet me ligj ose është e nevojshme për mbrojtjen e të drejtave, sigurisë dhe përdoruesve.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Ne nuk i shesim dhe nuk i japim me qira regjistrat e klientëve. Ndarja me Meta e përshkruar më sipër është fakultative dhe varet nga pëlqimi juaj për reklama. Në rast riorganizimi, financimi apo transferimi të Shërbimit, të dhënat mund të transferohen me njoftim dhe mbrojtje përkatëse.",
+        },
+      ],
+    },
+    {
+      id: "transfers",
+      title: "8. Transferimi në shtete të tjera",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Disa ofrues infrastrukture mund të përpunojnë të dhëna jashtë Maqedonisë së Veriut. Kur ligji i zbatueshëm kërkon mbrojtje shtesë për transferime të tilla, përdorim mekanizma të lejuar dhe masa të përshtatshme kontraktuale ose organizative. Mund të kërkoni informacione për mekanizmin që zbatohet për një ofrues të caktuar në hello@opus.mk.",
+        },
+      ],
+    },
+    {
+      id: "retention",
+      title: "9. Sa kohë i ruajmë të dhënat",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Të dhënat i ruajmë vetëm për aq kohë sa janë të nevojshme për qëllimin për të cilin janë mbledhur. Periudha varet nga lloji i të dhënave, aktiviteti i llogarisë, udhëzimet e studios, rreziku i sigurisë dhe detyrimet ligjore.",
+        },
+        {
+          type: "list",
+          items: [
+            "Të dhënat e llogarisë dhe biznesit: për aq kohë sa llogaria është aktive dhe më pas për një periudhë të arsyeshme për mbyllje, eksport, kontest ose detyrim ligjor.",
+            "Terminet dhe regjistrat e klientëve: sipas nevojës dhe udhëzimeve të studios, përveç kur kërkohet periudhë më e gjatë për detyrim ligjor, siguri apo kërkesë juridike.",
+            "Kodet njëpërdorimshme: vetëm për një kohë të shkurtër të nevojshme për verifikim; kodet ruhen në formë të hash-uar dhe skadojnë.",
+            "Kontakti dhe mbështetja: derisa të përgjigjemi dhe më pas për aq kohë sa është e arsyeshme për ndjekjen e kërkesës.",
+            "Regjistrat e sigurisë, dorëzimit dhe auditimit: aq sa është e nevojshme për mbrojtje, diagnostikim, dëshmi të veprimeve dhe detyrime ligjore.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Kur fshihet një regjistrim, ai mund të hiqet fillimisht nga përdorimi aktiv. Të dhëna të kufizuara mund të mbeten në kopje rezervë apo regjistra sigurie e auditimi deri në rotacionin e tyre të rregullt, ose të mbahen kur e kërkon ligji.",
+        },
+      ],
+    },
+    {
+      id: "cookies",
+      title: "10. Biskotat dhe memoria lokale",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Teknologjitë e nevojshme mundësojnë hyrjen, sigurinë dhe cilësimet tuaja. Analitika dhe teknologjitë e reklamave janë të veçanta dhe të çaktivizuara derisa t'i pranoni:",
+        },
+        {
+          type: "list",
+          items: [
+            "Biskotat e nevojshme për sesionin dhe sigurinë në studio.opus.mk, për t'u kyçur dhe për të qëndruar të kyçur në mënyrë të sigurt.",
+            "opus_consent_v1 ruan zgjedhjen tuaj deri në 180 ditë në opus.mk dhe studio.opus.mk. Një sinjal lokal njofton skedat e tjera të hapura për ndryshimin e zgjedhjes.",
+            "PostHog: biskota analitike me parashtesë ph_ dhe memorie lokale, vetëm me pëlqim analitik. Kohëzgjatja e biskotave është 180 ditë; memoria lokale mbetet deri në tërheqjen e pëlqimit ose fshirjen. Në faqen e marketingut opus.mk mund të regjistrojmë sesione me pëlqim analitik për të kuptuar përdorimin e faqes. Vlerat e fushave janë të maskuara. Regjistrimi i sesioneve në panelin e studios mbetet i çaktivizuar.",
+            "Meta Pixel: _fbp dhe, kur ekziston identifikuesi i klikimit të reklamës, _fbc, zakonisht deri në 90 ditë dhe të rinovuara gjatë përdorimit. Ngarkohet vetëm pas pëlqimit për reklama, në faqet e marketingut dhe regjistrimit të OPUS. Nuk ngarkohet në faqet publike të rezervimit të studiove apo në faqet private të panelit.",
+            "Biskota opus_locale, e cila vendoset kur vetë e ndryshoni gjuhën dhe ruan zgjedhjen deri në një vit.",
+            "Memoria lokale për temën e errët apo të çelët dhe për disa cilësime të ndërfaqes. Këto vlera mbeten në pajisje derisa t'i pastroni.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Zgjidhni Vetëm të nevojshmet, Prano të gjitha ose ruani zgjedhje të veçantë për analiza dhe reklama. Cilësimet e biskotave janë të disponueshme në fund të faqes në opus.mk dhe në aplikacionin e studios. Tërheqja e pëlqimit ndalon gjurmimin e ardhshëm fakultativ; nuk e zhbën përpunimin e mëparshëm. Bllokimi i biskotave të nevojshme mund të parandalojë hyrjen në llogari.",
+        },
+      ],
+    },
+    {
+      id: "security",
+      title: "11. Siguria",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Zbatojmë masa teknike dhe organizative të përshtatshme me rrezikun, përfshirë kontrollin e qasjes sipas studios dhe rolit, kodet njëpërdorimshme në formë të hash-uar, kufizimin e përpjekjeve, transmetimin e enkriptuar dhe regjistrat e auditimit për veprime domethënëse. Qasja është e kufizuar për personat dhe ofruesit që u nevojitet për punën e tyre.",
+        },
+        {
+          type: "paragraph",
+          text: "Asnjë sistem nuk është plotësisht i sigurt. Nëse dyshoni se një llogari ose të dhënë personale është komprometuar, na shkruani menjëherë në hello@opus.mk.",
+        },
+      ],
+    },
+    {
+      id: "rights",
+      title: "12. Të drejtat tuaja",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Varësisht nga rrethanat dhe ligji i zbatueshëm, mund të keni të drejtë:",
+        },
+        {
+          type: "list",
+          items: [
+            "të informoheni dhe të keni qasje në të dhënat tuaja personale;",
+            "të korrigjoni të dhënat e pasakta ose të plotësoni ato të paplota;",
+            "të kërkoni fshirjen ose kufizimin e përpunimit;",
+            "të merrni të dhënat në format të bartshëm kur plotësohen kushtet ligjore;",
+            "të kundërshtoni përpunimin e bazuar në interesin legjitim;",
+            "të tërhiqni pëlqimin në çdo kohë, pa cenuar ligjshmërinë e mëparshme; dhe",
+            "të mos jeni subjekt i një vendimi të bazuar vetëm në përpunim të automatizuar që prodhon pasoja juridike ose ngjashëm të rëndësishme.",
+          ],
+        },
+        {
+          type: "paragraph",
+          text: "Dërgoni kërkesën tuaj në hello@opus.mk. Mund të kërkojmë konfirmim të arsyeshëm të identitetit dhe kontekstit të studios për të shmangur zbulimin e të dhënave tek personi i gabuar. Disa të drejta mund të kufizohen kur ligji lejon ose kërkon ruajtjen e të dhënave.",
+        },
+        {
+          type: "link",
+          text: "Keni gjithashtu të drejtë të paraqisni kërkesë pranë",
+          label: "Agjencisë për Mbrojtjen e të Dhënave Personale",
+          href: "https://azlp.mk/sq/formularet-dhe-sherbimet-per-qytetaret/",
+        },
+      ],
+    },
+    {
+      id: "children",
+      title: "13. Të miturit",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Llogaritë e biznesit në OPUS janë të destinuara për të rritur. Shërbimi nuk është i destinuar që një fëmijë të krijojë në mënyrë të pavarur llogari biznesi. Kur rezervohet shërbim për një të mitur, prindi, kujdestari ose studioja duhet të bëjë rezervimin dhe të sigurojë bazë të përshtatshme ligjore për të dhënat.",
+        },
+      ],
+    },
+    {
+      id: "automation-marketing",
+      title: "14. Vendimmarrja e automatizuar dhe marketingu",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "OPUS nuk përdor të dhënat nga procesi aktual i rezervimit për vendimmarrje të bazuar vetëm në përpunim të automatizuar që prodhon pasoja juridike ose ngjashëm të rëndësishme për ju. Kodet njëpërdorimshme, konfirmimet dhe rikujtuesit janë mesazhe transaksionesh. Ne nuk dërgojmë marketing pa bazë të veçantë ligjore dhe mundësi çregjistrimi.",
+        },
+      ],
+    },
+    {
+      id: "changes",
+      title: "15. Ndryshimet në këtë Politikë",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Mund ta përditësojmë Politikën kur ndryshon Shërbimi, ofruesit ose ligji. Do të përditësojmë datën në krye të faqes dhe, kur ndryshimi është thelbësor, do të japim njoftim shtesë përmes Shërbimit ose me email kur është e përshtatshme.",
+        },
+      ],
+    },
+    {
+      id: "contact",
+      title: "16. Pyetje për privatësinë",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "Për pyetje, kërkesa ose ankesa në lidhje me privatësinë, shkruani në hello@opus.mk ose telefononi në +389 77 826 333. Nëse çështja ka të bëjë me të dhënat e një studioje të caktuar, shënoni emrin e studios dhe detaje të mjaftueshme për të gjetur kërkesën pa dërguar të dhëna të panevojshme të ndjeshme.",
+        },
+      ],
+    },
+  ],
+};
+
 const documents: Record<Locale, Record<LegalDocumentKind, LegalDocument>> = {
   mk: {
     privacy: mkPrivacy,
@@ -1249,6 +1845,10 @@ const documents: Record<Locale, Record<LegalDocumentKind, LegalDocument>> = {
   en: {
     privacy: enPrivacy,
     terms: enTerms,
+  },
+  sq: {
+    privacy: sqPrivacy,
+    terms: sqTerms,
   },
 };
 

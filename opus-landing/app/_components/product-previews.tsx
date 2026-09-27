@@ -15,7 +15,9 @@ export function BookingPreview() {
       aria-label={
         locale === "mk"
           ? "Пример за веб-сајт за закажување со услуга и слободни термини"
-          : "Sample studio booking website with a haircut service and available appointment times"
+          : locale === "sq"
+            ? "Shembull i uebfaqes së rezervimit me shërbim dhe termine të lira"
+            : "Sample studio booking website with a haircut service and available appointment times"
       }
     >
       <div className="product-mini-address">atelier.opus.mk</div>
@@ -58,7 +60,9 @@ export function CalendarPreview() {
       aria-label={
         locale === "mk"
           ? "Пример за заеднички календар со двајца членови на тимот и закажани термини"
-          : "Sample shared calendar showing two staff members and three scheduled appointments"
+          : locale === "sq"
+            ? "Shembull i kalendarit të përbashkët me dy anëtarë ekipi dhe termine të rezervuara"
+            : "Sample shared calendar showing two staff members and three scheduled appointments"
       }
     >
       <div className="product-mini-heading">
@@ -106,7 +110,9 @@ export function ClientPreview() {
       aria-label={
         locale === "mk"
           ? "Пример за клиентски профил со историја на посети"
-          : "Sample client profile with her recent haircut and color visits"
+          : locale === "sq"
+            ? "Shembull i profilit të klientit me historinë e vizitave të fundit"
+            : "Sample client profile with her recent haircut and color visits"
       }
     >
       <div className="product-mini-profile">

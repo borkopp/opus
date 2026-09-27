@@ -14,6 +14,8 @@ describe("shared OPUS language preference", () => {
     ["en;q=0.2,mk;q=0.9", "mk"],
     ["mk;q=0,en;q=1", "en"],
     ["de-DE,en-GB;q=0.8", "en"],
+    ["sq-AL,sq;q=0.9,en;q=0.8", "sq"],
+    ["de-DE,sq;q=0.8", "sq"],
     [null, "mk"],
   ])("resolves %s to %s", (header, expected) => {
     expect(resolveLocale(header)).toBe(expected);

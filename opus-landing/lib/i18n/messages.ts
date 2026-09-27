@@ -19,6 +19,7 @@ export const mkMessages = {
     languageToggle: "Избор на јазик",
     switchToEnglish: "Префрли на англиски",
     switchToMacedonian: "Префрли на македонски",
+    switchToAlbanian: "Префрли на албански",
     openMenu: "Отвори мени",
     closeMenu: "Затвори мени",
     skipToContent: "Прескокни до содржина",
@@ -521,6 +522,7 @@ export const enMessages: Messages = {
     languageToggle: "Language selection",
     switchToEnglish: "Switch to English",
     switchToMacedonian: "Switch to Macedonian",
+    switchToAlbanian: "Switch to Albanian",
     openMenu: "Open menu",
     closeMenu: "Close menu",
     skipToContent: "Skip to content",
@@ -1000,9 +1002,511 @@ export const enMessages: Messages = {
   },
 };
 
+export const sqMessages: Messages = {
+  metadata: {
+    home: {
+      title: "OPUS — Sistem rezervimesh për sallone",
+      description:
+        "OPUS është një sistem rezervimesh për sallone dhe studio bukurie. Përfitoni një faqe interneti ku klientët rezervojnë dhe një kalendar për ekipin tuaj. Filloni falas.",
+    },
+    contact: {
+      title: "Kontaktoni OPUS — Pak ndihmë për studion tuaj.",
+      description:
+        "Keni një pyetje për OPUS? Na kontaktoni për ndihmë me uebfaqen tuaj të rezervimeve, ekipin tuaj ose fillimin e studios tuaj.",
+      openGraphDescription:
+        "Po filloni apo po përshtateni? Jemi këtu për studion tuaj.",
+    },
+  },
+  accessibility: {
+    languageToggle: "Zgjedhja e gjuhës",
+    switchToEnglish: "Kalo në anglisht",
+    switchToMacedonian: "Kalo në maqedonisht",
+    switchToAlbanian: "Kalo në shqip",
+    openMenu: "Hap menynë",
+    closeMenu: "Mbyll menynë",
+    skipToContent: "Kalo tek përmbajtja",
+  },
+  nav: {
+    features: "Funksionet",
+    ai: "Vegla AI",
+    howItWorks: "Si funksionon",
+    pricing: "Çmimet",
+    contact: "Kontakt",
+    newBadge: "E RE",
+    login: "Hyrje",
+    startFree: "Filloni falas",
+    language: "Gjuha",
+  },
+  hero: {
+    previewLabel:
+      "Pamje ilustruese e kalendarit dhe uebfaqes së rezervimeve të OPUS.",
+    title: "Sistem rezervimesh për sallonin tuaj.",
+    description:
+      "Me OPUS përfitoni një faqe interneti ku klientët zgjedhin shërbimin dhe terminin e lirë. Uebfaqja dhe kalendari janë falas.",
+    createWebsite: "Filloni falas",
+    learnMore: "Si punon OPUS",
+    badgeFree: "Plani falas",
+    badgeNoCard: "Pa kartelë krediti",
+    badgeForStudio: "Për ju dhe ekipin tuaj",
+    noteBookingTitle: "Termin i ri online",
+    noteBookingDesc: "Eva rezervoi qethje për të premten.",
+    noteBookingTime: "tani",
+    calendarGreeting: "Mirëmëngjes, Ana",
+    calendarDate: "Enj., 17 sht.",
+    calendarTitle: "Kalendari i sotëm",
+    calendarStaffAna: "Ana",
+    calendarStaffMarija: "Marija",
+    apt1Title: "Qethje dhe tharje",
+    apt1Time: "09:00 – 10:00 · Elena P.",
+    apt2Title: "Trajtim për flokë",
+    apt2Time: "10:30 – 11:15 · Mila S.",
+    apt3Title: "Manikyr me xhel",
+    apt3Time: "09:30 – 10:30 · Sara K.",
+    apt4Title: "Manikyr klasik",
+    apt4Time: "11:00 – 11:45 · Eva M.",
+    calendarFooterText: "Terminet e të gjithë ekipit.",
+    calendarView: "Hapni kalendarin",
+    phoneStudioName: "ATELIER",
+    phoneStudioType: "STUDIO BUKURIE",
+    phoneLocation: "SHKUP, MAQEDONI",
+    phoneHeading: "Rezervoni termin.",
+    phoneSubheading: "Zgjidhni shërbimin dhe terminin e lirë.",
+    phoneTabServices: "Shërbimet",
+    phoneTabTeam: "Ekipi ynë",
+    phoneTabAbout: "Rreth nesh",
+    phoneService1: "Qethje dhe tharje",
+    phoneService1Sub: "60 min · nga 900 den.",
+    phoneService2: "Nuancim dhe kujdes",
+    phoneService2Sub: "90 min · nga 1.800 den.",
+    phoneService3: "Tharje flokësh",
+    phoneService3Sub: "30 min · nga 500 den.",
+    phoneButton: "Rezervoni termin",
+    phonePowered: "Mundësuar nga",
+    noteAiTitle: "Rezervime përmes linkut tuaj",
+    noteAiDesc: "Klientët zgjedhin terminin e lirë.",
+    audiences: [
+      "Sallone flokësh",
+      "Berberë",
+      "Studio thonjsh",
+      "Grimierë",
+      "Studio masazhi",
+    ],
+  },
+  dashboardPreview: {
+    heading: "Kështu i shihni terminet në OPUS.",
+    description:
+      "Hapni OPUS në telefon ose kompjuter. Shihni cili klient po vjen, për cilin shërbim dhe në cilën orë.",
+    imageAlt:
+      "Shembull i panelit kryesor të OPUS me terminet e sotme, zënien e kalendarit dhe vlerën e termineve të përfunduara.",
+  },
+  productTour: {
+    heading: "Çfarë përfitoni me OPUS?",
+    subheading:
+      "Një faqe interneti për klientët tuaj dhe një kalendar për ju. Me Pro përfitoni edhe historinë e vizitave të çdo klienti.",
+    includedInFree: "Përfshirë në planin falas",
+    includedInPro: "Përfshirë në Pro",
+    cta: "Filloni falas",
+    tabs: {
+      website: {
+        label: "Uebfaqe për rezervime",
+        title: "Klientët rezervojnë përmes linkut tuaj.",
+        description:
+          "Klienti hap linkun, zgjedh shërbimin, datën dhe terminin e lirë, dhe konfirmon rezervimin. Nuk i nevojitet llogari apo aplikacion.",
+        serviceName: "Qethje dhe tharje",
+        serviceDetail: "60 min · 900 den.",
+      },
+      calendar: {
+        label: "Kalendari i termineve",
+        title: "Ju i menaxhoni të gjitha terminet.",
+        description:
+          "Rezervimet online shfaqen në kalendar. Terminet e caktuara me telefon ose mesazh i vendosni vetë. Mund të zhvendosni ose anuloni terminin.",
+        todayHeading: "Kalendari i sotëm",
+        todayDay: "E enjte",
+        staffAna: "Ana",
+        staffMarija: "Marija",
+        apt1: "Qethje dhe tharje",
+        apt2: "Trajtim për flokë",
+        apt3: "Manikyr me xhel",
+      },
+      clients: {
+        label: "Historia e klientëve",
+        title: "Kontrolloni vizitat e mëparshme.",
+        description:
+          "Me Pro, gjeni klientin sipas emrit, email-it ose telefonit. Shihni cilat shërbime ka marrë dhe kur e ka terminin e ardhshëm.",
+        clientName: "Elena Petrova",
+        clientRemembered: "Të dhënat e klientit",
+        recentVisits: "Vizitat e fundit",
+        visit1: "Qethje dhe tharje",
+        date1: "14 shtator",
+        visit2: "Nuancim dhe kujdes",
+        date2: "18 gusht",
+        visit3: "Qethje dhe tharje",
+        date3: "21 korrik",
+      },
+    },
+  },
+  featuresBento: {
+    heading: "Për punën e përditshme në sallon.",
+    subheading:
+      "Vendosni shërbimet dhe orarin e punës. Pranoni termine të reja dhe ndryshoni ato ekzistuese.",
+    bookingTitle1: "Uebfaqe",
+    bookingTitle2: "për rezervime.",
+    bookingDesc1: "Shfaqni shërbimet dhe çmimet.",
+    bookingDesc2: "Klientët zgjedhin nga terminet e lira.",
+    calendarTitle1: "Termine",
+    calendarTitle2: "për ekipin.",
+    calendarDesc:
+      "Çdo anëtar i ekipit ka orarin e vet. OPUS parandalon dy termine tek i njëjti punonjës në të njëjtën kohë.",
+    clientsTitle1: "Klientët",
+    clientsTitle2: "tuaj.",
+    clientsDesc1: "Kontaktet në çdo termin.",
+    clientsDesc2: "Historia e vizitave me Pro.",
+    remindersTitle1: "Njoftime",
+    remindersTitle2: "me email.",
+    remindersDesc1: "Konfirmime për çdo termin.",
+    remindersDesc2: "Kujtesa me Pro.",
+    summaryUnlimited: "Termine të pakufizuara",
+    summaryServices: "Shërbime dhe klientë të pakufizuar",
+    summaryDevices: "Në telefon dhe kompjuter",
+  },
+  promotion: {
+    heading: "Shpërndani linkun tuaj të rezervimit.",
+    description:
+      "Vendosni linkun në bio në Instagram, dërgojeni me mesazh ose vendosni një QR kod në sallon.",
+    qr: {
+      label: "QR kod për rezervim",
+      title: "QR kod për sallonin tuaj.",
+      description:
+        "Shkarkoni QR kodin ose posterin e gatshëm A5 për printim. Klientët e skanojnë dhe hapin faqen tuaj për rezervim.",
+      imageAlt: "Shembull i posterit A5 nga OPUS me QR kod për rezervim online.",
+      caption: "Shembull posteri · Gati për printim",
+    },
+    story: {
+      label: "Instagram Story",
+      title: "Publikoni një termin të lirë në Instagram.",
+      description:
+        "Zgjidhni një termin të lirë. OPUS përgatit një imazh me shërbimin, çmimin dhe orën. Shkarkojeni dhe postojeni si Story me linkun tuaj.",
+      imageAlt:
+        "Shembull i një Instagram Story nga OPUS me shërbimin, datën, orën dhe çmimin e një termini të lirë.",
+      caption: "Shembull Story · 1080 × 1920",
+    },
+    included: "Përfshirë në planin falas",
+    customization:
+      "Ngjyrat tuaja, emri i studios dhe linku. E disponueshme sapo të publikoni uebfaqen tuaj.",
+    cta: "Filloni falas",
+  },
+  intelligence: {
+    heading: "AI për biznesin tuaj.",
+    subheading:
+      "AI u përgjigjet mesazheve, ju jep rekomandime dhe ju ndihmon ta kuptoni më mirë biznesin tuaj.",
+    usageNote:
+      "AI Chat, AI Frontdesk dhe veglat e tjera janë të përfshira në Pro. Përdorini direkt nga llogaria juaj.",
+    analyst: {
+      name: "AI Chat",
+      title: ["AI Chat"],
+      description:
+        "Pyesni inteligjencën artificiale për biznesin tuaj. Merrni rekomandime, analiza dhe ide përmirësimi bazuar në të dhënat e sallonit tuaj.",
+      note: "200 përgjigje në muaj, nga të cilat deri në 20 analiza të hollësishme.",
+      artCopy: "Pyesni AI për biznesin tuaj.",
+      yourAnalyst: "AI Chat",
+      subtitle: "Përgjigje, rekomandime dhe njohuri për biznesin tuaj.",
+      sampleHeading: "SHEMBULL BASHKËBISEDIMI",
+      sampleNote:
+        "Të dhëna ilustruese · Përgjigjet bazohen në të dhënat e studios tuaj.",
+      limit1: "200 përgjigje / muaj",
+      limit2: "Deri në 20 analiza të hollësishme",
+      days: ["H", "M", "M", "E", "P", "S"],
+      chip: "Rekomandime AI për biznesin tuaj",
+      examples: [
+        {
+          label: "Ditët më të ngarkuara?",
+          question: "Kur është më e ngarkuar studioja ime?",
+          answer:
+            "Në këtë javë shembull, dita më e ngarkuar është e premtja. Të martën keni më shumë termine të lira.",
+        },
+        {
+          label: "Si t'i reduktoj anulimet?",
+          question: "Çfarë mund të bëj për të pasur më pak anulime?",
+          answer:
+            "Në këtë shembull, më shumë anulime ka të martën. Provoni kujtesa para terminit dhe ndiqni nëse numri i anulimeve zvogëlohet.",
+        },
+        {
+          label: "Si të plotësoj më shumë termine?",
+          question: "Çfarë më rekomandoni për të plotësuar më shumë termine?",
+          answer:
+            "Në këtë shembull, më shumë termine të lira ka të hënën dhe të martën. Mund t'u ofroni termin klientëve që tashmë e kanë vizituar studion.",
+        },
+      ],
+    },
+    receptionist: {
+      name: "AI Frontdesk",
+      title: ["AI Frontdesk"],
+      description:
+        "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve. Përgjigjet për shërbimet, çmimet dhe terminet e lira, dhe rezervon pasi klienti të konfirmojë.",
+      note: "Lidhni profilin tuaj profesional të Instagram-it nga cilësimet.",
+      channels: ["Instagram"],
+    },
+    rebooking: {
+      name: "Historia e klientëve",
+      title: ["Shihni cilët klientë kur kanë qenë."],
+      description:
+        "Gjeni kontaktet, vizitat e kaluara dhe terminet e ardhshme të klientit në regjistrin e sallonit tuaj.",
+      note: "Përfshirë në Pro.",
+      chip: "Kontakte dhe vizita të mëparshme",
+    },
+    recovery: {
+      name: "Oferta për termine të lira",
+      title: ["Ofroni një termin të lirë."],
+      description:
+        "OPUS propozon se cilëve klientë t'u ofroni termin të lirë. Ju miratoni çdo ofertë me email. Klienti vendos nëse dëshiron të rezervojë.",
+      note: "Vetëm për klientët që kanë lejuar oferta me email.",
+      flow: ["Zgjidhni", "Shikoni", "Miratoni"],
+    },
+  },
+  carousel: {
+    heading: "Për sallone dhe studio bukurie.",
+    subheading:
+      "Për parukierë, berberë, thonj, qerpikë dhe vetulla, grim dhe masazh. Për punë të pavarur dhe për sallone me ekip më të madh.",
+    footer: "Rezervime online dhe kalendar për ekipin tuaj.",
+    slides: [
+      {
+        title: "Sallone flokësh",
+        desc: "Klientët zgjedhin shërbimin, stilistin dhe terminin e lirë. Ju i shihni të gjitha rezervimet në kalendar.",
+      },
+      {
+        title: "Berberë",
+        desc: "Pranoni termine për qethje dhe mjekër përmes linkut tuaj. Ndiqni orarin e çdo berberi.",
+      },
+      {
+        title: "Studio thonjsh",
+        desc: "Vendosni çmimet dhe kohëzgjatjen për manikyr dhe pedikyr. Klientët zgjedhin vetë terminin e lirë.",
+      },
+      {
+        title: "Grimierë",
+        desc: "Vendosni shërbimet dhe terminet e lira për grim. Klientët rezervojnë përmes uebfaqes tuaj.",
+      },
+      {
+        title: "Studio masazhi",
+        desc: "Vendosni llojet e masazhit, kohëzgjatjen dhe pushimet. Ndiqni terminet e çdo masazheri.",
+      },
+    ],
+    prev: "Lloji i mëparshëm i studios",
+    next: "Lloji i ardhshëm i studios",
+    statusOf: "nga",
+  },
+  howItWorks: {
+    heading: "Si të filloni?",
+    subheading:
+      "Shtoni shërbimet, publikoni uebfaqen dhe shpërndani linkun tuaj.",
+    step1Title: "1. Shtoni shërbimet.",
+    step1Desc:
+      "Shënoni emrin dhe adresën e sallonit, një shërbim me çmim dhe kohëzgjatje dhe orarin tuaj të punës. Shërbimet e tjera dhe ekipin mund t'i shtoni më vonë.",
+    step2Title: "2. Shpërndani linkun tuaj.",
+    step2Desc:
+      "OPUS krijon uebfaqen tuaj. Shikojeni paraprakisht, publikojeni dhe vendosni linkun në bio në Instagram ose dërgojuani klientëve.",
+    step3Title: "3. Ndiqni terminet.",
+    step3Desc:
+      "Klientët rezervojnë përmes linkut. Ju i shihni terminet në kalendar dhe mund t'i zhvendosni ose anuloni ato.",
+    cta: "Filloni falas",
+  },
+  pricing: {
+    heading: "Sa kushton OPUS?",
+    comparePlans: "Krahasoni të gjitha funksionet",
+    subheading:
+      "Filloni falas. Pro është 1.190 den. në muaj për vegla shtesë dhe ekip më të madh.",
+    note: "Rezervimi online, uebfaqja dhe kalendari janë falas. Pro është me zgjedhje.",
+    free: {
+      name: "Plani falas",
+      price: "0",
+      currency: "den.",
+      desc: "Rezervim online dhe kalendar për ju dhe deri në 3 punonjës.",
+      cta: "Filloni falas",
+      label: "Përfshirë në planin falas:",
+      features: [
+        "Termine, shërbime dhe klientë të pakufizuar",
+        "Uebfaqja juaj për rezervime",
+        "Klientët rezervojnë pa llogari apo aplikacion",
+        "Pronari dhe deri në 3 punonjës",
+        "Kalendar ekipi pa mbivendosje të termineve",
+        "Përcaktimi i orarit të punës, pushimeve dhe ditëve të lira",
+        "Kontakti i klientit në çdo termin",
+        "Konfirmime për terminet me email",
+        "Galeri me deri në 3 fotografi",
+        "QR kod dhe Instagram Story për promovim",
+        "Qasje nga telefoni, tableti dhe kompjuteri",
+      ],
+      end: "Pa kartelë krediti. Pa periudhë prove.",
+    },
+    pro: {
+      name: "Pro",
+      price: "1.190",
+      currency: "den. / muaj",
+      desc: "Vegla AI, ekip më i madh, historia e klientëve dhe rikujtues.",
+      cta: "Zgjidhni Pro",
+      label: "Gjithçka nga plani falas, plus:",
+      features: [
+        "Deri në 12 anëtarë të ekipit",
+        "Galeri me deri në 15 fotografi",
+        "Regjistër klientësh me histori dhe statistika të vizitave",
+        "Kujtesa për klientët me email para terminit",
+        "Konfirmime dhe kujtesa me SMS, me aktivizim nga cilësimet",
+        "Oferta me email për termine të lira, me miratimin tuaj",
+        "Raporte të hollësishme për terminet në studio",
+        "Më shumë kontroll mbi email-in, marketingun dhe njoftimet",
+        "Mbështetje prioritare",
+      ],
+      aiAnalystTitle: "AI Chat",
+      aiAnalystSub:
+        "Pyesni AI për biznesin tuaj dhe merrni rekomandime dhe analiza. 200 përgjigje në muaj, nga të cilat deri në 20 analiza të hollësishme.",
+      aiReceptionistTitle: "AI Frontdesk",
+      aiReceptionistSub:
+        "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
+      end: "Përdorni veglat Pro direkt nga llogaria juaj.",
+    },
+    custom: {
+      name: "Softuer sipas porosisë",
+      price: "Çmimi me marrëveshje",
+      desc: "Nga një funksion i veçantë deri te një sistem i plotë për studion tuaj.",
+      monthly: "I disponueshëm edhe plan mujor",
+      cta: "Na tregoni idenë tuaj",
+      label: "Ndërtojmë sipas nevojave tuaja:",
+      features: [
+        "Funksionalitete sipas dëshirës tuaj",
+        "Ueb-aplikacione dhe vegla për ekipin tuaj",
+        "Lidhje me sistemet që tashmë përdorni",
+        "Automatizim i detyrave të përditshme",
+        "Dizajni, marka dhe mënyra juaj e punës",
+        "Zhvillim me faza, sipas prioriteteve tuaja",
+      ],
+      end: "Bashkërisht dakordohemi për vëllimin, afatin dhe planin mujor që ju përshtatet.",
+    },
+  },
+  faq: {
+    heading: "Pyetje të shpeshta.",
+    subheading: "Çfarë është OPUS, si përdoret dhe çfarë është falas.",
+    items: [
+      {
+        question: "Çfarë është OPUS?",
+        answer:
+          "OPUS është një sistem rezervimesh për sallone dhe studio bukurie. Përfitoni faqen tuaj të internetit ku klientët rezervojnë dhe një kalendar ku ndiqni terminet e ekipit tuaj. E përdorni përmes internetit, në telefon ose kompjuter.",
+      },
+      {
+        question: "Çfarë përfitoj falas?",
+        answer:
+          "Faqe interneti për rezervime, kalendar, termine dhe shërbime të pakufizuara, QR kod dhe imazhe për Instagram Story. Plani falas është për pronarin dhe deri në 3 punonjës. Nuk keni nevojë për kartelë dhe nuk ka periudhë prove.",
+      },
+      {
+        question: "Si rezervojnë klientët?",
+        answer:
+          "Shpërndani linkun tuaj në Instagram, në mesazh ose përmes QR kodit. Klienti zgjedh shërbimin dhe terminin e lirë, vendos të dhënat dhe konfirmon email-in. Termini i rezervuar shfaqet në kalendarin tuaj. Nuk i nevojitet llogari apo aplikacion.",
+      },
+      {
+        question: "A mund të regjistroj një termin të caktuar me telefon ose mesazh?",
+        answer:
+          "Po. Hapni kalendarin dhe shënoni klientin, shërbimin dhe orën. Terminet e futura me dorë dhe ato të rezervuara online i shihni në të njëjtin kalendar.",
+      },
+      {
+        question: "A më nevojitet uebfaqe e imja?",
+        answer:
+          "Jo. OPUS ju krijon një faqe interneti me shërbimet, çmimet dhe terminet e lira në një adresë si yourstudio.opus.mk. E publikoni dhe e shpërndani linkun me klientët.",
+      },
+      {
+        question: "Për çfarë sallonesh është OPUS?",
+        answer:
+          "Për sallone flokësh, berberë, studio thonjsh, qerpikë dhe vetulla, grimierë dhe studio masazhi. Mund ta përdorni vetëm ose me një ekip.",
+      },
+      {
+        question: "Kur më nevojitet Pro?",
+        answer:
+          "Për AI Chat, AI Frontdesk, më shumë se 4 anëtarë në ekip, historinë e klientëve dhe rikujtues. Pro kushton 1.190 den. në muaj dhe mbështet deri në 12 anëtarë. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
+      },
+      {
+        question: "A dërgon OPUS vetë oferta për termine të lira?",
+        answer:
+          "Jo. Me Pro, OPUS sugjeron klientë për një termin të lirë. Ju rishikoni dhe miratoni çdo ofertë para se të dërgohet me email. Oferta marrin vetëm klientët që kanë dhënë pëlqim.",
+      },
+    ],
+  },
+  finalCta: {
+    heading: "Pranoni termine përmes linkut tuaj.",
+    subheading:
+      "Shtoni shërbimet dhe orarin e punës. Publikoni faqen falas dhe shpërndajeni me klientët.",
+    cta: "Filloni falas",
+    small: "Falas. Nuk kërkohet kartelë krediti.",
+  },
+  footer: {
+    sloganLine1: "Rezervime online",
+    sloganLine2: "për sallone dhe studio.",
+    meetOpus: "Rreth OPUS",
+    features: "Funksionet",
+    intelligence: "Vegla AI",
+    pricing: "Çmimet",
+    nextChapter: "Filloni me OPUS",
+    howItWorks: "Si funksionon",
+    faq: "Pyetje të shpeshta",
+    createWebsite: "Filloni falas",
+    madeForYou: "Për sallone dhe studio.",
+    madeForYouSub1: "Sistem rezervimesh për sallone",
+    madeForYouSub2: " dhe studio bukurie.",
+    copyright: "© 2026 OPUS.",
+    tagline: "Faqe interneti për klientët. Kalendar për sallonin tuaj.",
+    contact: "Kontakt",
+    privacy: "Privatësia",
+    terms: "Kushtet",
+    cookieSettings: "Cilësimet e biskotave",
+    backToTop: "Kthehu në krye",
+  },
+  contactPage: {
+    heroTitle1: "Pak ndihmë.",
+    heroTitle2: "Një bisedë e vërtetë.",
+    heroSubLine1:
+      "Po filloni, po zhvilloheni apo po planifikoni hapin e radhës?",
+    heroSubLine2: "Jemi këtu për studion tuaj.",
+    proTitle: "Të interesuar për Pro?",
+    proDescription:
+      "Na shkruani për studion tuaj dhe pyesni rreth funksioneve, çmimit dhe aktivizimit të planit Pro.",
+    detailsTitle: "Le të bisedojmë.",
+    emailLabel: "Preferoni email?",
+    phoneLabel: "Na telefononi",
+    locationLabel: "Pak më pranë",
+    locationValue: "Shkup, Maqedoni e Veriut",
+    faqLink: "Lexoni pyetjet e shpeshta",
+    formTitle: "Na tregoni se çfarë keni në mendje.",
+    formDescLine1: "Një pyetje, mendim apo ndihmë për të filluar.",
+    formDescLine2: "Lini një mesazh dhe do t'ju përgjigjemi me email.",
+    fieldName: "Emri juaj",
+    fieldEmail: "Adresa e email-it",
+    fieldBusiness: "Emri i studios",
+    fieldMessage: "Si mund t'ju ndihmojmë?",
+    placeholderName: "Ana Petrova",
+    placeholderEmail: "ana@studiojatuaj.mk",
+    placeholderBusiness: "Studioja juaj e bukurisë",
+    placeholderMessage: "Na tregoni pak për planet tuaja…",
+    optional: "Fakultative",
+    submit: "Dërgo mesazhin",
+    submitting: "Duke dërguar mesazhin…",
+    successTitle: "Mesazhi u pranua.",
+    successDesc:
+      "Ju falënderojmë që na kontaktuat. Do t'ju përgjigjemi në adresën e shënuar të email-it.",
+    sendAnother: "Dërgo një mesazh tjetër",
+    errorTitle: "Mesazhi nuk mund të dërgohej.",
+    errorGeneric:
+      "Ju lutemi provoni përsëri ose shkruani në hello@opus.mk. Mesazhi juaj është ruajtur.",
+    errorRateLimit:
+      "Ju lutemi prisni pak para se të provoni përsëri, ose na shkruani drejtpërdrejt. Mesazhi juaj është ruajtur.",
+    errorConnection:
+      "Kontrolloni lidhjen tuaj me internet dhe provoni përsëri, ose shkruani në hello@opus.mk. Mesazhi juaj është ruajtur.",
+    privacyNote:
+      "Të dhënat tuaja do t'i përdorim vetëm për t'iu përgjigjur mesazhit.",
+    readOur: "Lexoni ",
+    privacyLink: "politikën tonë të privatësisë",
+  },
+};
+
 const messagesByLocale: Record<Locale, Messages> = {
   mk: mkMessages,
   en: enMessages,
+  sq: sqMessages,
 };
 
 export function getMessages(locale: Locale): Messages {

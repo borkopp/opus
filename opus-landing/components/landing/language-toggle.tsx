@@ -27,6 +27,15 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       </button>
       <button
         type="button"
+        className={cn("locale-toggle-btn", locale === "sq" && "is-active")}
+        onClick={() => setLocale("sq")}
+        aria-pressed={locale === "sq"}
+        aria-label={messages.accessibility.switchToAlbanian}
+      >
+        SQ
+      </button>
+      <button
+        type="button"
         className={cn("locale-toggle-btn", locale === "en" && "is-active")}
         onClick={() => setLocale("en")}
         aria-pressed={locale === "en"}

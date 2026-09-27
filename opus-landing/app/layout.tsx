@@ -67,6 +67,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getRequestLocale();
+  const messages = getMessages(locale);
 
   return (
     <html
@@ -76,7 +77,7 @@ export default async function RootLayout({
       <body>
         <I18nProvider initialLocale={locale}>
           <a className="skip" href="#main">
-            {locale === "mk" ? "Прескокни до содржина" : "Skip to content"}
+            {messages.accessibility.skipToContent}
           </a>
           <div className="site-shell">
             <SiteHeader />

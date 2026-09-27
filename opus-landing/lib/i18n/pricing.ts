@@ -150,7 +150,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         title: "AI алатки и анализи",
         rows: [
           {
-            feature: "AI-аналитичар за вашиот бизнис",
+            feature: "AI Chat",
+            description:
+              "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување.",
             free: false,
             pro: "200 одговори месечно*",
           },
@@ -170,7 +172,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "AI Frontdesk",
             description:
-              "AI одговара на вашите пораки додека вие се посветувате на клиентите.",
+              "AI одговара на Instagram пораките додека вие се посветувате на клиентите.",
             free: false,
             pro: true,
           },
@@ -183,7 +185,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     ],
     activationTitle: "За SMS и AI алатките",
     activationNote:
-      "* Потребна е активација за вашето студио. За Instagram е потребна поврзана професионална сметка. Контактирајте нè за достапност и трошоци за SMS; планот не вклучува неограничени SMS пораки.",
+      "* AI и SMS ги поставувате сами од вашата сметка. За AI Frontdesk, поврзете го вашиот професионален Instagram профил во поставките. Планот не вклучува неограничени SMS пораки.",
     customTitle: "Ви треба нешто по мерка?",
     customDescription:
       "Софтверот по мерка има посебна понуда. Заедно ги договараме функциите, интеграциите, рокот и месечниот план за вашиот проект.",
@@ -311,7 +313,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         title: "AI tools & Insights",
         rows: [
           {
-            feature: "AI business analyst",
+            feature: "AI Chat",
+            description:
+              "Ask AI about your business. Get recommendations, insights, and ideas for improvement.",
             free: false,
             pro: "200 answers / month*",
           },
@@ -331,7 +335,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "AI Frontdesk",
             description:
-              "AI answers your DMs for you while you focus on clients.",
+              "AI answers your Instagram DMs while you focus on clients.",
             free: false,
             pro: true,
           },
@@ -344,7 +348,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     ],
     activationTitle: "About SMS and AI tools",
     activationNote:
-      "* Requires activation for your studio. Instagram also requires a connected professional account. Contact us for availability and SMS usage costs; the plan does not include unlimited SMS messages.",
+      "* Set up AI and SMS yourself from your account. For AI Frontdesk, connect your professional Instagram account in settings. The plan does not include unlimited SMS messages.",
     customTitle: "Need something built for you?",
     customDescription:
       "Custom software is quoted separately. We agree on the features, integrations, timeline, and monthly plan for your project together.",

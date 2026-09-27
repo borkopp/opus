@@ -188,8 +188,7 @@ export function HomeContent() {
                 </h3>
                 <p>
                   {t.featuresBento.clientsDesc1}
-                  <br />
-                  {t.featuresBento.clientsDesc2}
+                  <br /> {t.featuresBento.clientsDesc2}
                 </p>
               </div>
             </article>
@@ -210,8 +209,7 @@ export function HomeContent() {
                 </h3>
                 <p>
                   {t.featuresBento.remindersDesc1}
-                  <br />
-                  {t.featuresBento.remindersDesc2}
+                  <br /> {t.featuresBento.remindersDesc2}
                 </p>
               </div>
             </article>

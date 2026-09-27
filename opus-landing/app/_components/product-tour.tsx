@@ -124,7 +124,9 @@ export function ProductTour() {
             <h3>{slide.title}</h3>
             <p>{slide.description}</p>
             <span className="product-tour-included">
-              {t.productTour.includedInFree}
+              {slide.id === "clients"
+                ? t.productTour.includedInPro
+                : t.productTour.includedInFree}
             </span>
           </div>
           <div className="product-tour-visual">

@@ -4,6 +4,7 @@ import type { QueryCtx } from "../_generated/server";
 
 const FREE_STAFF_LIMIT = 3;
 const FREE_OWNER_LIMIT = 1;
+const PRO_TEAM_LIMIT = 12;
 
 export async function getStaffPlanStatusForOrg(
   ctx: QueryCtx,
@@ -25,7 +26,6 @@ export async function getStaffPlanStatusForOrg(
   );
 
   function canUseRole(role: "owner" | "staff") {
-    if (org.plan === "paid") return true;
     const nextOwners =
       ownerCount -
       (existingIsActive && existingStaff?.role === "owner" ? 1 : 0) +
@@ -35,6 +35,10 @@ export async function getStaffPlanStatusForOrg(
       (existingIsActive && existingStaff?.role !== "owner" ? 1 : 0) +
       (role !== "owner" ? 1 : 0);
     const nextTotal = nextOwners + nextStaff;
+
+    if (org.plan === "paid") {
+      return !(nextTotal > PRO_TEAM_LIMIT && nextTotal > activeStaff.length);
+    }
 
     // Existing teams above the limit may still edit profiles and reduce their
     // usage. Only changes that increase an over-limit count are blocked.
@@ -52,9 +56,13 @@ export async function getStaffPlanStatusForOrg(
     isFree: org.plan !== "paid",
     staffCount,
     ownerCount,
+    totalCount: activeStaff.length,
     staffLimit: FREE_STAFF_LIMIT,
     ownerLimit: FREE_OWNER_LIMIT,
-    totalLimit: FREE_STAFF_LIMIT + FREE_OWNER_LIMIT,
+    totalLimit:
+      org.plan === "paid"
+        ? PRO_TEAM_LIMIT
+        : FREE_STAFF_LIMIT + FREE_OWNER_LIMIT,
     canUseStaffRole: canUseRole("staff"),
     canUseOwnerRole: canUseRole("owner"),
   };
@@ -66,11 +74,17 @@ export async function requireStaffPlanCapacity(
   role: Doc<"staff_members">["role"],
   existingStaff?: Doc<"staff_members">,
 ) {
-  if (org.plan === "paid") return;
   const status = await getStaffPlanStatusForOrg(ctx, org, existingStaff);
   const allowed =
     role === "owner" ? status.canUseOwnerRole : status.canUseStaffRole;
   if (!allowed) {
+    if (org.plan === "paid") {
+      throw new ConvexError({
+        code: "PRO_STAFF_LIMIT",
+        message:
+          "The Pro plan allows up to 12 active team members. Deactivate a team member to add more.",
+      });
+    }
     throw new ConvexError({
       code: "FREE_STAFF_LIMIT",
       message:

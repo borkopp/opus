@@ -2,6 +2,7 @@ import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
+import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
 
 // ─────────────────────────────────────────────────────
 // List all media for an org, ordered by type then sortOrder.
@@ -47,7 +48,7 @@ export const addMedia = mutation({
     sortOrder: v.number(),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "manager");
+    const { staffMember, org } = await requireRole(ctx, args.orgId, "manager");
 
     let finalUrl = args.url;
     if (args.storageId) {
@@ -76,14 +77,18 @@ export const addMedia = mutation({
     }
 
     if (args.type === "gallery") {
+      const limit = galleryPhotoLimit(org);
       const activeGallery = await ctx.db
         .query("org_media")
         .withIndex("by_org_type_active", (q) =>
-          q.eq("orgId", args.orgId).eq("type", "gallery").eq("isDeleted", false),
+          q
+            .eq("orgId", args.orgId)
+            .eq("type", "gallery")
+            .eq("isDeleted", false),
         )
-        .collect();
-      if (activeGallery.length >= 3) {
-        throw new ConvexError("Maximum of 3 gallery photos allowed.");
+        .take(limit);
+      if (activeGallery.length >= limit) {
+        throw new ConvexError(`Maximum of ${limit} gallery photos allowed.`);
       }
     }
 

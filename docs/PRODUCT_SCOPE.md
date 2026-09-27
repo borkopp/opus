@@ -179,6 +179,20 @@ booking links. Saved replies are tenant-scoped; owners and managers edit team
 templates, and active staff can copy them. Starter replies support Macedonian
 and English. These tools do not enable AI generation or campaigns.
 
+### Studio team limits
+
+Free retains 1 active owner plus up to 3 active staff members. Pro supports up
+to 12 active team members in total, including owners and managers. Inactive and
+soft-deleted members do not use a slot. Creation and reactivation enforce these
+limits; existing teams above a limit can still edit profiles and reduce usage.
+
+### Studio gallery limits
+
+Free studios may upload up to 3 gallery photos; Pro studios may upload up to 15.
+The server enforces the current plan's limit, and Settings uses the same limit
+for its photo counter and uploads. Downgrading preserves existing photos and
+blocks new gallery uploads until the studio is below its current limit.
+
 ### Pro client directory
 
 The staff client directory was authorized on September 24, 2026. Active staff,

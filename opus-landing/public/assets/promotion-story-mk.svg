@@ -1,0 +1,19 @@
+<!-- Example artwork exported from opus-dashboard/lib/promotion-artwork.ts. Demo links open opus.mk. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920"><rect width="1080" height="1920" fill="#f0edf8"/>
+      <path d="M700 -80C320 300 1280 160 1050 700" fill="none" stroke="#7c68a3" stroke-opacity="0.16" stroke-width="140"/>
+      <path d="M-150 1560C180 1180 250 2060 700 1850" fill="none" stroke="#7c68a3" stroke-opacity="0.11" stroke-width="110"/>
+      <g fill="#37304e" font-family="Arial, Helvetica, sans-serif">
+      <text x="84" y="234" font-size="38" font-weight="600"><tspan x="84" dy="0">АТЕЉЕ · СТУДИО ЗА УБАВИНА</tspan></text>
+      <path d="M84 345h72" stroke="#7c68a3" stroke-width="4"/>
+      <text x="84" y="438" font-size="23" letter-spacing="3">ОНЛАЈН ЗАКАЖУВАЊЕ</text><text x="80" y="585" font-family="Georgia, serif" font-size="108" letter-spacing="-4"><tspan x="80">Време само</tspan><tspan x="80" dy="120">за вас.</tspan></text>
+        <rect x="64" y="815" width="952" height="574" rx="40" fill="#fcfaff"/>
+        <g fill="#37304e">
+        <text x="110" y="882" font-size="22" letter-spacing="2" fill="#7c68a3">СЛОБОДЕН ТЕРМИН</text>
+        <text x="110" y="958" font-size="45" font-weight="600"><tspan x="110" dy="0">Гел маникир</tspan></text>
+        <text x="110" y="1073" font-size="27" ><tspan x="110" dy="0">Со Ана</tspan></text>
+        <path d="M110 1120H970" stroke="#37304e" stroke-opacity="0.15" stroke-width="2"/>
+        <text x="110" y="1204" font-size="74" font-weight="500">14:30</text>
+        <text x="110" y="1254" font-size="28" ><tspan x="110" dy="0">Петок, 2 октомври</tspan></text>
+        <text x="110" y="1338" font-size="29">1.200 ден. · 60 мин</text></g>
+        <text x="84" y="1510" font-size="36" font-weight="500">Закажете преку линкот.</text>
+        <text x="84" y="1570" font-size="28" ><tspan x="84" dy="0">opus.mk</tspan></text><text x="84" y="1760" font-size="20" letter-spacing="1">ЛЕСНО ЗАКАЖУВАЊЕ СО OPUS</text></g></svg>

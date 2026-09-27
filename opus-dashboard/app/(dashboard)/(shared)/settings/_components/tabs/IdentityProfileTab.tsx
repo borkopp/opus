@@ -28,6 +28,7 @@ import { SettingsCard } from "../SettingsCard";
 
 interface IdentityProfileTabProps {
   orgId: Id<"orgs">;
+  galleryPhotoLimit: number;
   initialData: {
     name: string;
     logoUrl: string;
@@ -62,10 +63,9 @@ async function upload(
   })) as Id<"_storage">;
 }
 
-const MAX_GALLERY_PHOTOS = 3;
-
 export function IdentityProfileTab({
   orgId,
+  galleryPhotoLimit,
   initialData,
   media,
 }: IdentityProfileTabProps) {
@@ -176,29 +176,29 @@ export function IdentityProfileTab({
   };
 
   const handleMedia = (type: "cover" | "gallery") => {
-    if (type === "gallery" && gallery.length >= MAX_GALLERY_PHOTOS) {
+    if (type === "gallery" && gallery.length >= galleryPhotoLimit) {
       toast.error(
         t(
-          `Maximum of ${MAX_GALLERY_PHOTOS} gallery photos reached.`,
-          `Достигнат е максимумот од ${MAX_GALLERY_PHOTOS} фотографии во галеријата.`,
+          `Maximum of ${galleryPhotoLimit} gallery photos reached.`,
+          `Достигнат е максимумот од ${galleryPhotoLimit} фотографии во галеријата.`,
         ),
       );
       return;
     }
     const remainingSlots =
-      type === "gallery" ? MAX_GALLERY_PHOTOS - gallery.length : 1;
+      type === "gallery" ? galleryPhotoLimit - gallery.length : 1;
     chooseFile(type === "gallery", async (rawFiles) => {
       let files = rawFiles;
       if (type === "gallery" && files.length > remainingSlots) {
         toast.error(
           remainingSlots === 1
             ? t(
-                "You can only add up to 1 more gallery photo (maximum 3).",
-                "Може да додадете уште најмногу 1 фотографија во галеријата (максимум 3).",
+                `You can only add up to 1 more gallery photo (maximum ${galleryPhotoLimit}).`,
+                `Може да додадете уште најмногу 1 фотографија во галеријата (максимум ${galleryPhotoLimit}).`,
               )
             : t(
-                `You can only add up to ${remainingSlots} more gallery photos (maximum ${MAX_GALLERY_PHOTOS}).`,
-                `Може да додадете уште најмногу ${remainingSlots} фотографии во галеријата (максимум ${MAX_GALLERY_PHOTOS}).`,
+                `You can only add up to ${remainingSlots} more gallery photos (maximum ${galleryPhotoLimit}).`,
+                `Може да додадете уште најмногу ${remainingSlots} фотографии во галеријата (максимум ${galleryPhotoLimit}).`,
               ),
         );
         files = files.slice(0, remainingSlots);
@@ -471,7 +471,7 @@ export function IdentityProfileTab({
           )}
           action={
             <span className="rounded-full border border-border/80 bg-secondary/80 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              {gallery.length}/{MAX_GALLERY_PHOTOS}
+              {gallery.length}/{galleryPhotoLimit}
             </span>
           }
           contentClassName="flex flex-col gap-4"
@@ -506,7 +506,7 @@ export function IdentityProfileTab({
               </div>
             ))}
 
-            {gallery.length < MAX_GALLERY_PHOTOS && (
+            {gallery.length < galleryPhotoLimit && (
               <button
                 type="button"
                 onClick={() => handleMedia("gallery")}

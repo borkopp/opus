@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { ArrowUpRight, Check, Code2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useI18n } from "@/lib/i18n/context";
 
-export function CustomSoftwarePlan() {
+export function CustomSoftwarePlan({
+  animated = false,
+}: {
+  animated?: boolean;
+}) {
   const { t } = useI18n();
   const plan = t.pricing.custom;
 
   return (
-    <article className="price-card price-custom reveal">
+    <article className={cn("price-card price-custom", { reveal: animated })}>
       <div className="plan-heading">
         <span className="plan-symbol">
           <Code2 aria-hidden="true" />

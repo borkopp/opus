@@ -8,7 +8,6 @@ const nextConfig: NextConfig = {
   experimental: { externalDir: true },
   async redirects() {
     return [
-      { source: "/pricing", destination: "/#pricing", permanent: true },
       { source: "/hero-original", destination: "/", permanent: true },
       {
         source: "/login",

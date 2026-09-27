@@ -22,7 +22,7 @@ export function SiteHeader() {
     { href: "/#features", label: t.nav.features },
     { href: "/#intelligence", label: t.nav.ai },
     { href: "/#how-it-works", label: t.nav.howItWorks },
-    { href: "/#pricing", label: t.nav.pricing },
+    { href: "/pricing", label: t.nav.pricing },
     { href: "/contact", label: t.nav.contact },
   ];
 

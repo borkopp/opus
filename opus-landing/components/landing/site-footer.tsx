@@ -32,7 +32,7 @@ export function SiteFooter() {
           <b>{t.footer.meetOpus}</b>
           <Link href="/#features">{t.footer.features}</Link>
           <Link href="/#intelligence">{t.footer.intelligence}</Link>
-          <Link href="/#pricing">{t.footer.pricing}</Link>
+          <Link href="/pricing">{t.footer.pricing}</Link>
         </div>
         <div className="footer-links">
           <b>{t.footer.nextChapter}</b>

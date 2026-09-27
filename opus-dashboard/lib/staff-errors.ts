@@ -11,14 +11,22 @@ export function getStaffErrorMessage(
     error instanceof ConvexError &&
     typeof error.data === "object" &&
     error.data !== null &&
-    "code" in error.data &&
-    error.data.code === "FREE_STAFF_LIMIT"
+    "code" in error.data
   ) {
-    return translate(
-      language,
-      "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
-      "Бесплатниот план дозволува 1 активен сопственик и до 3 активни вработени (вкупно 4 лица). Деактивирајте член на тимот или преминете на OPUS Pro за да додадете повеќе.",
-    );
+    if (error.data.code === "FREE_STAFF_LIMIT") {
+      return translate(
+        language,
+        "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
+        "Бесплатниот план дозволува 1 активен сопственик и до 3 активни вработени (вкупно 4 лица). Деактивирајте член на тимот или преминете на OPUS Pro за да додадете повеќе.",
+      );
+    }
+    if (error.data.code === "PRO_STAFF_LIMIT") {
+      return translate(
+        language,
+        "The Pro plan allows up to 12 active team members. Deactivate a team member to add more.",
+        "Pro дозволува најмногу 12 активни членови на тимот. Деактивирајте член на тимот за да додадете повеќе.",
+      );
+    }
   }
   return getErrorMessage(error, fallback);
 }

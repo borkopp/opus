@@ -248,6 +248,7 @@ export function SettingsWorkspace() {
               websiteUrl: org.websiteUrl || "",
             }}
             media={media ?? []}
+            galleryPhotoLimit={data.galleryPhotoLimit}
           />
           <LocationTab
             key={`location-${org.updatedAt}`}

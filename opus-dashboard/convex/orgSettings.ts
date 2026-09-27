@@ -19,6 +19,7 @@ import {
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
 import { smsProviderConfigured } from "./lib/sms";
+import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
 
 function requireClientReminderAccess(
   org: Doc<"orgs">,
@@ -61,6 +62,7 @@ export const getOrgSettings = query({
       org,
       settings,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
+      galleryPhotoLimit: galleryPhotoLimit(org),
       emailRecipients,
       smsAvailable: smsProviderConfigured(),
     };

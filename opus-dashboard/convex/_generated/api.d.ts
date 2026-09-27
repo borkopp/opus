@@ -71,6 +71,7 @@ import type * as lib_gapRecovery from "../lib/gapRecovery.js";
 import type * as lib_gapRecoveryRules from "../lib/gapRecoveryRules.js";
 import type * as lib_gapRecoveryScan from "../lib/gapRecoveryScan.js";
 import type * as lib_imageUrl from "../lib/imageUrl.js";
+import type * as lib_mediaPlanLimits from "../lib/mediaPlanLimits.js";
 import type * as lib_opusUserAuth from "../lib/opusUserAuth.js";
 import type * as lib_orgSettingsValidation from "../lib/orgSettingsValidation.js";
 import type * as lib_overviewMetrics from "../lib/overviewMetrics.js";
@@ -191,6 +192,7 @@ declare const fullApi: ApiFromModules<{
   "lib/gapRecoveryRules": typeof lib_gapRecoveryRules;
   "lib/gapRecoveryScan": typeof lib_gapRecoveryScan;
   "lib/imageUrl": typeof lib_imageUrl;
+  "lib/mediaPlanLimits": typeof lib_mediaPlanLimits;
   "lib/opusUserAuth": typeof lib_opusUserAuth;
   "lib/orgSettingsValidation": typeof lib_orgSettingsValidation;
   "lib/overviewMetrics": typeof lib_overviewMetrics;

@@ -154,7 +154,7 @@ export function ServicesWorkspace() {
                 onClick={() => setIsAddStaffOpen(true)}
                 disabled={!planStatus?.canUseStaffRole}
                 aria-describedby={
-                  planStatus?.isFree ? "staff-plan-limit" : undefined
+                  planStatus ? "staff-plan-limit" : undefined
                 }
                 className="h-11 w-full sm:w-fit sm:shrink-0"
               >

@@ -10,6 +10,7 @@ import { getBeautyActivationState } from "./lib/activation";
 import { requireActiveOrg, requireRole, requireUser } from "./lib/auth";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { allocateUniqueTenantSlug } from "./lib/tenantSlug";
+import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
 
 const beautyCategory = v.union(
   v.literal("barbershop"),
@@ -587,7 +588,7 @@ export const saveStorefront = mutation({
           q.eq("orgId", org._id).eq("type", "gallery").eq("isDeleted", false),
         )
         .collect();
-      if (existing.length >= 3) break;
+      if (existing.length >= galleryPhotoLimit(org)) break;
 
       const url = await ctx.storage.getUrl(storageId);
       if (!url) throw new ConvexError("Gallery upload could not be found.");

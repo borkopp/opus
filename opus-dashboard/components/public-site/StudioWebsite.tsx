@@ -50,9 +50,9 @@ export function StudioWebsite({ site }: { site: PublicSite }) {
   const cover =
     site.media.find((item) => item.type === "cover") ??
     site.media.find((item) => item.type === "gallery");
-  const gallery = site.media
-    .filter((item) => item.type === "gallery" && item.url !== cover?.url)
-    .slice(0, 3);
+  const gallery = site.media.filter(
+    (item) => item.type === "gallery" && item.url !== cover?.url,
+  );
   const location = [site.address, site.neighborhood, site.city]
     .filter(Boolean)
     .join(", ");

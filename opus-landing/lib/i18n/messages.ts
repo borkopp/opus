@@ -165,6 +165,32 @@ export const mkMessages = {
     summaryServices: "Неограничени услуги и клиенти",
     summaryDevices: "Достапно на секој уред",
   },
+  promotion: {
+    heading: "Промовирајте го вашето студио.",
+    description:
+      "Креирајте QR-код за закажување и Instagram Story. Помогнете им на клиентите да го најдат следниот слободен термин.",
+    qr: {
+      label: "QR-код за закажување",
+      title: "Скенирај. Избери термин. Закажи.",
+      description:
+        "Преземете QR-код или готов A5 постер за пултот. Со скенирање, клиентите ја отвораат вашата страница за закажување.",
+      imageAlt: "Пример за A5 постер од OPUS со QR-код за онлајн закажување.",
+      caption: "Пример за постер · Подготвен за печатење",
+    },
+    story: {
+      label: "Instagram Story",
+      title: "Слободен термин? Споделете го.",
+      description:
+        "Изберете слободен термин или промовирајте го вашиот линк за закажување. Преземете ја сликата и објавете ја на Instagram со линкот.",
+      imageAlt:
+        "Пример за Instagram Story од OPUS со услуга, датум, час и цена на слободен термин.",
+      caption: "Пример за Story · 1080 × 1920",
+    },
+    included: "Вклучено во бесплатниот план",
+    customization:
+      "Ваши бои, име на студиото и линк. Достапно откако ќе ја објавите веб-страницата.",
+    cta: "Започнете бесплатно",
+  },
   intelligence: {
     heading: "Подигнете го вашиот бизнис на следно ниво со AI.",
     subheading: "AI алатки кои ќе ви помогнат да го раширите вашиот бизнис.",
@@ -211,7 +237,7 @@ export const mkMessages = {
       name: "AI рецепционер",
       title: ["AI одговори на пораки."],
       description:
-        "Планирана помош за одговарање на прашања од клиенти преку веб-чет, Instagram и WhatsApp. Оваа функција сè уште не е достапна.",
+        "Планирана помош за одговарање на прашања од клиенти преку веб-чет, Instagram и WhatsApp.",
       note: "Вклучено во Pro.",
       channels: ["Веб-чет", "Instagram", "WhatsApp"],
     },
@@ -219,7 +245,7 @@ export const mkMessages = {
       name: "AI-предлози за посети",
       title: ["Предлози за следна посета."],
       description:
-        "Планирани AI-предлози за следен термин или услуга според претходните посети на клиентот. Оваа функција сè уште не е достапна.",
+        "Планирани AI-предлози за следен термин или услуга според претходните посети на клиентот.",
       note: "Вклучено во Pro.",
       chip: "Предлози според претходни посети",
     },
@@ -280,25 +306,27 @@ export const mkMessages = {
   },
   pricing: {
     heading: "Изберете што му треба на вашето студио.",
+    comparePlans: "Споредете ги сите функции",
     subheading: "Веб-сајтот и календарот се вклучени бесплатно.",
     note: "Не ви треба Pro за да примате онлајн закажувања. Веб-сајтот и календарот се дел од бесплатниот план.",
     free: {
       name: "Бесплатен план",
       price: "0",
       currency: "ден.",
-      desc: "Веб-сајт и календар за вас и тројца вработени.",
+      desc: "Веб-сајт и календар за тим од 4 члена.",
       cta: "Креирајте бесплатен веб-сајт",
       label: "Вклучено во бесплатниот план:",
       features: [
         "Неограничени термини, услуги и клиенти",
         "Ваш веб-сајт на yourstudio.opus.mk",
         "Закажување за клиенти — без кориснички профил",
-        "Еден сопственик + тројца членови на тимот",
+        "4 членови на тимот",
         "Тимски календар без преклопување на термините",
         "Поставување работно време, паузи и слободни денови",
         "Контакт на клиентот во секој термин",
         "Потврди за термини по е-пошта",
         "Галерија со најмногу 3 фотографии",
+        "QR-код и Instagram Story за промоција",
         "Пристап од телефон, таблет и компјутер",
       ],
       end: "Без кредитна картичка. Без пробен рок.",
@@ -311,22 +339,22 @@ export const mkMessages = {
       cta: "Активирај Pro",
       label: "Сè од бесплатниот план, плус:",
       features: [
-        "Поголем тим",
+        "До 12 членови на тимот",
+        "Галерија со најмногу 15 фотографии",
         "Именик на клиенти со историја и статистика на посети",
         "Потсетници за клиенти по е-пошта пред терминот",
-        "SMS потврди и потсетници за термини",
-        "Понуди по е-пошта и SMS за слободни и откажани термини",
+        "SMS потврди и потсетници, со активација",
+        "Понуди по е-пошта за слободни термини, со ваше одобрение",
         "Детални извештаи за термините во студиото",
         "Поголема контрола врз е-поштата, маркетингот и известувањата",
         "Приоритетна поддршка",
       ],
       aiAnalystTitle: "AI Chat",
-      aiAnalystSub: "200 одговори месечно, од кои до 20 детални анализи",
-      aiReceptionistTitle: "24/7 AI рецепционер",
+      aiAnalystSub:
+        "200 одговори месечно, од кои до 20 детални анализи. Со активација.",
+      aiReceptionistTitle: "AI Frontdesk",
       aiReceptionistSub:
-        "Одговара на пораки (Instagram, WhatsApp, Web-Chat) и закажува термини автоматски.",
-      aiRebookingTitle: "AI анализа на клиенти и предлози",
-      aiRebookingSub: "",
+        "AI одговара на вашите пораки додека вие се посветувате на клиентите.",
       end: "Активирајте Pro од вашата сметка. Проверете со нас за достапноста на AI-аналитичарот.",
     },
     custom: {
@@ -354,7 +382,7 @@ export const mkMessages = {
       {
         question: "Дали бесплатниот план е навистина бесплатен?",
         answer:
-          "Да. Бесплатниот план чини 0 ден., без кредитна картичка и без пробен рок. Добивате неограничени термини, услуги и клиенти, сопствен веб-сајт за закажување и простор за еден сопственик и тројца членови на тимот.",
+          "Да. Бесплатниот план чини 0 ден., без кредитна картичка и без пробен рок. Добивате неограничени термини, услуги и клиенти, сопствен веб-сајт за закажување и простор за 4 членови на тимот.",
       },
       {
         question: "Дали на моите клиенти им треба апликација?",
@@ -369,7 +397,7 @@ export const mkMessages = {
       {
         question: "Може ли мојот тим да го користи истиот календар?",
         answer:
-          "Да. Бесплатниот план вклучува еден сопственик и тројца членови на тимот. Управувајте со термините, достапноста, паузите и слободните денови заедно, без преклопување на термините. Со Pro можете да додадете уште членови во тимот.",
+          "Да. Бесплатниот план вклучува 4 членови на тимот. Управувајте со термините, достапноста, паузите и слободните денови заедно, без преклопување на термините. Pro вклучува до 12 членови на тимот.",
       },
       {
         question: "Што можам да прашам AI-аналитичарот за мојот бизнис?",
@@ -632,6 +660,33 @@ export const enMessages: Messages = {
     summaryServices: "Unlimited services & clients",
     summaryDevices: "Works on every device",
   },
+  promotion: {
+    heading: "Promote your studio.",
+    description:
+      "Create a booking QR code and an Instagram Story. Help clients find their next available appointment.",
+    qr: {
+      label: "Booking QR code",
+      title: "Scan. Choose a time. Book.",
+      description:
+        "Download a QR code or a ready-to-print A5 counter sign. Clients scan it to open your booking page.",
+      imageAlt:
+        "Example OPUS A5 counter sign with a QR code for online booking.",
+      caption: "Example counter sign · Ready to print",
+    },
+    story: {
+      label: "Instagram Story",
+      title: "An open slot? Share it.",
+      description:
+        "Choose an available appointment or promote your booking link. Download the image and post it on Instagram with your link.",
+      imageAlt:
+        "Example OPUS Instagram Story showing an available appointment with a service, date, time, and price.",
+      caption: "Example Story · 1080 × 1920",
+    },
+    included: "Included in the Free plan",
+    customization:
+      "Your colors, studio name, and link. Available once your booking website is published.",
+    cta: "Start for free",
+  },
   intelligence: {
     heading: "Take your business to the next level with AI.",
     subheading: "AI tools to help you grow your business.",
@@ -745,25 +800,27 @@ export const enMessages: Messages = {
   },
   pricing: {
     heading: "Choose what works for your studio.",
+    comparePlans: "Compare all features",
     subheading: "Your booking website and calendar are included for free.",
     note: "You don’t need Pro to take online bookings. Your website and calendar are part of the Free plan.",
     free: {
       name: "Free",
       price: "0",
       currency: "MKD",
-      desc: "A website and calendar for you and three staff members.",
+      desc: "A website and calendar for a team of 4.",
       cta: "Create your free website",
       label: "Included in the Free plan:",
       features: [
         "Unlimited appointments, services, and clients",
         "Your own yourstudio.opus.mk website",
         "Guest booking — no client account needed",
-        "One owner + 3 staff members",
+        "4 team members",
         "Team calendar with overlap protection",
         "Set working hours, breaks, and days off",
         "Client contact details on every appointment",
         "Appointment confirmations by email",
         "Gallery with up to 3 photos",
+        "Booking QR code and Instagram Story creation",
         "Phone, tablet, and desktop access",
       ],
       end: "No credit card. No trial countdown.",
@@ -776,23 +833,22 @@ export const enMessages: Messages = {
       cta: "Get Pro",
       label: "Everything in Free, plus:",
       features: [
-        "A larger team",
+        "Up to 12 team members",
+        "Gallery with up to 15 photos",
         "Client directory with visit history and statistics",
         "Client email reminders before appointments",
-        "SMS confirmations and appointment reminders",
-        "Email offers for empty and cancelled slots",
+        "SMS confirmations and reminders, with activation",
+        "Email offers for empty slots, approved by you",
         "Detailed reports on your studio’s appointments",
         "More email, marketing, and notification controls",
         "Priority support",
       ],
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
-        "200 answers per month, including up to 20 detailed analyses",
-      aiReceptionistTitle: "24/7 AI receptionist",
+        "200 answers per month, including up to 20 detailed analyses. Requires activation.",
+      aiReceptionistTitle: "AI Frontdesk",
       aiReceptionistSub:
-        "Answers messages on Instagram, WhatsApp, and web chat and books appointments automatically.",
-      aiRebookingTitle: "AI client analysis and suggestions",
-      aiRebookingSub: "",
+        "AI answers your DMs for you while you focus on clients.",
       end: "Activate Pro from your account.",
     },
     custom: {
@@ -820,7 +876,7 @@ export const enMessages: Messages = {
       {
         question: "Is the Free plan really free?",
         answer:
-          "Yes. Free is 0 MKD, with no credit card and no trial expiry. You get unlimited appointments, services, and clients, your own booking website, and space for one owner plus three staff members.",
+          "Yes. Free is 0 MKD, with no credit card and no trial expiry. You get unlimited appointments, services, and clients, your own booking website, and space for 4 team members.",
       },
       {
         question: "Do my clients need to download an app?",
@@ -835,7 +891,7 @@ export const enMessages: Messages = {
       {
         question: "Can my team use the same calendar?",
         answer:
-          "Yes. The Free plan includes one owner and three staff members. Manage appointments, availability, breaks, and days off together, with protection against overlapping appointments. Pro supports a larger team.",
+          "Yes. The Free plan includes 4 team members. Manage appointments, availability, breaks, and days off together, with protection against overlapping appointments. Pro includes up to 12 team members.",
       },
       {
         question: "What can I ask the AI business analyst?",

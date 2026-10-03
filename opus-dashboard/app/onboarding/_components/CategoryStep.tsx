@@ -77,18 +77,23 @@ export function CategoryStep({
       <StepFrame
         replayPublicTitle
         replayPublicDescription
-        title={t("What kind of studio do you run?", "Каков тип студио имате?")}
+        title={t(
+          "What kind of studio do you run?",
+          "Каков тип студио имате?",
+          "Çfarë lloj studioje drejtoni?",
+        )}
         description={t(
           "Choose the category that best fits your services.",
           "Изберете ја категоријата што најмногу одговара на вашите услуги.",
+          "Zgjidhni kategorinë që i përshtatet më së miri shërbimeve tuaja.",
         )}
       >
         <FieldSet disabled={saving}>
           <FieldLegend className="sr-only">
-            {t("Studio category", "Категорија на студиото")}
+            {t("Studio category", "Категорија на студиото", "Kategoria e studios")}
           </FieldLegend>
           <FieldGroup className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {beautyCategories.map(([value, en, mk]) => {
+            {beautyCategories.map(([value, en, mk, sq]) => {
               const Icon = categoryIcons[value];
               const checked = selected === value;
               return (
@@ -116,7 +121,7 @@ export function CategoryStep({
                       <Icon className="size-7" strokeWidth={1.5} />
                     </span>
                     <FieldTitle className="justify-center" data-replay-public>
-                      {t(en, mk)}
+                      {t(en, mk, sq)}
                     </FieldTitle>
                   </Field>
                   {checked && (

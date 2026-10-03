@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brand } from "./brand";
+import { OwnerCaptcha } from "./owner-captcha";
+import type { AuthSecurityPolicy } from "../../../shared/auth-security";
 
 export function OwnerLogin() {
   const router = useRouter();
@@ -24,6 +26,38 @@ export function OwnerLogin() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const [policy, setPolicy] = useState<AuthSecurityPolicy | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [generation, setGeneration] = useState(0);
+  const [showResendCaptcha, setShowResendCaptcha] = useState(false);
+  const captchaError = useCallback(() => {
+    setToken(null);
+    setError("The security check could not load. Refresh and try again.");
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/auth/security", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Security check unavailable");
+        const next: AuthSecurityPolicy = await response.json();
+        if (
+          typeof next.required !== "boolean" ||
+          (next.required && !next.siteKey)
+        )
+          throw new Error("Security check unavailable");
+        setPolicy(next);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setError(
+            "Sign-in is temporarily unavailable. Please try again later.",
+          );
+      });
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     if (!cooldown) return;
     const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
@@ -31,6 +65,14 @@ export function OwnerLogin() {
   }, [cooldown]);
 
   async function submit(sendCode: boolean) {
+    if (sendCode) {
+      if (!policy) return;
+      if (policy.required && !token) {
+        setShowResendCaptcha(true);
+        setError("Complete the security check to request another code.");
+        return;
+      }
+    }
     setBusy(true);
     setError("");
     try {
@@ -40,7 +82,10 @@ export function OwnerLogin() {
           : "/api/auth/sign-in/email-otp",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(sendCode && token ? { "x-captcha-response": token } : {}),
+          },
           body: JSON.stringify(
             sendCode
               ? { email: email.trim().toLowerCase(), type: "sign-in" }
@@ -65,6 +110,7 @@ export function OwnerLogin() {
         setSent(true);
         setCooldown(60);
         setOtp("");
+        setShowResendCaptcha(false);
       } else router.refresh();
     } catch (cause) {
       setError(
@@ -73,6 +119,10 @@ export function OwnerLogin() {
           : "Something went wrong. Please try again.",
       );
     } finally {
+      if (sendCode) {
+        setToken(null);
+        setGeneration((current) => current + 1);
+      }
       setBusy(false);
     }
   }
@@ -141,9 +191,24 @@ export function OwnerLogin() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
+              {policy?.required &&
+              policy.siteKey &&
+              (!sent || showResendCaptcha) ? (
+                <OwnerCaptcha
+                  key={generation}
+                  siteKey={policy.siteKey}
+                  onToken={setToken}
+                  onError={captchaError}
+                />
+              ) : null}
               <Button
                 type="submit"
-                disabled={busy || (sent && otp.length !== 6)}
+                disabled={
+                  busy ||
+                  (sent
+                    ? otp.length !== 6
+                    : !policy || (policy.required && !token))
+                }
               >
                 {busy
                   ? "One moment…"
@@ -158,7 +223,7 @@ export function OwnerLogin() {
                     type="button"
                     variant="link"
                     size="sm"
-                    disabled={busy || cooldown > 0}
+                    disabled={busy || cooldown > 0 || !policy}
                     onClick={() => void submit(true)}
                   >
                     {cooldown ? `Resend in ${cooldown}s` : "Resend code"}

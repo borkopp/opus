@@ -422,11 +422,11 @@ function ScheduleSummary({
 
 function formatRole(
   role: Doc<"staff_members">["role"],
-  t: (en: string, mk: string) => string,
+  t: (en: string, mk: string, sq?: string) => string,
 ) {
-  if (role === "owner") return t("Owner", "Сопственик");
-  if (role === "manager") return t("Manager", "Менаџер");
-  return t("Staff member", "Вработен");
+  if (role === "owner") return t("Owner", "Сопственик", "Pronar");
+  if (role === "manager") return t("Manager", "Менаџер", "Menaxher");
+  return t("Staff member", "Вработен", "Anëtar i stafit");
 }
 
 function getInitials(displayName: string) {

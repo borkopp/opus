@@ -18,14 +18,18 @@ export default async function Login({
         replayPublicTitle
         replayPublicDescription
         title={
-          locale === "mk"
-            ? "Добредојдовте во вашето студио"
-            : "Welcome to your studio"
+          locale === "sq"
+            ? "Mirësevini në studion tuaj"
+            : locale === "mk"
+              ? "Добредојдовте во вашето студио"
+              : "Welcome to your studio"
         }
         description={
-          locale === "mk"
-            ? "Најавете се или создајте сметка за да управувате со вашето студио."
-            : "Log in or create an account to manage your beauty studio."
+          locale === "sq"
+            ? "Kyçuni ose krijoni llogari për të menaxhuar studion tuaj të bukurisë."
+            : locale === "mk"
+              ? "Најавете се или создајте сметка за да управувате со вашето студио."
+              : "Log in or create an account to manage your beauty studio."
         }
         callbackUrl={callbackUrl}
       />

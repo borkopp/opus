@@ -31,7 +31,13 @@ export function ReviewStep({
     try {
       await publish({});
       posthog.capture("website_published");
-      toast.success(t("Website published", "Веб-страницата е објавена"));
+      toast.success(
+        t(
+          "Website published",
+          "Веб-страницата е објавена",
+          "Faqja e internetit u publikua",
+        ),
+      );
       onPublished();
     } catch (caught) {
       toast.error(onboardingError(caught, language));
@@ -50,12 +56,18 @@ export function ReviewStep({
             ? t(
                 "Your booking website is ready",
                 "Вашата страница за закажување е подготвена",
+                "Faqja juaj e rezervimeve është gati",
               )
-            : t("One more step before launch", "Уште еден чекор до објавување")
+            : t(
+                "One more step before launch",
+                "Уште еден чекор до објавување",
+                "Edhe një hap para lansimit",
+              )
         }
         description={t(
           "Check your website, then publish your booking link. Add photos, a logo, and more services whenever you’re ready.",
           "Прегледајте ја страницата, па објавете го линкот за закажување. Фотографии, лого и други услуги можете да додадете подоцна.",
+          "Kontrolloni faqen tuaj, më pas publikoni linkun e rezervimit. Shtoni foto, një logo dhe më shumë shërbime kur të jeni gati.",
         )}
       >
         {!state.allWebsiteRequirementsComplete && (
@@ -64,11 +76,12 @@ export function ReviewStep({
               {t(
                 "Finish this step before accepting bookings.",
                 "Завршете го овој чекор пред да примате закажувања.",
+                "Përfundoni këtë hap para se të pranoni rezervime.",
               )}
             </p>
             <Button asChild>
               <Link data-replay-public href={next.href}>
-                {t(next.label[0], next.label[1])}
+                {t(next.label[0], next.label[1], next.label[2])}
               </Link>
             </Button>
           </div>
@@ -79,14 +92,18 @@ export function ReviewStep({
           </div>
           <iframe
             src="/onboarding/preview"
-            title={t("Your website preview", "Преглед на вашата веб-страница")}
+            title={t(
+              "Your website preview",
+              "Преглед на вашата веб-страница",
+              "Parapamja e faqes tuaj",
+            )}
             className="h-[400px] w-full bg-background sm:h-[480px]"
           />
         </div>
         {state.org.websiteStatus === "published" ? (
           <Button asChild className="mt-6 min-h-12 w-full">
             <Link data-replay-public href="/beauty">
-              {t("Open dashboard", "Отвори контролна табла")}
+              {t("Open dashboard", "Отвори контролна табла", "Hap panelin")}
             </Link>
           </Button>
         ) : (
@@ -99,6 +116,7 @@ export function ReviewStep({
               label={t(
                 "Publish my booking website",
                 "Објави ја страницата за закажување",
+                "Publiko faqen time të rezervimeve",
               )}
             />
             <div className="mt-2 flex justify-center">
@@ -111,6 +129,7 @@ export function ReviewStep({
                   {t(
                     "Proceed to the dashboard",
                     "Продолжи кон контролната табла",
+                    "Vazhdo te paneli",
                   )}
                 </Link>
               </Button>

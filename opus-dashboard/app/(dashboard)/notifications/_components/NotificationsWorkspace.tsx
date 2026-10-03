@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { mk } from "date-fns/locale";
+import { mk, sq } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,37 +33,40 @@ type FilterTab =
   | "ai_handoff"
   | "no_show";
 
-function getTypeConfig(type: string, t: (en: string, mk: string) => string) {
+function getTypeConfig(
+  type: string,
+  t: (en: string, mk: string, sq?: string) => string,
+) {
   switch (type) {
     case "ai_handoff":
       return {
         icon: <IconBellRinging size={18} stroke={2} />,
         iconBg: "bg-warning/15 text-warning",
-        label: t("AI handoff", "Преземи разговор"),
+        label: t("AI handoff", "Преземи разговор", "Dorëzimi te stafi"),
       };
     case "new_booking":
       return {
         icon: <IconCalendarPlus size={18} stroke={2} />,
         iconBg: "bg-primary/10 text-primary",
-        label: t("New Booking", "Нов термин"),
+        label: t("New Booking", "Нов термин", "Termin i ri"),
       };
     case "booking_cancelled":
       return {
         icon: <IconCalendarOff size={18} stroke={2} />,
         iconBg: "bg-destructive/10 text-destructive",
-        label: t("Cancellation", "Откажан термин"),
+        label: t("Cancellation", "Откажан термин", "Termin i anuluar"),
       };
     case "no_show":
       return {
         icon: <IconAlertTriangle size={18} stroke={2} />,
         iconBg: "bg-warning/15 text-warning",
-        label: t("No-Show", "Непојавување"),
+        label: t("No-Show", "Непојавување", "Mosparaqitje"),
       };
     default:
       return {
         icon: <IconBell size={18} stroke={2} />,
         iconBg: "bg-muted text-muted-foreground",
-        label: t("Notification", "Известување"),
+        label: t("Notification", "Известување", "Njoftim"),
       };
   }
 }
@@ -273,7 +276,12 @@ export function NotificationsWorkspace() {
                   <p className="text-xs text-muted-foreground/70 mt-1.5 font-sans">
                     {formatDistanceToNow(new Date(n.createdAt), {
                       addSuffix: true,
-                      locale: language === "mk" ? mk : undefined,
+                      locale:
+                        language === "sq"
+                          ? sq
+                          : language === "mk"
+                            ? mk
+                            : undefined,
                     })}
                   </p>
                 </div>

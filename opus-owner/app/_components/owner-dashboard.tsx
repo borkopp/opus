@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Brand } from "./brand";
 import { OverviewMetrics } from "./overview-metrics";
 import { BusinessTable } from "./business-table";
+import { BusinessActivity } from "./business-activity";
 
 export function OwnerDashboard({ email }: { email: string }) {
   const [data, setData] = useState<OwnerOverview | null>(null);
@@ -18,10 +19,27 @@ export function OwnerDashboard({ email }: { email: string }) {
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState("");
+  const sessionEnded = useRef(false);
+  const activityExpired = useCallback(() => {
+    sessionEnded.current = true;
+    setData(null);
+    setExpired(true);
+    setError("Your session has ended. Please sign in again.");
+  }, []);
+  const inspectBusiness = (id: string) => {
+    setSelectedBusiness(id);
+    document
+      .getElementById("business-activity")
+      ?.scrollIntoView({ block: "start" });
+    document
+      .getElementById("business-activity-title")
+      ?.focus({ preventScroll: true });
+  };
   const started = useRef(false);
   const inFlight = useRef(false);
   const refresh = useCallback(async () => {
-    if (inFlight.current) return;
+    if (inFlight.current || sessionEnded.current) return;
     inFlight.current = true;
     setBusy(true);
     setError("");
@@ -31,13 +49,15 @@ export function OwnerDashboard({ email }: { email: string }) {
         cache: "no-store",
       });
       if (response.status === 401 || response.status === 403) {
+        sessionEnded.current = true;
         setData(null);
         setExpired(true);
         throw new Error("Your session has ended. Please sign in again.");
       }
       if (!response.ok)
         throw new Error("Couldn’t refresh the overview. Please try again.");
-      setData(await response.json());
+      const overview: OwnerOverview = await response.json();
+      if (!sessionEnded.current) setData(overview);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : "Couldn’t load the overview.",
@@ -159,7 +179,17 @@ export function OwnerDashboard({ email }: { email: string }) {
         {data && (
           <>
             <OverviewMetrics data={data} />
-            <BusinessTable businesses={data.businesses} />
+            <BusinessTable
+              businesses={data.businesses}
+              onInspect={inspectBusiness}
+            />
+            <BusinessActivity
+              businesses={data.businesses}
+              selectedId={selectedBusiness}
+              onSelect={setSelectedBusiness}
+              refreshAt={data.completedAt}
+              onExpired={activityExpired}
+            />
             <details className="rounded-xl border bg-card p-5 text-xs leading-relaxed text-muted-foreground">
               <summary className="cursor-pointer font-medium text-foreground">
                 How these numbers are counted

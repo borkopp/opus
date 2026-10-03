@@ -15,7 +15,7 @@ import {
   User,
 } from "lucide-react";
 import { format } from "date-fns";
-import { mk } from "date-fns/locale";
+import { mk, sq } from "date-fns/locale";
 import posthog from "posthog-js";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { getHandoffReason } from "@/lib/i18n/ai-frontdesk";
@@ -57,7 +57,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
   if (conversation === null)
     return (
       <p data-replay-public className="p-5 text-sm text-muted-foreground">
-        {t("Conversation not found.", "Разговорот не е пронајден.")}
+        {t("Conversation not found.", "Разговорот не е пронајден.", "Biseda nuk u gjet.")}
       </p>
     );
   if (conversation === undefined) {
@@ -76,7 +76,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         booking_count: conversation.bookingIds.length,
       });
       toast.success(
-        t("Conversation resolved", "Разговорот е означен како решен"),
+        t("Conversation resolved", "Разговорот е означен како решен", "Biseda u zgjidh"),
       );
     } catch (error: unknown) {
       toast.error(
@@ -85,6 +85,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
           : t(
               "Failed to resolve conversation",
               "Неуспешно затворање на разговорот",
+              "Dështoi zgjidhja e bisedës",
             ),
       );
     }
@@ -105,6 +106,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         t(
           "Conversation taken over — AI is no longer responding",
           "Разговорот е преземен — AI веќе не одговара",
+          "Biseda u mor në ngarkim — AI nuk përgjigjet më",
         ),
       );
     } catch (error: unknown) {
@@ -114,6 +116,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
           : t(
               "Failed to take over conversation",
               "Неуспешно преземање на разговорот",
+              "Dështoi marrja në ngarkim e bisedës",
             ),
       );
     }
@@ -134,7 +137,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
             <div className="flex items-center gap-2">
               <span className="break-words [overflow-wrap:anywhere] font-medium text-sm">
                 {conversation.customer?.name ??
-                  t("Unknown customer", "Непознат клиент")}
+                  t("Unknown customer", "Непознат клиент", "Klient i panjohur")}
               </span>
               <ChannelIcon
                 size={13}
@@ -144,17 +147,17 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
             <div className="flex flex-wrap items-center gap-2 mt-0.5">
               <ConversationStatusBadge status={conversation.status} />
               <span className="text-[11px] text-muted-foreground">
-                {t("Started", "Започнат на")}{" "}
+                {t("Started", "Започнат на", "Filluar më")}{" "}
                 {format(new Date(conversation.createdAt), "d MMM yyyy", {
-                  locale: language === "mk" ? mk : undefined,
+                  locale: language === "sq" ? sq : language === "mk" ? mk : undefined,
                 })}
               </span>
               {conversation.bookingIds.length > 0 && (
                 <span className="text-[11px] text-muted-foreground">
                   · {conversation.bookingIds.length}{" "}
                   {conversation.bookingIds.length === 1
-                    ? t("booking", "термин")
-                    : t("bookings", "термини")}
+                    ? t("booking", "термин", "rezervim")
+                    : t("bookings", "термини", "rezervime")}
                 </span>
               )}
             </div>
@@ -177,18 +180,19 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
                       t(
                         "AI will reply to the next message",
                         "AI ќе одговори на следната порака",
+                        "AI do t'i përgjigjet mesazhit të radhës",
                       ),
                     );
                   } catch (error) {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : t("Unable to resume AI", "AI не може да продолжи"),
+                        : t("Unable to resume AI", "AI не може да продолжи", "Nuk mund të rifillojë AI"),
                     );
                   }
                 }}
               >
-                {t("Resume AI", "Продолжи со AI")}
+                {t("Resume AI", "Продолжи со AI", "Rifillo AI")}
               </Button>
             )}
             {conversation.status === "active" && (
@@ -198,7 +202,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
                 variant="outline"
                 onClick={handleTakeOver}
               >
-                {t("Take Over", "Преземи")}
+                {t("Take Over", "Преземи", "Merr në ngarkim")}
               </Button>
             )}
             <Button
@@ -207,7 +211,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
               variant="outline"
               onClick={handleResolve}
             >
-              {t("Mark Resolved", "Означи како решен")}
+              {t("Mark Resolved", "Означи како решен", "Shëno të zgjidhur")}
             </Button>
           </div>
         )}
@@ -231,7 +235,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
                       data-replay-public
                       className="text-sm text-muted-foreground"
                     >
-                      {t("No messages yet", "Сè уште нема пораки")}
+                      {t("No messages yet", "Сè уште нема пораки", "Ende nuk ka mesazhe")}
                     </p>
                   </div>
                 ) : (
@@ -247,7 +251,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
               </MessageScrollerContent>
             </MessageScrollerViewport>
             <MessageScrollerButton
-              aria-label={t("Latest messages", "Најнови пораки")}
+              aria-label={t("Latest messages", "Најнови пораки", "Mesazhet më të fundit")}
             />
           </MessageScroller>
         </MessageScrollerProvider>
@@ -258,7 +262,7 @@ export function ConversationDetail({ orgId, conversationId }: Props) {
         <div className="px-5 py-3 border-t border-border/40 bg-highlight/10 shrink-0">
           <p className="text-xs text-warning">
             <span data-replay-public className="font-medium">
-              {t("Handed off:", "Преземено:")}
+              {t("Handed off:", "Преземено:", "Dorëzuar:")}
             </span>{" "}
             {getHandoffReason(language, conversation.handoffReason)}
           </p>

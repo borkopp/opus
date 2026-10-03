@@ -183,10 +183,15 @@ export function LocationStep({
       <StepFrame
         replayPublicDescription
         replayPublicTitle
-        title={t("Where is your studio?", "Каде се наоѓа вашето студио?")}
+        title={t(
+          "Where is your studio?",
+          "Каде се наоѓа вашето студио?",
+          "Ku ndodhet studioja juaj?",
+        )}
         description={t(
           "Choose your address. We’ll place it on the map for you.",
           "Изберете ја адресата. Ние ќе ја означиме на мапата.",
+          "Zgjidhni adresën tuaj. Ne do ta vendosim në hartë për ju.",
         )}
       >
         <Field data-invalid={Boolean(selectionError || searchError)}>
@@ -195,7 +200,7 @@ export function LocationStep({
             className="sr-only"
             htmlFor="location-search"
           >
-            {t("Studio address", "Адреса на студиото")}
+            {t("Studio address", "Адреса на студиото", "Adresa e studios")}
           </FieldLabel>
           <div className="relative">
             <InputGroup variant="prominent">
@@ -217,6 +222,7 @@ export function LocationStep({
                 placeholder={t(
                   "Enter street, number and city",
                   "Внесете улица, број и град",
+                  "Shkruani rrugën, numrin dhe qytetin",
                 )}
                 role="combobox"
                 aria-autocomplete="list"
@@ -304,6 +310,7 @@ export function LocationStep({
                 {t(
                   "Address selected. You can continue.",
                   "Адресата е избрана. Можете да продолжите.",
+                  "Adresa u zgjodh. Mund të vazhdoni.",
                 )}
               </FieldDescription>
             ) : null}
@@ -322,11 +329,16 @@ export function LocationStep({
               {t(
                 "Adjust map location (optional)",
                 "Променете ја локацијата на мапата (незадолжително)",
+                "Rregulloni vendndodhjen në hartë (opsionale)",
               )}
             </summary>
             <Field data-invalid={Boolean(pinError)}>
               <FieldLabel data-replay-public>
-                {t("Exact map pin", "Точна локација на мапата")}
+                {t(
+                  "Exact map pin",
+                  "Точна локација на мапата",
+                  "Pika e saktë në hartë",
+                )}
               </FieldLabel>
               {showMap && (
                 <LocationMapPicker
@@ -346,10 +358,12 @@ export function LocationStep({
                       ? t(
                           "Checking the updated pin…",
                           "Ја проверуваме локацијата…",
+                          "Po kontrollojmë pikën e përditësuar…",
                         )
                       : t(
                           "Drag the pin or click the map if the entrance is not exact.",
                           "Повлечете ја ознаката или допрете на мапата за да го означите влезот.",
+                          "Tërhiqni pikën ose klikoni në hartë nëse hyrja nuk është e saktë.",
                         )}
                   </FieldDescription>
                 )}
@@ -381,10 +395,12 @@ export function LocationStep({
             ? t(
                 "You can search again or adjust the pin to update this location.",
                 "Пребарајте повторно или поместете ја ознаката за да ја смените локацијата.",
+                "Mund të kërkoni përsëri ose të rregulloni pikën për të përditësuar këtë vendndodhje.",
               )
             : t(
                 "You can adjust this address and pin later in Settings.",
                 "Адресата и ознаката можете да ги смените подоцна во Поставки.",
+                "Mund ta rregulloni këtë adresë dhe pikë më vonë te Cilësimet.",
               )}
         </p>
       </StepFrame>

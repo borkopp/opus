@@ -28,6 +28,37 @@ const HANDOFF_REASONS_MK: Record<string, string> = {
     "Обработката на пораката е запрена. Проверете на Instagram пред да одговорите.",
 };
 
+const HANDOFF_REASONS_SQ: Record<string, string> = {
+  "Staff takeover": "Biseda u mor në dorëzim nga ekipi.",
+  "A team member replied in Instagram. AI is paused.":
+    "Një anëtar i ekipit u përgjigj në Instagram. AI është pezulluar.",
+  "The AI needs the studio team to answer this question.":
+    "Ekipi i studios duhet t'i përgjigjet kësaj pyetjeje.",
+  "The assistant could not complete this request. Please review the conversation.":
+    "Asistenti nuk mundi ta plotësonte këtë kërkesë. Ju lutemi rishikoni bisedën.",
+  "Review this attachment or long message in Instagram.":
+    "Rishikoni këtë bashkëngjitje ose mesazh të gjatë në Instagram.",
+  "This conversation reached the automatic reply limit.":
+    "Kjo bisedë ka arritur kufirin e përgjigjeve automatike.",
+  "Automatic replies are unavailable or the reply window has expired.":
+    "Përgjigjet automatike nuk janë të disponueshme ose dritarja e përgjigjes ka skaduar.",
+  "Automatic reply allowance or Instagram reply window reached.":
+    "Kufiri i përgjigjeve automatike ose dritarja e Instagramit u arrit.",
+  "Reply was not sent. Check the channel connection and Instagram reply window.":
+    "Përgjigja nuk u dërgua. Kontrolloni lidhjen e kanalit dhe dritaren e Instagramit.",
+  "Delivery could not be confirmed. Check Instagram before replying to avoid a duplicate.":
+    "Dërgimi nuk mund të konfirmohej. Kontrolloni Instagramin para se të përgjigjeni për të shmangur dublikimin.",
+  "Instagram rejected the reply. The team needs to follow up.":
+    "Instagrami e refuzoi përgjigjen. Ekipi duhet të vazhdojë bisedën.",
+  "Delivery stopped. Check Instagram before replying.":
+    "Dërgimi u ndalua. Kontrolloni Instagramin para se të përgjigjeni.",
+  "Message processing stopped. Check Instagram before replying.":
+    "Përpunimi i mesazhit u ndalua. Kontrolloni Instagramin para se të përgjigjeni.",
+};
+
 export function getHandoffReason(language: DashboardLanguage, reason: string) {
+  if (language === "sq") {
+    return HANDOFF_REASONS_SQ[reason] ?? reason;
+  }
   return language === "mk" ? (HANDOFF_REASONS_MK[reason] ?? reason) : reason;
 }

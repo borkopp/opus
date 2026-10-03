@@ -166,10 +166,12 @@ export function ImplementationPreview() {
                 value={language}
                 onChange={(event) => {
                   const value = event.target.value;
-                  if (value === "en" || value === "mk") setLanguage(value);
+                  if (value === "en" || value === "mk" || value === "sq")
+                    setLanguage(value);
                 }}
               >
                 <option value="en">English</option>
+                <option value="sq">Shqip</option>
                 <option value="mk">Македонски</option>
               </select>
             </label>

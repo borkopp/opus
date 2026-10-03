@@ -1,5 +1,6 @@
 import { handler } from "@/lib/auth-server";
 import { allowedAuthRequest, isSameOrigin } from "@/lib/auth-policy";
+import { withAuthProxyProof } from "@/lib/auth-security";
 
 export const dynamic = "force-dynamic";
 
@@ -26,5 +27,14 @@ export async function POST(request: Request) {
   }
   // Better Auth still applies database-backed rate limits, five OTP attempts,
   // hashed single-use codes and the existing five-minute expiry.
-  return handler.POST(request);
+  try {
+    return await handler.POST(await withAuthProxyProof(request));
+  } catch {
+    return Response.json(
+      {
+        message: "Sign-in is temporarily unavailable. Please try again later.",
+      },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
 }

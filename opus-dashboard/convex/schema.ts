@@ -1258,6 +1258,7 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_action", ["orgId", "action"])
+    .index("by_org_resource", ["orgId", "resourceType", "resourceId"])
     .index("by_resource", ["resourceType", "resourceId"]),
 
   // ─────────────────────────────────────────────────────

@@ -88,7 +88,7 @@ export function WizardActions({
           onClick={onBack}
         >
           <ArrowLeft data-icon="inline-start" />
-          {t("Back", "Назад")}
+          {t("Back", "Назад", "Kthehu")}
         </Button>
       )}
       <Button
@@ -99,7 +99,7 @@ export function WizardActions({
         disabled={disabled || isSubmitting}
       >
         {isSubmitting ? <Spinner /> : null}
-        {label ?? t("Next", "Следно")}
+        {label ?? t("Next", "Следно", "Tjetra")}
         <ArrowRight data-icon="inline-end" />
       </Button>
     </div>

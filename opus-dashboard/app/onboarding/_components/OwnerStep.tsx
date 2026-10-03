@@ -34,6 +34,7 @@ export function OwnerStep({
         t(
           "Enter your name using 1 to 100 characters.",
           "Внесете го вашето име со 1 до 100 знаци.",
+          "Shkruani emrin tuaj duke përdorur 1 deri në 100 karaktere.",
         ),
       );
       return;
@@ -54,16 +55,17 @@ export function OwnerStep({
       <StepFrame
         replayPublicTitle
         replayPublicDescription
-        title={t("What’s your name?", "Како се викате?")}
+        title={t("What’s your name?", "Како се викате?", "Si quheni?")}
         description={t(
           "Customers will see this name when booking an appointment with you.",
           "Клиентите ќе го гледаат ова име кога закажуваат термин кај вас.",
+          "Klientët do ta shohin këtë emër kur të rezervojnë një termin me ju.",
         )}
       >
         <FieldGroup>
           <Field data-invalid={Boolean(error)}>
             <FieldLabel data-replay-public htmlFor="owner-name">
-              {t("Your name", "Вашето име")}
+              {t("Your name", "Вашето име", "Emri juaj")}
             </FieldLabel>
             <Input
               id="owner-name"

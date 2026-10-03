@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { mk } from "date-fns/locale";
+import { mk, sq } from "date-fns/locale";
 import { ConversationStatusBadge } from "./ConversationStatusBadge";
 import {
   IconBrandInstagram,
@@ -50,10 +50,10 @@ export function ConversationList({
   const { language, t } = useDashboardI18n();
 
   const filters: { value: Status | "all"; label: string }[] = [
-    { value: "all", label: t("All", "Сите") },
-    { value: "active", label: t("Active", "Активни") },
-    { value: "handed_off", label: t("Handed Off", "Преземени") },
-    { value: "resolved", label: t("Resolved", "Решени") },
+    { value: "all", label: t("All", "Сите", "Të gjitha") },
+    { value: "active", label: t("Active", "Активни", "Aktive") },
+    { value: "handed_off", label: t("Handed Off", "Преземени", "Të dorëzuara") },
+    { value: "resolved", label: t("Resolved", "Решени", "Të zgjidhura") },
   ];
 
   return (
@@ -61,7 +61,7 @@ export function ConversationList({
       <div className="flex flex-col gap-4 border-b border-border/50 p-4">
         <div className="flex items-center justify-between gap-3">
           <h2 data-replay-public className="text-base font-medium">
-            {t("Conversations", "Разговори")}
+            {t("Conversations", "Разговори", "Bisedat")}
           </h2>
           <span className="text-xs tabular-nums text-muted-foreground">
             {loading ? "…" : conversations.length}
@@ -75,7 +75,7 @@ export function ConversationList({
             if (value) onFilterChange(value as Status | "all");
           }}
           className="grid w-full grid-cols-2 gap-1"
-          aria-label={t("Filter conversations", "Филтрирај разговори")}
+          aria-label={t("Filter conversations", "Филтрирај разговори", "Filtro bisedat")}
         >
           {filters.map((f) => (
             <ToggleGroupItem key={f.value} value={f.value} className="min-h-10">
@@ -89,7 +89,7 @@ export function ConversationList({
         {loading ? (
           <div
             className="flex flex-col gap-3 p-2"
-            aria-label={t("Loading conversations", "Се вчитуваат разговорите")}
+            aria-label={t("Loading conversations", "Се вчитуваат разговорите", "Po ngarkohen bisedat")}
           >
             {[0, 1, 2].map((item) => (
               <Skeleton key={item} className="h-24 w-full rounded-2xl" />
@@ -103,18 +103,20 @@ export function ConversationList({
               </EmptyMedia>
               <EmptyTitle>
                 {statusFilter === "all"
-                  ? t("No conversations yet", "Сè уште нема разговори")
-                  : t("No conversations here", "Нема разговори тука")}
+                  ? t("No conversations yet", "Сè уште нема разговори", "Ende nuk ka biseda")
+                  : t("No conversations here", "Нема разговори тука", "Nuk ka biseda këtu")}
               </EmptyTitle>
               <EmptyDescription>
                 {statusFilter === "all"
                   ? t(
                       "Messages from your connected Instagram account will appear here.",
                       "Пораките од поврзаната Instagram сметка ќе се прикажат тука.",
+                      "Mesazhet nga llogaria juaj e lidhur në Instagram do të shfaqen këtu.",
                     )
                   : t(
                       "Try another filter to see your conversations.",
                       "Изберете друг филтер за да ги видите разговорите.",
+                      "Provoni një filtër tjetër për të parë bisedat tuaja.",
                     )}
               </EmptyDescription>
             </EmptyHeader>
@@ -143,12 +145,12 @@ export function ConversationList({
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-1">
                     <span className="text-sm font-medium truncate">
                       {conv.customerName ??
-                        t("Unknown customer", "Непознат клиент")}
+                        t("Unknown customer", "Непознат клиент", "Klient i panjohur")}
                     </span>
                     <span className="text-[11px] text-muted-foreground shrink-0">
                       {formatDistanceToNow(new Date(conv.lastMessageAt), {
                         addSuffix: true,
-                        locale: language === "mk" ? mk : undefined,
+                        locale: language === "sq" ? sq : language === "mk" ? mk : undefined,
                       })}
                     </span>
                   </div>

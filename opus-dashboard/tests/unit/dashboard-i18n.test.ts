@@ -16,6 +16,15 @@ describe("dashboard i18n locale resolution", () => {
     expect(resolveDashboardLanguage("  mk-MK  ")).toBe("mk");
   });
 
+  it("resolves Albanian locale variants", () => {
+    expect(resolveDashboardLanguage("sq")).toBe("sq");
+    expect(resolveDashboardLanguage("sq-AL")).toBe("sq");
+    expect(resolveDashboardLanguage("sq-MK")).toBe("sq");
+    expect(resolveDashboardLanguage("SQ-al")).toBe("sq");
+    expect(resolveDashboardLanguage("sq-Latn-AL")).toBe("sq");
+    expect(resolveDashboardLanguage("  sq-AL  ")).toBe("sq");
+  });
+
   it("falls back to English for other or missing locales", () => {
     expect(resolveDashboardLanguage("en-GB")).toBe("en");
     expect(resolveDashboardLanguage("en-US")).toBe("en");
@@ -27,24 +36,36 @@ describe("dashboard i18n locale resolution", () => {
 
   it("normalizes values to supported dashboard locales", () => {
     expect(normalizeDashboardLocale("mk")).toBe("mk-MK");
+    expect(normalizeDashboardLocale("sq")).toBe("sq-AL");
+    expect(normalizeDashboardLocale("sq-MK")).toBe("sq-AL");
     expect(normalizeDashboardLocale("en-US")).toBe("en-GB");
     expect(normalizeDashboardLocale(undefined)).toBe("en-GB");
   });
 
   it("selects the requested translation", () => {
-    expect(translate("en", "Settings", "Поставки")).toBe("Settings");
-    expect(translate("mk", "Settings", "Поставки")).toBe("Поставки");
+    expect(translate("en", "Settings", "Поставки", "Cilësimet")).toBe("Settings");
+    expect(translate("mk", "Settings", "Поставки", "Cilësimet")).toBe("Поставки");
+    expect(translate("sq", "Settings", "Поставки", "Cilësimet")).toBe("Cilësimet");
+    expect(translate("sq", "Settings", "Поставки")).toBe("Settings");
   });
 
   it("resolves localized page titles for nested dashboard routes", () => {
     expect(getDashboardPageTitle("/settings", "mk")).toBe("Поставки");
+    expect(getDashboardPageTitle("/settings", "sq")).toBe("Cilësimet");
     expect(getDashboardPageTitle("/beauty/bookings", "en")).toBe(
       "Appointments",
+    );
+    expect(getDashboardPageTitle("/beauty/bookings", "sq")).toBe(
+      "Terminet",
     );
     expect(getDashboardPageTitle("/beauty/staff/member-id", "mk")).toBe(
       "Тим",
     );
+    expect(getDashboardPageTitle("/beauty/staff/member-id", "sq")).toBe(
+      "Ekipi",
+    );
     expect(getDashboardPageTitle("/unknown", "mk")).toBeNull();
+    expect(getDashboardPageTitle("/unknown", "sq")).toBeNull();
   });
 });
 
@@ -111,6 +132,67 @@ describe("dashboard notification localization", () => {
     });
   });
 
+  it("localizes known booking notification templates in Albanian", () => {
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "new_booking",
+        title: "New Booking",
+        body: "Ana booked Haircut with Elena for Thu 3 Sept at 14:00",
+      }),
+    ).toEqual({
+      title: "Termin i ri",
+      body: "Ana rezervoi Haircut me Elena për enj. 3 sht. në 14:00.",
+    });
+
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "booking_cancelled",
+        title: "Booking Cancelled",
+        body:
+          "The Haircut booking for Ana on Thu 3 Sept at 14:00 was cancelled",
+      }),
+    ).toEqual({
+      title: "Termin i anuluar",
+      body:
+        "Termini i Ana për Haircut, i caktuar për enj. 3 sht. në 14:00, u anulua.",
+    });
+
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "no_show",
+        title: "No-Show",
+        body: "Ana didn't show up for Haircut on Thu 3 Sept at 14:00",
+      }),
+    ).toEqual({
+      title: "Mosparaqitje",
+      body: "Ana nuk u paraqit për Haircut më enj. 3 sht. në 14:00.",
+    });
+
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "new_booking",
+        title: "Booking Rescheduled",
+        body: "Ana's Haircut with Elena was rescheduled to Thu 3 Sept at 15:00",
+      }),
+    ).toEqual({
+      title: "Termin i ricaktuar",
+      body:
+        "Termini i Ana për Haircut me Elena u ricaktua për enj. 3 sht. në 15:00.",
+    });
+
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "ai_handoff",
+        title: "Human Takeover Needed",
+        body: "A conversation needs your attention: Elena",
+      }),
+    ).toEqual({
+      title: "Biseda kërkon vëmendje",
+      body:
+        "Një klient po pret përgjigje nga ekipi juaj. Hapni bisedën në kutinë e AI.",
+    });
+  });
+
   it("falls back to the persisted body when a template is unknown", () => {
     expect(
       getDashboardNotificationCopy("mk", {
@@ -120,6 +202,17 @@ describe("dashboard notification localization", () => {
       }),
     ).toEqual({
       title: "Нов термин",
+      body: "Custom notification body",
+    });
+
+    expect(
+      getDashboardNotificationCopy("sq", {
+        type: "new_booking",
+        title: "New Booking",
+        body: "Custom notification body",
+      }),
+    ).toEqual({
+      title: "Termin i ri",
       body: "Custom notification body",
     });
   });

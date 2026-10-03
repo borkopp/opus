@@ -16,3 +16,44 @@ export const date = (value: number) =>
     year: "numeric",
     timeZone: "Europe/Skopje",
   }).format(value);
+
+export const dateTime = (value: number) =>
+  new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Skopje",
+  }).format(value);
+
+export function appointmentValue(value: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency,
+    }).format(value / 100);
+  } catch {
+    return `${number(value / 100)} ${currency}`;
+  }
+}
+
+export const bookingSource = (source: string) =>
+  ({
+    web: "Booking website",
+    manual: "Dashboard / manual",
+    ai_instagram: "Instagram AI",
+    opus_web: "OPUS website (legacy)",
+    ai_whatsapp: "WhatsApp AI (legacy)",
+    ai_webchat: "Web chat AI (legacy)",
+    ai_voice: "Voice AI (legacy)",
+  })[source] ?? source;
+
+export const bookingStatus = (status: string) =>
+  ({
+    confirmed: "Confirmed",
+    checked_in: "Checked in",
+    completed: "Completed",
+    cancelled: "Cancelled",
+    no_show: "No-show",
+  })[status] ?? status;

@@ -12,7 +12,14 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { DAYS_MK, onboardingError } from "@/lib/i18n/onboarding";
+import {
+  DAYS_MK,
+  DAYS_SQ,
+  DAYS_SHORT_EN,
+  DAYS_SHORT_MK,
+  DAYS_SHORT_SQ,
+  onboardingError,
+} from "@/lib/i18n/onboarding";
 import { applyHoursToOpenDays, type OpeningHour } from "@/lib/opening-hours";
 import { StepFrame, WizardActions } from "./OnboardingStep";
 export type { OpeningHour } from "@/lib/opening-hours";
@@ -40,7 +47,14 @@ export function HoursStep({
   minimumDurationMins?: number;
 }) {
   const { t, language } = useDashboardI18n();
-  const days = language === "mk" ? DAYS_MK : DAYS;
+  const days =
+    language === "sq" ? DAYS_SQ : language === "mk" ? DAYS_MK : DAYS;
+  const daysShort =
+    language === "sq"
+      ? DAYS_SHORT_SQ
+      : language === "mk"
+        ? DAYS_SHORT_MK
+        : DAYS_SHORT_EN;
   const first = hours.find((day) => !day.isClosed) ?? hours[0];
   const [draft, setDraft] = useState(hours);
   const [common, setCommon] = useState({
@@ -66,6 +80,7 @@ export function HoursStep({
         t(
           "Choose at least one working day.",
           "Изберете барем еден работен ден.",
+          "Zgjidhni të paktën një ditë pune.",
         ),
       );
       return;
@@ -82,6 +97,7 @@ export function HoursStep({
         t(
           "Closing time must be after opening time.",
           "Времето на затворање мора да биде по отворањето.",
+          "Koha e mbylljes duhet të jetë pas kohës së hapjes.",
         ),
       );
       return;
@@ -97,6 +113,7 @@ export function HoursStep({
         t(
           "Allow enough time for at least one appointment.",
           "Оставете доволно време за барем еден термин.",
+          "Lini kohë të mjaftueshme për të paktën një termin.",
         ),
       );
       return;
@@ -119,16 +136,18 @@ export function HoursStep({
         title={t(
           "When can customers book?",
           "Кога можат клиентите да закажуваат?",
+          "Kur mund të rezervojnë klientët?",
         )}
         description={t(
           "Choose your working days and confirm the hours customers can book.",
           "Изберете работни денови и потврдете кога клиентите можат да закажуваат.",
+          "Zgjidhni ditët tuaja të punës dhe konfirmoni orët kur klientët mund të rezervojnë.",
         )}
       >
         <FieldGroup>
           <Field>
             <FieldLabel data-replay-public>
-              {t("Working days", "Работни денови")}
+              {t("Working days", "Работни денови", "Ditët e punës")}
             </FieldLabel>
             <ToggleGroup
               type="multiple"
@@ -148,7 +167,7 @@ export function HoursStep({
                 );
                 setError(null);
               }}
-              aria-label={t("Working days", "Работни денови")}
+              aria-label={t("Working days", "Работни денови", "Ditët e punës")}
             >
               {days.map((day, i) => (
                 <ToggleGroupItem
@@ -158,7 +177,7 @@ export function HoursStep({
                   aria-label={day}
                   className="h-auto min-h-18 w-full flex-col gap-1.5 rounded-lg px-2 py-3"
                 >
-                  <span>{day.slice(0, 3)}</span>
+                  <span>{daysShort[i]}</span>
                   {draft.find((item) => item.dayOfWeek === i)?.isClosed ? (
                     <Minus aria-hidden="true" />
                   ) : (
@@ -173,11 +192,11 @@ export function HoursStep({
             >
               <span className="inline-flex items-center gap-1.5">
                 <Check className="size-4 text-primary" aria-hidden="true" />
-                {t("Working day", "Работен ден")}
+                {t("Working day", "Работен ден", "Ditë pune")}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Minus className="size-4" aria-hidden="true" />
-                {t("Day off", "Неработен ден")}
+                {t("Day off", "Неработен ден", "Ditë pushimi")}
               </span>
             </FieldDescription>
           </Field>
@@ -187,8 +206,8 @@ export function HoursStep({
                 <Field key={edge}>
                   <FieldLabel data-replay-public htmlFor={`hours-${edge}`}>
                     {edge === "open"
-                      ? t("Opens", "Отворање")
-                      : t("Closes", "Затворање")}
+                      ? t("Opens", "Отворање", "Hapet")
+                      : t("Closes", "Затворање", "Mbyllet")}
                   </FieldLabel>
                   <Input
                     id={`hours-${edge}`}
@@ -222,8 +241,13 @@ export function HoursStep({
               ? t(
                   "Use the same hours on selected days",
                   "Исто време за избраните денови",
+                  "Përdor të njëjtin orar në ditët e zgjedhura",
                 )
-              : t("Set different hours per day", "Различно време по ден")}
+              : t(
+                  "Set different hours per day",
+                  "Различно време по ден",
+                  "Cakto orare të ndryshme për çdo ditë",
+                )}
           </Button>
           {custom && (
             <div className="flex flex-col gap-4">
@@ -249,8 +273,8 @@ export function HoursStep({
                             htmlFor={`hours-${edge}-${day.dayOfWeek}`}
                           >
                             {edge === "open"
-                              ? t("Opens", "Отворање")
-                              : t("Closes", "Затворање")}
+                              ? t("Opens", "Отворање", "Hapet")
+                              : t("Closes", "Затворање", "Mbyllet")}
                           </FieldLabel>
                           <Input
                             id={`hours-${edge}-${day.dayOfWeek}`}
@@ -281,7 +305,11 @@ export function HoursStep({
           canGoBack={canGoBack}
           onBack={onBack}
           isSubmitting={saving}
-          label={t("Confirm working hours", "Потврди работно време")}
+          label={t(
+            "Confirm working hours",
+            "Потврди работно време",
+            "Konfirmo orarin e punës",
+          )}
         />
       </StepFrame>
     </form>

@@ -49,12 +49,21 @@ export function ServiceStep({
     if (invalid) {
       setError(
         invalid === "name"
-          ? t("Enter a service name.", "Внесете име на услугата.")
+          ? t(
+              "Enter a service name.",
+              "Внесете име на услугата.",
+              "Shkruani emrin e shërbimit.",
+            )
           : invalid === "price"
-            ? t("Enter a valid price.", "Внесете валидна цена.")
+            ? t(
+                "Enter a valid price.",
+                "Внесете валидна цена.",
+                "Shkruani një çmim të vlefshëm.",
+              )
             : t(
                 `Use a duration in multiples of ${slotDurationMins} minutes.`,
                 `Внесете времетраење во интервали од ${slotDurationMins} минути.`,
+                `Përdorni një kohëzgjatje në shumëfisha të ${slotDurationMins} minutave.`,
               ),
       );
       return;
@@ -86,10 +95,15 @@ export function ServiceStep({
       <StepFrame
         replayPublicTitle
         replayPublicDescription
-        title={t("What can customers book?", "Што можат клиентите да закажат?")}
+        title={t(
+          "What can customers book?",
+          "Што можат клиентите да закажат?",
+          "Çfarë mund të rezervojnë klientët?",
+        )}
         description={t(
           "One service is enough to start. Add the rest whenever you’re ready.",
           "Една услуга е доволна за почеток. Другите додајте ги подоцна.",
+          "Një shërbim mjafton për të filluar. Shtoni pjesën tjetër kur të jeni gati.",
         )}
       >
         <FieldGroup>
@@ -102,19 +116,24 @@ export function ServiceStep({
             onClick={() => setPhotoImport(true)}
           >
             <Camera data-icon="inline-start" />
-            {t("Add services from a photo", "Додај услуги од фотографија")}
+            {t(
+              "Add services from a photo",
+              "Додај услуги од фотографија",
+              "Shto shërbime nga një foto",
+            )}
           </Button>
           <Field>
             <FieldLabel data-replay-public htmlFor="service-name">
-              {t("Service name", "Име на услугата")}
+              {t("Service name", "Име на услугата", "Emri i shërbimit")}
             </FieldLabel>
             <Input
               id="service-name"
               value={draft.name}
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               placeholder={t(
-                `e.g. ${suggestion[3]}`,
-                `На пр. ${suggestion[4]}`,
+                `e.g. ${suggestion[4]}`,
+                `На пр. ${suggestion[5]}`,
+                `P.sh. ${suggestion[6]}`,
               )}
               required
               minLength={2}
@@ -125,7 +144,7 @@ export function ServiceStep({
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <Field>
               <FieldLabel data-replay-public htmlFor="service-price">
-                {t("Price (MKD)", "Цена (ден.)")}
+                {t("Price (MKD)", "Цена (ден.)", "Çmimi (MKD)")}
               </FieldLabel>
               <Input
                 id="service-price"
@@ -140,7 +159,11 @@ export function ServiceStep({
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="service-duration">
-                {t("Duration (minutes)", "Времетраење (минути)")}
+                {t(
+                  "Duration (minutes)",
+                  "Времетраење (минути)",
+                  "Kohëzgjatja (minuta)",
+                )}
               </FieldLabel>
               <Input
                 id="service-duration"
@@ -161,6 +184,7 @@ export function ServiceStep({
             {t(
               "You’ll be the first person offering this service. You can add your team later.",
               "Вие ќе бидете првиот член што ја нуди услугата. Тимот можете да го додадете подоцна.",
+              "Ju do të jeni personi i parë që ofron këtë shërbim. Ekipin mund ta shtoni më vonë.",
             )}
           </FieldDescription>
           {error && <FieldError role="alert">{error}</FieldError>}

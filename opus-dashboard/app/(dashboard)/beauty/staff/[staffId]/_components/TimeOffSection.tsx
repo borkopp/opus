@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { format, parseISO } from "date-fns";
-import { enGB, mk } from "date-fns/locale";
+import { enGB, mk, sq } from "date-fns/locale";
 import {
   CalendarOffIcon,
   Clock3Icon,
@@ -40,6 +40,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import type { DashboardLanguage } from "@/lib/i18n/types";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
@@ -424,9 +425,9 @@ function getLocalDate() {
   return localTime.toISOString().slice(0, 10);
 }
 
-function formatDate(value: string, language: "en" | "mk") {
-  const dateLocale = language === "mk" ? mk : enGB;
+function formatDate(value: string, language: DashboardLanguage) {
+  const dateLocale = language === "sq" ? sq : language === "mk" ? mk : enGB;
   const formatPattern =
-    language === "mk" ? "EEE, d MMM yyyy" : "EEE, MMM d, yyyy";
+    language === "en" ? "EEE, MMM d, yyyy" : "EEE, d MMM yyyy";
   return format(parseISO(value), formatPattern, { locale: dateLocale });
 }

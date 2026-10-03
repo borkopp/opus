@@ -30,6 +30,7 @@ export interface NavItem {
   label: {
     en: string;
     mk: string;
+    sq: string;
   };
   href: string;
   icon: React.ReactNode;
@@ -39,7 +40,7 @@ export interface VerticalNavConfig {
   /** URL base path, e.g. "/beauty" */
   basePath: string;
   /** Human label for the vertical */
-  label: { en: string; mk: string };
+  label: { en: string; mk: string; sq: string };
   /** Primary nav items shown in the top bar */
   primaryLinks: NavItem[];
 }
@@ -55,42 +56,51 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
     label: {
       en: "Beauty & Wellness",
       mk: "Убавина и велнес",
+      sq: "Bukuri dhe mirëqenie",
     },
     primaryLinks: [
       {
-        label: { en: "Dashboard", mk: "Контролна табла" },
+        label: { en: "Dashboard", mk: "Контролна табла", sq: "Paneli" },
         href: "{base}",
         icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Calendar", mk: "Календар" },
+        label: { en: "Calendar", mk: "Календар", sq: "Kalendari" },
         href: "{base}/bookings",
         icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Clients", mk: "Клиенти" },
+        label: { en: "Clients", mk: "Клиенти", sq: "Klientët" },
         href: "{base}/clients",
         icon: <IconAddressBook className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Services & staff", mk: "Услуги и тим" },
+        label: {
+          en: "Services & staff",
+          mk: "Услуги и тим",
+          sq: "Shërbimet dhe ekipi",
+        },
         href: "{base}/services",
         icon: <IconScissors className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Promote", mk: "Промоција" },
+        label: { en: "Promote", mk: "Промоција", sq: "Promovimi" },
         href: "{base}/promote",
         icon: <IconSpeakerphone className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Settings", mk: "Поставки" },
+        label: { en: "Settings", mk: "Поставки", sq: "Cilësimet" },
         href: "/settings",
         icon: <IconSettings className="h-5 w-5 flex-shrink-0" />,
       },
       ...(ACTIVE_CAPABILITIES.businessAnalyst
         ? [
             {
-              label: { en: "Business assistant", mk: "Деловен асистент" },
+              label: {
+                en: "Business assistant",
+                mk: "Деловен асистент",
+                sq: "Asistenti i biznesit",
+              },
               href: "{base}/assistant",
               icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
             },

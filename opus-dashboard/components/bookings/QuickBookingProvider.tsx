@@ -14,7 +14,7 @@ import {
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { X } from "lucide-react";
-import { enGB, mk } from "date-fns/locale";
+import { enGB, mk, sq } from "date-fns/locale";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -195,7 +195,7 @@ export function QuickBookingProvider({
           <DrawerHeader className="shrink-0 px-5 py-5 text-left">
             <div className="flex items-center justify-between gap-4">
               <DrawerTitle data-replay-public className="font-display text-xl">
-                {t("New Booking", "Нов термин")}
+                {t("New Booking", "Нов термин", "Rezervim i ri")}
               </DrawerTitle>
               <DrawerClose asChild>
                 <Button
@@ -204,6 +204,7 @@ export function QuickBookingProvider({
                   aria-label={t(
                     "Close booking drawer",
                     "Затвори го панелот за закажување",
+                    "Mbyll panelin e rezervimit",
                   )}
                 >
                   <X />
@@ -274,7 +275,7 @@ function QuickBookingSchedulePicker({
     <div className="flex flex-col gap-6">
       <Calendar
         mode="single"
-        locale={language === "mk" ? mk : enGB}
+        locale={language === "sq" ? sq : language === "mk" ? mk : enGB}
         month={monthFromKey(pickerMonth)}
         selected={
           selectedDate && availableDateSet.has(requestDate)
@@ -292,11 +293,12 @@ function QuickBookingSchedulePicker({
         aria-label={t(
           "Available booking dates",
           "Слободни датуми за закажување",
+          "Data të lira për rezervim",
         )}
         aria-busy={isLoadingAvailableDates}
         labels={{
-          labelNext: () => t("Next month", "Следен месец"),
-          labelPrevious: () => t("Previous month", "Претходен месец"),
+          labelNext: () => t("Next month", "Следен месец", "Muaji tjetër"),
+          labelPrevious: () => t("Previous month", "Претходен месец", "Muaji i mëparshëm"),
         }}
         classNames={{
           root: "w-full max-w-[308px]",
@@ -311,7 +313,7 @@ function QuickBookingSchedulePicker({
       />
       <Field>
         <FieldLabel data-replay-public id="quick-booking-time-label">
-          {t("Time", "Време")}
+          {t("Time", "Време", "Koha")}
         </FieldLabel>
         {isLoadingSlots ? (
           <div
@@ -320,7 +322,11 @@ function QuickBookingSchedulePicker({
             role="status"
           >
             <Spinner />
-            {t("Checking available times…", "Проверка на слободни термини…")}
+            {t(
+              "Checking available times…",
+              "Проверка на слободни термини…",
+              "Po kontrollohen oraret e lira…",
+            )}
           </div>
         ) : availableSlots && availableSlots.length > 0 ? (
           <ScrollArea className="h-44">
@@ -350,6 +356,7 @@ function QuickBookingSchedulePicker({
                     aria-label={t(
                       `${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`,
                       `${bookingTimeLabel(slot.startAt)} до ${bookingTimeLabel(slot.endAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
+                      `${bookingTimeLabel(slot.startAt)} deri ${bookingTimeLabel(slot.endAt)}${staff ? ` me ${staff.displayName}` : ""}`,
                     )}
                   >
                     <span className="tabular-nums">
@@ -372,7 +379,7 @@ function QuickBookingSchedulePicker({
             className="py-3 text-sm text-muted-foreground"
             role="status"
           >
-            {t("No times available", "Нема слободни термини")}
+            {t("No times available", "Нема слободни термини", "Nuk ka orare të lira")}
           </p>
         )}
       </Field>
@@ -491,7 +498,7 @@ function QuickBookingForm({
         currency: selectedCurrency,
         used_fallback_slot: selection.isFallback,
       });
-      toast.success(t("Booking created", "Терминот е креиран"));
+      toast.success(t("Booking created", "Терминот е креиран", "Rezervimi u krijua"));
       onBooked();
     } catch (error) {
       toast.error(
@@ -500,6 +507,7 @@ function QuickBookingForm({
           : t(
               "Could not create the booking.",
               "Не може да се креира терминот.",
+              "Nuk mund të krijohet rezervimi.",
             ),
       );
     } finally {
@@ -525,7 +533,7 @@ function QuickBookingForm({
         />
 
         <FieldSet>
-          <FieldLegend variant="label">{t("Services", "Услуги")}</FieldLegend>
+          <FieldLegend variant="label">{t("Services", "Услуги", "Shërbimet")}</FieldLegend>
           <FieldGroup data-slot="checkbox-group" className="gap-2">
             {services === undefined ? (
               <div
@@ -533,7 +541,7 @@ function QuickBookingForm({
                 className="flex items-center gap-2 py-3 text-sm text-muted-foreground"
               >
                 <Spinner />
-                {t("Loading services…", "Вчитување услуги…")}
+                {t("Loading services…", "Вчитување услуги…", "Po ngarkohen shërbimet…")}
               </div>
             ) : services.length === 0 ? (
               <p
@@ -543,6 +551,7 @@ function QuickBookingForm({
                 {t(
                   "Add an active service before creating a booking.",
                   "Додајте активна услуга пред да креирате термин.",
+                  "Shtoni një shërbim aktiv para se të krijoni një rezervim.",
                 )}
               </p>
             ) : (
@@ -599,8 +608,9 @@ function QuickBookingForm({
                             ? t(
                                 `${service.durationMins} minutes`,
                                 `${service.durationMins} минути`,
+                                `${service.durationMins} minuta`,
                               )
-                            : t("Unavailable", "Недостапно")}
+                            : t("Unavailable", "Недостапно", "E padisponueshme")}
                         </FieldDescription>
                       </FieldContent>
                     </Field>
@@ -611,11 +621,16 @@ function QuickBookingForm({
           </FieldGroup>
           <FieldError>
             {servicesError
-              ? t("Select at least one service.", "Изберете барем една услуга.")
+              ? t(
+                  "Select at least one service.",
+                  "Изберете барем една услуга.",
+                  "Zgjidhni të paktën një shërbim.",
+                )
               : totalDurationMins > 0 && !servicesFit
                 ? t(
                     `These services need ${totalDurationMins} minutes, but only ${selection?.availableDurationMins ?? 0} minutes are available from this time.`,
                     `За овие услуги се потребни ${totalDurationMins} минути, но од ова време се достапни само ${selection?.availableDurationMins ?? 0} минути.`,
+                    `Këto shërbime kërkojnë ${totalDurationMins} minuta, por vetëm ${selection?.availableDurationMins ?? 0} minuta janë të lira nga kjo kohë.`,
                   )
                 : undefined}
           </FieldError>
@@ -624,14 +639,14 @@ function QuickBookingForm({
         <FieldGroup className="gap-4">
           <Field data-invalid={nameError}>
             <FieldLabel data-replay-public htmlFor="quick-customer-name">
-              {t("Customer name", "Име на клиент")}
+              {t("Customer name", "Име на клиент", "Emri i klientit")}
             </FieldLabel>
             <InputGroup>
               <InputGroupInput
                 id="quick-customer-name"
                 value={customerName}
                 onChange={(event) => setCustomerName(event.target.value)}
-                placeholder={t("Customer name", "Име на клиент")}
+                placeholder={t("Customer name", "Име на клиент", "Emri i klientit")}
                 maxLength={120}
                 autoComplete="name"
                 aria-invalid={nameError}
@@ -639,7 +654,11 @@ function QuickBookingForm({
             </InputGroup>
             <FieldError>
               {nameError
-                ? t("Enter the customer name.", "Внесете го името на клиентот.")
+                ? t(
+                    "Enter the customer name.",
+                    "Внесете го името на клиентот.",
+                    "Vendosni emrin e klientit.",
+                  )
                 : undefined}
             </FieldError>
           </Field>
@@ -647,12 +666,12 @@ function QuickBookingForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <Field>
               <FieldLabel data-replay-public htmlFor="quick-customer-phone">
-                {t("Phone", "Телефон")}{" "}
+                {t("Phone", "Телефон", "Telefoni")}{" "}
                 <span
                   data-replay-public
                   className="font-normal text-muted-foreground"
                 >
-                  {t("Optional", "Опционално")}
+                  {t("Optional", "Опционално", "Opsionale")}
                 </span>
               </FieldLabel>
               <InputGroup>
@@ -668,12 +687,12 @@ function QuickBookingForm({
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="quick-customer-email">
-                {t("Email", "Е-пошта")}{" "}
+                {t("Email", "Е-пошта", "Email")}{" "}
                 <span
                   data-replay-public
                   className="font-normal text-muted-foreground"
                 >
-                  {t("Optional", "Опционално")}
+                  {t("Optional", "Опционално", "Opsionale")}
                 </span>
               </FieldLabel>
               <InputGroup>
@@ -696,7 +715,7 @@ function QuickBookingForm({
         {totalDurationMins > 0 && (
           <div className="flex items-center justify-between gap-4 text-sm">
             <span className="text-muted-foreground">
-              {totalDurationMins} {t("min", "мин")}
+              {totalDurationMins} {t("min", "мин", "min")}
             </span>
             <span className="font-semibold">
               {selectedCurrency &&
@@ -707,8 +726,8 @@ function QuickBookingForm({
         <Button type="submit" disabled={submitDisabled} size="lg">
           {isSubmitting && <Spinner data-icon="inline-start" />}
           {isSubmitting
-            ? t("Creating…", "Креирање…")
-            : t("Create booking", "Креирај термин")}
+            ? t("Creating…", "Креирање…", "Po krijohet…")
+            : t("Create booking", "Креирај термин", "Krijo rezervim")}
         </Button>
       </DrawerFooter>
     </form>

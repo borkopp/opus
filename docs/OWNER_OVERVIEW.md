@@ -1,6 +1,22 @@
 # Private owner overview
 
-## Current release — 11 September 2026
+## Current release — 30 September 2026
+
+The business activity expansion is deployed at `https://admin.opus.mk` through
+Vercel production deployment `dpl_HvCUP3BXd3mYgdF1ekFDGgxdPTuQ` (READY).
+`ownerActivity:page` and the additive `audit_log.by_org_resource` index are
+deployed to the existing production Convex deployment `calm-dachshund-294`.
+
+Verified in the owner's existing signed-in browser session: production bookings
+and their details, audit records, and team sign-in records load successfully.
+Anonymous activity requests return 401; foreign-origin activity requests return 403. The temporary local preview route returns 404 in production. The landing,
+studio login, and an existing published tenant website return HTTP 200.
+Before release, 30 targeted tests, owner lint/typecheck/build, backend typecheck,
+and synthetic desktop/mobile UI checks passed. No OTP bypass or new tracking
+was added. Only the owner app and shared owner contracts were uploaded to Vercel;
+unrelated dashboard frontend edits were excluded.
+
+## Original release — 11 September 2026
 
 The owner app is deployed and `admin.opus.mk` is verified on the independent
 Vercel project `opus-owner`. The additive analytics module/index is deployed to
@@ -80,6 +96,48 @@ There is no link to it in the business dashboard, landing page or tenant sites.
 - Search, plan/website filters, sorting by creation/storage/recent bookings and
   a paginated business table.
 
+### Business activity expansion — 30 September 2026
+
+The deployed owner app includes a read-only business activity panel. Future
+releases must retain `convex/ownerActivity.ts` and the additive
+`audit_log.by_org_resource` index in the backend, and deploy them before the
+owner app when updating the shared contract.
+
+Use **View activity** on a business or the business selector to inspect:
+
+- **Bookings:** paginated, non-deleted booking records, with a status filter;
+  client name/email/phone, current service names and assigned staff, stored
+  booking channel, recorded creation actor, appointment times, creation/update
+  timestamps, price snapshot and currency, notes, cancellation reason and
+  recovery-offer attribution when present. Appointment value is not payment
+  revenue. Legacy channels are labelled as legacy, not advertised as available.
+- **Audit history:** paginated recorded actions, time, actor and resource reference.
+  Only recognized scalar changes are exposed from `before`/`after`; arbitrary
+  provider payloads, auth tokens, IP addresses and user agents are not returned.
+  Price changes use minor units. It is not a complete history of every action.
+- **Team sign-ins:** retained non-deleted team seats, linked account email, role,
+  active status, newest retained auth session creation time and its expiry.
+  There is no permanent `lastLoginAt` field. Removed/signed-out sessions may
+  leave no timestamp; this must not be described as "never logged in".
+  An unexpired session does not establish that someone is online. Session
+  tokens are never returned, and auth reads use the component's `userId` index
+  for accounts linked from the selected studio's staff only.
+
+The booking creator is resolved from the existing `booking.created` audit entry,
+not inferred from the assigned provider. Older `dashboard` entries cannot identify
+the individual staff member, and missing creators are labelled explicitly.
+Deleted or foreign client/staff/service references are not resolved into contact
+data. Names reflect current records because historical name snapshots are not stored.
+
+Activity reads are independently paginated in batches of up to 25 records and
+250 KB; deleted records can leave a short or empty page with a continuation.
+Each request checks the same verified platform-owner access and eligible beauty
+business roots as the overview. Tenant lists and booking audit lookup use named
+organization indexes. The supplied business ID selects the report and never
+grants access. Reads perform no writes and introduce no tracking. Times use
+Europe/Skopje. Activity refresh is manual, and reads across pages are not a
+single database snapshot. Session expiry clears the private UI.
+
 Deleted businesses, unclaimed scraped listings and dormant hospitality businesses
 are excluded from business metrics. Claimed imports use their original creation
 timestamp because a separate signup timestamp is not stored. Signup chart months
@@ -148,7 +206,18 @@ NEXT_PUBLIC_CONVEX_URL=https://<production-deployment>.convex.cloud
 NEXT_PUBLIC_CONVEX_SITE_URL=https://<production-deployment>.convex.site
 OWNER_SITE_URL=https://admin.opus.mk
 NEXT_PUBLIC_ROOT_DOMAIN=opus.mk
+TURNSTILE_SITE_KEY=<public-widget-key>
+AUTH_PROXY_SECRET=<same-private-proxy-secret-as-dashboard-and-Convex>
 ```
+
+Account OTP protection was added on October 3, 2026. The owner app retains its
+exact email allowlist and same-origin guard, then signs country/IP/hostname and
+request contents for the shared backend. It uses the same Managed Turnstile
+widget with `admin.opus.mk` allowed. CAPTCHA is required outside MK, RS, and AL;
+rate limits apply everywhere. Keep the Siteverify secret only in Convex. See
+[`AUTH_ABUSE_PROTECTION.md`](AUTH_ABUSE_PROTECTION.md) for policy and live checks.
+The small shared auth/security and widget helpers live in `shared/`; the owner
+app continues to build independently from the dashboard.
 
 Use the production addresses already used by the studio application. Unlike the
 dashboard build, the owner build does not have a Convex deploy command to inject

@@ -13,7 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { formatDistanceToNow } from "date-fns";
-import { mk } from "date-fns/locale";
+import { mk, sq } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -72,38 +72,42 @@ function playChime() {
 // ─────────────────────────────────────────────────────
 export function getNotificationTypeConfig(
   type: string,
-  t?: (en: string, mk: string) => string,
+  t?: (en: string, mk: string, sq?: string) => string,
 ) {
   switch (type) {
     case "ai_handoff":
       return {
         icon: <BellRing size={16} strokeWidth={2} />,
         iconBg: "bg-highlight/15 text-warning",
-        label: t ? t("AI handoff", "Преземи разговор") : "AI handoff",
+        label: t
+          ? t("AI handoff", "Преземи разговор", "Dorëzimi te stafi")
+          : "AI handoff",
       };
     case "new_booking":
       return {
         icon: <CalendarPlus size={16} strokeWidth={2} />,
         iconBg: "bg-accent text-accent-foreground",
-        label: t ? t("New Booking", "Нов термин") : "New Booking",
+        label: t ? t("New Booking", "Нов термин", "Termin i ri") : "New Booking",
       };
     case "booking_cancelled":
       return {
         icon: <CalendarX size={16} strokeWidth={2} />,
         iconBg: "bg-destructive/10 text-destructive",
-        label: t ? t("Cancellation", "Откажан термин") : "Cancellation",
+        label: t
+          ? t("Cancellation", "Откажан термин", "Termin i anuluar")
+          : "Cancellation",
       };
     case "no_show":
       return {
         icon: <TriangleAlert size={16} strokeWidth={2} />,
         iconBg: "bg-highlight/15 text-warning",
-        label: t ? t("No-Show", "Непојавување") : "No-Show",
+        label: t ? t("No-Show", "Непојавување", "Mosparaqitje") : "No-Show",
       };
     default:
       return {
         icon: <Bell size={16} strokeWidth={2} />,
         iconBg: "bg-secondary text-muted-foreground",
-        label: t ? t("Notification", "Известување") : "Notification",
+        label: t ? t("Notification", "Известување", "Njoftim") : "Notification",
       };
   }
 }
@@ -174,7 +178,7 @@ function NotificationItem({
         <p className="text-[10px] text-muted-foreground/60 mt-1 font-display">
           {formatDistanceToNow(new Date(notification.createdAt), {
             addSuffix: true,
-            locale: language === "mk" ? mk : undefined,
+            locale: language === "sq" ? sq : language === "mk" ? mk : undefined,
           })}
         </p>
       </div>
@@ -192,7 +196,7 @@ function NotificationItem({
           onDismiss(notification._id);
         }}
         className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
-        aria-label={t("Dismiss notification", "Отфрли известување")}
+        aria-label={t("Dismiss notification", "Отфрли известување", "Hiq njoftimin")}
       >
         <X size={13} />
       </button>
@@ -277,7 +281,7 @@ function NotificationToast({
             data-replay-public
             className="text-[10px] text-muted-foreground/50 mt-1.5 font-medium"
           >
-            {t("Just now", "Штотуку")}
+            {t("Just now", "Штотуку", "Sapo")}
           </p>
         </div>
 
@@ -289,7 +293,7 @@ function NotificationToast({
             handleDismiss();
           }}
           className="absolute right-2.5 top-2.5 p-1 rounded-lg hover:bg-secondary text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          aria-label={t("Dismiss notification", "Отфрли известување")}
+          aria-label={t("Dismiss notification", "Отфрли известување", "Hiq njoftimin")}
         >
           <X size={14} />
         </button>
@@ -595,11 +599,11 @@ export function NotificationBell({
                 data-replay-public
                 className="text-sm font-semibold font-display text-primary"
               >
-                {t("Notifications", "Известувања")}
+                {t("Notifications", "Известувања", "Njoftimet")}
               </span>
               {hasUnread && (
                 <span className="text-[10px] font-bold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
-                  {unreadCount} {t("new", "нови")}
+                  {unreadCount} {t("new", "нови", "të reja")}
                 </span>
               )}
             </div>
@@ -611,7 +615,11 @@ export function NotificationBell({
                 className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 <Check size={12} />
-                {t("Mark all read", "Означи ги сите како прочитани")}
+                {t(
+                  "Mark all read",
+                  "Означи ги сите како прочитани",
+                  "Shënoji të gjitha si të lexuara",
+                )}
               </button>
             )}
           </div>
@@ -627,7 +635,7 @@ export function NotificationBell({
                   data-replay-public
                   className="text-sm font-medium text-foreground"
                 >
-                  {t("All caught up", "Сè е прочитано")}
+                  {t("All caught up", "Сè е прочитано", "Të gjitha u lexuan")}
                 </p>
                 <p
                   data-replay-public
@@ -636,6 +644,7 @@ export function NotificationBell({
                   {t(
                     "New bookings and updates will appear here.",
                     "Новите термини и известувања ќе се појават тука.",
+                    "Rezervimet dhe përditësimet e reja do të shfaqen këtu.",
                   )}
                 </p>
               </div>
@@ -662,7 +671,11 @@ export function NotificationBell({
               onClick={() => setOpen(false)}
             >
               <span data-replay-public>
-                {t("View all notifications", "Види ги сите известувања")}
+                {t(
+                  "View all notifications",
+                  "Види ги сите известувања",
+                  "Shiko të gjitha njoftimet",
+                )}
               </span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>

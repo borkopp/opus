@@ -101,16 +101,17 @@ function AssistantWorkspace({ access }: { access: Access }) {
     )
       return;
     const text = question.trim();
+    const analystLanguage: "en" | "mk" = language === "mk" ? "mk" : "en";
     if (
       !attempt.current ||
-      attempt.current.language !== language ||
+      attempt.current.language !== analystLanguage ||
       attempt.current.question !== text ||
       attempt.current.depth !== depth ||
       attempt.current.conversationId !== (conversationId ?? undefined)
     ) {
       attempt.current = {
         requestId: crypto.randomUUID(),
-        language,
+        language: analystLanguage,
         question: text,
         depth,
         conversationId: conversationId ?? undefined,
@@ -119,7 +120,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await send({ ...attempt.current, language });
+      const result = await send({ ...attempt.current, language: analystLanguage });
       setSelection(result.conversationId);
       setQuestion("");
       attempt.current = null;

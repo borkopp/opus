@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { addDays, isToday, startOfDay, subDays } from "date-fns";
-import { enGB, mk } from "date-fns/locale";
+import { enGB, mk, sq } from "date-fns/locale";
 import { labelDayButton } from "react-day-picker";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ export function BookingsDateNavigation({
         size="icon"
         className="size-11 shrink-0 text-muted-foreground md:size-9"
         onClick={() => onDateChange(subDays(date, 1))}
-        aria-label={t("Previous day", "Претходен ден")}
+        aria-label={t("Previous day", "Претходен ден", "Dita e mëparshme")}
       >
         <IconChevronLeft className="size-4" />
       </Button>
@@ -48,7 +48,7 @@ export function BookingsDateNavigation({
           <Button
             variant="ghost"
             className="min-h-11 min-w-0 flex-1 px-1 tabular-nums md:min-h-9"
-            aria-label={`${t("Choose date", "Избери датум")}: ${label}`}
+            aria-label={`${t("Choose date", "Избери датум", "Zgjidh datën")}: ${label}`}
           >
             <span aria-live="polite" className="truncate">
               {label}
@@ -59,13 +59,13 @@ export function BookingsDateNavigation({
           align="start"
           collisionPadding={8}
           className="max-h-[var(--radix-popover-content-available-height)] w-auto overflow-y-auto p-0"
-          aria-label={t("Choose booking date", "Избери датум за термини")}
+          aria-label={t("Choose booking date", "Избери датум за термини", "Zgjidh datën e rezervimeve")}
         >
           <Calendar
             mode="single"
             required
             autoFocus
-            locale={language === "mk" ? mk : enGB}
+            locale={language === "sq" ? sq : language === "mk" ? mk : enGB}
             defaultMonth={date}
             selected={date}
             classNames={{
@@ -83,13 +83,14 @@ export function BookingsDateNavigation({
               hasBookings: "dashboard-booking-date-dot",
             }}
             labels={{
-              labelNext: () => t("Next month", "Следен месец"),
-              labelPrevious: () => t("Previous month", "Претходен месец"),
+              labelNext: () => t("Next month", "Следен месец", "Muaji tjetër"),
+              labelPrevious: () => t("Previous month", "Претходен месец", "Muaji i mëparshëm"),
               labelDayButton: (day, modifiers, options) => {
                 const count = bookingDateCounts.get(dateKey(day)) ?? 0;
                 const bookingsLabel = t(
                   count === 1 ? "1 booking" : `${count} bookings`,
                   count === 1 ? "1 термин" : `${count} термини`,
+                  count === 1 ? "1 rezervim" : `${count} rezervime`,
                 );
                 return `${labelDayButton(day, modifiers, options)}, ${bookingsLabel}`;
               },
@@ -104,7 +105,7 @@ export function BookingsDateNavigation({
               aria-hidden="true"
               className="size-1.5 rounded-full bg-primary"
             />
-            {t("Days with bookings", "Денови со термини")}
+            {t("Days with bookings", "Денови со термини", "Ditë me rezervime")}
           </p>
         </PopoverContent>
       </Popover>
@@ -113,7 +114,7 @@ export function BookingsDateNavigation({
         size="icon"
         className="size-11 shrink-0 text-muted-foreground md:size-9"
         onClick={() => onDateChange(addDays(date, 1))}
-        aria-label={t("Next day", "Следен ден")}
+        aria-label={t("Next day", "Следен ден", "Dita tjetër")}
       >
         <IconChevronRight className="size-4" />
       </Button>
@@ -124,7 +125,7 @@ export function BookingsDateNavigation({
           className="min-h-11 shrink-0 px-3 md:min-h-9"
           onClick={() => onDateChange(startOfDay(new Date()))}
         >
-          {t("Today", "Денес")}
+          {t("Today", "Денес", "Sot")}
         </Button>
       )}
     </div>

@@ -1,5 +1,10 @@
 import { makeFunctionReference } from "convex/server";
-import type { OwnerOverview } from "../../shared/owner-overview";
+import type {
+  OwnerActivityKind,
+  OwnerActivityPage,
+  OwnerBookingStatus,
+  OwnerOverview,
+} from "../../shared/owner-overview";
 
 // Shared data contract only: this app does not import the studio application.
 export const ownerAccess = makeFunctionReference<
@@ -12,3 +17,14 @@ export const ownerOverview = makeFunctionReference<
   Record<string, never>,
   OwnerOverview
 >("ownerAnalytics:overview");
+
+export const ownerActivity = makeFunctionReference<
+  "query",
+  {
+    orgId: string;
+    kind: OwnerActivityKind;
+    cursor: string | null;
+    status: OwnerBookingStatus | "all";
+  },
+  OwnerActivityPage
+>("ownerActivity:page");

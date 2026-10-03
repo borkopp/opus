@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/input-otp";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Spinner } from "@/components/ui/spinner";
+import type { AuthSecurityPolicy } from "@/lib/auth-protection";
+import { AuthCaptcha } from "./AuthCaptcha";
 import s from "./auth.module.css";
 
 type EmailOtpFormProps = {
@@ -103,6 +105,45 @@ export function EmailOtpForm({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaPolicy, setCaptchaPolicy] = useState<AuthSecurityPolicy | null>(
+    null,
+  );
+  const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaGeneration, setCaptchaGeneration] = useState(0);
+  const [showResendCaptcha, setShowResendCaptcha] = useState(false);
+  const captchaError = useCallback(() => {
+    setCaptchaToken(null);
+    setError(
+      t(
+        "The security check could not load. Refresh the page and try again.",
+        "Безбедносната проверка не се вчита. Освежете ја страницата и обидете се повторно.",
+      ),
+    );
+  }, [t]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/auth/security", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Security check unavailable");
+        const policy: AuthSecurityPolicy = await response.json();
+        if (
+          typeof policy.required !== "boolean" ||
+          (policy.required && !policy.siteKey)
+        ) {
+          throw new Error("Security check unavailable");
+        }
+        setCaptchaPolicy(policy);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setCaptchaUnavailable(true);
+      });
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (readyToRedirect) {
@@ -114,15 +155,33 @@ export function EmailOtpForm({
     event?.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail) return;
+    if (!captchaPolicy || captchaUnavailable) return;
+    if (captchaPolicy.required && !captchaToken) {
+      setShowResendCaptcha(true);
+      setError(
+        t(
+          "Complete the security check to send another code.",
+          "Завршете ја безбедносната проверка за да испратите нов код.",
+        ),
+      );
+      return;
+    }
 
     setError(null);
     setStatus(null);
     setIsSubmitting(true);
     try {
-      const result = await authClient.emailOtp.sendVerificationOtp({
-        email: normalizedEmail,
-        type: "sign-in",
-      });
+      const result = await authClient.emailOtp.sendVerificationOtp(
+        {
+          email: normalizedEmail,
+          type: "sign-in",
+        },
+        {
+          headers: captchaToken
+            ? { "x-captcha-response": captchaToken }
+            : undefined,
+        },
+      );
 
       if (result.error) {
         setError(
@@ -138,6 +197,7 @@ export function EmailOtpForm({
       setCode("");
       setDirection(1);
       setStep("code");
+      setShowResendCaptcha(false);
       setStatus(t("A fresh code was sent.", "Испратен е нов код."));
     } catch (caught) {
       setError(
@@ -147,6 +207,9 @@ export function EmailOtpForm({
         ),
       );
     } finally {
+      // Turnstile tokens are single-use, including a failed send attempt.
+      setCaptchaToken(null);
+      setCaptchaGeneration((generation) => generation + 1);
       setIsSubmitting(false);
     }
   };
@@ -292,11 +355,24 @@ export function EmailOtpForm({
                     )}
                   </FieldDescription>
                 </Field>
+                {captchaPolicy?.required && captchaPolicy.siteKey ? (
+                  <AuthCaptcha
+                    key={captchaGeneration}
+                    siteKey={captchaPolicy.siteKey}
+                    onToken={setCaptchaToken}
+                    onError={captchaError}
+                  />
+                ) : null}
                 <Button
                   type="submit"
                   size="lg"
                   className="h-12 w-full"
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting ||
+                    !captchaPolicy ||
+                    captchaUnavailable ||
+                    (captchaPolicy.required && !captchaToken)
+                  }
                 >
                   {isSubmitting ? (
                     <>
@@ -362,6 +438,16 @@ export function EmailOtpForm({
                     </>
                   )}
                 </Button>
+                {showResendCaptcha &&
+                captchaPolicy?.required &&
+                captchaPolicy.siteKey ? (
+                  <AuthCaptcha
+                    key={captchaGeneration}
+                    siteKey={captchaPolicy.siteKey}
+                    onToken={setCaptchaToken}
+                    onError={captchaError}
+                  />
+                ) : null}
                 <div className="flex items-center justify-between gap-3">
                   <Button
                     data-replay-public
@@ -386,7 +472,9 @@ export function EmailOtpForm({
                     size="sm"
                     className="px-0"
                     onClick={() => void sendCode()}
-                    disabled={isSubmitting}
+                    disabled={
+                      isSubmitting || !captchaPolicy || captchaUnavailable
+                    }
                   >
                     {t("Send again", "Испрати повторно")}
                   </Button>
@@ -399,6 +487,14 @@ export function EmailOtpForm({
 
       <div aria-live="polite" className="mt-5 min-h-5 text-sm">
         {error ? <p className="text-destructive">{error}</p> : null}
+        {!error && captchaUnavailable ? (
+          <p className="text-destructive">
+            {t(
+              "Sign-in is temporarily unavailable. Please try again later.",
+              "Најавата е привремено недостапна. Обидете се повторно подоцна.",
+            )}
+          </p>
+        ) : null}
         {!error && status ? (
           <p className="text-muted-foreground">{status}</p>
         ) : null}

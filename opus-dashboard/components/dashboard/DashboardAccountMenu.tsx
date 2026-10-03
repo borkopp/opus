@@ -21,6 +21,7 @@ import { CookiePreferencesMenuItem } from "@/components/account/CookiePreference
 import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import type { DashboardLanguage } from "@/lib/i18n/types";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -50,7 +51,8 @@ export function DashboardAccountMenu({
   const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
-  const name = profile.user?.name || t("Your account", "Вашата сметка");
+  const name =
+    profile.user?.name || t("Your account", "Вашата сметка", "Llogaria juaj");
   async function signOut() {
     setSigningOut(true);
     try {
@@ -62,6 +64,7 @@ export function DashboardAccountMenu({
         t(
           "Could not sign out. Please try again.",
           "Одјавувањето не успеа. Обидете се повторно.",
+          "Dalja dështoi. Ju lutemi provoni përsëri.",
         ),
       );
     } finally {
@@ -74,7 +77,11 @@ export function DashboardAccountMenu({
         <button
           type="button"
           className="dashboard-account-trigger"
-          aria-label={t("Open account menu", "Отвори мени за сметката")}
+          aria-label={t(
+            "Open account menu",
+            "Отвори мени за сметката",
+            "Hap menynë e llogarisë",
+          )}
         >
           <span className={s.avatar} data-tone="peach">
             {initials(name)}
@@ -83,10 +90,10 @@ export function DashboardAccountMenu({
             <strong>{name}</strong>
             <span data-replay-public>
               {profile.role === "owner"
-                ? t("Studio owner", "Сопственик")
+                ? t("Studio owner", "Сопственик", "Pronar i studios")
                 : profile.role === "manager"
-                  ? t("Studio manager", "Менаџер")
-                  : t("Team member", "Член на тимот")}
+                  ? t("Studio manager", "Менаџер", "Menaxher i studios")
+                  : t("Team member", "Член на тимот", "Anëtar i ekipit")}
             </span>
           </span>
         </button>
@@ -111,47 +118,68 @@ export function DashboardAccountMenu({
           <DropdownMenuItem asChild>
             <Link data-replay-public href="/settings">
               <Settings2 />
-              {t("Settings", "Поставки")}
+              {t("Settings", "Поставки", "Cilësimet")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link data-replay-public href="/settings?tab=themes">
               <SwatchBook />
-              {t("Dashboard theme", "Тема на контролната табла")}
+              {t(
+                "Dashboard theme",
+                "Тема на контролната табла",
+                "Tema e panelit",
+              )}
             </Link>
           </DropdownMenuItem>
           {profile.role !== "staff" && (
             <DropdownMenuItem asChild>
               <Link data-replay-public href="/beauty/assistant">
                 <ChartNoAxesCombined />
-                {t("Business assistant", "Деловен асистент")}
+                {t(
+                  "Business assistant",
+                  "Деловен асистент",
+                  "Asistenti i biznesit",
+                )}
               </Link>
             </DropdownMenuItem>
           )}
           <DropdownMenuItem asChild>
             <Link data-replay-public href="/gap-optimizer">
               <CalendarClock />
-              {t("Opening recovery", "Пополнување слободни термини")}
+              {t(
+                "Opening recovery",
+                "Пополнување слободни термини",
+                "Rikuperimi i hapësirave",
+              )}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link data-replay-public href="/ai-inbox">
               <MessagesSquare />
-              {t("AI frontdesk inbox", "Сандаче на AI рецепција")}
+              {t(
+                "AI frontdesk inbox",
+                "Сандаче на AI рецепција",
+                "Kutia e AI recepsionit",
+              )}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSub>
             <DropdownMenuSubTrigger data-replay-public>
               <Languages />
-              {t("Language", "Јазик")}
+              {t("Language", "Јазик", "Gjuha")}
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuRadioGroup
                 value={language}
-                onValueChange={(value) => setLanguage(value as "en" | "mk")}
+                onValueChange={(value) =>
+                  setLanguage(value as DashboardLanguage)
+                }
               >
                 <DropdownMenuRadioItem data-replay-public value="en">
                   English
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem data-replay-public value="sq">
+                  Shqip
                 </DropdownMenuRadioItem>
                 <DropdownMenuRadioItem data-replay-public value="mk">
                   Македонски
@@ -167,7 +195,7 @@ export function DashboardAccountMenu({
             <DropdownMenuItem asChild>
               <Link data-replay-public href="/settings?tab=billing">
                 <CreditCard />
-                {t("Subscription", "Претплата")}
+                {t("Subscription", "Претплата", "Abonimi")}
               </Link>
             </DropdownMenuItem>
           )}
@@ -178,7 +206,7 @@ export function DashboardAccountMenu({
             disabled={signingOut}
           >
             <LogOut />
-            {t("Sign out", "Одјави се")}
+            {t("Sign out", "Одјави се", "Dilni")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

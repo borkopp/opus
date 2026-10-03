@@ -23,7 +23,7 @@ export interface DashboardI18nContextValue {
   setLanguage: (language: DashboardLanguage) => void;
   language: DashboardLanguage;
   locale: string;
-  t: (english: string, macedonian: string) => string;
+  t: (english: string, macedonian: string, albanian?: string) => string;
 }
 
 const DashboardI18nContext = createContext<DashboardI18nContextValue | null>(
@@ -60,8 +60,8 @@ export function DashboardI18nProvider({
       language,
       setLanguage,
       locale: activeLocale,
-      t: (english: string, macedonian: string) =>
-        translate(language, english, macedonian),
+      t: (english: string, macedonian: string, albanian?: string) =>
+        translate(language, english, macedonian, albanian),
     };
   }, [language, activeLocale, setLanguage]);
 

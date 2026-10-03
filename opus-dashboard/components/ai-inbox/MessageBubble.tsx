@@ -7,7 +7,7 @@ import {
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { mk } from "date-fns/locale";
+import { mk, sq } from "date-fns/locale";
 import { api } from "@/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -20,15 +20,15 @@ export function MessageBubble({ message }: { message: Message }) {
   const isAction = !!message.actionType;
   const time = formatDistanceToNow(new Date(message.createdAt), {
     addSuffix: true,
-    locale: language === "mk" ? mk : undefined,
+    locale: language === "sq" ? sq : language === "mk" ? mk : undefined,
   });
 
   if (isAction) {
     const actionLabels: Record<string, string> = {
-      booking_created: t("Booking created", "Терминот е закажан"),
-      booking_cancelled: t("Booking cancelled", "Терминот е откажан"),
-      booking_rescheduled: t("Booking rescheduled", "Терминот е презакажан"),
-      handoff_triggered: t("Handed off to human", "Преземено од персонал"),
+      booking_created: t("Booking created", "Терминот е закажан", "Rezervimi u caktua"),
+      booking_cancelled: t("Booking cancelled", "Терминот е откажан", "Rezervimi u anulua"),
+      booking_rescheduled: t("Booking rescheduled", "Терминот е презакажан", "Rezervimi u ricaktua"),
+      handoff_triggered: t("Handed off to human", "Преземено од персонал", "Dorëzuar te stafi"),
     };
     return (
       <div className="flex justify-center my-3">
@@ -47,10 +47,10 @@ export function MessageBubble({ message }: { message: Message }) {
       <MessageContent>
         <MessageHeader>
           {isUser
-            ? t("Client", "Клиент")
+            ? t("Client", "Клиент", "Klient")
             : message.author === "staff"
-              ? t("Your team", "Вашиот тим")
-              : t("AI front desk", "AI рецепција")}
+              ? t("Your team", "Вашиот тим", "Ekipi juaj")
+              : t("AI front desk", "AI рецепција", "Recepsioni AI")}
         </MessageHeader>
         <Bubble
           variant={isUser ? "outline" : "tinted"}
@@ -63,20 +63,22 @@ export function MessageBubble({ message }: { message: Message }) {
             </p>
             {!isUser && message.deliveryStatus && (
               <p className="mt-2 text-xs opacity-70">
-                {message.author === "staff" ? t("Team", "Тим") : "AI"} ·{" "}
+                {message.author === "staff" ? t("Team", "Тим", "Ekipi") : "AI"} ·{" "}
                 {
                   {
-                    queued: t("Queued", "Во редица"),
-                    sending: t("Sending", "Се испраќа"),
-                    sent: t("Accepted by Instagram", "Прифатено од Instagram"),
-                    failed: t("Not sent", "Не е испратено"),
+                    queued: t("Queued", "Во редица", "Në radhë"),
+                    sending: t("Sending", "Се испраќа", "Po dërgohet"),
+                    sent: t("Accepted by Instagram", "Прифатено од Instagram", "Pranuar nga Instagram"),
+                    failed: t("Not sent", "Не е испратено", "Nuk u dërgua"),
                     uncertain: t(
                       "Check delivery in Instagram",
                       "Проверете ја испораката во Instagram",
+                      "Kontrolloni dërgimin në Instagram",
                     ),
                     withheld: t(
                       "Not sent · needs team review",
                       "Не е испратено · потребен е преглед од тимот",
+                      "Nuk u dërgua · kërkon rishikim nga ekipi",
                     ),
                   }[message.deliveryStatus]
                 }
@@ -96,7 +98,7 @@ export function MessageBubble({ message }: { message: Message }) {
               )}
             >
               {Math.round(message.confidenceScore * 100)}%{" "}
-              {t("confident", "сигурност")}
+              {t("confident", "сигурност", "siguri")}
             </span>
           )}
         </MessageFooter>

@@ -30,6 +30,7 @@ export function BusinessStep({
         t(
           "Enter at least 2 characters for your studio name.",
           "Внесете најмалку 2 знаци за името на студиото.",
+          "Shkruani të paktën 2 karaktere për emrin e studios tuaj.",
         ),
       );
       return;
@@ -49,22 +50,31 @@ export function BusinessStep({
       <StepFrame
         replayPublicTitle
         replayPublicDescription
-        title={t("What’s your studio called?", "Како се вика вашето студио?")}
+        title={t(
+          "What’s your studio called?",
+          "Како се вика вашето студио?",
+          "Si quhet studioja juaj?",
+        )}
         description={t(
           "Enter the name your customers know you by.",
           "Внесете го името по кое ве познаваат клиентите.",
+          "Shkruani emrin me të cilin ju njohin klientët tuaj.",
         )}
       >
         <FieldGroup>
           <Field>
             <FieldLabel data-replay-public htmlFor="business-name">
-              {t("Studio name", "Име на студиото")}
+              {t("Studio name", "Име на студиото", "Emri i studios")}
             </FieldLabel>
             <Input
               id="business-name"
               value={draftName}
               onChange={(e) => setName(e.target.value)}
-              placeholder={t("e.g. Studio Luna", "На пр. Студио Луна")}
+              placeholder={t(
+                "e.g. Studio Luna",
+                "На пр. Студио Луна",
+                "P.sh. Studio Luna",
+              )}
               autoComplete="organization"
               required
               minLength={2}

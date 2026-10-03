@@ -40,24 +40,27 @@ import { cn } from "@/lib/utils";
 
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 
-function getDayLabel(dayOfWeek: number, t: (en: string, mk: string) => string) {
+function getDayLabel(
+  dayOfWeek: number,
+  t: (en: string, mk: string, sq?: string) => string,
+) {
   switch (dayOfWeek) {
     case 1:
-      return t("Monday", "Понеделник");
+      return t("Monday", "Понеделник", "E hënë");
     case 2:
-      return t("Tuesday", "Вторник");
+      return t("Tuesday", "Вторник", "E martë");
     case 3:
-      return t("Wednesday", "Среда");
+      return t("Wednesday", "Среда", "E mërkurë");
     case 4:
-      return t("Thursday", "Четврток");
+      return t("Thursday", "Четврток", "E enjte");
     case 5:
-      return t("Friday", "Петок");
+      return t("Friday", "Петок", "E premte");
     case 6:
-      return t("Saturday", "Сабота");
+      return t("Saturday", "Сабота", "E shtunë");
     case 0:
-      return t("Sunday", "Недела");
+      return t("Sunday", "Недела", "E diel");
     default:
-      return t("Day", "Ден");
+      return t("Day", "Ден", "Ditë");
   }
 }
 
@@ -562,7 +565,7 @@ function schedulesMatch(first: DraftDay[], second: DraftDay[]) {
 
 function getScheduleValidationError(
   schedule: DraftDay[],
-  t: (en: string, mk: string) => string,
+  t: (en: string, mk: string, sq?: string) => string,
 ) {
   for (const day of schedule) {
     if (!day.isActive) continue;
@@ -572,6 +575,7 @@ function getScheduleValidationError(
       return t(
         `${dayLabel}'s end time must be later than its start time.`,
         `Крајното време за ${dayLabel} мора да биде после почетното време.`,
+        `Koha e përfundimit për ${dayLabel} duhet të jetë më vonë se koha e fillimit.`,
       );
     }
 
@@ -584,6 +588,7 @@ function getScheduleValidationError(
         return t(
           `${dayLabel} has a break with invalid times.`,
           `${dayLabel} има пауза со невалидно време.`,
+          `${dayLabel} ka një pushim me orar të pavlefshëm.`,
         );
       }
 
@@ -594,6 +599,7 @@ function getScheduleValidationError(
         return t(
           `${dayLabel}'s breaks must be inside its working hours.`,
           `Паузите за ${dayLabel} мора да бидат во рамките на работното време.`,
+          `Pushimet për ${dayLabel} duhet të jenë brenda orarit të punës.`,
         );
       }
     }

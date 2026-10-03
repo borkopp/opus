@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Search } from "lucide-react";
+import { ArrowDownRight, ExternalLink, Search } from "lucide-react";
 import type { BusinessUsage } from "../../../shared/owner-overview";
 import { bytes, date, number } from "@/lib/format";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,13 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 
-export function BusinessTable({ businesses }: { businesses: BusinessUsage[] }) {
+export function BusinessTable({
+  businesses,
+  onInspect,
+}: {
+  businesses: BusinessUsage[];
+  onInspect: (id: string) => void;
+}) {
   const [search, setSearch] = useState("");
   const [plan, setPlan] = useState("all");
   const [website, setWebsite] = useState("all");
@@ -143,6 +149,15 @@ export function BusinessTable({ businesses }: { businesses: BusinessUsage[] }) {
                     {business.city || "No city yet"} ·{" "}
                     {date(business.createdAt)}
                   </div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => onInspect(business.id)}
+                    aria-label={`View activity for ${business.name}`}
+                  >
+                    View activity
+                    <ArrowDownRight data-icon="inline-end" />
+                  </Button>
                 </TableCell>
                 <TableCell>
                   {business.websiteStatus === "published" ? (

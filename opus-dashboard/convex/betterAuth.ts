@@ -11,6 +11,8 @@ import {
   providerOrderForRoute,
 } from "./lib/emailDelivery";
 import { renderAccountOtpEmail } from "./lib/emailTemplates";
+import { authenticateAuthProxy, verifyAuthCaptcha } from "./lib/authProtection";
+import { AUTH_CLIENT_IP_HEADER } from "../lib/auth-protection";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -115,16 +117,30 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
   const testOtp =
     isLocalUrl(siteUrl) && configuredTestOtp ? configuredTestOtp : undefined;
 
-  return betterAuth({
+  const auth = betterAuth({
     appName: "OPUS",
     baseURL: siteUrl,
     secret: getAuthSecret(),
     trustedOrigins: getTrustedOrigins(siteUrl),
     database: authComponent.adapter(ctx),
+    advanced: { ipAddress: { ipAddressHeaders: [AUTH_CLIENT_IP_HEADER] } },
     rateLimit: {
+      // Convex does not set NODE_ENV=production. Never rely on that default.
+      enabled: true,
       storage: "database",
+      customRules: {
+        "/email-otp/send-verification-otp": { window: 60, max: 3 },
+        "/sign-in/email-otp": { window: 60, max: 5 },
+      },
     },
     plugins: [
+      {
+        id: "opus-auth-captcha",
+        onRequest: async (request) => {
+          const response = await verifyAuthCaptcha(request, siteUrl);
+          return response ? { response } : undefined;
+        },
+      },
       emailOTP({
         allowedAttempts: 5,
         expiresIn: 300,
@@ -137,4 +153,11 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
       convex({ authConfig }),
     ],
   });
+  return {
+    ...auth,
+    handler: async (request: Request) => {
+      const secured = await authenticateAuthProxy(request, siteUrl);
+      return secured instanceof Response ? secured : auth.handler(secured);
+    },
+  };
 };

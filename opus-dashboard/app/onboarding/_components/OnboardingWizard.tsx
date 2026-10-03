@@ -235,23 +235,37 @@ function OnboardingFlow({
       <header className="px-4 py-4 sm:px-8 sm:py-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Logo className="text-2xl" />
-          <div className="flex items-center gap-1">
-            <Button
-              data-replay-public
-              type="button"
-              variant="ghost"
-              className="min-h-11"
-              onClick={() => setLanguage(language === "mk" ? "en" : "mk")}
-              aria-label={t("Switch to Macedonian", "Промени на англиски")}
-            >
-              {language === "mk" ? "EN" : "МК"}
-            </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-lg border border-border p-0.5 text-xs font-medium">
+              {(["mk", "sq", "en"] as const).map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={cn(
+                    "px-2 py-1 rounded-md transition-colors",
+                    language === lang
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-label={
+                    lang === "sq"
+                      ? "Kalo në shqip"
+                      : lang === "mk"
+                        ? "Промени на македонски"
+                        : "Switch to English"
+                  }
+                >
+                  {lang.toUpperCase()}
+                </button>
+              ))}
+            </div>
             {state?.operationalSetupComplete && (
               <Button asChild variant="ghost" className="min-h-11">
                 <Link href="/beauty">
                   <Store />
                   <span data-replay-public className="sr-only sm:not-sr-only">
-                    {t("Dashboard", "Контролна табла")}
+                    {t("Dashboard", "Контролна табла", "Paneli")}
                   </span>
                 </Link>
               </Button>
@@ -267,6 +281,7 @@ function OnboardingFlow({
               {t(
                 "Set up your studio, then review your subscription and confirm payment.",
                 "Поставете го студиото, па прегледајте ја претплатата и потврдете го плаќањето.",
+                "Konfiguroni studion tuaj, më pas rishikoni abonimin dhe konfirmoni pagesën.",
               )}
             </AlertDescription>
           </Alert>
@@ -274,19 +289,28 @@ function OnboardingFlow({
         <div
           className="mb-8 w-full max-w-xl sm:mb-12"
           role="progressbar"
-          aria-label={t("Studio setup", "Поставување на студиото")}
+          aria-label={t(
+            "Studio setup",
+            "Поставување на студиото",
+            "Konfigurimi i studios",
+          )}
           aria-valuemin={1}
           aria-valuemax={steps.length}
           aria-valuenow={index + 1}
         >
           <div className="mb-3 flex justify-between text-xs font-medium text-muted-foreground">
             <span data-replay-public>
-              {t("Your booking website", "Вашата страница за закажување")}
+              {t(
+                "Your booking website",
+                "Вашата страница за закажување",
+                "Faqja juaj e rezervimeve",
+              )}
             </span>
             <span data-replay-public>
               {t(
                 `Step ${index + 1} of ${steps.length}`,
                 `Чекор ${index + 1} од ${steps.length}`,
+                `Hapi ${index + 1} nga ${steps.length}`,
               )}
             </span>
           </div>

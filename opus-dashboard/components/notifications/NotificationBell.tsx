@@ -682,11 +682,7 @@ export function NotificationBell({
               className="flex min-h-11 items-center px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
               onClick={() => setOpen(false)}
             >
-              {t(
-                "Notification preferences",
-                "Поставки за известувања",
-                "Preferencat e njoftimeve",
-              )}
+              {t("My preferences", "Мои поставки", "Preferencat e mia")}
             </Link>
             <Link
               href="/notifications"

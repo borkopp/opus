@@ -14,6 +14,7 @@ export const al: DashboardTranslations = {
     "/beauty/clients": "Klientët",
     "/beauty/staff": "Ekipi",
     "/gap-optimizer": "Hapësirat boshe",
+    "/notifications/preferences": "Preferencat e mia",
     "/notifications": "Njoftimet",
     "/settings": "Cilësimet",
     "/ai-inbox": "Kutia e AI",

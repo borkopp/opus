@@ -72,14 +72,14 @@ export const getOrgSettings = query({
 export const updateOrgSettings = mutation({
   args: {
     orgId: v.id("orgs"),
-    timezone: v.string(),
-    currency: v.string(),
-    locale: v.string(),
-    slotDurationMins: v.number(),
+    timezone: v.optional(v.string()),
+    currency: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    slotDurationMins: v.optional(v.number()),
     quickBookingDurationMins: v.optional(v.number()),
-    bookingWindowDays: v.number(),
-    cancellationWindowHours: v.number(),
-    bufferTimeMins: v.number(),
+    bookingWindowDays: v.optional(v.number()),
+    cancellationWindowHours: v.optional(v.number()),
+    bufferTimeMins: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { staffMember } = await requireRole(ctx, args.orgId, "owner");
@@ -91,26 +91,57 @@ export const updateOrgSettings = mutation({
 
     if (!settings) throw new Error("Settings not found");
 
-    const quickBookingDurationMins =
-      args.quickBookingDurationMins ?? settings.quickBookingDurationMins;
-
+    // Older clients may still submit the complete form. New forms submit only
+    // changed fields, preserving regional settings and concurrent edits.
+    const changed = Object.fromEntries(
+      Object.entries(args).filter(
+        ([key, value]) => key !== "orgId" && value !== undefined,
+      ),
+    );
+    if (Object.keys(changed).length === 0) return true;
     const updates = {
-      timezone: args.timezone.trim(),
-      currency: supportedCurrency(args.currency) ?? args.currency.trim(),
-      locale: canonicalLocale(args.locale) ?? args.locale.trim(),
-      slotDurationMins: args.slotDurationMins,
-      ...(quickBookingDurationMins !== undefined
-        ? { quickBookingDurationMins }
+      ...changed,
+      ...(args.timezone !== undefined
+        ? { timezone: args.timezone.trim() }
         : {}),
-      bookingWindowDays: args.bookingWindowDays,
-      cancellationWindowHours: args.cancellationWindowHours,
-      bufferTimeMins: args.bufferTimeMins,
+      ...(args.currency !== undefined
+        ? { currency: supportedCurrency(args.currency) ?? args.currency.trim() }
+        : {}),
+      ...(args.locale !== undefined
+        ? { locale: canonicalLocale(args.locale) ?? args.locale.trim() }
+        : {}),
       updatedAt: Date.now(),
     };
-    const validationError = operationalSettingsError(updates);
+    const validationError = operationalSettingsError({
+      ...settings,
+      ...updates,
+    });
     if (validationError) throw new ConvexError(validationError);
 
-    if (settings.timezone !== updates.timezone)
+    if (
+      args.slotDurationMins !== undefined &&
+      args.slotDurationMins !== settings.slotDurationMins
+    ) {
+      const services = await ctx.db
+        .query("services")
+        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+        .collect();
+      if (
+        services.some(
+          (service) =>
+            !service.isDeleted &&
+            service.durationMins % args.slotDurationMins! !== 0,
+        )
+      ) {
+        throw new ConvexError(
+          "Choose an appointment start interval that fits all existing service durations.",
+        );
+      }
+    }
+    if (
+      updates.timezone !== undefined &&
+      settings.timezone !== updates.timezone
+    )
       await closeOrgRecoveryGaps(ctx, args.orgId);
     await ctx.db.patch(settings._id, updates);
     await ctx.db.insert("audit_log", {
@@ -300,38 +331,63 @@ export const updateSmsNotificationSettings = mutation({
 export const updateEmailNotificationSettings = mutation({
   args: {
     orgId: v.id("orgs"),
-    customerReminderEmailEnabled: v.boolean(),
-    customerReminderHoursBefore: v.array(v.number()),
-    staffNewBookingEmailEnabled: v.boolean(),
-    staffReminderEmailEnabled: v.boolean(),
-    staffReminderHoursBefore: v.array(v.number()),
-    staffEmailRecipientUserIds: v.array(v.id("users")),
+    customerReminderEmailEnabled: v.optional(v.boolean()),
+    customerReminderHoursBefore: v.optional(v.array(v.number())),
+    staffNewBookingEmailEnabled: v.optional(v.boolean()),
+    staffReminderEmailEnabled: v.optional(v.boolean()),
+    staffReminderHoursBefore: v.optional(v.array(v.number())),
+    staffEmailRecipientUserIds: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
-    const customerReminderError = reminderHoursValidationError(
-      args.customerReminderHoursBefore,
-    );
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+    if (!settings) throw new Error("Settings not found");
+    const customerHours =
+      args.customerReminderHoursBefore ?? settings.reminderHoursBefore;
+    const customerEnabled =
+      args.customerReminderEmailEnabled ?? settings.emailEnabled;
+    const staffHours =
+      args.staffReminderHoursBefore ??
+      settings.staffReminderHoursBefore ??
+      settings.reminderHoursBefore;
+    const staffEnabled =
+      args.staffReminderEmailEnabled ??
+      settings.staffReminderEmailEnabled ??
+      true;
+    const changesClientReminders =
+      args.customerReminderEmailEnabled !== undefined ||
+      args.customerReminderHoursBefore !== undefined;
+    const changesStaffReminders =
+      args.staffReminderEmailEnabled !== undefined ||
+      args.staffReminderHoursBefore !== undefined;
+    const customerReminderError = changesClientReminders
+      ? reminderHoursValidationError(customerHours)
+      : null;
     if (customerReminderError) throw new ConvexError(customerReminderError);
-    const staffReminderError = reminderHoursValidationError(
-      args.staffReminderHoursBefore,
-    );
+    const staffReminderError = changesStaffReminders
+      ? reminderHoursValidationError(staffHours)
+      : null;
     if (staffReminderError) throw new ConvexError(staffReminderError);
     if (
-      args.customerReminderEmailEnabled &&
-      args.customerReminderHoursBefore.length === 0
+      changesClientReminders &&
+      customerEnabled &&
+      customerHours.length === 0
     ) {
       throw new ConvexError("Choose at least one client reminder time.");
     }
-    if (
-      args.staffReminderEmailEnabled &&
-      args.staffReminderHoursBefore.length === 0
-    ) {
+    if (changesStaffReminders && staffEnabled && staffHours.length === 0) {
       throw new ConvexError("Choose at least one team reminder time.");
     }
 
     const recipientUserIds = Array.from(
-      new Set(args.staffEmailRecipientUserIds),
+      new Set(
+        args.staffEmailRecipientUserIds ??
+          settings.staffEmailRecipientUserIds ??
+          [],
+      ),
     );
     const availableRecipients = await resolveStaffEmailRecipients(
       ctx,
@@ -340,36 +396,42 @@ export const updateEmailNotificationSettings = mutation({
     const availableUserIds = new Set(
       availableRecipients.map((recipient) => recipient.userId),
     );
-    if (recipientUserIds.some((userId) => !availableUserIds.has(userId))) {
+    if (
+      args.staffEmailRecipientUserIds !== undefined &&
+      recipientUserIds.some((userId) => !availableUserIds.has(userId))
+    ) {
       throw new ConvexError(
         "One or more email recipients no longer have dashboard access.",
       );
     }
-    const settings = await ctx.db
-      .query("org_settings")
-      .withIndex("by_org", (query) => query.eq("orgId", args.orgId))
-      .first();
-    if (!settings) throw new Error("Settings not found");
-
-    requireClientReminderAccess(
-      org,
-      settings,
-      args.customerReminderEmailEnabled,
-      args.customerReminderHoursBefore,
-    );
+    if (changesClientReminders)
+      requireClientReminderAccess(
+        org,
+        settings,
+        customerEnabled,
+        customerHours,
+      );
 
     const updatedAt = Date.now();
     const updates = {
-      emailEnabled: args.customerReminderEmailEnabled,
-      reminderHoursBefore: normalizeReminderHours(
-        args.customerReminderHoursBefore,
-      ),
-      staffNewBookingEmailEnabled: args.staffNewBookingEmailEnabled,
-      staffReminderEmailEnabled: args.staffReminderEmailEnabled,
-      staffReminderHoursBefore: normalizeReminderHours(
-        args.staffReminderHoursBefore,
-      ),
-      staffEmailRecipientUserIds: recipientUserIds,
+      ...(args.customerReminderEmailEnabled !== undefined
+        ? { emailEnabled: customerEnabled }
+        : {}),
+      ...(args.customerReminderHoursBefore !== undefined
+        ? { reminderHoursBefore: normalizeReminderHours(customerHours) }
+        : {}),
+      ...(args.staffNewBookingEmailEnabled !== undefined
+        ? { staffNewBookingEmailEnabled: args.staffNewBookingEmailEnabled }
+        : {}),
+      ...(args.staffReminderEmailEnabled !== undefined
+        ? { staffReminderEmailEnabled: staffEnabled }
+        : {}),
+      ...(args.staffReminderHoursBefore !== undefined
+        ? { staffReminderHoursBefore: normalizeReminderHours(staffHours) }
+        : {}),
+      ...(args.staffEmailRecipientUserIds !== undefined
+        ? { staffEmailRecipientUserIds: recipientUserIds }
+        : {}),
       updatedAt,
     };
     await ctx.db.patch(settings._id, updates);
@@ -480,9 +542,9 @@ export const updateDashboardNotificationSettings = mutation({
 export const updateAiSettings = mutation({
   args: {
     orgId: v.id("orgs"),
-    aiEnabled: v.boolean(),
-    aiPersonaName: v.string(),
-    aiConfidenceThreshold: v.number(),
+    aiEnabled: v.optional(v.boolean()),
+    aiPersonaName: v.optional(v.string()),
+    aiConfidenceThreshold: v.optional(v.number()),
     aiHandoffPhoneNumber: v.optional(v.string()),
     aiWebchatEnabled: v.optional(v.boolean()),
     aiInstagramEnabled: v.optional(v.boolean()),
@@ -526,9 +588,10 @@ export const updateAiSettings = mutation({
     if (!settings) throw new Error("Settings not found");
 
     const updates = {
-      aiEnabled: args.aiEnabled,
-      aiPersonaName: args.aiPersonaName.trim(),
-      aiConfidenceThreshold: args.aiConfidenceThreshold,
+      aiEnabled: args.aiEnabled ?? settings.aiEnabled,
+      aiPersonaName: args.aiPersonaName?.trim() ?? settings.aiPersonaName,
+      aiConfidenceThreshold:
+        args.aiConfidenceThreshold ?? settings.aiConfidenceThreshold,
       aiHandoffPhoneNumber: (
         args.aiHandoffPhoneNumber ?? settings.aiHandoffPhoneNumber
       )?.trim(),
@@ -595,6 +658,59 @@ export const getOrgSettingsInternal = internalQuery({
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
       .first();
+  },
+});
+
+/** Profile-only updates leave logo, legacy links, location and other settings intact. */
+export const updateStudioProfile = mutation({
+  args: {
+    orgId: v.id("orgs"),
+    name: v.optional(v.string()),
+    tagline: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    instagramHandle: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
+    if (args.name !== undefined && !args.name.trim())
+      throw new ConvexError("Studio name is required.");
+    const updates = {
+      ...(args.name !== undefined ? { name: args.name.trim() } : {}),
+      ...(args.tagline !== undefined
+        ? { tagline: args.tagline.trim() || undefined }
+        : {}),
+      ...(args.bio !== undefined ? { bio: args.bio.trim() || undefined } : {}),
+      ...(args.phone !== undefined
+        ? { phone: args.phone.trim() || undefined }
+        : {}),
+      ...(args.instagramHandle !== undefined
+        ? { instagramHandle: args.instagramHandle.trim() || undefined }
+        : {}),
+      updatedAt: Date.now(),
+    };
+    await ctx.db.patch(org._id, updates);
+    await ctx.db.insert("audit_log", {
+      orgId: org._id,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "org.branding_updated",
+      resourceType: "orgs",
+      resourceId: org._id,
+      before: {
+        name: org.name,
+        tagline: org.tagline,
+        bio: org.bio,
+        phone: org.phone,
+        instagramHandle: org.instagramHandle,
+      },
+      after: updates,
+      createdAt: updates.updatedAt,
+    });
+    await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
+      orgId: org._id,
+    });
+    return true;
   },
 });
 

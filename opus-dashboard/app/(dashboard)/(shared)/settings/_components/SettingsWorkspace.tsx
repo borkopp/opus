@@ -1,80 +1,47 @@
 "use client";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 
-import { useCallback } from "react";
+import Link from "next/link";
+import { useCallback, useEffect } from "react";
 import { useQuery } from "convex/react";
 import {
-  BellRing,
-  CreditCard,
   Bot,
   CalendarClock,
-  Flame,
-  MapPin,
-  Palette,
-  Settings2,
-  SwatchBook,
-  Sparkles,
+  BellRing,
+  CreditCard,
+  Store,
+  SlidersHorizontal,
+  ArrowUpRight,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { resolveSettingsNavigation } from "@/lib/settings-navigation";
 import { SettingsSectionPicker } from "./SettingsSectionPicker";
 import { AiOperatorTab } from "./tabs/AiOperatorTab";
 import { BookingOperationsTab } from "./tabs/BookingOperationsTab";
 import { BillingTab } from "./tabs/BillingTab";
-import { DynamicSurgePricingTab } from "./tabs/DynamicSurgePricingTab";
-import { GapOptimizerTab } from "./tabs/GapOptimizerTab";
-import { GeneralTab } from "./tabs/GeneralTab";
+import { CurrencySettings } from "./tabs/CurrencySettings";
 import { IdentityProfileTab } from "./tabs/IdentityProfileTab";
 import { LocationTab } from "./tabs/LocationTab";
 import { NotificationsQueueTab } from "./tabs/NotificationsQueueTab";
-import { ThemeTab } from "./tabs/ThemeTab";
 
 const SETTINGS_TABS = [
   {
-    value: "general",
-    labelEn: "General",
-    labelMk: "Општо",
-    labelSq: "Të përgjithshme",
-    icon: Settings2,
-  },
-  {
-    value: "billing",
-    labelEn: "Subscription",
-    labelMk: "Претплата",
-    labelSq: "Abonimi",
-    icon: CreditCard,
-  },
-  {
-    value: "themes",
-    labelEn: "Themes",
-    labelMk: "Теми",
-    labelSq: "Temat",
-    icon: SwatchBook,
-  },
-  {
-    value: "branding",
-    labelEn: "Branding",
-    labelMk: "Брендирање",
-    labelSq: "Identiteti",
-    icon: Palette,
-  },
-  {
-    value: "location",
-    labelEn: "Location",
-    labelMk: "Локација",
-    labelSq: "Vendndodhja",
-    icon: MapPin,
+    value: "studio",
+    labelEn: "Studio",
+    labelMk: "Студио",
+    labelSq: "Studio",
+    icon: Store,
   },
   {
     value: "booking",
-    labelEn: "Booking rules",
+    labelEn: "Booking",
     labelMk: "Закажување",
-    labelSq: "Rregullat e rezervimit",
+    labelSq: "Rezervimi",
     icon: CalendarClock,
   },
   {
@@ -85,226 +52,190 @@ const SETTINGS_TABS = [
     icon: BellRing,
   },
   {
-    value: "gaps",
-    labelEn: "Gap optimizer",
-    labelMk: "Празни термини",
-    labelSq: "Optimizuesi i hapësirave",
-    icon: Sparkles,
-  },
-  {
-    value: "surge",
-    labelEn: "Surge pricing",
-    labelMk: "Динамични цени",
-    labelSq: "Çmimet dinamike",
-    icon: Flame,
-  },
-  {
     value: "ai",
     labelEn: "AI front desk",
     labelMk: "AI рецепција",
     labelSq: "Recepsioni AI",
     icon: Bot,
   },
+  {
+    value: "billing",
+    labelEn: "Subscription",
+    labelMk: "Претплата",
+    labelSq: "Abonimi",
+    icon: CreditCard,
+  },
 ] as const;
 
-type SettingsTab = (typeof SETTINGS_TABS)[number]["value"];
-
-const DEFAULT_AI_WORKING_HOURS = [
-  { dayOfWeek: 0, startTime: "10:00", endTime: "16:00" },
-  { dayOfWeek: 1, startTime: "09:00", endTime: "18:00" },
-  { dayOfWeek: 2, startTime: "09:00", endTime: "18:00" },
-  { dayOfWeek: 3, startTime: "09:00", endTime: "18:00" },
-  { dayOfWeek: 4, startTime: "09:00", endTime: "18:00" },
-  { dayOfWeek: 5, startTime: "09:00", endTime: "18:00" },
-  { dayOfWeek: 6, startTime: "10:00", endTime: "16:00" },
-];
-
-function isSettingsTab(value: string | null): value is SettingsTab {
-  return SETTINGS_TABS.some((tab) => tab.value === value);
-}
+const DEFAULT_AI_HOURS = Array.from({ length: 7 }, (_, dayOfWeek) => ({
+  dayOfWeek,
+  startTime: dayOfWeek === 0 || dayOfWeek === 6 ? "10:00" : "09:00",
+  endTime: dayOfWeek === 0 || dayOfWeek === 6 ? "16:00" : "18:00",
+}));
 
 export function SettingsWorkspace() {
   const { t } = useDashboardI18n();
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
+  const isOwner = profile?.role === "owner";
+  const router = useRouter();
   const searchParams = useSearchParams();
-
   const tabFromUrl = searchParams.get("tab");
-  const activeTab = isSettingsTab(tabFromUrl) ? tabFromUrl : "general";
-
-  const handleTabChange = useCallback((value: string) => {
-    if (!isSettingsTab(value)) return;
-    const url = value === "general" ? "/settings" : `/settings?tab=${value}`;
-    // Tabs use already-loaded client data. Avoid a server navigation for a
-    // local panel switch; Next keeps useSearchParams in sync with history.
-    window.history.replaceState(null, "", url);
-  }, []);
-
+  const navigation = resolveSettingsNavigation(tabFromUrl, isOwner);
   const data = useQuery(
     api.orgSettings.getOrgSettings,
-    orgId ? { orgId } : "skip",
+    orgId && isOwner ? { orgId } : "skip",
   );
 
-  if (profile === undefined || data === undefined) {
+  useEffect(() => {
+    if (profile && navigation.redirect) router.replace(navigation.redirect);
+  }, [profile, navigation.redirect, router]);
+
+  const handleTabChange = useCallback((value: string) => {
+    if (!SETTINGS_TABS.some((tab) => tab.value === value)) return;
+    window.history.replaceState(
+      null,
+      "",
+      value === "studio" ? "/settings" : `/settings?tab=${value}`,
+    );
+  }, []);
+
+  if (profile === undefined || navigation.redirect || data === undefined) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Spinner className="size-6" />
       </div>
     );
   }
-
   if (!orgId || !data?.settings) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-3">
-        <p data-replay-public className="text-sm text-muted-foreground">
-          {t(
-            "Unable to load settings. Please make sure onboarding is complete.",
-            "Поставките не може да се вчитаат. Проверете дали воведот е завршен.",
-            "Nuk mund të ngarkohen cilësimet. Sigurohuni që konfigurimi fillestar ka përfunduar.",
-          )}
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        {t(
+          "Settings could not be loaded. Please try again.",
+          "Поставките не може да се вчитаат. Обидете се повторно.",
+          "Cilësimet nuk mund të ngarkoheshin. Provoni përsëri.",
+        )}
+      </p>
     );
   }
-
   const { settings, org, media } = data;
-  const quickBookingDurationMins =
-    settings.quickBookingDurationMins ??
-    Math.max(
-      settings.slotDurationMins,
-      Math.ceil(30 / settings.slotDurationMins) * settings.slotDurationMins,
-    );
-  const configuredAiHours = settings.aiWorkingHours;
-  const aiWorkingHours = DEFAULT_AI_WORKING_HOURS.map(
+  const aiHours = DEFAULT_AI_HOURS.map(
     (fallback) =>
-      configuredAiHours?.find(
+      settings.aiWorkingHours?.find(
         (entry) => entry.dayOfWeek === fallback.dayOfWeek,
       ) ?? fallback,
   );
-  const aiWorkingHoursEnabledDays = DEFAULT_AI_WORKING_HOURS.map(
-    ({ dayOfWeek }) =>
-      configuredAiHours
-        ? configuredAiHours.some((entry) => entry.dayOfWeek === dayOfWeek)
-        : dayOfWeek >= 1 && dayOfWeek <= 5,
-  );
-  const availableEmailRecipientIds = new Set(
+  const emailRecipientIds = new Set(
     data.emailRecipients.map((recipient) => recipient.userId),
   );
-  const selectedEmailRecipientUserIds = (
-    settings.staffEmailRecipientUserIds ??
-    data.emailRecipients.map((recipient) => recipient.userId)
-  ).filter((userId) => availableEmailRecipientIds.has(userId));
-
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18 }}
-      className="flex min-h-full w-full flex-1 flex-col gap-7 pb-12"
-    >
+    <div className="flex min-h-full w-full flex-col gap-6 pb-12">
       <DashboardPageHeader
         replayPublicTitle
         title={t("Settings", "Поставки", "Cilësimet")}
         description={t(
-          `Keep ${org.name}'s studio details, booking rules, and team preferences in one place.`,
-          `Податоците за ${org.name}, правилата за закажување и поставките на тимот на едно место.`,
-          `Mbani detajet e studios së ${org.name}, rregullat e rezervimit dhe preferencat e ekipit në një vend.`,
+          "Manage your studio, online booking, and client messages.",
+          "Уредете го студиото, онлајн закажувањето и пораките за клиенти.",
+          "Menaxhoni studion, rezervimet online dhe mesazhet për klientët.",
         )}
       />
-
       <Tabs
+        key={orgId}
         orientation="vertical"
-        value={activeTab}
+        value={navigation.section}
         onValueChange={handleTabChange}
         className="dashboard-settings-tabs w-full"
       >
         <div className="dashboard-settings-nav">
           <SettingsSectionPicker
             sections={SETTINGS_TABS}
-            value={activeTab}
+            value={navigation.section}
             onValueChange={handleTabChange}
           />
           <div className="hidden md:block">
             <TabsList
-              aria-label={t("Settings sections", "Секции за поставки", "Seksionet e cilësimeve")}
-              className="h-auto w-max min-w-full justify-start gap-1 rounded-xl p-1 bg-muted/80 border border-border/70 shadow-2xs dark:bg-muted/70 dark:border-transparent dark:shadow-none"
+              aria-label={t(
+                "Settings sections",
+                "Секции за поставки",
+                "Seksionet e cilësimeve",
+              )}
+              className="w-full border-0 bg-transparent"
             >
-              {SETTINGS_TABS.map(({ value, labelEn, labelMk, labelSq, icon: Icon }) => (
-                <TabsTrigger
-                  data-replay-public
-                  key={value}
-                  value={value}
-                  className="h-9 min-w-max flex-1 gap-2 rounded-lg px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card/40 transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border/60 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-transparent dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground dark:data-[state=active]:shadow-none"
-                >
-                  <Icon />
-                  {t(labelEn, labelMk, labelSq)}
-                </TabsTrigger>
-              ))}
+              {SETTINGS_TABS.map(
+                ({ value, labelEn, labelMk, labelSq, icon: Icon }) => (
+                  <TabsTrigger data-replay-public key={value} value={value}>
+                    <Icon />
+                    {t(labelEn, labelMk, labelSq)}
+                  </TabsTrigger>
+                ),
+              )}
             </TabsList>
           </div>
+          <div className="mt-3 flex flex-wrap gap-1 border-t border-border pt-3 md:flex-col">
+            <Button asChild variant="ghost" className="justify-start">
+              <Link href="/notifications/preferences">
+                <SlidersHorizontal data-icon="inline-start" />
+                {t("My preferences", "Мои поставки", "Preferencat e mia")}
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="justify-start">
+              <Link href="/gap-optimizer">
+                <ArrowUpRight data-icon="inline-start" />
+                {t(
+                  "Opening recovery",
+                  "Пополнување термини",
+                  "Rikuperimi i orareve",
+                )}
+              </Link>
+            </Button>
+          </div>
         </div>
-
         <div className="min-w-0">
-          {activeTab === "billing" && <BillingTab key={orgId} />}
-          <ThemeTab />
-          <GeneralTab
-            key={`general-${settings.updatedAt}`}
-            orgId={orgId}
-            initialData={{
-              timezone: settings.timezone,
-              currency: settings.currency,
-              locale: settings.locale,
-              slotDurationMins: settings.slotDurationMins,
-              quickBookingDurationMins,
-              bookingWindowDays: settings.bookingWindowDays,
-              cancellationWindowHours: settings.cancellationWindowHours,
-              bufferTimeMins: settings.bufferTimeMins,
-            }}
-          />
-          <IdentityProfileTab
-            key={`branding-${org.updatedAt}`}
-            orgId={orgId}
-            initialData={{
-              name: org.name,
-              logoUrl: org.logoUrl || "",
-              tagline: org.tagline || "",
-              bio: org.bio || "",
-              phone: org.phone || "",
-              instagramHandle: org.instagramHandle || "",
-              instagramPageId: org.instagramPageId || "",
-              websiteUrl: org.websiteUrl || "",
-            }}
-            media={media ?? []}
-            galleryPhotoLimit={data.galleryPhotoLimit}
-          />
-          <LocationTab
-            key={`location-${org.updatedAt}`}
-            orgId={orgId}
-            initialData={{
-              address: org.address || "",
-              city: org.city || "",
-              neighborhood: org.neighborhood || "",
-              postalCode: org.postalCode || "",
-              country: org.country || "",
-              coordinates: org.coordinates ?? null,
-            }}
-          />
+          <TabsContent value="studio" className="m-0 flex flex-col gap-5">
+            <IdentityProfileTab
+              orgId={orgId}
+              initialData={{
+                name: org.name,
+                logoUrl: org.logoUrl || "",
+                tagline: org.tagline || "",
+                bio: org.bio || "",
+                phone: org.phone || "",
+                instagramHandle: org.instagramHandle || "",
+              }}
+              media={media ?? []}
+              galleryPhotoLimit={data.galleryPhotoLimit}
+              showPhotos={tabFromUrl === "branding"}
+            />
+            <LocationTab
+              orgId={orgId}
+              initialData={{
+                address: org.address || "",
+                city: org.city || "",
+                neighborhood: org.neighborhood || "",
+                postalCode: org.postalCode || "",
+                country: org.country || "MK",
+                coordinates: org.coordinates ?? null,
+              }}
+            />
+            <CurrencySettings orgId={orgId} currency={settings.currency} />
+          </TabsContent>
           <BookingOperationsTab
-            key={`booking-${settings.updatedAt}`}
             orgId={orgId}
             initialData={{
-              timezone: settings.timezone,
-              currency: settings.currency,
-              locale: settings.locale,
               slotDurationMins: settings.slotDurationMins,
-              quickBookingDurationMins,
+              quickBookingDurationMins:
+                settings.quickBookingDurationMins ??
+                Math.max(
+                  settings.slotDurationMins,
+                  Math.ceil(30 / settings.slotDurationMins) *
+                    settings.slotDurationMins,
+                ),
               bookingWindowDays: settings.bookingWindowDays,
               cancellationWindowHours: settings.cancellationWindowHours,
               bufferTimeMins: settings.bufferTimeMins,
             }}
           />
           <NotificationsQueueTab
-            key={`notifications-${settings.updatedAt}`}
             orgId={orgId}
             isPaid={org.plan === "paid"}
             smsAvailable={data.smsAvailable}
@@ -320,7 +251,10 @@ export function SettingsWorkspace() {
               staffReminderHoursBefore:
                 settings.staffReminderHoursBefore ??
                 settings.reminderHoursBefore,
-              staffEmailRecipientUserIds: selectedEmailRecipientUserIds,
+              staffEmailRecipientUserIds: (
+                settings.staffEmailRecipientUserIds ??
+                data.emailRecipients.map((recipient) => recipient.userId)
+              ).filter((id) => emailRecipientIds.has(id)),
               emailRecipients: data.emailRecipients,
               dashboardNotificationsEnabled:
                 settings.dashboardNotificationsEnabled ?? true,
@@ -328,33 +262,15 @@ export function SettingsWorkspace() {
               dashboardToastEnabled: settings.dashboardToastEnabled ?? true,
             }}
           />
-          <GapOptimizerTab
-            key={`gaps-${settings.updatedAt}`}
-            orgId={orgId}
-            isPaid={org.plan === "paid"}
-            initialData={{
-              gapOptimizerEnabled: settings.gapOptimizerEnabled ?? false,
-              gapOptimizerMinGapMins: settings.gapOptimizerMinGapMins ?? 30,
-            }}
-          />
-          <DynamicSurgePricingTab
-            key={`surge-${settings.updatedAt}`}
-            orgId={orgId}
-            initialData={{
-              surgePricingEnabled: settings.surgePricingEnabled,
-              surgeRules: settings.surgeRules ?? [],
-            }}
-          />
           <AiOperatorTab
-            key={`ai-${settings.updatedAt}`}
             orgId={orgId}
             isPaid={org.plan === "paid"}
+            studioPhone={org.phone || ""}
             initialData={{
               aiEnabled: settings.aiEnabled,
               aiPersonaName: settings.aiPersonaName,
               aiConfidenceThreshold: settings.aiConfidenceThreshold,
               aiHandoffPhoneNumber: settings.aiHandoffPhoneNumber || "",
-              aiWebchatEnabled: settings.aiWebchatEnabled ?? false,
               aiInstagramEnabled: settings.aiInstagramEnabled ?? false,
               aiSystemPrompt: settings.aiSystemPrompt ?? "",
               aiStudioContext: settings.aiStudioContext ?? "",
@@ -362,13 +278,21 @@ export function SettingsWorkspace() {
               aiTone: settings.aiTone ?? "friendly",
               aiLanguage: settings.aiLanguage ?? "auto",
               aiWorkingHoursEnabled: settings.aiWorkingHoursEnabled ?? false,
-              aiWorkingHours,
-              aiWorkingHoursEnabled_days: aiWorkingHoursEnabledDays,
+              aiWorkingHours: aiHours,
+              aiWorkingHoursEnabled_days: DEFAULT_AI_HOURS.map(
+                ({ dayOfWeek }) =>
+                  settings.aiWorkingHours
+                    ? settings.aiWorkingHours.some(
+                        (entry) => entry.dayOfWeek === dayOfWeek,
+                      )
+                    : dayOfWeek >= 1 && dayOfWeek <= 5,
+              ),
               aiAwayMessage: settings.aiAwayMessage ?? "",
             }}
           />
+          {navigation.section === "billing" && <BillingTab />}
         </div>
       </Tabs>
-    </motion.div>
+    </div>
   );
 }

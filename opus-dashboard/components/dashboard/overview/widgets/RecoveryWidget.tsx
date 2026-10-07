@@ -23,7 +23,11 @@ export function RecoveryWidget({
       replayPublicTitle
       delay={45}
       className="flex flex-col"
-      title={t("Opening recovery", "Пополнување слободни термини", "Rikuperimi i hapësirave boshe")}
+      title={t(
+        "Opening recovery",
+        "Пополнување слободни термини",
+        "Rikuperimi i hapësirave boshe",
+      )}
       subtitle={t(
         "A cancellation can become a booking",
         "Откажан термин може повторно да се пополни",
@@ -57,12 +61,16 @@ export function RecoveryWidget({
             ? "https://opus.mk/#pricing"
             : summary?.enabled
               ? "/gap-optimizer"
-              : "/settings?tab=gaps"
+              : "/gap-optimizer?settings=open"
         }
         external={!paid}
         actionLabel={
           paid
-            ? t("Review openings", "Прегледај слободни термини", "Shqyrto hapësirat e lira")
+            ? t(
+                "Review openings",
+                "Прегледај слободни термини",
+                "Shqyrto hapësirat e lira",
+              )
             : t("Learn more", "Дознај повеќе", "Mësoni më shumë")
         }
       />

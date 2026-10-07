@@ -492,7 +492,7 @@ export const finish = internalMutation({
         conv,
         handoffReply(
           responseLanguage(ready.settings.aiLanguage, inbound?.content ?? ""),
-          ready.settings.aiHandoffPhoneNumber,
+          ready.settings.aiHandoffPhoneNumber?.trim() || ready.org.phone,
         ),
         1,
         { handoffNotice: true },

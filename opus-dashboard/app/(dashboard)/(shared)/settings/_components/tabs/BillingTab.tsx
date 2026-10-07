@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
 import { BillingPlanSummary } from "./BillingPlanSummary";
-import { SettingsCard } from "../SettingsCard";
+import { SettingsCard } from "@/components/settings/SettingsCard";
 
 export function BillingTab() {
   const { t } = useDashboardI18n();
@@ -116,7 +116,11 @@ export function BillingTab() {
                     ) : (
                       <ArrowUpRight data-icon="inline-start" />
                     )}
-                    {t("Subscribe to Pro", "Претплатете се на Pro", "Abonohuni në Pro")}
+                    {t(
+                      "Subscribe to Pro",
+                      "Претплатете се на Pro",
+                      "Abonohuni në Pro",
+                    )}
                   </Button>
                 )}
                 {data.portalAvailable && (
@@ -134,7 +138,11 @@ export function BillingTab() {
                     ) : (
                       <CreditCard data-icon="inline-start" />
                     )}
-                    {t("Manage billing", "Управување со наплата", "Menaxhoni faturimin")}
+                    {t(
+                      "Manage billing",
+                      "Управување со наплата",
+                      "Menaxhoni faturimin",
+                    )}
                   </Button>
                 )}
                 {(data.checkoutAvailable || data.portalAvailable) && (

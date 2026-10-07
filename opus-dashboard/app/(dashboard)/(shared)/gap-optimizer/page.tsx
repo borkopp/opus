@@ -50,7 +50,12 @@ export default function GapOptimizerPage() {
         </div>
       )}
       {data && (
-        <RecoveryDashboard orgId={orgId} data={data} onDateChange={setDate} />
+        <RecoveryDashboard
+          orgId={orgId}
+          data={data}
+          onDateChange={setDate}
+          canEditSettings={profile?.role === "owner"}
+        />
       )}
     </PaidFeatureOverlay>
   );

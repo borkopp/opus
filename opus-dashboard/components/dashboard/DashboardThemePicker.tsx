@@ -37,7 +37,11 @@ export function DashboardThemePicker({
         }}
         disabled={disabled}
         spacing={4}
-        aria-label={t("Dashboard theme", "Тема на контролната табла", "Tema e panelit")}
+        aria-label={t(
+          "Dashboard theme",
+          "Тема на контролната табла",
+          "Tema e panelit",
+        )}
         className={s.options}
       >
         {DASHBOARD_THEMES.map((theme) => {
@@ -72,7 +76,11 @@ export function DashboardThemePicker({
                   <Logo className={s.logo} markClassName={s.logoMark} />
                 </span>
                 <span className={s.description}>
-                  {t(details.description.en, details.description.mk, details.description.sq)}
+                  {t(
+                    details.description.en,
+                    details.description.mk,
+                    details.description.sq,
+                  )}
                 </span>
               </span>
             </ToggleGroupItem>
@@ -81,9 +89,9 @@ export function DashboardThemePicker({
       </ToggleGroup>
       <FieldDescription data-replay-public>
         {t(
-          "Your theme is personal. You can change it anytime in Settings.",
-          "Темата важи само за вас. Можете да ја промените во Поставки.",
-          "Tema juaj është personale. Mund ta ndryshoni në çdo kohë te Cilësimet.",
+          "Your theme is personal. You can change it anytime in My preferences.",
+          "Темата важи само за вас. Можете да ја промените во Мои поставки.",
+          "Tema juaj është personale. Mund ta ndryshoni në çdo kohë te Preferencat e mia.",
         )}
       </FieldDescription>
     </FieldSet>

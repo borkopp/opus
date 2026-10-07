@@ -8,18 +8,15 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { ReminderTimesField } from "@/components/notifications/ReminderTimesField";
+import { ProFeatureNotice } from "@/components/billing/ProFeatureNotice";
+import { useSettingsDraft } from "@/hooks/use-settings-draft";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
-import { SettingsCard, SettingsToggleRow } from "../SettingsCard";
-import { parseReminderHours } from "../validation";
+import {
+  SettingsCard,
+  SettingsToggleRow,
+} from "@/components/settings/SettingsCard";
 
 export function SmsNotificationsCard({
   orgId,
@@ -35,24 +32,17 @@ export function SmsNotificationsCard({
   initialReminderHours: number[];
 }) {
   const { t } = useDashboardI18n();
-  const [enabled, setEnabled] = useState(initialEnabled);
-  const [hours, setHours] = useState(initialReminderHours.join(", "));
+  const { draft, setDraft, isDirty } = useSettingsDraft({
+    enabled: initialEnabled,
+    hours: initialReminderHours,
+  });
+  const { enabled, hours } = draft;
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
   const update = useMutation(api.orgSettings.updateSmsNotificationSettings);
 
   async function save() {
-    const reminderHours = parseReminderHours(hours);
-    if (!reminderHours) {
-      setError(
-        t(
-          "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
-          "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
-          "Vendosni deri në tetë kujtesa në orë të plota midis 1 dhe 336, për shembull 24, 2.",
-        ),
-      );
-      return;
-    }
+    const reminderHours = hours;
     setSaving(true);
     try {
       await update({
@@ -60,7 +50,13 @@ export function SmsNotificationsCard({
         smsEnabled: enabled,
         smsReminderHoursBefore: reminderHours,
       });
-      toast.success(t("SMS settings saved", "Поставките за SMS се зачувани", "Cilësimet e SMS u ruajtën"));
+      toast.success(
+        t(
+          "SMS settings saved",
+          "Поставките за SMS се зачувани",
+          "Cilësimet e SMS u ruajtën",
+        ),
+      );
     } catch (cause) {
       toast.error(
         cause instanceof Error
@@ -76,6 +72,18 @@ export function SmsNotificationsCard({
     }
   }
 
+  if (!isPaid)
+    return (
+      <ProFeatureNotice
+        title={t("SMS notifications", "SMS известувања", "Njoftimet me SMS")}
+        description={t(
+          "Client confirmations, changes and reminders by SMS are included in Pro after activation.",
+          "SMS потврди, промени и потсетници се дел од Pro по активирање.",
+          "Konfirmimet, ndryshimet dhe kujtesat me SMS përfshihen në Pro pas aktivizimit.",
+        )}
+        actionLabel={t("View Pro", "Погледни Pro", "Shiko Pro")}
+      />
+    );
   return (
     <SettingsCard
       title={t("SMS notifications", "SMS известувања", "Njoftimet me SMS")}
@@ -94,11 +102,18 @@ export function SmsNotificationsCard({
       contentClassName="flex flex-col gap-5"
       footer={
         isPaid && (
-          <Button onClick={save} disabled={saving || (enabled && !available)}>
+          <Button
+            onClick={save}
+            disabled={saving || !isDirty || (enabled && !available)}
+          >
             {saving && <Spinner data-icon="inline-start" />}
             {saving
               ? t("Saving…", "Се зачувува…", "Po ruhet…")
-              : t("Save SMS settings", "Зачувај поставки за SMS", "Ruaj cilësimet e SMS")}
+              : t(
+                  "Save SMS settings",
+                  "Зачувај поставки за SMS",
+                  "Ruaj cilësimet e SMS",
+                )}
           </Button>
         )
       }
@@ -123,7 +138,11 @@ export function SmsNotificationsCard({
         )
       )}
       <SettingsToggleRow
-        title={t("Client SMS notifications", "SMS известувања за клиенти", "Njoftimet me SMS për klientët")}
+        title={t(
+          "Client SMS notifications",
+          "SMS известувања за клиенти",
+          "Njoftimet me SMS për klientët",
+        )}
         description={t(
           "Uses the phone number saved with the appointment. Email settings stay independent.",
           "Го користи телефонскиот број зачуван со терминот. Поставките за е-пошта се независни.",
@@ -139,43 +158,25 @@ export function SmsNotificationsCard({
             )}
             checked={isPaid && enabled}
             disabled={saving || !isPaid || (!available && !enabled)}
-            onCheckedChange={setEnabled}
+            onCheckedChange={(value) =>
+              setDraft((current) => ({ ...current, enabled: value }))
+            }
           />
         }
       />
       {isPaid && enabled && (
-        <FieldGroup className="max-w-xl">
-          <Field data-invalid={Boolean(error)}>
-            <FieldLabel data-replay-public htmlFor="sms-reminder-hours">
-              {t(
-                "SMS reminder schedule (hours before)",
-                "Распоред за SMS потсетници (часови однапред)",
-                "Orari i kujtesave me SMS (orë përpara)",
-              )}
-            </FieldLabel>
-            <Input
-              id="sms-reminder-hours"
-              value={hours}
-              disabled={saving}
-              maxLength={64}
-              placeholder="24, 2"
-              aria-invalid={Boolean(error)}
-              aria-describedby="sms-reminder-description"
-              onChange={(event) => {
-                setHours(event.target.value);
-                setError(undefined);
-              }}
-            />
-            <FieldDescription data-replay-public id="sms-reminder-description">
-              {t(
-                "For example, 24, 2 sends reminders a day and two hours before. Leave empty to send only confirmations and appointment updates.",
-                "На пример, 24, 2 испраќа потсетници еден ден и два часа однапред. Оставете празно за да испраќате само потврди и промени на термините.",
-                "Për shembull, 24, 2 dërgon kujtesa një ditë dhe dy orë përpara. Lëreni bosh për të dërguar vetëm konfirmime dhe përditësime të termineve.",
-              )}
-            </FieldDescription>
-            <FieldError>{error}</FieldError>
-          </Field>
-        </FieldGroup>
+        <ReminderTimesField
+          id="sms-reminder"
+          hours={hours}
+          savedHours={initialReminderHours}
+          onChange={(value) => {
+            setDraft((current) => ({ ...current, hours: value }));
+            setError(undefined);
+          }}
+          disabled={saving}
+          error={error}
+          allowEmpty
+        />
       )}
     </SettingsCard>
   );

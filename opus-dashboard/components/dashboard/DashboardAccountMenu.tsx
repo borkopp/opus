@@ -6,11 +6,9 @@ import { useState } from "react";
 import {
   LogOut,
   Settings2,
-  Languages,
   ChartNoAxesCombined,
   CalendarClock,
   MessagesSquare,
-  SwatchBook,
   CreditCard,
   Bell,
 } from "lucide-react";
@@ -28,7 +26,6 @@ import { CookiePreferencesMenuItem } from "@/components/account/CookiePreference
 import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import type { DashboardLanguage } from "@/lib/i18n/types";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -37,11 +34,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import s from "./clarity.module.css";
 export type DashboardProfile = Partial<
@@ -68,7 +60,7 @@ export function DashboardAccountMenu({
 }: {
   profile: DashboardProfile;
 }) {
-  const { t, language, setLanguage } = useDashboardI18n();
+  const { t } = useDashboardI18n();
   const signOutAccount = usePushSignOut();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -170,30 +162,22 @@ export function DashboardAccountMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
-            <Link data-replay-public href="/settings">
-              <Settings2 />
-              {t("Settings", "Поставки", "Cilësimet")}
-            </Link>
-          </DropdownMenuItem>
+          {profile.role === "owner" && (
+            <DropdownMenuItem asChild>
+              <Link data-replay-public href="/settings">
+                <Settings2 />
+                {t(
+                  "Studio settings",
+                  "Поставки за студио",
+                  "Cilësimet e studios",
+                )}
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem asChild>
             <Link data-replay-public href="/notifications/preferences">
               <Bell />
-              {t(
-                "Notification preferences",
-                "Поставки за известувања",
-                "Preferencat e njoftimeve",
-              )}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link data-replay-public href="/settings?tab=themes">
-              <SwatchBook />
-              {t(
-                "Dashboard theme",
-                "Тема на контролната табла",
-                "Tema e panelit",
-              )}
+              {t("My preferences", "Мои поставки", "Preferencat e mia")}
             </Link>
           </DropdownMenuItem>
           {profile.role !== "staff" && (
@@ -228,30 +212,6 @@ export function DashboardAccountMenu({
               )}
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger data-replay-public>
-              <Languages />
-              {t("Language", "Јазик", "Gjuha")}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              <DropdownMenuRadioGroup
-                value={language}
-                onValueChange={(value) =>
-                  setLanguage(value as DashboardLanguage)
-                }
-              >
-                <DropdownMenuRadioItem data-replay-public value="en">
-                  English
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem data-replay-public value="sq">
-                  Shqip
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem data-replay-public value="mk">
-                  Македонски
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
           <CookiePreferencesMenuItem />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

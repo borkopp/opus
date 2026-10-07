@@ -43,6 +43,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Disclosure } from "@/components/ui/disclosure";
 
 export function PushPreferencesCard() {
   const settings = useQuery(api.pushNotifications.getSettings);
@@ -147,11 +148,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell />
-          {t(
-            "My push notifications",
-            "Мои push известувања",
-            "Njoftimet e mia push",
-          )}
+          {t("My notifications", "Мои известувања", "Njoftimet e mia")}
         </CardTitle>
         <CardDescription>
           {t(
@@ -257,10 +254,13 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
               </Field>
             </FieldGroup>
           </FieldSet>
-          <FieldSet>
-            <FieldLegend>
-              {t("Which alerts", "Кои известувања", "Cilat njoftime")}
-            </FieldLegend>
+          <Disclosure
+            title={t(
+              "Choose which alerts I receive",
+              "Избери кои известувања ги добивам",
+              "Zgjidhni cilat njoftime marr",
+            )}
+          >
             <FieldGroup>
               {!settings.ownOnly && (
                 <Field>
@@ -357,7 +357,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                 </Field>
               )}
             </FieldGroup>
-          </FieldSet>
+          </Disclosure>
           <FieldSet>
             <FieldLegend>
               {t(
@@ -399,9 +399,9 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                 id="push-quiet"
                 label={t("Quiet hours", "Тивки часови", "Orët e qeta")}
                 description={t(
-                  `Skip push alerts during these hours (${settings.timezone}).`,
-                  `Не испраќај известувања во овие часови (${settings.timezone}).`,
-                  `Mos dërgoni njoftime gjatë këtyre orëve (${settings.timezone}).`,
+                  "Pause push alerts during these hours, using the studio’s local time.",
+                  "Паузирај ги известувањата во овие часови според локалното време на студиото.",
+                  "Pezulloni njoftimet gjatë këtyre orëve sipas kohës lokale të studios.",
                 )}
                 checked={draft.quietHours}
                 disabled={disabled}

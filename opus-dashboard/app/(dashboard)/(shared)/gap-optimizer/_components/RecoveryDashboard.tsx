@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/format-price";
 import { GapOptimizerHeader } from "./GapOptimizerHeader";
 import { GapList } from "./GapList";
 import { RecoveryContacts } from "./RecoveryContacts";
+import { RecoverySettings } from "./RecoverySettings";
 
 type RecoveryData = FunctionReturnType<
   typeof api.ai.gapOptimizerHelpers.getRecoveryDashboard
@@ -20,10 +21,12 @@ export function RecoveryDashboard({
   orgId,
   data,
   onDateChange,
+  canEditSettings,
 }: {
   orgId: Id<"orgs">;
   data: RecoveryData;
   onDateChange: (date: string) => void;
+  canEditSettings: boolean;
 }) {
   const { t } = useDashboardI18n();
   return (
@@ -36,18 +39,33 @@ export function RecoveryDashboard({
         canScan={data.canManage && data.enabled && data.websitePublished}
         lastScanAt={data.lastScanAt}
       />
+      {canEditSettings && <RecoverySettings orgId={orgId} />}
       {!data.enabled && (
         <Alert>
           <AlertTitle data-replay-public>
-            {t("Recovery is off", "Пополнувањето е исклучено", "Rikuperimi është joaktiv")}
+            {t(
+              "Recovery is off",
+              "Пополнувањето е исклучено",
+              "Rikuperimi është joaktiv",
+            )}
           </AlertTitle>
           <AlertDescription>
             <Link
               data-replay-public
-              href="/settings?tab=gaps"
+              href="/gap-optimizer?settings=open#recovery-settings"
               className="underline"
             >
-              {t("Enable it in Settings", "Овозможете го во поставките", "Aktivizojeni te Cilësimet")}
+              {canEditSettings
+                ? t(
+                    "Enable recovery above",
+                    "Вклучете го пополнувањето погоре",
+                    "Aktivizoni rikuperimin më sipër",
+                  )
+                : t(
+                    "Ask the studio owner to enable recovery",
+                    "Побарајте сопственикот да го вклучи пополнувањето",
+                    "Kërkojini pronarit të studios të aktivizojë rikuperimin",
+                  )}
             </Link>
           </AlertDescription>
         </Alert>
@@ -91,14 +109,24 @@ export function RecoveryDashboard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">
-            {data.openCount} {t("openings to review", "термини за преглед", "hapësira për shqyrtim")}
+            {data.openCount}{" "}
+            {t(
+              "openings to review",
+              "термини за преглед",
+              "hapësira për shqyrtim",
+            )}
           </Badge>
           <Badge variant="outline">
-            {data.outreachSentCount} {t("active offers", "активни понуди", "oferta aktive")}
+            {data.outreachSentCount}{" "}
+            {t("active offers", "активни понуди", "oferta aktive")}
           </Badge>
           <Badge variant="outline">
             {data.filledCount}{" "}
-            {t("attributed bookings", "резервации преку понуди", "rezervime nga ofertat")}
+            {t(
+              "attributed bookings",
+              "резервации преку понуди",
+              "rezervime nga ofertat",
+            )}
           </Badge>
         </div>
         {data.canManage && <RecoveryContacts orgId={orgId} />}

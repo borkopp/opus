@@ -11,7 +11,7 @@ import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { SettingsSection } from "../SettingsCard";
+import { SettingsSection } from "@/components/settings/SettingsCard";
 
 export function InstagramConnection({
   disabled = false,
@@ -173,9 +173,9 @@ export function InstagramConnection({
         </div>
         <p data-replay-public className="text-xs text-muted-foreground">
           {t(
-            "The AI replies after a client messages you. Your team can take over at any time. WhatsApp is not connected in this release.",
-            "AI одговара откако клиент ќе ви испрати порака. Вашиот тим може да го преземе разговорот во секое време. WhatsApp не е поврзан во оваа верзија.",
-            "AI përgjigjet pasi një klient ju shkruan. Ekipi juaj mund ta marrë bisedën në çdo kohë. WhatsApp nuk është i lidhur në këtë version.",
+            "The AI replies after a client messages you. Your team can take over at any time.",
+            "AI одговара откако клиент ќе ви испрати порака. Вашиот тим може да го преземе разговорот во секое време.",
+            "AI përgjigjet pasi një klient ju shkruan. Ekipi juaj mund ta marrë bisedën në çdo kohë.",
           )}
         </p>
       </div>

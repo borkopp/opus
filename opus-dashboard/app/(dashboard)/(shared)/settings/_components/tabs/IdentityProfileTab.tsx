@@ -8,15 +8,12 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { TabsContent } from "@/components/ui/tabs";
+import { Disclosure } from "@/components/ui/disclosure";
+import { useSettingsDraft } from "@/hooks/use-settings-draft";
+import { trimSettingsText } from "@/lib/settings-form";
 import { Textarea } from "@/components/ui/textarea";
 import {
   type CompressImageOptions,
@@ -24,11 +21,12 @@ import {
   uploadCompressedImage,
 } from "@/lib/image-compression";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { SettingsCard } from "../SettingsCard";
+import { SettingsCard } from "@/components/settings/SettingsCard";
 
 interface IdentityProfileTabProps {
   orgId: Id<"orgs">;
   galleryPhotoLimit: number;
+  showPhotos?: boolean;
   initialData: {
     name: string;
     logoUrl: string;
@@ -36,8 +34,6 @@ interface IdentityProfileTabProps {
     bio: string;
     phone: string;
     instagramHandle: string;
-    instagramPageId: string;
-    websiteUrl: string;
   };
   media: Array<{
     _id: Id<"org_media">;
@@ -68,12 +64,20 @@ export function IdentityProfileTab({
   galleryPhotoLimit,
   initialData,
   media,
+  showPhotos = false,
 }: IdentityProfileTabProps) {
   const { t } = useDashboardI18n();
-  const [branding, setBranding] = useState(initialData);
+  const {
+    draft: branding,
+    setDraft: setBranding,
+    changes,
+  } = useSettingsDraft(initialData);
+  const profileChanges = trimSettingsText(changes);
+  delete profileChanges.logoUrl;
+  const profileDirty = Object.keys(profileChanges).length > 0;
   const [isSaving, setIsSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
-  const updateBranding = useMutation(api.orgSettings.updateOrgBranding);
+  const updateBranding = useMutation(api.orgSettings.updateStudioProfile);
   const updateLogo = useMutation(api.orgSettings.updateLogo);
   const removeLogo = useMutation(api.orgSettings.removeLogo);
   const generateUploadUrl = useMutation(api.activation.generateUploadUrl);
@@ -96,17 +100,8 @@ export function IdentityProfileTab({
     }
     setIsSaving(true);
     try {
-      await updateBranding({
-        orgId,
-        name: branding.name.trim(),
-        logoUrl: branding.logoUrl || undefined,
-        tagline: branding.tagline.trim() || undefined,
-        bio: branding.bio.trim() || undefined,
-        phone: branding.phone.trim() || undefined,
-        instagramHandle: branding.instagramHandle.trim() || undefined,
-        instagramPageId: branding.instagramPageId.trim() || undefined,
-        websiteUrl: branding.websiteUrl.trim() || undefined,
-      });
+      setBranding((current) => ({ ...current, ...profileChanges }));
+      await updateBranding({ orgId, ...profileChanges });
       toast.success(
         t(
           "Business profile saved",
@@ -179,9 +174,7 @@ export function IdentityProfileTab({
     try {
       await removeLogo({ orgId });
       setBranding((current) => ({ ...current, logoUrl: "" }));
-      toast.success(
-        t("Logo removed", "Логото е отстрането", "Logoja u hoq"),
-      );
+      toast.success(t("Logo removed", "Логото е отстрането", "Logoja u hoq"));
     } catch (error) {
       toast.error(
         getErrorMessage(
@@ -294,8 +287,110 @@ export function IdentityProfileTab({
     setBranding((current) => ({ ...current, [field]: value }));
 
   return (
-    <TabsContent value="branding" className="m-0">
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      <SettingsCard
+        title={t("Studio details", "Податоци за студиото", "Detajet e studios")}
+        description={t(
+          "Customer-facing information used across the booking experience.",
+          "Информации видливи за клиентите при процесот на закажување.",
+          "Informacione për klientët që përdoren gjatë procesit të rezervimit.",
+        )}
+        footer={
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || !profileDirty}
+          >
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <Save data-icon="inline-start" />
+            )}
+            {isSaving
+              ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+              : t("Save profile", "Зачувај профил", "Ruaj profilin")}
+          </Button>
+        }
+      >
+        <FieldGroup>
+          <Field>
+            <FieldLabel data-replay-public htmlFor="settings-name">
+              {t("Business name", "Име на бизнис", "Emri i biznesit")}
+            </FieldLabel>
+            <Input
+              id="settings-name"
+              value={branding.name}
+              onChange={(event) => update("name", event.target.value)}
+            />
+          </Field>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field>
+              <FieldLabel data-replay-public htmlFor="settings-phone">
+                {t("Phone", "Телефон", "Telefoni")}
+              </FieldLabel>
+              <Input
+                id="settings-phone"
+                value={branding.phone}
+                onChange={(event) => update("phone", event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel data-replay-public htmlFor="settings-instagram">
+                {t("Instagram", "Instagram", "Instagram")}
+              </FieldLabel>
+              <Input
+                id="settings-instagram"
+                placeholder="@yourstudio"
+                value={branding.instagramHandle}
+                onChange={(event) =>
+                  update("instagramHandle", event.target.value)
+                }
+              />
+            </Field>
+          </div>
+          <Disclosure
+            title={t(
+              "About your studio",
+              "За вашето студио",
+              "Rreth studios suaj",
+            )}
+          >
+            <FieldGroup>
+              {" "}
+              <Field>
+                <FieldLabel data-replay-public htmlFor="settings-tagline">
+                  {t("Tagline", "Краток опис", "Sllogani")}
+                </FieldLabel>
+                <Input
+                  id="settings-tagline"
+                  value={branding.tagline}
+                  onChange={(event) => update("tagline", event.target.value)}
+                />
+              </Field>
+              <Field>
+                <FieldLabel data-replay-public htmlFor="settings-bio">
+                  {t("About", "За нас", "Rreth nesh")}
+                </FieldLabel>
+                <Textarea
+                  id="settings-bio"
+                  value={branding.bio}
+                  onChange={(event) => update("bio", event.target.value)}
+                />
+              </Field>
+            </FieldGroup>
+          </Disclosure>
+        </FieldGroup>
+      </SettingsCard>
+
+      <Disclosure
+        open={showPhotos || undefined}
+        title={t("Logo and photos", "Лого и фотографии", "Logo dhe foto")}
+        description={t(
+          "Optional images for your studio website.",
+          "Изборни слики за веб-страницата на студиото.",
+          "Foto opsionale për uebsajtin e studios.",
+        )}
+      >
         <SettingsCard
           title={t(
             "Storefront images",
@@ -303,19 +398,25 @@ export function IdentityProfileTab({
             "Fotot e faqes kryesore",
           )}
           description={t(
-            "Your logo and cover are shared by onboarding, Settings, and opus.mk.",
-            "Вашето лого и насловна слика се користат при воведот, во Поставки и на opus.mk.",
-            "Logoja dhe kopertina juaj ndahen midis regjistrimit, Cilësimeve dhe opus.mk.",
+            "Your logo and cover appear on your studio website.",
+            "Вашето лого и насловна слика се прикажуваат на веб-страницата на студиото.",
+            "Logoja dhe kopertina shfaqen në uebsajtin e studios suaj.",
           )}
           contentClassName="grid gap-6 md:grid-cols-[208px_1fr]"
         >
           <div className="flex flex-col gap-3">
-            <FieldLabel data-replay-public>{t("Logo", "Лого", "Logo")}</FieldLabel>
+            <FieldLabel data-replay-public>
+              {t("Logo", "Лого", "Logo")}
+            </FieldLabel>
             <div className="group relative flex h-52 w-52 max-w-full aspect-square flex-col justify-end overflow-hidden rounded-2xl border bg-secondary md:w-full">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
-                  alt={t("Business logo", "Лого на бизнисот", "Logoja e biznesit")}
+                  alt={t(
+                    "Business logo",
+                    "Лого на бизнисот",
+                    "Logoja e biznesit",
+                  )}
                   fill
                   unoptimized
                   className="object-cover"
@@ -432,96 +533,6 @@ export function IdentityProfileTab({
         </SettingsCard>
 
         <SettingsCard
-          title={t("Identity and contact", "Идентитет и контакт", "Identiteti dhe kontakti")}
-          description={t(
-            "Customer-facing information used across the booking experience.",
-            "Информации видливи за клиентите при процесот на закажување.",
-            "Informacione për klientët që përdoren gjatë procesit të rezervimit.",
-          )}
-          footer={
-            <Button type="button" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <Save data-icon="inline-start" />
-              )}
-              {isSaving
-                ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
-                : t("Save profile", "Зачувај профил", "Ruaj profilin")}
-            </Button>
-          }
-        >
-          <FieldGroup>
-            <Field>
-              <FieldLabel data-replay-public htmlFor="settings-name">
-                {t("Business name", "Име на бизнис", "Emri i biznesit")}
-              </FieldLabel>
-              <Input
-                id="settings-name"
-                value={branding.name}
-                onChange={(event) => update("name", event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel data-replay-public htmlFor="settings-tagline">
-                {t("Tagline", "Краток опис", "Sllogani")}
-              </FieldLabel>
-              <Input
-                id="settings-tagline"
-                value={branding.tagline}
-                onChange={(event) => update("tagline", event.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel data-replay-public htmlFor="settings-bio">
-                {t("About", "За нас", "Rreth nesh")}
-              </FieldLabel>
-              <Textarea
-                id="settings-bio"
-                value={branding.bio}
-                onChange={(event) => update("bio", event.target.value)}
-              />
-            </Field>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <Field>
-                <FieldLabel data-replay-public htmlFor="settings-phone">
-                  {t("Phone", "Телефон", "Telefoni")}
-                </FieldLabel>
-                <Input
-                  id="settings-phone"
-                  value={branding.phone}
-                  onChange={(event) => update("phone", event.target.value)}
-                />
-              </Field>
-              <Field>
-                <FieldLabel data-replay-public htmlFor="settings-instagram">
-                  {t("Instagram", "Instagram", "Instagram")}
-                </FieldLabel>
-                <Input
-                  id="settings-instagram"
-                  placeholder="@yourstudio"
-                  value={branding.instagramHandle}
-                  onChange={(event) =>
-                    update("instagramHandle", event.target.value)
-                  }
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel data-replay-public htmlFor="settings-website">
-                  {t("Website", "Веб-страница", "Uebsajti")}
-                </FieldLabel>
-                <Input
-                  id="settings-website"
-                  value={branding.websiteUrl}
-                  onChange={(event) => update("websiteUrl", event.target.value)}
-                />
-              </Field>
-            </div>
-          </FieldGroup>
-        </SettingsCard>
-
-        <SettingsCard
           title={t("Gallery", "Галерија", "Galeria")}
           description={t(
             "Optional photos of your space, team, or work.",
@@ -599,15 +610,8 @@ export function IdentityProfileTab({
               </button>
             )}
           </div>
-          <FieldDescription data-replay-public>
-            {t(
-              "Images are soft-deleted so audit history remains intact.",
-              "Сликите се бришат со меко бришење за историјата на ревизија да остане непроменета.",
-              "Imazhet fshihen butësisht në mënyrë që historiku i auditimit të mbetet i paprekur.",
-            )}
-          </FieldDescription>
         </SettingsCard>
-      </div>
-    </TabsContent>
+      </Disclosure>
+    </div>
   );
 }

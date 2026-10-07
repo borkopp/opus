@@ -11,8 +11,8 @@ were verified against the local backend on October 6, 2026, as recorded below.
 
 - **Mobile:** Settings → Notification preferences. Save your choices, then tap
   **Enable on this phone** in an installed OPUS Studio build.
-- **Web:** account menu or notification bell → Notification preferences
-  (`/notifications/preferences`). It also appears in Settings → Notifications.
+- **Web:** account menu or notification bell → My preferences
+  (`/notifications/preferences`). Studio Settings also links to My preferences.
   Save choices, then tap **Enable in this browser**.
 - Every phone and browser needs its own explicit permission. Opening either app
   never prompts for permission. Existing permitted registrations refresh on app

@@ -14,6 +14,7 @@ export const mk: DashboardTranslations = {
     "/beauty/clients": "Клиенти",
     "/beauty/staff": "Тим",
     "/gap-optimizer": "Празни термини",
+    "/notifications/preferences": "Мои поставки",
     "/notifications": "Известувања",
     "/settings": "Поставки",
     "/ai-inbox": "AI сандаче",

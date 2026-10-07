@@ -15,16 +15,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { SettingsSection } from "../SettingsCard";
+import { SettingsSection } from "@/components/settings/SettingsCard";
 
 export function AiStudioContext({
   value,
   onChange,
   canPreview,
+  providerReady,
 }: {
   value: string;
   onChange: (value: string) => void;
   canPreview: boolean;
+  providerReady: boolean;
 }) {
   const { t } = useDashboardI18n();
   const preview = useAction(api.ai.agent.preview);
@@ -43,7 +45,11 @@ export function AiStudioContext({
       toast.error(
         error instanceof Error
           ? error.message
-          : t("Unable to test the answer.", "Одговорот не може да се тестира.", "Nuk mund të testohet përgjigja."),
+          : t(
+              "Unable to test the answer.",
+              "Одговорот не може да се тестира.",
+              "Nuk mund të testohet përgjigja.",
+            ),
       );
     } finally {
       setLoading(false);
@@ -93,7 +99,11 @@ export function AiStudioContext({
         </Field>
         <Field>
           <FieldLabel data-replay-public htmlFor="ai-test-question">
-            {t("Try a customer question", "Пробајте прашање од клиент", "Provoni një pyetje nga klienti")}
+            {t(
+              "Try a customer question",
+              "Пробајте прашање од клиент",
+              "Provoni një pyetje nga klienti",
+            )}
           </FieldLabel>
           <Textarea
             id="ai-test-question"
@@ -108,11 +118,17 @@ export function AiStudioContext({
             )}
           />
           <FieldDescription data-replay-public>
-            {t(
-              "Save your settings first. This test uses saved studio context and does not send messages or create appointments.",
-              "Прво зачувајте ги поставките. Тестот го користи зачуваниот контекст и не испраќа пораки или закажува термини.",
-              "Ruani cilësimet fillimisht. Ky test përdor kontekstin e ruajtur të studios dhe nuk dërgon mesazhe ose krijon termine.",
-            )}
+            {providerReady
+              ? t(
+                  "Save your settings first. This test uses saved studio context and does not send messages or create appointments.",
+                  "Прво зачувајте ги поставките. Тестот го користи зачуваниот контекст и не испраќа пораки или закажува термини.",
+                  "Ruani cilësimet fillimisht. Ky test përdor kontekstin e ruajtur të studios dhe nuk dërgon mesazhe ose krijon termine.",
+                )
+              : t(
+                  "Answer testing becomes available after OPUS activates the AI service. You can save your studio context now.",
+                  "Тестирањето одговори е достапно откако OPUS ќе го активира AI сервисот. Сега можете да го зачувате контекстот за студиото.",
+                  "Testimi i përgjigjeve bëhet i disponueshëm pasi OPUS aktivizon shërbimin AI. Mund të ruani kontekstin e studios tani.",
+                )}
           </FieldDescription>
         </Field>
         <Button
@@ -136,8 +152,16 @@ export function AiStudioContext({
               className="self-start"
             >
               {result.handoff
-                ? t("Would ask your team", "Ќе го праша вашиот тим", "Do të pyeste ekipin tuaj")
-                : t("Ready to answer", "Подготвен одговор", "Gati për t'u përgjigjur")}
+                ? t(
+                    "Would ask your team",
+                    "Ќе го праша вашиот тим",
+                    "Do të pyeste ekipin tuaj",
+                  )
+                : t(
+                    "Ready to answer",
+                    "Подготвен одговор",
+                    "Gati për t'u përgjigjur",
+                  )}
             </Badge>
             <p className="whitespace-pre-wrap break-words text-sm">
               {result.message}

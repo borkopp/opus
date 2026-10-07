@@ -124,10 +124,25 @@ export function DashboardHeader({
         {profile.bookingAccess !== "own" && (
           <>
             <Link
-              href="/settings"
+              href={
+                profile.role === "owner"
+                  ? "/settings"
+                  : "/notifications/preferences"
+              }
               className={s.iconButton}
-              aria-label={t("Settings", "Поставки", "Cilësimet")}
-              aria-current={pathname === "/settings" ? "page" : undefined}
+              aria-label={
+                profile.role === "owner"
+                  ? t("Settings", "Поставки", "Cilësimet")
+                  : t("My preferences", "Мои поставки", "Preferencat e mia")
+              }
+              aria-current={
+                pathname ===
+                (profile.role === "owner"
+                  ? "/settings"
+                  : "/notifications/preferences")
+                  ? "page"
+                  : undefined
+              }
             >
               <Settings2 size={19} />
             </Link>

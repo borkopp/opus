@@ -1,357 +1,317 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
-import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useSettingsDraft } from "@/hooks/use-settings-draft";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Button } from "@/components/ui/button";
-import { DebouncedInput } from "@/components/ui/debounced-input";
+import { Disclosure } from "@/components/ui/disclosure";
+import { Input } from "@/components/ui/input";
 import {
   Field,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { SettingsCard } from "../SettingsCard";
-import { nonNegInt, posInt, type FieldErrors } from "../validation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { SettingsCard } from "@/components/settings/SettingsCard";
 
-interface BookingOperationsTabProps {
-  orgId: Id<"orgs">;
-  initialData: {
-    timezone: string;
-    currency: string;
-    locale: string;
-    slotDurationMins: number;
-    quickBookingDurationMins: number;
-    bookingWindowDays: number;
-    cancellationWindowHours: number;
-    bufferTimeMins: number;
-  };
-}
-
-type Fields =
-  | "slotDurationMins"
-  | "quickBookingDurationMins"
-  | "bookingWindowDays"
-  | "cancellationWindowHours"
-  | "bufferTimeMins";
-
-const FIELD_CONFIG: Array<{
-  id: string;
-  labelEn: string;
-  labelMk: string;
-  labelSq: string;
-  unitEn: string;
-  unitMk: string;
-  unitSq: string;
-  field: Fields;
-  min: number;
-  max: number;
-  descriptionEn: string;
-  descriptionMk: string;
-  descriptionSq: string;
-}> = [
-  {
-    id: "slot-duration",
-    labelEn: "Slot duration",
-    labelMk: "Времетраење на термин",
-    labelSq: "Kohëzgjatja e orarit",
-    unitEn: "minutes",
-    unitMk: "минути",
-    unitSq: "minuta",
-    field: "slotDurationMins",
-    min: 1,
-    max: 480,
-    descriptionEn: "The smallest interval customers can book.",
-    descriptionMk: "Најмалиот интервал што клиентите можат да го закажат.",
-    descriptionSq: "Intervali më i vogël që klientët mund të rezervojnë.",
-  },
-  {
-    id: "quick-booking-duration",
-    labelEn: "Quick booking",
-    labelMk: "Брзо закажување",
-    labelSq: "Rezervim i shpejtë",
-    unitEn: "minutes",
-    unitMk: "минути",
-    unitSq: "minuta",
-    field: "quickBookingDurationMins",
-    min: 1,
-    max: 480,
-    descriptionEn:
-      "Preferred duration shown when you hover an available calendar slot.",
-    descriptionMk:
-      "Претпочитано времетраење што се прикажува при посочување на слободен термин во календарот.",
-    descriptionSq:
-      "Kohëzgjatja e preferuar e shfaqur kur kaloni kursorin mbi një orar të lirë në kalendar.",
-  },
-  {
-    id: "buffer-time",
-    labelEn: "Buffer time",
-    labelMk: "Пауза меѓу термини",
-    labelSq: "Koha e pushimit",
-    unitEn: "minutes",
-    unitMk: "минути",
-    unitSq: "minuta",
-    field: "bufferTimeMins",
-    min: 0,
-    max: 240,
-    descriptionEn: "Time kept free after every appointment.",
-    descriptionMk: "Слободно време по секој термин за подготовка.",
-    descriptionSq: "Koha e mbajtur e lirë pas çdo termini.",
-  },
-  {
-    id: "booking-window",
-    labelEn: "Advance booking limit",
-    labelMk: "Ограничување за закажување однапред",
-    labelSq: "Kufiri i rezervimit paraprak",
-    unitEn: "days",
-    unitMk: "денови",
-    unitSq: "ditë",
-    field: "bookingWindowDays",
-    min: 1,
-    max: 730,
-    descriptionEn: "How far ahead customers may book.",
-    descriptionMk: "Колку однапред клиентите можат да закажат термин.",
-    descriptionSq: "Sa kohë përpara mund të rezervojnë klientët.",
-  },
-  {
-    id: "cancellation-window",
-    labelEn: "Cancellation notice",
-    labelMk: "Рок за откажување",
-    labelSq: "Njoftimi i anulimit",
-    unitEn: "hours",
-    unitMk: "часови",
-    unitSq: "orë",
-    field: "cancellationWindowHours",
-    min: 1,
-    max: 8760,
-    descriptionEn: "Minimum notice required for a customer cancellation.",
-    descriptionMk: "Минимален рок за најава за откажување од страна на клиент.",
-    descriptionSq: "Njoftimi minimal i kërkuar për anulim nga klienti.",
-  },
-];
-
+type BookingRules = {
+  slotDurationMins: number;
+  quickBookingDurationMins: number;
+  bookingWindowDays: number;
+  cancellationWindowHours: number;
+  bufferTimeMins: number;
+};
 export function BookingOperationsTab({
   orgId,
   initialData,
-}: BookingOperationsTabProps) {
+}: {
+  orgId: Id<"orgs">;
+  initialData: BookingRules;
+}) {
   const { t } = useDashboardI18n();
-  const isMounted = useRef(true);
-
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const [bookingRules, setBookingRules] = useState({
-    slotDurationMins: initialData.slotDurationMins,
-    quickBookingDurationMins: initialData.quickBookingDurationMins,
-    bookingWindowDays: initialData.bookingWindowDays,
-    cancellationWindowHours: initialData.cancellationWindowHours,
-    bufferTimeMins: initialData.bufferTimeMins,
-  });
-  const [errors, setErrors] = useState<FieldErrors<Fields>>({});
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    setBookingRules({
-      slotDurationMins: initialData.slotDurationMins,
-      quickBookingDurationMins: initialData.quickBookingDurationMins,
-      bookingWindowDays: initialData.bookingWindowDays,
-      cancellationWindowHours: initialData.cancellationWindowHours,
-      bufferTimeMins: initialData.bufferTimeMins,
-    });
-  }, [
-    initialData.bookingWindowDays,
-    initialData.bufferTimeMins,
-    initialData.cancellationWindowHours,
-    initialData.quickBookingDurationMins,
-    initialData.slotDurationMins,
-  ]);
-
-  const updateOrgSettings = useMutation(api.orgSettings.updateOrgSettings);
-
-  function validate(): FieldErrors<Fields> {
-    const nextErrors: FieldErrors<Fields> = {};
-    if (
-      !posInt(bookingRules.slotDurationMins) ||
-      bookingRules.slotDurationMins > 480
-    ) {
-      nextErrors.slotDurationMins = t(
-        "Enter a whole number between 1 and 480.",
-        "Внесете цел број помеѓу 1 и 480.",
-        "Vendosni një numër të plotë midis 1 dhe 480.",
-      );
-    }
-    if (
-      !posInt(bookingRules.quickBookingDurationMins) ||
-      bookingRules.quickBookingDurationMins > 480 ||
-      bookingRules.quickBookingDurationMins < bookingRules.slotDurationMins ||
-      bookingRules.quickBookingDurationMins % bookingRules.slotDurationMins !==
-        0
-    ) {
-      nextErrors.quickBookingDurationMins = t(
-        `Use a whole-number multiple of the ${bookingRules.slotDurationMins} minute slot duration, up to 480 minutes.`,
-        `Користете цел број што е содржател на времетраењето на терминот од ${bookingRules.slotDurationMins} минути, до 480 минути.`,
-        `Përdorni një numër të plotë që është shumëfish i kohëzgjatjes së orarit prej ${bookingRules.slotDurationMins} minutash, deri në 480 minuta.`,
-      );
-    }
-    if (
-      !posInt(bookingRules.bookingWindowDays) ||
-      bookingRules.bookingWindowDays > 730
-    ) {
-      nextErrors.bookingWindowDays = t(
-        "Enter a whole number between 1 and 730.",
-        "Внесете цел број помеѓу 1 и 730.",
-        "Vendosni një numër të plotë midis 1 dhe 730.",
-      );
-    }
-    if (
-      !posInt(bookingRules.cancellationWindowHours) ||
-      bookingRules.cancellationWindowHours > 8760
-    ) {
-      nextErrors.cancellationWindowHours = t(
-        "Enter a whole number between 1 and 8,760.",
-        "Внесете цел број помеѓу 1 и 8.760.",
-        "Vendosni një numër të plotë midis 1 dhe 8.760.",
-      );
-    }
-    if (
-      !nonNegInt(bookingRules.bufferTimeMins) ||
-      bookingRules.bufferTimeMins > 240
-    ) {
-      nextErrors.bufferTimeMins = t(
-        "Enter 0 or a whole number up to 240.",
-        "Внесете 0 или цел број до 240.",
-        "Vendosni 0 ose një numër të plotë deri në 240.",
-      );
-    }
-    return nextErrors;
-  }
-
-  const clearError = (field: Fields) => {
-    if (errors[field]) {
-      setErrors((current) => ({ ...current, [field]: undefined }));
-    }
+  const { draft, setDraft, changes, isDirty } = useSettingsDraft(initialData);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const update = useMutation(api.orgSettings.updateOrgSettings);
+  const set = (key: keyof BookingRules, value: number) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+    setError("");
   };
-
-  const handleSave = async () => {
-    const nextErrors = validate();
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
+  async function save() {
+    if (
+      Object.values(draft).some(
+        (value) => !Number.isFinite(value) || !Number.isInteger(value),
+      )
+    ) {
+      setError(
+        t(
+          "Use whole numbers for booking rules.",
+          "Внесете цели броеви за правилата за закажување.",
+          "Përdorni numra të plotë për rregullat e rezervimit.",
+        ),
+      );
       return;
     }
-
-    setErrors({});
-    setIsSaving(true);
+    setSaving(true);
+    setError("");
     try {
-      await updateOrgSettings({
-        orgId,
-        ...bookingRules,
-        timezone: initialData.timezone,
-        currency: initialData.currency,
-        locale: initialData.locale,
-      });
-      if (isMounted.current) {
-        toast.success(
-          t(
-            "Booking rules saved",
-            "Правилата за закажување се зачувани",
-            "Rregullat e rezervimit u ruajtën",
-          ),
-        );
-      }
-    } catch (error) {
-      if (isMounted.current) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : t(
-                "Failed to save booking rules.",
-                "Не успеа зачувувањето на правилата за закажување.",
-                "Dështoi ruajtja e rregullave të rezervimit.",
-              ),
-        );
-      }
+      await update({ orgId, ...changes });
+      toast.success(
+        t(
+          "Booking rules saved",
+          "Правилата за закажување се зачувани",
+          "Rregullat e rezervimit u ruajtën",
+        ),
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : t(
+              "Could not save booking rules.",
+              "Правилата не се зачувани.",
+              "Rregullat nuk mund të ruheshin.",
+            ),
+      );
     } finally {
-      if (isMounted.current) setIsSaving(false);
+      setSaving(false);
     }
-  };
-
+  }
+  function numberField(
+    key: keyof BookingRules,
+    label: string,
+    description: string,
+    min: number,
+    max: number,
+  ) {
+    return (
+      <Field>
+        <FieldLabel htmlFor={`booking-${key}`}>{label}</FieldLabel>
+        <Input
+          id={`booking-${key}`}
+          type="number"
+          min={min}
+          max={max}
+          step={1}
+          value={Number.isFinite(draft[key]) ? draft[key] : ""}
+          onChange={(event) =>
+            set(
+              key,
+              event.target.value === ""
+                ? Number.NaN
+                : Number(event.target.value),
+            )
+          }
+        />
+        <FieldDescription>{description}</FieldDescription>
+      </Field>
+    );
+  }
   return (
-    <TabsContent value="booking" className="m-0 flex flex-col gap-6">
+    <TabsContent value="booking" className="m-0">
       <SettingsCard
-        title={t(
-          "Booking rules",
-          "Правила за закажување",
-          "Rregullat e rezervimit",
-        )}
+        title={t("Online booking", "Онлајн закажување", "Rezervimi online")}
         description={t(
-          "Control calendar quick booking, appointment intervals, cancellation notice, and breathing room between bookings.",
-          "Управувајте со брзото закажување во календарот, интервалите на термини, рокот за откажување и паузите меѓу третмани.",
-          "Menaxhoni rezervimin e shpejtë në kalendar, intervalet e termineve, njoftimin e anulimit dhe kohën e pushimit midis rezervimeve.",
+          "Choose when clients can book and how much time to leave between appointments.",
+          "Изберете кога клиентите можат да закажуваат и колкава пауза да има меѓу термините.",
+          "Zgjidhni kur klientët mund të rezervojnë dhe sa kohë të lihet midis termineve.",
         )}
         footer={
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <Save data-icon="inline-start" />
-            )}
-            {isSaving
-              ? t("Saving…", "Се зачувува…", "Po ruhet…")
-              : t(
-                  "Save booking rules",
-                  "Зачувај правила за закажување",
-                  "Ruaj rregullat e rezervimit",
-                )}
+          <Button onClick={save} disabled={saving || !isDirty}>
+            {saving && <Spinner data-icon="inline-start" />}
+            {t("Save booking rules", "Зачувај правила", "Ruaj rregullat")}
           </Button>
         }
       >
-        <FieldGroup className="grid gap-6 sm:grid-cols-2">
-          {FIELD_CONFIG.map((config) => (
-            <Field
-              key={config.field}
-              data-invalid={Boolean(errors[config.field])}
-            >
-              <FieldLabel htmlFor={config.id}>
-                {t(config.labelEn, config.labelMk, config.labelSq)} (
-                {t(config.unitEn, config.unitMk, config.unitSq)})
-              </FieldLabel>
-              <DebouncedInput
-                id={config.id}
-                type="number"
-                min={config.min}
-                max={config.max}
-                value={String(bookingRules[config.field])}
-                aria-describedby={`${config.id}-description`}
-                aria-invalid={Boolean(errors[config.field])}
-                onChange={(value) => {
-                  setBookingRules((current) => ({
-                    ...current,
-                    [config.field]: Number.parseInt(value, 10),
-                  }));
-                  clearError(config.field);
-                }}
-              />
-              <FieldDescription id={`${config.id}-description`}>
-                {t(
-                  config.descriptionEn,
-                  config.descriptionMk,
-                  config.descriptionSq,
-                )}
-              </FieldDescription>
-              <FieldError>{errors[config.field]}</FieldError>
-            </Field>
-          ))}
-        </FieldGroup>
+        <fieldset disabled={saving} className="flex min-w-0 flex-col gap-6">
+          <FieldGroup className="grid gap-6 sm:grid-cols-2">
+            {numberField(
+              "bufferTimeMins",
+              t(
+                "Time between appointments (minutes)",
+                "Пауза меѓу термини (минути)",
+                "Koha midis termineve (minuta)",
+              ),
+              t(
+                "Time for preparation after each appointment. Use 0 for no break.",
+                "Време за подготовка по секој термин. Внесете 0 ако нема пауза.",
+                "Koha për përgatitje pas çdo termini. Përdorni 0 nëse nuk duhet pushim.",
+              ),
+              0,
+              240,
+            )}
+            {numberField(
+              "bookingWindowDays",
+              t(
+                "Clients can book ahead (days)",
+                "Закажување однапред (денови)",
+                "Rezervimi paraprak (ditë)",
+              ),
+              t(
+                "How far into the future online appointments are available.",
+                "Колку однапред се достапни онлајн термини.",
+                "Sa kohë përpara janë të disponueshme terminet online.",
+              ),
+              1,
+              730,
+            )}
+            {numberField(
+              "cancellationWindowHours",
+              t(
+                "Cancellation notice (hours)",
+                "Рок за откажување (часови)",
+                "Njoftimi i anulimit (orë)",
+              ),
+              t(
+                "After this deadline, clients must contact the studio to cancel.",
+                "По овој рок, клиентите треба да го контактираат студиото за откажување.",
+                "Pas këtij afati, klientët duhet të kontaktojnë studion për anulim.",
+              ),
+              1,
+              8760,
+            )}
+          </FieldGroup>
+          <Disclosure
+            title={t(
+              "Calendar and booking intervals",
+              "Календар и интервали за закажување",
+              "Kalendari dhe intervalet e rezervimit",
+            )}
+          >
+            <FieldGroup className="grid gap-6 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="booking-start-interval">
+                  {t(
+                    "Appointment start interval",
+                    "Интервал на почеток на термин",
+                    "Intervali i fillimit të terminit",
+                  )}
+                </FieldLabel>
+                <Select
+                  value={String(draft.slotDurationMins)}
+                  onValueChange={(value) => {
+                    const interval = Number(value);
+                    setDraft((current) => ({
+                      ...current,
+                      slotDurationMins: interval,
+                      quickBookingDurationMins: Math.max(
+                        interval,
+                        Math.ceil(current.quickBookingDurationMins / interval) *
+                          interval,
+                      ),
+                    }));
+                    setError("");
+                  }}
+                >
+                  <SelectTrigger id="booking-start-interval">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {[
+                        ...new Set([
+                          5,
+                          10,
+                          15,
+                          20,
+                          30,
+                          60,
+                          draft.slotDurationMins,
+                        ]),
+                      ]
+                        .sort((a, b) => a - b)
+                        .map((value) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {value} {t("minutes", "минути", "minuta")}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  {t(
+                    "For example, 15 minutes offers starts at 09:00, 09:15 and 09:30. Service duration stays in Services.",
+                    "На пример, 15 минути нуди почеток во 09:00, 09:15 и 09:30. Времетраењето на услугите се уредува во Услуги.",
+                    "Për shembull, 15 minuta ofron fillime në 09:00, 09:15 dhe 09:30. Kohëzgjatja e shërbimit caktohet te Shërbimet.",
+                  )}
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="booking-quick-length">
+                  {t(
+                    "Calendar quick booking length",
+                    "Времетраење за брзо закажување",
+                    "Kohëzgjatja e rezervimit të shpejtë",
+                  )}
+                </FieldLabel>
+                <Select
+                  value={String(draft.quickBookingDurationMins)}
+                  onValueChange={(value) =>
+                    set("quickBookingDurationMins", Number(value))
+                  }
+                >
+                  <SelectTrigger id="booking-quick-length">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {[
+                        ...new Set([
+                          draft.slotDurationMins,
+                          30,
+                          45,
+                          60,
+                          90,
+                          120,
+                          draft.quickBookingDurationMins,
+                        ]),
+                      ]
+                        .filter(
+                          (value) =>
+                            value >= draft.slotDurationMins &&
+                            value % draft.slotDurationMins === 0 &&
+                            value <= 480,
+                        )
+                        .sort((a, b) => a - b)
+                        .map((value) => (
+                          <SelectItem key={value} value={String(value)}>
+                            {value} {t("minutes", "минути", "minuta")}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  {t(
+                    "The suggested length when adding an appointment from an empty calendar slot.",
+                    "Предложено времетраење при додавање термин од празно место во календарот.",
+                    "Kohëzgjatja e sugjeruar kur shtoni një termin nga një orar bosh në kalendar.",
+                  )}
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+          </Disclosure>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </fieldset>
       </SettingsCard>
     </TabsContent>
   );

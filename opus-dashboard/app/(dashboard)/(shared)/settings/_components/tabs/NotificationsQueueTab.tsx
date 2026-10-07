@@ -1,39 +1,35 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
 import { useMutation } from "convex/react";
-import { MailCheck, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Badge } from "@/components/ui/badge";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { useSettingsDraft } from "@/hooks/use-settings-draft";
+import { useEmailNotificationSettings } from "@/hooks/use-email-notification-settings";
+import { ProFeatureNotice } from "@/components/billing/ProFeatureNotice";
+import { ReminderTimesField } from "@/components/notifications/ReminderTimesField";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DebouncedInput } from "@/components/ui/debounced-input";
+import { Disclosure } from "@/components/ui/disclosure";
 import {
   Field,
   FieldContent,
   FieldDescription,
-  FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSet,
 } from "@/components/ui/field";
-import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { TabsContent } from "@/components/ui/tabs";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import {
   SettingsCard,
-  SettingsSection,
   SettingsToggleRow,
-} from "../SettingsCard";
-import { parseReminderHours } from "../validation";
+} from "@/components/settings/SettingsCard";
 import { SmsNotificationsCard } from "./SmsNotificationsCard";
 import { ClientEmailReminders } from "./ClientEmailReminders";
-import { PushPreferencesCard } from "@/components/notifications/PushPreferencesCard";
 
 type EmailRecipient = {
   userId: Id<"users">;
@@ -63,38 +59,6 @@ interface NotificationsQueueTabProps {
   };
 }
 
-const DASHBOARD_OPTIONS = [
-  {
-    id: "dashboard-sound-enabled",
-    labelEn: "Sound",
-    labelMk: "Звук",
-    labelSq: "Tingull",
-    descriptionEn: "Play a chime when a new notification arrives.",
-    descriptionMk: "Пушти звучен сигнал кога ќе пристигне ново известување.",
-    descriptionSq: "Luaj një tingull kur mbërrin një njoftim i ri.",
-    key: "dashboardSoundEnabled",
-  },
-  {
-    id: "dashboard-toast-enabled",
-    labelEn: "Toast preview",
-    labelMk: "Преглед на известување",
-    labelSq: "Parashikim i njoftimit",
-    descriptionEn: "Show a brief notification card beneath the bell.",
-    descriptionMk: "Прикажи кратка картичка со известување под ѕвончето.",
-    descriptionSq: "Shfaq një kartë të shkurtër njoftimi poshtë ziles.",
-    key: "dashboardToastEnabled",
-  },
-] as const;
-
-const ROLE_LABELS: Record<
-  EmailRecipient["role"],
-  { en: string; mk: string; sq: string }
-> = {
-  owner: { en: "Owner", mk: "Сопственик", sq: "Pronar" },
-  manager: { en: "Manager", mk: "Менаџер", sq: "Menaxher" },
-  staff: { en: "Staff", mk: "Вработен", sq: "Staf" },
-};
-
 export function NotificationsQueueTab({
   orgId,
   isPaid,
@@ -102,134 +66,42 @@ export function NotificationsQueueTab({
   initialData,
 }: NotificationsQueueTabProps) {
   const { t } = useDashboardI18n();
-  const isMounted = useRef(true);
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  const [email, setEmail] = useState({
-    customerReminderEmailEnabled: initialData.emailEnabled,
-    customerReminderHours: initialData.reminderHoursBefore,
-    staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
-    staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
-    staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
-    staffEmailRecipientUserIds: initialData.staffEmailRecipientUserIds,
-  });
-  const [dashboard, setDashboard] = useState({
-    dashboardNotificationsEnabled: initialData.dashboardNotificationsEnabled,
-    dashboardSoundEnabled: initialData.dashboardSoundEnabled,
-    dashboardToastEnabled: initialData.dashboardToastEnabled,
-  });
-  const [customerReminderError, setCustomerReminderError] = useState<string>();
-  const [staffReminderError, setStaffReminderError] = useState<string>();
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    setEmail({
-      customerReminderEmailEnabled: initialData.emailEnabled,
-      customerReminderHours: initialData.reminderHoursBefore,
-      staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
-      staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
-      staffReminderHours: initialData.staffReminderHoursBefore.join(", "),
-      staffEmailRecipientUserIds: initialData.staffEmailRecipientUserIds,
-    });
-    setDashboard({
-      dashboardNotificationsEnabled: initialData.dashboardNotificationsEnabled,
-      dashboardSoundEnabled: initialData.dashboardSoundEnabled,
-      dashboardToastEnabled: initialData.dashboardToastEnabled,
-    });
-  }, [initialData]);
-
-  const updateEmailNotificationSettings = useMutation(
-    api.orgSettings.updateEmailNotificationSettings,
-  );
-  const updateDashboardNotificationSettings = useMutation(
-    api.orgSettings.updateDashboardNotificationSettings,
-  );
-
-  const handleSave = async () => {
-    const customerReminderHours = isPaid
-      ? email.customerReminderHours
-      : initialData.reminderHoursBefore;
-    const staffReminderHours = parseReminderHours(email.staffReminderHours);
-    let invalid = false;
-    if (
-      isPaid &&
-      email.customerReminderEmailEnabled &&
-      customerReminderHours.length === 0
-    ) {
-      setCustomerReminderError(
-        t(
-          "Select at least one reminder time.",
-          "Изберете барем едно време за потсетување.",
-          "Zgjidhni të paktën një kohë për rikujtues.",
-        ),
-      );
-      invalid = true;
-    } else {
-      setCustomerReminderError(undefined);
-    }
-    if (
-      !staffReminderHours ||
-      (email.staffReminderEmailEnabled && staffReminderHours.length === 0)
-    ) {
-      setStaffReminderError(
-        t(
-          "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
-          "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
-          "Vendosni deri në tetë rikujtues në orë të plota midis 1 dhe 336, si 24, 2.",
-        ),
-      );
-      invalid = true;
-    } else {
-      setStaffReminderError(undefined);
-    }
-    if (invalid || !staffReminderHours) return;
-
-    setIsSaving(true);
-    try {
-      await updateEmailNotificationSettings({
-        orgId,
-        customerReminderEmailEnabled:
-          isPaid && email.customerReminderEmailEnabled,
-        customerReminderHoursBefore: customerReminderHours,
-        staffNewBookingEmailEnabled: email.staffNewBookingEmailEnabled,
-        staffReminderEmailEnabled: email.staffReminderEmailEnabled,
-        staffReminderHoursBefore: staffReminderHours,
-        staffEmailRecipientUserIds: email.staffEmailRecipientUserIds,
-      });
-      await updateDashboardNotificationSettings({ orgId, ...dashboard });
-      if (isMounted.current) {
-        toast.success(
-          t(
-            "Email and alert settings saved",
-            "Поставките за е-пошта и известувања се зачувани",
-            "Cilësimet e email-it dhe njoftimeve u ruajtën",
-          ),
-        );
-      }
-    } catch (error) {
-      if (isMounted.current) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : t(
-                "Failed to save email settings.",
-                "Не успеа зачувувањето на поставките за е-пошта.",
-                "Ruajtja e cilësimeve të email-it dështoi.",
-              ),
-        );
-      }
-    } finally {
-      if (isMounted.current) setIsSaving(false);
-    }
-  };
-
   return (
     <TabsContent value="notifications" className="m-0 flex flex-col gap-5">
-      <PushPreferencesCard />
+      <p className="text-sm text-muted-foreground">
+        {t(
+          "These settings apply to your studio. ",
+          "Овие поставки важат за студиото. ",
+          "Këto cilësime vlejnë për studion. ",
+        )}
+        <Link
+          className="underline underline-offset-4"
+          href="/notifications/preferences"
+        >
+          {t(
+            "Manage my personal alerts",
+            "Уреди ги моите лични известувања",
+            "Menaxho njoftimet e mia personale",
+          )}
+        </Link>
+      </p>
+      {isPaid ? (
+        <ClientEmailSettings orgId={orgId} initialData={initialData} />
+      ) : (
+        <ProFeatureNotice
+          title={t(
+            "Client email reminders",
+            "Потсетници за клиенти по е-пошта",
+            "Kujtesa me email për klientët",
+          )}
+          description={t(
+            "Appointment confirmations and email verification are included. Scheduled client reminders are available with Pro.",
+            "Потврдите за термини и верификацијата се вклучени. Закажаните потсетници за клиенти се достапни со Pro.",
+            "Konfirmimet dhe verifikimi me email përfshihen. Kujtesat e planifikuara për klientët janë në Pro.",
+          )}
+          actionLabel={t("View Pro", "Погледни Pro", "Shiko Pro")}
+        />
+      )}
       <SmsNotificationsCard
         orgId={orgId}
         isPaid={isPaid}
@@ -237,372 +109,325 @@ export function NotificationsQueueTab({
         initialEnabled={initialData.smsEnabled}
         initialReminderHours={initialData.smsReminderHoursBefore}
       />
-      <SettingsCard
-        title={t(
-          "Email & alerts",
-          "Е-пошта и известувања",
-          "Email dhe njoftime",
-        )}
-        description={t(
-          "Keep clients verified and informed, then decide exactly which dashboard users hear about new and upcoming appointments.",
-          "Осигурете верификација и информираност на клиентите, и изберете кои корисници на контролната табла добиваат известувања за нови и претстојни термини.",
-          "Mbajini klientët e verifikuar dhe të informuar, pastaj vendosni saktësisht cilët përdorues të panelit njoftohen për terminet e reja dhe të ardhshme.",
-        )}
-        contentClassName="flex flex-col gap-7"
-        footer={
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? (
-              <Spinner data-icon="inline-start" />
-            ) : (
-              <Save data-icon="inline-start" />
-            )}
-            {isSaving
-              ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
-              : t(
-                  "Save email settings",
-                  "Зачувај поставки за е-пошта",
-                  "Ruaj cilësimet e email-it",
-                )}
-          </Button>
+      <TeamEmailSettings orgId={orgId} initialData={initialData} />
+      <DashboardAlertSettings orgId={orgId} initialData={initialData} />
+    </TabsContent>
+  );
+}
+
+type EmailSettingsProps = {
+  orgId: Id<"orgs">;
+  initialData: NotificationsQueueTabProps["initialData"];
+};
+function ClientEmailSettings({ orgId, initialData }: EmailSettingsProps) {
+  const { t } = useDashboardI18n();
+  const form = useEmailNotificationSettings(orgId, {
+    customerReminderEmailEnabled: initialData.emailEnabled,
+    customerReminderHoursBefore: initialData.reminderHoursBefore,
+  });
+  return (
+    <SettingsCard
+      title={t("Client email", "Е-пошта за клиенти", "Email për klientët")}
+      description={t(
+        "Email verification and appointment confirmations are always included.",
+        "Верификацијата на е-пошта и потврдите за термини се секогаш вклучени.",
+        "Verifikimi me email dhe konfirmimet e termineve përfshihen gjithmonë.",
+      )}
+      footer={
+        <Button onClick={form.save} disabled={form.saving || !form.isDirty}>
+          {form.saving && <Spinner data-icon="inline-start" />}
+          {t(
+            "Save client reminders",
+            "Зачувај потсетници за клиенти",
+            "Ruaj kujtesat për klientët",
+          )}
+        </Button>
+      }
+    >
+      <ClientEmailReminders
+        isPaid
+        enabled={form.draft.customerReminderEmailEnabled}
+        hours={form.draft.customerReminderHoursBefore}
+        savedHours={initialData.reminderHoursBefore}
+        saving={form.saving}
+        error={form.error || undefined}
+        onEnabledChange={(enabled) =>
+          form.setDraft((current) => ({
+            ...current,
+            customerReminderEmailEnabled: enabled,
+          }))
         }
-      >
-        <SettingsSection
+        onHoursChange={(hours) =>
+          form.setDraft((current) => ({
+            ...current,
+            customerReminderHoursBefore: hours,
+          }))
+        }
+      />
+      {form.error && !form.draft.customerReminderEmailEnabled && (
+        <Alert variant="destructive">
+          <AlertDescription>{form.error}</AlertDescription>
+        </Alert>
+      )}
+    </SettingsCard>
+  );
+}
+
+function TeamEmailSettings({ orgId, initialData }: EmailSettingsProps) {
+  const { t } = useDashboardI18n();
+  const form = useEmailNotificationSettings(orgId, {
+    staffNewBookingEmailEnabled: initialData.staffNewBookingEmailEnabled,
+    staffReminderEmailEnabled: initialData.staffReminderEmailEnabled,
+    staffReminderHoursBefore: initialData.staffReminderHoursBefore,
+    staffEmailRecipientUserIds: initialData.staffEmailRecipientUserIds,
+  });
+  return (
+    <SettingsCard
+      title={t("Team email", "Е-пошта за тимот", "Email për ekipin")}
+      description={t(
+        "Notify assigned staff about their appointments. You can also include additional studio recipients.",
+        "Известете ги вработените за нивните термини. Можете да вклучите и дополнителни примачи од студиото.",
+        "Njoftoni stafin për terminet e tyre. Mund të shtoni edhe marrës të tjerë të studios.",
+      )}
+      footer={
+        <Button onClick={form.save} disabled={form.saving || !form.isDirty}>
+          {form.saving && <Spinner data-icon="inline-start" />}
+          {t(
+            "Save team email",
+            "Зачувај тимска е-пошта",
+            "Ruaj email-in e ekipit",
+          )}
+        </Button>
+      }
+    >
+      <fieldset disabled={form.saving} className="flex min-w-0 flex-col gap-5">
+        <SettingsToggleRow
+          title={t("New appointments", "Нови термини", "Termine të reja")}
+          description={t(
+            "Email assigned staff when an appointment is added. Additional recipients also receive new online bookings.",
+            "Испраќајте е-пошта на вработениот при нов термин. Дополнителните примачи добиваат и нови онлајн закажувања.",
+            "Dërgoni email stafit kur shtohet një termin. Marrësit shtesë marrin edhe rezervimet e reja online.",
+          )}
+          control={
+            <Switch
+              aria-label={t(
+                "New appointment emails",
+                "Е-пошта за нови термини",
+                "Email për termine të reja",
+              )}
+              checked={form.draft.staffNewBookingEmailEnabled}
+              onCheckedChange={(enabled) =>
+                form.setDraft((current) => ({
+                  ...current,
+                  staffNewBookingEmailEnabled: enabled,
+                }))
+              }
+            />
+          }
+        />
+        <SettingsToggleRow
           title={t(
-            "Client journey",
-            "Патување на клиентот",
-            "Rrugëtimi i klientit",
+            "Upcoming appointment reminders",
+            "Потсетници за претстојни термини",
+            "Kujtesa për terminet e ardhshme",
           )}
           description={t(
-            "Verification and confirmation are transactional parts of online booking, so clients cannot switch them off.",
-            "Верификацијата и потврдата се трансакциски дел од онлајн закажувањето, па клиентите не можат да ги исклучат.",
-            "Verifikimi dhe konfirmimi janë pjesë thelbësore e rezervimit në internet, prandaj klientët nuk mund t'i çaktivizojnë ato.",
+            "Remind assigned staff and additional recipients before appointments.",
+            "Потсетете ги вработените и дополнителните примачи пред термините.",
+            "Kujtoni stafin dhe marrësit shtesë para termineve.",
           )}
-        >
-          <div className="flex flex-col gap-3">
-            <SettingsToggleRow
-              title={t(
-                "Email verification code",
-                "Код за верификација на е-пошта",
-                "Kodi i verifikimit me email",
+          control={
+            <Switch
+              aria-label={t(
+                "Team appointment reminders",
+                "Тимски потсетници за термини",
+                "Kujtesat e termineve për ekipin",
               )}
-              description={t(
-                "Confirms that the client owns the email address before the appointment is created.",
-                "Потврдува дека клиентот е сопственик на е-адресата пред да се креира терминот.",
-                "Konfirmon që klienti zotëron adresën e email-it përpara se të krijohet termini.",
-              )}
-              control={
-                <Badge data-replay-public variant="secondary">
-                  <ShieldCheck data-icon="inline-start" />
-                  {t("Required", "Задолжително", "E detyrueshme")}
-                </Badge>
+              checked={form.draft.staffReminderEmailEnabled}
+              onCheckedChange={(enabled) =>
+                form.setDraft((current) => ({
+                  ...current,
+                  staffReminderEmailEnabled: enabled,
+                }))
               }
             />
-            <SettingsToggleRow
-              title={t(
-                "Appointment confirmation",
-                "Потврда за термин",
-                "Konfirmimi i terminit",
-              )}
-              description={t(
-                "Sends the appointment overview, calendar file, directions, and studio contact actions.",
-                "Испраќа преглед на терминот, датотека за календар, насоки и контакт информации за студиото.",
-                "Dërgon përmbledhjen e terminit, skedarin e kalendarit, udhëzimet dhe kontaktet e studios.",
-              )}
-              control={
-                <Badge data-replay-public variant="secondary">
-                  <MailCheck data-icon="inline-start" />
-                  {t("Always on", "Секогаш вклучено", "Gjithmonë aktive")}
-                </Badge>
-              }
-            />
-          </div>
-
-          <ClientEmailReminders
-            isPaid={isPaid}
-            enabled={email.customerReminderEmailEnabled}
-            hours={email.customerReminderHours}
-            saving={isSaving}
-            error={customerReminderError}
-            onEnabledChange={(enabled) => {
-              setEmail((current) => ({
+          }
+        />
+        {form.draft.staffReminderEmailEnabled && (
+          <ReminderTimesField
+            id="team-reminder"
+            hours={form.draft.staffReminderHoursBefore}
+            savedHours={initialData.staffReminderHoursBefore}
+            onChange={(hours) =>
+              form.setDraft((current) => ({
                 ...current,
-                customerReminderEmailEnabled: enabled,
-              }));
-              setCustomerReminderError(undefined);
-            }}
-            onHoursChange={(hours) => {
-              setEmail((current) => ({
-                ...current,
-                customerReminderHours: hours,
-              }));
-              setCustomerReminderError(undefined);
-            }}
-          />
-        </SettingsSection>
-
-        <Separator />
-
-        <SettingsSection
-          title={t("Team email", "Тимска е-пошта", "Email-i i ekipit")}
-          description={t(
-            "Choose which appointment events are emailed to assigned staff and additional dashboard recipients.",
-            "Изберете кои настани за термини се испраќаат по е-пошта на доделениот персонал и дополнителни корисници.",
-            "Zgjidhni cilat ngjarje të termineve u dërgohen me email stafit të caktuar dhe marrësve shtesë në panel.",
-          )}
-        >
-          <div className="flex flex-col gap-3">
-            <SettingsToggleRow
-              title={t("New appointments", "Нови термини", "Termine të reja")}
-              description={t(
-                "Email the assigned staff when an appointment is added. Selected dashboard recipients also receive new online bookings.",
-                "Испраќа е-пошта на доделениот вработен при додавање нов термин. Избраните корисници на контролната табла исто така добиваат известувања за нови онлајн закажувања.",
-                "Dërgon email te stafi i caktuar kur shtohet një termin. Marrësit e përzgjedhur të panelit marrin gjithashtu rezervimet e reja online.",
-              )}
-              control={
-                <Switch
-                  id="staff-new-booking-email-enabled"
-                  aria-label={t(
-                    "New booking emails",
-                    "Е-пораки за нови закажувања",
-                    "Email-e për rezervime të reja",
-                  )}
-                  checked={email.staffNewBookingEmailEnabled}
-                  onCheckedChange={(checked) =>
-                    setEmail((current) => ({
-                      ...current,
-                      staffNewBookingEmailEnabled: checked,
-                    }))
-                  }
-                />
-              }
-            />
-            <SettingsToggleRow
-              title={t(
-                "Upcoming appointment reminders",
-                "Потсетници за претстојни термини",
-                "Rikujtues për terminet e ardhshme",
-              )}
-              description={t(
-                "Email assigned staff and selected dashboard recipients before confirmed appointments.",
-                "Испраќа е-пошта на доделениот вработен и избраните корисници пред потврдените термини.",
-                "Dërgon email te stafi i caktuar dhe marrësit e përzgjedhur para termineve të konfirmuara.",
-              )}
-              control={
-                <Switch
-                  id="staff-reminder-email-enabled"
-                  aria-label={t(
-                    "Team appointment reminders",
-                    "Тимски потсетници за термини",
-                    "Rikujtues të ekipit për terminet",
-                  )}
-                  checked={email.staffReminderEmailEnabled}
-                  onCheckedChange={(checked) =>
-                    setEmail((current) => ({
-                      ...current,
-                      staffReminderEmailEnabled: checked,
-                    }))
-                  }
-                />
-              }
-            />
-          </div>
-
-          {email.staffReminderEmailEnabled && (
-            <FieldGroup className="max-w-xl">
-              <Field data-invalid={Boolean(staffReminderError)}>
-                <FieldLabel data-replay-public htmlFor="staff-reminder-hours">
-                  {t(
-                    "Team reminder schedule (hours before)",
-                    "Распоред за тимски потсетници (часови однапред)",
-                    "Orari i rikujtuesve të ekipit (orë përpara)",
-                  )}
-                </FieldLabel>
-                <DebouncedInput
-                  id="staff-reminder-hours"
-                  value={email.staffReminderHours}
-                  maxLength={64}
-                  aria-describedby="staff-reminder-description"
-                  aria-invalid={Boolean(staffReminderError)}
-                  onChange={(value) => {
-                    setEmail((current) => ({
-                      ...current,
-                      staffReminderHours: value,
-                    }));
-                    setStaffReminderError(undefined);
-                  }}
-                  placeholder="24, 2"
-                />
-                <FieldDescription
-                  data-replay-public
-                  id="staff-reminder-description"
-                >
-                  {t(
-                    "This schedule is independent from the client reminder schedule.",
-                    "Овој распоред е независен од распоредот за потсетување на клиенти.",
-                    "Ky orar është i pavarur nga orari i rikujtuesve për klientët.",
-                  )}
-                </FieldDescription>
-                <FieldError>{staffReminderError}</FieldError>
-              </Field>
-            </FieldGroup>
-          )}
-
-          <FieldSet>
-            <FieldLegend variant="label">
-              {t(
-                "Additional dashboard recipients",
-                "Дополнителни примачи од контролната табла",
-                "Marrës shtesë nga paneli",
-              )}
-            </FieldLegend>
-            <FieldDescription data-replay-public>
-              {t(
-                "Staff with an appointment email receive only their assigned appointments. Select dashboard users here if they should also receive studio-wide team emails.",
-                "Вработените со е-пошта за термини ги добиваат само своите доделени термини. Изберете корисници тука доколку треба да добиваат е-пораки за целото студио.",
-                "Stafi me email për termine merr vetëm terminet e caktuara për ta. Zgjidhni përdoruesit e panelit këtu nëse duhet të marrin edhe email-e të përgjithshme të studios.",
-              )}
-            </FieldDescription>
-            <FieldGroup data-slot="checkbox-group">
-              {initialData.emailRecipients.map((recipient) => {
-                const id = `email-recipient-${recipient.userId}`;
-                const checked = email.staffEmailRecipientUserIds.includes(
-                  recipient.userId,
-                );
-                return (
-                  <Field
-                    key={recipient.userId}
-                    orientation="horizontal"
-                    variant="surface"
-                  >
-                    <Checkbox
-                      id={id}
-                      checked={checked}
-                      onCheckedChange={(nextChecked) => {
-                        setEmail((current) => ({
-                          ...current,
-                          staffEmailRecipientUserIds: nextChecked
-                            ? Array.from(
-                                new Set([
-                                  ...current.staffEmailRecipientUserIds,
-                                  recipient.userId,
-                                ]),
-                              )
-                            : current.staffEmailRecipientUserIds.filter(
-                                (userId) => userId !== recipient.userId,
-                              ),
-                        }));
-                      }}
-                    />
-                    <FieldContent>
-                      <FieldLabel htmlFor={id}>
-                        {recipient.name}
-                        <Badge variant="outline">
-                          {t(
-                            ROLE_LABELS[recipient.role].en,
-                            ROLE_LABELS[recipient.role].mk,
-                            ROLE_LABELS[recipient.role].sq,
-                          )}
-                        </Badge>
-                      </FieldLabel>
-                      <FieldDescription>{recipient.email}</FieldDescription>
-                    </FieldContent>
-                  </Field>
-                );
-              })}
-            </FieldGroup>
-            {initialData.emailRecipients.length === 0 && (
-              <FieldDescription data-replay-public>
-                {t(
-                  "There are no active dashboard users to add. Appointment emails are linked from the Staff page.",
-                  "Нема активни корисници за додавање. Е-поштата за термини се поврзува на страницата Тим.",
-                  "Nuk ka përdorues aktivë të panelit për të shtuar. Email-et e termineve lidhen te faqja Stafi.",
-                )}
-              </FieldDescription>
-            )}
-          </FieldSet>
-        </SettingsSection>
-
-        <Separator />
-
-        <SettingsSection
-          title={t(
-            "Dashboard alerts",
-            "Известувања на контролната табла",
-            "Njoftimet në panel",
-          )}
-          description={t(
-            "Control real-time feedback for staff working inside OPUS.",
-            "Контролирајте ги известувањата во реално време за персоналот во OPUS.",
-            "Kontrolloni njoftimet në kohë reale për stafin brenda OPUS-it.",
-          )}
-        >
-          <SettingsToggleRow
-            title={t(
-              "In-app notifications",
-              "Известувања во апликацијата",
-              "Njoftime brenda aplikacionit",
-            )}
-            description={t(
-              "Show new bookings, cancellations, and no-shows in the notification bell.",
-              "Прикажувај нови закажувања, откажувања и пропуштени термини во ѕвончето за известувања.",
-              "Shfaq rezervimet e reja, anulimet dhe mosparaqitjet te zilja e njoftimeve.",
-            )}
-            control={
-              <Switch
-                id="dashboard-notifications-enabled"
-                aria-label={t(
-                  "In-app notifications",
-                  "Известувања во апликацијата",
-                  "Njoftime brenda aplikacionit",
-                )}
-                checked={dashboard.dashboardNotificationsEnabled}
-                onCheckedChange={(checked) =>
-                  setDashboard((current) => ({
-                    ...current,
-                    dashboardNotificationsEnabled: checked,
-                  }))
-                }
-              />
+                staffReminderHoursBefore: hours,
+              }))
             }
           />
-
-          {dashboard.dashboardNotificationsEnabled && (
-            <div className="flex flex-col gap-3">
-              {DASHBOARD_OPTIONS.map(
-                ({
-                  id,
-                  labelEn,
-                  labelMk,
-                  labelSq,
-                  descriptionEn,
-                  descriptionMk,
-                  descriptionSq,
-                  key,
-                }) => (
-                  <SettingsToggleRow
-                    key={id}
-                    title={t(labelEn, labelMk, labelSq)}
-                    description={t(descriptionEn, descriptionMk, descriptionSq)}
-                    control={
-                      <Switch
-                        id={id}
-                        aria-label={t(labelEn, labelMk, labelSq)}
-                        checked={dashboard[key]}
-                        onCheckedChange={(checked) =>
-                          setDashboard((current) => ({
-                            ...current,
-                            [key]: checked,
-                          }))
-                        }
-                      />
-                    }
-                  />
-                ),
-              )}
-            </div>
+        )}
+        <Disclosure
+          title={t(
+            "Additional email recipients",
+            "Дополнителни примачи на е-пошта",
+            "Marrës shtesë të email-it",
           )}
-        </SettingsSection>
-      </SettingsCard>
-    </TabsContent>
+          description={t(
+            "Choose who also receives studio-wide team emails.",
+            "Изберете кој добива тимски е-пораки за целото студио.",
+            "Zgjidhni kush merr edhe email-e për të gjithë studion.",
+          )}
+        >
+          <FieldGroup>
+            {initialData.emailRecipients.map((recipient) => (
+              <Field key={recipient.userId} orientation="horizontal">
+                <Checkbox
+                  id={`email-recipient-${recipient.userId}`}
+                  checked={form.draft.staffEmailRecipientUserIds.includes(
+                    recipient.userId,
+                  )}
+                  onCheckedChange={(checked) =>
+                    form.setDraft((current) => ({
+                      ...current,
+                      staffEmailRecipientUserIds:
+                        checked === true
+                          ? [
+                              ...new Set([
+                                ...current.staffEmailRecipientUserIds,
+                                recipient.userId,
+                              ]),
+                            ]
+                          : current.staffEmailRecipientUserIds.filter(
+                              (id) => id !== recipient.userId,
+                            ),
+                    }))
+                  }
+                />
+                <FieldContent>
+                  <FieldLabel htmlFor={`email-recipient-${recipient.userId}`}>
+                    {recipient.name}
+                  </FieldLabel>
+                  <FieldDescription>{recipient.email}</FieldDescription>
+                </FieldContent>
+              </Field>
+            ))}
+          </FieldGroup>
+          {initialData.emailRecipients.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "No additional team accounts are available.",
+                "Нема дополнителни тимски сметки.",
+                "Nuk ka llogari të tjera të ekipit.",
+              )}
+            </p>
+          )}
+        </Disclosure>
+        {form.error && (
+          <Alert variant="destructive">
+            <AlertDescription>{form.error}</AlertDescription>
+          </Alert>
+        )}
+      </fieldset>
+    </SettingsCard>
+  );
+}
+
+function DashboardAlertSettings({ orgId, initialData }: EmailSettingsProps) {
+  const { t } = useDashboardI18n();
+  const form = useSettingsDraft({
+    dashboardNotificationsEnabled: initialData.dashboardNotificationsEnabled,
+    dashboardSoundEnabled: initialData.dashboardSoundEnabled,
+    dashboardToastEnabled: initialData.dashboardToastEnabled,
+  });
+  const [saving, setSaving] = useState(false);
+  const update = useMutation(
+    api.orgSettings.updateDashboardNotificationSettings,
+  );
+  async function save() {
+    setSaving(true);
+    try {
+      await update({ orgId, ...form.draft });
+      toast.success(
+        t(
+          "Dashboard alerts saved",
+          "Известувањата се зачувани",
+          "Njoftimet u ruajtën",
+        ),
+      );
+    } catch (cause) {
+      toast.error(
+        cause instanceof Error
+          ? cause.message
+          : t(
+              "Could not save alerts.",
+              "Известувањата не се зачувани.",
+              "Njoftimet nuk mund të ruheshin.",
+            ),
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+  const options = [
+    {
+      key: "dashboardNotificationsEnabled",
+      label: t(
+        "Notification bell alerts",
+        "Известувања во ѕвончето",
+        "Njoftimet te zilja",
+      ),
+    },
+    {
+      key: "dashboardSoundEnabled",
+      label: t("Play a sound", "Пушти звук", "Luaj tingull"),
+    },
+    {
+      key: "dashboardToastEnabled",
+      label: t(
+        "Show a notification preview",
+        "Прикажи преглед на известување",
+        "Shfaq pamje paraprake të njoftimit",
+      ),
+    },
+  ] as const;
+  return (
+    <Disclosure
+      title={t(
+        "Dashboard alerts",
+        "Известувања на контролната табла",
+        "Njoftimet në panel",
+      )}
+      description={t(
+        "Studio-wide sound and notification previews while OPUS is open.",
+        "Звук и преглед на известувања за студиото додека OPUS е отворен.",
+        "Tinguj dhe pamje paraprake për studion kur OPUS është i hapur.",
+      )}
+    >
+      <FieldGroup>
+        {options.map(({ key, label }) => (
+          <Field key={key} orientation="horizontal">
+            <FieldContent>
+              <FieldLabel htmlFor={`alert-${key}`}>{label}</FieldLabel>
+            </FieldContent>
+            <Switch
+              id={`alert-${key}`}
+              checked={form.draft[key]}
+              disabled={saving}
+              onCheckedChange={(enabled) =>
+                form.setDraft((current) => ({ ...current, [key]: enabled }))
+              }
+            />
+          </Field>
+        ))}
+      </FieldGroup>
+      <Button
+        onClick={save}
+        disabled={saving || !form.isDirty}
+        className="self-start"
+      >
+        {saving && <Spinner data-icon="inline-start" />}
+        {t("Save dashboard alerts", "Зачувај известувања", "Ruaj njoftimet")}
+      </Button>
+    </Disclosure>
   );
 }

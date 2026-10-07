@@ -14,6 +14,7 @@ export const en: DashboardTranslations = {
     "/beauty/clients": "Clients",
     "/beauty/staff": "Team",
     "/gap-optimizer": "Fill Gaps",
+    "/notifications/preferences": "My preferences",
     "/notifications": "Notifications",
     "/settings": "Settings",
     "/ai-inbox": "AI Inbox",

@@ -66,6 +66,29 @@ are optional; they must not block publication or suspend an otherwise bookable
 website. Branding and more services/team members can be added after launch.
 The Pro signup path still continues from operational setup to subscription review.
 
+### Studio settings and personal preferences
+
+The October 7 settings simplification groups studio controls into Studio,
+Booking, Notifications, AI front desk and Subscription. Studio combines profile,
+photos and location; all existing currency choices (MKD, EUR, USD and GBP) remain.
+Timezone, public locale, country and existing advanced AI values are retained in
+storage when their controls are hidden. The dormant surge-pricing tab and unused
+external website field are absent from the active settings UI.
+
+Dashboard language, appearance and personal push preferences are available at
+`/notifications/preferences`. Language remains a browser preference; changing it
+does not rewrite the studio's public locale. Opening recovery controls live with
+the recovery workspace at `/gap-optimizer`, and each offer still requires approval.
+Older settings URLs continue to resolve to the appropriate section or destination.
+Business settings remain owner-managed; personal preferences retain staff access.
+
+The settings mutations accept additive, partial updates and retain the previous
+complete payloads for existing clients. There is no settings migration or data
+deletion. Release the compatible Convex backend before the dashboard frontend so
+the new profile mutation and partial payloads are available when the UI updates.
+The existing Vercel build command in [`TENANT_WEBSITES.md`](TENANT_WEBSITES.md)
+builds the frontend and publishes the backend before Vercel promotes the frontend.
+
 ### Authorized service photo import
 
 Onboarding service import from a camera or uploaded price-list photo was

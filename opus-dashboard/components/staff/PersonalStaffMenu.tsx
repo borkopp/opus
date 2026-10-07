@@ -15,11 +15,7 @@ export function PersonalStaffMenu() {
     <div className="flex flex-wrap gap-2">
       <Button asChild size="sm" variant="ghost">
         <Link href="/notifications/preferences">
-          {t(
-            "Notification preferences",
-            "Поставки за известувања",
-            "Preferencat e njoftimeve",
-          )}
+          {t("My preferences", "Мои поставки", "Preferencat e mia")}
         </Link>
       </Button>
       <Button asChild size="sm" variant="ghost">

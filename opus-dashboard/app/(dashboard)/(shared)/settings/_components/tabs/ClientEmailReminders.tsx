@@ -2,23 +2,15 @@
 
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Badge } from "@/components/ui/badge";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { SettingsToggleRow } from "../SettingsCard";
-
-const CLIENT_REMINDER_HOURS = [24, 3, 2, 1];
+import { ReminderTimesField } from "@/components/notifications/ReminderTimesField";
+import { SettingsToggleRow } from "@/components/settings/SettingsCard";
 
 export function ClientEmailReminders({
   isPaid,
   enabled,
   hours,
+  savedHours,
   saving,
   error,
   onEnabledChange,
@@ -27,6 +19,7 @@ export function ClientEmailReminders({
   isPaid: boolean;
   enabled: boolean;
   hours: number[];
+  savedHours: number[];
   saving: boolean;
   error?: string;
   onEnabledChange: (enabled: boolean) => void;
@@ -34,18 +27,16 @@ export function ClientEmailReminders({
 }) {
   const { t } = useDashboardI18n();
   const disabled = !isPaid || !enabled || saving;
-  // Keep any previously saved custom times visible until the owner removes
-  // them. Saving unrelated settings must not silently change the schedule.
-  const hourOptions = [...new Set([...CLIENT_REMINDER_HOURS, ...hours])].sort(
-    (first, second) => second - first,
-  );
-
   return (
     <div className="flex flex-col gap-5">
       <SettingsToggleRow
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
-            {t("Client email reminders", "Потсетници за клиенти по е-пошта", "Kujtesa me email për klientët")}
+            {t(
+              "Client email reminders",
+              "Потсетници за клиенти по е-пошта",
+              "Kujtesa me email për klientët",
+            )}
             {!isPaid && (
               <Badge data-replay-public variant="pro">
                 Pro
@@ -80,55 +71,16 @@ export function ClientEmailReminders({
           />
         }
       />
-      <FieldGroup className="max-w-xl">
-        <Field data-disabled={disabled} data-invalid={Boolean(error)}>
-          <FieldLabel data-replay-public id="customer-reminder-label">
-            {t("Before the appointment", "Пред терминот", "Para terminit")}
-          </FieldLabel>
-          <ToggleGroup
-            type="multiple"
-            variant="outline"
-            size="lg"
-            spacing={2}
-            className="flex-wrap"
-            aria-labelledby="customer-reminder-label"
-            aria-describedby="customer-reminder-description customer-reminder-error"
-            aria-invalid={Boolean(error)}
-            disabled={disabled}
-            value={hours.map(String)}
-            onValueChange={(values) => onHoursChange(values.map(Number))}
-          >
-            {hourOptions.map((hoursBefore) => (
-              <ToggleGroupItem
-                key={hoursBefore}
-                value={String(hoursBefore)}
-                aria-label={t(
-                  `${hoursBefore} ${hoursBefore === 1 ? "hour" : "hours"} before the appointment`,
-                  `${hoursBefore} ${hoursBefore === 1 ? "час" : "часа"} пред терминот`,
-                  `${hoursBefore} ${hoursBefore === 1 ? "orë" : "orë"} para terminit`,
-                )}
-              >
-                {t(
-                  `${hoursBefore} ${hoursBefore === 1 ? "hour" : "hours"}`,
-                  `${hoursBefore} ${hoursBefore === 1 ? "час" : "часа"}`,
-                  `${hoursBefore} ${hoursBefore === 1 ? "orë" : "orë"}`,
-                )}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          <FieldDescription
-            data-replay-public
-            id="customer-reminder-description"
-          >
-            {t(
-              "Select one or more times. A reminder is sent at each selected time.",
-              "Изберете едно или повеќе времиња. За секое избрано време се испраќа потсетник.",
-              "Zgjidhni një ose më shumë orare. Një kujtesë dërgohet në secilin orar të zgjedhur.",
-            )}
-          </FieldDescription>
-          <FieldError id="customer-reminder-error">{error}</FieldError>
-        </Field>
-      </FieldGroup>
+      {enabled && (
+        <ReminderTimesField
+          id="client-email-reminder"
+          hours={hours}
+          savedHours={savedHours}
+          onChange={onHoursChange}
+          disabled={disabled}
+          error={error}
+        />
+      )}
     </div>
   );
 }

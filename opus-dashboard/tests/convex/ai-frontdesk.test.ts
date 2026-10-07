@@ -379,6 +379,80 @@ describe("Instagram frontdesk", () => {
     ).rejects.toThrow("different Instagram connection");
   });
 
+  test.each([undefined, "", "+38970222333"])(
+    "handoff uses the studio phone unless an alternate number is saved: %s",
+    async (alternate) => {
+      const t = createBackend(),
+        a = await studio(t);
+      await t.run(async (ctx) => {
+        await ctx.db.patch(a.orgId, { phone: "+38970111222" });
+        const settings = await ctx.db
+          .query("org_settings")
+          .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
+          .first();
+        await ctx.db.patch(settings!._id, { aiHandoffPhoneNumber: alternate });
+      });
+      const conv = await a.ingest("phone-handoff", "Please get a person");
+      const work = {
+        orgId: a.orgId,
+        conversationId: conv._id,
+        lease: "phone-lease",
+      };
+      await t.mutation(internal.ai.queue.claim, work);
+      const replyId = await t.mutation(internal.ai.queue.finish, {
+        ...work,
+        reply: "Uncertain answer",
+        confidenceScore: 0.4,
+        needsHandoff: false,
+        model: "gpt-6-luna",
+      });
+      expect((await t.run((ctx) => ctx.db.get(replyId!)))?.content).toContain(
+        alternate || "+38970111222",
+      );
+      expect((await t.run((ctx) => ctx.db.get(conv._id)))?.status).toBe(
+        "handed_off",
+      );
+    },
+  );
+
+  test("legacy reply schedules without an away message use the studio phone", async () => {
+    const t = createBackend(),
+      a = await studio(t);
+    await t.run((ctx) => ctx.db.patch(a.orgId, { phone: "+38970111222" }));
+    await t.run(async (ctx) => {
+      const settings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
+        .first();
+      await ctx.db.patch(settings!._id, {
+        aiWorkingHoursEnabled: true,
+        aiWorkingHours: [
+          { dayOfWeek: 1, startTime: "11:00", endTime: "17:00" },
+        ],
+        aiAwayMessage: "",
+      });
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ message_id: "away-message" }), {
+            status: 200,
+          }),
+      ),
+    );
+    const conv = await a.ingest("outside-hours", "Hello");
+    await t.action(internal.ai.agent.processConversation, {
+      orgId: a.orgId,
+      conversationId: conv._id,
+    });
+    expect(
+      (await a.messages()).find((message) => message.role === "assistant")
+        ?.content,
+    ).toContain("+38970111222");
+    expect(createResponse).not.toHaveBeenCalled();
+  });
+
   test("withholds low-confidence output, queues a safe acknowledgement and notifies the team", async () => {
     const t = createBackend(),
       a = await studio(t);

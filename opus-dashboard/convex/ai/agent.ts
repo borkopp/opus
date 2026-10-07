@@ -89,7 +89,7 @@ export const processConversation = internalAction({
           settings.aiAwayMessage ||
             handoffReply(
               responseLanguage(settings.aiLanguage, message.content),
-              settings.aiHandoffPhoneNumber,
+              settings.aiHandoffPhoneNumber?.trim() || org.phone,
             ),
         );
         return;

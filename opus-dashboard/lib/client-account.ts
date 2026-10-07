@@ -1,3 +1,5 @@
+import { isLocale } from "../../shared/i18n/locale";
+
 /** Central client area uses the existing studio origin, keeping business cookies host-scoped. */
 export function clientAreaUrl(path = "/account", currentOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_CLIENT_ACCOUNT_URL;
@@ -18,6 +20,8 @@ export function clientBookingPath(
     const value = Array.isArray(query[key]) ? query[key][0] : query[key];
     if (value) params.set(key, value);
   }
+  const language = Array.isArray(query.lang) ? query.lang[0] : query.lang;
+  if (isLocale(language)) params.set("lang", language);
   const search = params.toString();
   return `/book/${encodeURIComponent(slug)}${search ? `?${search}` : ""}`;
 }

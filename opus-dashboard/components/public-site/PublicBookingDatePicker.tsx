@@ -1,8 +1,10 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
-import { mk } from "date-fns/locale";
+import { enGB, mk, sq } from "date-fns/locale";
 import { CalendarDays, ChevronDown, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -44,6 +46,7 @@ export function PublicBookingDatePicker({
   selectedDate: string;
   onSelectDate: (date: string) => void;
 }) {
+  const { text, locale } = usePublicBookingI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const [open, setOpen] = useState(false);
   const service = site.services.find((item) => item._id === selectedServiceId);
@@ -102,13 +105,13 @@ export function PublicBookingDatePicker({
         }
         startMonth={dateFromKey(today)}
         endMonth={dateFromKey(maxDate)}
-        locale={mk}
+        locale={{ mk, en: enGB, sq }[locale]}
         showOutsideDays={false}
         fixedWeeks
-        aria-label="Изберете датум за термин"
+        aria-label={text("Изберете датум за термин")}
         labels={{
-          labelPrevious: () => "Претходен месец",
-          labelNext: () => "Следен месец",
+          labelPrevious: () => text("Претходен месец"),
+          labelNext: () => text("Следен месец"),
         }}
         className="public-booking-calendar w-full p-0 [--cell-size:2.75rem]"
         classNames={{ root: "w-full" }}
@@ -120,13 +123,15 @@ export function PublicBookingDatePicker({
       >
         {availableDates === undefined && <Spinner />}
         {availableDates === undefined
-          ? "Ги проверуваме слободните датуми…"
+          ? text("Ги проверуваме слободните датуми…")
           : availableDates.length === 0
-            ? "Нема слободни датуми во овој месец. Проверете друг месец или специјалист."
-            : "Датумите без слободен термин се оневозможени."}
+            ? text(
+                "Нема слободни датуми во овој месец. Проверете друг месец или специјалист.",
+              )
+            : text("Датумите без слободен термин се оневозможени.")}
       </p>
       <p className="text-xs leading-5 text-muted-foreground">
-        Достапни датуми до {formatBookingDateValue(maxDate)}.
+        {text("Достапни датуми до")} {formatBookingDateValue(maxDate, locale)}.
       </p>
     </div>
   );
@@ -153,9 +158,9 @@ export function PublicBookingDatePicker({
           <CalendarDays className="shrink-0" />
           <span className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="text-xs font-normal text-muted-foreground">
-              Датум · Промени
+              {text("Датум · Промени")}
             </span>
-            <span>{formatBookingDateValue(selectedDate)}</span>
+            <span>{formatBookingDateValue(selectedDate, locale)}</span>
           </span>
           <ChevronDown className="shrink-0" />
         </Button>
@@ -165,12 +170,12 @@ export function PublicBookingDatePicker({
         className="public-site mx-auto max-w-md data-[vaul-drawer-direction=bottom]:max-h-[92dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl"
       >
         <DrawerHeader className="relative shrink-0 px-12 pt-5 pb-3">
-          <DrawerTitle>Изберете датум</DrawerTitle>
+          <DrawerTitle>{text("Изберете датум")}</DrawerTitle>
           <DrawerClose asChild>
             <Button
               variant="ghost"
               size="icon"
-              aria-label="Затвори календар"
+              aria-label={text("Затвори календар")}
               className="absolute top-3 right-2 size-11"
             >
               <X />

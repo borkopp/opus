@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy, ExternalLink, Globe2 } from "lucide-react";
+import { Check, Copy, ExternalLink, Globe2, Paintbrush } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Appear } from "@/components/ui/appear";
@@ -13,7 +14,13 @@ import {
 } from "@/components/ui/tooltip";
 import { appearStep } from "@/lib/appear";
 
-export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
+export function LiveWebsiteCard({
+  websiteUrl,
+  canCustomize = false,
+}: {
+  websiteUrl: string;
+  canCustomize?: boolean;
+}) {
   const { t } = useDashboardI18n();
   const [copied, setCopied] = useState(false);
   const address = new URL(websiteUrl).host;
@@ -28,7 +35,11 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
       await navigator.clipboard.writeText(websiteUrl);
       setCopied(true);
       toast.success(
-        t("Website link copied", "Линкот до веб-страницата е копиран", "Linku i uebsajtit u kopjua"),
+        t(
+          "Website link copied",
+          "Линкот до веб-страницата е копиран",
+          "Linku i uebsajtit u kopjua",
+        ),
       );
     } catch {
       toast.error(
@@ -46,7 +57,11 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
       as="section"
       delay={90}
       className="flex min-w-0 flex-col gap-4 rounded-[25px] bg-card p-5 md:min-h-[272px] md:gap-5 md:p-6"
-      aria-label={t("Studio website", "Веб-страница на студиото", "Uebsajti i studios")}
+      aria-label={t(
+        "Studio website",
+        "Веб-страница на студиото",
+        "Uebsajti i studios",
+      )}
     >
       <div
         className="flex items-center gap-3 md:items-start"
@@ -64,7 +79,11 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           data-replay-public
           className="min-w-0 flex-1 self-center text-sm font-medium leading-snug tracking-tight md:text-base"
         >
-          {t("Website is live", "Веб-страницата е активна", "Faqja e internetit është aktive")}
+          {t(
+            "Website is live",
+            "Веб-страницата е активна",
+            "Faqja e internetit është aktive",
+          )}
         </h2>
         <Button
           asChild
@@ -107,7 +126,11 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           rel="noreferrer"
           title={address}
           className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-          aria-label={t(`Open ${address}`, `Отвори ${address}`, `Hap ${address}`)}
+          aria-label={t(
+            `Open ${address}`,
+            `Отвори ${address}`,
+            `Hap ${address}`,
+          )}
         >
           {address}
         </a>
@@ -121,19 +144,37 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
               aria-label={
                 copied
                   ? t("Link copied", "Линкот е копиран", "Linku u kopjua")
-                  : t("Copy website link", "Копирај линк до веб-страницата", "Kopjo linkun e uebsajtit")
+                  : t(
+                      "Copy website link",
+                      "Копирај линк до веб-страницата",
+                      "Kopjo linkun e uebsajtit",
+                    )
               }
             >
               {copied ? <Check /> : <Copy />}
             </Button>
           </TooltipTrigger>
           <TooltipContent data-replay-public>
-            {copied ? t("Copied", "Копирано", "U kopjua") : t("Copy link", "Копирај линк", "Kopjo linkun")}
+            {copied
+              ? t("Copied", "Копирано", "U kopjua")
+              : t("Copy link", "Копирај линк", "Kopjo linkun")}
           </TooltipContent>
         </Tooltip>
       </div>
 
       <div data-appear="item" style={appearStep(4)}>
+        {canCustomize && (
+          <Button asChild variant="outline" className="mb-2 w-full">
+            <Link href="/website">
+              <Paintbrush data-icon="inline-start" />
+              {t(
+                "Customize website",
+                "Уреди веб-страница",
+                "Personalizoni uebsajtin",
+              )}
+            </Link>
+          </Button>
+        )}
         <Button
           data-replay-public
           onClick={() => void copyLink()}
@@ -141,7 +182,11 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
         >
           {copied
             ? t("Link copied", "Линкот е копиран", "Linku u kopjua")
-            : t("Copy booking link", "Копирај линк за закажување", "Kopjo linkun e rezervimit")}
+            : t(
+                "Copy booking link",
+                "Копирај линк за закажување",
+                "Kopjo linkun e rezervimit",
+              )}
           {copied ? (
             <Check data-icon="inline-end" />
           ) : (

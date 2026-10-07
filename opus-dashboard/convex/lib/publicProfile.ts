@@ -1,38 +1,47 @@
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { resolveStoredImageUrl } from "./imageUrl";
+import {
+  websiteSources,
+  type WebsiteDesign,
+} from "../../../shared/website-design";
 
 type ReadCtx = Pick<QueryCtx, "db" | "storage">;
 
 export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
-  const [media, services, orgSettings, activeStaff] = await Promise.all([
-    ctx.db
-      .query("org_media")
-      .withIndex("by_org_active", (q) =>
-        q.eq("orgId", org._id).eq("isDeleted", false),
-      )
-      .collect(),
-    ctx.db
-      .query("services")
-      .withIndex("by_org_visible_active", (q) =>
-        q
-          .eq("orgId", org._id)
-          .eq("isOpusVisible", true)
-          .eq("isActive", true)
-          .eq("isDeleted", false),
-      )
-      .collect(),
-    ctx.db
-      .query("org_settings")
-      .withIndex("by_org", (q) => q.eq("orgId", org._id))
-      .first(),
-    ctx.db
-      .query("staff_members")
-      .withIndex("by_org_active", (q) =>
-        q.eq("orgId", org._id).eq("isActive", true).eq("isDeleted", false),
-      )
-      .collect(),
-  ]);
+  const [media, services, orgSettings, activeStaff, websiteDesign] =
+    await Promise.all([
+      ctx.db
+        .query("org_media")
+        .withIndex("by_org_active", (q) =>
+          q.eq("orgId", org._id).eq("isDeleted", false),
+        )
+        .collect(),
+      ctx.db
+        .query("services")
+        .withIndex("by_org_visible_active", (q) =>
+          q
+            .eq("orgId", org._id)
+            .eq("isOpusVisible", true)
+            .eq("isActive", true)
+            .eq("isDeleted", false),
+        )
+        .collect(),
+      ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", org._id))
+        .first(),
+      ctx.db
+        .query("staff_members")
+        .withIndex("by_org_active", (q) =>
+          q.eq("orgId", org._id).eq("isActive", true).eq("isDeleted", false),
+        )
+        .collect(),
+      ctx.db
+        .query("website_designs")
+        .withIndex("by_org", (q) => q.eq("orgId", org._id))
+        .first(),
+    ]);
 
   const categoryIds = [
     ...new Set(services.map((service) => service.categoryId).filter(Boolean)),
@@ -73,7 +82,7 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
     }))
     .filter((service) => service.staffIds.length > 0);
 
-  return {
+  const profile = {
     _id: org._id,
     name: org.name,
     slug: org.slug,
@@ -129,4 +138,58 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
       })),
     ),
   };
+  let design: WebsiteDesign | undefined;
+  const published =
+    websiteDesign && !websiteDesign.isDeleted
+      ? websiteDesign.published
+      : undefined;
+  if (published) {
+    const visibleServiceIds = new Set(
+      publicServices.map((service) => service._id as string),
+    );
+    const visibleMediaIds = new Set(media.map((item) => item._id as string));
+    design = {
+      ...published,
+      ...(org.plan !== "paid" && {
+        languages: [published.primaryLanguage],
+        autoTranslate: false,
+        translations: [],
+      }),
+      serviceCopy: published.serviceCopy.filter((copy) =>
+        visibleServiceIds.has(copy.serviceId),
+      ),
+      hero: {
+        ...published.hero,
+        imageId: visibleMediaIds.has(published.hero.imageId)
+          ? published.hero.imageId
+          : "",
+      },
+      gallery: {
+        ...published.gallery,
+        imageIds: published.gallery.imageIds.filter((id) =>
+          visibleMediaIds.has(id),
+        ),
+      },
+    };
+    const sources = new Map(
+      websiteSources(design, profile).map((source) => [
+        source.key,
+        source.source,
+      ]),
+    );
+    // Hidden/deleted services, staff and stale originals must not survive in the public payload.
+    design.translations = design.translations
+      .filter(
+        (entry) =>
+          design!.languages.includes(entry.locale) &&
+          entry.locale !== design!.primaryLanguage,
+      )
+      .map((entry) => ({
+        ...entry,
+        messages: entry.messages.filter(
+          (message) => sources.get(message.key) === message.source,
+        ),
+      }));
+  }
+  return { ...profile, design };
 }

@@ -10,6 +10,7 @@ export function canCaptureAnalytics() {
     !window.location.pathname.startsWith("/account") &&
     !window.location.pathname.startsWith("/invites/") &&
     !window.location.pathname.startsWith("/onboarding/preview") &&
+    !window.location.pathname.startsWith("/website/preview") &&
     getConsent().analytics
   );
 }

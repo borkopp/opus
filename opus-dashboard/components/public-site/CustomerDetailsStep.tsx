@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { AlertCircle, Mail, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,7 @@ export function CustomerDetailsStep({
   onSubmit,
   onBack,
 }: CustomerDetailsStepProps) {
+  const { text, locale } = usePublicBookingI18n();
   const service = site.services.find(
     (candidate) => candidate._id === selectedServiceId,
   );
@@ -79,23 +82,27 @@ export function CustomerDetailsStep({
 
   return (
     <BookingStepShell
-      title="Ваши податоци"
-      backLabel="Назад кон термини"
+      title={text("Ваши податоци")}
+      backLabel={text("Назад кон термини")}
       onBack={onBack}
     >
       <dl className="grid grid-cols-2 gap-x-4 gap-y-5 rounded-2xl border bg-card p-5 text-sm shadow-s sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <dt className="text-xs text-muted-foreground">Услуга</dt>
+          <dt className="text-xs text-muted-foreground">{text("Услуга")}</dt>
           <dd className="font-medium">{service?.name}</dd>
         </div>
         <div className="flex min-w-0 flex-col gap-1 text-right">
-          <dt className="text-xs text-muted-foreground">Специјалист</dt>
+          <dt className="text-xs text-muted-foreground">
+            {text("Специјалист")}
+          </dt>
           <dd className="font-medium">{staff?.displayName}</dd>
         </div>
         <div className="flex flex-col gap-1">
-          <dt className="text-xs text-muted-foreground">Датум и време</dt>
+          <dt className="text-xs text-muted-foreground">
+            {text("Датум и време")}
+          </dt>
           <dd className="font-medium">
-            {formatBookingDate(selectedSlotTimestamp)}
+            {formatBookingDate(selectedSlotTimestamp, locale)}
           </dd>
           <dd className="font-mono text-muted-foreground">
             {formatBookingTime(selectedSlotTimestamp)}–
@@ -103,7 +110,7 @@ export function CustomerDetailsStep({
           </dd>
         </div>
         <div className="flex min-w-0 flex-col gap-1 text-right">
-          <dt className="text-xs text-muted-foreground">Цена</dt>
+          <dt className="text-xs text-muted-foreground">{text("Цена")}</dt>
           <dd className="font-mono font-medium">
             {service &&
               formatPrice(
@@ -118,7 +125,9 @@ export function CustomerDetailsStep({
       <form onSubmit={onSubmit} className="flex flex-col gap-7">
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="customer-name">Име и презиме</FieldLabel>
+            <FieldLabel htmlFor="customer-name">
+              {text("Име и презиме")}
+            </FieldLabel>
             <Input
               id="customer-name"
               name="name"
@@ -132,7 +141,7 @@ export function CustomerDetailsStep({
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="customer-email">Е-пошта</FieldLabel>
+            <FieldLabel htmlFor="customer-email">{text("Е-пошта")}</FieldLabel>
             <Input
               readOnly={rememberedClient}
               id="customer-email"
@@ -147,15 +156,17 @@ export function CustomerDetailsStep({
             />
             <FieldDescription>
               {rememberedClient
-                ? "Е-поштата е потврдена преку вашата OPUS сметка."
+                ? text("Е-поштата е потврдена преку вашата OPUS сметка.")
                 : offerPriceMinorUnits !== undefined
-                  ? "Внесете ја е-поштата на која ја добивте понудата. На неа ќе го испратиме кодот за потврда."
-                  : "На оваа адреса ќе го испратиме кодот за потврда."}
+                  ? text(
+                      "Внесете ја е-поштата на која ја добивте понудата. На неа ќе го испратиме кодот за потврда.",
+                    )
+                  : text("На оваа адреса ќе го испратиме кодот за потврда.")}
             </FieldDescription>
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="customer-phone">Телефон</FieldLabel>
+            <FieldLabel htmlFor="customer-phone">{text("Телефон")}</FieldLabel>
             <Input
               id="customer-phone"
               name="tel"
@@ -168,14 +179,18 @@ export function CustomerDetailsStep({
               required
             />
             <FieldDescription>
-              Студиото може да го користи бројот за контакт околу терминот.
+              {text(
+                "Студиото може да го користи бројот за контакт околу терминот.",
+              )}
             </FieldDescription>
           </Field>
 
           <Field>
             <FieldLabel htmlFor="customer-note">
-              Забелешка{" "}
-              <span className="text-muted-foreground">(опционално)</span>
+              {text("Забелешка")}{" "}
+              <span className="text-muted-foreground">
+                {text("(опционално)")}
+              </span>
             </FieldLabel>
             <Textarea
               id="customer-note"
@@ -183,7 +198,7 @@ export function CustomerDetailsStep({
               value={customerNote}
               onChange={(event) => onChangeNote(event.target.value)}
               maxLength={1_000}
-              placeholder="Додајте нешто што студиото треба да го знае."
+              placeholder={text("Додајте нешто што студиото треба да го знае.")}
             />
           </Field>
 
@@ -198,11 +213,12 @@ export function CustomerDetailsStep({
               />
               <div className="flex flex-col gap-1">
                 <FieldLabel htmlFor="create-client-account">
-                  Создај OPUS сметка
+                  {text("Создај OPUS сметка")}
                 </FieldLabel>
                 <FieldDescription>
-                  Со истиот код ќе се најавите и ќе го потврдите терминот.
-                  Следниот пат закажете побрзо со зачувани податоци.
+                  {text(
+                    "Со истиот код ќе се најавите и ќе го потврдите терминот. Следниот пат закажете побрзо со зачувани податоци.",
+                  )}
                 </FieldDescription>
               </div>
             </Field>
@@ -212,7 +228,7 @@ export function CustomerDetailsStep({
           {error && (
             <Alert variant="destructive">
               <AlertCircle />
-              <AlertTitle>Терминот сè уште не е зачуван</AlertTitle>
+              <AlertTitle>{text("Терминот сè уште не е зачуван")}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -222,10 +238,14 @@ export function CustomerDetailsStep({
           <ShieldCheck className="mt-1 size-4 shrink-0" aria-hidden="true" />
           <p>
             {rememberedClient
-              ? "Терминот ќе биде зачуван во вашата OPUS сметка."
+              ? text("Терминот ќе биде зачуван во вашата OPUS сметка.")
               : createAccount
-                ? "Вашата сметка ќе ги прикажува само вашите термини. Секое студио ги гледа само своите записи."
-                : "Продолжувате како гостин. Со кодот ќе го потврдите само терминот."}
+                ? text(
+                    "Вашата сметка ќе ги прикажува само вашите термини. Секое студио ги гледа само своите записи.",
+                  )
+                : text(
+                    "Продолжувате како гостин. Со кодот ќе го потврдите само терминот.",
+                  )}
           </p>
         </div>
 
@@ -245,7 +265,9 @@ export function CustomerDetailsStep({
           ) : (
             <Mail data-icon="inline-start" />
           )}
-          {rememberedClient ? "Потврди термин" : "Испрати код за потврда"}
+          {rememberedClient
+            ? text("Потврди термин")
+            : text("Испрати код за потврда")}
         </Button>
       </form>
     </BookingStepShell>

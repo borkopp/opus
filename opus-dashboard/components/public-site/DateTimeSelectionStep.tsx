@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { useQuery } from "convex/react";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -55,6 +57,7 @@ export function DateTimeSelectionStep({
   onBack,
   sharedOpeningStartAt,
 }: DateTimeSelectionStepProps) {
+  const { text, locale } = usePublicBookingI18n();
   const service = site.services.find(
     (candidate) => candidate._id === selectedServiceId,
   );
@@ -79,8 +82,8 @@ export function DateTimeSelectionStep({
 
   return (
     <BookingStepShell
-      title="Изберете термин"
-      backLabel="Назад кон специјалисти"
+      title={text("Изберете термин")}
+      backLabel={text("Назад кон специјалисти")}
       onBack={onBack}
     >
       <div
@@ -90,7 +93,8 @@ export function DateTimeSelectionStep({
         <div className="flex min-w-0 flex-col gap-1">
           <p className="font-medium">{service?.name}</p>
           <p className="text-muted-foreground">
-            {staff?.displayName || "Прв достапен"} · {service?.durationMins} мин
+            {staff?.displayName || text("Прв достапен")} ·{" "}
+            {service?.durationMins} {text("мин")}
           </p>
         </div>
         <p className="shrink-0 font-mono font-medium">
@@ -104,7 +108,7 @@ export function DateTimeSelectionStep({
       </div>
       <FieldGroup className="gap-6 md:grid md:grid-cols-2 md:items-start md:gap-8">
         <Field>
-          <FieldLabel className="hidden md:block">Датум</FieldLabel>
+          <FieldLabel className="hidden md:block">{text("Датум")}</FieldLabel>
           <PublicBookingDatePicker
             site={site}
             selectedServiceId={selectedServiceId}
@@ -115,16 +119,21 @@ export function DateTimeSelectionStep({
         </Field>
 
         <Field>
-          <FieldLabel>Слободни термини</FieldLabel>
+          <FieldLabel>{text("Слободни термини")}</FieldLabel>
           <FieldDescription>
-            {formatBookingDateValue(selectedDate)}
+            {formatBookingDateValue(selectedDate, locale)}
           </FieldDescription>
           {sharedOpeningStartAt && slots !== undefined && (
             <Alert>
               <AlertDescription>
                 {slots.some((slot) => slot.startAt === sharedOpeningStartAt)
-                  ? `Терминот од објавата е во ${formatBookingTime(sharedOpeningStartAt)}. Изберете го времето за да продолжите.`
-                  : "Терминот од објавата веќе не е достапен за овој избор. Изберете друго слободно време или датум."}
+                  ? text(
+                      "Терминот од објавата е во {v0}. Изберете го времето за да продолжите.",
+                      { v0: formatBookingTime(sharedOpeningStartAt) },
+                    )
+                  : text(
+                      "Терминот од објавата веќе не е достапен за овој избор. Изберете друго слободно време или датум.",
+                    )}
               </AlertDescription>
             </Alert>
           )}
@@ -141,9 +150,11 @@ export function DateTimeSelectionStep({
                 <EmptyMedia variant="icon">
                   <CalendarDays />
                 </EmptyMedia>
-                <EmptyTitle>Нема слободни термини</EmptyTitle>
+                <EmptyTitle>{text("Нема слободни термини")}</EmptyTitle>
                 <EmptyDescription>
-                  Изберете друг датум или вратете се и сменете го специјалистот.
+                  {text(
+                    "Изберете друг датум или вратете се и сменете го специјалистот.",
+                  )}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -151,7 +162,7 @@ export function DateTimeSelectionStep({
             <div
               className="grid grid-cols-3 gap-2 sm:grid-cols-4"
               role="group"
-              aria-label="Слободни термини"
+              aria-label={text("Слободни термини")}
             >
               {slots.map((slot) => {
                 const availableStaffId = slot.availableStaffIds[0];
@@ -191,14 +202,14 @@ export function DateTimeSelectionStep({
           {selectedSlotTimestamp ? (
             <>
               <span className="block text-xs text-muted-foreground">
-                Избрано време
+                {text("Избрано време")}
               </span>
               <span className="font-mono text-lg font-semibold">
                 {formatBookingTime(selectedSlotTimestamp)}
               </span>
             </>
           ) : (
-            "Изберете време за да продолжите."
+            text("Изберете време за да продолжите.")
           )}
         </p>
         <Button
@@ -208,7 +219,8 @@ export function DateTimeSelectionStep({
           onClick={onContinue}
           className="min-h-12 shrink-0"
         >
-          Продолжи <ArrowRight data-icon="inline-end" />
+          {text("Продолжи")}
+          <ArrowRight data-icon="inline-end" />
         </Button>
       </div>
     </BookingStepShell>

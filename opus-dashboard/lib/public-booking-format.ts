@@ -50,11 +50,25 @@ export function formatBookingTime(timestamp: number): string {
   return `${hours}:${minutes}`;
 }
 
-export function formatBookingDate(timestamp: number): string {
+export function formatBookingDate(
+  timestamp: number,
+  locale: "mk" | "en" | "sq" = "mk",
+): string {
   const date = new Date(timestamp);
+  if (locale !== "mk")
+    return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : locale, {
+      timeZone: "UTC",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(date);
   return `${DAYS[date.getUTCDay()]}, ${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
 
-export function formatBookingDateValue(date: string): string {
-  return formatBookingDate(new Date(`${date}T12:00:00Z`).getTime());
+export function formatBookingDateValue(
+  date: string,
+  locale: "mk" | "en" | "sq" = "mk",
+): string {
+  return formatBookingDate(new Date(`${date}T12:00:00Z`).getTime(), locale);
 }

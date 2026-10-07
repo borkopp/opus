@@ -32,6 +32,7 @@ export const getBySlug = query({
       _id: profile._id,
       name: profile.name,
       slug: profile.slug,
+      design: profile.design,
       logoUrl: profile.logoUrl,
       tagline: profile.tagline,
       bio: profile.bio,

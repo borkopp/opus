@@ -9,7 +9,7 @@ import { requireLiveStudio } from "./lib/appReview";
 export const getReadiness = query({
   args: { orgId: v.optional(v.id("orgs")) },
   handler: async (ctx, args) => {
-    const { orgId } = await requireAuth(ctx, args.orgId);
+    const { orgId, staffMember } = await requireAuth(ctx, args.orgId);
     const state = await getBeautyActivationState(ctx, orgId);
     if (!state) return null;
 
@@ -27,6 +27,7 @@ export const getReadiness = query({
 
     return {
       slug: state.org.slug,
+      canCustomize: staffMember.role === "owner",
       websiteStatus: getWebsiteStatus(state.org),
       websitePublishedAt: state.org.websitePublishedAt,
       requirements: state.websiteRequirements,

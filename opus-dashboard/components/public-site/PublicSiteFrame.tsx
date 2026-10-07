@@ -1,3 +1,7 @@
+"use client";
+
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays } from "lucide-react";
@@ -18,6 +22,7 @@ export function PublicSiteFrame({
   mode?: "site" | "booking";
   studioHref?: string;
 }) {
+  const { text, locale } = usePublicBookingI18n();
   return (
     <div
       className={`public-site flex min-h-dvh flex-col bg-background text-foreground ${mode === "site" ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
@@ -55,44 +60,44 @@ export function PublicSiteFrame({
           {mode === "site" ? (
             <nav
               className="flex shrink-0 items-center gap-2 sm:gap-4"
-              aria-label="Главна навигација"
+              aria-label={text("Главна навигација")}
             >
               <div className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
                 <Link
                   href="/#services"
                   className="rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Услуги
+                  {text("Услуги")}
                 </Link>
                 {site.bio && (
                   <Link
                     href="/#about"
                     className="rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    За студиото
+                    {text("За студиото")}
                   </Link>
                 )}
                 <Link
                   href="/#info"
                   className="rounded-md transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  Информации
+                  {text("Информации")}
                 </Link>
               </div>
-              <ThemeToggle />
+              <ThemeToggle locale={locale} />
               <Button asChild size="sm" className="hidden md:inline-flex">
                 <Link href="/book">
                   <CalendarDays data-icon="inline-start" />
-                  Резервирај
+                  {text("Резервирај")}
                 </Link>
               </Button>
             </nav>
           ) : (
             <div className="flex items-center gap-2 sm:gap-3">
               <span className="micro-label hidden text-muted-foreground sm:inline">
-                Онлајн резервација
+                {text("Онлајн резервација")}
               </span>
-              <ThemeToggle />
+              <ThemeToggle locale={locale} />
             </div>
           )}
         </div>
@@ -103,7 +108,7 @@ export function PublicSiteFrame({
           <Button asChild size="lg" className="min-h-12 w-full">
             <Link href="/book">
               <CalendarDays data-icon="inline-start" />
-              Резервирај термин
+              {text("Резервирај термин")}
             </Link>
           </Button>
         </div>
@@ -118,10 +123,10 @@ export function PublicSiteFrame({
           </p>
           <Link
             href="https://opus.mk"
-            aria-label="Резервации преку OPUS"
+            aria-label={text("Резервации преку OPUS")}
             className="inline-flex w-fit items-center gap-2 rounded-md text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span>Резервации преку</span>
+            <span>{text("Резервации преку")}</span>
             <Logo className="text-xs" markClassName="h-3.5" />
             <ArrowUpRight className="size-3.5" aria-hidden="true" />
           </Link>

@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
@@ -19,6 +21,7 @@ export function RecoveryOfferBooking({
   token: string;
   accountBooking?: boolean;
 }) {
+  const { text, locale } = usePublicBookingI18n();
   const offer = useQuery(api.ai.gapOptimizerHelpers.getPublicOffer, {
     orgId: site._id,
     token,
@@ -32,11 +35,13 @@ export function RecoveryOfferBooking({
       await decline({ orgId: site._id, token, unsubscribe });
       setMessage(
         unsubscribe
-          ? "Повеќе нема да добивате понуди за слободни термини од ова студио."
-          : "Понудата е одбиена.",
+          ? text(
+              "Повеќе нема да добивате понуди за слободни термини од ова студио.",
+            )
+          : text("Понудата е одбиена."),
       );
     } catch {
-      setMessage("Промената не е зачувана. Обидете се повторно.");
+      setMessage(text("Промената не е зачувана. Обидете се повторно."));
     } finally {
       setBusy(false);
     }
@@ -56,20 +61,20 @@ export function RecoveryOfferBooking({
       ) : (
         <div className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-12">
           <Alert>
-            <AlertTitle>Понудата повеќе не е достапна</AlertTitle>
+            <AlertTitle>{text("Понудата повеќе не е достапна")}</AlertTitle>
             <AlertDescription>
-              Изберете друг слободен термин од распоредот на студиото.
+              {text("Изберете друг слободен термин од распоредот на студиото.")}
             </AlertDescription>
           </Alert>
           <Button asChild>
             <Link
               href={
                 accountBooking
-                  ? `/book/${encodeURIComponent(site.slug)}`
-                  : "/book"
+                  ? `/book/${encodeURIComponent(site.slug)}?lang=${locale}`
+                  : `/book?lang=${locale}`
               }
             >
-              Прегледај други термини
+              {text("Прегледај други термини")}
             </Link>
           </Button>
         </div>
@@ -87,14 +92,14 @@ export function RecoveryOfferBooking({
               disabled={busy || !offer.available}
               onClick={() => respond(false)}
             >
-              Одбиј ја понудата
+              {text("Одбиј ја понудата")}
             </Button>
             <Button
               variant="ghost"
               disabled={busy}
               onClick={() => respond(true)}
             >
-              Исклучи ги овие пораки
+              {text("Исклучи ги овие пораки")}
             </Button>
           </div>
         </div>

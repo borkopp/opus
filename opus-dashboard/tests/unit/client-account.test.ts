@@ -13,12 +13,18 @@ describe("client sign-in destinations", () => {
         date: "2026-10-12",
         at: "123",
         offer: "offer-proof",
+        lang: "sq",
         email: "private@example.com",
         callbackUrl: "https://evil.example",
       }),
     ).toBe(
-      "/book/atelier?service=service&staff=any&date=2026-10-12&at=123&offer=offer-proof",
+      "/book/atelier?service=service&staff=any&date=2026-10-12&at=123&offer=offer-proof&lang=sq",
     );
+  });
+  it("ignores unsupported language values without losing the booking selection", () => {
+    expect(
+      clientBookingPath("atelier", { service: "service", lang: "unknown" }),
+    ).toBe("/book/atelier?service=service");
   });
   it("preserves a single-booking claim and selected public studio booking", () => {
     expect(clientSignInDestination("/account?claim=appointment")).toBe(

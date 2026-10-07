@@ -100,6 +100,7 @@ test.each([
   "/account/sign-in",
   "/invites/secret",
   "/book/studio?offer=secret",
+  "/website/preview",
 ])("excludes account and invitation links from analytics: %s", async (path) => {
   vi.stubEnv("NODE_ENV", "production");
   state.allowed = true;

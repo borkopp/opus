@@ -286,22 +286,32 @@ export async function getMapboxDirections({
   };
 }
 
-export function formatMapboxDuration(durationSeconds: number): string {
+export function formatMapboxDuration(
+  durationSeconds: number,
+  locale: "mk" | "en" | "sq" = "mk",
+): string {
+  const minuteUnit = locale === "mk" ? "мин" : "min";
+  const hourUnit = locale === "mk" ? "ч" : "h";
   const totalMinutes = Math.max(1, Math.ceil(durationSeconds / 60));
-  if (totalMinutes < 60) return `${totalMinutes} мин`;
+  if (totalMinutes < 60) return `${totalMinutes} ${minuteUnit}`;
 
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
-  return minutes > 0 ? `${hours} ч ${minutes} мин` : `${hours} ч`;
+  return minutes > 0
+    ? `${hours} ${hourUnit} ${minutes} ${minuteUnit}`
+    : `${hours} ${hourUnit}`;
 }
 
-export function formatMapboxDistance(distanceMeters: number): string {
+export function formatMapboxDistance(
+  distanceMeters: number,
+  locale: "mk" | "en" | "sq" = "mk",
+): string {
   if (distanceMeters < 1000)
-    return `${Math.max(1, Math.round(distanceMeters))} м`;
+    return `${Math.max(1, Math.round(distanceMeters))} ${locale === "mk" ? "м" : "m"}`;
 
-  return `${new Intl.NumberFormat("mk-MK", {
+  return `${new Intl.NumberFormat(locale === "mk" ? "mk-MK" : locale, {
     maximumFractionDigits: 1,
-  }).format(distanceMeters / 1000)} км`;
+  }).format(distanceMeters / 1000)} ${locale === "mk" ? "км" : "km"}`;
 }
 
 export async function searchMapbox(

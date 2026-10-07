@@ -21,6 +21,7 @@ import {
   type MapboxTravelMode,
 } from "@/lib/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+import type { Locale } from "../../../shared/i18n/locale";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN ?? "";
 
@@ -76,10 +77,41 @@ function routeBounds(coordinates: [number, number][]) {
 export function StudioLocationMap({
   studioName,
   coordinates: destination,
+  locale = "mk",
 }: {
   studioName: string;
   coordinates: Coordinates;
+  locale?: Locale;
 }) {
+  const t = (en: string, mk: string, sq: string) => ({ en, mk, sq })[locale];
+  const errorLabel = (message: string) =>
+    ({
+      "Дозволете пристап до локацијата за да добиете проценка.": t(
+        "Allow location access for an estimate.",
+        "Дозволете пристап до локацијата за да добиете проценка.",
+        "Lejoni vendndodhjen për një vlerësim.",
+      ),
+      "Локацијата не одговори навреме. Обидете се повторно.": t(
+        "Location request timed out. Try again.",
+        "Локацијата не одговори навреме. Обидете се повторно.",
+        "Kërkesa për vendndodhjen skadoi. Provoni përsëri.",
+      ),
+      "Вашата локација моментално не е достапна.": t(
+        "Your location is currently unavailable.",
+        "Вашата локација моментално не е достапна.",
+        "Vendndodhja juaj nuk është e disponueshme aktualisht.",
+      ),
+      "Не можевме да ја пресметаме рутата. Обидете се повторно.": t(
+        "We could not calculate the route. Try again.",
+        "Не можевме да ја пресметаме рутата. Обидете се повторно.",
+        "Nuk mund ta llogarisnim rrugën. Provoni përsëri.",
+      ),
+      "Вашиот прелистувач не поддржува споделување локација.": t(
+        "Your browser does not support location sharing.",
+        "Вашиот прелистувач не поддржува споделување локација.",
+        "Shfletuesi juaj nuk mbështet ndarjen e vendndodhjes.",
+      ),
+    })[message] ?? message;
   const destinationLat = destination.lat;
   const destinationLng = destination.lng;
   const mapRef = useRef<MapRef>(null);
@@ -193,7 +225,7 @@ export function StudioLocationMap({
       return (
         <span className="inline-flex items-center gap-2">
           <Spinner aria-hidden="true" />
-          Локација…
+          {t("Locating…", "Локација…", "Duke gjetur vendndodhjen…")}
         </span>
       );
     }
@@ -201,7 +233,7 @@ export function StudioLocationMap({
       return (
         <span className="inline-flex items-center gap-2">
           <Spinner aria-hidden="true" />
-          Рута…
+          {t("Routing…", "Рута…", "Duke llogaritur rrugën…")}
         </span>
       );
     }
@@ -209,10 +241,10 @@ export function StudioLocationMap({
       return (
         <>
           <span className="font-semibold text-foreground">
-            {formatMapboxDuration(route.durationSeconds)}
+            {formatMapboxDuration(route.durationSeconds, locale)}
           </span>
           <span aria-hidden="true">·</span>
-          <span>{formatMapboxDistance(route.distanceMeters)}</span>
+          <span>{formatMapboxDistance(route.distanceMeters, locale)}</span>
         </>
       );
     }
@@ -220,8 +252,12 @@ export function StudioLocationMap({
       return (
         <span className="text-destructive">
           {error.startsWith("Дозволете")
-            ? "Овозможи локација"
-            : "Обиди се повторно"}
+            ? t(
+                "Enable location",
+                "Овозможи локација",
+                "Aktivizoni vendndodhjen",
+              )
+            : t("Try again", "Обиди се повторно", "Provoni përsëri")}
         </span>
       );
     }
@@ -234,7 +270,11 @@ export function StudioLocationMap({
     <div
       className="relative h-60 w-full overflow-hidden rounded-xl bg-secondary ring-1 ring-border/40 sm:h-72"
       role="region"
-      aria-label={`Интерактивна мапа до ${studioName}`}
+      aria-label={t(
+        `Interactive map to ${studioName}`,
+        `Интерактивна мапа до ${studioName}`,
+        `Harta interaktive për ${studioName}`,
+      )}
     >
       <Map
         ref={mapRef}
@@ -272,7 +312,11 @@ export function StudioLocationMap({
             <span
               className="flex size-7 items-center justify-center rounded-full bg-background shadow-md ring-2 ring-foreground"
               role="img"
-              aria-label="Вашата локација"
+              aria-label={t(
+                "Your location",
+                "Вашата локација",
+                "Vendndodhja juaj",
+              )}
             >
               <LocateFixed className="size-4" aria-hidden="true" />
             </span>
@@ -298,8 +342,10 @@ export function StudioLocationMap({
         <p
           className="pointer-events-auto flex h-10 min-w-14 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-background/95 px-3 text-xs text-muted-foreground shadow-m ring-1 ring-border/60 backdrop-blur-md"
           aria-live="polite"
-          aria-label={status === "error" && error ? error : undefined}
-          title={status === "error" && error ? error : undefined}
+          aria-label={
+            status === "error" && error ? errorLabel(error) : undefined
+          }
+          title={status === "error" && error ? errorLabel(error) : undefined}
         >
           {statusContent}
         </p>
@@ -310,21 +356,33 @@ export function StudioLocationMap({
           spacing={1}
           value={travelMode ?? ""}
           onValueChange={selectTravelMode}
-          aria-label="Начин на патување"
+          aria-label={t(
+            "Travel mode",
+            "Начин на патување",
+            "Mënyra e udhëtimit",
+          )}
           className="pointer-events-auto shrink-0 rounded-full bg-background/95 p-1 shadow-m ring-1 ring-border/60 backdrop-blur-md"
         >
           <ToggleGroupItem
             value="driving"
-            aria-label="Пресметај пат со автомобил"
-            title="Автомобил"
+            aria-label={t(
+              "Calculate driving route",
+              "Пресметај пат со автомобил",
+              "Llogaritni rrugën me makinë",
+            )}
+            title={t("Driving", "Автомобил", "Me makinë")}
             className="size-8 rounded-full px-0"
           >
             <CarFront aria-hidden="true" />
           </ToggleGroupItem>
           <ToggleGroupItem
             value="walking"
-            aria-label="Пресметај пат пеш"
-            title="Пеш"
+            aria-label={t(
+              "Calculate walking route",
+              "Пресметај пат пеш",
+              "Llogaritni rrugën në këmbë",
+            )}
+            title={t("Walking", "Пеш", "Në këmbë")}
             className="size-8 rounded-full px-0"
           >
             <Footprints aria-hidden="true" />

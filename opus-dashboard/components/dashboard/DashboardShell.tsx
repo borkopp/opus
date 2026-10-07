@@ -10,7 +10,7 @@ import React from "react";
 import { ACTIVE_DASHBOARD_PATH } from "@/lib/product-scope";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
 import { WebsiteSetupBanner } from "@/components/dashboard/WebsiteSetupBanner";
-import { IOSAppBanner } from "@/components/dashboard/IOSAppBanner";
+import { DashboardAnnouncementCarousel } from "@/components/dashboard/DashboardAnnouncementCarousel";
 import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
@@ -79,6 +79,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       "/notifications",
       "/gap-optimizer",
       "/ai-inbox",
+      "/website",
     ];
     if (sharedPaths.some((p) => pathname.startsWith(p))) return;
 
@@ -113,6 +114,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   )
     return null;
 
+  if (pathname === "/website" || pathname.startsWith("/website/"))
+    return <>{children}</>;
+
   return (
     <DashboardAppearanceProvider
       theme={resolveDashboardTheme(profile.dashboardTheme)}
@@ -144,7 +148,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     orgId={profile.orgId}
                   />
                 )}
-                <IOSAppBanner />
+                <DashboardAnnouncementCarousel
+                  key={`announcements:${profile.orgId}`}
+                  orgId={profile.orgId}
+                  canEditWebsite={profile.role === "owner"}
+                />
                 {children}
               </main>
             </div>

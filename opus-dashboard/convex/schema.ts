@@ -3,6 +3,7 @@ import { polarSubscription } from "./lib/polar";
 import { v } from "convex/values";
 import { dashboardThemeValidator } from "./lib/dashboardTheme";
 import { serviceImportRow } from "./lib/serviceImport";
+import { websiteDesignValidator } from "./lib/websiteDesign";
 import {
   pushEventValidator,
   pushPreferencesValidator,
@@ -49,6 +50,27 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
+  website_designs: defineTable({
+    orgId: v.id("orgs"),
+    draft: websiteDesignValidator,
+    published: v.optional(websiteDesignValidator),
+    revision: v.number(),
+    publishedRevision: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    translationStatus: v.union(
+      v.literal("idle"),
+      v.literal("queued"),
+      v.literal("ready"),
+      v.literal("failed"),
+    ),
+    translationJob: v.optional(v.string()),
+    translationWindowAt: v.optional(v.number()),
+    translationCount: v.optional(v.number()),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_org", ["orgId"]),
   // One provider customer per studio, never per owner email. Sandbox and live
   // billing belong on separate Convex deployments.
   billing_accounts: defineTable({

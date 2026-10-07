@@ -14,7 +14,8 @@ export type PaidFeature =
   | "SMS notifications"
   | "Client directory"
   | "Client email reminders"
-  | "Staff accounts";
+  | "Staff accounts"
+  | "Website languages";
 
 export function requirePaidPlan(
   org: Pick<Doc<"orgs">, "plan"> & Partial<Pick<Doc<"orgs">, "_id" | "slug">>,

@@ -18,7 +18,7 @@ import {
 import { downloadIcsFile, getGoogleCalendarUrl } from "./calendar-export";
 import { clientAreaUrl } from "@/lib/client-account";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { usePublicBookingI18n } from "./PublicBookingI18n";
 import type { PublicSite } from "./types";
 
 interface BookingResult {
@@ -47,7 +47,7 @@ export function BookingConfirmationStep({
   customerEmail,
   onBookAnother,
 }: BookingConfirmationStepProps) {
-  const { t } = useDashboardI18n();
+  const { t, text, locale } = usePublicBookingI18n();
   const location = [site.address, site.neighborhood, site.city]
     .filter(Boolean)
     .join(", ");
@@ -57,8 +57,12 @@ export function BookingConfirmationStep({
       )}`
     : null;
   const googleCalendarUrl = getGoogleCalendarUrl({
-    title: `${result.serviceName} во ${site.name}`,
-    description: `Резервација за ${result.serviceName} со ${result.staffName} во ${site.name}.`,
+    title: text("{v0} во {v1}", { v0: result.serviceName, v1: site.name }),
+    description: text("Резервација за {v0} со {v1} во {v2}.", {
+      v0: result.serviceName,
+      v1: result.staffName,
+      v2: site.name,
+    }),
     location,
     startAt: result.startAt,
     endAt: result.endAt,
@@ -67,7 +71,19 @@ export function BookingConfirmationStep({
   const handleDownloadCalendar = () => {
     downloadIcsFile({
       title: `${result.serviceName} - ${site.name}`,
-      description: `Услуга: ${result.serviceName}\nСпецијалист: ${result.staffName}\nСтудио: ${site.name}\nЦена: ${formatPrice(result.priceMinorUnits, result.currency, site.bookingSettings.locale)}`,
+      description: text(
+        "Услуга: {v0}\nСпецијалист: {v1}\nСтудио: {v2}\nЦена: {v3}",
+        {
+          v0: result.serviceName,
+          v1: result.staffName,
+          v2: site.name,
+          v3: formatPrice(
+            result.priceMinorUnits,
+            result.currency,
+            site.bookingSettings.locale,
+          ),
+        },
+      ),
       location,
       startAt: result.startAt,
       endAt: result.endAt,
@@ -79,12 +95,12 @@ export function BookingConfirmationStep({
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14">
       <div className="flex items-center gap-2 text-success">
         <CheckCircle2 className="size-5" aria-hidden="true" />
-        <span className="micro-label">Потврдено</span>
+        <span className="micro-label">{text("Потврдено")}</span>
       </div>
 
       <div className="flex flex-col gap-3">
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Терминот е зачуван
+          {text("Терминот е зачуван")}
         </h1>
       </div>
 
@@ -98,23 +114,27 @@ export function BookingConfirmationStep({
 
         <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <dt className="text-xs text-muted-foreground">Услуга</dt>
+            <dt className="text-xs text-muted-foreground">{text("Услуга")}</dt>
             <dd className="font-medium">{result.serviceName}</dd>
           </div>
           <div className="flex flex-col gap-1 sm:text-right">
-            <dt className="text-xs text-muted-foreground">Специјалист</dt>
+            <dt className="text-xs text-muted-foreground">
+              {text("Специјалист")}
+            </dt>
             <dd className="font-medium">{result.staffName}</dd>
           </div>
           <div className="flex flex-col gap-1">
-            <dt className="text-xs text-muted-foreground">Датум</dt>
-            <dd className="font-medium">{formatBookingDate(result.startAt)}</dd>
+            <dt className="text-xs text-muted-foreground">{text("Датум")}</dt>
+            <dd className="font-medium">
+              {formatBookingDate(result.startAt, locale)}
+            </dd>
             <dd className="font-mono text-muted-foreground">
               {formatBookingTime(result.startAt)}–
               {formatBookingTime(result.endAt)}
             </dd>
           </div>
           <div className="flex flex-col gap-1 sm:text-right">
-            <dt className="text-xs text-muted-foreground">Цена</dt>
+            <dt className="text-xs text-muted-foreground">{text("Цена")}</dt>
             <dd className="font-mono font-medium">
               {formatPrice(
                 result.priceMinorUnits,
@@ -125,7 +145,7 @@ export function BookingConfirmationStep({
           </div>
           <div className="flex min-w-0 flex-col gap-1 sm:col-span-2">
             <dt className="text-xs text-muted-foreground">
-              Потврдено преку е-пошта
+              {text("Потврдено преку е-пошта")}
             </dt>
             <dd className="break-all font-medium">{customerEmail}</dd>
           </div>
@@ -134,7 +154,7 @@ export function BookingConfirmationStep({
         {googleMapsUrl && (
           <Button asChild variant="link" size="sm" className="mt-5 w-fit">
             <a href={googleMapsUrl} target="_blank" rel="noreferrer">
-              Отвори ја локацијата
+              {text("Отвори ја локацијата")}
               <ExternalLink data-icon="inline-end" />
             </a>
           </Button>
@@ -189,7 +209,7 @@ export function BookingConfirmationStep({
           onClick={handleDownloadCalendar}
         >
           <Download data-icon="inline-start" />
-          Преземи .ics
+          {text("Преземи .ics")}
         </Button>
       </div>
 
@@ -198,20 +218,20 @@ export function BookingConfirmationStep({
           <Link
             href={
               accountBooking
-                ? tenantSiteUrl(
+                ? `${tenantSiteUrl(
                     site.slug,
                     process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk",
-                  )
-                : "/"
+                  )}?lang=${locale}`
+                : `/?lang=${locale}`
             }
           >
             <ArrowLeft data-icon="inline-start" />
-            Назад кон студиото
+            {text("Назад кон студиото")}
           </Link>
         </Button>
         <Button type="button" variant="ghost" onClick={onBookAnother}>
           <Plus data-icon="inline-start" />
-          Резервирај друг термин
+          {text("Резервирај друг термин")}
         </Button>
       </div>
     </section>

@@ -11,6 +11,7 @@ import {
   Store,
   SlidersHorizontal,
   ArrowUpRight,
+  Paintbrush,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -172,6 +173,12 @@ export function SettingsWorkspace() {
             </TabsList>
           </div>
           <div className="mt-3 flex flex-wrap gap-1 border-t border-border pt-3 md:flex-col">
+            <Button asChild variant="ghost" className="justify-start">
+              <Link href="/website">
+                <Paintbrush data-icon="inline-start" />
+                {t("OPUS Sites", "OPUS Sites", "OPUS Sites")}
+              </Link>
+            </Button>
             <Button asChild variant="ghost" className="justify-start">
               <Link href="/notifications/preferences">
                 <SlidersHorizontal data-icon="inline-start" />

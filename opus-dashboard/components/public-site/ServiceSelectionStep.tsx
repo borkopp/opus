@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import Image from "next/image";
 import { ArrowRight, Check } from "lucide-react";
 import {
@@ -28,6 +30,7 @@ export function ServiceSelectionStep({
   onSelectService,
   onBack,
 }: ServiceSelectionStepProps) {
+  const { text } = usePublicBookingI18n();
   const selectedStaff =
     selectedStaffId && selectedStaffId !== "any"
       ? site.staff.find((member) => member._id === selectedStaffId)
@@ -40,8 +43,8 @@ export function ServiceSelectionStep({
 
   return (
     <BookingStepShell
-      title="Изберете услуга"
-      backLabel={`Назад кон ${site.name}`}
+      title={text("Изберете услуга")}
+      backLabel={text("Назад кон {v0}", { v0: site.name })}
       onBack={onBack}
     >
       {services.length > 0 ? (
@@ -89,7 +92,7 @@ export function ServiceSelectionStep({
 
                 <div className="flex items-center justify-between gap-5 sm:justify-end">
                   <span className="text-sm text-muted-foreground">
-                    {service.durationMins} мин
+                    {service.durationMins} {text("мин")}
                   </span>
                   <span className="font-mono text-sm font-medium">
                     {formatPrice(
@@ -123,9 +126,9 @@ export function ServiceSelectionStep({
       ) : (
         <Empty>
           <EmptyHeader>
-            <EmptyTitle>Нема достапни услуги</EmptyTitle>
+            <EmptyTitle>{text("Нема достапни услуги")}</EmptyTitle>
             <EmptyDescription>
-              Вратете се назад и изберете друг специјалист.
+              {text("Вратете се назад и изберете друг специјалист.")}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

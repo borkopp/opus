@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { useEffect, useState } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { ArrowLeft, CalendarCheck, RefreshCw, ShieldCheck } from "lucide-react";
@@ -56,6 +58,7 @@ export function OtpVerificationStep({
   onResend,
   onBack,
 }: OtpVerificationStepProps) {
+  const { text, locale } = usePublicBookingI18n();
   const [clock, setClock] = useState(() => Date.now());
 
   useEffect(() => {
@@ -83,28 +86,30 @@ export function OtpVerificationStep({
         className="w-fit"
       >
         <ArrowLeft data-icon="inline-start" />
-        Промени податоци
+        {text("Промени податоци")}
       </Button>
 
       <div className="flex flex-col gap-3">
-        <p className="micro-label text-primary">Последен чекор</p>
+        <p className="micro-label text-primary">{text("Последен чекор")}</p>
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Проверете ја е-поштата
+          {text("Проверете ја е-поштата")}
         </h1>
       </div>
 
       <dl className="grid gap-4 rounded-2xl border bg-card p-5 text-sm shadow-s sm:grid-cols-2">
         <div className="flex flex-col gap-1">
-          <dt className="text-xs text-muted-foreground">Услуга</dt>
+          <dt className="text-xs text-muted-foreground">{text("Услуга")}</dt>
           <dd className="font-medium">{serviceName}</dd>
         </div>
         <div className="flex flex-col gap-1 sm:text-right">
-          <dt className="text-xs text-muted-foreground">Специјалист</dt>
+          <dt className="text-xs text-muted-foreground">
+            {text("Специјалист")}
+          </dt>
           <dd className="font-medium">{staffName}</dd>
         </div>
         <div className="flex flex-col gap-1 sm:col-span-2">
-          <dt className="text-xs text-muted-foreground">Термин</dt>
-          <dd className="font-medium">{formatBookingDate(startAt)}</dd>
+          <dt className="text-xs text-muted-foreground">{text("Термин")}</dt>
+          <dd className="font-medium">{formatBookingDate(startAt, locale)}</dd>
           <dd className="font-mono text-muted-foreground">
             {formatBookingTime(startAt)}
           </dd>
@@ -113,9 +118,11 @@ export function OtpVerificationStep({
 
       <form onSubmit={onSubmit} className="flex flex-col gap-7">
         <Field data-invalid={Boolean(error)}>
-          <FieldLabel htmlFor="booking-otp-input">Код за потврда</FieldLabel>
+          <FieldLabel htmlFor="booking-otp-input">
+            {text("Код за потврда")}
+          </FieldLabel>
           <FieldDescription>
-            Испратен на{" "}
+            {text("Испратен на")}{" "}
             <span className="break-all font-medium text-foreground">
               {customerEmail}
             </span>
@@ -150,8 +157,10 @@ export function OtpVerificationStep({
           ) : (
             <FieldDescription>
               {minutesUntilExpiry > 0
-                ? `Кодот важи уште околу ${minutesUntilExpiry} мин.`
-                : "Кодот истече. Побарајте нов код."}
+                ? text("Кодот важи уште околу {v0} мин.", {
+                    v0: minutesUntilExpiry,
+                  })
+                : text("Кодот истече. Побарајте нов код.")}
             </FieldDescription>
           )}
         </Field>
@@ -160,8 +169,12 @@ export function OtpVerificationStep({
           <ShieldCheck className="mt-1 size-4 shrink-0" aria-hidden="true" />
           <p>
             {createAccount
-              ? "Со овој код го потврдувате терминот и автоматски се најавувате на вашата OPUS сметка."
-              : "Кодот го потврдува само терминот. Продолжувате како гостин."}
+              ? text(
+                  "Со овој код го потврдувате терминот и автоматски се најавувате на вашата OPUS сметка.",
+                )
+              : text(
+                  "Кодот го потврдува само терминот. Продолжувате како гостин.",
+                )}
           </p>
         </div>
 
@@ -178,7 +191,7 @@ export function OtpVerificationStep({
           ) : (
             <CalendarCheck data-icon="inline-start" />
           )}
-          Потврди го терминот
+          {text("Потврди го терминот")}
         </Button>
 
         {securityCheck}
@@ -191,8 +204,8 @@ export function OtpVerificationStep({
         >
           <RefreshCw data-icon="inline-start" />
           {secondsUntilResend > 0
-            ? `Нов код за ${secondsUntilResend}с`
-            : "Испрати нов код"}
+            ? text("Нов код за {v0}с", { v0: secondsUntilResend })
+            : text("Испрати нов код")}
         </Button>
       </form>
     </section>

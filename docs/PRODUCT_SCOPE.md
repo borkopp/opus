@@ -66,6 +66,32 @@ are optional; they must not block publication or suspend an otherwise bookable
 website. Branding and more services/team members can be added after launch.
 The Pro signup path still continues from operational setup to subscription review.
 
+### Authorized website customization
+
+The October 7 authorization adds **OPUS Sites**, an owner-only full-screen
+website editor at `/website`. It offers predefined section layouts, palettes,
+typography, spacing, ordered sections, inline copy editing, and a wider live
+preview with desktop, tablet and phone widths. Design drafts are saved separately;
+explicit publication applies the design to the existing tenant website. The
+preview and published website use the same renderer. Existing websites retain
+their current design until an owner publishes an OPUS Sites draft.
+
+Owners write custom content in one primary language. Website language controls
+are Pro-only. Free owners can inspect the Languages panel with all controls
+visible and disabled, and continue customizing other sections. Pro owners can enable
+Macedonian, English and Albanian, prepare provider-backed translations, and make
+individual corrections. Automatic translation requires configured credentials.
+After a downgrade, language settings and corrections remain stored, but the public
+site uses its primary language and queued AI translation cannot continue. Upgrading
+restores the saved multilingual configuration.
+Missing, failed or outdated translations fall back to the current original text;
+they never block publication or guest booking. Built-in website and booking
+labels are supplied by OPUS. Website copy does not change canonical service IDs,
+prices, durations, staff eligibility, booking availability or the studio's stored
+operational locale. Photo uploads and business contact details remain in Studio
+settings. See [`WEBSITE_EDITOR.md`](WEBSITE_EDITOR.md) for the implementation and
+configuration boundaries.
+
 ### Studio settings and personal preferences
 
 The October 7 settings simplification groups studio controls into Studio,

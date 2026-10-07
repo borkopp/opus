@@ -98,6 +98,7 @@ import type * as lib_staffPlanLimits from "../lib/staffPlanLimits.js";
 import type * as lib_staffPush from "../lib/staffPush.js";
 import type * as lib_tenantSites from "../lib/tenantSites.js";
 import type * as lib_tenantSlug from "../lib/tenantSlug.js";
+import type * as lib_websiteDesign from "../lib/websiteDesign.js";
 import type * as listing from "../listing.js";
 import type * as marketplace_chatMobile from "../marketplace/chatMobile.js";
 import type * as marketplace_conversations from "../marketplace/conversations.js";
@@ -137,6 +138,8 @@ import type * as smsWebhooks from "../smsWebhooks.js";
 import type * as staff from "../staff.js";
 import type * as users from "../users.js";
 import type * as website from "../website.js";
+import type * as websiteDesigns from "../websiteDesigns.js";
+import type * as websiteTranslations from "../websiteTranslations.js";
 
 import type {
   ApiFromModules,
@@ -235,6 +238,7 @@ declare const fullApi: ApiFromModules<{
   "lib/staffPush": typeof lib_staffPush;
   "lib/tenantSites": typeof lib_tenantSites;
   "lib/tenantSlug": typeof lib_tenantSlug;
+  "lib/websiteDesign": typeof lib_websiteDesign;
   listing: typeof listing;
   "marketplace/chatMobile": typeof marketplace_chatMobile;
   "marketplace/conversations": typeof marketplace_conversations;
@@ -274,6 +278,8 @@ declare const fullApi: ApiFromModules<{
   staff: typeof staff;
   users: typeof users;
   website: typeof website;
+  websiteDesigns: typeof websiteDesigns;
+  websiteTranslations: typeof websiteTranslations;
 }>;
 
 /**

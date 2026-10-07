@@ -35,7 +35,7 @@ import {
   completeAccountBooking,
 } from "@/lib/booking-account";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { usePublicBookingI18n } from "./PublicBookingI18n";
 
 interface BookingFormProps {
   site: PublicSite;
@@ -91,7 +91,7 @@ export function BookingForm({
   recoveryOffer,
 }: BookingFormProps) {
   const router = useRouter();
-  const { t } = useDashboardI18n();
+  const { t, text, locale } = usePublicBookingI18n();
   const accountsEnabled = accountBooking;
   const account = useClientAccount(Boolean(accountsEnabled && accountBooking));
   const rememberedClient =
@@ -184,7 +184,7 @@ export function BookingForm({
     setCustomerPhone((value) => value || rememberedClient.phone || "");
   }, [rememberedClient]);
   const handoffToAccount = () => {
-    const query = new URLSearchParams();
+    const query = new URLSearchParams({ lang: locale });
     if (selectedServiceId) query.set("service", selectedServiceId);
     if (selectedStaffId) query.set("staff", selectedStaffId);
     if (selectedDate) query.set("date", selectedDate);
@@ -306,27 +306,27 @@ export function BookingForm({
   const handleSubmitDetails = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedService || !selectedSlotTimestamp || !selectedSlotStaffId) {
-      setError("Изберете услуга, специјалист и слободен термин.");
+      setError(text("Изберете услуга, специјалист и слободен термин."));
       return;
     }
 
     const normalizedName = customerName.trim();
     const normalizedEmail = customerEmail.trim().toLowerCase();
     if (normalizedName.length < 2) {
-      setError("Внесете име и презиме.");
+      setError(text("Внесете име и презиме."));
       return;
     }
     if (!normalizedEmail) {
-      setError("Внесете е-пошта за да го потврдите терминот.");
+      setError(text("Внесете е-пошта за да го потврдите терминот."));
       return;
     }
     if (!customerPhone.trim()) {
-      setError("Внесете телефонски број.");
+      setError(text("Внесете телефонски број."));
       return;
     }
     const normalizedPhone = normalizePublicBookingPhone(customerPhone);
     if (!isValidPublicBookingPhone(normalizedPhone)) {
-      setError("Внесете валиден телефонски број.");
+      setError(text("Внесете валиден телефонски број."));
       return;
     }
 
@@ -361,8 +361,10 @@ export function BookingForm({
       if (createClientAccount && !security.ready) {
         throw new AccountLinkError(
           security.unavailable
-            ? "Безбедносната проверка не се вчита. Освежете ја страницата."
-            : "Завршете ја безбедносната проверка пред да побарате код.",
+            ? text(
+                "Безбедносната проверка не се вчита. Освежете ја страницата.",
+              )
+            : text("Завршете ја безбедносната проверка пред да побарате код."),
         );
       }
       const challenge = createClientAccount
@@ -389,7 +391,9 @@ export function BookingForm({
       setOtp("");
       scrollToFlowStart();
     } catch (caught) {
-      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
+      setError(
+        accountErrorMessage(caught, text(publicBookingErrorMessage(caught))),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -398,7 +402,7 @@ export function BookingForm({
   const handleSubmitOtp = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!pendingBooking || otp.length !== 6) {
-      setError("Внесете го шестцифрениот код од е-поштата.");
+      setError(text("Внесете го шестцифрениот код од е-поштата."));
       return;
     }
 
@@ -447,7 +451,9 @@ export function BookingForm({
       setPendingBooking(null);
       scrollToFlowStart();
     } catch (caught) {
-      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
+      setError(
+        accountErrorMessage(caught, text(publicBookingErrorMessage(caught))),
+      );
       setOtp("");
     } finally {
       setIsSubmitting(false);
@@ -462,7 +468,7 @@ export function BookingForm({
     try {
       if (pendingBooking.createAccount && !security.ready) {
         throw new AccountLinkError(
-          "Завршете ја безбедносната проверка за нов код.",
+          text("Завршете ја безбедносната проверка за нов код."),
         );
       }
       const challenge = pendingBooking.createAccount
@@ -477,7 +483,9 @@ export function BookingForm({
       );
       setOtp("");
     } catch (caught) {
-      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
+      setError(
+        accountErrorMessage(caught, text(publicBookingErrorMessage(caught))),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -485,7 +493,7 @@ export function BookingForm({
 
   const handleBookAnother = () => {
     if (recoveryOffer) {
-      router.push(`/book/${encodeURIComponent(site.slug)}`);
+      router.push(`/book/${encodeURIComponent(site.slug)}?lang=${locale}`);
       return;
     }
     setBookingResult(null);
@@ -503,13 +511,14 @@ export function BookingForm({
   const setBookingCaptchaToken = security.setToken;
   const handleCaptchaError = useCallback(() => {
     setBookingCaptchaToken(null);
-    setError("Безбедносната проверка не се вчита. Обидете се повторно.");
-  }, [setBookingCaptchaToken]);
+    setError(text("Безбедносната проверка не се вчита. Обидете се повторно."));
+  }, [setBookingCaptchaToken, text]);
   const securityCheck = security.unavailable ? (
     <Alert variant="destructive">
       <AlertDescription>
-        Безбедносната проверка не се вчита. Освежете ја страницата или
-        продолжете како гостин.
+        {text(
+          "Безбедносната проверка не се вчита. Освежете ја страницата или продолжете како гостин.",
+        )}
       </AlertDescription>
     </Alert>
   ) : security.policy?.required && security.policy.siteKey ? (
@@ -526,7 +535,10 @@ export function BookingForm({
       <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
         <BookingConfirmationStep
           site={site}
-          result={bookingResult}
+          result={{
+            ...bookingResult,
+            serviceName: selectedService?.name ?? bookingResult.serviceName,
+          }}
           customerEmail={customerEmail}
           accountBooking={accountBooking}
           onBookAnother={handleBookAnother}
@@ -539,15 +551,16 @@ export function BookingForm({
     return (
       <main className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-12">
         <Alert>
-          <AlertTitle>Понудата повеќе не е достапна</AlertTitle>
+          <AlertTitle>{text("Понудата повеќе не е достапна")}</AlertTitle>
           <AlertDescription>
-            Можеби истекла или терминот е веќе резервиран. Може да изберете друг
-            термин.
+            {text(
+              "Можеби истекла или терминот е веќе резервиран. Може да изберете друг термин.",
+            )}
           </AlertDescription>
         </Alert>
         <Button asChild>
-          <Link href={`/book/${encodeURIComponent(site.slug)}`}>
-            Прегледај други термини
+          <Link href={`/book/${encodeURIComponent(site.slug)}?lang=${locale}`}>
+            {text("Прегледај други термини")}
           </Link>
         </Button>
       </main>
@@ -556,13 +569,13 @@ export function BookingForm({
   if (pendingBooking) {
     const staffName =
       site.staff.find((member) => member._id === pendingBooking.staffId)
-        ?.displayName || "Специјалист";
+        ?.displayName || text("Специјалист");
 
     return (
       <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
         <OtpVerificationStep
           customerEmail={pendingBooking.customerEmail}
-          serviceName={selectedService?.name || "Услуга"}
+          serviceName={selectedService?.name || text("Услуга")}
           staffName={staffName}
           startAt={pendingBooking.startAt}
           otp={otp}
@@ -712,7 +725,9 @@ export function BookingForm({
             onSubmit={handleSubmitDetails}
             onBack={() =>
               recoveryOffer
-                ? router.push(`/book/${encodeURIComponent(site.slug)}`)
+                ? router.push(
+                    `/book/${encodeURIComponent(site.slug)}?lang=${locale}`,
+                  )
                 : goToStep("datetime")
             }
           />

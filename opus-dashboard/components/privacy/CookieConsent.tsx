@@ -62,7 +62,8 @@ export function CookieConsent() {
   if (
     snapshot === "server" ||
     !isPlatformHost(window.location.hostname) ||
-    pathname.startsWith("/sites/")
+    pathname.startsWith("/sites/") ||
+    pathname.startsWith("/website/preview")
   )
     return null;
 
@@ -84,9 +85,13 @@ export function CookieConsent() {
     // Keep the shortcut off previews, auth, and onboarding; the dashboard menu provides it.
     if (
       layoutSegment === "(dashboard)" ||
-      ["/login", "/signup", "/onboarding", "/dashboard-preview"].some(
-        (route) => pathname === route || pathname.startsWith(`${route}/`),
-      )
+      [
+        "/login",
+        "/signup",
+        "/onboarding",
+        "/dashboard-preview",
+        "/website",
+      ].some((route) => pathname === route || pathname.startsWith(`${route}/`))
     )
       return null;
 

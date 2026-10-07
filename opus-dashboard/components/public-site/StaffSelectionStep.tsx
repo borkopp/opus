@@ -1,5 +1,7 @@
 "use client";
 
+import { usePublicBookingI18n } from "./PublicBookingI18n";
+
 import { ArrowRight, Check, UsersRound } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,7 @@ export function StaffSelectionStep({
   onSelectStaff,
   onBack,
 }: StaffSelectionStepProps) {
+  const { text } = usePublicBookingI18n();
   const service = site.services.find(
     (candidate) => candidate._id === selectedServiceId,
   );
@@ -39,12 +42,12 @@ export function StaffSelectionStep({
 
   return (
     <BookingStepShell
-      title="Изберете специјалист"
-      backLabel="Назад кон услуги"
+      title={text("Изберете специјалист")}
+      backLabel={text("Назад кон услуги")}
       onBack={onBack}
     >
       <div className="flex flex-col gap-1 rounded-xl sm:flex-row sm:items-center sm:justify-between sm:gap-4 bg-secondary px-4 py-3 text-sm">
-        <span className="text-muted-foreground">Избрана услуга</span>
+        <span className="text-muted-foreground">{text("Избрана услуга")}</span>
         <span className="font-medium sm:text-right">{service?.name}</span>
       </div>
 
@@ -65,10 +68,12 @@ export function StaffSelectionStep({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-display font-semibold">
-              Без претпочитан специјалист
+              {text("Без претпочитан специјалист")}
             </span>
             <span className="mt-1 block text-sm text-muted-foreground">
-              Ќе биде доделен достапен член од тимот за избраниот термин.
+              {text(
+                "Ќе биде доделен достапен член од тимот за избраниот термин.",
+              )}
             </span>
           </span>
           {selectedStaffId === "any" ? (

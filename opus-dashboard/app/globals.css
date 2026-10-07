@@ -2487,6 +2487,9 @@ body:has(.dashboard-shell)
 .sites-mobile-switch {
   display: none;
 }
+.sites-mobile-notice {
+  display: none;
+}
 @media (hover: hover) and (pointer: fine) {
   .opus-site-service:hover {
     border-color: var(--site-accent);
@@ -2562,6 +2565,9 @@ body:has(.dashboard-shell)
   }
 }
 @media (max-width: 900px) {
+  .sites-mobile-notice {
+    display: grid;
+  }
   .sites-editor-body {
     display: grid;
     grid-template-columns: 54px minmax(0, 1fr);

@@ -76,6 +76,7 @@ import type { WebsitePreviewEvent } from "@/components/website/preview-protocol"
 import { DesignControls } from "./DesignControls";
 import { SectionControls } from "./SectionControls";
 import { LanguageControls } from "./LanguageControls";
+import { WebsiteEditorMobileNotice } from "./WebsiteEditorMobileNotice";
 
 type EditorData = FunctionReturnType<typeof api.websiteDesigns.getEditor>;
 
@@ -483,6 +484,7 @@ export function WebsiteEditorWorkspace({ data }: { data: EditorData }) {
           </Button>
         </div>
       </header>
+      <WebsiteEditorMobileNotice />
       <div className="sites-editor-body">
         <nav
           className="sites-editor-rail"

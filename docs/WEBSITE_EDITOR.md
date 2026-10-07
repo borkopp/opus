@@ -9,7 +9,9 @@ or native editing.
 Owners open **Settings → OPUS Sites**, or **Customize website** on the dashboard's
 live website card. `/website` removes dashboard chrome and displays controls on
 the left with a wider website preview on the right. At narrow widths, Customize
-and Preview switch between these panels. The authenticated `/website/preview`
+and Preview switch between these panels. Mobile owners see a dismissible
+recommendation to use a computer for more space; editing remains available and
+dismissal is remembered on that browser. The authenticated `/website/preview`
 iframe uses the same `WebsiteCanvas` as the published website and receives draft
 data only through messages from its same-origin parent window. Preview links
 cannot leave the frame or submit bookings. Preview analytics and the cookie

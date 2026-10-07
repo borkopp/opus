@@ -27,7 +27,7 @@ export function DashboardThemePicker({
   return (
     <FieldSet disabled={disabled} className="min-w-0">
       <FieldLegend className="sr-only">
-        {t("Dashboard theme", "Тема на контролната табла")}
+        {t("Dashboard theme", "Тема на контролната табла", "Tema e panelit")}
       </FieldLegend>
       <ToggleGroup
         type="single"
@@ -37,7 +37,7 @@ export function DashboardThemePicker({
         }}
         disabled={disabled}
         spacing={4}
-        aria-label={t("Dashboard theme", "Тема на контролната табла")}
+        aria-label={t("Dashboard theme", "Тема на контролната табла", "Tema e panelit")}
         className={s.options}
       >
         {DASHBOARD_THEMES.map((theme) => {
@@ -58,6 +58,7 @@ export function DashboardThemePicker({
                   alt={t(
                     `${details.name} dashboard preview`,
                     `Преглед на темата ${details.name}`,
+                    `Parapamje e temës ${details.name}`,
                   )}
                   sizes="(max-width: 639px) 90vw, (max-width: 1023px) 45vw, 520px"
                 />
@@ -71,7 +72,7 @@ export function DashboardThemePicker({
                   <Logo className={s.logo} markClassName={s.logoMark} />
                 </span>
                 <span className={s.description}>
-                  {t(details.description.en, details.description.mk)}
+                  {t(details.description.en, details.description.mk, details.description.sq)}
                 </span>
               </span>
             </ToggleGroupItem>
@@ -82,6 +83,7 @@ export function DashboardThemePicker({
         {t(
           "Your theme is personal. You can change it anytime in Settings.",
           "Темата важи само за вас. Можете да ја промените во Поставки.",
+          "Tema juaj është personale. Mund ta ndryshoni në çdo kohë te Cilësimet.",
         )}
       </FieldDescription>
     </FieldSet>

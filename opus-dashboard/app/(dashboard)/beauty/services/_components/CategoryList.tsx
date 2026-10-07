@@ -92,7 +92,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       toast.error(
         getErrorMessage(
           error,
-          t("Could not add category", "Не може да се додаде категоријата"),
+          t("Could not add category", "Не може да се додаде категоријата", "Kategoria nuk mund të shtohej"),
         ),
       );
     }
@@ -116,6 +116,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
           t(
             "Could not rename category",
             "Не може да се преименува категоријата",
+            "Kategoria nuk mund të riemërohej",
           ),
         ),
       );
@@ -131,6 +132,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
         t(
           `Delete “${categoryName}”? Move its services to another category first.`,
           `Дали сакате да ја избришете „${categoryName}“? Прво преместете ги нејзините услуги во друга категорија.`,
+          `Dëshironi të fshini “${categoryName}”? Zhvendosni së pari shërbimet e saj në një kategori tjetër.`,
         ),
       )
     ) {
@@ -143,7 +145,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
       toast.error(
         getErrorMessage(
           error,
-          t("Could not delete category", "Не може да се избрише категоријата"),
+          t("Could not delete category", "Не може да се избрише категоријата", "Kategoria nuk mund të fshihej"),
         ),
       );
     }
@@ -173,6 +175,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
           t(
             "Could not reorder categories",
             "Не може да се промени редоследот на категориите",
+            "Nuk mund të ndryshohej renditja e kategorive",
           ),
         ),
       );
@@ -194,18 +197,19 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
           className="h-11 flex-1 transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:flex-none"
         >
           <FolderTreeIcon data-icon="inline-start" />
-          {t("Categories", "Категории")}
+          {t("Categories", "Категории", "Kategoritë")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle data-replay-public>
-            {t("Categories", "Категории")}
+            {t("Categories", "Категории", "Kategoritë")}
           </DialogTitle>
           <DialogDescription data-replay-public>
             {t(
               "Group related services on your booking page.",
               "Групирајте сродни услуги на вашата страница за закажување.",
+              "Gruponi shërbimet e ngjashme në faqen tuaj të rezervimit.",
             )}
           </DialogDescription>
         </DialogHeader>
@@ -225,12 +229,13 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     <FolderTreeIcon />
                   </EmptyMedia>
                   <EmptyTitle>
-                    {t("No categories", "Нема категории")}
+                    {t("No categories", "Нема категории", "Nuk ka kategori")}
                   </EmptyTitle>
                   <EmptyDescription>
                     {t(
                       "Categories are optional. Add one when you want to group similar services.",
                       "Категориите се опционални. Додајте категорија кога сакате да групирате слични услуги.",
+                      "Kategoritë janë opsionale. Shtoni një kur dëshironi të gruponi shërbime të ngjashme.",
                     )}
                   </EmptyDescription>
                 </EmptyHeader>
@@ -253,7 +258,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           htmlFor={`category-${category._id}`}
                           className="sr-only"
                         >
-                          {t("Category name", "Име на категорија")}
+                          {t("Category name", "Име на категорија", "Emri i kategorisë")}
                         </FieldLabel>
                         <Input
                           id={`category-${category._id}`}
@@ -274,6 +279,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           aria-label={t(
                             "Save category name",
                             "Зачувај име на категорија",
+                            "Ruaj emrin e kategorisë",
                           )}
                           disabled={!editName.trim()}
                         >
@@ -286,6 +292,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                           aria-label={t(
                             "Cancel renaming",
                             "Откажи преименување",
+                            "Anulo riemërimin",
                           )}
                           onClick={() => {
                             setEditingId(null);
@@ -312,6 +319,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                             aria-label={t(
                               `Actions for ${category.name}`,
                               `Опции за ${category.name}`,
+                              `Veprimet për ${category.name}`,
                             )}
                           >
                             <MoreHorizontalIcon />
@@ -327,7 +335,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                               }}
                             >
                               <PencilIcon />
-                              {t("Rename", "Преименувај")}
+                              {t("Rename", "Преименувај", "Riemëro")}
                             </DropdownMenuItem>
                             {categories.length > 1 && (
                               <>
@@ -337,7 +345,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                                   onSelect={() => moveCategory(index, "up")}
                                 >
                                   <ArrowUpIcon />
-                                  {t("Move up", "Помести нагоре")}
+                                  {t("Move up", "Помести нагоре", "Lëviz lart")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   data-replay-public
@@ -345,7 +353,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                                   onSelect={() => moveCategory(index, "down")}
                                 >
                                   <ArrowDownIcon />
-                                  {t("Move down", "Помести надолу")}
+                                  {t("Move down", "Помести надолу", "Lëviz poshtë")}
                                 </DropdownMenuItem>
                               </>
                             )}
@@ -360,7 +368,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                               }
                             >
                               <Trash2Icon />
-                              {t("Delete", "Избриши")}
+                              {t("Delete", "Избриши", "Fshi")}
                             </DropdownMenuItem>
                           </DropdownMenuGroup>
                         </DropdownMenuContent>
@@ -385,12 +393,12 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     htmlFor="new-category"
                     className="sr-only"
                   >
-                    {t("Category name", "Име на категорија")}
+                    {t("Category name", "Име на категорија", "Emri i kategorisë")}
                   </FieldLabel>
                   <Input
                     id="new-category"
                     autoFocus
-                    placeholder={t("Category name", "Име на категорија")}
+                    placeholder={t("Category name", "Име на категорија", "Emri i kategorisë")}
                     value={newName}
                     onChange={(event) => setNewName(event.target.value)}
                     onKeyDown={(event) => {
@@ -404,7 +412,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     type="submit"
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={t("Add category", "Додај категорија")}
+                    aria-label={t("Add category", "Додај категорија", "Shto kategori")}
                     disabled={!newName.trim()}
                   >
                     <CheckIcon />
@@ -416,6 +424,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                     aria-label={t(
                       "Cancel adding category",
                       "Откажи додавање категорија",
+                      "Anulo shtimin e kategorisë",
                     )}
                     onClick={() => {
                       setIsAdding(false);
@@ -437,7 +446,7 @@ export function CategoryList({ orgId }: { orgId: Id<"orgs"> }) {
                 }}
               >
                 <PlusIcon data-icon="inline-start" />
-                {t("Add category", "Додај категорија")}
+                {t("Add category", "Додај категорија", "Shto kategori")}
               </Button>
             )}
           </div>

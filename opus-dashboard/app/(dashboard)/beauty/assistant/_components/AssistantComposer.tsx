@@ -47,7 +47,7 @@ export function AssistantComposer({
             htmlFor="business-question"
             className="sr-only"
           >
-            {t("Ask about your studio", "Прашајте за вашето студио")}
+            {t("Ask about your studio", "Прашајте за вашето студио", "Pyesni për studion tuaj")}
           </FieldLabel>
           <InputGroup className="dashboard-assistant-composer">
             <InputGroupTextarea
@@ -59,6 +59,7 @@ export function AssistantComposer({
               placeholder={t(
                 "What would you like to understand about your studio?",
                 "Што сакате да дознаете за вашето студио?",
+                "Çfarë dëshironi të kuptoni rreth studios suaj?",
               )}
               onChange={(event) => setQuestion(event.target.value)}
               onKeyDown={(event) => {
@@ -83,7 +84,7 @@ export function AssistantComposer({
                 variant="default"
                 spacing={1}
                 className="shrink-0 rounded-full border border-border/70 bg-muted/60 p-1"
-                aria-label={t("Analysis depth", "Длабочина на анализа")}
+                aria-label={t("Analysis depth", "Длабочина на анализа", "Thellësia e analizës")}
                 disabled={pending}
                 onValueChange={(value) => {
                   if (value === "standard" || value === "deep") setDepth(value);
@@ -95,12 +96,13 @@ export function AssistantComposer({
                   title={t(
                     "Fast answers and essential figures",
                     "Брзи одговори и клучни бројки",
+                    "Përgjigje të shpejta dhe shifra thelbësore",
                   )}
                 >
                   <span className="flex size-6 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors group-data-[state=on]/mode:bg-primary/15 group-data-[state=on]/mode:text-primary motion-reduce:transition-none">
                     <Zap aria-hidden className="size-3.5" />
                   </span>
-                  {t("Fast", "Брза")}
+                  {t("Fast", "Брза", "E shpejtë")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="deep"
@@ -111,17 +113,19 @@ export function AssistantComposer({
                       ? t(
                           "More context and recommendations",
                           "Повеќе детали и препораки",
+                          "Më shumë kontekst dhe rekomandime",
                         )
                       : t(
                           `More context and recommendations · ${deepRemaining} remaining`,
                           `Повеќе детали и препораки · Преостанати: ${deepRemaining}`,
+                          `Më shumë kontekst dhe rekomandime · ${deepRemaining} të mbetura`,
                         )
                   }
                 >
                   <span className="flex size-6 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors group-data-[state=on]/mode:bg-primary/15 group-data-[state=on]/mode:text-primary motion-reduce:transition-none">
                     <BrainCircuit aria-hidden className="size-3.5" />
                   </span>
-                  {t("Detailed", "Детална")}
+                  {t("Detailed", "Детална", "E detajuar")}
                 </ToggleGroupItem>
               </ToggleGroup>
               <InputGroupText className="ml-auto hidden sm:inline">
@@ -137,7 +141,7 @@ export function AssistantComposer({
                   !question.trim() ||
                   (depth === "deep" && deepRemaining === 0)
                 }
-                aria-label={t("Send question", "Испрати прашање")}
+                aria-label={t("Send question", "Испрати прашање", "Dërgo pyetjen")}
               >
                 {pending ? (
                   <LoaderCircle className="motion-safe:animate-spin" />

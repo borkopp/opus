@@ -41,6 +41,7 @@ export function DevDataControls({
         t(
           `Added ${result.totalBookings} bookings and ${result.totalCustomers} customers.`,
           `Додадени се ${result.totalBookings} термини и ${result.totalCustomers} клиенти.`,
+          `U shtuan ${result.totalBookings} termine dhe ${result.totalCustomers} klientë.`,
         ),
       );
     } catch (error) {
@@ -50,6 +51,7 @@ export function DevDataControls({
           : t(
               "Failed to add test data.",
               "Не успеа додавањето на тест податоци.",
+              "Dështoi shtimi i të dhënave testuese.",
             ),
       );
     } finally {
@@ -65,6 +67,7 @@ export function DevDataControls({
         t(
           `Cleared ${result.deletedBookingsCount} bookings and ${result.deletedCustomersCount} customers.`,
           `Избришани се ${result.deletedBookingsCount} термини и ${result.deletedCustomersCount} клиенти.`,
+          `U fshinë ${result.deletedBookingsCount} termine dhe ${result.deletedCustomersCount} klientë.`,
         ),
       );
     } catch (error) {
@@ -74,6 +77,7 @@ export function DevDataControls({
           : t(
               "Failed to clear test data.",
               "Не успеа бришењето на тест податоци.",
+              "Dështoi fshirja e të dhënave testuese.",
             ),
       );
     } finally {
@@ -84,7 +88,7 @@ export function DevDataControls({
   const controls = [
     {
       id: "seed",
-      label: t("Add test data", "Додај тест податоци"),
+      label: t("Add test data", "Додај тест податоци", "Shto të dhëna testuese"),
       icon: IconDatabasePlus,
       action: handleSeed,
       pending: pendingAction === "seed",
@@ -92,7 +96,7 @@ export function DevDataControls({
     },
     {
       id: "clear",
-      label: t("Clear test data", "Избриши тест податоци"),
+      label: t("Clear test data", "Избриши тест податоци", "Pastro të dhënat testuese"),
       icon: IconTrash,
       action: handleClear,
       pending: pendingAction === "clear",

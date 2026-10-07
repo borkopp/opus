@@ -13,6 +13,8 @@ import {
   DashboardAccountMenu,
   type DashboardProfile,
 } from "./DashboardAccountMenu";
+import { PersonalStaffMenu } from "@/components/staff/PersonalStaffMenu";
+import { StudioSwitcher } from "@/components/staff/StudioSwitcher";
 import s from "./clarity.module.css";
 export function DashboardHeader({
   profile,
@@ -43,14 +45,20 @@ export function DashboardHeader({
     observer.observe(nav);
     return () => observer.disconnect();
   }, [pathname, language]);
-  const links = getNavLinks(ACTIVE_INDUSTRY, language).links.filter(
-    (link) => link.href !== "/settings" && link.href !== "/beauty/assistant",
+  const links = getNavLinks(ACTIVE_INDUSTRY, language).links.filter((link) =>
+    profile.bookingAccess === "own"
+      ? link.href === "/beauty/bookings"
+      : link.href !== "/settings" && link.href !== "/beauty/assistant",
   );
   return (
     <header className={s.topbar}>
       <Link
-        href="/beauty"
-        aria-label={t("OPUS dashboard", "OPUS контролна табла")}
+        href={profile.bookingAccess === "own" ? "/beauty/bookings" : "/beauty"}
+        aria-label={t(
+          "OPUS dashboard",
+          "OPUS контролна табла",
+          "Paneli i OPUS",
+        )}
       >
         <span className={s.brandLockup}>
           <Logo className={s.brand} markClassName={s.brandMark} />
@@ -64,7 +72,11 @@ export function DashboardHeader({
       <nav
         ref={navigationRef}
         className={s.navigation}
-        aria-label={t("Main navigation", "Главна навигација")}
+        aria-label={t(
+          "Main navigation",
+          "Главна навигација",
+          "Navigimi kryesor",
+        )}
       >
         {links.map((link) => (
           <Link
@@ -84,17 +96,24 @@ export function DashboardHeader({
           >
             {link.icon}
             <span data-replay-public>
-              {link.href === "/beauty" ? t("Overview", "Преглед") : link.label}
+              {link.href === "/beauty"
+                ? t("Overview", "Преглед", "Përmbledhje")
+                : link.label}
             </span>
           </Link>
         ))}
       </nav>
       <div className={s.headerActions}>
+        <StudioSwitcher orgId={profile.orgId} />
         {profile.role !== "staff" && (
           <Link
             href="/beauty/assistant"
             className={`${s.iconButton} dashboard-assistant-link`}
-            aria-label={t("Business assistant", "Деловен асистент")}
+            aria-label={t(
+              "Business assistant",
+              "Деловен асистент",
+              "Asistenti i biznesit",
+            )}
             aria-current={
               pathname.startsWith("/beauty/assistant") ? "page" : undefined
             }
@@ -102,19 +121,27 @@ export function DashboardHeader({
             <ChartNoAxesCombined size={19} />
           </Link>
         )}
-        <Link
-          href="/settings"
-          className={s.iconButton}
-          aria-label={t("Settings", "Поставки")}
-          aria-current={pathname === "/settings" ? "page" : undefined}
-        >
-          <Settings2 size={19} />
-        </Link>
-        {profile.orgId && (
-          <NotificationBell orgId={profile.orgId} placement="header" />
+        {profile.bookingAccess !== "own" && (
+          <>
+            <Link
+              href="/settings"
+              className={s.iconButton}
+              aria-label={t("Settings", "Поставки", "Cilësimet")}
+              aria-current={pathname === "/settings" ? "page" : undefined}
+            >
+              <Settings2 size={19} />
+            </Link>
+            {profile.orgId && (
+              <NotificationBell orgId={profile.orgId} placement="header" />
+            )}
+          </>
         )}
         <span className={s.headerDivider} />
-        <DashboardAccountMenu profile={profile} />
+        {profile.bookingAccess === "own" ? (
+          <PersonalStaffMenu />
+        ) : (
+          <DashboardAccountMenu profile={profile} />
+        )}
       </div>
     </header>
   );

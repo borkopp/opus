@@ -39,7 +39,7 @@ export function RecoveryDashboard({
       {!data.enabled && (
         <Alert>
           <AlertTitle data-replay-public>
-            {t("Recovery is off", "Пополнувањето е исклучено")}
+            {t("Recovery is off", "Пополнувањето е исклучено", "Rikuperimi është joaktiv")}
           </AlertTitle>
           <AlertDescription>
             <Link
@@ -47,7 +47,7 @@ export function RecoveryDashboard({
               href="/settings?tab=gaps"
               className="underline"
             >
-              {t("Enable it in Settings", "Овозможете го во поставките")}
+              {t("Enable it in Settings", "Овозможете го во поставките", "Aktivizojeni te Cilësimet")}
             </Link>
           </AlertDescription>
         </Alert>
@@ -58,12 +58,14 @@ export function RecoveryDashboard({
             {t(
               "Publish your studio website",
               "Објавете ја веб-страницата на студиото",
+              "Publikoni uebsajtin e studios suaj",
             )}
           </AlertTitle>
           <AlertDescription data-replay-public>
             {t(
               "Clients need a published booking page to accept an offer.",
               "На клиентите им е потребна објавена страница за да ја прифатат понудата.",
+              "Klientët kanë nevojë për një faqe të publikuar rezervimesh për të pranuar ofertën.",
             )}
           </AlertDescription>
         </Alert>
@@ -74,12 +76,14 @@ export function RecoveryDashboard({
             {t(
               "Email delivery needs configuration",
               "Потребна е конфигурација за е-пошта",
+              "Dërgimi i email-eve kërkon konfigurim",
             )}
           </AlertTitle>
           <AlertDescription data-replay-public>
             {t(
               "You can review openings and clients. Email approval becomes available when delivery is configured.",
               "Може да ги разгледате термините и клиентите. Одобрувањето пораки ќе биде достапно по конфигурацијата.",
+              "Mund të shqyrtoni hapësirat dhe klientët. Miratimi i email-eve bëhet i disponueshëm kur konfigurohet dërgimi.",
             )}
           </AlertDescription>
         </Alert>
@@ -87,14 +91,14 @@ export function RecoveryDashboard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">
-            {data.openCount} {t("openings to review", "термини за преглед")}
+            {data.openCount} {t("openings to review", "термини за преглед", "hapësira për shqyrtim")}
           </Badge>
           <Badge variant="outline">
-            {data.outreachSentCount} {t("active offers", "активни понуди")}
+            {data.outreachSentCount} {t("active offers", "активни понуди", "oferta aktive")}
           </Badge>
           <Badge variant="outline">
             {data.filledCount}{" "}
-            {t("attributed bookings", "резервации преку понуди")}
+            {t("attributed bookings", "резервации преку понуди", "rezervime nga ofertat")}
           </Badge>
         </div>
         {data.canManage && <RecoveryContacts orgId={orgId} />}
@@ -104,6 +108,7 @@ export function RecoveryDashboard({
           {t(
             "Completed appointment value through offers",
             "Вредност на завршени термини преку понуди",
+            "Vlera e termineve të përfunduara përmes ofertave",
           )}
           :{" "}
           {data.completedValue

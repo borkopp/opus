@@ -34,6 +34,7 @@ export default function GapOptimizerPage() {
       featureLabel={t(
         "Opening recovery requires OPUS Pro",
         "Пополнувањето слободни термини бара OPUS Pro",
+        "Plotësimi i termineve të lira kërkon OPUS Pro",
       )}
     >
       {!isPaid && (
@@ -44,6 +45,7 @@ export default function GapOptimizerPage() {
           {t(
             "Find bookable openings and invite clients with your approval.",
             "Пронајдете слободни термини и поканете клиенти со ваше одобрение.",
+            "Gjeni hapësira të lira për rezervim dhe ftoni klientë me miratimin tuaj.",
           )}
         </div>
       )}

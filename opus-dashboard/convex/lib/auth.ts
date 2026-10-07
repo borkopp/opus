@@ -1,18 +1,33 @@
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
+import {
+  appReviewBindings,
+  assertAppReviewUser,
+  isAppReviewEmail,
+  isAppReviewOrg,
+} from "./appReview";
 
 export type PaidFeature =
   | "Gap optimizer"
   | "AI front desk"
   | "SMS notifications"
   | "Client directory"
-  | "Client email reminders";
+  | "Client email reminders"
+  | "Staff accounts";
 
 export function requirePaidPlan(
-  org: Pick<Doc<"orgs">, "plan">,
+  org: Pick<Doc<"orgs">, "plan"> & Partial<Pick<Doc<"orgs">, "_id" | "slug">>,
   feature: PaidFeature,
 ): void {
+  if ((org._id && isAppReviewOrg(org._id)) || org.slug === "opus-app-review") {
+    if (
+      ["Gap optimizer", "AI front desk", "SMS notifications"].includes(feature)
+    )
+      throw new ConvexError(
+        "This action is unavailable in the App Review demo studio.",
+      );
+  }
   if (org.plan !== "paid") {
     throw new ConvexError(`${feature} requires the paid plan.`);
   }
@@ -32,8 +47,63 @@ export async function requireUser(ctx: QueryCtx) {
   if (!user || user.isDeleted) {
     throw new ConvexError("Unauthorised");
   }
+  assertAppReviewUser(identity, user);
 
   return { identity, user };
+}
+
+/** Resolve only this authenticated user's active memberships, including revocation fallback. */
+export async function resolveActiveMembership(
+  ctx: QueryCtx,
+  user: Doc<"users">,
+) {
+  if (isAppReviewEmail(user.email)) {
+    const binding = appReviewBindings();
+    const orgId = binding.orgId
+      ? ctx.db.normalizeId("orgs", binding.orgId)
+      : null;
+    if (
+      !orgId ||
+      user._id !== binding.userId ||
+      user.authUserId !== binding.authUserId ||
+      user.activeOrgId !== orgId
+    )
+      return null;
+    const org = await ctx.db.get(orgId);
+    if (
+      !org ||
+      org.isDeleted ||
+      org.slug !== "opus-app-review" ||
+      org.industry !== "beauty_wellness"
+    )
+      return null;
+    const staffMember = await ctx.db
+      .query("staff_members")
+      .withIndex("by_org_user", (q) =>
+        q.eq("orgId", orgId).eq("userId", user._id),
+      )
+      .first();
+    return staffMember && !staffMember.isDeleted && staffMember.isActive
+      ? { org, orgId, staffMember }
+      : null;
+  }
+  const memberships = await ctx.db
+    .query("staff_members")
+    .withIndex("by_user", (q) => q.eq("userId", user._id))
+    .collect();
+  const active = memberships.filter(
+    (member) => !member.isDeleted && member.isActive,
+  );
+  const preferred = active.find((member) => member.orgId === user.activeOrgId);
+  const candidates = preferred
+    ? [preferred, ...active.filter((member) => member._id !== preferred._id)]
+    : active;
+  for (const staffMember of candidates) {
+    const org = await ctx.db.get(staffMember.orgId);
+    if (org && !org.isDeleted && !isAppReviewOrg(org))
+      return { org, orgId: org._id, staffMember };
+  }
+  return null;
 }
 
 export async function requireActiveOrg(
@@ -41,52 +111,27 @@ export async function requireActiveOrg(
   expectedOrgId?: Id<"orgs">,
 ) {
   const { identity, user } = await requireUser(ctx);
-
-  let activeOrgId = user.activeOrgId;
-
-  // Development data may predate activeOrgId. Resolve a single valid
-  // membership for this request without trusting a client-provided tenant.
-  if (!activeOrgId) {
-    const memberships = await ctx.db
-      .query("staff_members")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const activeMembership = memberships.find(
-      (membership) => !membership.isDeleted && membership.isActive,
+  const membership = await resolveActiveMembership(ctx, user);
+  if (!membership)
+    throw new ConvexError(
+      user.activeOrgId ? "Unauthorised" : "No active business",
     );
-    activeOrgId = activeMembership?.orgId;
-  }
-
-  if (!activeOrgId) {
-    throw new ConvexError("No active business");
-  }
-
-  if (expectedOrgId && expectedOrgId !== activeOrgId) {
+  if (expectedOrgId && expectedOrgId !== membership.orgId)
     throw new ConvexError("Unauthorised");
-  }
-
-  const org = await ctx.db.get(activeOrgId);
-  if (!org || org.isDeleted) {
-    throw new ConvexError("Business not found");
-  }
-
-  const staffMember = await ctx.db
-    .query("staff_members")
-    .withIndex("by_org_user", (q) =>
-      q.eq("orgId", activeOrgId).eq("userId", user._id),
-    )
-    .first();
-
-  if (!staffMember || staffMember.isDeleted || !staffMember.isActive) {
-    throw new ConvexError("Unauthorised");
-  }
-
-  return { identity, user, org, orgId: activeOrgId, staffMember };
+  return { identity, user, ...membership };
 }
 
 export async function requireAuth(ctx: QueryCtx, expectedOrgId?: Id<"orgs">) {
-  return await requireActiveOrg(ctx, expectedOrgId);
+  const auth = await requireActiveOrg(ctx, expectedOrgId);
+  if (
+    auth.staffMember.role === "staff" &&
+    auth.staffMember.bookingAccess === "own"
+  ) {
+    throw new ConvexError(
+      "Your account has access to your own appointments only.",
+    );
+  }
+  return auth;
 }
 
 export async function requireRole(

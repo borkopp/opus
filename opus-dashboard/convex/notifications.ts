@@ -22,6 +22,7 @@ import {
 } from "./lib/sms";
 import { decryptBookingOtp } from "./lib/bookingEmailSecurity";
 import { wallClockNow } from "./lib/bookingTime";
+import { isAppReviewOrg } from "./lib/appReview";
 import {
   deliverEmail,
   emailFromForRoute,
@@ -36,6 +37,8 @@ import {
   type EmailProviderAttempt,
 } from "./lib/emailDeliveryTypes";
 import { isActiveIndustry } from "./lib/productScope";
+import { pushEventValidator } from "./lib/pushValidators";
+import { mobilePushConfigured, browserPushConfigured } from "./lib/staffPush";
 import {
   recoveryDeliverySkipReason,
   syncRecoveryDelivery,
@@ -118,6 +121,12 @@ function appendProviderAttempts(
 export const scheduleNotification = internalMutation({
   args: {
     orgId: v.id("orgs"),
+    pushUserId: v.optional(v.id("users")),
+    pushDeviceId: v.optional(v.id("staff_push_devices")),
+    pushEvent: v.optional(pushEventValidator),
+    pushConversationId: v.optional(v.id("ai_conversations")),
+    pushBookingStartAt: v.optional(v.number()),
+    pushReminderMinutes: v.optional(v.number()),
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
@@ -156,6 +165,14 @@ export const scheduleNotification = internalMutation({
         : "Client phone number is invalid.";
       recipientAddress = phone ?? recipientAddress;
     }
+    const orgForIsolation = await ctx.db.get(args.orgId);
+    if (
+      args.channel !== "push" &&
+      orgForIsolation &&
+      isAppReviewOrg(orgForIsolation)
+    )
+      smsSkipReason =
+        "External messages are disabled in the App Review demo studio.";
     if (args.dedupeKey) {
       const matching = await ctx.db
         .query("notifications")
@@ -172,6 +189,12 @@ export const scheduleNotification = internalMutation({
     const scheduledFor = args.scheduledFor ?? Date.now();
     const notificationId = await ctx.db.insert("notifications", {
       orgId: args.orgId,
+      pushUserId: args.pushUserId,
+      pushDeviceId: args.pushDeviceId,
+      pushEvent: args.pushEvent,
+      pushConversationId: args.pushConversationId,
+      pushBookingStartAt: args.pushBookingStartAt,
+      pushReminderMinutes: args.pushReminderMinutes,
       customerId: args.customerId,
       bookingId: args.bookingId,
       bookingEmailVerificationId: args.bookingEmailVerificationId,
@@ -193,7 +216,9 @@ export const scheduleNotification = internalMutation({
     // create a race between two workers for the same one-time challenge.
     if (
       !smsSkipReason &&
-      (args.channel === "email" || args.channel === "sms") &&
+      (args.channel === "email" ||
+        args.channel === "sms" ||
+        args.channel === "push") &&
       args.type !== "booking_verification"
     ) {
       await ctx.scheduler.runAfter(
@@ -268,7 +293,7 @@ export const getNotificationDeliveryContext = internalQuery({
         )
       : [];
     const assignedStaffRecipient = staff
-      ? resolveAssignedStaffEmailRecipient(staff)
+      ? await resolveAssignedStaffEmailRecipient(ctx, staff)
       : null;
     const staffRecipientEmails = Array.from(
       new Set([
@@ -302,6 +327,8 @@ function deliverySkipReason(context: DeliveryContext) {
     staffRecipientEmails,
   } = context;
   if (!org || org.isDeleted || !settings) return "Organization unavailable";
+  if (isAppReviewOrg(org))
+    return "External messages are disabled in the App Review demo studio.";
   if (notification.channel === "sms")
     return smsDeliverySkipReason({
       org,
@@ -420,6 +447,7 @@ function appointmentData(context: DeliveryContext): AppointmentEmailData {
   return {
     studioName:
       stringValue(data.studioName) || context.org?.name || "OPUS Studio",
+    clientAccountUrl: stringValue(data.clientAccountUrl) || undefined,
     customerName:
       stringValue(data.customerName) || context.customer?.name || "Client",
     customerEmail:
@@ -482,7 +510,9 @@ async function renderNotificationEmail(
   if (notification.type === "staff_invite") {
     return renderStaffInviteEmail({
       studioName: context.org?.name ?? "OPUS Studio",
-      dashboardUrl: configuredSiteUrl(),
+      dashboardUrl: stringValue(data.token)
+        ? `${configuredSiteUrl()}/invites/${encodeURIComponent(stringValue(data.token))}`
+        : configuredSiteUrl(),
     });
   }
 
@@ -766,6 +796,8 @@ export const processIndividualNotification = internalAction({
     ctx,
     args,
   ): Promise<"sent" | "failed" | "retrying" | "cancelled" | "ignored"> => {
+    const push = await ctx.runQuery(internal.pushQueue.isPush, args);
+    if (push) return ctx.runAction(internal.pushDelivery.send, args);
     let context = await ctx.runQuery(
       internal.notifications.getNotificationDeliveryContext,
       args,
@@ -951,7 +983,12 @@ export const reconcileBookingRemindersForOrg = internalMutation({
       org.plan === "paid" && settings.smsEnabled
         ? normalizeReminderHours(settings.smsReminderHoursBefore ?? [24])
         : [];
-    const allHours = [...customerHours, ...staffHours, ...smsHours];
+    const allHours = [
+      ...customerHours,
+      ...staffHours,
+      ...smsHours,
+      ...(mobilePushConfigured() || browserPushConfigured() ? [24] : []),
+    ];
     if (allHours.length === 0) return 0;
 
     const now = wallClockNow(settings.timezone);

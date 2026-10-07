@@ -1,0 +1,20 @@
+{
+  "nativeSourceBuild": "eb15e371-2813-4eeb-aad2-25486f3a6bb2",
+  "nativeSignature": "1d653d54a1b5a99a21fd5d6bdbf1f3c52a45774bac4d8e99430506531e4a66ab",
+  "bundleVersion": "6",
+  "productionBackend": true,
+  "otaChecks": "NEVER (local test package only)",
+  "localBundleTime": "2026-10-06T18:44:24.225Z",
+  "uploaded": false,
+  "installedOn": "paired iPhone 17 Pro",
+  "installedVersion": "1.0.0",
+  "installedBuild": "6",
+  "launchVerification": "pending phone unlock",
+  "nativeUiVerification": "pending Mac unlock",
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "tests": "43 passed",
+    "strictCodeSignature": "passed"
+  }
+}

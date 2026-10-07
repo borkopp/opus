@@ -58,6 +58,7 @@ export function GapOptimizerTab({
         t(
           "Enter a whole number between 15 and 240 minutes.",
           "Внесете цел број помеѓу 15 и 240 минути.",
+          "Vendosni një numër të plotë midis 15 dhe 240 minutave.",
         ),
       );
       return;
@@ -75,6 +76,7 @@ export function GapOptimizerTab({
         t(
           "Gap optimizer settings saved",
           "Поставките за оптимизаторот на празни термини се зачувани",
+          "Cilësimet e optimizuesit të hapësirave u ruajtën",
         ),
       );
     } catch (caught) {
@@ -84,6 +86,7 @@ export function GapOptimizerTab({
           : t(
               "Failed to save gap optimizer settings.",
               "Не успеа зачувувањето на поставките за оптимизаторот на празни термини.",
+              "Dështoi ruajtja e cilësimeve të optimizuesit të hapësirave.",
             ),
       );
     } finally {
@@ -95,7 +98,7 @@ export function GapOptimizerTab({
     <TabsContent value="gaps" className="m-0">
       <fieldset disabled={!isPaid || isSaving} className="min-w-0">
         <SettingsCard
-          title={t("Gap optimizer", "Оптимизатор на празни термини")}
+          title={t("Gap optimizer", "Оптимизатор на празни термини", "Optimizuesi i hapësirave")}
           action={
             !isPaid && (
               <Badge data-replay-public variant="pro">
@@ -106,6 +109,7 @@ export function GapOptimizerTab({
           description={t(
             "Find bookable openings in the next seven days. Review a client and approve each email offer before sending.",
             "Пронајдете слободни термини во следните седум дена. Изберете клиент и одобрете ја секоја понуда по е-пошта пред испраќање.",
+            "Gjeni orare të rezervueshme në shtatë ditët e ardhshme. Rishikoni një klient dhe miratoni çdo ofertë me email para dërgimit.",
           )}
           contentClassName="flex flex-col gap-6"
           footer={
@@ -117,10 +121,11 @@ export function GapOptimizerTab({
                   <Save data-icon="inline-start" />
                 )}
                 {isSaving
-                  ? t("Saving…", "Се зачувува…")
+                  ? t("Saving…", "Се зачувува…", "Po ruhet…")
                   : t(
                       "Save optimizer settings",
                       "Зачувај поставки за оптимизатор",
+                      "Ruaj cilësimet e optimizuesit",
                     )}
               </Button>
             )
@@ -131,6 +136,7 @@ export function GapOptimizerTab({
               {t(
                 "Gap optimizer is included in Pro. Contact OPUS to upgrade and activate it for your studio.",
                 "Оптимизаторот на празни термини е дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
+                "Optimizuesi i hapësirave përfshihet në Pro. Kontaktoni me OPUS për ta përmirësuar dhe aktivizuar për studion tuaj.",
               )}
             </p>
           )}
@@ -138,10 +144,12 @@ export function GapOptimizerTab({
             title={t(
               "Enable gap optimizer",
               "Овозможи оптимизатор на празни термини",
+              "Aktivizo optimizuesin e hapësirave",
             )}
             description={t(
               "Refresh openings after calendar changes. Requires a published studio website, configured email delivery, and client permission. Turning this off cancels outstanding offers.",
               "Освежувај ги слободните термини по промени во распоредот. Потребни се објавена веб-страница, конфигурирана е-пошта и дозвола од клиентот. Исклучувањето ги поништува активните понуди.",
+              "Përditësoni oraret e lira pas ndryshimeve në kalendar. Kërkon një faqe interneti të publikuar të studios, dërgim të konfiguruar të email-it dhe lejen e klientit. Çaktivizimi anulon ofertat aktive.",
             )}
             control={
               <Switch
@@ -149,6 +157,7 @@ export function GapOptimizerTab({
                 aria-label={t(
                   "Enable gap optimizer",
                   "Овозможи оптимизатор на празни термини",
+                  "Aktivizo optimizuesin e hapësirave",
                 )}
                 checked={isPaid && optimizer.enabled}
                 disabled={!isPaid || isSaving}
@@ -168,6 +177,7 @@ export function GapOptimizerTab({
                 {t(
                   "Minimum gap duration (minutes)",
                   "Минимално времетраење на празнината (минути)",
+                  "Kohëzgjatja minimale e hapësirës (minuta)",
                 )}
               </FieldLabel>
               <Input
@@ -192,6 +202,7 @@ export function GapOptimizerTab({
                 {t(
                   "Shorter openings are ignored so recovery stays focused on useful appointment slots.",
                   "Пократките празнини се игнорираат за пополнувањето да остане фокусирано на корисни термини.",
+                  "Hapësirat më të shkurtra injorohen në mënyrë që rikuperimi të mbetet i fokusuar në orare të dobishme terminesh.",
                 )}
               </FieldDescription>
               <FieldError>{error}</FieldError>

@@ -279,65 +279,34 @@ describe("beauty activation engine", () => {
     });
   });
 
-  test("lets only owners link a normalized appointment email to staff", async () => {
+  test("ignores retired appointment-email inputs and hides stored legacy addresses", async () => {
     const { owner, orgId } = await completeBeautySetup(t);
-    const { authenticated: manager } = await createAuthenticatedStaff(
-      t,
-      orgId,
-      "manager-email",
-      "manager",
-    );
     const staffId = await owner.mutation(api.staff.createStaffMember, {
       orgId,
       displayName: "Ana Artist",
       role: "staff",
       specialties: ["Nails"],
-      appointmentEmail: " ANA.ARTIST@EXAMPLE.COM ",
+      appointmentEmail: "old@example.com",
     });
-
-    expect(
-      await owner.query(api.staff.getStaffMember, { orgId, staffId }),
-    ).toMatchObject({
-      appointmentEmail: "ana.artist@example.com",
-    });
-    expect(
-      await manager.query(api.staff.getStaffMember, { orgId, staffId }),
-    ).not.toHaveProperty("appointmentEmail");
-
-    await expect(
-      manager.mutation(api.staff.updateStaffMember, {
-        orgId,
-        staffId,
-        appointmentEmail: "manager-change@example.com",
-      }),
-    ).rejects.toThrow("Only an owner can manage staff appointment emails");
-    await expect(
-      owner.mutation(api.staff.updateStaffMember, {
-        orgId,
-        staffId,
-        appointmentEmail: "not-an-email",
-      }),
-    ).rejects.toThrow("Enter a valid appointment email address");
-
+    expect(await t.run((ctx) => ctx.db.get(staffId))).not.toHaveProperty(
+      "appointmentEmail",
+    );
+    await t.run((ctx) =>
+      ctx.db.patch(staffId, { appointmentEmail: "legacy@example.com" }),
+    );
     await owner.mutation(api.staff.updateStaffMember, {
       orgId,
       staffId,
-      appointmentEmail: null,
+      displayName: "Ana Updated",
+      appointmentEmail: "ignored@example.com",
     });
-    const persisted = await t.run(async (ctx) => ({
-      staff: await ctx.db.get(staffId),
-      audit: await ctx.db
-        .query("audit_log")
-        .withIndex("by_org", (query) => query.eq("orgId", orgId))
-        .collect(),
-    }));
-    expect(persisted.staff).not.toHaveProperty("appointmentEmail");
     expect(
-      persisted.audit.filter(
-        (entry) =>
-          entry.resourceId === staffId && entry.action === "staff.updated",
-      ),
-    ).toHaveLength(1);
+      await owner.query(api.staff.getStaffMember, { orgId, staffId }),
+    ).not.toHaveProperty("appointmentEmail");
+    expect(await t.run((ctx) => ctx.db.get(staffId))).toMatchObject({
+      displayName: "Ana Updated",
+      appointmentEmail: "legacy@example.com",
+    });
   });
 
   test("keeps the last active owner from being demoted or deactivated", async () => {
@@ -381,6 +350,30 @@ describe("beauty activation engine", () => {
       isActive: true,
       isDeleted: false,
     });
+  });
+
+  test("syncs staff displayName and updates profile name when staff settings are saved", async () => {
+    const { owner, orgId } = await completeBeautySetup(t);
+    const ownerStaffId = await t.run(async (ctx) => {
+      const ownerMember = await ctx.db
+        .query("staff_members")
+        .withIndex("by_org_role", (q) =>
+          q.eq("orgId", orgId).eq("role", "owner"),
+        )
+        .first();
+      if (!ownerMember) throw new Error("Owner fixture is missing");
+      return ownerMember._id;
+    });
+
+    await owner.mutation(api.staff.updateStaffMember, {
+      orgId,
+      staffId: ownerStaffId,
+      displayName: "Elena Master Stylist",
+    });
+
+    const profile = await owner.query(api.users.getMyProfile);
+    expect(profile?.staffDisplayName).toBe("Elena Master Stylist");
+    expect(profile?.user?.name).toBe("Elena Master Stylist");
   });
 
   test("creates one idempotent business and assigns unique slugs", async () => {
@@ -1329,6 +1322,10 @@ describe("beauty activation engine", () => {
 
   test("exposes real public availability and atomically rejects slot conflicts", async () => {
     const { owner, orgId, serviceId } = await completeBeautySetup(t);
+    await owner.mutation(api.orgSettings.updateClientAccounts, {
+      orgId,
+      enabled: true,
+    });
     await owner.mutation(api.listing.publishOrg, { orgId });
 
     const nextMonday = new Date();
@@ -1593,6 +1590,10 @@ describe("beauty activation engine", () => {
 
   test("protects staff booking actions and validates reschedule availability", async () => {
     const { owner, orgId, serviceId } = await completeBeautySetup(t);
+    await owner.mutation(api.orgSettings.updateClientAccounts, {
+      orgId,
+      enabled: true,
+    });
     await owner.mutation(api.listing.publishOrg, { orgId });
 
     const nextMonday = new Date();
@@ -1637,7 +1638,7 @@ describe("beauty activation engine", () => {
       }),
     ).rejects.toThrow("Unauthorised");
 
-    const outsideWorkingHours = new Date(`${date}T00:00:00.000Z`).getTime();
+    const outsideWorkingHours = new Date(`${date}T08:00:00.000Z`).getTime();
     await expect(
       owner.mutation(api.bookings.rescheduleBooking, {
         orgId,
@@ -1674,6 +1675,9 @@ describe("beauty activation engine", () => {
     });
     expect(logoUrl).toBeTruthy();
 
+    const profileWithLogo = await owner.query(api.users.getMyProfile);
+    expect(profileWithLogo?.orgLogoUrl).toBe(logoUrl);
+
     await owner.mutation(api.website.publish, { orgId });
 
     const orgWithLogo = await t.run(async (ctx) => await ctx.db.get(orgId));
@@ -1684,5 +1688,8 @@ describe("beauty activation engine", () => {
     const orgWithoutLogo = await t.run(async (ctx) => await ctx.db.get(orgId));
     expect(orgWithoutLogo?.logoUrl).toBeUndefined();
     expect(orgWithoutLogo?.websiteStatus).toBe("published");
+
+    const profileWithoutLogo = await owner.query(api.users.getMyProfile);
+    expect(profileWithoutLogo?.orgLogoUrl).toBeUndefined();
   });
 });

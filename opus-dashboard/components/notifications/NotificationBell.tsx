@@ -87,7 +87,9 @@ export function getNotificationTypeConfig(
       return {
         icon: <CalendarPlus size={16} strokeWidth={2} />,
         iconBg: "bg-accent text-accent-foreground",
-        label: t ? t("New Booking", "Нов термин", "Termin i ri") : "New Booking",
+        label: t
+          ? t("New Booking", "Нов термин", "Termin i ri")
+          : "New Booking",
       };
     case "booking_cancelled":
       return {
@@ -196,7 +198,11 @@ function NotificationItem({
           onDismiss(notification._id);
         }}
         className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
-        aria-label={t("Dismiss notification", "Отфрли известување", "Hiq njoftimin")}
+        aria-label={t(
+          "Dismiss notification",
+          "Отфрли известување",
+          "Hiq njoftimin",
+        )}
       >
         <X size={13} />
       </button>
@@ -293,7 +299,11 @@ function NotificationToast({
             handleDismiss();
           }}
           className="absolute right-2.5 top-2.5 p-1 rounded-lg hover:bg-secondary text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          aria-label={t("Dismiss notification", "Отфрли известување", "Hiq njoftimin")}
+          aria-label={t(
+            "Dismiss notification",
+            "Отфрли известување",
+            "Hiq njoftimin",
+          )}
         >
           <X size={14} />
         </button>
@@ -409,7 +419,7 @@ export function NotificationBell({
               ? "bg-secondary text-foreground font-semibold shadow-xs"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
           )}
-          aria-label={t("Notifications", "Известувања")}
+          aria-label={t("Notifications", "Известувања", "Njoftimet")}
         >
           <div className="shrink-0 flex items-center justify-center relative">
             {hasUnread ? (
@@ -443,7 +453,7 @@ export function NotificationBell({
               ? "bg-secondary text-foreground font-semibold shadow-xs"
               : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
           )}
-          aria-label={t("Notifications", "Известувања")}
+          aria-label={t("Notifications", "Известувања", "Njoftimet")}
         >
           <div
             className={cn(
@@ -464,7 +474,7 @@ export function NotificationBell({
             data-replay-public
             className="text-sm font-medium whitespace-nowrap overflow-hidden truncate"
           >
-            {t("Notifications", "Известувања")}
+            {t("Notifications", "Известувања", "Njoftimet")}
           </span>
 
           {hasUnread && (
@@ -493,7 +503,7 @@ export function NotificationBell({
             ? "bg-secondary text-foreground font-semibold shadow-xs"
             : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
         )}
-        aria-label={t("Notifications", "Известувања")}
+        aria-label={t("Notifications", "Известувања", "Njoftimet")}
       >
         <div className="flex items-center gap-3">
           <div
@@ -508,7 +518,9 @@ export function NotificationBell({
               <Bell className="h-5 w-5" />
             )}
           </div>
-          <span data-replay-public>{t("Notifications", "Известувања")}</span>
+          <span data-replay-public>
+            {t("Notifications", "Известувања", "Njoftimet")}
+          </span>
         </div>
 
         {hasUnread && (
@@ -536,7 +548,7 @@ export function NotificationBell({
             ? "bg-primary text-primary-foreground border-primary"
             : "bg-secondary text-primary hover:bg-secondary/80 border-border/40",
         )}
-        aria-label={t("Notifications", "Известувања")}
+        aria-label={t("Notifications", "Известувања", "Njoftimet")}
       >
         {hasUnread ? (
           <BellRing className="h-5 w-5" />
@@ -568,7 +580,7 @@ export function NotificationBell({
               <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={12}>
-              {t("Notifications", "Известувања")}
+              {t("Notifications", "Известувања", "Njoftimet")}
               {hasUnread ? ` (${unreadCount})` : ""}
             </TooltipContent>
           </Tooltip>
@@ -665,6 +677,17 @@ export function NotificationBell({
 
           {/* Footer */}
           <div className="border-t border-border/40 p-2 bg-muted/20">
+            <Link
+              href="/notifications/preferences"
+              className="flex min-h-11 items-center px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
+              onClick={() => setOpen(false)}
+            >
+              {t(
+                "Notification preferences",
+                "Поставки за известувања",
+                "Preferencat e njoftimeve",
+              )}
+            </Link>
             <Link
               href="/notifications"
               className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addDays, isToday, startOfDay, subDays } from "date-fns";
+import { startOfDay } from "date-fns";
 import { enGB, mk, sq } from "date-fns/locale";
 import { labelDayButton } from "react-day-picker";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
@@ -13,24 +13,60 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { dateKey } from "@/lib/booking-wall-clock";
+import {
+  calendarDays,
+  shiftCalendarPeriod,
+  type CalendarPeriod,
+} from "../../../shared/calendar";
+import {
+  bookingTimestampForDate,
+  bookingDateKey,
+  dateFromKey,
+  dateKey,
+} from "@/lib/booking-wall-clock";
 
 export function BookingsDateNavigation({
   date,
+  today = new Date(),
+  period = "day",
   bookingDateCounts,
   onDateChange,
 }: {
   date: Date;
+  today?: Date;
+  period?: CalendarPeriod;
   bookingDateCounts: ReadonlyMap<string, number>;
   onDateChange: (date: Date) => void;
 }) {
   const { locale, language, t } = useDashboardI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const label = new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  }).format(date);
+  const timestamp = bookingTimestampForDate(date, 0);
+  const days = calendarDays(timestamp, "week");
+  const shortDate = (day: number) =>
+    new Intl.DateTimeFormat(locale, {
+      timeZone: "UTC",
+      month: "short",
+      day: "numeric",
+    }).format(day);
+  const label =
+    period === "month"
+      ? new Intl.DateTimeFormat(locale, {
+          month: "long",
+          year: "numeric",
+        }).format(date)
+      : period === "week"
+        ? `${shortDate(days[0])} – ${shortDate(days[6])}`
+        : new Intl.DateTimeFormat(locale, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          }).format(date);
+  const shift = (direction: number) =>
+    onDateChange(
+      dateFromKey(
+        bookingDateKey(shiftCalendarPeriod(timestamp, period, direction)),
+      )!,
+    );
 
   return (
     <div className="col-span-3 flex min-w-0 items-center gap-1 lg:col-span-1">
@@ -38,8 +74,14 @@ export function BookingsDateNavigation({
         variant="ghost"
         size="icon"
         className="size-11 shrink-0 text-muted-foreground md:size-9"
-        onClick={() => onDateChange(subDays(date, 1))}
-        aria-label={t("Previous day", "Претходен ден", "Dita e mëparshme")}
+        onClick={() => shift(-1)}
+        aria-label={
+          period === "month"
+            ? t("Previous month", "Претходен месец", "Muaji i mëparshëm")
+            : period === "week"
+              ? t("Previous week", "Претходна недела", "Java e mëparshme")
+              : t("Previous day", "Претходен ден", "Dita e mëparshme")
+        }
       >
         <IconChevronLeft className="size-4" />
       </Button>
@@ -59,7 +101,11 @@ export function BookingsDateNavigation({
           align="start"
           collisionPadding={8}
           className="max-h-[var(--radix-popover-content-available-height)] w-auto overflow-y-auto p-0"
-          aria-label={t("Choose booking date", "Избери датум за термини", "Zgjidh datën e rezervimeve")}
+          aria-label={t(
+            "Choose booking date",
+            "Избери датум за термини",
+            "Zgjidh datën e rezervimeve",
+          )}
         >
           <Calendar
             mode="single"
@@ -84,7 +130,8 @@ export function BookingsDateNavigation({
             }}
             labels={{
               labelNext: () => t("Next month", "Следен месец", "Muaji tjetër"),
-              labelPrevious: () => t("Previous month", "Претходен месец", "Muaji i mëparshëm"),
+              labelPrevious: () =>
+                t("Previous month", "Претходен месец", "Muaji i mëparshëm"),
               labelDayButton: (day, modifiers, options) => {
                 const count = bookingDateCounts.get(dateKey(day)) ?? 0;
                 const bookingsLabel = t(
@@ -113,17 +160,23 @@ export function BookingsDateNavigation({
         variant="ghost"
         size="icon"
         className="size-11 shrink-0 text-muted-foreground md:size-9"
-        onClick={() => onDateChange(addDays(date, 1))}
-        aria-label={t("Next day", "Следен ден", "Dita tjetër")}
+        onClick={() => shift(1)}
+        aria-label={
+          period === "month"
+            ? t("Next month", "Следен месец", "Muaji tjetër")
+            : period === "week"
+              ? t("Next week", "Следна недела", "Java tjetër")
+              : t("Next day", "Следен ден", "Dita tjetër")
+        }
       >
         <IconChevronRight className="size-4" />
       </Button>
-      {!isToday(date) && (
+      {dateKey(date) !== dateKey(today) && (
         <Button
           data-replay-public
           variant="secondary"
           className="min-h-11 shrink-0 px-3 md:min-h-9"
-          onClick={() => onDateChange(startOfDay(new Date()))}
+          onClick={() => onDateChange(startOfDay(today))}
         >
           {t("Today", "Денес", "Sot")}
         </Button>

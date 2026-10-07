@@ -107,6 +107,7 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
       })),
     services: publicServices,
     bookingSettings: {
+      clientAccountsEnabled: true,
       timezone: orgSettings?.timezone ?? "Europe/Belgrade",
       locale: orgSettings?.locale ?? "mk-MK",
       bookingWindowDays: orgSettings?.bookingWindowDays ?? 60,

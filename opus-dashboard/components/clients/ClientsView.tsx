@@ -71,30 +71,32 @@ export function ClientsView({
     onFiltersChange({ ...filters, page: 0, ...patch });
   const metrics = [
     {
-      label: t("Clients", "Клиенти"),
-      shortLabel: t("Clients", "Клиенти"),
+      label: t("Clients", "Клиенти", "Klientët"),
+      shortLabel: t("Clients", "Клиенти", "Klientët"),
       value: data?.summary.clients,
       icon: UsersRound,
       description: t(
         "In your studio's address book",
         "Во именикот на вашето студио",
+        "Në librin e adresave të studios",
       ),
     },
     {
-      label: t("Completed visits", "Завршени посети"),
-      shortLabel: t("Visits", "Посети"),
+      label: t("Completed visits", "Завршени посети", "Vizita të përfunduara"),
+      shortLabel: t("Visits", "Посети", "Vizita"),
       value: data?.summary.completedVisits,
       icon: CalendarCheck2,
-      description: t("Every completed appointment", "Секој завршен термин"),
+      description: t("Every completed appointment", "Секој завршен термин", "Çdo termin i përfunduar"),
     },
     {
-      label: t("Returning clients", "Клиенти што се враќаат"),
-      shortLabel: t("Returning", "Повторни"),
+      label: t("Returning clients", "Клиенти што се враќаат", "Klientë të rikthyer"),
+      shortLabel: t("Returning", "Повторни", "Të rikthyer"),
       value: data?.summary.returningClients,
       icon: Repeat2,
       description: t(
         "Two or more completed visits",
         "Две или повеќе завршени посети",
+        "Dy ose më shumë vizita të përfunduara",
       ),
     },
   ];
@@ -105,10 +107,11 @@ export function ClientsView({
         <DashboardPageHeader
           replayPublicDescription
           replayPublicTitle
-          title={t("Clients", "Клиенти")}
+          title={t("Clients", "Клиенти", "Klientët")}
           description={t(
             "Contact details, past visits and the next appointment.",
             "Контакт, претходни посети и следниот закажан термин.",
+            "Detajet e kontaktit, vizitat e kaluara dhe termini i ardhshëm.",
           )}
         />
         <Badge
@@ -125,6 +128,7 @@ export function ClientsView({
           featureLabel={t(
             "Client profiles are included in Pro",
             "Профилите на клиенти се дел од Pro",
+            "Profilet e klientëve përfshihen në Pro",
           )}
         >
           <div className="flex min-h-96 flex-col gap-5 rounded-3xl bg-card p-8">
@@ -167,12 +171,13 @@ export function ClientsView({
             <CardHeader className="min-w-0 grid-cols-1 gap-4 px-5 sm:px-6">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
                 <CardTitle data-replay-public>
-                  {t("Client directory", "Именик на клиенти")}
+                  {t("Client directory", "Именик на клиенти", "Regjistri i klientëve")}
                 </CardTitle>
                 <p data-replay-public className="text-xs text-muted-foreground">
                   {t(
                     "Visit totals count completed appointments only.",
                     "Вкупните посети ги вклучуваат само завршените термини.",
+                    "Totali i vizitave numëron vetëm terminet e përfunduara.",
                   )}
                 </p>
               </div>
@@ -182,10 +187,11 @@ export function ClientsView({
                     <Search />
                   </InputGroupAddon>
                   <InputGroupInput
-                    aria-label={t("Search clients", "Пребарај клиенти")}
+                    aria-label={t("Search clients", "Пребарај клиенти", "Kërko klientë")}
                     placeholder={t(
                       "Search name, email or phone",
                       "Пребарај име, е-пошта или телефон",
+                      "Kërko emër, email ose telefon",
                     )}
                     value={filters.search}
                     maxLength={150}
@@ -194,7 +200,7 @@ export function ClientsView({
                   {filters.search && (
                     <InputGroupAddon align="inline-end">
                       <InputGroupButton
-                        aria-label={t("Clear search", "Исчисти пребарување")}
+                        aria-label={t("Clear search", "Исчисти пребарување", "Pastro kërkimin")}
                         size="icon-xs"
                         onClick={() => change({ search: "" })}
                       >
@@ -213,28 +219,28 @@ export function ClientsView({
                   >
                     <TabsList
                       className="w-full"
-                      aria-label={t("Filter clients", "Филтрирај клиенти")}
+                      aria-label={t("Filter clients", "Филтрирај клиенти", "Filtro klientët")}
                     >
                       <TabsTrigger
                         data-replay-public
                         value="all"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
-                        {t("All", "Сите")}
+                        {t("All", "Сите", "Të gjithë")}
                       </TabsTrigger>
                       <TabsTrigger
                         data-replay-public
                         value="returning"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
-                        {t("Returning", "Повторни")}
+                        {t("Returning", "Повторни", "Të rikthyer")}
                       </TabsTrigger>
                       <TabsTrigger
                         data-replay-public
                         value="unvisited"
                         className="px-2 text-xs sm:px-3 sm:text-sm"
                       >
-                        {t("No visits yet", "Без посети")}
+                        {t("No visits yet", "Без посети", "Ende pa vizita")}
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -245,7 +251,7 @@ export function ClientsView({
                     }
                   >
                     <SelectTrigger
-                      aria-label={t("Sort clients", "Подреди клиенти")}
+                      aria-label={t("Sort clients", "Подреди клиенти", "Rendit klientët")}
                       className="w-full sm:w-44"
                     >
                       <SelectValue />
@@ -253,13 +259,13 @@ export function ClientsView({
                     <SelectContent>
                       <SelectGroup>
                         <SelectItem data-replay-public value="recent">
-                          {t("Recent visits", "Последни посети")}
+                          {t("Recent visits", "Последни посети", "Vizitat e fundit")}
                         </SelectItem>
                         <SelectItem data-replay-public value="visits">
-                          {t("Most visits", "Најмногу посети")}
+                          {t("Most visits", "Најмногу посети", "Më së shumti vizita")}
                         </SelectItem>
                         <SelectItem data-replay-public value="name">
-                          {t("Name A–Z", "Име А–Ш")}
+                          {t("Name A–Z", "Име А–Ш", "Emri A–Z")}
                         </SelectItem>
                       </SelectGroup>
                     </SelectContent>
@@ -270,7 +276,7 @@ export function ClientsView({
             <CardContent className="min-w-0 px-5 sm:px-6">
               {!data ? (
                 <div
-                  aria-label={t("Loading clients", "Се вчитуваат клиентите")}
+                  aria-label={t("Loading clients", "Се вчитуваат клиентите", "Duke ngarkuar klientët")}
                   className="flex flex-col gap-3"
                 >
                   {[0, 1, 2, 3, 4].map((row) => (
@@ -292,10 +298,10 @@ export function ClientsView({
                       <p aria-live="polite">
                         {data.page * data.pageSize + 1}–
                         {Math.min((data.page + 1) * data.pageSize, data.total)}{" "}
-                        {t("of", "од")} {data.total}{" "}
+                        {t("of", "од", "nga")} {data.total}{" "}
                         {data.total === 1
-                          ? t("client", "клиент")
-                          : t("clients", "клиенти")}
+                          ? t("client", "клиент", "klient")
+                          : t("clients", "клиенти", "klientë")}
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -306,7 +312,7 @@ export function ClientsView({
                           onClick={() => change({ page: data.page - 1 })}
                         >
                           <ArrowLeft data-icon="inline-start" />
-                          {t("Previous", "Претходни")}
+                          {t("Previous", "Претходни", "Prapa")}
                         </Button>
                         <Button
                           data-replay-public
@@ -317,7 +323,7 @@ export function ClientsView({
                           }
                           onClick={() => change({ page: data.page + 1 })}
                         >
-                          {t("Next", "Следни")}
+                          {t("Next", "Следни", "Para")}
                           <ArrowRight data-icon="inline-end" />
                         </Button>
                       </div>

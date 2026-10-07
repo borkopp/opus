@@ -38,6 +38,7 @@ export function CopyButton({
             t(
               "Could not copy. Select and copy the text instead.",
               "Не успеа копирањето. Означете го текстот и копирајте го.",
+              "Nuk mund të kopjohej. Zgjidhni dhe kopjoni tekstin manualisht.",
             ),
           );
         }
@@ -48,7 +49,7 @@ export function CopyButton({
       ) : (
         <Copy data-icon="inline-start" />
       )}
-      <span aria-live="polite">{copied ? t("Copied", "Копирано") : label}</span>
+      <span aria-live="polite">{copied ? t("Copied", "Копирано", "U kopjua") : label}</span>
     </Button>
   );
 }

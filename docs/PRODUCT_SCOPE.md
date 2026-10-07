@@ -179,6 +179,30 @@ booking links. Saved replies are tenant-scoped; owners and managers edit team
 templates, and active staff can copy them. Starter replies support Macedonian
 and English. These tools do not enable AI generation or campaigns.
 
+### Authorized staff and optional client accounts
+
+Personal Pro staff accounts and optional shared OPUS client accounts were
+authorized on October 4, 2026 and simplified on October 5, 2026. New staff
+account invitations require Pro and default to assigned-appointment access;
+owners control broader staff access. The Add Staff dialog can queue an invitation
+with the staff member's sign-in email. Existing staff are managed in one workspace
+with profile/login, hours and time-off sections. Appointment notifications use
+the linked account email; the separate appointment-email setting is retired.
+Existing linked accounts keep their permissions.
+
+Client accounts are optional alongside guest booking at every published beauty
+studio. There is no studio setting to enable them. The booking details form offers
+one account-creation choice: a single email OTP verifies the email, signs the
+client in and confirms the booking through the authenticated booking engine.
+Returning clients use their remembered session. Booking uses the central studio
+origin so one client identity can book at multiple salons, each with private
+customer records. Opening-offer emails default to enabled for new booking clients;
+existing opt-outs and unsubscribe controls remain effective. This adds no
+marketplace discovery or native consumer application. See
+[AUTH_ACCOUNTS.md](AUTH_ACCOUNTS.md) for authorization boundaries, compatibility,
+and release requirements. Local implementation does not establish production
+availability.
+
 ### Studio team limits
 
 Free retains 1 active owner plus up to 3 active staff members. Pro supports up
@@ -278,3 +302,39 @@ Future agents must not introduce or re-enable another vertical based on dormant 
 ## Native applications come last
 
 Native applications are intentionally deferred until the dashboard and public studio website golden journey is stable. Do not expand, synchronize, or otherwise touch native clients during the current phase unless the user explicitly authorizes native work. Web stabilization comes first; native apps are last.
+
+### Authorized studio-dashboard mobile app
+
+The Expo / React Native studio dashboard inside this monorepo and its existing-backend
+integration were explicitly authorized on October 3, 2026. `opus-mobile/` adapts the
+Clarity and Studio designs with bottom tabs for Dashboard, Calendar, Clients,
+Management and Settings. It uses Better Auth email OTP through the existing signed
+proxy, active staff membership, live studio data and existing booking mutations.
+Client directory/history remain Pro-only; all tenant and booking rules apply.
+
+Core native flows include appointment creation from server availability,
+completion, cancellation and no-shows, service editing, and team profiles/hours.
+The October 7 simplification removes the mobile arrival step; appointments can
+be completed directly, and historical checked-in records remain compatible.
+The October 5 release preparation adds branded launch assets, legal links, clear
+native headers, account-deletion requests and release configuration. Onboarding,
+business-wide hours, billing and advanced settings use the web dashboard. See
+[`MOBILE_RELEASE.md`](MOBILE_RELEASE.md) for tested behavior and remaining signed-build,
+device and provider checks. Local validation does not establish production mobile
+availability or an app-store release.
+
+This authorization covers the business dashboard and backend integration. Consumer
+apps, marketplace and native billing remain deferred. OTA updates and App Store
+launch preparation were explicitly authorized on October 6, 2026. The later
+October 6 instruction removes mobile PostHog, session replay and their consent
+UI completely. Mobile release source has no analytics SDK, optional analytics
+consent or recording indicator. This supersedes the earlier mobile analytics
+authorization; it does not change the web products' analytics configuration.
+The listing is OPUS Beauty Studio; the
+user retains the final App Review submission. See [`MOBILE_OTA.md`](MOBILE_OTA.md),
+[`APP_REVIEW_ACCESS.md`](APP_REVIEW_ACCESS.md). Personal staff
+push on the mobile app and web dashboard was explicitly authorized on October 5,
+2026, with shared per-person/per-studio preferences, opt-in devices and current
+staff permission checks. See [`PUSH_NOTIFICATIONS.md`](PUSH_NOTIFICATIONS.md).
+Availability and delivery claims require configured providers and device validation.
+The web booking journey remains the priority.

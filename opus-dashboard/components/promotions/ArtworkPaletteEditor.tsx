@@ -47,11 +47,13 @@ export function ArtworkPaletteEditor({
     ),
   );
   const labels: Record<keyof PromotionPalette, string> = {
-    background: t("Background", "Позадина"),
+    background: t("Background", "Позадина", "Sfondi"),
     text:
-      kind === "qr" ? t("QR color", "Боја на QR-кодот") : t("Text", "Текст"),
-    accent: t("Accent", "Акцент"),
-    surface: t("Appointment card", "Картичка за терминот"),
+      kind === "qr"
+        ? t("QR color", "Боја на QR-кодот", "Ngjyra e QR-kodit")
+        : t("Text", "Текст", "Teksti"),
+    accent: t("Accent", "Акцент", "Akcenti"),
+    surface: t("Appointment card", "Картичка за терминот", "Karta e terminit"),
   };
   const keys: (keyof PromotionPalette)[] =
     kind === "qr"
@@ -63,11 +65,12 @@ export function ArtworkPaletteEditor({
   return (
     <Card className="@container min-w-0">
       <CardHeader>
-        <CardTitle data-replay-public>{t("Colors", "Бои")}</CardTitle>
+        <CardTitle data-replay-public>{t("Colors", "Бои", "Ngjyrat")}</CardTitle>
         <CardDescription data-replay-public>
           {t(
             "Choose a palette or make it your own.",
             "Изберете палета или приспособете ги боите.",
+            "Zgjidhni një paletë ose personalizojeni atë.",
           )}
         </CardDescription>
         <CardAction>
@@ -77,8 +80,8 @@ export function ArtworkPaletteEditor({
             className="size-11"
             disabled={disabled}
             onClick={() => onChange(DEFAULT_PROMOTION_PALETTE)}
-            aria-label={t("Reset colors", "Врати ги почетните бои")}
-            title={t("Reset colors", "Врати ги почетните бои")}
+            aria-label={t("Reset colors", "Врати ги почетните бои", "Rikthe ngjyrat")}
+            title={t("Reset colors", "Врати ги почетните бои", "Rikthe ngjyrat")}
           >
             <RotateCcw />
           </Button>
@@ -88,10 +91,10 @@ export function ArtworkPaletteEditor({
         <FieldGroup className="gap-5">
           <Field>
             <FieldLabel id={`${id}-presets`}>
-              {t("Palette", "Палета")} ·{" "}
+              {t("Palette", "Палета", "Paleta")} ·{" "}
               {selected
-                ? t(selected.name.en, selected.name.mk)
-                : t("Custom", "Сопствена")}
+                ? t(selected.name.en, selected.name.mk, selected.name.sq)
+                : t("Custom", "Сопствена", "E personalizuar")}
             </FieldLabel>
             <ToggleGroup
               type="single"
@@ -113,8 +116,8 @@ export function ArtworkPaletteEditor({
                   key={preset.id}
                   value={preset.id}
                   className="size-11 p-2"
-                  aria-label={t(preset.name.en, preset.name.mk)}
-                  title={t(preset.name.en, preset.name.mk)}
+                  aria-label={t(preset.name.en, preset.name.mk, preset.name.sq)}
+                  title={t(preset.name.en, preset.name.mk, preset.name.sq)}
                 >
                   <span
                     className="flex size-7 overflow-hidden rounded-full border"
@@ -172,6 +175,7 @@ export function ArtworkPaletteEditor({
             {t(
               "Remembered for this studio on this browser. Text and QR contrast adjust for readability.",
               "Се запомнуваат за ова студио во овој прелистувач. Контрастот на текстот и QR-кодот се приспособува за читливост.",
+              "Ruhet për këtë studio në këtë shfletues. Kontrasti i tekstit dhe i QR-kodit përshtatet për lexueshmëri.",
             )}
           </p>
         </FieldGroup>

@@ -4,6 +4,11 @@ import { v } from "convex/values";
 import { dashboardThemeValidator } from "./lib/dashboardTheme";
 import { serviceImportRow } from "./lib/serviceImport";
 import {
+  pushEventValidator,
+  pushPreferencesValidator,
+  webPushSubscriptionValidator,
+} from "./lib/pushValidators";
+import {
   answerValidator,
   depthValidator,
   reportValidator,
@@ -390,6 +395,9 @@ export default defineSchema({
     slotDurationMins: v.number(), // default 15 — smallest bookable unit
     quickBookingDurationMins: v.optional(v.number()), // preferred calendar hover duration; legacy rows fall back at read time
     bookingWindowDays: v.number(), // how far ahead clients can book (e.g. 60)
+    // Opt-in: existing studios retain guest-only booking until enabled.
+    // Retained for stored-document compatibility; client accounts are always available.
+    clientAccountsEnabled: v.optional(v.boolean()),
     cancellationWindowHours: v.number(), // minimum notice required to cancel
     bufferTimeMins: v.number(), // gap between appointments
 
@@ -504,6 +512,10 @@ export default defineSchema({
     avatarUrl: v.optional(v.string()),
     activeOrgId: v.optional(v.id("orgs")),
 
+    // Account erasure requests are identity-scoped, including accounts without a studio.
+    accountDeletionRequestedAt: v.optional(v.number()),
+    accountDeletionNotifiedAt: v.optional(v.number()),
+
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -511,6 +523,7 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_auth_user_id", ["authUserId"])
+    .index("by_account_deletion_requested", ["accountDeletionRequestedAt"])
     .index("by_clerk_id", ["clerkId"]),
 
   // ─────────────────────────────────────────────────────
@@ -568,10 +581,14 @@ export default defineSchema({
     specialties: v.array(v.string()),
     // Owner-managed delivery address for this person's assigned appointments.
     // This is intentionally separate from userId and does not grant dashboard access.
+    // Legacy data only. Staff notifications use the linked account email.
     appointmentEmail: v.optional(v.string()),
 
     // Role
     role: v.union(v.literal("owner"), v.literal("manager"), v.literal("staff")),
+
+    // Undefined preserves existing team access; new personal accounts default to own.
+    bookingAccess: v.optional(v.union(v.literal("own"), v.literal("team"))),
 
     // Personal dashboard appearance within this business. Legacy seats use Clarity.
     dashboardTheme: v.optional(dashboardThemeValidator),
@@ -595,6 +612,7 @@ export default defineSchema({
   // STAFF INVITES
   // ─────────────────────────────────────────────────────
   staff_invites: defineTable({
+    personalAccount: v.optional(v.boolean()),
     orgId: v.id("orgs"),
     staffId: v.id("staff_members"),
     email: v.string(),
@@ -820,6 +838,9 @@ export default defineSchema({
     // Cancellation
     cancelledAt: v.optional(v.number()),
     cancelledBy: v.optional(v.string()),
+    clientVerifiedEmail: v.optional(v.string()),
+    clientClaimTokenHash: v.optional(v.string()),
+    clientClaimTokenExpiresAt: v.optional(v.number()),
     cancellationReason: v.optional(v.string()),
 
     // Notes
@@ -834,6 +855,7 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_status", ["orgId", "status"])
     .index("by_staff_start", ["staffId", "startAt"]) // slot conflict check
+    .index("by_org_opus_user_start", ["orgId", "opusUserId", "startAt"])
     .index("by_customer", ["customerId"])
     .index("by_org_start", ["orgId", "startAt"]) // daily schedule view
     .index("by_org_customer_start", ["orgId", "customerId", "startAt"])
@@ -878,6 +900,7 @@ export default defineSchema({
     gapRecoveryConsentSource: v.optional(
       v.union(
         v.literal("guest_booking"),
+        v.literal("booking_default"),
         v.literal("staff_recorded"),
         v.literal("offer_unsubscribe"),
         v.literal("provider_feedback"),
@@ -954,6 +977,7 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_published", ["orgId", "isPublished"])
+    .index("by_org_booking", ["orgId", "bookingId"])
     .index("by_opus_user", ["opusUserId"])
     .index("by_booking", ["bookingId"])
     .index("by_reservation", ["reservationId"]),
@@ -1115,6 +1139,20 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   notifications: defineTable({
     orgId: v.id("orgs"),
+    pushUserId: v.optional(v.id("users")),
+    pushDeviceId: v.optional(v.id("staff_push_devices")),
+    pushEvent: v.optional(pushEventValidator),
+    pushConversationId: v.optional(v.id("ai_conversations")),
+    pushBookingStartAt: v.optional(v.number()),
+    pushReminderMinutes: v.optional(v.number()),
+    pushReceiptStatus: v.optional(
+      v.union(
+        v.literal("accepted"),
+        v.literal("provider_accepted"),
+        v.literal("failed"),
+        v.literal("unknown"),
+      ),
+    ),
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
@@ -1156,7 +1194,12 @@ export default defineSchema({
     failureReason: v.optional(v.string()),
     externalMessageId: v.optional(v.string()),
     deliveryProvider: v.optional(
-      v.union(emailProviderValidator, v.literal("twilio")),
+      v.union(
+        emailProviderValidator,
+        v.literal("twilio"),
+        v.literal("expo"),
+        v.literal("web_push"),
+      ),
     ),
     deliveryStatus: v.optional(emailDeliveryStatusValidator),
     deliveryUpdatedAt: v.optional(v.number()),
@@ -1176,6 +1219,38 @@ export default defineSchema({
     .index("by_booking", ["bookingId"]),
 
   // ─────────────────────────────────────────────────────
+  // Personal staff push preferences and explicitly opted-in installations.
+  // Tokens/subscription keys are server-only and never returned in dashboard queries.
+  staff_notification_preferences: defineTable({
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    preferences: pushPreferencesValidator,
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_user", ["orgId", "userId"]),
+  staff_push_devices: defineTable({
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    deviceId: v.string(),
+    kind: v.union(v.literal("expo"), v.literal("web")),
+    authSessionId: v.string(),
+    expoToken: v.optional(v.string()),
+    subscription: v.optional(webPushSubscriptionValidator),
+    locale: v.union(v.literal("en"), v.literal("mk"), v.literal("sq")),
+    lastSeenAt: v.number(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_user", ["orgId", "userId"])
+    .index("by_org_device", ["orgId", "deviceId"]),
+
   // PUBLIC BOOKING EMAIL VERIFICATIONS
   // Short-lived, single-use challenges for unauthenticated tenant-site guests.
   // The OTP is stored only as a keyed hash; the queued delivery payload keeps
@@ -1334,7 +1409,15 @@ export default defineSchema({
     offerEndAt: v.optional(v.number()),
     priceMinorUnits: v.optional(v.number()),
     currency: v.optional(v.string()),
-    reasons: v.optional(v.array(v.object({ en: v.string(), mk: v.string() }))),
+    reasons: v.optional(
+      v.array(
+        v.object({
+          en: v.string(),
+          mk: v.string(),
+          sq: v.optional(v.string()),
+        }),
+      ),
+    ),
     offerTokenHash: v.optional(v.string()),
     recipientEmail: v.optional(v.string()),
     expiresAt: v.optional(v.number()),

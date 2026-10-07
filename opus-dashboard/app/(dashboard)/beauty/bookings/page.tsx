@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { IconLoader2 } from "@tabler/icons-react";
+import { PersonalStaffCalendar } from "@/components/staff/PersonalStaffCalendar";
 import { BookingsSplitView } from "@/components/bookings/BookingsSplitView";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
@@ -26,12 +27,19 @@ export default function BookingsPage() {
       <div
         className="flex min-h-0 flex-1 items-center justify-center p-12"
         role="status"
-        aria-label={t("Loading bookings…", "Вчитување термини…")}
+        aria-label={t(
+          "Loading bookings…",
+          "Вчитување термини…",
+          "Po ngarkohen terminet…",
+        )}
       >
         <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
+
+  if (profile?.bookingAccess === "own")
+    return <PersonalStaffCalendar orgId={orgId} bookings={bookings} />;
 
   return (
     <div className="flex flex-col gap-6 w-full flex-1 min-h-0">

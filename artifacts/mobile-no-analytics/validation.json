@@ -1,0 +1,33 @@
+{
+  "appVersion": "1.0.1",
+  "nativeSignature": "5b8813be21930560d3f7d9bacc40357d3fe8cc19a2007c8fb86ab2746c3ff195",
+  "posthogDependenciesRemoved": true,
+  "analyticsConsentAndReplayUiRemoved": true,
+  "generatedNativeProjects": "regenerated from configuration",
+  "nativeAutolinking": {
+    "ios": "no analytics SDK",
+    "android": "no analytics SDK"
+  },
+  "exportedBundlesInspected": 6,
+  "removedIntegrationMarkersFound": 0,
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "tests": "25 passed",
+    "expoDoctor": "21 of 21 passed",
+    "exports": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "policySourceLint": "passed",
+    "diffWhitespace": "passed"
+  },
+  "nativeBuild": "fresh iOS Release build compiled locally with Xcode 26.6",
+  "installedPhoneVersion": "1.0.1 (local build 7)",
+  "otaGate": "blocked pending FINISHED matching EAS artifact; this is a local phone-test build",
+  "uploaded": false,
+  "deployed": false,
+  "nativeArtifactVerification": "no PostHog markers, current source signature, production endpoints, functionality-only privacy manifest, deep/strict code signature passed",
+  "phoneLaunch": "pending unlocked-phone confirmation"
+}

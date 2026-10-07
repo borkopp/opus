@@ -23,14 +23,14 @@ export function NextClientWidget({
     <WidgetFrame
       replayPublicTitle
       delay={45}
-      title={t("Up next", "Следен термин")}
+      title={t("Up next", "Следен термин", "Në vijim")}
       className={s.nextClient}
       action={
         booking && (
           <span className={s.livePill}>
             <i />
             {booking.status === "checked_in"
-              ? t("Client arrived", "Клиентот пристигна")
+              ? t("Client arrived", "Клиентот пристигна", "Klienti mbërriti")
               : bookingTimeLabel(booking.startAt)}
           </span>
         )
@@ -50,7 +50,7 @@ export function NextClientWidget({
                 {initials(booking.customerName)}
               </span>
               <span data-replay-public className={s.artCaption}>
-                {t("A little time for you.", "Малку време за себе.")}
+                {t("A little time for you.", "Малку време за себе.", "Pak kohë për ju.")}
               </span>
             </div>
           )}
@@ -80,7 +80,7 @@ export function NextClientWidget({
             <div data-appear="item" style={appearStep(5)}>
               <Scissors size={15} />
               <strong>{booking.staffName}</strong>
-              <span data-replay-public>{t("Your team", "Вашиот тим")}</span>
+              <span data-replay-public>{t("Your team", "Вашиот тим", "Ekipi juaj")}</span>
             </div>
             <div data-appear="item" style={appearStep(6)}>
               <Wallet size={15} />
@@ -94,13 +94,14 @@ export function NextClientWidget({
             className={s.clientNote}
           >
             <span data-replay-public>
-              {t("GOOD TO KNOW", "КОРИСНО ДА ЗНАЕТЕ")}
+              {t("GOOD TO KNOW", "КОРИСНО ДА ЗНАЕТЕ", "MIRË TË DIHET")}
             </span>
             <p>
               {booking.notes ||
                 t(
                   "No appointment notes yet.",
                   "Сè уште нема белешки за терминот.",
+                  "Ende nuk ka shënime për terminin.",
                 )}
             </p>
           </div>
@@ -111,13 +112,13 @@ export function NextClientWidget({
             className={s.clientButton}
             href={appointmentHref(booking)}
           >
-            {t("View appointment", "Прегледај термин")}
+            {t("View appointment", "Прегледај термин", "Shiko terminin")}
             <ArrowUpRight size={17} />
           </Link>
         </>
       ) : (
         <WidgetEmpty>
-          {t("No more appointments today.", "Нема повеќе термини денес.")}
+          {t("No more appointments today.", "Нема повеќе термини денес.", "Nuk ka më termine sot.")}
         </WidgetEmpty>
       )}
     </WidgetFrame>

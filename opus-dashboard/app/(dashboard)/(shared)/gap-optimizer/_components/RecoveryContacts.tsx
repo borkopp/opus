@@ -45,115 +45,144 @@ export function RecoveryContacts({
   async function act(customerId: Id<"customers">, optedIn?: boolean) {
     setBusy(true);
     try {
-      if (gapId) {
-        await choose({ orgId, gapId, customerId });
-        setOpen(false);
-        toast.success(
-          t("Customer added for review", "Клиентот е додаден за преглед"),
-        );
-      } else {
-        await setConsent({ orgId, customerId, optedIn: !!optedIn });
-        toast.success(t("Permission updated", "Дозволата е ажурирана"));
+        if (gapId) {
+          await choose({ orgId, gapId, customerId });
+          setOpen(false);
+          toast.success(
+            t(
+              "Customer added for review",
+              "Клиентот е додаден за преглед",
+              "Klienti u shtua për shqyrtim",
+            ),
+          );
+        } else {
+          await setConsent({ orgId, customerId, optedIn: !!optedIn });
+          toast.success(
+            t("Permission updated", "Дозволата е ажурирана", "Leja u përditësua"),
+          );
+        }
+      } catch (error) {
+        toast.error(recoveryErrorMessage(error, t));
+      } finally {
+        setBusy(false);
       }
-    } catch (error) {
-      toast.error(recoveryErrorMessage(error, t));
-    } finally {
-      setBusy(false);
     }
-  }
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          data-replay-public
-          variant="outline"
-          size="sm"
-          disabled={disabled}
-        >
-          {gapId
-            ? t("Choose another client", "Избери друг клиент")
-            : t("Client permissions", "Дозволи од клиенти")}
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle data-replay-public>
-            {gapId
-              ? t("Choose a client", "Изберете клиент")
-              : t(
-                  "Permission for opening offers",
-                  "Дозвола за понуди за слободни термини",
-                )}
-          </DialogTitle>
-          <DialogDescription data-replay-public>
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            data-replay-public
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+          >
             {gapId
               ? t(
-                  "Only clients who allow these emails can be selected. Availability and upcoming appointments are checked before adding them.",
-                  "Може да се изберат само клиенти што ги дозволуваат овие пораки. Се проверуваат достапноста и идните резервации.",
+                  "Choose another client",
+                  "Избери друг клиент",
+                  "Zgjidhni një klient tjetër",
                 )
               : t(
-                  "Record permission only after the client agrees to receive opening offers by email. A booking alone is not permission.",
-                  "Евидентирајте дозвола само откако клиентот ќе се согласи да добива понуди по е-пошта. Самото резервирање не е дозвола.",
+                  "Client permissions",
+                  "Дозволи од клиенти",
+                  "Lejet e klientëve",
                 )}
-          </DialogDescription>
-        </DialogHeader>
-        <Field>
-          <FieldLabel
-            data-replay-public
-            htmlFor={gapId ? "choose-client-search" : "permission-search"}
-          >
-            {t("Search clients", "Пребарај клиенти")}
-          </FieldLabel>
-          <Input
-            id={gapId ? "choose-client-search" : "permission-search"}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </Field>
-        <div className="flex max-h-80 flex-col gap-4 overflow-y-auto">
-          {contacts === undefined ? (
-            <Skeleton className="h-24 w-full" />
-          ) : contacts.length === 0 ? (
-            <p data-replay-public className="text-sm text-muted-foreground">
-              {t("No clients found.", "Нема пронајдени клиенти.")}
-            </p>
-          ) : (
-            contacts.map((contact) => (
-              <div
-                key={contact._id}
-                className="flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{contact.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {contact.email ||
-                      t("No email address", "Нема адреса за е-пошта")}
-                  </p>
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle data-replay-public>
+              {gapId
+                ? t("Choose a client", "Изберете клиент", "Zgjidhni një klient")
+                : t(
+                    "Permission for opening offers",
+                    "Дозвола за понуди за слободни термини",
+                    "Leje për oferta për hapësirat e lira",
+                  )}
+            </DialogTitle>
+            <DialogDescription data-replay-public>
+              {gapId
+                ? t(
+                    "Only clients who allow these emails can be selected. Availability and upcoming appointments are checked before adding them.",
+                    "Може да се изберат само клиенти што ги дозволуваат овие пораки. Се проверуваат достапноста и идните резервации.",
+                    "Mund të zgjidhen vetëm klientët që lejojnë këto email-e. Disponueshmëria dhe terminet e ardhshme kontrollohen përpara se të shtohen.",
+                  )
+                : t(
+                    "Record permission only after the client agrees to receive opening offers by email. A booking alone is not permission.",
+                    "Евидентирајте дозвола само откако клиентот ќе се согласи да добива понуди по е-пошта. Самото резервирање не е дозвола.",
+                    "Regjistroni lejen vetëm pasi klienti të pranojë të marrë oferta me email. Një rezervim i thjeshtë nuk përbën leje.",
+                  )}
+            </DialogDescription>
+          </DialogHeader>
+          <Field>
+            <FieldLabel
+              data-replay-public
+              htmlFor={gapId ? "choose-client-search" : "permission-search"}
+            >
+              {t("Search clients", "Пребарај клиенти", "Kërko klientë")}
+            </FieldLabel>
+            <Input
+              id={gapId ? "choose-client-search" : "permission-search"}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </Field>
+          <div className="flex max-h-80 flex-col gap-4 overflow-y-auto">
+            {contacts === undefined ? (
+              <Skeleton className="h-24 w-full" />
+            ) : contacts.length === 0 ? (
+              <p data-replay-public className="text-sm text-muted-foreground">
+                {t(
+                  "No clients found.",
+                  "Нема пронајдени клиенти.",
+                  "Nuk u gjet asnjë klient.",
+                )}
+              </p>
+            ) : (
+              contacts.map((contact) => (
+                <div
+                  key={contact._id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{contact.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {contact.email ||
+                        t(
+                          "No email address",
+                          "Нема адреса за е-пошта",
+                          "Pa adresë email-i",
+                        )}
+                    </p>
+                  </div>
+                  {gapId ? (
+                    <Button
+                      data-replay-public
+                      size="sm"
+                      variant="outline"
+                      disabled={busy || !contact.optedIn || !contact.email}
+                      onClick={() => act(contact._id)}
+                    >
+                      {contact.optedIn
+                        ? t("Choose", "Избери", "Zgjidh")
+                        : t("No permission", "Нема дозвола", "Pa leje")}
+                    </Button>
+                  ) : (
+                    <Switch
+                      checked={contact.optedIn}
+                      disabled={busy || !contact.email}
+                      aria-label={`${t(
+                        "Permission recorded for",
+                        "Евидентирана дозвола за",
+                        "Leje e regjistruar për",
+                      )} ${contact.name}`}
+                      onCheckedChange={(value) => act(contact._id, value)}
+                    />
+                  )}
                 </div>
-                {gapId ? (
-                  <Button
-                    data-replay-public
-                    size="sm"
-                    variant="outline"
-                    disabled={busy || !contact.optedIn || !contact.email}
-                    onClick={() => act(contact._id)}
-                  >
-                    {contact.optedIn
-                      ? t("Choose", "Избери")
-                      : t("No permission", "Нема дозвола")}
-                  </Button>
-                ) : (
-                  <Switch
-                    checked={contact.optedIn}
-                    disabled={busy || !contact.email}
-                    aria-label={`${t("Permission recorded for", "Евидентирана дозвола за")} ${contact.name}`}
-                    onCheckedChange={(value) => act(contact._id, value)}
-                  />
-                )}
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
       </DialogContent>
     </Dialog>
   );

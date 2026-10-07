@@ -215,11 +215,12 @@ export function ImplementationPreview() {
                 <div className="mx-auto max-w-6xl p-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>{t("Themes", "Теми")}</CardTitle>
+                      <CardTitle>{t("Themes", "Теми", "Temat")}</CardTitle>
                       <CardDescription>
                         {t(
                           "Choose a style that feels like you.",
                           "Изберете изглед што ви одговара.",
+                          "Zgjidhni një stil që ju përshtatet.",
                         )}
                       </CardDescription>
                     </CardHeader>

@@ -1,10 +1,18 @@
 import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
-import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
+import {
+  ensureScheduleBaseline,
+  recordScheduleVersion,
+} from "./analyst/schedules";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
-import { requireAuth, requireRole } from "./lib/auth";
-import { internal } from "./_generated/api";
+import {
+  requireActiveOrg,
+  requireAuth,
+  requirePaidPlan,
+  requireRole,
+} from "./lib/auth";
+import { api, internal } from "./_generated/api";
 import {
   isValidBookingEmail,
   normalizeBookingEmail,
@@ -14,13 +22,22 @@ import {
   getStaffPlanStatusForOrg,
   requireStaffPlanCapacity,
 } from "./lib/staffPlanLimits";
+import {
+  hasPersonalBookingAccess,
+  requireBookingAccess,
+} from "./lib/staffAccess";
+import { wallClockNow } from "./lib/bookingTime";
+import {
+  isAppReviewEmail,
+  rejectAppReviewIdentity,
+  requireLiveStudio,
+} from "./lib/appReview";
 
 type StorageCtx = Pick<import("./_generated/server").QueryCtx, "storage">;
 
 async function visibleStaffMember(
   ctx: StorageCtx,
   staffMember: Doc<"staff_members">,
-  canManageAppointmentEmail: boolean,
 ) {
   const visible = { ...staffMember };
   const avatarUrl = await resolveStoredImageUrl(ctx, visible.avatarUrl);
@@ -29,7 +46,8 @@ async function visibleStaffMember(
   } else {
     delete visible.avatarUrl;
   }
-  if (!canManageAppointmentEmail) delete visible.appointmentEmail;
+  // Deprecated appointment emails are never exposed by active APIs.
+  delete visible.appointmentEmail;
   return visible;
 }
 
@@ -46,11 +64,11 @@ async function normalizeAvatarUrl(
   return avatarUrl;
 }
 
-function normalizeAppointmentEmail(value: string | null | undefined) {
+function normalizeSignInEmail(value: string | null | undefined) {
   if (!value?.trim()) return undefined;
   const email = normalizeBookingEmail(value);
   if (!isValidBookingEmail(email)) {
-    throw new ConvexError("Enter a valid appointment email address.");
+    throw new ConvexError("Enter a valid sign-in email address.");
   }
   return email;
 }
@@ -80,7 +98,7 @@ export const listStaffMembers = query({
   },
   returns: v.array(v.any()), // Can be refined later with Document<"staff_members">
   handler: async (ctx, args) => {
-    const { staffMember: caller } = await requireAuth(ctx, args.orgId);
+    const { staffMember: caller } = await requireActiveOrg(ctx, args.orgId);
 
     const staff = await ctx.db
       .query("staff_members")
@@ -90,10 +108,12 @@ export const listStaffMembers = query({
 
     return await Promise.all(
       staff
+        .filter(
+          (member) =>
+            !hasPersonalBookingAccess(caller) || member._id === caller._id,
+        )
         .sort((a, b) => a.displayName.localeCompare(b.displayName))
-        .map((staffMember) =>
-          visibleStaffMember(ctx, staffMember, caller.role === "owner"),
-        ),
+        .map((staffMember) => visibleStaffMember(ctx, staffMember)),
     );
   },
 });
@@ -105,7 +125,7 @@ export const getStaffMember = query({
   },
   returns: v.union(v.null(), v.any()),
   handler: async (ctx, args) => {
-    const { staffMember: caller } = await requireAuth(ctx, args.orgId);
+    const { staffMember: caller } = await requireActiveOrg(ctx, args.orgId);
 
     const staffMember = await ctx.db.get(args.staffId);
 
@@ -117,7 +137,9 @@ export const getStaffMember = query({
       return null;
     }
 
-    return await visibleStaffMember(ctx, staffMember, caller.role === "owner");
+    if (hasPersonalBookingAccess(caller) && staffMember._id !== caller._id)
+      return null;
+    return await visibleStaffMember(ctx, staffMember);
   },
 });
 
@@ -129,7 +151,8 @@ export const createStaffMember = mutation({
     bio: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
     specialties: v.array(v.string()),
-    appointmentEmail: v.optional(v.string()),
+    appointmentEmail: v.optional(v.string()), // Accepted for older clients; ignored.
+    signInEmail: v.optional(v.string()),
   },
   returns: v.id("staff_members"),
   handler: async (ctx, args) => {
@@ -141,13 +164,9 @@ export const createStaffMember = mutation({
     if (args.role === "owner" && caller.role !== "owner") {
       throw new ConvexError("Only an owner can add another owner");
     }
-    if (args.appointmentEmail !== undefined && caller.role !== "owner") {
-      throw new ConvexError(
-        "Only an owner can manage staff appointment emails.",
-      );
-    }
     await requireStaffPlanCapacity(ctx, org, args.role);
-    const appointmentEmail = normalizeAppointmentEmail(args.appointmentEmail);
+    const signInEmail = normalizeSignInEmail(args.signInEmail);
+    if (signInEmail) requirePaidPlan(org, "Staff accounts");
     const avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
 
     await ensureScheduleBaseline(ctx, args.orgId);
@@ -155,10 +174,10 @@ export const createStaffMember = mutation({
       orgId: args.orgId,
       displayName: args.displayName,
       role: args.role,
+      bookingAccess: args.role === "staff" ? "own" : "team",
       bio: args.bio,
       avatarUrl,
       specialties: args.specialties,
-      appointmentEmail,
       isActive: true,
       isDeleted: false,
       createdAt: Date.now(),
@@ -177,7 +196,6 @@ export const createStaffMember = mutation({
         displayName: args.displayName,
         role: args.role,
         specialties: args.specialties,
-        appointmentEmail,
       },
       createdAt: Date.now(),
     });
@@ -188,6 +206,13 @@ export const createStaffMember = mutation({
 
     await recordScheduleVersion(ctx, args.orgId);
     await scheduleRecoveryRefresh(ctx, args.orgId);
+    if (signInEmail) {
+      await ctx.runMutation(api.staff.inviteStaffMember, {
+        orgId: args.orgId,
+        staffId: newStaffId,
+        email: signInEmail,
+      });
+    }
     return newStaffId;
   },
 });
@@ -218,11 +243,6 @@ export const updateStaffMember = mutation({
 
     if (args.role !== undefined && caller.role === "staff") {
       throw new ConvexError("Staff cannot change their own role");
-    }
-    if (args.appointmentEmail !== undefined && caller.role !== "owner") {
-      throw new ConvexError(
-        "Only an owner can manage staff appointment emails.",
-      );
     }
 
     const existingStaff = await ctx.db.get(args.staffId);
@@ -274,7 +294,20 @@ export const updateStaffMember = mutation({
     const updates: Partial<typeof existingStaff> = {
       updatedAt: Date.now(),
     };
-    if (args.displayName !== undefined) updates.displayName = args.displayName;
+    if (args.displayName !== undefined) {
+      const trimmedName = args.displayName.trim();
+      updates.displayName = trimmedName;
+      if (
+        existingStaff.userId &&
+        (tryingToUpdateSelf ||
+          (caller.role === "owner" && existingStaff.role === "owner"))
+      ) {
+        await ctx.db.patch(existingStaff.userId, {
+          name: trimmedName,
+          updatedAt: Date.now(),
+        });
+      }
+    }
     if (args.bio !== undefined) updates.bio = args.bio;
     if (args.avatarUrl !== undefined) {
       updates.avatarUrl = await normalizeAvatarUrl(ctx, args.avatarUrl);
@@ -282,11 +315,6 @@ export const updateStaffMember = mutation({
     if (args.specialties !== undefined) updates.specialties = args.specialties;
     if (args.role !== undefined) updates.role = args.role;
     if (args.isActive !== undefined) updates.isActive = args.isActive;
-    if (args.appointmentEmail !== undefined) {
-      updates.appointmentEmail = normalizeAppointmentEmail(
-        args.appointmentEmail,
-      );
-    }
 
     await ensureScheduleBaseline(ctx, args.orgId);
     await ctx.db.patch(args.staffId, updates);
@@ -310,13 +338,6 @@ export const updateStaffMember = mutation({
       await ctx.runMutation(internal.publication.recomputeWebsiteStatus, {
         orgId: args.orgId,
       });
-    }
-    if (args.appointmentEmail !== undefined) {
-      await ctx.scheduler.runAfter(
-        0,
-        internal.notifications.reconcileBookingRemindersForOrg,
-        { orgId: args.orgId },
-      );
     }
 
     return null;
@@ -410,7 +431,7 @@ export const inviteStaffMember = mutation({
   },
   returns: v.id("staff_invites"),
   handler: async (ctx, args) => {
-    const { staffMember: caller } = await requireRole(
+    const { staffMember: caller, org } = await requireRole(
       ctx,
       args.orgId,
       "manager",
@@ -432,13 +453,47 @@ export const inviteStaffMember = mutation({
       throw new ConvexError("Only an owner can invite another owner");
     }
 
+    requirePaidPlan(org, "Staff accounts");
+    const email = normalizeSignInEmail(args.email);
+    if (!email) throw new ConvexError("Enter a valid invitation email.");
+    requireLiveStudio(org);
+    if (isAppReviewEmail(email))
+      throw new ConvexError(
+        "The reserved App Review account cannot be invited to a studio.",
+      );
+    if (!existingStaff.isActive)
+      throw new ConvexError("Activate this staff member before inviting them.");
+    const pending = await ctx.db
+      .query("staff_invites")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .collect();
+    for (const invite of pending) {
+      if (
+        invite.staffId === args.staffId &&
+        invite.status === "pending" &&
+        !invite.isDeleted
+      )
+        await ctx.db.patch(invite._id, {
+          status: "cancelled",
+          updatedAt: Date.now(),
+        });
+    }
     const token = crypto.randomUUID();
     const expiresAt = Date.now() + 72 * 60 * 60 * 1000; // 72 hours
 
+    if (
+      existingStaff.role === "staff" &&
+      existingStaff.bookingAccess === undefined
+    )
+      await ctx.db.patch(existingStaff._id, {
+        bookingAccess: "own",
+        updatedAt: Date.now(),
+      });
     const inviteId = await ctx.db.insert("staff_invites", {
       orgId: args.orgId,
       staffId: args.staffId,
-      email: args.email,
+      email,
+      personalAccount: true,
       token,
       status: "pending",
       expiresAt,
@@ -451,7 +506,7 @@ export const inviteStaffMember = mutation({
       orgId: args.orgId,
       channel: "email",
       type: "staff_invite",
-      recipientAddress: args.email,
+      recipientAddress: email,
       templateData: { token, inviteId },
       dedupeKey: `staff-invite:${inviteId}:${args.email.trim().toLowerCase()}`,
     });
@@ -481,6 +536,11 @@ export const acceptStaffInvite = mutation({
     if (!identity) {
       throw new ConvexError("Unauthenticated");
     }
+    rejectAppReviewIdentity(identity);
+    if (identity.emailVerified === false)
+      throw new ConvexError(
+        "Verify your account email before accepting this invitation.",
+      );
 
     const user = await ctx.db
       .query("users")
@@ -508,7 +568,49 @@ export const acceptStaffInvite = mutation({
       throw new ConvexError("Invite has expired");
     }
 
-    // Link the user to the staff member
+    if (
+      !identity.email ||
+      normalizeBookingEmail(identity.email) !==
+        normalizeBookingEmail(invite.email)
+    )
+      throw new ConvexError(
+        "Sign in with the email address that received this invitation.",
+      );
+    const [target, org] = await Promise.all([
+      ctx.db.get(invite.staffId),
+      ctx.db.get(invite.orgId),
+    ]);
+    if (
+      !target ||
+      target.orgId !== invite.orgId ||
+      target.isDeleted ||
+      !target.isActive ||
+      !org ||
+      org.isDeleted
+    )
+      throw new ConvexError("This invitation is no longer available.");
+    if (target.userId && target.userId !== user._id)
+      throw new ConvexError(
+        "Staff member is already linked to another account.",
+      );
+    requireLiveStudio(org);
+    if (invite.personalAccount) requirePaidPlan(org, "Staff accounts");
+    const memberships = await ctx.db
+      .query("staff_members")
+      .withIndex("by_org_user", (q) =>
+        q.eq("orgId", invite.orgId).eq("userId", user._id),
+      )
+      .collect();
+    if (
+      memberships.some(
+        (member) => !member.isDeleted && member._id !== target._id,
+      )
+    )
+      throw new ConvexError(
+        "This account already has a membership in this studio.",
+      );
+
+    // Link the user to the existing staff seat without replacing its bookings.
     await ctx.db.patch(invite.staffId, {
       userId: user._id,
       updatedAt: Date.now(),
@@ -539,6 +641,183 @@ export const acceptStaffInvite = mutation({
       createdAt: Date.now(),
     });
 
+    await ctx.scheduler.runAfter(
+      0,
+      internal.notifications.reconcileBookingRemindersForOrg,
+      { orgId: invite.orgId },
+    );
+
     return null;
+  },
+});
+
+export const getPersonalContext = query({
+  args: {},
+  handler: async (ctx) => {
+    const { org, orgId, staffMember } = await requireBookingAccess(ctx);
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", orgId))
+      .first();
+    const timezone = settings?.timezone ?? "Europe/Skopje";
+    return {
+      name: org.name,
+      staffName: staffMember.displayName,
+      timezone,
+      now: wallClockNow(timezone),
+    };
+  },
+});
+
+export const getAccountAccess = query({
+  args: { orgId: v.id("orgs"), staffId: v.id("staff_members") },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, args.orgId, "manager");
+    const staff = await ctx.db.get(args.staffId);
+    if (!staff || staff.orgId !== args.orgId || staff.isDeleted)
+      throw new ConvexError("Staff member not found.");
+    const account = staff.userId ? await ctx.db.get(staff.userId) : null;
+    const invites = await ctx.db
+      .query("staff_invites")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .collect();
+    const pending = invites
+      .filter(
+        (invite) =>
+          invite.staffId === staff._id &&
+          invite.status === "pending" &&
+          !invite.isDeleted &&
+          invite.expiresAt > Date.now(),
+      )
+      .sort((a, b) => b.createdAt - a.createdAt)[0];
+    return {
+      email: account && !account.isDeleted ? account.email : null,
+      linked: Boolean(account && !account.isDeleted),
+      bookingAccess: hasPersonalBookingAccess(staff)
+        ? ("own" as const)
+        : ("team" as const),
+      invite: pending
+        ? { email: pending.email, expiresAt: pending.expiresAt }
+        : null,
+    };
+  },
+});
+
+export const updateAccountAccess = mutation({
+  args: {
+    orgId: v.id("orgs"),
+    staffId: v.id("staff_members"),
+    bookingAccess: v.union(v.literal("own"), v.literal("team")),
+  },
+  handler: async (ctx, args) => {
+    const { staffMember: caller } = await requireRole(ctx, args.orgId, "owner");
+    const staff = await ctx.db.get(args.staffId);
+    if (
+      !staff ||
+      staff.orgId !== args.orgId ||
+      staff.isDeleted ||
+      staff.role !== "staff"
+    )
+      throw new ConvexError(
+        "Only a staff member's appointment access can be changed.",
+      );
+    await ctx.db.patch(staff._id, {
+      bookingAccess: args.bookingAccess,
+      updatedAt: Date.now(),
+    });
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "staff",
+      actorId: caller._id,
+      action: "staff.account_access_updated",
+      resourceType: "staff_members",
+      resourceId: staff._id,
+      before: { bookingAccess: staff.bookingAccess ?? "team" },
+      after: { bookingAccess: args.bookingAccess },
+      createdAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const revokeAccountAccess = mutation({
+  args: { orgId: v.id("orgs"), staffId: v.id("staff_members") },
+  handler: async (ctx, args) => {
+    const { staffMember: caller } = await requireRole(ctx, args.orgId, "owner");
+    const staff = await ctx.db.get(args.staffId);
+    if (
+      !staff ||
+      staff.orgId !== args.orgId ||
+      staff.isDeleted ||
+      staff.role === "owner"
+    )
+      throw new ConvexError(
+        "Owner access must be managed through studio ownership.",
+      );
+    await ctx.db.patch(staff._id, { userId: undefined, updatedAt: Date.now() });
+    const invites = await ctx.db
+      .query("staff_invites")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .collect();
+    for (const invite of invites)
+      if (
+        invite.staffId === staff._id &&
+        invite.status === "pending" &&
+        !invite.isDeleted
+      )
+        await ctx.db.patch(invite._id, {
+          status: "cancelled",
+          updatedAt: Date.now(),
+        });
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "staff",
+      actorId: caller._id,
+      action: "staff.account_access_revoked",
+      resourceType: "staff_members",
+      resourceId: staff._id,
+      createdAt: Date.now(),
+    });
+    return null;
+  },
+});
+
+export const getInvite = query({
+  args: { token: v.string() },
+  handler: async (ctx, { token }) => {
+    const invite = await ctx.db
+      .query("staff_invites")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+    if (
+      !invite ||
+      invite.isDeleted ||
+      invite.status !== "pending" ||
+      invite.expiresAt <= Date.now()
+    )
+      return null;
+    const [org, staff] = await Promise.all([
+      ctx.db.get(invite.orgId),
+      ctx.db.get(invite.staffId),
+    ]);
+    if (
+      !org ||
+      org.isDeleted ||
+      !staff ||
+      staff.isDeleted ||
+      !staff.isActive ||
+      staff.orgId !== org._id
+    )
+      return null;
+    const identity = await ctx.auth.getUserIdentity();
+    return {
+      studioName: org.name,
+      staffName: staff.displayName,
+      emailMatches: Boolean(
+        identity?.email &&
+        normalizeBookingEmail(identity.email) ===
+          normalizeBookingEmail(invite.email),
+      ),
+    };
   },
 });

@@ -16,9 +16,13 @@ import {
   formatBookingTime,
 } from "@/lib/public-booking-format";
 import { downloadIcsFile, getGoogleCalendarUrl } from "./calendar-export";
+import { clientAreaUrl } from "@/lib/client-account";
+import { tenantSiteUrl } from "@/lib/tenant-sites";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import type { PublicSite } from "./types";
 
 interface BookingResult {
+  claimToken?: string;
   bookingId: string;
   serviceName: string;
   staffName: string;
@@ -30,6 +34,7 @@ interface BookingResult {
 
 interface BookingConfirmationStepProps {
   site: PublicSite;
+  accountBooking?: boolean;
   result: BookingResult;
   customerEmail: string;
   onBookAnother: () => void;
@@ -37,10 +42,12 @@ interface BookingConfirmationStepProps {
 
 export function BookingConfirmationStep({
   site,
+  accountBooking = false,
   result,
   customerEmail,
   onBookAnother,
 }: BookingConfirmationStepProps) {
+  const { t } = useDashboardI18n();
   const location = [site.address, site.neighborhood, site.city]
     .filter(Boolean)
     .join(", ");
@@ -134,6 +141,41 @@ export function BookingConfirmationStep({
         )}
       </div>
 
+      {site.bookingSettings.clientAccountsEnabled && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            {result.claimToken
+              ? t(
+                  "Save this appointment to your OPUS account for easier bookings next time. Guest booking stays available.",
+                  "Зачувајте го терминот во OPUS сметка за полесно следно закажување. Може и понатаму да резервирате како гостин.",
+                  "Ruajeni këtë termin në llogarinë tuaj OPUS për rezervime më të lehta herën tjetër. Rezervimi si mysafir mbetet i disponueshëm.",
+                )
+              : t(
+                  "This appointment is saved to your OPUS account.",
+                  "Терминот е зачуван во вашата OPUS сметка.",
+                  "Ky termin është ruajtur në llogarinë tuaj OPUS.",
+                )}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const path = result.claimToken
+                ? `/account?claim=${encodeURIComponent(result.bookingId)}#${new URLSearchParams({ proof: result.claimToken })}`
+                : "/account";
+              window.location.assign(
+                clientAreaUrl(path, window.location.origin),
+              );
+            }}
+          >
+            {t(
+              "Open my OPUS account",
+              "Отвори ја мојата OPUS сметка",
+              "Hap llogarinë time OPUS",
+            )}
+          </Button>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Button asChild variant="outline">
           <a href={googleCalendarUrl} target="_blank" rel="noreferrer">
@@ -153,7 +195,16 @@ export function BookingConfirmationStep({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button asChild>
-          <Link href="/">
+          <Link
+            href={
+              accountBooking
+                ? tenantSiteUrl(
+                    site.slug,
+                    process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk",
+                  )
+                : "/"
+            }
+          >
             <ArrowLeft data-icon="inline-start" />
             Назад кон студиото
           </Link>

@@ -20,14 +20,14 @@ export function RevenueMetric({
     >
       <div data-appear="item" className={s.metricTop}>
         <span data-replay-public>
-          {t("Completed appointment value", "Вредност на завршени термини")}
+          {t("Completed appointment value", "Вредност на завршени термини", "Vlera e termineve të përfunduara")}
         </span>
         <ArrowUpRight size={19} />
       </div>
       <div data-appear="item" style={appearStep(2)} className={s.metricValue}>
         {overviewNumber(revenue.totalMinor, locale)}
         <small>
-          {revenue.currency ?? t("Mixed currencies", "Повеќе валути")}
+          {revenue.currency ?? t("Mixed currencies", "Повеќе валути", "Valuta të përziera")}
         </small>
       </div>
       <div className={s.miniBars} aria-hidden="true">
@@ -45,13 +45,14 @@ export function RevenueMetric({
       <div data-appear="item" style={appearStep(4)} className={s.metricFoot}>
         <span>
           {revenue.changePct === null
-            ? t("No comparison yet", "Сè уште нема споредба")
+            ? t("No comparison yet", "Сè уште нема споредба", "Ende nuk ka krahasim")
             : `${revenue.changePct > 0 ? "+" : ""}${revenue.changePct.toFixed(1)}%`}
         </span>
         <span>
           {t(
             `vs. previous ${revenue.days} days`,
             `споредено со претходни ${revenue.days} дена`,
+            `krahasuar me ${revenue.days} ditët e mëparshme`,
           )}
         </span>
       </div>

@@ -1,4 +1,5 @@
 import { ConvexError, v } from "convex/values";
+import { internal } from "../_generated/api";
 import { internalMutation, internalQuery } from "../_generated/server";
 import { computeSlotsForDate } from "../slots";
 import { isWithinPublicBookingWindow } from "../lib/publicBookingRules";
@@ -8,6 +9,7 @@ import {
 } from "../../lib/public-booking-phone";
 import { recordRecoveryBooking } from "../lib/gapRecovery";
 import { queueBookingSmsNotifications } from "../lib/bookingNotifications";
+import { queueStaffPushEvent } from "../lib/staffPush";
 import { automationReady, leasedConversation, storeReply } from "./queue";
 import { isExplicitConfirmation, responseLanguage } from "./rules";
 import { logEvent } from "./state";
@@ -332,19 +334,21 @@ export const confirm = internalMutation({
       },
       createdAt: now,
     });
-    await ctx.db.insert("dashboard_notifications", {
+    await ctx.runMutation(internal.dashboardNotifications.create, {
       orgId: args.orgId,
       type: "new_booking",
       title: "New Booking",
       body: `${proposal.customerName} · ${service.name} · ${date} ${new Date(proposal.startAt).toISOString().slice(11, 16)}`,
       bookingId,
       customerId,
-      isRead: false,
-      isDismissed: false,
-      createdAt: now,
     });
     const booking = await ctx.db.get(bookingId);
     if (booking) {
+      await queueStaffPushEvent(ctx, {
+        orgId: args.orgId,
+        bookingId,
+        event: "booking_reminder",
+      });
       await recordRecoveryBooking(ctx, booking);
       const bookingCustomer = await ctx.db.get(customerId);
       const staff = await ctx.db.get(booking.staffId);

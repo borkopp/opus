@@ -84,12 +84,13 @@ function LocationMapPickerContent({
       <Alert variant="destructive">
         <MapPin />
         <AlertTitle data-replay-public>
-          {t("Map is unavailable", "Мапата не е достапна")}
+          {t("Map is unavailable", "Мапата не е достапна", "Harta nuk është e disponueshme")}
         </AlertTitle>
         <AlertDescription data-replay-public>
           {t(
             "The map is temporarily unavailable. Please try again later.",
             "Мапата е привремено недостапна. Обидете се повторно подоцна.",
+            "Harta është përkohësisht e padisponueshme. Ju lutemi provoni përsëri më vonë.",
           )}
         </AlertDescription>
       </Alert>
@@ -156,7 +157,7 @@ function LocationMapPickerContent({
               <>
                 <Spinner />
                 <p data-replay-public className="text-sm">
-                  {t("Loading map…", "Мапата се вчитува…")}
+                  {t("Loading map…", "Мапата се вчитува…", "Harta po ngarkohet…")}
                 </p>
               </>
             ) : (
@@ -165,6 +166,7 @@ function LocationMapPickerContent({
                   {t(
                     "The map could not load. Check your connection and try again.",
                     "Мапата не се вчита. Проверете ја врската и обидете се повторно.",
+                    "Harta nuk mund të ngarkohej. Kontrolloni lidhjen dhe provoni përsëri.",
                   )}
                 </p>
                 <Button
@@ -176,7 +178,7 @@ function LocationMapPickerContent({
                     setAttempt((current) => current + 1);
                   }}
                 >
-                  {t("Retry map", "Вчитај повторно")}
+                  {t("Retry map", "Вчитај повторно", "Riprovo hartën")}
                 </Button>
               </>
             )}
@@ -191,6 +193,7 @@ function LocationMapPickerContent({
               {t(
                 "Click the map to pin your location",
                 "Кликнете на мапата за да ја означите вашата локација",
+                "Kliko në hartë për të shënuar vendndodhjen tuaj",
               )}
             </div>
           </div>
@@ -198,8 +201,8 @@ function LocationMapPickerContent({
       </div>
       {/* <p className="px-1 text-xs text-muted-foreground">
         {confirmedCoords
-          ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — ${t("drag the pin or click the map to adjust", "повлечете го пинот или кликнете на мапата за прилагодување")}`
-          : t("No coordinates confirmed", "Нема потврдени координати")}
+          ? `${confirmedCoords.lat.toFixed(5)}, ${confirmedCoords.lng.toFixed(5)} — ${t("drag the pin or click the map to adjust", "повлечете го пинот или кликнете на мапата за прилагодување", "tërhiqni gjilpërën ose klikoni në hartë për të rregulluar")}`
+          : t("No coordinates confirmed", "Нема потврдени координати", "Nuk janë konfirmuar koordinata")}
       </p> */}
     </div>
   );

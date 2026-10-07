@@ -23,6 +23,7 @@ export function SettingsSectionPicker({
     value: string;
     labelEn: string;
     labelMk: string;
+    labelSq?: string;
     icon: LucideIcon;
   }[];
   value: string;
@@ -42,11 +43,12 @@ export function SettingsSectionPicker({
           aria-label={t(
             `Settings section: ${selected.labelEn}`,
             `Секција за поставки: ${selected.labelMk}`,
+            `Seksioni i cilësimeve: ${selected.labelSq ?? selected.labelEn}`,
           )}
         >
           <span data-replay-public className="flex items-center gap-3">
             <Icon />
-            {t(selected.labelEn, selected.labelMk)}
+            {t(selected.labelEn, selected.labelMk, selected.labelSq)}
           </span>
           <ChevronDown />
         </Button>
@@ -54,21 +56,22 @@ export function SettingsSectionPicker({
       <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
         <DrawerHeader>
           <DrawerTitle data-replay-public>
-            {t("Settings sections", "Секции за поставки")}
+            {t("Settings sections", "Секции за поставки", "Seksionet e cilësimeve")}
           </DrawerTitle>
           <DrawerDescription data-replay-public>
             {t(
               "Choose what you want to manage.",
               "Изберете што сакате да уредите.",
+              "Zgjidhni çfarë dëshironi të menaxhoni.",
             )}
           </DrawerDescription>
         </DrawerHeader>
         <nav
           className="flex min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-          aria-label={t("Settings sections", "Секции за поставки")}
+          aria-label={t("Settings sections", "Секции за поставки", "Seksionet e cilësimeve")}
         >
           {sections.map(
-            ({ value: sectionValue, labelEn, labelMk, icon: SectionIcon }) => (
+            ({ value: sectionValue, labelEn, labelMk, labelSq, icon: SectionIcon }) => (
               <Button
                 data-replay-public
                 key={sectionValue}
@@ -81,7 +84,7 @@ export function SettingsSectionPicker({
                 }}
               >
                 <SectionIcon data-icon="inline-start" />
-                {t(labelEn, labelMk)}
+                {t(labelEn, labelMk, labelSq)}
                 {value === sectionValue && <Check className="ml-auto" />}
               </Button>
             ),

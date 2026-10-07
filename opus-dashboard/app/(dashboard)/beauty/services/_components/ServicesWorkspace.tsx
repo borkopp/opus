@@ -46,7 +46,11 @@ export function ServicesWorkspace() {
 
   if (profile === undefined) return <WorkspaceSkeleton />;
   if (!orgId)
-    return <div data-replay-public>{t("Not found", "Не е пронајдено")}</div>;
+    return (
+      <div data-replay-public>
+        {t("Not found", "Не е пронајдено", "Nuk u gjet")}
+      </div>
+    );
 
   const selectTab = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -66,10 +70,11 @@ export function ServicesWorkspace() {
       <DashboardPageHeader
         replayPublicDescription
         replayPublicTitle
-        title={t("Services & staff", "Услуги и тим")}
+        title={t("Services & staff", "Услуги и тим", "Shërbimet & stafi")}
         description={t(
           "Manage what customers can book and the team behind each appointment.",
           "Управувајте со услугите, тимот и работното време на едно место.",
+          "Menaxhoni se çfarë mund të rezervojnë klientët dhe ekipin pas çdo termini.",
         )}
       />
 
@@ -79,7 +84,11 @@ export function ServicesWorkspace() {
         className="min-w-0 flex-1 gap-6"
       >
         <TabsList
-          aria-label={t("Services and staff", "Услуги и тим")}
+          aria-label={t(
+            "Services and staff",
+            "Услуги и тим",
+            "Shërbimet dhe stafi",
+          )}
           className="grid w-full grid-cols-2 group-data-[orientation=horizontal]/tabs:h-12 sm:w-80"
         >
           <TabsTrigger
@@ -87,7 +96,7 @@ export function ServicesWorkspace() {
             className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
           >
             <ScissorsIcon className="hidden sm:block" />
-            {t("Services", "Услуги")}
+            {t("Services", "Услуги", "Shërbimet")}
             {services && <Badge variant="secondary">{services.length}</Badge>}
           </TabsTrigger>
           <TabsTrigger
@@ -95,7 +104,7 @@ export function ServicesWorkspace() {
             className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
           >
             <UsersIcon className="hidden sm:block" />
-            {t("Staff", "Тим")}
+            {t("Staff", "Тим", "Stafi")}
             {staff && <Badge variant="secondary">{staff.length}</Badge>}
           </TabsTrigger>
         </TabsList>
@@ -107,6 +116,7 @@ export function ServicesWorkspace() {
                 {t(
                   "Set prices, duration and who provides each service.",
                   "Поставете цени, времетраење и кој ја извршува секоја услуга.",
+                  "Përcaktoni çmimet, kohëzgjatjen dhe kush e ofron çdo shërbim.",
                 )}
               </p>
               <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
@@ -117,7 +127,7 @@ export function ServicesWorkspace() {
                   onClick={() => setIsAddServiceOpen(true)}
                 >
                   <PlusIcon data-icon="inline-start" />
-                  {t("Add service", "Додај услуга")}
+                  {t("Add service", "Додај услуга", "Shto shërbim")}
                 </Button>
               </div>
             </div>
@@ -126,6 +136,7 @@ export function ServicesWorkspace() {
                 label={t(
                   "Search services or categories",
                   "Пребарај услуги или категории",
+                  "Kërko shërbime ose kategori",
                 )}
                 value={serviceSearch}
                 onChange={setServiceSearch}
@@ -147,24 +158,23 @@ export function ServicesWorkspace() {
                 {t(
                   "Manage your team, working hours and time off.",
                   "Управувајте со тимот, работното време и отсуствата.",
+                  "Menaxhoni ekipin tuaj, orarin e punës dhe pushimet.",
                 )}
               </p>
               <Button
                 data-replay-public
                 onClick={() => setIsAddStaffOpen(true)}
                 disabled={!planStatus?.canUseStaffRole}
-                aria-describedby={
-                  planStatus ? "staff-plan-limit" : undefined
-                }
+                aria-describedby={planStatus ? "staff-plan-limit" : undefined}
                 className="h-11 w-full sm:w-fit sm:shrink-0"
               >
                 <PlusIcon data-icon="inline-start" />
-                {t("Add staff member", "Додај вработен")}
+                {t("Add staff member", "Додај вработен", "Shto anëtar stafi")}
               </Button>
             </div>
             {(!!staff?.length || staffSearch) && (
               <WorkspaceSearch
-                label={t("Search staff", "Пребарај вработени")}
+                label={t("Search staff", "Пребарај вработени", "Kërko staf")}
                 value={staffSearch}
                 onChange={setStaffSearch}
               />
@@ -174,7 +184,6 @@ export function ServicesWorkspace() {
               searchQuery={staffSearch}
               onClearSearch={() => setStaffSearch("")}
               onAddClick={() => setIsAddStaffOpen(true)}
-              canManageAppointmentEmail={profile.role === "owner"}
             />
             <StaffPlanFooter />
           </div>
@@ -189,12 +198,7 @@ export function ServicesWorkspace() {
         />
       )}
       {isAddStaffOpen && (
-        <StaffFormDialog
-          orgId={orgId}
-          open
-          canManageAppointmentEmail={profile.role === "owner"}
-          onOpenChange={setIsAddStaffOpen}
-        />
+        <StaffFormDialog orgId={orgId} open onOpenChange={setIsAddStaffOpen} />
       )}
     </div>
   );

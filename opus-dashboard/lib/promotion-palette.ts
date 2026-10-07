@@ -15,12 +15,12 @@ export const DEFAULT_PROMOTION_PALETTE: PromotionPalette = {
 export const PROMOTION_PALETTES = [
   {
     id: "sage",
-    name: { en: "Sage", mk: "Жалфија" },
+    name: { en: "Sage", mk: "Жалфија", sq: "Sherbelë" },
     colors: DEFAULT_PROMOTION_PALETTE,
   },
   {
     id: "rose",
-    name: { en: "Rose", mk: "Роза" },
+    name: { en: "Rose", mk: "Роза", sq: "Trëndafil" },
     colors: {
       background: "#f9eeef",
       text: "#512e3d",
@@ -30,7 +30,7 @@ export const PROMOTION_PALETTES = [
   },
   {
     id: "lavender",
-    name: { en: "Lavender", mk: "Лаванда" },
+    name: { en: "Lavender", mk: "Лаванда", sq: "Livando" },
     colors: {
       background: "#f0edf8",
       text: "#37304e",
@@ -40,7 +40,7 @@ export const PROMOTION_PALETTES = [
   },
   {
     id: "midnight",
-    name: { en: "Midnight", mk: "Полноќ" },
+    name: { en: "Midnight", mk: "Полноќ", sq: "Mesnatë" },
     colors: {
       background: "#202c36",
       text: "#faf4e8",

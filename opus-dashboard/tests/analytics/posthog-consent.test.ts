@@ -95,6 +95,25 @@ test("the embedded website preview does not start a second replay or pageview", 
   expect(sdk.capture).not.toHaveBeenCalled();
 });
 
+test.each([
+  "/account?claim=booking#proof=secret",
+  "/account/sign-in",
+  "/invites/secret",
+  "/book/studio?offer=secret",
+])("excludes account and invitation links from analytics: %s", async (path) => {
+  vi.stubEnv("NODE_ENV", "production");
+  state.allowed = true;
+  vi.stubGlobal("window", {
+    location: new URL(`https://studio.opus.mk${path}`),
+  });
+  const { syncPostHogConsent, canCaptureAnalytics } =
+    await import("../../lib/analytics-consent");
+  syncPostHogConsent();
+  expect(canCaptureAnalytics()).toBe(false);
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(sdk.capture).not.toHaveBeenCalled();
+});
+
 test("does not initialise PostHog until analytics consent and opts out on withdrawal", async () => {
   vi.stubEnv("NODE_ENV", "production");
   const { syncPostHogConsent } = await import("../../lib/analytics-consent");

@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useAction } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { publicBookingErrorMessage } from "@/lib/public-booking-errors";
@@ -24,9 +24,22 @@ import { ServiceSelectionStep } from "./ServiceSelectionStep";
 import { StaffSelectionStep } from "./StaffSelectionStep";
 import type { PublicSite } from "./types";
 import posthog from "posthog-js";
+import { useClientAccount } from "@/hooks/use-client-account";
+import { clientAreaUrl } from "@/lib/client-account";
+import { useAuthSecurity } from "@/hooks/use-auth-security";
+import { AuthCaptcha } from "@/components/auth/AuthCaptcha";
+import { accountErrorMessage, AccountLinkError } from "@/lib/account-errors";
+import {
+  requestBookingAccountCode,
+  verifyBookingAccountCode,
+  completeAccountBooking,
+} from "@/lib/booking-account";
+import { tenantSiteUrl } from "@/lib/tenant-sites";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 interface BookingFormProps {
   site: PublicSite;
+  accountBooking?: boolean;
   initialServiceId?: string;
   initialStaffId?: string;
   initialDate?: string;
@@ -42,6 +55,7 @@ interface BookingFormProps {
 }
 
 type BookingResult = {
+  claimToken?: string;
   bookingId: string;
   serviceName: string;
   staffName: string;
@@ -52,7 +66,8 @@ type BookingResult = {
 };
 
 type PendingBooking = {
-  challengeId: Id<"booking_email_verifications">;
+  challengeId?: Id<"booking_email_verifications">;
+  createAccount: boolean;
   expiresAt: number;
   resendAfter: number;
   orgId: Id<"orgs">;
@@ -63,12 +78,12 @@ type PendingBooking = {
   customerPhone: string;
   customerEmail: string;
   customerNote?: string;
-  gapRecoveryEmailOptIn?: boolean;
   recoveryToken?: string;
 };
 
 export function BookingForm({
   site,
+  accountBooking = false,
   initialServiceId,
   initialStaffId,
   initialDate,
@@ -76,6 +91,14 @@ export function BookingForm({
   recoveryOffer,
 }: BookingFormProps) {
   const router = useRouter();
+  const { t } = useDashboardI18n();
+  const accountsEnabled = accountBooking;
+  const account = useClientAccount(Boolean(accountsEnabled && accountBooking));
+  const rememberedClient =
+    accountsEnabled && accountBooking ? account.user : null;
+  const createAccountBooking = useMutation(
+    api.publicBooking.createAccountBooking,
+  );
   const initialService = site.services.find(
     (service) => service._id === initialServiceId,
   );
@@ -133,7 +156,11 @@ export function BookingForm({
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerNote, setCustomerNote] = useState("");
-  const [gapRecoveryEmailOptIn, setGapRecoveryEmailOptIn] = useState(false);
+  const [createClientAccount, setCreateClientAccount] = useState(false);
+  const [accountVerified, setAccountVerified] = useState(false);
+  const security = useAuthSecurity(
+    accountBooking && createClientAccount && !rememberedClient,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingBooking, setPendingBooking] = useState<PendingBooking | null>(
@@ -150,6 +177,27 @@ export function BookingForm({
   const confirmPublicBooking = useAction(
     api.publicBooking.confirmPublicBooking,
   );
+  useEffect(() => {
+    if (!rememberedClient) return;
+    setCustomerName((value) => value || rememberedClient.name);
+    setCustomerEmail(rememberedClient.email);
+    setCustomerPhone((value) => value || rememberedClient.phone || "");
+  }, [rememberedClient]);
+  const handoffToAccount = () => {
+    const query = new URLSearchParams();
+    if (selectedServiceId) query.set("service", selectedServiceId);
+    if (selectedStaffId) query.set("staff", selectedStaffId);
+    if (selectedDate) query.set("date", selectedDate);
+    if (selectedSlotTimestamp) query.set("at", String(selectedSlotTimestamp));
+    if (recoveryOffer) query.set("offer", recoveryOffer.token);
+    const bookingPath = `/book/${encodeURIComponent(site.slug)}?${query}`;
+    window.location.assign(
+      clientAreaUrl(
+        `/account/sign-in?callbackUrl=${encodeURIComponent(bookingPath)}`,
+        window.location.origin,
+      ),
+    );
+  };
   const selectedService = site.services.find(
     (service) => service._id === selectedServiceId,
   );
@@ -247,6 +295,14 @@ export function BookingForm({
     scrollToFlowStart();
   };
 
+  const requestAccountCode = async (email: string) => {
+    try {
+      return await requestBookingAccountCode(email, security.token);
+    } finally {
+      security.reset();
+    }
+  };
+
   const handleSubmitDetails = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedService || !selectedSlotTimestamp || !selectedSlotStaffId) {
@@ -278,14 +334,48 @@ export function BookingForm({
     setError(null);
 
     try {
-      const challenge = await requestBookingEmailOtp({
-        orgId: site._id,
-        email: normalizedEmail,
-        recoveryToken: recoveryOffer?.token,
-      });
+      if (rememberedClient || accountVerified) {
+        const submit = rememberedClient
+          ? createAccountBooking
+          : completeAccountBooking;
+        const result = await submit({
+          orgId: site._id,
+          serviceId: selectedService._id,
+          staffId: selectedSlotStaffId as Id<"staff_members">,
+          startAt: selectedSlotTimestamp,
+          customerName: normalizedName,
+          customerPhone: normalizedPhone,
+          customerNote: customerNote.trim() || undefined,
+          recoveryToken: recoveryOffer?.token,
+        });
+        if (rememberedClient) setCustomerEmail(rememberedClient.email);
+        setBookingResult(result);
+        posthog.capture("public_booking_confirmed", {
+          duration_mins: selectedService.durationMins,
+          price_minor_units: result.priceMinorUnits,
+          currency: result.currency,
+        });
+        scrollToFlowStart();
+        return;
+      }
+      if (createClientAccount && !security.ready) {
+        throw new AccountLinkError(
+          security.unavailable
+            ? "Безбедносната проверка не се вчита. Освежете ја страницата."
+            : "Завршете ја безбедносната проверка пред да побарате код.",
+        );
+      }
+      const challenge = createClientAccount
+        ? await requestAccountCode(normalizedEmail)
+        : await requestBookingEmailOtp({
+            orgId: site._id,
+            email: normalizedEmail,
+            recoveryToken: recoveryOffer?.token,
+          });
 
       setPendingBooking({
         ...challenge,
+        createAccount: createClientAccount,
         orgId: site._id,
         serviceId: selectedService._id,
         staffId: selectedSlotStaffId as Id<"staff_members">,
@@ -294,13 +384,12 @@ export function BookingForm({
         customerPhone: normalizedPhone,
         customerEmail: normalizedEmail,
         customerNote: customerNote.trim() || undefined,
-        gapRecoveryEmailOptIn,
         recoveryToken: recoveryOffer?.token,
       });
       setOtp("");
       scrollToFlowStart();
     } catch (caught) {
-      setError(publicBookingErrorMessage(caught));
+      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
     } finally {
       setIsSubmitting(false);
     }
@@ -317,20 +406,37 @@ export function BookingForm({
     setError(null);
 
     try {
-      const result = await confirmPublicBooking({
+      const draft = {
         orgId: pendingBooking.orgId,
         serviceId: pendingBooking.serviceId,
         staffId: pendingBooking.staffId,
         startAt: pendingBooking.startAt,
         customerName: pendingBooking.customerName,
         customerPhone: pendingBooking.customerPhone,
-        customerEmail: pendingBooking.customerEmail,
         customerNote: pendingBooking.customerNote,
-        gapRecoveryEmailOptIn: pendingBooking.gapRecoveryEmailOptIn,
         recoveryToken: pendingBooking.recoveryToken,
-        challengeId: pendingBooking.challengeId,
-        otp,
-      });
+      };
+      let result: BookingResult;
+      if (pendingBooking.createAccount) {
+        await verifyBookingAccountCode(
+          pendingBooking.customerEmail,
+          otp,
+          pendingBooking.customerName,
+        );
+        setAccountVerified(true);
+        // If the slot was taken, preserve the sign-in and let the client choose another.
+        setPendingBooking(null);
+        result = await completeAccountBooking(draft);
+      } else {
+        if (!pendingBooking.challengeId)
+          throw new Error("Missing guest verification challenge");
+        result = await confirmPublicBooking({
+          ...draft,
+          customerEmail: pendingBooking.customerEmail,
+          challengeId: pendingBooking.challengeId,
+          otp,
+        });
+      }
 
       posthog.capture("public_booking_confirmed", {
         duration_mins: selectedService?.durationMins,
@@ -341,7 +447,7 @@ export function BookingForm({
       setPendingBooking(null);
       scrollToFlowStart();
     } catch (caught) {
-      setError(publicBookingErrorMessage(caught));
+      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
       setOtp("");
     } finally {
       setIsSubmitting(false);
@@ -354,17 +460,24 @@ export function BookingForm({
     setIsSubmitting(true);
     setError(null);
     try {
-      const challenge = await requestBookingEmailOtp({
-        orgId: pendingBooking.orgId,
-        email: pendingBooking.customerEmail,
-        recoveryToken: pendingBooking.recoveryToken,
-      });
+      if (pendingBooking.createAccount && !security.ready) {
+        throw new AccountLinkError(
+          "Завршете ја безбедносната проверка за нов код.",
+        );
+      }
+      const challenge = pendingBooking.createAccount
+        ? await requestAccountCode(pendingBooking.customerEmail)
+        : await requestBookingEmailOtp({
+            orgId: pendingBooking.orgId,
+            email: pendingBooking.customerEmail,
+            recoveryToken: pendingBooking.recoveryToken,
+          });
       setPendingBooking((current) =>
         current ? { ...current, ...challenge } : current,
       );
       setOtp("");
     } catch (caught) {
-      setError(publicBookingErrorMessage(caught));
+      setError(accountErrorMessage(caught, publicBookingErrorMessage(caught)));
     } finally {
       setIsSubmitting(false);
     }
@@ -372,7 +485,7 @@ export function BookingForm({
 
   const handleBookAnother = () => {
     if (recoveryOffer) {
-      router.push("/book");
+      router.push(`/book/${encodeURIComponent(site.slug)}`);
       return;
     }
     setBookingResult(null);
@@ -387,6 +500,27 @@ export function BookingForm({
     scrollToFlowStart();
   };
 
+  const setBookingCaptchaToken = security.setToken;
+  const handleCaptchaError = useCallback(() => {
+    setBookingCaptchaToken(null);
+    setError("Безбедносната проверка не се вчита. Обидете се повторно.");
+  }, [setBookingCaptchaToken]);
+  const securityCheck = security.unavailable ? (
+    <Alert variant="destructive">
+      <AlertDescription>
+        Безбедносната проверка не се вчита. Освежете ја страницата или
+        продолжете како гостин.
+      </AlertDescription>
+    </Alert>
+  ) : security.policy?.required && security.policy.siteKey ? (
+    <AuthCaptcha
+      key={security.generation}
+      siteKey={security.policy.siteKey}
+      onToken={security.setToken}
+      onError={handleCaptchaError}
+    />
+  ) : null;
+
   if (bookingResult) {
     return (
       <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
@@ -394,6 +528,7 @@ export function BookingForm({
           site={site}
           result={bookingResult}
           customerEmail={customerEmail}
+          accountBooking={accountBooking}
           onBookAnother={handleBookAnother}
         />
       </main>
@@ -411,7 +546,9 @@ export function BookingForm({
           </AlertDescription>
         </Alert>
         <Button asChild>
-          <Link href="/book">Прегледај други термини</Link>
+          <Link href={`/book/${encodeURIComponent(site.slug)}`}>
+            Прегледај други термини
+          </Link>
         </Button>
       </main>
     );
@@ -431,6 +568,10 @@ export function BookingForm({
           otp={otp}
           expiresAt={pendingBooking.expiresAt}
           resendAfter={pendingBooking.resendAfter}
+          createAccount={pendingBooking.createAccount}
+          securityCheck={
+            pendingBooking.createAccount ? securityCheck : undefined
+          }
           isSubmitting={isSubmitting}
           error={error}
           onChangeOtp={(value) => {
@@ -452,6 +593,40 @@ export function BookingForm({
 
   return (
     <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
+      {accountsEnabled && (
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <p className="text-sm text-muted-foreground">
+            {rememberedClient
+              ? t(
+                  "Your details are remembered. Confirm this appointment without another email code.",
+                  "Вашите детали се зачувани. Потврдете го терминот без нов код по е-пошта.",
+                  "Detajet tuaja janë ruajtur. Konfirmoni terminin pa kod tjetër emaili.",
+                )
+              : t(
+                  "Have an OPUS account? Sign in to reuse your details, or continue as a guest.",
+                  "Имате OPUS сметка? Најавете се со зачувани детали или продолжете како гостин.",
+                  "Keni llogari OPUS? Hyni për të përdorur detajet tuaja, ose vazhdoni si mysafir.",
+                )}
+          </p>
+          {rememberedClient ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/account">
+                {t("My appointments", "Мои термини", "Terminet e mia")}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={accountBooking && account.isLoading}
+              onClick={handoffToAccount}
+            >
+              {t("Sign in with OPUS", "Најава со OPUS", "Hyni me OPUS")}
+            </Button>
+          )}
+        </div>
+      )}
       {!recoveryOffer && (
         <BookingStepProgress
           currentStep={currentStep}
@@ -467,7 +642,16 @@ export function BookingForm({
           selectedStaffId={selectedStaffId}
           selectedServiceId={selectedServiceId}
           onSelectService={handleSelectService}
-          onBack={() => router.push("/")}
+          onBack={() =>
+            router.push(
+              accountBooking
+                ? tenantSiteUrl(
+                    site.slug,
+                    process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk",
+                  )
+                : "/",
+            )
+          }
         />
       )}
 
@@ -506,6 +690,7 @@ export function BookingForm({
         selectedSlotStaffId && (
           <CustomerDetailsStep
             site={site}
+            rememberedClient={Boolean(rememberedClient) || accountVerified}
             selectedStaffId={selectedSlotStaffId}
             selectedServiceId={selectedServiceId}
             selectedSlotTimestamp={selectedSlotTimestamp}
@@ -513,8 +698,10 @@ export function BookingForm({
             customerEmail={customerEmail}
             customerPhone={customerPhone}
             customerNote={customerNote}
-            gapRecoveryEmailOptIn={gapRecoveryEmailOptIn}
-            onChangeRecoveryOptIn={setGapRecoveryEmailOptIn}
+            createAccount={createClientAccount}
+            onChangeCreateAccount={setCreateClientAccount}
+            securityReady={security.ready}
+            securityCheck={createClientAccount ? securityCheck : undefined}
             offerPriceMinorUnits={recoveryOffer?.priceMinorUnits}
             isSubmitting={isSubmitting}
             error={error}
@@ -524,7 +711,9 @@ export function BookingForm({
             onChangeNote={setCustomerNote}
             onSubmit={handleSubmitDetails}
             onBack={() =>
-              recoveryOffer ? router.push("/book") : goToStep("datetime")
+              recoveryOffer
+                ? router.push(`/book/${encodeURIComponent(site.slug)}`)
+                : goToStep("datetime")
             }
           />
         )}

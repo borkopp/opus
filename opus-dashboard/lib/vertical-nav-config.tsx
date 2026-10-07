@@ -14,8 +14,12 @@ import {
 } from "@/lib/product-scope";
 import {
   resolveDashboardLanguage,
+  getTranslations,
   type DashboardLanguage,
 } from "@/lib/i18n/types";
+import en from "@/lib/i18n/en";
+import mk from "@/lib/i18n/mk";
+import al from "@/lib/i18n/al";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Vertical Navigation Config
@@ -54,42 +58,62 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
   [ACTIVE_INDUSTRY]: {
     basePath: ACTIVE_DASHBOARD_PATH,
     label: {
-      en: "Beauty & Wellness",
-      mk: "Убавина и велнес",
-      sq: "Bukuri dhe mirëqenie",
+      en: en.nav.industryLabel,
+      mk: mk.nav.industryLabel,
+      sq: al.nav.industryLabel,
     },
     primaryLinks: [
       {
-        label: { en: "Dashboard", mk: "Контролна табла", sq: "Paneli" },
+        label: {
+          en: en.nav.dashboard,
+          mk: mk.nav.dashboard,
+          sq: al.nav.dashboard,
+        },
         href: "{base}",
         icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Calendar", mk: "Календар", sq: "Kalendari" },
+        label: {
+          en: en.nav.calendar,
+          mk: mk.nav.calendar,
+          sq: al.nav.calendar,
+        },
         href: "{base}/bookings",
         icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Clients", mk: "Клиенти", sq: "Klientët" },
+        label: {
+          en: en.nav.clients,
+          mk: mk.nav.clients,
+          sq: al.nav.clients,
+        },
         href: "{base}/clients",
         icon: <IconAddressBook className="h-5 w-5 flex-shrink-0" />,
       },
       {
         label: {
-          en: "Services & staff",
-          mk: "Услуги и тим",
-          sq: "Shërbimet dhe ekipi",
+          en: en.nav.management,
+          mk: mk.nav.management,
+          sq: al.nav.management,
         },
         href: "{base}/services",
         icon: <IconScissors className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Promote", mk: "Промоција", sq: "Promovimi" },
+        label: {
+          en: en.nav.promote,
+          mk: mk.nav.promote,
+          sq: al.nav.promote,
+        },
         href: "{base}/promote",
         icon: <IconSpeakerphone className="h-5 w-5 flex-shrink-0" />,
       },
       {
-        label: { en: "Settings", mk: "Поставки", sq: "Cilësimet" },
+        label: {
+          en: en.nav.settings,
+          mk: mk.nav.settings,
+          sq: al.nav.settings,
+        },
         href: "/settings",
         icon: <IconSettings className="h-5 w-5 flex-shrink-0" />,
       },
@@ -97,9 +121,9 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
         ? [
             {
               label: {
-                en: "Business assistant",
-                mk: "Деловен асистент",
-                sq: "Asistenti i biznesit",
+                en: en.nav.assistant,
+                mk: mk.nav.assistant,
+                sq: al.nav.assistant,
               },
               href: "{base}/assistant",
               icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
@@ -123,15 +147,16 @@ export function getNavLinks(
   links: Array<{ label: string; href: string; icon: React.ReactNode }>;
 } {
   const language = resolveDashboardLanguage(languageOrLocale);
+  const dict = getTranslations(language);
   const config =
     verticalNavConfig[industry] ?? verticalNavConfig[ACTIVE_INDUSTRY];
   const base = config.basePath;
 
   return {
     basePath: base,
-    label: config.label[language],
+    label: dict.nav.industryLabel,
     links: config.primaryLinks.map((item) => ({
-      label: item.label[language],
+      label: (item.label as Record<string, string>)[language] ?? item.label.en,
       href: item.href.replace("{base}", base),
       icon: item.icon,
     })),

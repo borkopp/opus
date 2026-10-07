@@ -17,10 +17,11 @@ export function ReturningClientsWidget({
       replayPublicSubtitle
       replayPublicTitle
       delay={70}
-      title={t("Returning clients", "Редовни клиенти")}
+      title={t("Returning clients", "Редовни клиенти", "Klientë të kthyer")}
       subtitle={t(
         "Clients who keep coming back",
         "Клиенти кои повторно се враќаат",
+        "Klientët që kthehen përsëri",
       )}
       className={s.returning}
     >
@@ -42,6 +43,7 @@ export function ReturningClientsWidget({
             {t(
               "Strong relationships, built over time.",
               "Добри односи, градени со време.",
+              "Marrëdhënie të forta, të ndërtuara me kalimin e kohës.",
             )}
           </strong>
           <p data-appear="item" style={appearStep(5)}>
@@ -49,8 +51,9 @@ export function ReturningClientsWidget({
               ? t(
                   `${clients.returningClients} of ${clients.clients} clients returned in the last 30 days.`,
                   `${clients.returningClients} од ${clients.clients} клиенти се вратија во последните 30 дена.`,
+                  `${clients.returningClients} nga ${clients.clients} klientë u kthyen në 30 ditët e fundit.`,
                 )
-              : t("Loading visits…", "Се вчитуваат посетите…")}
+              : t("Loading visits…", "Се вчитуваат посетите…", "Po ngarkohen vizitat…")}
           </p>
         </div>
       </div>

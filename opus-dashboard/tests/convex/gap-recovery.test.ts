@@ -478,6 +478,52 @@ describe("manual opening recovery", () => {
     ).toEqual([{ currency: "MKD", amount: 180000 }]);
   });
 
+  test("a remembered account uses the offered email, slot and price with recovery attribution", async () => {
+    const f = await fixture(t);
+    const offer = await approve(t, f);
+    const args = {
+      orgId: f.orgId,
+      serviceId: offer.candidate.serviceId!,
+      staffId: f.staffId,
+      startAt: offer.candidate.offerStartAt!,
+      customerName: offer.customer.name,
+      customerPhone: offer.customer.phone!,
+      recoveryToken: offer.token,
+    };
+    const wrongAccount = t.withIdentity({
+      subject: "another-client",
+      email: "someoneelse@example.com",
+      emailVerified: true,
+    });
+    await expect(
+      wrongAccount.mutation(api.publicBooking.createAccountBooking, args),
+    ).rejects.toThrow("offer is no longer available");
+
+    const client = t.withIdentity({
+      subject: "offered-client",
+      email: offer.customer.email!,
+      emailVerified: true,
+    });
+    await expect(
+      client.mutation(api.publicBooking.createAccountBooking, {
+        ...args,
+        startAt: args.startAt + 15 * 60_000,
+      }),
+    ).rejects.toThrow();
+    const result = await client.mutation(
+      api.publicBooking.createAccountBooking,
+      args,
+    );
+    const booking = (await t.run((ctx) => ctx.db.get(result.bookingId)))!;
+    expect(booking.gapRecoveryCandidateId).toBe(offer.candidate._id);
+    expect(booking.customerId).toBe(offer.customer._id);
+    expect(booking.priceMinorUnits).toBe(offer.candidate.priceMinorUnits);
+    expect(booking.opusUserId).toBeDefined();
+    expect(
+      (await t.run((ctx) => ctx.db.get(offer.candidate._id)))?.status,
+    ).toBe("booked");
+  });
+
   test("an organic booking invalidates the offer without taking recovery credit", async () => {
     const f = await fixture(t);
     const offer = await approve(t, f);
@@ -613,16 +659,24 @@ describe("manual opening recovery", () => {
     expect(bookings).toHaveLength(1);
   });
 
-  test("a booking records opening-email permission only when the guest explicitly selects it", async () => {
+  test("booking enables opening emails by default and preserves recorded opt-outs", async () => {
     const f = await fixture(t);
-    for (const [index, optedIn] of [false, true].entries()) {
+    for (const [index, optedOut] of [true, false].entries()) {
       const customer = (await t.run((ctx) =>
         ctx.db.get(f.customerIds[index]),
       ))!;
-      await f.owner.mutation(
-        api.ai.gapOptimizerHelpers.setRecoveryContactConsent,
-        { orgId: f.orgId, customerId: customer._id, optedIn: false },
-      );
+      if (optedOut)
+        await f.owner.mutation(
+          api.ai.gapOptimizerHelpers.setRecoveryContactConsent,
+          { orgId: f.orgId, customerId: customer._id, optedIn: false },
+        );
+      else
+        await t.run((ctx) =>
+          ctx.db.patch(customer._id, {
+            gapRecoveryEmailOptIn: undefined,
+            gapRecoveryConsentSource: undefined,
+          }),
+        );
       const challenge = await t.action(
         api.publicBooking.requestBookingEmailOtp,
         { orgId: f.orgId, email: customer.email! },
@@ -637,12 +691,12 @@ describe("manual opening recovery", () => {
         customerEmail: customer.email!,
         challengeId: challenge.challengeId,
         otp: OTP,
-        ...(optedIn ? { gapRecoveryEmailOptIn: true } : {}),
       });
       const stored = (await t.run((ctx) => ctx.db.get(customer._id)))!;
-      expect(stored.gapRecoveryEmailOptIn).toBe(optedIn);
-      if (optedIn)
-        expect(stored.gapRecoveryConsentSource).toBe("guest_booking");
+      expect(stored.gapRecoveryEmailOptIn).toBe(!optedOut);
+      expect(stored.gapRecoveryConsentSource).toBe(
+        optedOut ? "staff_recorded" : "booking_default",
+      );
     }
   });
 

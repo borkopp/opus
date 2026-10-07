@@ -1,0 +1,38 @@
+{
+  "appVersion": "1.0.1",
+  "localBuildNumber": "7",
+  "app": "/tmp/opus-no-analytics-phone-v7erfn5g/OPUSStudio.app",
+  "nativeSignature": "5b8813be21930560d3f7d9bacc40357d3fe8cc19a2007c8fb86ab2746c3ff195",
+  "nativeSource": "fresh Expo-generated native project",
+  "xcode": "26.6 (17F113)",
+  "sdk": "iOS 26.5",
+  "configuration": "Release",
+  "posthogMarkerCount": 0,
+  "embeddedBundleSha256": "2decab1b7aba7ddb8117a208722b3a27483471d767b1afb0c78d360e86631538",
+  "mainExecutableSha256": "794d1f902df13c5822152652ec486878e98516a37c4f1b378527bc16c349736a",
+  "privacyTypes": 14,
+  "privacyPurposes": [
+    "App Functionality"
+  ],
+  "runtimeVersion": "1.0.1",
+  "channel": "production",
+  "productionBackend": true,
+  "signatureVerification": "deep and strict passed",
+  "signing": {
+    "team": "HQQV94Q788",
+    "existingCertificate": "YQ7WXF9DC9",
+    "apsEnvironment": "production",
+    "credentialsCreated": false,
+    "certificateExpires": "2026-10-24T22:50:46Z"
+  },
+  "builtAt": "2026-10-07T01:22:56.341Z",
+  "uploaded": false,
+  "deployed": false,
+  "installed": true,
+  "installedVersion": "1.0.1",
+  "installedBuildNumber": "7",
+  "device": "paired physical iPhone 17 Pro, iOS 27 beta",
+  "automaticLaunch": "blocked by phone lock",
+  "keychainSearchListRestored": true,
+  "temporaryPrivateSigningCopiesRemoved": true
+}

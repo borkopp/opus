@@ -67,6 +67,7 @@ export function PromotionsWorkspace() {
           aria-label={t(
             "Loading promotion tools",
             "Се вчитуваат алатките за промоција",
+            "Po ngarkohen mjetet e promovimit",
           )}
         >
           <Skeleton className="h-96 rounded-3xl" />
@@ -81,6 +82,7 @@ export function PromotionsWorkspace() {
                 {t(
                   "Publish your booking website first",
                   "Прво објавете ја веб-страницата за закажување",
+                  "Publikoni fillimisht faqen tuaj të rezervimit",
                 )}
               </AlertTitle>
               <AlertDescription>
@@ -88,11 +90,12 @@ export function PromotionsWorkspace() {
                   {t(
                     "Your graphics and QR code will be ready when clients can book. You can prepare saved replies now.",
                     "Сликите и QR-кодот ќе бидат достапни кога клиентите ќе можат да закажуваат. Зачуваните одговори можете да ги подготвите сега.",
+                    "Grafikat dhe QR-kodi juaj do të jenë gati kur klientët të mund të rezervojnë. Mund të përgatitni përgjigjet e ruajtura tani.",
                   )}
                 </p>
                 <Button asChild variant="outline">
                   <Link data-replay-public href="/onboarding?step=review">
-                    {t("Finish website setup", "Довршете ја веб-страницата")}
+                    {t("Finish website setup", "Довршете ја веб-страницата", "Përfundo konfigurimin e faqes")}
                     <ExternalLink data-icon="inline-end" />
                   </Link>
                 </Button>
@@ -113,15 +116,15 @@ export function PromotionsWorkspace() {
                 <TabsList variant="line">
                   <TabsTrigger data-replay-public value="opening">
                     <ImagePlus />
-                    {t("Share an opening", "Сподели термин")}
+                    {t("Share an opening", "Сподели термин", "Shpërndaj një termin të lirë")}
                   </TabsTrigger>
                   <TabsTrigger data-replay-public value="kit">
                     <QrCode />
-                    {t("Booking kit", "Промотивен пакет")}
+                    {t("Booking kit", "Промотивен пакет", "Paketa e rezervimit")}
                   </TabsTrigger>
                   <TabsTrigger data-replay-public value="replies">
                     <MessageSquareText />
-                    {t("Saved replies", "Зачувани одговори")}
+                    {t("Saved replies", "Зачувани одговори", "Përgjigjet e ruajtura")}
                   </TabsTrigger>
                 </TabsList>
               </div>

@@ -23,6 +23,7 @@ import type { PublicSite } from "./types";
 
 interface CustomerDetailsStepProps {
   site: PublicSite;
+  rememberedClient?: boolean;
   selectedStaffId: string;
   selectedServiceId: string;
   selectedSlotTimestamp: number;
@@ -30,8 +31,10 @@ interface CustomerDetailsStepProps {
   customerEmail: string;
   customerPhone: string;
   customerNote: string;
-  gapRecoveryEmailOptIn: boolean;
-  onChangeRecoveryOptIn: (value: boolean) => void;
+  createAccount: boolean;
+  onChangeCreateAccount: (value: boolean) => void;
+  securityReady: boolean;
+  securityCheck?: React.ReactNode;
   offerPriceMinorUnits?: number;
   isSubmitting: boolean;
   error: string | null;
@@ -45,6 +48,7 @@ interface CustomerDetailsStepProps {
 
 export function CustomerDetailsStep({
   site,
+  rememberedClient = false,
   selectedStaffId,
   selectedServiceId,
   selectedSlotTimestamp,
@@ -52,8 +56,10 @@ export function CustomerDetailsStep({
   customerEmail,
   customerPhone,
   customerNote,
-  gapRecoveryEmailOptIn,
-  onChangeRecoveryOptIn,
+  createAccount,
+  onChangeCreateAccount,
+  securityReady,
+  securityCheck,
   offerPriceMinorUnits,
   isSubmitting,
   error,
@@ -128,6 +134,7 @@ export function CustomerDetailsStep({
           <Field>
             <FieldLabel htmlFor="customer-email">Е-пошта</FieldLabel>
             <Input
+              readOnly={rememberedClient}
               id="customer-email"
               name="email"
               type="email"
@@ -139,9 +146,11 @@ export function CustomerDetailsStep({
               required
             />
             <FieldDescription>
-              {offerPriceMinorUnits !== undefined
-                ? "Внесете ја е-поштата на која ја добивте понудата. На неа ќе го испратиме кодот за потврда."
-                : "На оваа адреса ќе го испратиме кодот за потврда."}
+              {rememberedClient
+                ? "Е-поштата е потврдена преку вашата OPUS сметка."
+                : offerPriceMinorUnits !== undefined
+                  ? "Внесете ја е-поштата на која ја добивте понудата. На неа ќе го испратиме кодот за потврда."
+                  : "На оваа адреса ќе го испратиме кодот за потврда."}
             </FieldDescription>
           </Field>
 
@@ -178,24 +187,27 @@ export function CustomerDetailsStep({
             />
           </Field>
 
-          <Field orientation="horizontal">
-            <Checkbox
-              id="recovery-email-consent"
-              checked={gapRecoveryEmailOptIn}
-              onCheckedChange={(checked) =>
-                onChangeRecoveryOptIn(checked === true)
-              }
-            />
-            <div className="flex flex-col gap-1">
-              <FieldLabel htmlFor="recovery-email-consent">
-                Сакам понуди за слободни термини по е-пошта
-              </FieldLabel>
-              <FieldDescription>
-                Опционално. Студиото може да ми понуди соодветен слободен
-                термин. Може да ги исклучам пораките во секое време.
-              </FieldDescription>
-            </div>
-          </Field>
+          {!rememberedClient && (
+            <Field orientation="horizontal" variant="surface">
+              <Checkbox
+                id="create-client-account"
+                checked={createAccount}
+                onCheckedChange={(checked) =>
+                  onChangeCreateAccount(checked === true)
+                }
+              />
+              <div className="flex flex-col gap-1">
+                <FieldLabel htmlFor="create-client-account">
+                  Создај OPUS сметка
+                </FieldLabel>
+                <FieldDescription>
+                  Со истиот код ќе се најавите и ќе го потврдите терминот.
+                  Следниот пат закажете побрзо со зачувани податоци.
+                </FieldDescription>
+              </div>
+            </Field>
+          )}
+          {!rememberedClient && createAccount && securityCheck}
 
           {error && (
             <Alert variant="destructive">
@@ -209,8 +221,11 @@ export function CustomerDetailsStep({
         <div className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
           <ShieldCheck className="mt-1 size-4 shrink-0" aria-hidden="true" />
           <p>
-            Не е потребен профил. Податоците му овозможуваат на студиото да го
-            евидентира и управува со терминот.
+            {rememberedClient
+              ? "Терминот ќе биде зачуван во вашата OPUS сметка."
+              : createAccount
+                ? "Вашата сметка ќе ги прикажува само вашите термини. Секое студио ги гледа само своите записи."
+                : "Продолжувате како гостин. Со кодот ќе го потврдите само терминот."}
           </p>
         </div>
 
@@ -218,7 +233,10 @@ export function CustomerDetailsStep({
           type="submit"
           size="lg"
           disabled={
-            isSubmitting || !customerName.trim() || !customerEmail.trim()
+            isSubmitting ||
+            !customerName.trim() ||
+            !customerEmail.trim() ||
+            (!rememberedClient && createAccount && !securityReady)
           }
           className="w-full"
         >
@@ -227,7 +245,7 @@ export function CustomerDetailsStep({
           ) : (
             <Mail data-icon="inline-start" />
           )}
-          Испрати код за потврда
+          {rememberedClient ? "Потврди термин" : "Испрати код за потврда"}
         </Button>
       </form>
     </BookingStepShell>

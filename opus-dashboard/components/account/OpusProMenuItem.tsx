@@ -13,7 +13,7 @@ export function OpusProMenuItem() {
     <DropdownMenuItem asChild className="cursor-pointer justify-between py-3">
       <Link
         href="/settings?tab=billing"
-        aria-label={t("Explore OPUS Pro", "Разгледајте го OPUS Pro")}
+        aria-label={t("Explore OPUS Pro", "Разгледајте го OPUS Pro", "Eksploroni OPUS Pro")}
       >
         <LogoPro className="text-lg" markClassName="size-5" />
         <ArrowUpRight aria-hidden="true" />

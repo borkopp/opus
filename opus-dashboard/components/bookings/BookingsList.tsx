@@ -64,7 +64,7 @@ export function BookingsList({
         const endLabel = bookingTimeLabel(booking.endAt);
         const serviceName = bookingServiceLabel(
           booking,
-          t("Service", "Услуга"),
+          t("Service", "Услуга", "Shërbim"),
         );
         const theme = getServiceTheme(booking.service?.name || serviceName);
 
@@ -142,7 +142,7 @@ export function BookingsList({
                   </div>
                   <div className="flex flex-col min-w-0">
                     <span className="font-semibold text-foreground break-words text-base lg:truncate lg:text-sm tracking-tight">
-                      {booking.customer?.name || t("Guest", "Гостин")}
+                      {booking.customer?.name || t("Guest", "Гостин", "Mysafir")}
                     </span>
                     {booking.customer?.phone && (
                       <span className="hidden lg:flex text-xs text-muted-foreground items-center gap-1 truncate font-mono">
@@ -190,14 +190,14 @@ export function BookingsList({
                   {isCompleted && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
                       <IconCircleCheck className="size-3.5 shrink-0" />
-                      <span data-replay-public>{t("Done", "Завршен")}</span>
+                      <span data-replay-public>{t("Done", "Завршен", "Përfunduar")}</span>
                     </span>
                   )}
                   {isNoShow && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full">
                       <IconAlertTriangle className="size-3.5 shrink-0" />
                       <span data-replay-public>
-                        {t("No-Show", "Не се појави")}
+                        {t("No-Show", "Не се појави", "Mosparaqitje")}
                       </span>
                     </span>
                   )}
@@ -205,7 +205,7 @@ export function BookingsList({
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground bg-muted border border-border px-2.5 py-1 rounded-full">
                       <IconX className="size-3.5 shrink-0" />
                       <span data-replay-public>
-                        {t("Cancelled", "Откажан")}
+                        {t("Cancelled", "Откажан", "Anuluar")}
                       </span>
                     </span>
                   )}
@@ -219,7 +219,7 @@ export function BookingsList({
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-muted/60 border border-border/60 px-2.5 py-1 rounded-full">
                       <span className="size-1.5 rounded-full bg-emerald-500" />
                       <span data-replay-public>
-                        {t("Confirmed", "Потврден")}
+                        {t("Confirmed", "Потврден", "Konfirmuar")}
                       </span>
                     </span>
                   )}

@@ -16,7 +16,7 @@ Future agents must:
 4. Prioritize reliability of the documented golden booking journey.
 5. Keep marketing claims aligned with behavior that is genuinely operational and configured.
 6. Ask for explicit user authorization before changing product scope or enabling another vertical.
-7. Keep this repository focused on the web applications; native clients were removed from the monorepo.
+7. Keep web stabilization the priority. The explicitly authorized `opus-mobile/` Expo studio dashboard and its existing-backend integration are retained in this monorepo; native consumer clients remain deferred.
 8. Keep `opus-mk/` dormant and untouched unless the user explicitly resumes marketplace work.
 
 ---
@@ -39,6 +39,7 @@ Independent Next.js applications, with the studio and owner apps sharing Convex:
 | `opus-mk/`        | Dormant beauty marketplace retained for future work; do not modify by default | 3001                           |
 | `opus-landing/`   | Beauty-focused `opus.mk` marketing site — no backend, no auth                 | 3000                           |
 | `opus-owner/`     | Private platform-owner overview at `admin.opus.mk`; read-only analytics       | 3002                           |
+| `opus-mobile/`    | Authorized Expo studio dashboard using the shared Convex backend              | 8081 (Metro / web preview)      |
 
 `opus-mk/convex` is a symlink to `../opus-dashboard/convex`. Both apps share the same Convex deployment.
 

@@ -9,7 +9,7 @@ export const RECOVERY_HORIZON_DAYS = 7;
 export const RECOVERY_COOLDOWN_MS = 7 * 86_400_000;
 export const RECOVERY_OFFER_TTL_MS = 2 * 60 * 60_000;
 export const BOOKING_NOTICE_MS = 15 * 60_000;
-export type RecoveryReason = { en: string; mk: string };
+export type RecoveryReason = { en: string; mk: string; sq?: string };
 export type RecoveryOption = {
   serviceId: Id<"services">;
   serviceName: string;
@@ -158,30 +158,36 @@ export function rankRecoveryOptions(
       reasons.push({
         en: `Usually returns every ${returnDays} days; last visit ${daysSince} days before this opening.`,
         mk: `Обично доаѓа на ${returnDays} дена; последната посета е ${daysSince} дена пред овој термин.`,
+        sq: `Zakonisht kthehet çdo ${returnDays} ditë; vizita e fundit ${daysSince} ditë para kësaj hapësire.`,
       });
     else if (last)
       reasons.push({
         en: `${visits.length} completed visits for this service; return timing is not yet known.`,
         mk: `${visits.length} завршени посети за оваа услуга; сè уште нема доволно податоци за зачестеноста.`,
+        sq: `${visits.length} vizita të përfunduara për këtë shërbim; koha e kthimit nuk dihet ende.`,
       });
     else
       reasons.push({
         en: "No completed history for this service. Review this choice manually.",
         mk: "Нема завршени посети за оваа услуга. Проценете дали понудата е соодветна.",
+        sq: "Nuk ka histori të përfunduar për këtë shërbim. Rishikoni këtë zgjedhje manualisht.",
       });
     if (sameStaff)
       reasons.push({
         en: "Prefers or usually books this specialist.",
         mk: "Го претпочита или обично го избира овој специјалист.",
+        sq: "Preferon ose zakonisht rezervon me këtë specialist.",
       });
     if (sameTime || sameDay)
       reasons.push({
         en: "Fits their usual appointment time or weekday.",
         mk: "Одговара на вообичаениот час или ден за посета.",
+        sq: "Përshtatet me orën ose ditën e zakonshme të termineve të tyre.",
       });
     reasons.push({
       en: "No upcoming appointment for this service.",
       mk: "Нема иден закажан термин за оваа услуга.",
+      sq: "Nuk ka termin të ardhshëm për këtë shërbim.",
     });
     results.push({
       ...option,
@@ -209,8 +215,9 @@ export function recoveryMessage(args: {
   currency: string;
   locale: string;
 }) {
+  const sq = args.locale.startsWith("sq");
   const mk = args.locale.startsWith("mk");
-  const locale = mk ? "mk-MK" : "en-GB";
+  const locale = sq ? "sq-AL" : mk ? "mk-MK" : "en-GB";
   const date = new Intl.DateTimeFormat(locale, {
     day: "numeric",
     month: "long",
@@ -225,6 +232,9 @@ export function recoveryMessage(args: {
   })
     .format(args.priceMinorUnits / 100)
     .replace(/\.$/, "");
+  if (sq) {
+    return `Përshëndetje ${args.customerName}, në ${args.studioName} ka një termin të lirë për ${args.serviceName} me ${args.staffName} më ${date}, me çmim prej ${price}. Nëse ju përshtatet, hapni ofertën për të konfirmuar terminin tuaj përderisa është ende i disponueshëm.`;
+  }
   return mk
     ? `Здраво ${args.customerName}, во ${args.studioName} има слободен термин за ${args.serviceName} со ${args.staffName} на ${date}, по цена од ${price}. Ако ви одговара, отворете ја понудата за да го потврдите терминот додека е слободен.`
     : `Hi ${args.customerName}, ${args.studioName} has an opening for ${args.serviceName} with ${args.staffName} on ${date}, priced at ${price}. Open the offer to confirm your appointment while it is still available.`;

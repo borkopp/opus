@@ -31,7 +31,7 @@ export function BookingCard({
 }: BookingCardProps) {
   const { t, locale } = useDashboardI18n();
 
-  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга"));
+  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbim"));
   const theme = useMemo(
     () => getServiceTheme(booking.service?.name || serviceName),
     [booking.service?.name, serviceName],
@@ -53,7 +53,7 @@ export function BookingCard({
   const isCancelled = booking.status === "cancelled";
   const isNoShow = booking.status === "no_show";
 
-  const customerName = booking.customer?.name || t("Unknown", "Непознат");
+  const customerName = booking.customer?.name || t("Unknown", "Непознат", "I panjohur");
   const priceFormatted = formatPrice(
     booking.priceMinorUnits,
     booking.currency || "MKD",
@@ -70,12 +70,12 @@ export function BookingCard({
             "inline-flex items-center gap-1 font-medium rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25",
             compact ? "p-0.5" : "px-1.5 py-0.5 text-[10px]",
           )}
-          title={t("Completed", "Завршен")}
+          title={t("Completed", "Завршен", "Përfunduar")}
         >
           <IconCircleCheck className="size-3 shrink-0" />
           {!compact && (
             <span data-replay-public className="hidden sm:inline font-semibold">
-              {t("Completed", "Завршен")}
+              {t("Completed", "Завршен", "Përfunduar")}
             </span>
           )}
         </span>
@@ -89,11 +89,11 @@ export function BookingCard({
             "inline-flex items-center gap-1 font-medium rounded-full bg-muted text-muted-foreground border border-border/60",
             compact ? "p-0.5" : "px-1.5 py-0.5 text-[10px]",
           )}
-          title={t("Cancelled", "Откажан")}
+          title={t("Cancelled", "Откажан", "Anuluar")}
         >
           <IconX className="size-3 shrink-0" />
           {!compact && (
-            <span data-replay-public>{t("Cancelled", "Откажан")}</span>
+            <span data-replay-public>{t("Cancelled", "Откажан", "Anuluar")}</span>
           )}
         </span>
       );
@@ -106,11 +106,11 @@ export function BookingCard({
             "inline-flex items-center gap-1 font-medium rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/25",
             compact ? "p-0.5" : "px-1.5 py-0.5 text-[10px]",
           )}
-          title={t("No Show", "Не се појави")}
+          title={t("No Show", "Не се појави", "Mosparaqitje")}
         >
           <IconAlertTriangle className="size-3 shrink-0" />
           {!compact && (
-            <span data-replay-public>{t("No Show", "Не се појави")}</span>
+            <span data-replay-public>{t("No Show", "Не се појави", "Mosparaqitje")}</span>
           )}
         </span>
       );
@@ -123,7 +123,7 @@ export function BookingCard({
             "inline-flex items-center gap-1 font-medium rounded-full bg-primary/15 text-primary dark:bg-primary/20 border border-primary/30",
             compact ? "p-0.5" : "px-1.5 py-0.5 text-[10px]",
           )}
-          title={t("Booked via AI Assistant", "Закажано преку AI")}
+          title={t("Booked via AI Assistant", "Закажано преку AI", "Rezervuar me Asistentin AI")}
         >
           <IconSparkles className="size-3 shrink-0" />
           {!compact && (
@@ -141,7 +141,7 @@ export function BookingCard({
           "inline-flex items-center gap-0.5 opacity-60",
           compact ? "p-0.5" : "px-1 text-[10px]",
         )}
-        title={t("Confirmed", "Потврден")}
+        title={t("Confirmed", "Потврден", "Konfirmuar")}
       >
         <IconDotsCircleHorizontal className="size-3 shrink-0" />
       </span>

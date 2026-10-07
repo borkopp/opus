@@ -7,10 +7,11 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
-import { requireActiveOrg, requireRole, requireUser } from "./lib/auth";
+import { requireAuth, requireRole, requireUser } from "./lib/auth";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { allocateUniqueTenantSlug } from "./lib/tenantSlug";
 import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
+import { rejectAppReviewIdentity } from "./lib/appReview";
 
 const beautyCategory = v.union(
   v.literal("barbershop"),
@@ -78,7 +79,7 @@ function assertHours(
 export const getState = query({
   args: {},
   handler: async (ctx) => {
-    const { orgId } = await requireActiveOrg(ctx);
+    const { orgId } = await requireAuth(ctx);
     return await getBeautyActivationState(ctx, orgId);
   },
 });
@@ -99,7 +100,8 @@ export const startBeautyBusiness = mutation({
   },
   returns: v.object({ orgId: v.id("orgs"), created: v.boolean() }),
   handler: async (ctx, args) => {
-    const { user } = await requireUser(ctx);
+    const { user, identity } = await requireUser(ctx);
+    rejectAppReviewIdentity(identity);
     const name = args.name.trim();
     if (name.length < 2) {
       throw new ConvexError("Business name must be at least 2 characters.");
@@ -518,7 +520,7 @@ export const generateUploadUrl = mutation({
   args: {},
   returns: v.string(),
   handler: async (ctx) => {
-    await requireActiveOrg(ctx);
+    await requireRole(ctx, undefined, "owner");
     return await ctx.storage.generateUploadUrl();
   },
 });

@@ -1,17 +1,12 @@
 import { bookingDateKey } from "./booking-wall-clock";
+import { isVisibleCalendarBooking } from "../../shared/calendar";
+export { isVisibleCalendarBooking } from "../../shared/calendar";
 
 type CalendarBooking = {
   startAt: number;
   status: string;
   cancellationReason?: string;
 };
-
-export function isVisibleCalendarBooking(booking: CalendarBooking) {
-  return !(
-    booking.status === "cancelled" &&
-    booking.cancellationReason === "Rescheduled"
-  );
-}
 
 export function getBookingDateCounts(bookings: readonly CalendarBooking[]) {
   const counts = new Map<string, number>();

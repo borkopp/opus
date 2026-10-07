@@ -2,12 +2,13 @@ import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
-import { requireActiveOrg, requireRole } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
+import { requireLiveStudio } from "./lib/appReview";
 
 export const getListingReadiness = query({
   args: { orgId: v.optional(v.id("orgs")) },
   handler: async (ctx, args) => {
-    const { orgId } = await requireActiveOrg(ctx, args.orgId);
+    const { orgId } = await requireAuth(ctx, args.orgId);
     const state = await getBeautyActivationState(ctx, orgId);
     if (!state) return null;
 
@@ -44,6 +45,7 @@ export const publishOrg = mutation({
       args.orgId,
       "owner",
     );
+    requireLiveStudio(org);
     if (org.industry !== "beauty_wellness") {
       throw new ConvexError("Hospitality publishing is coming soon.");
     }

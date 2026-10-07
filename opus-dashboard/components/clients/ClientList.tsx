@@ -65,10 +65,11 @@ export function ClientList({
           </EmptyMedia>
           <EmptyTitle>
             {filtered
-              ? t("No matching clients", "Нема пронајдени клиенти")
+              ? t("No matching clients", "Нема пронајдени клиенти", "Nuk u gjet asnjë klient")
               : t(
                   "Your clients will appear here",
                   "Вашите клиенти ќе се прикажат тука",
+                  "Klientët tuaj do të shfaqen këtu",
                 )}
           </EmptyTitle>
           <EmptyDescription>
@@ -76,17 +77,19 @@ export function ClientList({
               ? t(
                   "Try another name, email, or phone number.",
                   "Обидете се со друго име, е-пошта или телефон.",
+                  "Provoni një emër, email ose numër telefoni tjetër.",
                 )
               : t(
                   "Clients are added automatically when your team or a client makes an appointment.",
                   "Клиентите се додаваат автоматски кога вашиот тим или клиент ќе закаже термин.",
+                  "Klientët shtohen automatikisht kur ekipi juaj ose një klient bën një termin.",
                 )}
           </EmptyDescription>
         </EmptyHeader>
         {filtered && (
           <EmptyContent>
             <Button data-replay-public variant="outline" onClick={onClear}>
-              {t("Clear filters", "Исчисти филтри")}
+              {t("Clear filters", "Исчисти филтри", "Pastro filtrat")}
             </Button>
           </EmptyContent>
         )}
@@ -99,18 +102,18 @@ export function ClientList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("Client", "Клиент")}</TableHead>
-              <TableHead>{t("Phone", "Телефон")}</TableHead>
-              <TableHead>{t("Last visit", "Последна посета")}</TableHead>
+              <TableHead>{t("Client", "Клиент", "Klienti")}</TableHead>
+              <TableHead>{t("Phone", "Телефон", "Telefoni")}</TableHead>
+              <TableHead>{t("Last visit", "Последна посета", "Vizita e fundit")}</TableHead>
               <TableHead className="text-right">
-                {t("Visits", "Посети")}
+                {t("Visits", "Посети", "Vizita")}
               </TableHead>
               <TableHead className="text-right">
-                {t("Completed value", "Вредност на посетите")}
+                {t("Completed value", "Вредност на посетите", "Vlera e përfunduar")}
               </TableHead>
               <TableHead>
                 <span data-replay-public className="sr-only">
-                  {t("Open profile", "Отвори профил")}
+                  {t("Open profile", "Отвори профил", "Hap profilin")}
                 </span>
               </TableHead>
             </TableRow>
@@ -125,6 +128,7 @@ export function ClientList({
                     aria-label={t(
                       `View ${client.name}`,
                       `Погледни го профилот на ${client.name}`,
+                      `Shiko profilin e ${client.name}`,
                     )}
                   >
                     <ClientIdentity client={client} />
@@ -136,7 +140,7 @@ export function ClientList({
                 <TableCell>
                   {client.lastVisitAt
                     ? clientDate(client.lastVisitAt, locale)
-                    : t("No visits yet", "Сè уште нема посети")}
+                    : t("No visits yet", "Сè уште нема посети", "Nuk ka ende vizita")}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge variant="secondary">{client.visits}</Badge>
@@ -152,6 +156,7 @@ export function ClientList({
                     aria-label={t(
                       `Open ${client.name}'s profile`,
                       `Отвори профил на ${client.name}`,
+                      `Hap profilin e ${client.name}`,
                     )}
                   >
                     <ArrowUpRight />
@@ -179,15 +184,15 @@ export function ClientList({
                   data-replay-public
                   className="text-xs text-muted-foreground"
                 >
-                  {t("Last visit", "Последна посета")}
+                  {t("Last visit", "Последна посета", "Vizita e fundit")}
                 </span>
                 {clientDate(client.lastVisitAt, locale)}
               </span>
               <Badge variant="secondary">
                 {client.visits}{" "}
                 {client.visits === 1
-                  ? t("visit", "посета")
-                  : t("visits", "посети")}
+                  ? t("visit", "посета", "vizitë")
+                  : t("visits", "посети", "vizita")}
               </Badge>
             </span>
           </button>

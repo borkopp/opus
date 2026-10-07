@@ -24,7 +24,7 @@ export function BillingPlanSummary({
             data-replay-public
             className="text-xs font-medium uppercase tracking-widest text-muted-foreground"
           >
-            {t("Your current plan", "Вашиот тековен план")}
+            {t("Your current plan", "Вашиот тековен план", "Plani juaj aktual")}
           </p>
           <Badge
             variant={paid ? "success" : "secondary"}
@@ -39,7 +39,9 @@ export function BillingPlanSummary({
             }
           >
             {paid && <Check data-icon="inline-start" />}
-            {paid ? t("Active", "Активен") : t("Free plan", "Бесплатен план")}
+            {paid
+              ? t("Active", "Активен", "Aktiv")
+              : t("Free plan", "Бесплатен план", "Plani falas")}
           </Badge>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
@@ -61,10 +63,12 @@ export function BillingPlanSummary({
                 ? t(
                     "More tools for your studio.",
                     "Повеќе алатки за вашето студио.",
+                    "Më shumë mjete për studion tuaj.",
                   )
                 : t(
                     "Everything you need to start taking bookings.",
                     "Сè што ви треба за да започнете со закажувања.",
+                    "Gjithçka që ju nevojitet për të filluar me rezervimet.",
                   )}
             </p>
           </div>
@@ -77,7 +81,7 @@ export function BillingPlanSummary({
             className="flex items-center gap-2 text-xs text-muted-foreground"
           >
             <CreditCard className="size-4" aria-hidden="true" />
-            {t("Subscription price", "Цена на претплатата")}
+            {t("Subscription price", "Цена на претплатата", "Çmimi i abonimit")}
           </dt>
           <dd className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-xl font-medium tabular-nums tracking-tight">
@@ -88,7 +92,7 @@ export function BillingPlanSummary({
                     locale,
                   )
                 : paid
-                  ? t("Pro enabled", "Pro е активиран")
+                  ? t("Pro enabled", "Pro е активиран", "Pro i aktivizuar")
                   : formatPrice(0, "MKD", locale, false)}
             </span>
             {subscription && (
@@ -96,7 +100,7 @@ export function BillingPlanSummary({
                 data-replay-public
                 className="text-xs text-muted-foreground"
               >
-                / {t("month", "месечно")}
+                / {t("month", "месечно", "muaj")}
               </span>
             )}
           </dd>
@@ -109,16 +113,28 @@ export function BillingPlanSummary({
             <CalendarDays className="size-4" aria-hidden="true" />
             {subscription
               ? subscription.cancelAtPeriodEnd
-                ? t("Access until", "Пристап до")
-                : t("Current period ends", "Тековниот период завршува")
-              : t("Billing", "Наплата")}
+                ? t("Access until", "Пристап до", "Qasje deri më")
+                : t(
+                    "Current period ends",
+                    "Тековниот период завршува",
+                    "Periudha aktuale përfundon",
+                  )
+              : t("Billing", "Наплата", "Faturimi")}
           </dt>
           <dd className="text-xl font-medium tabular-nums tracking-tight">
             {subscription
               ? formatBillingDate(subscription.currentPeriodEnd, locale)
               : paid
-                ? t("No online subscription", "Без онлајн претплата")
-                : t("No payment required", "Без плаќање")}
+                ? t(
+                    "No online subscription",
+                    "Без онлајн претплата",
+                    "Pa abonim në internet",
+                  )
+                : t(
+                    "No payment required",
+                    "Без плаќање",
+                    "Nuk kërkohet pagesë",
+                  )}
           </dd>
         </div>
       </dl>

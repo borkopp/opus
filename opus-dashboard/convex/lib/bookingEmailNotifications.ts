@@ -6,6 +6,7 @@ import {
   normalizeBookingEmail,
 } from "./bookingEmailSecurity";
 import { wallClockTimestampToInstant } from "./bookingTime";
+import { hasPersonalBookingAccess } from "./staffAccess";
 
 const MAX_REMINDER_HOURS = 14 * 24;
 const MAX_REMINDER_ENTRIES = 8;
@@ -30,17 +31,16 @@ function uniqueEmailRecipients(
   return [...unique.values()];
 }
 
-export function resolveAssignedStaffEmailRecipient(
+export async function resolveAssignedStaffEmailRecipient(
+  ctx: Pick<QueryCtx, "db">,
   staffMember: Doc<"staff_members">,
-): BookingEmailRecipient | null {
-  if (
-    staffMember.isDeleted ||
-    !staffMember.isActive ||
-    !staffMember.appointmentEmail
-  ) {
+): Promise<BookingEmailRecipient | null> {
+  if (staffMember.isDeleted || !staffMember.isActive || !staffMember.userId) {
     return null;
   }
-  const email = normalizeBookingEmail(staffMember.appointmentEmail);
+  const user = await ctx.db.get(staffMember.userId!);
+  if (!user || user.isDeleted) return null;
+  const email = normalizeBookingEmail(user.email);
   if (!isValidBookingEmail(email)) return null;
   return {
     staffId: staffMember._id,
@@ -98,6 +98,7 @@ export async function resolveStaffEmailRecipients(
     staffMembers.map(async (staffMember) => {
       if (
         !staffMember.userId ||
+        hasPersonalBookingAccess(staffMember) ||
         (allowedUserIds && !allowedUserIds.has(staffMember.userId))
       ) {
         return null;
@@ -124,6 +125,7 @@ export async function resolveStaffEmailRecipients(
 }
 
 type QueueBookingEmailsArgs = {
+  clientAccountUrl?: string;
   org: Doc<"orgs">;
   settings: Doc<"org_settings">;
   booking: Doc<"bookings">;
@@ -220,6 +222,9 @@ export async function queueBookingRescheduledEmail(
     recipientAddress: customerEmail,
     templateData: {
       ...appointmentTemplateData(args),
+      ...(args.clientAccountUrl
+        ? { clientAccountUrl: args.clientAccountUrl }
+        : {}),
       previousStartAt: args.previousStartAt,
       previousEndAt: args.previousEndAt,
     },
@@ -246,7 +251,12 @@ export async function queueBookingEmailNotifications(
       bookingId: args.booking._id,
       type: "booking_confirmation",
       recipientAddress: customerEmail,
-      templateData,
+      templateData: {
+        ...templateData,
+        ...(args.clientAccountUrl
+          ? { clientAccountUrl: args.clientAccountUrl }
+          : {}),
+      },
       dedupeKey: `customer-confirmation:${args.booking._id}:${customerEmail}`,
     });
   }
@@ -256,7 +266,10 @@ export async function queueBookingEmailNotifications(
     args.org._id,
     args.settings.staffEmailRecipientUserIds,
   );
-  const assignedStaffRecipient = resolveAssignedStaffEmailRecipient(args.staff);
+  const assignedStaffRecipient = await resolveAssignedStaffEmailRecipient(
+    ctx,
+    args.staff,
+  );
   const assignedStaffRecipients = assignedStaffRecipient
     ? [assignedStaffRecipient]
     : [];

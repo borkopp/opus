@@ -50,7 +50,7 @@ export function PaidFeatureOverlay({
           className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-3"
         >
           <span className="text-sm font-medium text-muted-foreground">
-            {t("Available with", "Достапно со")}
+            {t("Available with", "Достапно со", "E disponueshme me")}
           </span>
           <span aria-hidden="true">
             <LogoPro className={compact ? "text-lg" : "text-3xl sm:text-4xl"} />
@@ -62,10 +62,11 @@ export function PaidFeatureOverlay({
             aria-label={t(
               "Learn more about OPUS Pro (opens in a new tab)",
               "Дознај повеќе за OPUS Pro (се отвора во нов таб)",
+              "Mësoni më shumë rreth OPUS Pro (hapet në një skedë të re)",
             )}
             className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            {t("Learn more", "Дознај повеќе")}
+            {t("Learn more", "Дознај повеќе", "Mësoni më shumë")}
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </a>
         </div>

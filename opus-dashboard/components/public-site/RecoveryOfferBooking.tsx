@@ -13,9 +13,11 @@ import type { PublicSite } from "./types";
 export function RecoveryOfferBooking({
   site,
   token,
+  accountBooking = false,
 }: {
   site: PublicSite;
   token: string;
+  accountBooking?: boolean;
 }) {
   const offer = useQuery(api.ai.gapOptimizerHelpers.getPublicOffer, {
     orgId: site._id,
@@ -46,6 +48,7 @@ export function RecoveryOfferBooking({
       {offer ? (
         <BookingForm
           site={site}
+          accountBooking={accountBooking}
           initialServiceId={offer.serviceId}
           initialStaffId={offer.staffId}
           recoveryOffer={{ ...offer, token }}
@@ -59,7 +62,15 @@ export function RecoveryOfferBooking({
             </AlertDescription>
           </Alert>
           <Button asChild>
-            <Link href="/book">Прегледај други термини</Link>
+            <Link
+              href={
+                accountBooking
+                  ? `/book/${encodeURIComponent(site.slug)}`
+                  : "/book"
+              }
+            >
+              Прегледај други термини
+            </Link>
           </Button>
         </div>
       )}

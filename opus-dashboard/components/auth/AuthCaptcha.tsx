@@ -30,6 +30,7 @@ export function AuthCaptcha({
         {t(
           "Complete the security check to receive your code.",
           "Завршете ја безбедносната проверка за да го добиете кодот.",
+          "Përfundoni kontrollin e sigurisë për të marrë kodin tuaj.",
         )}
       </FieldDescription>
       <div ref={container} className="min-h-16 w-full" />

@@ -1,19 +1,27 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { ArrowLeftIcon, PencilIcon } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeftIcon } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { api } from "@/convex/_generated/api";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { StaffFormDialog } from "@/components/staff/StaffFormDialog";
+import { StaffAccountPanel } from "@/components/staff/StaffAccountPanel";
+import { StaffDetailsForm } from "@/components/staff/StaffDetailsForm";
 import { TimeOffSection } from "./TimeOffSection";
 import { WeeklySchedule } from "./WeeklySchedule";
 
@@ -31,7 +39,7 @@ export function StaffMemberWorkspace({
     api.staff.getStaffMember,
     orgId ? { orgId, staffId } : "skip",
   );
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const query = useSearchParams();
 
   if (profile === undefined || staffMember === undefined) {
     return (
@@ -53,25 +61,24 @@ export function StaffMemberWorkspace({
   if (!orgId || staffMember === null) {
     return (
       <div data-replay-public>
-        {t("Staff member not found.", "Вработениот не е пронајден.")}
+        {t(
+          "Staff member not found.",
+          "Вработениот не е пронајден.",
+          "Anëtari i stafit nuk u gjet.",
+        )}
       </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.18 }}
-      className="flex min-h-full w-full flex-1 flex-col gap-6"
-    >
+    <div className="flex min-h-full w-full flex-1 flex-col gap-6">
       <Link
         data-replay-public
         href="/beauty/services?tab=staff"
         className="flex w-fit items-center gap-2 rounded-sm text-sm font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
       >
         <ArrowLeftIcon className="size-4" />
-        {t("All staff", "Сите вработени")}
+        {t("All staff", "Сите вработени", "Gjithë stafi")}
       </Link>
 
       <header className="flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -98,8 +105,8 @@ export function StaffMemberWorkspace({
                 variant={staffMember.isActive ? "success" : "secondary"}
               >
                 {staffMember.isActive
-                  ? t("Active", "Активен")
-                  : t("Inactive", "Неактивен")}
+                  ? t("Active", "Активен", "Aktiv")
+                  : t("Inactive", "Неактивен", "Joaktiv")}
               </Badge>
               <span
                 data-replay-public
@@ -107,44 +114,78 @@ export function StaffMemberWorkspace({
               >
                 {staffMember.isActive
                   ? t(
-                      "Manage working hours and time off.",
-                      "Управувајте со работното време и отсуствата.",
+                      "Manage profile, login access and availability.",
+                      "Управувајте со профилот, пристапот и достапноста.",
+                      "Menaxhoni profilin, qasjen dhe disponueshmërinë.",
                     )
                   : t(
                       "Inactive staff cannot be booked.",
                       "Неактивните вработени не можат да бидат закажани.",
+                      "Stafi joaktiv nuk mund të rezervohet.",
                     )}
               </span>
             </div>
           </div>
         </div>
-
-        <Button
-          data-replay-public
-          variant="outline"
-          size="sm"
-          onClick={() => setIsEditOpen(true)}
-        >
-          <PencilIcon data-icon="inline-start" />
-          {t("Edit details", "Уреди детали")}
-        </Button>
       </header>
 
-      <div className="flex flex-col gap-6">
-        <WeeklySchedule orgId={orgId} staffId={staffId} />
-        <TimeOffSection orgId={orgId} staffId={staffId} />
-      </div>
-
-      {isEditOpen && (
-        <StaffFormDialog
-          orgId={orgId}
-          staffId={staffId}
-          open
-          canManageAppointmentEmail={profile?.role === "owner"}
-          onOpenChange={setIsEditOpen}
-        />
-      )}
-    </motion.div>
+      <Tabs
+        defaultValue={query.get("tab") === "hours" ? "hours" : "profile"}
+        className="min-w-0 gap-6"
+      >
+        <TabsList className="h-11 w-full sm:w-fit">
+          <TabsTrigger value="profile">
+            {t("Profile & login", "Профил и најава", "Profili dhe hyrja")}
+          </TabsTrigger>
+          <TabsTrigger value="hours">
+            {t("Hours", "Часови", "Orari")}
+          </TabsTrigger>
+          <TabsTrigger value="time-off">
+            {t("Time off", "Отсуства", "Pushimet")}
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="profile" className="m-0">
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {t(
+                    "Profile details",
+                    "Детали за профилот",
+                    "Detajet e profilit",
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {t(
+                    "The information shown on your booking website.",
+                    "Информации прикажани на страницата за закажување.",
+                    "Informacioni i shfaqur në faqen tuaj të rezervimit.",
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StaffDetailsForm orgId={orgId} staffId={staffId} />
+              </CardContent>
+            </Card>
+            {(profile?.role === "owner" || profile?.role === "manager") && (
+              <StaffAccountPanel
+                orgId={orgId}
+                staffId={staffId}
+                role={staffMember.role}
+                owner={profile.role === "owner"}
+                paid={profile.plan === "paid"}
+              />
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="hours" className="m-0">
+          <WeeklySchedule orgId={orgId} staffId={staffId} />
+        </TabsContent>
+        <TabsContent value="time-off" className="m-0">
+          <TimeOffSection orgId={orgId} staffId={staffId} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 

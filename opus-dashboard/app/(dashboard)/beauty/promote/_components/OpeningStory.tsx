@@ -135,6 +135,7 @@ export function OpeningStory({
             t(
               "Select an available appointment first.",
               "Прво изберете слободен термин.",
+              "Zgjidhni fillimisht një termin të lirë.",
             ),
           );
         const fresh = await convex.query(api.promotions.getOpenings, {
@@ -153,6 +154,7 @@ export function OpeningStory({
             t(
               "This opening has changed. Select a current appointment before downloading.",
               "Овој термин се промени. Изберете достапен термин пред преземање.",
+              "Ky termin ka ndryshuar. Zgjidhni një termin aktual para shkarkimit.",
             ),
           );
       }}
@@ -203,12 +205,14 @@ export function OpeningStoryEditor({
               {t(
                 "A free slot. A ready-to-share Story.",
                 "Слободен термин. Story подготвено за споделување.",
+                "Një termin i lirë. Një Story gati për t'u shpërndarë.",
               )}
             </CardTitle>
             <CardDescription data-replay-public>
               {t(
                 "Choose a service and an available time. Your Story includes the current price and specialist.",
                 "Изберете услуга и слободно време. Story ќе ги содржи тековната цена и специјалистот.",
+                "Zgjidhni një shërbim dhe një orar të disponueshëm. Story juaj përfshin çmimin aktual dhe specialistin.",
               )}
             </CardDescription>
           </CardHeader>
@@ -216,7 +220,7 @@ export function OpeningStoryEditor({
             <FieldGroup>
               <Field>
                 <FieldLabel data-replay-public htmlFor="story-service">
-                  {t("Service", "Услуга")}
+                  {t("Service", "Услуга", "Shërbimi")}
                 </FieldLabel>
                 <Select
                   value={serviceId || ""}
@@ -225,7 +229,7 @@ export function OpeningStoryEditor({
                 >
                   <SelectTrigger id="story-service" className="w-full">
                     <SelectValue
-                      placeholder={t("Choose a service", "Изберете услуга")}
+                      placeholder={t("Choose a service", "Изберете услуга", "Zgjidhni një shërbim")}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -241,7 +245,7 @@ export function OpeningStoryEditor({
               </Field>
               <Field>
                 <FieldLabel data-replay-public htmlFor="story-staff">
-                  {t("Specialist", "Специјалист")}
+                  {t("Specialist", "Специјалист", "Specialisti")}
                 </FieldLabel>
                 <Select
                   value={staffId}
@@ -257,6 +261,7 @@ export function OpeningStoryEditor({
                         {t(
                           "Any available specialist",
                           "Кој било слободен специјалист",
+                          "Çdo specialist i disponueshëm",
                         )}
                       </SelectItem>
                       {staff.map((person) => (
@@ -270,7 +275,7 @@ export function OpeningStoryEditor({
               </Field>
               <Field>
                 <FieldLabel data-replay-public htmlFor="story-date">
-                  {t("Date", "Датум")}
+                  {t("Date", "Датум", "Data")}
                 </FieldLabel>
                 <Input
                   id="story-date"
@@ -284,7 +289,7 @@ export function OpeningStoryEditor({
               </Field>
               <Field>
                 <FieldLabel data-replay-public>
-                  {t("Available times", "Слободни термини")}
+                  {t("Available times", "Слободни термини", "Orari i lirë")}
                 </FieldLabel>
                 {!data.published ? (
                   <p
@@ -294,6 +299,7 @@ export function OpeningStoryEditor({
                     {t(
                       "Available after your website is published.",
                       "Достапно откако ќе ја објавите веб-страницата.",
+                      "E disponueshme pasi faqja juaj të publikohet.",
                     )}
                   </p>
                 ) : !service ? (
@@ -304,6 +310,7 @@ export function OpeningStoryEditor({
                     {t(
                       "Add a public service and assign a specialist first.",
                       "Прво додајте јавна услуга и назначете специјалист.",
+                      "Shtoni fillimisht një shërbim publik dhe caktoni një specialist.",
                     )}
                   </p>
                 ) : slots === undefined ? (
@@ -322,12 +329,14 @@ export function OpeningStoryEditor({
                         {t(
                           "No openings for this selection",
                           "Нема слободни термини за овој избор",
+                          "Nuk ka termine të lira për këtë përzgjedhje",
                         )}
                       </EmptyTitle>
                       <EmptyDescription>
                         {t(
                           "Try another date, service, or specialist.",
                           "Пробајте друг датум, услуга или специјалист.",
+                          "Provoni një datë, shërbim ose specialist tjetër.",
                         )}
                       </EmptyDescription>
                     </EmptyHeader>
@@ -336,7 +345,7 @@ export function OpeningStoryEditor({
                   <div
                     className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto p-1 sm:grid-cols-4"
                     role="group"
-                    aria-label={t("Available times", "Слободни термини")}
+                    aria-label={t("Available times", "Слободни термини", "Orari i lirë")}
                   >
                     {slots.map((slot) => (
                       <button
@@ -365,6 +374,7 @@ export function OpeningStoryEditor({
               {t(
                 "Download the image, add it to your Instagram Story, then paste the booking link into a Link sticker. Sharing does not reserve the appointment.",
                 "Преземете ја сликата, додајте ја во Instagram Story и залепете го линкот за закажување во налепницата Link. Споделувањето не го резервира терминот.",
+                "Shkarkoni imazhin, shtojeni në Instagram Story dhe vendosni linkun e rezervimit në ngjitësen Link. Ndarja nuk e rezervon terminin.",
               )}
             </p>
           </CardContent>
@@ -425,12 +435,14 @@ export function OpeningStoryEditor({
               {t(
                 "Your Story starts with an opening",
                 "Вашето Story почнува со слободен термин",
+                "Story juaj fillon me një termin të lirë",
               )}
             </EmptyTitle>
             <EmptyDescription>
               {t(
                 "Select a time to preview the image your clients will see.",
                 "Изберете време за да ја видите сликата што ќе ја споделите со клиентите.",
+                "Zgjidhni një orar për të parë paraprakisht imazhin që do të shohin klientët tuaj.",
               )}
             </EmptyDescription>
           </EmptyHeader>

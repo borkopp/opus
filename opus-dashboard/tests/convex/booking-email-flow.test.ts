@@ -102,6 +102,8 @@ describe("public booking email flow", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-07T08:00:00Z"));
     t = createBackend();
     vi.stubEnv("SITE_URL", "http://localhost:3000");
     vi.stubEnv("BETTER_AUTH_SECRET", "test-booking-email-secret");
@@ -594,10 +596,15 @@ describe("public booking email flow", () => {
     const clientReminders = queued.filter(
       (notification) => notification.type === "booking_reminder",
     );
-    expect(staffNewBooking).toHaveLength(1);
-    expect(staffNewBooking[0].recipientAddress).toBe("manager@atelier.example");
-    expect(staffReminders).toHaveLength(1);
-    expect(staffReminders[0]).toMatchObject({
+    expect(staffNewBooking.map((n) => n.recipientAddress).sort()).toEqual([
+      "manager@atelier.example",
+      "owner@atelier.example",
+    ]);
+    expect(staffReminders).toHaveLength(2);
+    const managerReminder = staffReminders.find(
+      (n) => n.recipientAddress === "manager@atelier.example",
+    )!;
+    expect(managerReminder).toMatchObject({
       recipientAddress: "manager@atelier.example",
       templateData: expect.objectContaining({ hoursBefore: 2 }),
     });
@@ -606,7 +613,7 @@ describe("public booking email flow", () => {
       recipientAddress: "settings-client@example.com",
       templateData: expect.objectContaining({ hoursBefore: 24 }),
     });
-    expect(staffReminders[0].scheduledFor).toBe(
+    expect(managerReminder.scheduledFor).toBe(
       wallClockTimestampToInstant(
         fixture.slot.startAt,
         persistedSettings?.timezone ?? "Europe/Skopje",
@@ -639,7 +646,7 @@ describe("public booking email flow", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  test("emails a linked staff address only for that person's appointments", async () => {
+  test("uses the linked sign-in email for assigned appointments and stops delivery after revocation", async () => {
     const fixture = await setupPublishedStudio(t);
     const appointmentEmail = "ana.artist@example.com";
     const assignedStaffId = await fixture.owner.mutation(
@@ -649,8 +656,20 @@ describe("public booking email flow", () => {
         displayName: "Ana Artist",
         role: "staff",
         specialties: ["Treatments"],
-        appointmentEmail: ` ${appointmentEmail.toUpperCase()} `,
       },
+    );
+    const staffAccount = t.withIdentity({
+      subject: "assigned-ana",
+      email: appointmentEmail,
+      name: "Ana Artist",
+      emailVerified: true,
+    });
+    const accountUserId = await staffAccount.mutation(api.users.ensureUser);
+    await t.run((ctx) =>
+      ctx.db.patch(assignedStaffId, {
+        userId: accountUserId,
+        appointmentEmail: "retired-alias@example.com",
+      }),
     );
     await fixture.owner.mutation(api.services.updateService, {
       orgId: fixture.orgId,
@@ -714,8 +733,8 @@ describe("public booking email flow", () => {
         )
         .collect(),
     }));
-    expect(state.staff?.userId).toBeUndefined();
-    expect(state.staff?.appointmentEmail).toBe(appointmentEmail);
+    expect(state.staff?.userId).toBe(accountUserId);
+    expect(state.staff?.appointmentEmail).toBe("retired-alias@example.com");
     const staffEmails = state.notifications.filter((notification) =>
       ["staff_new_booking", "staff_booking_reminder"].includes(
         notification.type,
@@ -780,10 +799,9 @@ describe("public booking email flow", () => {
       expect.objectContaining({ recipientAddress: appointmentEmail }),
     ]);
 
-    await fixture.owner.mutation(api.staff.updateStaffMember, {
+    await fixture.owner.mutation(api.staff.revokeAccountAccess, {
       orgId: fixture.orgId,
       staffId: assignedStaffId,
-      appointmentEmail: null,
     });
     const reminder = staffEmails.find(
       (notification) => notification.type === "staff_booking_reminder",
@@ -794,6 +812,82 @@ describe("public booking email flow", () => {
         notificationId: reminder._id,
       }),
     ).resolves.toBe("cancelled");
+  });
+
+  test("accepting a staff invitation schedules reminders for appointments already assigned", async () => {
+    const fixture = await setupPublishedStudio(t);
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
+    const staffId = await fixture.owner.mutation(api.staff.createStaffMember, {
+      orgId: fixture.orgId,
+      displayName: "Invited Artist",
+      role: "staff",
+      specialties: [],
+    });
+    await fixture.owner.mutation(api.services.updateService, {
+      orgId: fixture.orgId,
+      serviceId: fixture.serviceId,
+      staffIds: [fixture.staffId, staffId],
+    });
+    await fixture.owner.mutation(api.availability.setAvailabilityRule, {
+      orgId: fixture.orgId,
+      staffId,
+      dayOfWeek: 1,
+      startTime: "09:00",
+      endTime: "17:00",
+      isActive: true,
+    });
+    await fixture.owner.mutation(
+      api.orgSettings.updateEmailNotificationSettings,
+      {
+        orgId: fixture.orgId,
+        customerReminderEmailEnabled: false,
+        customerReminderHoursBefore: [24],
+        staffNewBookingEmailEnabled: true,
+        staffReminderEmailEnabled: true,
+        staffReminderHoursBefore: [2],
+        staffEmailRecipientUserIds: [],
+      },
+    );
+    vi.setSystemTime(
+      wallClockTimestampToInstant(fixture.slot.startAt, "Europe/Belgrade") -
+        25 * 3_600_000,
+    );
+    const bookingId = await fixture.owner.mutation(
+      api.bookings.createManualBooking,
+      {
+        orgId: fixture.orgId,
+        staffId,
+        serviceIds: [fixture.serviceId],
+        startAt: fixture.slot.startAt,
+        customerName: "Existing Appointment",
+      },
+    );
+    const inviteId = await fixture.owner.mutation(api.staff.inviteStaffMember, {
+      orgId: fixture.orgId,
+      staffId,
+      email: "invited-artist@example.com",
+    });
+    const invite = (await t.run((ctx) => ctx.db.get(inviteId)))!;
+    const staff = t.withIdentity({
+      subject: "invited-artist",
+      email: invite.email,
+      emailVerified: true,
+    });
+    await staff.mutation(api.users.ensureUser);
+    await staff.mutation(api.staff.acceptStaffInvite, { token: invite.token });
+    await vi.advanceTimersByTimeAsync(0);
+    await t.finishInProgressScheduledFunctions();
+    const notifications = await t.run((ctx) =>
+      ctx.db
+        .query("notifications")
+        .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+        .collect(),
+    );
+    const assigned = notifications.filter((n) => n.bookingId === bookingId);
+    expect(assigned.filter((n) => n.type === "staff_booking_reminder")).toEqual(
+      [expect.objectContaining({ recipientAddress: invite.email })],
+    );
+    expect(assigned.some((n) => n.type === "staff_new_booking")).toBe(false);
   });
 
   test("emails the client when the studio reschedules even with client reminders disabled", async () => {

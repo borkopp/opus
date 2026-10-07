@@ -1,6 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { queueStaffPushEvent } from "../lib/staffPush";
 
 export async function logEvent(
   ctx: MutationCtx,
@@ -66,6 +67,11 @@ export async function handoff(
     staffId ? "staff" : "ai",
     staffId,
   );
+  await queueStaffPushEvent(ctx, {
+    orgId: conversation.orgId,
+    event: "ai_handoff",
+    conversationId: conversation._id,
+  });
 }
 
 export async function reserveReply(

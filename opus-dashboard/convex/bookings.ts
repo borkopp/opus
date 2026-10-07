@@ -10,19 +10,25 @@ import {
   query,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { requireAuth, requireRole } from "./lib/auth";
+import { cancelBookingRecord } from "./lib/bookingCancellation";
+import {
+  assertBookingAccess,
+  hasPersonalBookingAccess,
+  requireBookingAccess,
+} from "./lib/staffAccess";
 import type { Doc } from "./_generated/dataModel";
 import { computeFreeIntervalsForStaffDate } from "./slots";
 import {
   queueBookingNotifications,
   queueBookingRescheduledNotifications,
-  queueBookingSms,
 } from "./lib/bookingNotifications";
 import {
   formatBookingNotificationDateTime,
   wallClockNow,
 } from "./lib/bookingTime";
 import { rangeFitsFreeInterval } from "./lib/quickBooking";
+import { clientClaimUrl, createClientClaimToken } from "./lib/clientAccounts";
+import { normalizeBookingEmail } from "./lib/bookingEmailSecurity";
 
 function getPrimaryContact(
   customer: Doc<"customers">,
@@ -55,7 +61,7 @@ export const createBooking = mutation({
     aiConversationId: v.optional(v.id("ai_conversations")),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, args.orgId, "staff");
+    await requireBookingAccess(ctx, args.orgId, args.staffId);
     if (args.source !== "manual") {
       throw new ConvexError("Dashboard bookings must use the manual source.");
     }
@@ -275,7 +281,11 @@ export const createManualBooking = mutation({
     startAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const { staffMember: actor } = await requireRole(ctx, args.orgId, "staff");
+    const { staffMember: actor } = await requireBookingAccess(
+      ctx,
+      args.orgId,
+      args.staffId,
+    );
 
     const customerName = args.customerName.trim();
     const customerEmail = args.customerEmail?.trim().toLowerCase() || undefined;
@@ -477,12 +487,14 @@ export const createManualBooking = mutation({
     let surgePriceApplied = false;
     let surgeMultiplierPct: number | undefined;
     const timeStr = `${String(startDate.getUTCHours()).padStart(2, "0")}:${String(startDate.getUTCMinutes()).padStart(2, "0")}`;
-    const matchingRule = settings.surgeRules?.find(
-      (rule) =>
-        rule.dayOfWeek === startDate.getUTCDay() &&
-        timeStr >= rule.startTime &&
-        timeStr < rule.endTime,
-    );
+    const matchingRule = settings.surgePricingEnabled
+      ? settings.surgeRules?.find(
+          (rule) =>
+            rule.dayOfWeek === startDate.getUTCDay() &&
+            timeStr >= rule.startTime &&
+            timeStr < rule.endTime,
+        )
+      : undefined;
     if (matchingRule) {
       surgePriceApplied = true;
       surgeMultiplierPct = matchingRule.multiplierPct;
@@ -580,9 +592,11 @@ export const completeBooking = mutation({
     bookingId: v.id("bookings"),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const { staffMember } = auth;
 
     const booking = await ctx.db.get(args.bookingId);
+    if (booking) assertBookingAccess(auth, booking);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
     }
@@ -656,93 +670,20 @@ export const cancelBooking = mutation({
     reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const { staffMember } = auth;
     const booking = await ctx.db.get(args.bookingId);
+    if (booking) assertBookingAccess(auth, booking);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
     }
 
-    if (["cancelled", "completed", "no_show"].includes(booking.status)) {
-      throw new ConvexError(
-        `Cannot cancel booking already in terminal status: ${booking.status}`,
-      );
-    }
-
-    await ctx.db.patch(args.bookingId, {
-      status: "cancelled",
-      cancelledAt: Date.now(),
-      cancellationReason: args.reason,
-      cancelledBy: staffMember._id,
-      updatedAt: Date.now(),
-    });
-
-    await ctx.db.insert("audit_log", {
-      orgId: args.orgId,
-      actorType: "staff",
-      actorId: staffMember._id,
-      action: "booking.cancelled",
-      resourceType: "bookings",
-      resourceId: args.bookingId,
-      before: { status: booking.status },
-      after: { status: "cancelled", reason: args.reason },
-      createdAt: Date.now(),
-    });
-
-    const customer = await ctx.db.get(booking.customerId);
-    const service = await ctx.db.get(booking.serviceId);
-    const staff = await ctx.db.get(booking.staffId);
-    if (customer && service && staff) {
-      const orgSettings = await ctx.db
-        .query("org_settings")
-        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
-        .first();
-      if (customer.email) {
-        await ctx.runMutation(internal.notifications.scheduleNotification, {
-          orgId: args.orgId,
-          customerId: customer._id,
-          bookingId: booking._id,
-          channel: "email",
-          type: "booking_cancelled",
-          recipientAddress: customer.email,
-          templateData: {
-            customerName: customer.name,
-            serviceName: service.name,
-            staffName: staff.displayName,
-            startAt: booking.startAt,
-            cancellationPolicy: `${orgSettings?.cancellationWindowHours ?? 24} hours`,
-          },
-        });
-      }
-
-      const org = await ctx.db.get(args.orgId);
-      if (org && orgSettings)
-        await queueBookingSms(
-          ctx,
-          { org, settings: orgSettings, booking, customer, service, staff },
-          "booking_cancelled",
-        );
-
-      // Dashboard notification
-      const cancelDateLabel = formatBookingNotificationDateTime(
-        booking.startAt,
-      );
-      await ctx.runMutation(internal.dashboardNotifications.create, {
-        orgId: args.orgId,
-        type: "booking_cancelled",
-        title: "Booking Cancelled",
-        body: `The ${service.name} booking for ${customer.name} on ${cancelDateLabel} was cancelled`,
-        bookingId: booking._id,
-        customerId: customer._id,
-      });
-    }
-
-    await scheduleRecoveryRefresh(
+    return cancelBookingRecord(
       ctx,
-      args.orgId,
-      booking.staffId,
-      new Date(booking.startAt).toISOString().slice(0, 10),
+      booking,
+      { type: "staff", id: staffMember._id },
+      args.reason,
     );
-    return true;
   },
 });
 
@@ -752,9 +693,11 @@ export const markNoShow = mutation({
     bookingId: v.id("bookings"),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const { staffMember } = auth;
 
     const booking = await ctx.db.get(args.bookingId);
+    if (booking) assertBookingAccess(auth, booking);
     if (!booking || booking.orgId !== args.orgId || booking.isDeleted) {
       throw new ConvexError("Booking not found.");
     }
@@ -844,9 +787,11 @@ export const rescheduleBooking = mutation({
     newStartAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const { staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const { staffMember } = auth;
     // Find existing
     const oldBooking = await ctx.db.get(args.bookingId);
+    if (oldBooking) assertBookingAccess(auth, oldBooking);
     if (
       !oldBooking ||
       oldBooking.orgId !== args.orgId ||
@@ -922,6 +867,15 @@ export const rescheduleBooking = mutation({
       );
     }
 
+    const bookingCustomer = await ctx.db.get(oldBooking.customerId);
+    const claim =
+      !oldBooking.opusUserId &&
+      oldBooking.clientVerifiedEmail &&
+      bookingCustomer?.orgId === args.orgId &&
+      normalizeBookingEmail(bookingCustomer.email ?? "") ===
+        normalizeBookingEmail(oldBooking.clientVerifiedEmail)
+        ? await createClientClaimToken()
+        : null;
     const newBookingId = await ctx.db.insert("bookings", {
       orgId: args.orgId,
       staffId: oldBooking.staffId,
@@ -938,6 +892,13 @@ export const rescheduleBooking = mutation({
       source: oldBooking.source,
       aiConversationId: oldBooking.aiConversationId,
       opusUserId: oldBooking.opusUserId,
+      clientVerifiedEmail: oldBooking.clientVerifiedEmail,
+      ...(claim
+        ? {
+            clientClaimTokenHash: claim.hash,
+            clientClaimTokenExpiresAt: claim.expiresAt,
+          }
+        : {}),
       customerNote: oldBooking.customerNote,
       isDeleted: false,
       createdAt: Date.now(),
@@ -970,6 +931,9 @@ export const rescheduleBooking = mutation({
         priceMinorUnits: newBooking.priceMinorUnits,
       };
       await queueBookingRescheduledNotifications(ctx, {
+        ...(claim
+          ? { clientAccountUrl: clientClaimUrl(newBookingId, claim.token) }
+          : {}),
         org,
         settings,
         booking: newBooking,
@@ -1005,6 +969,8 @@ export const rescheduleBooking = mutation({
         body: `${customer.name}'s ${combinedService.name} with ${staff.displayName} was rescheduled to ${newAppointmentLabel}`,
         bookingId: newBookingId,
         customerId: oldBooking.customerId,
+        // The reschedule helper already queues the booking_changed push event.
+        queuePush: false,
       });
     }
 
@@ -1027,9 +993,14 @@ export const getBooking = query({
     bookingId: v.id("bookings"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(ctx, args.orgId);
     const b = await ctx.db.get(args.bookingId);
     if (!b || b.orgId !== args.orgId || b.isDeleted) return null;
+    if (
+      hasPersonalBookingAccess(auth.staffMember) &&
+      b.staffId !== auth.staffMember._id
+    )
+      return null;
     return b;
   },
 });
@@ -1042,42 +1013,39 @@ export const listBookingsByOrg = query({
     status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(ctx, args.orgId);
 
-    // Using by_org_start
-    const q = ctx.db.query("bookings");
-
-    let bookings;
-    if (args.fromDate && args.toDate) {
-      bookings = await q
-        .withIndex("by_org_start", (q) =>
-          q
-            .eq("orgId", args.orgId)
-            .gte("startAt", args.fromDate!)
-            .lte("startAt", args.toDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else if (args.fromDate) {
-      bookings = await q
-        .withIndex("by_org_start", (q) =>
-          q.eq("orgId", args.orgId).gte("startAt", args.fromDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else if (args.toDate) {
-      bookings = await q
-        .withIndex("by_org_start", (q) =>
-          q.eq("orgId", args.orgId).lte("startAt", args.toDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else {
-      bookings = await q
-        .withIndex("by_org_start", (q) => q.eq("orgId", args.orgId))
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    }
+    const personal = hasPersonalBookingAccess(auth.staffMember);
+    const indexed = personal
+      ? ctx.db.query("bookings").withIndex("by_org_staff_start", (q) => {
+          const staffQuery = q
+            .eq("orgId", auth.orgId)
+            .eq("staffId", auth.staffMember._id);
+          if (args.fromDate !== undefined && args.toDate !== undefined)
+            return staffQuery
+              .gte("startAt", args.fromDate)
+              .lte("startAt", args.toDate);
+          if (args.fromDate !== undefined)
+            return staffQuery.gte("startAt", args.fromDate);
+          if (args.toDate !== undefined)
+            return staffQuery.lte("startAt", args.toDate);
+          return staffQuery;
+        })
+      : ctx.db.query("bookings").withIndex("by_org_start", (q) => {
+          const orgQuery = q.eq("orgId", auth.orgId);
+          if (args.fromDate !== undefined && args.toDate !== undefined)
+            return orgQuery
+              .gte("startAt", args.fromDate)
+              .lte("startAt", args.toDate);
+          if (args.fromDate !== undefined)
+            return orgQuery.gte("startAt", args.fromDate);
+          if (args.toDate !== undefined)
+            return orgQuery.lte("startAt", args.toDate);
+          return orgQuery;
+        });
+    let bookings = (await indexed.collect()).filter(
+      (booking) => !booking.isDeleted,
+    );
     if (args.status) {
       bookings = bookings.filter((b) => b.status === args.status);
     }
@@ -1112,7 +1080,19 @@ export const listBookingsByOrg = query({
           service: services[0] ?? null,
           services,
           staff,
-          customer,
+          customer:
+            personal && customer
+              ? {
+                  _id: customer._id,
+                  _creationTime: customer._creationTime,
+                  orgId: customer.orgId,
+                  name: customer.name,
+                  email: customer.email,
+                  phone: customer.phone,
+                  avatarUrl: customer.avatarUrl,
+                  totalVisits: undefined,
+                }
+              : customer,
         };
       }),
     );
@@ -1129,41 +1109,24 @@ export const listBookingsByStaff = query({
     toDate: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
-
-    const q = ctx.db.query("bookings");
-    let bookings;
-    if (args.fromDate && args.toDate) {
-      bookings = await q
-        .withIndex("by_staff_start", (q) =>
-          q
-            .eq("staffId", args.staffId)
-            .gte("startAt", args.fromDate!)
-            .lte("startAt", args.toDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else if (args.fromDate) {
-      bookings = await q
-        .withIndex("by_staff_start", (q) =>
-          q.eq("staffId", args.staffId).gte("startAt", args.fromDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else if (args.toDate) {
-      bookings = await q
-        .withIndex("by_staff_start", (q) =>
-          q.eq("staffId", args.staffId).lte("startAt", args.toDate!),
-        )
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    } else {
-      bookings = await q
-        .withIndex("by_staff_start", (q) => q.eq("staffId", args.staffId))
-        .filter((q) => q.eq(q.field("isDeleted"), false))
-        .collect();
-    }
-    return bookings;
+    const auth = await requireBookingAccess(ctx, args.orgId, args.staffId);
+    return (
+      await ctx.db
+        .query("bookings")
+        .withIndex("by_org_staff_start", (q) => {
+          const indexed = q.eq("orgId", auth.orgId).eq("staffId", args.staffId);
+          if (args.fromDate !== undefined && args.toDate !== undefined)
+            return indexed
+              .gte("startAt", args.fromDate)
+              .lte("startAt", args.toDate);
+          if (args.fromDate !== undefined)
+            return indexed.gte("startAt", args.fromDate);
+          if (args.toDate !== undefined)
+            return indexed.lte("startAt", args.toDate);
+          return indexed;
+        })
+        .collect()
+    ).filter((booking) => !booking.isDeleted);
   },
 });
 
@@ -1173,15 +1136,27 @@ export const listBookingsByCustomer = query({
     customerId: v.id("customers"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const customer = await ctx.db.get(args.customerId);
+    if (!customer || customer.orgId !== auth.orgId || customer.isDeleted)
+      return [];
 
     const bookings = await ctx.db
       .query("bookings")
-      .withIndex("by_customer", (q) => q.eq("customerId", args.customerId))
+      .withIndex("by_org_customer_start", (q) =>
+        q.eq("orgId", auth.orgId).eq("customerId", args.customerId),
+      )
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 
-    return bookings.sort((a, b) => b.startAt - a.startAt).slice(0, 20);
+    return bookings
+      .filter(
+        (booking) =>
+          !hasPersonalBookingAccess(auth.staffMember) ||
+          booking.staffId === auth.staffMember._id,
+      )
+      .sort((a, b) => b.startAt - a.startAt)
+      .slice(0, 20);
   },
 });
 

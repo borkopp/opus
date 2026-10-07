@@ -2,6 +2,10 @@ import { v, ConvexError } from "convex/values";
 import { internalQuery, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
+import {
+  hasPersonalBookingAccess,
+  requireBookingAccess,
+} from "./lib/staffAccess";
 import { defaultQuickBookingDurationMins } from "./lib/orgSettingsValidation";
 import { buildQuickBookingSlots } from "./lib/quickBooking";
 import { BOOKING_NOTICE_MS } from "./lib/gapRecoveryRules";
@@ -233,11 +237,17 @@ export const getAvailableSlots = query({
     date: v.string(), // "YYYY-MM-DD"
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(
+      ctx,
+      args.orgId,
+      args.staffId === "any" ? undefined : args.staffId,
+    );
     return await computeSlotsForDate(
       ctx,
       args.orgId,
-      args.staffId,
+      hasPersonalBookingAccess(auth.staffMember)
+        ? auth.staffMember._id
+        : args.staffId,
       args.serviceId,
       args.date,
     );
@@ -301,7 +311,11 @@ export const getAvailableDates = query({
     month: v.string(), // "YYYY-MM"
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(
+      ctx,
+      args.orgId,
+      args.staffId === "any" ? undefined : args.staffId,
+    );
     const [year, m] = args.month.split("-").map(Number);
     const daysInMonth = new Date(Date.UTC(year, m, 0)).getDate();
 
@@ -316,7 +330,9 @@ export const getAvailableDates = query({
         computeSlotsForDate(
           ctx,
           args.orgId,
-          args.staffId,
+          hasPersonalBookingAccess(auth.staffMember)
+            ? auth.staffMember._id
+            : args.staffId,
           args.serviceId,
           dateStr,
         ).then((slots) => ({ date: dateStr, hasSlots: slots.length > 0 })),

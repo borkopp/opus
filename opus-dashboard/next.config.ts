@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.0.200"],
   experimental: { externalDir: true },
   // Shared TypeScript lives above this app. Keep that resolution root while
   // postcss.config.mjs and globals.css limit Tailwind to dashboard UI sources.

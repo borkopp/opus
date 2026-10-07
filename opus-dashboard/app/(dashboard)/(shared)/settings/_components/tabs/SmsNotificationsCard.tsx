@@ -48,6 +48,7 @@ export function SmsNotificationsCard({
         t(
           "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
           "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
+          "Vendosni deri në tetë kujtesa në orë të plota midis 1 dhe 336, për shembull 24, 2.",
         ),
       );
       return;
@@ -59,7 +60,7 @@ export function SmsNotificationsCard({
         smsEnabled: enabled,
         smsReminderHoursBefore: reminderHours,
       });
-      toast.success(t("SMS settings saved", "Поставките за SMS се зачувани"));
+      toast.success(t("SMS settings saved", "Поставките за SMS се зачувани", "Cilësimet e SMS u ruajtën"));
     } catch (cause) {
       toast.error(
         cause instanceof Error
@@ -67,6 +68,7 @@ export function SmsNotificationsCard({
           : t(
               "Could not save SMS settings.",
               "Не успеа зачувувањето на поставките за SMS.",
+              "Nuk mund të ruheshin cilësimet e SMS.",
             ),
       );
     } finally {
@@ -76,7 +78,7 @@ export function SmsNotificationsCard({
 
   return (
     <SettingsCard
-      title={t("SMS notifications", "SMS известувања")}
+      title={t("SMS notifications", "SMS известувања", "Njoftimet me SMS")}
       action={
         !isPaid && (
           <Badge data-replay-public variant="pro">
@@ -87,6 +89,7 @@ export function SmsNotificationsCard({
       description={t(
         "Send clients appointment confirmations, changes, cancellations, and reminders by SMS.",
         "Испраќајте SMS потврди, промени, откажувања и потсетници за термините на клиентите.",
+        "Dërgoni konfirmime, ndryshime, anulime dhe kujtesa të termineve për klientët me SMS.",
       )}
       contentClassName="flex flex-col gap-5"
       footer={
@@ -94,8 +97,8 @@ export function SmsNotificationsCard({
           <Button onClick={save} disabled={saving || (enabled && !available)}>
             {saving && <Spinner data-icon="inline-start" />}
             {saving
-              ? t("Saving…", "Се зачувува…")
-              : t("Save SMS settings", "Зачувај поставки за SMS")}
+              ? t("Saving…", "Се зачувува…", "Po ruhet…")
+              : t("Save SMS settings", "Зачувај поставки за SMS", "Ruaj cilësimet e SMS")}
           </Button>
         )
       }
@@ -105,6 +108,7 @@ export function SmsNotificationsCard({
           {t(
             "SMS notifications are included in Pro. Contact OPUS to upgrade and activate them for your studio.",
             "SMS известувањата се дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
+            "Njoftimet me SMS përfshihen në Pro. Kontaktoni me OPUS për ta përmirësuar dhe aktivizuar për studion tuaj.",
           )}
         </p>
       ) : (
@@ -113,15 +117,17 @@ export function SmsNotificationsCard({
             {t(
               "SMS delivery is awaiting activation. Contact OPUS to enable it for your studio.",
               "Испраќањето SMS чека активирање. Контактирајте нè за да го овозможиме за вашето студио.",
+              "Dërgimi i SMS-ve po pret aktivizimin. Kontaktoni me OPUS për ta mundësuar për studion tuaj.",
             )}
           </p>
         )
       )}
       <SettingsToggleRow
-        title={t("Client SMS notifications", "SMS известувања за клиенти")}
+        title={t("Client SMS notifications", "SMS известувања за клиенти", "Njoftimet me SMS për klientët")}
         description={t(
           "Uses the phone number saved with the appointment. Email settings stay independent.",
           "Го користи телефонскиот број зачуван со терминот. Поставките за е-пошта се независни.",
+          "Përdor numrin e telefonit të ruajtur me terminin. Cilësimet e email-it mbeten të pavarura.",
         )}
         control={
           <Switch
@@ -129,6 +135,7 @@ export function SmsNotificationsCard({
             aria-label={t(
               "Client SMS notifications",
               "SMS известувања за клиенти",
+              "Njoftimet me SMS për klientët",
             )}
             checked={isPaid && enabled}
             disabled={saving || !isPaid || (!available && !enabled)}
@@ -143,6 +150,7 @@ export function SmsNotificationsCard({
               {t(
                 "SMS reminder schedule (hours before)",
                 "Распоред за SMS потсетници (часови однапред)",
+                "Orari i kujtesave me SMS (orë përpara)",
               )}
             </FieldLabel>
             <Input
@@ -162,6 +170,7 @@ export function SmsNotificationsCard({
               {t(
                 "For example, 24, 2 sends reminders a day and two hours before. Leave empty to send only confirmations and appointment updates.",
                 "На пример, 24, 2 испраќа потсетници еден ден и два часа однапред. Оставете празно за да испраќате само потврди и промени на термините.",
+                "Për shembull, 24, 2 dërgon kujtesa një ditë dhe dy orë përpara. Lëreni bosh për të dërguar vetëm konfirmime dhe përditësime të termineve.",
               )}
             </FieldDescription>
             <FieldError>{error}</FieldError>

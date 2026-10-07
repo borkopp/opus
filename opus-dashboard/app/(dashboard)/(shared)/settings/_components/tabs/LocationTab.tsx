@@ -109,7 +109,11 @@ export function LocationTab({ initialData }: LocationTabProps) {
       toast.error(
         getErrorMessage(
           caught,
-          t("Location could not be saved.", "Локацијата не може да се зачува."),
+          t(
+            "Location could not be saved.",
+            "Локацијата не може да се зачува.",
+            "Vendndodhja nuk mund të ruhej.",
+          ),
         ),
       );
     }
@@ -121,6 +125,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
         t(
           "Confirm the map pin before saving.",
           "Потврдете ја точната локација на мапата пред да зачувате.",
+          "Konfirmoni gjilpërën në hartë para se të ruani.",
         ),
       );
       return;
@@ -135,12 +140,18 @@ export function LocationTab({ initialData }: LocationTabProps) {
         country: location.country,
         coordinates: location.coordinates,
       });
-      toast.success(t("Location saved", "Локацијата е зачувана"));
+      toast.success(
+        t("Location saved", "Локацијата е зачувана", "Vendndodhja u ruajt"),
+      );
     } catch (caught) {
       toast.error(
         getErrorMessage(
           caught,
-          t("Location could not be saved.", "Локацијата не може да се зачува."),
+          t(
+            "Location could not be saved.",
+            "Локацијата не може да се зачува.",
+            "Vendndodhja nuk mund të ruhej.",
+          ),
         ),
       );
     } finally {
@@ -156,10 +167,11 @@ export function LocationTab({ initialData }: LocationTabProps) {
   return (
     <TabsContent value="location" className="m-0">
       <SettingsCard
-        title={t("Business location", "Локација на бизнисот")}
+        title={t("Business location", "Локација на бизнисот", "Vendndodhja e biznesit")}
         description={t(
           "This confirmed address and map pin appear on your studio website and keep booking setup complete.",
           "Оваа потврдена адреса и точна локација на мапата се прикажуваат на веб-страницата на студиото и овозможуваат комплетно поставување на закажувањето.",
+          "Kjo adresë e konfirmuar dhe gjilpëra në hartë shfaqen në uebsajtin e studios suaj dhe e mbajnë konfigurimin e rezervimeve të plotë.",
         )}
         footer={
           <Button type="button" onClick={handleSave} disabled={isSaving}>
@@ -169,15 +181,15 @@ export function LocationTab({ initialData }: LocationTabProps) {
               <Save data-icon="inline-start" />
             )}
             {isSaving
-              ? t("Saving…", "Се зачувува…")
-              : t("Save location", "Зачувај локација")}
+              ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+              : t("Save location", "Зачувај локација", "Ruaj vendndodhjen")}
           </Button>
         }
       >
         <FieldGroup>
           <Field>
             <FieldLabel data-replay-public htmlFor="settings-address-search">
-              {t("Find an address", "Најди адреса")}
+              {t("Find an address", "Најди адреса", "Gjeni një adresë")}
             </FieldLabel>
             <div ref={searchContainerRef} className="relative">
               <InputGroup>
@@ -201,6 +213,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
                   placeholder={t(
                     "Search by street or venue",
                     "Пребарај по улица или објект",
+                    "Kërkoni sipas rrugës ose objektit",
                   )}
                   autoComplete="off"
                   aria-autocomplete="list"
@@ -213,6 +226,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
                       aria-label={t(
                         "Clear address search",
                         "Исчисти пребарување на адреса",
+                        "Pastro kërkimin e adresës",
                       )}
                       onClick={clearSearch}
                       size="icon-xs"
@@ -254,7 +268,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
 
           <Field>
             <FieldLabel data-replay-public>
-              {t("Exact map pin", "Точна позиција на мапата")}
+              {t("Exact map pin", "Точна позиција на мапата", "Pozicioni i saktë në hartë")}
             </FieldLabel>
             <LocationMapPicker
               coords={location.coordinates}
@@ -265,7 +279,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
           <div className="grid gap-5 sm:grid-cols-2">
             <Field className="sm:col-span-2">
               <FieldLabel data-replay-public htmlFor="settings-address">
-                {t("Street address", "Улица и број")}
+                {t("Street address", "Улица и број", "Adresa e rrugës")}
               </FieldLabel>
               <Input
                 id="settings-address"
@@ -275,7 +289,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-city">
-                {t("City", "Град")}
+                {t("City", "Град", "Qyteti")}
               </FieldLabel>
               <Input
                 id="settings-city"
@@ -285,7 +299,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-neighborhood">
-                {t("Neighborhood", "Населба")}
+                {t("Neighborhood", "Населба", "Lagjja")}
               </FieldLabel>
               <Input
                 id="settings-neighborhood"
@@ -295,7 +309,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-postal">
-                {t("Postal code", "Поштенски број")}
+                {t("Postal code", "Поштенски број", "Kodi postar")}
               </FieldLabel>
               <Input
                 id="settings-postal"
@@ -305,7 +319,7 @@ export function LocationTab({ initialData }: LocationTabProps) {
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-country">
-                {t("Country code", "Код на држава")}
+                {t("Country code", "Код на држава", "Kodi i shtetit")}
               </FieldLabel>
               <Input
                 id="settings-country"

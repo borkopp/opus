@@ -23,10 +23,11 @@ export function RecoveryWidget({
       replayPublicTitle
       delay={45}
       className="flex flex-col"
-      title={t("Opening recovery", "Пополнување слободни термини")}
+      title={t("Opening recovery", "Пополнување слободни термини", "Rikuperimi i hapësirave boshe")}
       subtitle={t(
         "A cancellation can become a booking",
         "Откажан термин може повторно да се пополни",
+        "Një anulim mund të bëhet një rezervim",
       )}
       action={
         !paid && (
@@ -42,12 +43,14 @@ export function RecoveryWidget({
             ? t(
                 `${summary?.openCount ?? "—"} openings to review`,
                 `${summary?.openCount ?? "—"} слободни термини за преглед`,
+                `${summary?.openCount ?? "—"} hapësira për shqyrtim`,
               )
             : null
         }
         description={t(
           "Review openings, choose a client, and share an invitation yourself.",
           "Прегледајте слободни термини, изберете клиент и испратете покана сами.",
+          "Shqyrtoni hapësirat e lira, zgjidhni një klient dhe ndani një ftesë vetë.",
         )}
         href={
           !paid
@@ -59,8 +62,8 @@ export function RecoveryWidget({
         external={!paid}
         actionLabel={
           paid
-            ? t("Review openings", "Прегледај слободни термини")
-            : t("Learn more", "Дознај повеќе")
+            ? t("Review openings", "Прегледај слободни термини", "Shqyrto hapësirat e lira")
+            : t("Learn more", "Дознај повеќе", "Mësoni më shumë")
         }
       />
     </WidgetFrame>

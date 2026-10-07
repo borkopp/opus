@@ -33,10 +33,12 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
           ? t(
               "Your booking website is ready",
               "Вашата страница за закажување е подготвена",
+              "Uebsajti juaj i rezervimeve është gati",
             )
           : t(
               "Start accepting online bookings",
               "Започнете со онлајн закажување",
+              "Filloni të pranoni rezervime në internet",
             )}
       </h2>
       <p
@@ -47,10 +49,12 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
           ? t(
               "Preview your website and publish your booking link.",
               "Прегледајте ја страницата и објавете го линкот за закажување.",
+              "Shikoni parapamjen e faqes suaj dhe publikoni linkun e rezervimit.",
             )
           : t(
               "Complete the next step to get your booking link. Photos and branding can wait.",
               "Завршете го следниот чекор за да го добиете линкот за закажување. Фотографии и лого можете да додадете подоцна.",
+              "Përfundoni hapin tjetër për të marrë linkun tuaj të rezervimit. Fotot dhe marka mund të presin.",
             )}
       </p>
       <Button
@@ -58,7 +62,7 @@ export function WebsiteBanner({ orgId }: { orgId: Id<"orgs"> }) {
         className="mt-auto min-h-12 h-auto w-full justify-between whitespace-normal text-left"
       >
         <Link data-replay-public href={next.href}>
-          {t(next.label[0], next.label[1])}
+          {t(next.label[0], next.label[1], next.label[2])}
           <ArrowRight data-icon="inline-end" />
         </Link>
       </Button>

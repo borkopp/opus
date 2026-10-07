@@ -61,6 +61,7 @@ export function ConversationPanel({
       question: t(
         "What was my weakest day last month?",
         "Кој ми беше најслабиот ден минатиот месец?",
+        "Cila ishte dita ime më e dobët muajin e kaluar?",
       ),
     },
     {
@@ -68,6 +69,7 @@ export function ConversationPanel({
       question: t(
         "How did last month compare with the month before?",
         "Каков беше минатиот месец во споредба со претходниот?",
+        "Si u krahasua muaji i kaluar me muajin para tij?",
       ),
     },
     {
@@ -75,6 +77,7 @@ export function ConversationPanel({
       question: t(
         "Which services had the most cancellations last month?",
         "Кои услуги имаа најмногу откажувања минатиот месец?",
+        "Cilat shërbime patën më shumë anulime muajin e kaluar?",
       ),
     },
     {
@@ -82,6 +85,7 @@ export function ConversationPanel({
       question: t(
         "How many of my clients returned last month?",
         "Колку од моите клиенти се вратија минатиот месец?",
+        "Sa nga klientët e mi u kthyen muajin e kaluar?",
       ),
     },
   ];
@@ -100,12 +104,17 @@ export function ConversationPanel({
             <ChartNoAxesCombined />
           </EmptyMedia>
           <EmptyTitle>
-            {t("Understand your studio", "Запознајте го вашето студио")}
+            {t(
+              "Understand your studio",
+              "Запознајте го вашето студио",
+              "Kuptoni studion tuaj",
+            )}
           </EmptyTitle>
           <EmptyDescription>
             {t(
               "Turn your appointment history into clear answers and practical next steps.",
               "Претворете ја историјата на термините во јасни одговори и практични следни чекори.",
+              "Ktheni historinë e termineve në përgjigje të qarta dhe hapa praktikë të radhës.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -155,6 +164,7 @@ export function ConversationPanel({
                         {t(
                           "OPUS · Business assistant",
                           "OPUS · Деловен асистент",
+                          "OPUS · Asistent biznesi",
                         )}
                       </MessageHeader>
                       {turn.status === "pending" ||
@@ -168,6 +178,7 @@ export function ConversationPanel({
                           {t(
                             "Reviewing your appointments…",
                             "Ги анализираме вашите термини…",
+                            "Duke shqyrtuar terminet tuaja…",
                           )}
                         </p>
                       ) : turn.status === "failed" ? (
@@ -181,7 +192,7 @@ export function ConversationPanel({
                               disabled={disabled}
                               onClick={() => onPrompt(turn.question)}
                             >
-                              {t("Ask again", "Прашајте повторно")}
+                              {t("Ask again", "Прашајте повторно", "Pyesni përsëri")}
                             </Button>
                           </AlertDescription>
                         </Alert>
@@ -217,7 +228,7 @@ export function ConversationPanel({
                                     {recommendation.evidence}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {t("Measure", "Измерете")}:{" "}
+                                    {t("Measure", "Измерете", "Matni")}:{" "}
                                     {recommendation.measurement}
                                   </p>
                                 </div>
@@ -248,7 +259,11 @@ export function ConversationPanel({
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton
-          aria-label={t("Go to latest answer", "До последниот одговор")}
+          aria-label={t(
+            "Go to latest answer",
+            "До последниот одговор",
+            "Shko te përgjigjja më e fundit",
+          )}
         />
       </MessageScroller>
     </MessageScrollerProvider>

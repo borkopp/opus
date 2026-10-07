@@ -92,7 +92,7 @@ export function BookingSidebar({
           data-replay-public
           className="font-display text-lg font-bold text-foreground"
         >
-          {t("Booking overview", "Преглед на термин")}
+          {t("Booking overview", "Преглед на термин", "Pamja e përgjithshme e terminit")}
         </h3>
         <p
           data-replay-public
@@ -101,6 +101,7 @@ export function BookingSidebar({
           {t(
             "Click on any appointment in the calendar to view details, client history, and manage the booking.",
             "Изберете термин во календарот за да ги видите деталите, историјата на клиентот и акциите.",
+            "Klikoni mbi çdo termin në kalendar për të parë detajet, historikun e klientit dhe menaxhuar rezervimin.",
           )}
         </p>
       </div>
@@ -108,7 +109,7 @@ export function BookingSidebar({
   }
 
   const { customer, staff, startAt, endAt, source, status } = booking;
-  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга"));
+  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbimi"));
   const theme = getServiceTheme(booking.service?.name || serviceName);
 
   const totalVisits = customer?.totalVisits ?? 0;
@@ -128,7 +129,7 @@ export function BookingSidebar({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
           >
             <IconCircleCheck className="size-3.5" />
-            {t("Completed", "Завршен")}
+            {t("Completed", "Завршен", "Përfunduar")}
           </span>
         );
       case "cancelled":
@@ -138,7 +139,7 @@ export function BookingSidebar({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border"
           >
             <IconX className="size-3.5" />
-            {t("Cancelled", "Откажан")}
+            {t("Cancelled", "Откажан", "Anuluar")}
           </span>
         );
       case "no_show":
@@ -148,7 +149,7 @@ export function BookingSidebar({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"
           >
             <IconAlertTriangle className="size-3.5" />
-            {t("No Show", "Не се појави")}
+            {t("No Show", "Не се појави", "Mosparaqitje")}
           </span>
         );
       case "confirmed":
@@ -159,7 +160,7 @@ export function BookingSidebar({
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
           >
             <span className="size-2 rounded-full bg-primary animate-pulse" />
-            {t("Confirmed", "Потврден")}
+            {t("Confirmed", "Потврден", "Konfirmuar")}
           </span>
         );
     }
@@ -197,7 +198,7 @@ export function BookingSidebar({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="truncate font-display text-base font-bold text-foreground">
-                {customer?.name ?? t("Unknown customer", "Непознат клиент")}
+                {customer?.name ?? t("Unknown customer", "Непознат клиент", "Klient i panjohur")}
               </h2>
               {totalVisits >= 5 && (
                 <span
@@ -216,8 +217,9 @@ export function BookingSidebar({
                   ? t(
                       `${totalVisits} previous ${totalVisits === 1 ? "visit" : "visits"}`,
                       `${totalVisits} ${totalVisits === 1 ? "претходна посета" : "претходни посети"}`,
+                      `${totalVisits} ${totalVisits === 1 ? "vizitë e mëparshme" : "vizita të mëparshme"}`,
                     )
-                  : t("New client", "Нов клиент")}
+                  : t("New client", "Нов клиент", "Klient i ri")}
               </span>
 
               {customer?.phone && (
@@ -260,7 +262,7 @@ export function BookingSidebar({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          aria-label={t("Close booking details", "Затвори детали за термин")}
+          aria-label={t("Close booking details", "Затвори детали за термин", "Mbyll detajet e terminit")}
           className="size-8 shrink-0 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <IconX className="size-4" />
@@ -307,7 +309,7 @@ export function BookingSidebar({
                   data-replay-public
                   className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block"
                 >
-                  {t("Price", "Цена")}
+                  {t("Price", "Цена", "Çmimi")}
                 </span>
                 <Price
                   amount={booking.priceMinorUnits}
@@ -320,10 +322,10 @@ export function BookingSidebar({
                   data-replay-public
                   className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground block"
                 >
-                  {t("Duration", "Времетраење")}
+                  {t("Duration", "Времетраење", "Kohëzgjatja")}
                 </span>
                 <span className="font-mono text-sm font-semibold text-foreground">
-                  {durationMins} {t("min", "мин")}
+                  {durationMins} {t("min", "мин", "min")}
                 </span>
               </div>
             </div>
@@ -336,7 +338,7 @@ export function BookingSidebar({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <IconCalendar className="size-3.5 text-primary" />
-                <span data-replay-public>{t("Date", "Датум")}</span>
+                <span data-replay-public>{t("Date", "Датум", "Data")}</span>
               </div>
               <p className="text-sm font-semibold text-foreground capitalize">
                 {formatBookingDate(startAt, locale)}
@@ -346,7 +348,7 @@ export function BookingSidebar({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <IconClock className="size-3.5 text-primary" />
-                <span data-replay-public>{t("Time slot", "Време")}</span>
+                <span data-replay-public>{t("Time slot", "Време", "Orari")}</span>
               </div>
               <p className="font-mono text-sm font-bold text-foreground tabular-nums">
                 {bookingTimeLabel(startAt)} – {bookingTimeLabel(endAt)}
@@ -359,7 +361,7 @@ export function BookingSidebar({
               data-replay-public
               className="text-xs font-medium text-muted-foreground"
             >
-              {t("Specialist", "Специјалист")}
+              {t("Specialist", "Специјалист", "Specialist")}
             </span>
             <div className="flex items-center gap-2">
               <div className="size-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold overflow-hidden">
@@ -377,7 +379,7 @@ export function BookingSidebar({
                 )}
               </div>
               <span className="text-sm font-bold text-foreground">
-                {staff?.displayName ?? t("Staff member", "Член на тим")}
+                {staff?.displayName ?? t("Staff member", "Член на тим", "Anëtar i stafit")}
               </span>
             </div>
           </div>
@@ -389,7 +391,7 @@ export function BookingSidebar({
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-200 mb-1.5">
               <IconMessageCircle2 className="size-4 text-amber-600 dark:text-amber-400" />
               <span data-replay-public>
-                {t("Customer note", "Белешка од клиент")}
+                {t("Customer note", "Белешка од клиент", "Shënim nga klienti")}
               </span>
             </div>
             <p className="text-sm leading-relaxed text-foreground italic font-medium">
@@ -409,7 +411,7 @@ export function BookingSidebar({
                 data-replay-public
                 className="text-xs font-bold text-foreground flex items-center gap-1.5"
               >
-                {t("AI-assisted booking", "Закажано преку AI Рецепција")}
+                {t("AI-assisted booking", "Закажано преку AI Рецепција", "Rezervim i asistuar nga AI")}
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary uppercase">
                   {source?.replace("ai_", "")}
                 </span>
@@ -421,6 +423,7 @@ export function BookingSidebar({
                 {t(
                   "Appointment confirmed via automated assistant chat with customer.",
                   "Терминот е автоматски потврден преку дигиталниот асистент.",
+                  "Termini u konfirmua përmes bisedës automatike me asistentin me klientin.",
                 )}
               </p>
             </div>
@@ -455,7 +458,7 @@ export function BookingSidebar({
               disabled={!onComplete || isUpdating}
             >
               <IconCircleCheck className="size-4" />
-              {t("Complete booking", "Заврши термин")}
+              {t("Complete booking", "Заврши термин", "Përfundo terminin")}
             </Button>
 
             <div className="grid grid-cols-2 gap-2">
@@ -468,7 +471,7 @@ export function BookingSidebar({
                 disabled={!onMarkNoShow || isUpdating}
               >
                 <IconUserX className="size-3.5" />
-                {t("No-show", "Не се појави")}
+                {t("No-show", "Не се појави", "Mosparaqitje")}
               </Button>
               <Button
                 data-replay-public
@@ -491,8 +494,8 @@ export function BookingSidebar({
               >
                 <IconX className="size-3.5" />
                 {confirmingCancel
-                  ? t("Confirm cancel?", "Сигурно?")
-                  : t("Cancel", "Откажи")}
+                  ? t("Confirm cancel?", "Сигурно?", "Konfirmo anulimin?")
+                  : t("Cancel", "Откажи", "Anulo")}
               </Button>
             </div>
           </div>
@@ -509,8 +512,8 @@ export function BookingSidebar({
         >
           <IconCalendarClock className="size-4 text-primary" />
           {showReschedule
-            ? t("Close rescheduler", "Затвори презакажување")
-            : t("Reschedule appointment", "Презакажи термин")}
+            ? t("Close rescheduler", "Затвори презакажување", "Mbyll ripërcaktimin")
+            : t("Reschedule appointment", "Презакажи термин", "Ripërcakto terminin")}
         </Button>
       </div>
     </div>
@@ -551,12 +554,12 @@ function ReschedulePanel({
         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
           <IconClock className="size-4 text-primary" />
           <span data-replay-public>
-            {t("Choose a new time", "Изберете ново време")}
+            {t("Choose a new time", "Изберете ново време", "Zgjidhni një kohë të re")}
           </span>
         </div>
         <span className="font-mono text-[11px] font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
           {Math.round((booking.endAt - booking.startAt) / 60_000)}{" "}
-          {t("min", "мин")}
+          {t("min", "мин", "min")}
         </span>
       </div>
 
@@ -565,7 +568,7 @@ function ReschedulePanel({
           variant="ghost"
           size="icon"
           className="size-7"
-          aria-label={t("Previous day", "Претходен ден")}
+          aria-label={t("Previous day", "Претходен ден", "Dita e mëparshme")}
           onClick={() => {
             const previousDate = addDays(bookingDate, -1);
             if (!isBefore(previousDate, startOfDay(new Date()))) {
@@ -583,7 +586,7 @@ function ReschedulePanel({
           variant="ghost"
           size="icon"
           className="size-7"
-          aria-label={t("Next day", "Следен ден")}
+          aria-label={t("Next day", "Следен ден", "Dita tjetër")}
           onClick={() => {
             onDateChange(addDays(bookingDate, 1));
             setSelectedStartAt(null);
@@ -603,6 +606,7 @@ function ReschedulePanel({
               aria-label={t(
                 `Select ${bookingTimeLabel(slot.startAt)}`,
                 `Избери ${bookingTimeLabel(slot.startAt)}`,
+                `Zgjidh ${bookingTimeLabel(slot.startAt)}`,
               )}
               className={cn(
                 "rounded-lg border px-1 py-1.5 font-mono text-[11px] font-bold transition-all",
@@ -620,7 +624,7 @@ function ReschedulePanel({
             data-replay-public
             className="py-3 text-center text-xs text-muted-foreground"
           >
-            {t("Loading available times…", "Вчитување слободни термини…")}
+            {t("Loading available times…", "Вчитување слободни термини…", "Duke ngarkuar terminet e lira…")}
           </p>
         )}
         {availableSlots?.length === 0 && (
@@ -631,6 +635,7 @@ function ReschedulePanel({
             {t(
               "No available times on this date.",
               "Нема слободни термини на овој датум.",
+              "Nuk ka termine të lira në këtë datë.",
             )}
           </p>
         )}
@@ -643,7 +648,7 @@ function ReschedulePanel({
         disabled={!selectedStartAt}
         onClick={handleConfirm}
       >
-        {t("Confirm new time", "Потврди ново време")}
+        {t("Confirm new time", "Потврди ново време", "Konfirmo kohën e re")}
       </Button>
     </div>
   );

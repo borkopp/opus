@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { RecoveryOfferBooking } from "@/components/public-site/RecoveryOfferBooking";
-import { BookingForm } from "@/components/public-site/BookingForm";
-import { PublicSiteFrame } from "@/components/public-site/PublicSiteFrame";
-import { getPublicSite } from "@/lib/public-site-server";
+import { notFound, redirect } from "next/navigation";
+import { centralBookingUrl, getPublicSite } from "@/lib/public-site-server";
 import { tenantSiteUrl } from "@/lib/tenant-sites";
-import { promotionTimestamp } from "@/lib/promotions";
 
 export const dynamic = "force-dynamic";
 
@@ -48,29 +44,5 @@ export default async function PublicBookingPage({
   const site = await getPublicSite(slug);
   if (!site) notFound();
 
-  const offerToken = typeof query.offer === "string" ? query.offer : undefined;
-  const requestedService = Array.isArray(query.service)
-    ? query.service[0]
-    : query.service;
-  const requestedStaff = Array.isArray(query.staff)
-    ? query.staff[0]
-    : query.staff;
-
-  return (
-    <PublicSiteFrame site={site} mode="booking">
-      {offerToken ? (
-        <RecoveryOfferBooking site={site} token={offerToken} />
-      ) : (
-        <BookingForm
-          site={site}
-          initialServiceId={requestedService}
-          initialStaffId={requestedStaff}
-          initialDate={typeof query.date === "string" ? query.date : undefined}
-          sharedOpeningStartAt={promotionTimestamp(
-            typeof query.at === "string" ? query.at : undefined,
-          )}
-        />
-      )}
-    </PublicSiteFrame>
-  );
+  redirect(await centralBookingUrl(site.slug, query));
 }

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "runtimes": {
+    "1.0.0": {
+      "appVersion": "1.0.0",
+      "nativeSignature": "1d653d54a1b5a99a21fd5d6bdbf1f3c52a45774bac4d8e99430506531e4a66ab",
+      "inputs": {
+        "app.json native config": "0e2637ad8936cde437b89d64139d1fe1ded68c6f6125d7365171f3f475b2312e",
+        "package.json dependencies": "cac9590cb28ed3561e82531ab2bd7062c3520c327edc07278cfe50109157afb7",
+        "package-lock.json production graph": "91647b234186eb2ee5fcccffb832abb31dfd1a076cc402aa6c8ff8424893c503",
+        "app.config.js": "0fa6e3031355ef2b4fef1f07ec7e77b580d6daa1600d9490e935b9d3d530fed7",
+        "assets/adaptive-icon.png": "8949b63062e36e1addc90ad3ce8bdc483fc8e484203aac0468e486a5826adfaf",
+        "assets/favicon.png": "ed04c8d38e34f8e6550d2c3f4a1abe0b476a782c767596eaa1746ac76c2fe1a9",
+        "assets/icon.png": "0a8af012efa3c42375481971f81cdda87fd51145c6fecd0eafe42e287bf82978",
+        "assets/monochrome-icon.png": "a524cc9c413acc76e5993d59e7d18f5f394083733d9d3e367dded23cc3f56dbb",
+        "assets/notification-icon.png": "5b4e5b265eb841ee685c5dedcd937b39d291911d6d1644a6b3a5f787a5fb9a27",
+        "assets/opus-mark.svg": "7a1c7e04014c1d6d33a68080ad4fb889e07d9fabce1888739977a530b4eafdeb",
+        "assets/play-feature-graphic.png": "f99c5544ddf623354d1346c2bca6a490b18730945c89a000ff83096bec461bea",
+        "assets/splash-icon.png": "3a605a32f26fad95493fc47f206e14dc0436fb98c9d00f317b58ac160d0f9124"
+      },
+      "builds": {
+        "preview-simulator:ios": {
+          "id": "3666a3a4-b05d-45db-b8dc-6c380d40a5c2",
+          "completedAt": "2026-10-06T15:33:45.663Z",
+          "appBuildVersion": "2",
+          "isForIosSimulator": true
+        },
+        "production:ios": {
+          "id": "7a63e785-fb99-46e7-8adb-607acfdea436",
+          "completedAt": "2026-10-06T15:59:53.919Z",
+          "appBuildVersion": "5",
+          "isForIosSimulator": false
+        },
+        "preview:ios": {
+          "id": "eb15e371-2813-4eeb-aad2-25486f3a6bb2",
+          "completedAt": "2026-10-06T15:47:22.121Z",
+          "appBuildVersion": "4",
+          "isForIosSimulator": false
+        }
+      }
+    },
+    "1.0.1": {
+      "appVersion": "1.0.1",
+      "nativeSignature": "5b8813be21930560d3f7d9bacc40357d3fe8cc19a2007c8fb86ab2746c3ff195",
+      "inputs": {
+        "app.json native config": "e4c94902c352cd1860cb6f37371c97a7206d8efbbdab8447d06cc334ae18ff80",
+        "package.json dependencies": "25ad00bcac5b5bc46b48843d36f4778951fb18bde48316627b9fa9256d0aa0b5",
+        "package-lock.json production graph": "8cbcd2bbeb8d12f897d2c8fc528ebfcbf5ac7f3026da829fe10f0e077dfb98cd",
+        "app.config.js": "0fa6e3031355ef2b4fef1f07ec7e77b580d6daa1600d9490e935b9d3d530fed7",
+        "assets/adaptive-icon.png": "8949b63062e36e1addc90ad3ce8bdc483fc8e484203aac0468e486a5826adfaf",
+        "assets/favicon.png": "ed04c8d38e34f8e6550d2c3f4a1abe0b476a782c767596eaa1746ac76c2fe1a9",
+        "assets/icon.png": "0a8af012efa3c42375481971f81cdda87fd51145c6fecd0eafe42e287bf82978",
+        "assets/monochrome-icon.png": "a524cc9c413acc76e5993d59e7d18f5f394083733d9d3e367dded23cc3f56dbb",
+        "assets/notification-icon.png": "5b4e5b265eb841ee685c5dedcd937b39d291911d6d1644a6b3a5f787a5fb9a27",
+        "assets/opus-mark.svg": "7a1c7e04014c1d6d33a68080ad4fb889e07d9fabce1888739977a530b4eafdeb",
+        "assets/play-feature-graphic.png": "f99c5544ddf623354d1346c2bca6a490b18730945c89a000ff83096bec461bea",
+        "assets/splash-icon.png": "3a605a32f26fad95493fc47f206e14dc0436fb98c9d00f317b58ac160d0f9124"
+      },
+      "builds": {}
+    },
+    "1.0.2": {
+      "appVersion": "1.0.2",
+      "nativeSignature": "73df32533dfbd5613b915a0d89759125c073ee4854a2ca3983285ab3783e590f",
+      "inputs": {
+        "app.json native config": "954111881b3aaf6ccf8b3a89f8495a267bcf3c3202c759319ef0e632d1934ce9",
+        "package.json dependencies": "1f359b43592eddf3c574592e0a29fad0076ea906f2eb23a55f994c49483ae0b3",
+        "package-lock.json production graph": "6d49b174d3515e205f5478ae84bf19189f64cff4851a0fb8897fbba93540649c",
+        "app.config.js": "0fa6e3031355ef2b4fef1f07ec7e77b580d6daa1600d9490e935b9d3d530fed7",
+        "assets/adaptive-icon.png": "8949b63062e36e1addc90ad3ce8bdc483fc8e484203aac0468e486a5826adfaf",
+        "assets/favicon.png": "ed04c8d38e34f8e6550d2c3f4a1abe0b476a782c767596eaa1746ac76c2fe1a9",
+        "assets/icon.png": "0a8af012efa3c42375481971f81cdda87fd51145c6fecd0eafe42e287bf82978",
+        "assets/monochrome-icon.png": "a524cc9c413acc76e5993d59e7d18f5f394083733d9d3e367dded23cc3f56dbb",
+        "assets/notification-icon.png": "5b4e5b265eb841ee685c5dedcd937b39d291911d6d1644a6b3a5f787a5fb9a27",
+        "assets/opus-mark.svg": "7a1c7e04014c1d6d33a68080ad4fb889e07d9fabce1888739977a530b4eafdeb",
+        "assets/play-feature-graphic.png": "f99c5544ddf623354d1346c2bca6a490b18730945c89a000ff83096bec461bea",
+        "assets/splash-icon.png": "3a605a32f26fad95493fc47f206e14dc0436fb98c9d00f317b58ac160d0f9124"
+      },
+      "builds": {
+        "production:ios": {
+          "id": "60d913d3-bed0-4322-9441-dc40e3e089aa",
+          "completedAt": "2026-10-07T03:29:56.044Z",
+          "appBuildVersion": "7",
+          "isForIosSimulator": false
+        },
+        "preview-simulator:ios": {
+          "id": "14f0ba47-41c1-4c0a-86f6-ff7bea94d265",
+          "completedAt": "2026-10-07T03:41:01.593Z",
+          "appBuildVersion": "7",
+          "isForIosSimulator": true
+        }
+      }
+    },
+    "1.0.3": {
+      "appVersion": "1.0.3",
+      "nativeSignature": "dc76dac7cf451843ae06aad8f038f44e84afc6468f39fac64bcd29107b009066",
+      "inputs": {
+        "app.json native config": "954111881b3aaf6ccf8b3a89f8495a267bcf3c3202c759319ef0e632d1934ce9",
+        "package.json dependencies": "5dbb346a95b42912f0305afe52df077c42e9eb9305bfe809d98c9bb4d3e98467",
+        "package-lock.json production graph": "243e5c49762688f5ca615f964dfebb55d33a18feae5d1095cb163f3008da5410",
+        "app.config.js": "0fa6e3031355ef2b4fef1f07ec7e77b580d6daa1600d9490e935b9d3d530fed7",
+        "assets/adaptive-icon.png": "8949b63062e36e1addc90ad3ce8bdc483fc8e484203aac0468e486a5826adfaf",
+        "assets/favicon.png": "ed04c8d38e34f8e6550d2c3f4a1abe0b476a782c767596eaa1746ac76c2fe1a9",
+        "assets/icon.png": "0a8af012efa3c42375481971f81cdda87fd51145c6fecd0eafe42e287bf82978",
+        "assets/monochrome-icon.png": "a524cc9c413acc76e5993d59e7d18f5f394083733d9d3e367dded23cc3f56dbb",
+        "assets/notification-icon.png": "5b4e5b265eb841ee685c5dedcd937b39d291911d6d1644a6b3a5f787a5fb9a27",
+        "assets/opus-mark.svg": "7a1c7e04014c1d6d33a68080ad4fb889e07d9fabce1888739977a530b4eafdeb",
+        "assets/play-feature-graphic.png": "f99c5544ddf623354d1346c2bca6a490b18730945c89a000ff83096bec461bea",
+        "assets/splash-icon.png": "3a605a32f26fad95493fc47f206e14dc0436fb98c9d00f317b58ac160d0f9124"
+      },
+      "builds": {
+        "preview-simulator:ios": {
+          "id": "98090136-39ab-4f05-aef5-8076b91ed5c7",
+          "completedAt": "2026-10-07T04:08:08.763Z",
+          "appBuildVersion": "7",
+          "isForIosSimulator": true
+        },
+        "production:ios": {
+          "id": "dc2999de-84f7-429c-9fe0-a3d5737dce74",
+          "completedAt": "2026-10-07T04:15:02.230Z",
+          "appBuildVersion": "8",
+          "isForIosSimulator": false
+        }
+      }
+    }
+  }
+}

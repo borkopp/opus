@@ -11,14 +11,14 @@ export function AppointmentsMetric({ data }: { data: OverviewData }) {
     <Appear as="article" delay={35} className={s.metricCard}>
       <div data-appear="item" className={s.metricTop}>
         <span data-replay-public>
-          {t("Today’s appointments", "Денешни термини")}
+          {t("Today’s appointments", "Денешни термини", "Terminet e sotme")}
         </span>
         <CalendarDays size={18} />
       </div>
       <div data-appear="item" style={appearStep(2)} className={s.metricValue}>
         {data.todayCount}
         <span data-replay-public className={s.metricBadge}>
-          {t("On the calendar", "На календарот")}
+          {t("On the calendar", "На календарот", "Në kalendar")}
         </span>
       </div>
       <div data-appear="item" style={appearStep(4)} className={s.metricFoot}>
@@ -40,6 +40,7 @@ export function AppointmentsMetric({ data }: { data: OverviewData }) {
           {t(
             `Across your ${data.staff.length} team members`,
             `Со ${data.staff.length} членови на тимот`,
+            `Në të gjithë ${data.staff.length} anëtarët e ekipit`,
           )}
         </span>
       </div>

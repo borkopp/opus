@@ -86,7 +86,11 @@ export function IdentityProfileTab({
   const handleSave = async () => {
     if (!branding.name.trim()) {
       toast.error(
-        t("Business name is required.", "Името на бизнисот е задолжително."),
+        t(
+          "Business name is required.",
+          "Името на бизнисот е задолжително.",
+          "Emri i biznesit është i detyrueshëm.",
+        ),
       );
       return;
     }
@@ -104,13 +108,21 @@ export function IdentityProfileTab({
         websiteUrl: branding.websiteUrl.trim() || undefined,
       });
       toast.success(
-        t("Business profile saved", "Профилот на бизнисот е зачуван"),
+        t(
+          "Business profile saved",
+          "Профилот на бизнисот е зачуван",
+          "Profili i biznesit u ruajt",
+        ),
       );
     } catch (error) {
       toast.error(
         getErrorMessage(
           error,
-          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+          t(
+            "Changes could not be saved.",
+            "Промените не може да се зачуваат.",
+            "Ndryshimet nuk mund të ruheshin.",
+          ),
         ),
       );
     } finally {
@@ -144,7 +156,9 @@ export function IdentityProfileTab({
         );
         const logoUrl = await updateLogo({ orgId, storageId });
         setBranding((current) => ({ ...current, logoUrl }));
-        toast.success(t("Logo updated", "Логото е ажурирано"));
+        toast.success(
+          t("Logo updated", "Логото е ажурирано", "Logoja u përditësua"),
+        );
       } catch (error) {
         toast.error(
           getErrorMessage(
@@ -152,6 +166,7 @@ export function IdentityProfileTab({
             t(
               "Changes could not be saved.",
               "Промените не може да се зачуваат.",
+              "Ndryshimet nuk mund të ruheshin.",
             ),
           ),
         );
@@ -164,12 +179,18 @@ export function IdentityProfileTab({
     try {
       await removeLogo({ orgId });
       setBranding((current) => ({ ...current, logoUrl: "" }));
-      toast.success(t("Logo removed", "Логото е отстрането"));
+      toast.success(
+        t("Logo removed", "Логото е отстрането", "Logoja u hoq"),
+      );
     } catch (error) {
       toast.error(
         getErrorMessage(
           error,
-          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+          t(
+            "Changes could not be saved.",
+            "Промените не може да се зачуваат.",
+            "Ndryshimet nuk mund të ruheshin.",
+          ),
         ),
       );
     }
@@ -181,6 +202,7 @@ export function IdentityProfileTab({
         t(
           `Maximum of ${galleryPhotoLimit} gallery photos reached.`,
           `Достигнат е максимумот од ${galleryPhotoLimit} фотографии во галеријата.`,
+          `U arrit maksimumi prej ${galleryPhotoLimit} fotosh në galeri.`,
         ),
       );
       return;
@@ -195,10 +217,12 @@ export function IdentityProfileTab({
             ? t(
                 `You can only add up to 1 more gallery photo (maximum ${galleryPhotoLimit}).`,
                 `Може да додадете уште најмногу 1 фотографија во галеријата (максимум ${galleryPhotoLimit}).`,
+                `Mund të shtoni vetëm deri në 1 foto tjetër në galeri (maksimumi ${galleryPhotoLimit}).`,
               )
             : t(
                 `You can only add up to ${remainingSlots} more gallery photos (maximum ${galleryPhotoLimit}).`,
                 `Може да додадете уште најмногу ${remainingSlots} фотографии во галеријата (максимум ${galleryPhotoLimit}).`,
+                `Mund të shtoni vetëm deri në ${remainingSlots} foto të tjera në galeri (maksimumi ${galleryPhotoLimit}).`,
               ),
         );
         files = files.slice(0, remainingSlots);
@@ -218,8 +242,16 @@ export function IdentityProfileTab({
         }
         toast.success(
           type === "cover"
-            ? t("Cover updated", "Насловната слика е ажурирана")
-            : t("Gallery updated", "Галеријата е ажурирана"),
+            ? t(
+                "Cover updated",
+                "Насловната слика е ажурирана",
+                "Kopertina u përditësua",
+              )
+            : t(
+                "Gallery updated",
+                "Галеријата е ажурирана",
+                "Galeria u përditësua",
+              ),
         );
       } catch (error) {
         toast.error(
@@ -228,6 +260,7 @@ export function IdentityProfileTab({
             t(
               "Changes could not be saved.",
               "Промените не може да се зачуваат.",
+              "Ndryshimet nuk mund të ruheshin.",
             ),
           ),
         );
@@ -240,12 +273,18 @@ export function IdentityProfileTab({
   const handleRemove = async (mediaId: Id<"org_media">) => {
     try {
       await removeMedia({ orgId, mediaId });
-      toast.success(t("Photo removed", "Фотографијата е отстранета"));
+      toast.success(
+        t("Photo removed", "Фотографијата е отстранета", "Fotoja u hoq"),
+      );
     } catch (error) {
       toast.error(
         getErrorMessage(
           error,
-          t("Changes could not be saved.", "Промените не може да се зачуваат."),
+          t(
+            "Changes could not be saved.",
+            "Промените не може да се зачуваат.",
+            "Ndryshimet nuk mund të ruheshin.",
+          ),
         ),
       );
     }
@@ -258,20 +297,25 @@ export function IdentityProfileTab({
     <TabsContent value="branding" className="m-0">
       <div className="flex flex-col gap-6">
         <SettingsCard
-          title={t("Storefront images", "Слики за страницата")}
+          title={t(
+            "Storefront images",
+            "Слики за страницата",
+            "Fotot e faqes kryesore",
+          )}
           description={t(
             "Your logo and cover are shared by onboarding, Settings, and opus.mk.",
             "Вашето лого и насловна слика се користат при воведот, во Поставки и на opus.mk.",
+            "Logoja dhe kopertina juaj ndahen midis regjistrimit, Cilësimeve dhe opus.mk.",
           )}
           contentClassName="grid gap-6 md:grid-cols-[208px_1fr]"
         >
           <div className="flex flex-col gap-3">
-            <FieldLabel data-replay-public>{t("Logo", "Лого")}</FieldLabel>
+            <FieldLabel data-replay-public>{t("Logo", "Лого", "Logo")}</FieldLabel>
             <div className="group relative flex h-52 w-52 max-w-full aspect-square flex-col justify-end overflow-hidden rounded-2xl border bg-secondary md:w-full">
               {branding.logoUrl ? (
                 <Image
                   src={branding.logoUrl}
-                  alt={t("Business logo", "Лого на бизнисот")}
+                  alt={t("Business logo", "Лого на бизнисот", "Logoja e biznesit")}
                   fill
                   unoptimized
                   className="object-cover"
@@ -295,7 +339,7 @@ export function IdentityProfileTab({
                     variant="destructive"
                     onClick={handleRemoveLogo}
                     disabled={uploading === "logo"}
-                    aria-label={t("Remove logo", "Отстрани лого")}
+                    aria-label={t("Remove logo", "Отстрани лого", "Hiq logon")}
                   >
                     <Trash2 data-icon="inline-start" />
                   </Button>
@@ -309,23 +353,27 @@ export function IdentityProfileTab({
                 >
                   {uploading === "logo" && <Spinner data-icon="inline-start" />}
                   {uploading === "logo"
-                    ? t("Uploading…", "Се прикачува…")
+                    ? t("Uploading…", "Се прикачува…", "Duke ngarkuar…")
                     : branding.logoUrl
-                      ? t("Replace", "Замени")
-                      : t("Upload logo", "Прикачи лого")}
+                      ? t("Replace", "Замени", "Zëvendëso")
+                      : t("Upload logo", "Прикачи лого", "Ngarko logo")}
                 </Button>
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-3">
             <FieldLabel data-replay-public>
-              {t("Cover photo", "Насловна слика")}
+              {t("Cover photo", "Насловна слика", "Fotoja e kopertinës")}
             </FieldLabel>
             <div className="group relative flex h-52 w-full flex-col justify-end overflow-hidden rounded-2xl border bg-secondary">
               {cover ? (
                 <Image
                   src={cover.url}
-                  alt={t("Business cover", "Насловна слика на бизнисот")}
+                  alt={t(
+                    "Business cover",
+                    "Насловна слика на бизнисот",
+                    "Kopertina e biznesit",
+                  )}
                   fill
                   unoptimized
                   className="object-cover"
@@ -349,7 +397,11 @@ export function IdentityProfileTab({
                     variant="destructive"
                     onClick={() => handleRemove(cover._id)}
                     disabled={uploading === "cover"}
-                    aria-label={t("Remove cover", "Отстрани насловна слика")}
+                    aria-label={t(
+                      "Remove cover",
+                      "Отстрани насловна слика",
+                      "Hiq kopertinën",
+                    )}
                   >
                     <Trash2 data-icon="inline-start" />
                   </Button>
@@ -365,10 +417,14 @@ export function IdentityProfileTab({
                     <Spinner data-icon="inline-start" />
                   )}
                   {uploading === "cover"
-                    ? t("Uploading…", "Се прикачува…")
+                    ? t("Uploading…", "Се прикачува…", "Duke ngarkuar…")
                     : cover
-                      ? t("Replace", "Замени")
-                      : t("Upload cover", "Прикачи насловна слика")}
+                      ? t("Replace", "Замени", "Zëvendëso")
+                      : t(
+                          "Upload cover",
+                          "Прикачи насловна слика",
+                          "Ngarko kopertinë",
+                        )}
                 </Button>
               </div>
             </div>
@@ -376,10 +432,11 @@ export function IdentityProfileTab({
         </SettingsCard>
 
         <SettingsCard
-          title={t("Identity and contact", "Идентитет и контакт")}
+          title={t("Identity and contact", "Идентитет и контакт", "Identiteti dhe kontakti")}
           description={t(
             "Customer-facing information used across the booking experience.",
             "Информации видливи за клиентите при процесот на закажување.",
+            "Informacione për klientët që përdoren gjatë procesit të rezervimit.",
           )}
           footer={
             <Button type="button" onClick={handleSave} disabled={isSaving}>
@@ -389,15 +446,15 @@ export function IdentityProfileTab({
                 <Save data-icon="inline-start" />
               )}
               {isSaving
-                ? t("Saving…", "Се зачувува…")
-                : t("Save profile", "Зачувај профил")}
+                ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+                : t("Save profile", "Зачувај профил", "Ruaj profilin")}
             </Button>
           }
         >
           <FieldGroup>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-name">
-                {t("Business name", "Име на бизнис")}
+                {t("Business name", "Име на бизнис", "Emri i biznesit")}
               </FieldLabel>
               <Input
                 id="settings-name"
@@ -407,7 +464,7 @@ export function IdentityProfileTab({
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-tagline">
-                {t("Tagline", "Краток опис")}
+                {t("Tagline", "Краток опис", "Sllogani")}
               </FieldLabel>
               <Input
                 id="settings-tagline"
@@ -417,7 +474,7 @@ export function IdentityProfileTab({
             </Field>
             <Field>
               <FieldLabel data-replay-public htmlFor="settings-bio">
-                {t("About", "За нас")}
+                {t("About", "За нас", "Rreth nesh")}
               </FieldLabel>
               <Textarea
                 id="settings-bio"
@@ -428,7 +485,7 @@ export function IdentityProfileTab({
             <div className="grid gap-5 sm:grid-cols-2">
               <Field>
                 <FieldLabel data-replay-public htmlFor="settings-phone">
-                  {t("Phone", "Телефон")}
+                  {t("Phone", "Телефон", "Telefoni")}
                 </FieldLabel>
                 <Input
                   id="settings-phone"
@@ -438,10 +495,11 @@ export function IdentityProfileTab({
               </Field>
               <Field>
                 <FieldLabel data-replay-public htmlFor="settings-instagram">
-                  {t("Instagram", "Instagram")}
+                  {t("Instagram", "Instagram", "Instagram")}
                 </FieldLabel>
                 <Input
                   id="settings-instagram"
+                  placeholder="@yourstudio"
                   value={branding.instagramHandle}
                   onChange={(event) =>
                     update("instagramHandle", event.target.value)
@@ -451,7 +509,7 @@ export function IdentityProfileTab({
 
               <Field>
                 <FieldLabel data-replay-public htmlFor="settings-website">
-                  {t("Website", "Веб-страница")}
+                  {t("Website", "Веб-страница", "Uebsajti")}
                 </FieldLabel>
                 <Input
                   id="settings-website"
@@ -464,10 +522,11 @@ export function IdentityProfileTab({
         </SettingsCard>
 
         <SettingsCard
-          title={t("Gallery", "Галерија")}
+          title={t("Gallery", "Галерија", "Galeria")}
           description={t(
             "Optional photos of your space, team, or work.",
             "Изборни фотографии од вашиот простор, тим или изработени третмани.",
+            "Foto opsionale të ambientit tuaj, ekipit ose punës.",
           )}
           action={
             <span className="rounded-full border border-border/80 bg-secondary/80 px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
@@ -499,6 +558,7 @@ export function IdentityProfileTab({
                   aria-label={t(
                     "Remove gallery photo",
                     "Отстрани фотографија од галерија",
+                    "Hiq foton nga galeria",
                   )}
                 >
                   <Trash2 data-icon="inline-start" />
@@ -520,7 +580,7 @@ export function IdentityProfileTab({
                       data-replay-public
                       className="text-xs font-medium text-muted-foreground"
                     >
-                      {t("Uploading…", "Се прикачува…")}
+                      {t("Uploading…", "Се прикачува…", "Duke ngarkuar…")}
                     </span>
                   </>
                 ) : (
@@ -532,7 +592,7 @@ export function IdentityProfileTab({
                       data-replay-public
                       className="text-xs font-medium text-muted-foreground group-hover:text-foreground"
                     >
-                      {t("Add photo", "Додај фотографија")}
+                      {t("Add photo", "Додај фотографија", "Shto foto")}
                     </span>
                   </>
                 )}
@@ -543,6 +603,7 @@ export function IdentityProfileTab({
             {t(
               "Images are soft-deleted so audit history remains intact.",
               "Сликите се бришат со меко бришење за историјата на ревизија да остане непроменета.",
+              "Imazhet fshihen butësisht në mënyrë që historiku i auditimit të mbetet i paprekur.",
             )}
           </FieldDescription>
         </SettingsCard>

@@ -14,10 +14,11 @@ export function AssistantWidget() {
       replayPublicTitle
       delay={0}
       className="flex flex-col"
-      title={t("Business assistant", "Деловен асистент")}
+      title={t("Business assistant", "Деловен асистент", "Asistenti i biznesit")}
       subtitle={t(
         "A clearer view of your studio",
         "Појасен поглед на вашето студио",
+        "Një pamje më e qartë e studios suaj",
       )}
       action={
         access?.paid === false && (
@@ -30,14 +31,15 @@ export function AssistantWidget() {
       <FeatureCardContent
         status={
           !access
-            ? t("Checking availability…", "Се проверува достапноста…")
+            ? t("Checking availability…", "Се проверува достапноста…", "Po kontrollohet disponueshmëria…")
             : !access.paid
               ? null
               : !access.configured
-                ? t("Temporarily unavailable", "Привремено недостапно")
+                ? t("Temporarily unavailable", "Привремено недостапно", "Përkohësisht e padisponueshme")
                 : t(
                     `${access.remaining} answers available`,
                     `${access.remaining} достапни одговори`,
+                    `${access.remaining} përgjigje të disponueshme`,
                   )
         }
         description={
@@ -45,10 +47,12 @@ export function AssistantWidget() {
             ? t(
                 "New analyses are unavailable. Your saved reports are still here.",
                 "Новите анализи се недостапни. Зачуваните извештаи се тука.",
+                "Analizat e reja nuk janë të disponueshme. Raportet tuaja të ruajtura janë ende këtu.",
               )
             : t(
                 "Explore appointment trends, service performance, and client visits.",
                 "Анализирајте ги трендовите на термините, услугите и посетите на клиентите.",
+                "Eksploroni prirjet e termineve, performancën e shërbimeve dhe vizitat e klientëve.",
               )
         }
         href={
@@ -59,8 +63,8 @@ export function AssistantWidget() {
         external={!!access && !access.paid}
         actionLabel={
           access && !access.paid
-            ? t("Learn more", "Дознај повеќе")
-            : t("Open assistant", "Отвори асистент")
+            ? t("Learn more", "Дознај повеќе", "Mësoni më shumë")
+            : t("Open assistant", "Отвори асистент", "Hap asistentin")
         }
       />
     </WidgetFrame>

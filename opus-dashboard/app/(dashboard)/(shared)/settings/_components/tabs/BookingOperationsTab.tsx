@@ -46,32 +46,40 @@ const FIELD_CONFIG: Array<{
   id: string;
   labelEn: string;
   labelMk: string;
+  labelSq: string;
   unitEn: string;
   unitMk: string;
+  unitSq: string;
   field: Fields;
   min: number;
   max: number;
   descriptionEn: string;
   descriptionMk: string;
+  descriptionSq: string;
 }> = [
   {
     id: "slot-duration",
     labelEn: "Slot duration",
     labelMk: "Времетраење на термин",
+    labelSq: "Kohëzgjatja e orarit",
     unitEn: "minutes",
     unitMk: "минути",
+    unitSq: "minuta",
     field: "slotDurationMins",
     min: 1,
     max: 480,
     descriptionEn: "The smallest interval customers can book.",
     descriptionMk: "Најмалиот интервал што клиентите можат да го закажат.",
+    descriptionSq: "Intervali më i vogël që klientët mund të rezervojnë.",
   },
   {
     id: "quick-booking-duration",
     labelEn: "Quick booking",
     labelMk: "Брзо закажување",
+    labelSq: "Rezervim i shpejtë",
     unitEn: "minutes",
     unitMk: "минути",
+    unitSq: "minuta",
     field: "quickBookingDurationMins",
     min: 1,
     max: 480,
@@ -79,42 +87,53 @@ const FIELD_CONFIG: Array<{
       "Preferred duration shown when you hover an available calendar slot.",
     descriptionMk:
       "Претпочитано времетраење што се прикажува при посочување на слободен термин во календарот.",
+    descriptionSq:
+      "Kohëzgjatja e preferuar e shfaqur kur kaloni kursorin mbi një orar të lirë në kalendar.",
   },
   {
     id: "buffer-time",
     labelEn: "Buffer time",
     labelMk: "Пауза меѓу термини",
+    labelSq: "Koha e pushimit",
     unitEn: "minutes",
     unitMk: "минути",
+    unitSq: "minuta",
     field: "bufferTimeMins",
     min: 0,
     max: 240,
     descriptionEn: "Time kept free after every appointment.",
     descriptionMk: "Слободно време по секој термин за подготовка.",
+    descriptionSq: "Koha e mbajtur e lirë pas çdo termini.",
   },
   {
     id: "booking-window",
     labelEn: "Advance booking limit",
     labelMk: "Ограничување за закажување однапред",
+    labelSq: "Kufiri i rezervimit paraprak",
     unitEn: "days",
     unitMk: "денови",
+    unitSq: "ditë",
     field: "bookingWindowDays",
     min: 1,
     max: 730,
     descriptionEn: "How far ahead customers may book.",
     descriptionMk: "Колку однапред клиентите можат да закажат термин.",
+    descriptionSq: "Sa kohë përpara mund të rezervojnë klientët.",
   },
   {
     id: "cancellation-window",
     labelEn: "Cancellation notice",
     labelMk: "Рок за откажување",
+    labelSq: "Njoftimi i anulimit",
     unitEn: "hours",
     unitMk: "часови",
+    unitSq: "orë",
     field: "cancellationWindowHours",
     min: 1,
     max: 8760,
     descriptionEn: "Minimum notice required for a customer cancellation.",
     descriptionMk: "Минимален рок за најава за откажување од страна на клиент.",
+    descriptionSq: "Njoftimi minimal i kërkuar për anulim nga klienti.",
   },
 ];
 
@@ -168,6 +187,7 @@ export function BookingOperationsTab({
       nextErrors.slotDurationMins = t(
         "Enter a whole number between 1 and 480.",
         "Внесете цел број помеѓу 1 и 480.",
+        "Vendosni një numër të plotë midis 1 dhe 480.",
       );
     }
     if (
@@ -180,6 +200,7 @@ export function BookingOperationsTab({
       nextErrors.quickBookingDurationMins = t(
         `Use a whole-number multiple of the ${bookingRules.slotDurationMins} minute slot duration, up to 480 minutes.`,
         `Користете цел број што е содржател на времетраењето на терминот од ${bookingRules.slotDurationMins} минути, до 480 минути.`,
+        `Përdorni një numër të plotë që është shumëfish i kohëzgjatjes së orarit prej ${bookingRules.slotDurationMins} minutash, deri në 480 minuta.`,
       );
     }
     if (
@@ -189,6 +210,7 @@ export function BookingOperationsTab({
       nextErrors.bookingWindowDays = t(
         "Enter a whole number between 1 and 730.",
         "Внесете цел број помеѓу 1 и 730.",
+        "Vendosni një numër të plotë midis 1 dhe 730.",
       );
     }
     if (
@@ -198,6 +220,7 @@ export function BookingOperationsTab({
       nextErrors.cancellationWindowHours = t(
         "Enter a whole number between 1 and 8,760.",
         "Внесете цел број помеѓу 1 и 8.760.",
+        "Vendosni një numër të plotë midis 1 dhe 8.760.",
       );
     }
     if (
@@ -207,6 +230,7 @@ export function BookingOperationsTab({
       nextErrors.bufferTimeMins = t(
         "Enter 0 or a whole number up to 240.",
         "Внесете 0 или цел број до 240.",
+        "Vendosni 0 ose një numër të plotë deri në 240.",
       );
     }
     return nextErrors;
@@ -237,7 +261,11 @@ export function BookingOperationsTab({
       });
       if (isMounted.current) {
         toast.success(
-          t("Booking rules saved", "Правилата за закажување се зачувани"),
+          t(
+            "Booking rules saved",
+            "Правилата за закажување се зачувани",
+            "Rregullat e rezervimit u ruajtën",
+          ),
         );
       }
     } catch (error) {
@@ -248,6 +276,7 @@ export function BookingOperationsTab({
             : t(
                 "Failed to save booking rules.",
                 "Не успеа зачувувањето на правилата за закажување.",
+                "Dështoi ruajtja e rregullave të rezervimit.",
               ),
         );
       }
@@ -257,12 +286,17 @@ export function BookingOperationsTab({
   };
 
   return (
-    <TabsContent value="booking" className="m-0">
+    <TabsContent value="booking" className="m-0 flex flex-col gap-6">
       <SettingsCard
-        title={t("Booking rules", "Правила за закажување")}
+        title={t(
+          "Booking rules",
+          "Правила за закажување",
+          "Rregullat e rezervimit",
+        )}
         description={t(
           "Control calendar quick booking, appointment intervals, cancellation notice, and breathing room between bookings.",
           "Управувајте со брзото закажување во календарот, интервалите на термини, рокот за откажување и паузите меѓу третмани.",
+          "Menaxhoni rezervimin e shpejtë në kalendar, intervalet e termineve, njoftimin e anulimit dhe kohën e pushimit midis rezervimeve.",
         )}
         footer={
           <Button onClick={handleSave} disabled={isSaving}>
@@ -272,8 +306,12 @@ export function BookingOperationsTab({
               <Save data-icon="inline-start" />
             )}
             {isSaving
-              ? t("Saving…", "Се зачувува…")
-              : t("Save booking rules", "Зачувај правила за закажување")}
+              ? t("Saving…", "Се зачувува…", "Po ruhet…")
+              : t(
+                  "Save booking rules",
+                  "Зачувај правила за закажување",
+                  "Ruaj rregullat e rezervimit",
+                )}
           </Button>
         }
       >
@@ -284,8 +322,8 @@ export function BookingOperationsTab({
               data-invalid={Boolean(errors[config.field])}
             >
               <FieldLabel htmlFor={config.id}>
-                {t(config.labelEn, config.labelMk)} (
-                {t(config.unitEn, config.unitMk)})
+                {t(config.labelEn, config.labelMk, config.labelSq)} (
+                {t(config.unitEn, config.unitMk, config.unitSq)})
               </FieldLabel>
               <DebouncedInput
                 id={config.id}
@@ -304,7 +342,11 @@ export function BookingOperationsTab({
                 }}
               />
               <FieldDescription id={`${config.id}-description`}>
-                {t(config.descriptionEn, config.descriptionMk)}
+                {t(
+                  config.descriptionEn,
+                  config.descriptionMk,
+                  config.descriptionSq,
+                )}
               </FieldDescription>
               <FieldError>{errors[config.field]}</FieldError>
             </Field>

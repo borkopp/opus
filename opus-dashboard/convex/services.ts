@@ -2,6 +2,10 @@ import { scheduleRecoveryRefresh } from "./lib/gapRecovery";
 import { v, ConvexError } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
+import {
+  hasPersonalBookingAccess,
+  requireBookingAccess,
+} from "./lib/staffAccess";
 import { internal } from "./_generated/api";
 import { supportedCurrency } from "./lib/orgSettingsValidation";
 
@@ -12,7 +16,7 @@ export const listServices = query({
     isActive: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(ctx, args.orgId);
 
     const q = ctx.db
       .query("services")
@@ -22,7 +26,11 @@ export const listServices = query({
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 
-    let filtered = services;
+    let filtered = hasPersonalBookingAccess(auth.staffMember)
+      ? services.filter((service) =>
+          service.staffIds.includes(auth.staffMember._id),
+        )
+      : services;
     if (args.categoryId !== undefined) {
       filtered = filtered.filter((s) => s.categoryId === args.categoryId);
     }
@@ -40,11 +48,16 @@ export const getService = query({
     serviceId: v.id("services"),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx, args.orgId);
+    const auth = await requireBookingAccess(ctx, args.orgId);
     const service = await ctx.db.get(args.serviceId);
     if (!service || service.orgId !== args.orgId || service.isDeleted) {
       return null;
     }
+    if (
+      hasPersonalBookingAccess(auth.staffMember) &&
+      !service.staffIds.includes(auth.staffMember._id)
+    )
+      return null;
     return service;
   },
 });
@@ -422,6 +435,7 @@ export const reorderServices = mutation({
 export const getOrgSettings = query({
   args: { orgId: v.id("orgs") },
   handler: async (ctx, args) => {
+    await requireAuth(ctx, args.orgId);
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))

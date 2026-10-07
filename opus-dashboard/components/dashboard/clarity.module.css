@@ -6,7 +6,7 @@
   --sage: #dce9df;
   --peach: #f2e2d7;
   min-height: 100dvh;
-  background: var(--studio-frame);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-dm-sans), sans-serif;
   font-size: 14px;
@@ -61,14 +61,12 @@
   scroll-margin-top: 88px;
 }
 .stage {
-  padding: 30px 30px 10px;
-  min-height: calc(100dvh - 68px);
+  min-height: 100dvh;
 }
 .dashboard {
   overflow: clip;
   background: var(--background);
-  border-radius: 32px;
-  box-shadow: 0 12px 60px #1d284107;
+  min-height: 100dvh;
 }
 /* Bookings owns the viewport; only the schedule canvas scrolls. */
 .viewportShell {
@@ -194,6 +192,15 @@
   flex-shrink: 0;
   color: #746253;
   background: var(--peach);
+  overflow: hidden;
+  position: relative;
+}
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 .scope [data-tone="peach"] {
   background: var(--peach);
@@ -1204,9 +1211,6 @@
   }
 }
 @media (max-width: 1250px) {
-  .stage {
-    padding: 22px 22px 10px;
-  }
   .topbar {
     padding: 25px var(--dashboard-gutter);
     gap: 16px;
@@ -1362,12 +1366,6 @@
   }
 }
 @media (max-width: 760px) {
-  .stage {
-    padding: 16px 16px 0;
-  }
-  .dashboard {
-    border-radius: 25px;
-  }
   .topbar {
     padding: 23px var(--dashboard-gutter) 18px;
     gap: 20px;
@@ -1517,9 +1515,6 @@
   }
 }
 @media (max-width: 520px) {
-  .stage {
-    padding: 12px 12px 0;
-  }
   .topbar {
     padding: 21px var(--dashboard-gutter) 17px;
     gap: 18px;

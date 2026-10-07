@@ -11,10 +11,12 @@ export function PublicSiteFrame({
   site,
   children,
   mode = "site",
+  studioHref = "/",
 }: {
   site: PublicSite;
   children: React.ReactNode;
   mode?: "site" | "booking";
+  studioHref?: string;
 }) {
   return (
     <div
@@ -23,7 +25,7 @@ export function PublicSiteFrame({
       <header className="sticky top-0 z-30 border-b border-border/70 bg-background/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
-            href="/"
+            href={studioHref}
             className="flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-card">

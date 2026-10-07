@@ -17,6 +17,7 @@ export type RenderedEmail = {
 };
 
 export type AppointmentEmailData = {
+  clientAccountUrl?: string;
   studioName: string;
   customerName: string;
   customerEmail?: string;
@@ -413,6 +414,14 @@ export function renderClientConfirmationEmail(
       mk ? "Додај во календар" : "Add to calendar",
       true,
     ),
+    ...(data.clientAccountUrl
+      ? [
+          button(
+            data.clientAccountUrl,
+            mk ? "Зачувај во OPUS сметка" : "Save to your OPUS account",
+          ),
+        ]
+      : []),
     ...(maps ? [button(maps, mk ? "Насоки" : "Directions")] : []),
     ...(call ? [button(call, mk ? "Јавете се" : "Call studio")] : []),
   ].join("");
@@ -435,7 +444,7 @@ export function renderClientConfirmationEmail(
       studioName: data.studioName,
       content,
     }),
-    text: `${mk ? "Терминот е потврден." : "Your appointment is confirmed."}\n\n${appointmentText(data)}\n\n${mk ? "Додај во календар" : "Add to calendar"}: ${calendarUrl(data)}${maps ? `\n${mk ? "Насоки" : "Directions"}: ${maps}` : ""}${call ? `\n${mk ? "Телефон" : "Phone"}: ${data.studioPhone}` : ""}`,
+    text: `${mk ? "Терминот е потврден." : "Your appointment is confirmed."}\n\n${appointmentText(data)}\n\n${mk ? "Додај во календар" : "Add to calendar"}: ${calendarUrl(data)}${maps ? `\n${mk ? "Насоки" : "Directions"}: ${maps}` : ""}${call ? `\n${mk ? "Телефон" : "Phone"}: ${data.studioPhone}` : ""}${data.clientAccountUrl ? `\n\n${mk ? "Зачувај во OPUS сметка" : "Save to your OPUS account"}: ${data.clientAccountUrl}` : ""}`,
     attachments: [calendarAttachment(data)],
   };
 }
@@ -494,6 +503,14 @@ export function renderClientRescheduledEmail(
       mk ? "Додај нов термин" : "Add new time to calendar",
       true,
     ),
+    ...(data.clientAccountUrl
+      ? [
+          button(
+            data.clientAccountUrl,
+            mk ? "Зачувај во OPUS сметка" : "Save to your OPUS account",
+          ),
+        ]
+      : []),
     ...(maps ? [button(maps, mk ? "Насоки" : "Directions")] : []),
     ...(call ? [button(call, mk ? "Јавете се" : "Call studio")] : []),
   ].join("");
@@ -525,7 +542,7 @@ export function renderClientRescheduledEmail(
       studioName: data.studioName,
       content,
     }),
-    text: `${mk ? "Терминот е презакажан." : "Your appointment was rescheduled."}\n\n${previousText}${mk ? "Нов термин" : "New time"}:\n${appointmentText(data)}`,
+    text: `${mk ? "Терминот е презакажан." : "Your appointment was rescheduled."}\n\n${previousText}${mk ? "Нов термин" : "New time"}:\n${appointmentText(data)}${data.clientAccountUrl ? `\n\n${mk ? "Зачувај во OPUS сметка" : "Save to your OPUS account"}: ${data.clientAccountUrl}` : ""}`,
     attachments: [calendarAttachment(data)],
   };
 }

@@ -32,7 +32,7 @@ export function WorkspaceSearch({
       {value && (
         <InputGroupAddon align="inline-end">
           <InputGroupButton
-            aria-label={t("Clear search", "Исчисти пребарување")}
+            aria-label={t("Clear search", "Исчисти пребарување", "Pastro kërkimin")}
             size="icon-sm"
             onClick={() => onChange("")}
           >

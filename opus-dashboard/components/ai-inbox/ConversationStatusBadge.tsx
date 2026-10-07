@@ -7,9 +7,9 @@ export function ConversationStatusBadge({ status }: { status: Status }) {
   const { t } = useDashboardI18n();
 
   const labels: Record<Status, string> = {
-    active: t("Active", "Активен"),
-    handed_off: t("Handed Off", "Преземен"),
-    resolved: t("Resolved", "Решен"),
+    active: t("Active", "Активен", "Aktiv"),
+    handed_off: t("Handed Off", "Преземен", "I kaluar"),
+    resolved: t("Resolved", "Решен", "I zgjidhur"),
   };
 
   return (

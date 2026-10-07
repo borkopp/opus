@@ -44,7 +44,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
   ) => {
     const { t, locale } = useDashboardI18n();
 
-    const serviceName = bookingServiceLabel(booking, t("Service", "Услуга"));
+    const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbim"));
     const theme = useMemo(
       () => getServiceTheme(booking.service?.name || serviceName),
       [booking.service?.name, serviceName],
@@ -131,7 +131,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
             <div className="flex items-center gap-1 shrink-0">
               {isCompleted && (
                 <span
-                  title={t("Completed", "Завршен")}
+                  title={t("Completed", "Завршен", "Përfunduar")}
                   className="size-3.5 rounded-full bg-white/20 flex items-center justify-center text-white"
                 >
                   <IconCircleCheck className="size-2.5" />
@@ -139,7 +139,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
               )}
               {isNoShow && (
                 <span
-                  title={t("No Show", "Не се појави")}
+                  title={t("No Show", "Не се појави", "Mosparaqitje")}
                   className="size-3.5 rounded-full bg-white/20 flex items-center justify-center text-white"
                 >
                   <IconAlertTriangle className="size-2.5" />
@@ -147,7 +147,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
               )}
               {isCancelled && (
                 <span
-                  title={t("Cancelled", "Откажан")}
+                  title={t("Cancelled", "Откажан", "Anuluar")}
                   className="size-3.5 rounded-full bg-zinc-400/30 flex items-center justify-center text-zinc-600 dark:text-zinc-300"
                 >
                   <IconX className="size-2.5" />
@@ -155,7 +155,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
               )}
               {isAiBooked && (
                 <span
-                  title={t("Booked via AI", "Закажано преку AI")}
+                  title={t("Booked via AI", "Закажано преку AI", "Rezervuar me AI")}
                   className="size-3.5 rounded-full bg-white/20 flex items-center justify-center text-white"
                 >
                   <IconSparkles className="size-2.5" />

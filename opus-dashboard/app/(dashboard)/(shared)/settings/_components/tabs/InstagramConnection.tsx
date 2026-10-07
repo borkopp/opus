@@ -36,6 +36,7 @@ export function InstagramConnection({
           : t(
               "Unable to connect Instagram.",
               "Instagram не може да се поврзе.",
+              "Lidhja me Instagram nuk mund të bëhet.",
             ),
       );
       setBusy(false);
@@ -45,12 +46,19 @@ export function InstagramConnection({
     setBusy(true);
     try {
       await disconnect({});
-      toast.success(t("Instagram disconnected", "Instagram е исклучен"));
+      toast.success(
+        t(
+          "Instagram disconnected",
+          "Instagram е исклучен",
+          "Instagram u shkëput",
+        ),
+      );
     } catch {
       toast.error(
         t(
           "Unable to disconnect Instagram.",
           "Instagram не може да се исклучи.",
+          "Shkëputja e Instagram nuk mund të bëhet.",
         ),
       );
     } finally {
@@ -63,6 +71,7 @@ export function InstagramConnection({
       description={t(
         "Connect the studio’s professional Instagram account to answer DMs and book confirmed appointments.",
         "Поврзете ја професионалната Instagram сметка на студиото за одговори на пораки и закажување потврдени термини.",
+        "Lidhni llogarinë profesionale të Instagram-it të studios për t'iu përgjigjur mesazheve dhe për të rezervuar termine të konfirmuara.",
       )}
     >
       <div className="flex max-w-2xl flex-col gap-4">
@@ -71,20 +80,29 @@ export function InstagramConnection({
           <span className="min-w-0 break-all text-sm font-medium">
             {status?.username
               ? `@${status.username}`
-              : t("No account connected", "Нема поврзана сметка")}
+              : t(
+                  "No account connected",
+                  "Нема поврзана сметка",
+                  "Asnjë llogari e lidhur",
+                )}
           </span>
           <Badge
             data-replay-public
             variant={status?.ready ? "default" : "secondary"}
           >
             {status?.ready
-              ? t("Automatic replies on", "Автоматските одговори се вклучени")
+              ? t(
+                  "Automatic replies on",
+                  "Автоматските одговори се вклучени",
+                  "Përgjigjet automatike janë aktive",
+                )
               : status?.connected
                 ? t(
                     "Connected · replies paused",
                     "Поврзано · одговорите се паузирани",
+                    "E lidhur · përgjigjet të pezulluara",
                   )
-                : t("Not connected", "Не е поврзано")}
+                : t("Not connected", "Не е поврзано", "E palidhur")}
           </Badge>
         </div>
         {status && (!status.provider.instagram || !status.provider.ai) && (
@@ -92,6 +110,7 @@ export function InstagramConnection({
             {t(
               "OPUS needs to finish the messaging provider setup before automatic replies can start. You can prepare and save your studio context now.",
               "OPUS треба да го заврши поврзувањето со сервисите пред да започнат автоматските одговори. Можете да го подготвите и зачувате контекстот за студиото сега.",
+              "OPUS duhet të përfundojë konfigurimin e ofruesit të mesazheve përpara se të fillojnë përgjigjet automatike. Mund të përgatitni dhe ruani kontekstin e studios tani.",
             )}
           </p>
         )}
@@ -104,6 +123,7 @@ export function InstagramConnection({
             {t(
               "Instagram could not be connected or needs to be reconnected. Try again and allow access to messages.",
               "Instagram не е поврзан или треба повторно да се поврзе. Обидете се повторно и дозволете пристап до пораките.",
+              "Instagram nuk mund të lidhej ose duhet të rilidhet. Provoni përsëri dhe lejoni qasjen në mesazhe.",
             )}
           </p>
         )}
@@ -121,8 +141,12 @@ export function InstagramConnection({
           >
             {busy && <Spinner />}
             {status?.connected
-              ? t("Reconnect Instagram", "Поврзи Instagram повторно")
-              : t("Connect Instagram", "Поврзи Instagram")}
+              ? t(
+                  "Reconnect Instagram",
+                  "Поврзи Instagram повторно",
+                  "Rilidh Instagram-in",
+                )
+              : t("Connect Instagram", "Поврзи Instagram", "Lidh Instagram-in")}
           </Button>
           {status?.connected && (
             <Button
@@ -132,17 +156,17 @@ export function InstagramConnection({
               disabled={disabled || !status.canManage || busy}
               onClick={handleDisconnect}
             >
-              {t("Disconnect", "Исклучи")}
+              {t("Disconnect", "Исклучи", "Shkëput")}
             </Button>
           )}
           {disabled ? (
             <Button data-replay-public variant="ghost" disabled>
-              {t("Open inbox", "Отвори сандаче")}
+              {t("Open inbox", "Отвори сандаче", "Hap kutinë postare")}
             </Button>
           ) : (
             <Button asChild variant="ghost">
               <Link data-replay-public href="/ai-inbox">
-                {t("Open inbox", "Отвори сандаче")}
+                {t("Open inbox", "Отвори сандаче", "Hap kutinë postare")}
               </Link>
             </Button>
           )}
@@ -151,6 +175,7 @@ export function InstagramConnection({
           {t(
             "The AI replies after a client messages you. Your team can take over at any time. WhatsApp is not connected in this release.",
             "AI одговара откако клиент ќе ви испрати порака. Вашиот тим може да го преземе разговорот во секое време. WhatsApp не е поврзан во оваа верзија.",
+            "AI përgjigjet pasi një klient ju shkruan. Ekipi juaj mund ta marrë bisedën në çdo kohë. WhatsApp nuk është i lidhur në këtë version.",
           )}
         </p>
       </div>

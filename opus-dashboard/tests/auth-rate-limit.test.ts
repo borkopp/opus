@@ -64,6 +64,37 @@ async function sendRequest(ip: string, email: string, country = "MK") {
   );
 }
 
+it("accepts the native scheme through the signed proxy and keeps CAPTCHA and proof required", async () => {
+  const auth = createAuth({} as GenericCtx<DataModel>);
+  const native = await sendRequest("203.0.113.60", "native@example.com");
+  native.headers.delete("origin");
+  native.headers.set("expo-origin", "opus-studio:///");
+  expect((await auth.handler(native)).status).toBe(200);
+  expect(sent).toHaveBeenCalledTimes(1);
+
+  const protectedCountry = await sendRequest(
+    "203.0.113.61",
+    "native-de@example.com",
+    "DE",
+  );
+  protectedCountry.headers.delete("origin");
+  protectedCountry.headers.set("expo-origin", "opus-studio:///");
+  expect((await auth.handler(protectedCountry)).status).toBe(400);
+  const unsigned = new Request(
+    "https://studio.opus.mk/api/auth/email-otp/send-verification-otp",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "expo-origin": "opus-studio:///",
+      },
+      body: JSON.stringify({ email: "unsigned@example.com", type: "sign-in" }),
+    },
+  );
+  expect((await auth.handler(unsigned)).status).toBe(403);
+  expect(sent).toHaveBeenCalledTimes(1);
+});
+
 it("limits different email addresses from one IP even without NODE_ENV=production", async () => {
   const auth = createAuth({} as GenericCtx<DataModel>);
   for (let i = 0; i < 3; i++) {

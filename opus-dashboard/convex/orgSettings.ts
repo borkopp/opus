@@ -764,3 +764,32 @@ export const updateLocation = mutation({
     return true;
   },
 });
+
+/** Legacy API compatibility. This stored flag no longer controls client access. */
+export const updateClientAccounts = mutation({
+  args: { orgId: v.id("orgs"), enabled: v.boolean() },
+  handler: async (ctx, args) => {
+    const { staffMember } = await requireRole(ctx, args.orgId, "owner");
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+    if (!settings) throw new ConvexError("Settings not found.");
+    await ctx.db.patch(settings._id, {
+      clientAccountsEnabled: args.enabled,
+      updatedAt: Date.now(),
+    });
+    await ctx.db.insert("audit_log", {
+      orgId: args.orgId,
+      actorType: "staff",
+      actorId: staffMember._id,
+      action: "auth.client_accounts_updated",
+      resourceType: "org_settings",
+      resourceId: settings._id,
+      before: { enabled: settings.clientAccountsEnabled === true },
+      after: { enabled: args.enabled },
+      createdAt: Date.now(),
+    });
+    return null;
+  },
+});

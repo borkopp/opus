@@ -17,7 +17,7 @@ export function CookiePreferencesMenuItem() {
       className="cursor-pointer"
     >
       <Cookie aria-hidden="true" />
-      <span>{t(consentCopy.en.preferences, consentCopy.mk.preferences)}</span>
+      <span>{t(consentCopy.en.preferences, consentCopy.mk.preferences, consentCopy.sq.preferences)}</span>
     </DropdownMenuItem>
   );
 }

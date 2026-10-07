@@ -35,30 +35,56 @@ import { AiStudioContext } from "./AiStudioContext";
 import { InstagramConnection } from "./InstagramConnection";
 
 const TONES = [
-  { value: "friendly", labelEn: "Friendly", labelMk: "Пријателски" },
+  {
+    value: "friendly",
+    labelEn: "Friendly",
+    labelMk: "Пријателски",
+    labelSq: "Miqësor",
+  },
   {
     value: "professional",
     labelEn: "Professional",
     labelMk: "Професионален",
+    labelSq: "Profesional",
   },
-  { value: "casual", labelEn: "Casual", labelMk: "Опуштен" },
-  { value: "formal", labelEn: "Formal", labelMk: "Формален" },
+  {
+    value: "casual",
+    labelEn: "Casual",
+    labelMk: "Опуштен",
+    labelSq: "I relaksuar",
+  },
+  {
+    value: "formal",
+    labelEn: "Formal",
+    labelMk: "Формален",
+    labelSq: "Zyrtar",
+  },
 ] as const;
 
 const LANGUAGES = [
-  { value: "auto", labelEn: "Auto-detect", labelMk: "Автоматски" },
-  { value: "en", labelEn: "English", labelMk: "English" },
-  { value: "mk", labelEn: "Македонски", labelMk: "Македонски" },
+  {
+    value: "auto",
+    labelEn: "Auto-detect",
+    labelMk: "Автоматски",
+    labelSq: "Automatik",
+  },
+  { value: "en", labelEn: "English", labelMk: "English", labelSq: "Anglisht" },
+  {
+    value: "mk",
+    labelEn: "Македонски",
+    labelMk: "Македонски",
+    labelSq: "Maqedonisht",
+  },
 ] as const;
 
 const DAYS = [
-  { en: "Sun", mk: "Нед" },
-  { en: "Mon", mk: "Пон" },
-  { en: "Tue", mk: "Вто" },
-  { en: "Wed", mk: "Сре" },
-  { en: "Thu", mk: "Чет" },
-  { en: "Fri", mk: "Пет" },
-  { en: "Sat", mk: "Саб" },
+  { en: "Sun", mk: "Нед", sq: "Die" },
+  { en: "Mon", mk: "Пон", sq: "Hën" },
+  { en: "Tue", mk: "Вто", sq: "Mar" },
+  { en: "Wed", mk: "Сре", sq: "Mër" },
+  { en: "Thu", mk: "Чет", sq: "Enj" },
+  { en: "Fri", mk: "Пет", sq: "Pre" },
+  { en: "Sat", mk: "Саб", sq: "Sht" },
 ] as const;
 
 function ConfidenceMeter({ value }: { value: number }) {
@@ -76,15 +102,18 @@ function ConfidenceMeter({ value }: { value: number }) {
       ? t(
           "Higher confidence, fewer automatic replies",
           "Повисока сигурност, помалку автоматски одговори",
+          "Siguri më e lartë, më pak përgjigje automatike",
         )
       : percentage >= 40
         ? t(
             "Balanced confidence and escalation",
             "Балансирана сигурност и пренасочување кон човек",
+            "Siguri e balancuar dhe kalim te personeli",
           )
         : t(
             "Lower confidence, more automatic replies",
             "Пониска сигурност, повеќе автоматски одговори",
+            "Siguri më e ulët, më shumë përgjigje automatike",
           );
 
   return (
@@ -149,6 +178,7 @@ export function AiOperatorTab({
         t(
           "Enter the name shown to customers.",
           "Внесете го името што ќе им се прикажува на клиентите.",
+          "Vendosni emrin që u shfaqet klientëve.",
         ),
       );
       hasErrors = true;
@@ -159,7 +189,11 @@ export function AiOperatorTab({
       ai.aiConfidenceThreshold > 1
     ) {
       setConfidenceError(
-        t("Enter a number between 0.7 and 1.", "Внесете број помеѓу 0.7 и 1."),
+        t(
+          "Enter a number between 0.7 and 1.",
+          "Внесете број помеѓу 0.7 и 1.",
+          "Vendosni një numër midis 0.7 dhe 1.",
+        ),
       );
       hasErrors = true;
     }
@@ -193,6 +227,7 @@ export function AiOperatorTab({
         t(
           "AI front-desk settings saved",
           "Поставките за AI рецепција се зачувани",
+          "Cilësimet e recepsionit AI u ruajtën",
         ),
       );
     } catch (error) {
@@ -202,6 +237,7 @@ export function AiOperatorTab({
           : t(
               "Failed to save AI front-desk settings.",
               "Не успеа зачувувањето на поставките за AI рецепција.",
+              "Ruajtja e cilësimeve të recepsionit AI dështoi.",
             ),
       );
     } finally {
@@ -226,10 +262,11 @@ export function AiOperatorTab({
     <TabsContent value="ai" className="m-0">
       <fieldset disabled={controlsDisabled} className="min-w-0">
         <SettingsCard
-          title={t("AI front desk", "AI рецепција")}
+          title={t("AI front desk", "AI рецепција", "Recepsioni AI")}
           description={t(
             "Manage your assistant identity, customer channels, and team handoff preferences.",
             "Управувајте со идентитетот на асистентот, каналите за клиенти и поставките за предавање на разговорите на тимот.",
+            "Menaxhoni identitetin e asistentit, kanalet e klientëve dhe preferencat e kalimit te ekipi.",
           )}
           action={
             !isPaid && (
@@ -248,8 +285,8 @@ export function AiOperatorTab({
                   <Save data-icon="inline-start" />
                 )}
                 {isSaving
-                  ? t("Saving…", "Се зачувува…")
-                  : t("Save AI settings", "Зачувај AI поставки")}
+                  ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+                  : t("Save AI settings", "Зачувај AI поставки", "Ruaj cilësimet AI")}
               </Button>
             )
           }
@@ -259,20 +296,30 @@ export function AiOperatorTab({
               {t(
                 "AI front desk is included in Pro. Contact OPUS to upgrade and activate it for your studio.",
                 "AI рецепцијата е дел од Pro. Контактирајте нè за надградба и активирање за вашето студио.",
+                "Recepsioni AI përfshihet në Pro. Kontaktoni OPUS për ta përmirësuar dhe aktivizuar për studion tuaj.",
               )}
             </p>
           )}
           <SettingsToggleRow
-            title={t("Enable AI front desk", "Овозможи AI рецепција")}
+            title={t(
+              "Enable AI front desk",
+              "Овозможи AI рецепција",
+              "Aktivizo recepsionin AI",
+            )}
             description={t(
               "Use this configuration on connected and enabled customer channels.",
               "Користете ја оваа конфигурација на поврзаните и овозможени канали за клиенти.",
+              "Përdorni këtë konfigurim në kanalet e lidhura dhe të aktivizuara të klientëve.",
             )}
             control={
               <Switch
                 disabled={controlsDisabled}
                 id="ai-enabled"
-                aria-label={t("Enable AI front desk", "Овозможи AI рецепција")}
+                aria-label={t(
+                  "Enable AI front desk",
+                  "Овозможи AI рецепција",
+                  "Aktivizo recepsionin AI",
+                )}
                 checked={isPaid && ai.aiEnabled}
                 onCheckedChange={(checked) =>
                   setAi((current) => ({ ...current, aiEnabled: checked }))
@@ -297,16 +344,21 @@ export function AiOperatorTab({
               <Separator />
 
               <SettingsSection
-                title={t("Assistant identity", "Идентитет на асистент")}
+                title={t(
+                  "Assistant identity",
+                  "Идентитет на асистент",
+                  "Identiteti i asistentit",
+                )}
                 description={t(
                   "Set the customer-facing name, confidence threshold, and handoff route.",
                   "Поставете го името за клиенти, прагот на сигурност и контактот за пренасочување.",
+                  "Vendosni emrin për klientët, pragun e sigurisë dhe rrugën e kalimit te stafi.",
                 )}
               >
                 <FieldGroup className="max-w-2xl">
                   <Field data-invalid={Boolean(personaError)}>
                     <FieldLabel data-replay-public htmlFor="persona-name">
-                      {t("Assistant name", "Име на асистент")}
+                      {t("Assistant name", "Име на асистент", "Emri i asistentit")}
                     </FieldLabel>
                     <Input
                       id="persona-name"
@@ -329,6 +381,7 @@ export function AiOperatorTab({
                       {t(
                         "The name customers see in automated conversations.",
                         "Името што клиентите го гледаат во автоматските разговори.",
+                        "Emri që klientët shohin në bisedat e automatizuara.",
                       )}
                     </FieldDescription>
                     <FieldError>{personaError}</FieldError>
@@ -339,7 +392,7 @@ export function AiOperatorTab({
                       data-replay-public
                       htmlFor="confidence-threshold"
                     >
-                      {t("Confidence threshold", "Праг на сигурност")}
+                      {t("Confidence threshold", "Праг на сигурност", "Pragu i sigurisë")}
                     </FieldLabel>
                     <Input
                       id="confidence-threshold"
@@ -372,6 +425,7 @@ export function AiOperatorTab({
                       {t(
                         "Below this score, the conversation is handed to a person.",
                         "Под оваа оцена, разговорот се пренасочува кон вработен.",
+                        "Nën këtë vlerësim, biseda i kalohet një personi.",
                       )}
                     </FieldDescription>
                     <FieldError>{confidenceError}</FieldError>
@@ -382,6 +436,7 @@ export function AiOperatorTab({
                       {t(
                         "Handoff phone number",
                         "Телефонски број за пренасочување",
+                        "Numri i telefonit për kalim",
                       )}
                     </FieldLabel>
                     <Input
@@ -399,6 +454,7 @@ export function AiOperatorTab({
                       {t(
                         "Customers can be directed here when the assistant cannot help.",
                         "Клиентите може да бидат пренасочени тука кога асистентот не може да помогне.",
+                        "Klientët mund të drejtohen këtu kur asistenti nuk mund të ndihmojë.",
                       )}
                     </FieldDescription>
                   </Field>
@@ -408,18 +464,20 @@ export function AiOperatorTab({
               <Separator />
 
               <SettingsSection
-                title={t("Channels", "Канали")}
+                title={t("Channels", "Канали", "Kanalet")}
                 description={t(
                   "These switches permit an existing channel connection; they do not configure the provider itself.",
                   "Овие прекинувачи овозможуваат постоечка врска со канал; тие не го конфигурираат самиот провајдер.",
+                  "Këta çelësa lejojnë një lidhje ekzistuese kanali; ata nuk e konfigurojnë vetë ofruesin.",
                 )}
               >
                 <div className="flex flex-col gap-3">
                   <SettingsToggleRow
-                    title={t("Instagram DM", "Instagram пораки")}
+                    title={t("Instagram DM", "Instagram пораки", "Mesazhet në Instagram")}
                     description={t(
                       "Allow the assistant on the configured Instagram connection.",
                       "Дозволи го асистентот на конфигурираната Instagram сметка.",
+                      "Lejo asistentin në llogarinë e konfiguruar të Instagram-it.",
                     )}
                     control={
                       <Switch
@@ -428,6 +486,7 @@ export function AiOperatorTab({
                         aria-label={t(
                           "Enable Instagram DM",
                           "Овозможи Instagram пораки",
+                          "Aktivizo mesazhet në Instagram",
                         )}
                         checked={ai.aiInstagramEnabled}
                         onCheckedChange={(checked) =>
@@ -445,16 +504,17 @@ export function AiOperatorTab({
               <Separator />
 
               <SettingsSection
-                title={t("Conversation style", "Стил на разговор")}
+                title={t("Conversation style", "Стил на разговор", "Stili i bisedës")}
                 description={t(
                   "Choose how the assistant speaks and opens a conversation.",
                   "Изберете како асистентот зборува и започнува разговор.",
+                  "Zgjidhni si flet asistenti dhe si hap një bisedë.",
                 )}
               >
                 <FieldGroup className="max-w-2xl">
                   <Field>
                     <FieldLabel data-replay-public>
-                      {t("Tone", "Тон на обраќање")}
+                      {t("Tone", "Тон на обраќање", "Toni")}
                     </FieldLabel>
                     <ToggleGroup
                       disabled={controlsDisabled}
@@ -470,12 +530,16 @@ export function AiOperatorTab({
                       }}
                       variant="outline"
                       spacing={2}
-                      aria-label={t("Assistant tone", "Тон на асистентот")}
+                      aria-label={t(
+                        "Assistant tone",
+                        "Тон на асистентот",
+                        "Toni i asistentit",
+                      )}
                       className="flex flex-wrap"
                     >
                       {TONES.map((tone) => (
                         <ToggleGroupItem key={tone.value} value={tone.value}>
-                          {t(tone.labelEn, tone.labelMk)}
+                          {t(tone.labelEn, tone.labelMk, tone.labelSq)}
                         </ToggleGroupItem>
                       ))}
                     </ToggleGroup>
@@ -483,7 +547,7 @@ export function AiOperatorTab({
 
                   <Field>
                     <FieldLabel data-replay-public>
-                      {t("Language", "Јазик")}
+                      {t("Language", "Јазик", "Gjuha")}
                     </FieldLabel>
                     <ToggleGroup
                       disabled={controlsDisabled}
@@ -502,6 +566,7 @@ export function AiOperatorTab({
                       aria-label={t(
                         "Assistant language",
                         "Јазик на асистентот",
+                        "Gjuha e asistentit",
                       )}
                       className="flex flex-wrap"
                     >
@@ -510,7 +575,7 @@ export function AiOperatorTab({
                           key={language.value}
                           value={language.value}
                         >
-                          {t(language.labelEn, language.labelMk)}
+                          {t(language.labelEn, language.labelMk, language.labelSq)}
                         </ToggleGroupItem>
                       ))}
                     </ToggleGroup>
@@ -518,13 +583,14 @@ export function AiOperatorTab({
                       {t(
                         "Auto-detect replies in English or Macedonian based on the customer's message.",
                         "Автоматско одговарање на англиски или македонски јазик во зависност од пораката на клиентот.",
+                        "Zbulimi automatik përgjigjet në anglisht ose maqedonisht bazuar në mesazhin e klientit.",
                       )}
                     </FieldDescription>
                   </Field>
 
                   <Field>
                     <FieldLabel data-replay-public htmlFor="greeting-message">
-                      {t("Greeting message", "Порака за поздрав")}
+                      {t("Greeting message", "Порака за поздрав", "Mesazhi përshëndetës")}
                     </FieldLabel>
                     <Input
                       id="greeting-message"
@@ -532,6 +598,7 @@ export function AiOperatorTab({
                       placeholder={t(
                         "Hi! How can I help with your appointment?",
                         "Здраво! Како можам да ви помогнам со вашиот термин?",
+                        "Përshëndetje! Si mund t'ju ndihmoj me terminin tuaj?",
                       )}
                       onChange={(event) =>
                         setAi((current) => ({
@@ -544,6 +611,7 @@ export function AiOperatorTab({
                       {t(
                         "A greeting preference for the assistant’s first reply.",
                         "Пример за поздрав во првиот одговор на асистентот.",
+                        "Një preferencë përshëndetëse për përgjigjen e parë të asistentit.",
                       )}
                     </FieldDescription>
                   </Field>
@@ -553,7 +621,11 @@ export function AiOperatorTab({
                       data-replay-public
                       htmlFor="custom-instructions"
                     >
-                      {t("Custom instructions", "Прилагодени упатства")}
+                      {t(
+                        "Custom instructions",
+                        "Прилагодени упатства",
+                        "Udhëzime të personalizuara",
+                      )}
                     </FieldLabel>
                     <Textarea
                       id="custom-instructions"
@@ -562,6 +634,7 @@ export function AiOperatorTab({
                       placeholder={t(
                         "Preferred wording and conversation rules.",
                         "Претпочитани формулации и правила за разговорот.",
+                        "Formulimet e preferuara dhe rregullat e bisedës.",
                       )}
                       onChange={(event) =>
                         setAi((current) => ({
@@ -574,6 +647,7 @@ export function AiOperatorTab({
                       {t(
                         "Add boundaries, special policies, or preferred wording.",
                         "Додајте ограничувања, посебни правила или претпочитани формулации.",
+                        "Shtoni kufizime, politika të veçanta ose formulime të preferuara.",
                       )}
                     </FieldDescription>
                   </Field>
@@ -583,17 +657,19 @@ export function AiOperatorTab({
               <Separator />
 
               <SettingsSection
-                title={t("Working hours", "Работно време")}
+                title={t("Working hours", "Работно време", "Orari i punës")}
                 description={t(
                   "Optionally limit automated replies to a weekly schedule in your studio’s timezone.",
                   "Изборно ограничете ги автоматските одговори на неделен распоред во временската зона на студиото.",
+                  "Opsionale: kufizoni përgjigjet automatike në një orar javor në zonën kohore të studios tuaj.",
                 )}
               >
                 <SettingsToggleRow
-                  title={t("Use working hours", "Користи работно време")}
+                  title={t("Use working hours", "Користи работно време", "Përdor orarin e punës")}
                   description={t(
                     "Send the away message outside the selected times.",
                     "Испраќај порака за отсутност надвор од избраното време.",
+                    "Dërgo mesazh mungese jashtë orareve të zgjedhura.",
                   )}
                   control={
                     <Switch
@@ -602,6 +678,7 @@ export function AiOperatorTab({
                       aria-label={t(
                         "Use AI working hours",
                         "Користи AI работно време",
+                        "Përdor orarin e punës të AI",
                       )}
                       checked={ai.aiWorkingHoursEnabled}
                       onCheckedChange={(checked) =>
@@ -644,7 +721,7 @@ export function AiOperatorTab({
                             }}
                           />
                           <Label htmlFor={`ai-day-${dayOfWeek}`}>
-                            {t(day.en, day.mk)}
+                            {t(day.en, day.mk, day.sq)}
                           </Label>
                           <div className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:contents">
                             <Input
@@ -652,6 +729,7 @@ export function AiOperatorTab({
                               aria-label={t(
                                 `${day.en} start time`,
                                 `${day.mk} време на почеток`,
+                                `${day.sq} koha e fillimit`,
                               )}
                               disabled={!enabled}
                               value={hours?.startTime ?? "09:00"}
@@ -667,13 +745,14 @@ export function AiOperatorTab({
                               data-replay-public
                               className="text-xs text-muted-foreground"
                             >
-                              {t("to", "до")}
+                              {t("to", "до", "deri")}
                             </span>
                             <Input
                               type="time"
                               aria-label={t(
                                 `${day.en} end time`,
                                 `${day.mk} време на крај`,
+                                `${day.sq} koha e mbarimit`,
                               )}
                               disabled={!enabled}
                               value={hours?.endTime ?? "18:00"}
@@ -692,7 +771,7 @@ export function AiOperatorTab({
 
                     <Field>
                       <FieldLabel data-replay-public htmlFor="away-message">
-                        {t("Away message", "Порака за отсутност")}
+                        {t("Away message", "Порака за отсутност", "Mesazh mungese")}
                       </FieldLabel>
                       <Textarea
                         id="away-message"
@@ -701,6 +780,7 @@ export function AiOperatorTab({
                         placeholder={t(
                           "We are currently outside business hours.",
                           "Моментално сме надвор од работното време.",
+                          "Aktualisht jemi jashtë orarit të punës.",
                         )}
                         onChange={(event) =>
                           setAi((current) => ({

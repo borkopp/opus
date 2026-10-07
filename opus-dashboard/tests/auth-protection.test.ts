@@ -47,6 +47,78 @@ afterEach(() => {
 });
 
 describe("country policy and trusted forwarding", () => {
+  it("resolves the Next development bind address without trusting Host in production", () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("CONVEX_DEPLOYMENT", "local:test");
+    vi.stubEnv("AUTH_LOCAL_MOBILE_ORIGINS", "http://192.168.1.20:3000");
+    const boundRequest = (host: string) =>
+      new Request("http://0.0.0.0:3000/api/auth/security", {
+        headers: { host },
+      });
+    const allowed = boundRequest("192.168.1.20:3000");
+    expect(authSecurityPolicy(allowed).required).toBe(false);
+    expect(authSecurityPolicy(boundRequest("localhost:3000")).required).toBe(
+      false,
+    );
+    expect(authSecurityPolicy(boundRequest("192.168.1.21:3000")).required).toBe(
+      true,
+    );
+    expect(
+      authSecurityPolicy(boundRequest("public.example.com:3000")).required,
+    ).toBe(true);
+    expect(
+      authSecurityPolicy(boundRequest("person@localhost:3000")).required,
+    ).toBe(true);
+    expect(
+      authSecurityPolicy(
+        new Request("http://0.0.0.0:3000/api/auth/security", {
+          headers: { "x-forwarded-host": "localhost:3000" },
+        }),
+      ).required,
+    ).toBe(true);
+    vi.stubEnv("CONVEX_DEPLOYMENT", "dev:cloud");
+    expect(authSecurityPolicy(allowed).required).toBe(true);
+    vi.stubEnv("CONVEX_DEPLOYMENT", "local:test");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(authSecurityPolicy(allowed).required).toBe(true);
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL", "1");
+    expect(authSecurityPolicy(allowed).required).toBe(true);
+  });
+
+  it("allows an explicitly configured phone LAN proxy only in a local non-production setup", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL", "");
+    vi.stubEnv("CONVEX_DEPLOYMENT", "local:test");
+    vi.stubEnv(
+      "AUTH_LOCAL_MOBILE_ORIGINS",
+      "http://192.168.1.20:3000,https://public.example.com",
+    );
+    const lan = new Request("http://192.168.1.20:3000/api/auth/security");
+    expect(authSecurityPolicy(lan).required).toBe(false);
+    expect(
+      authSecurityPolicy(
+        new Request("http://192.168.1.21:3000/api/auth/security"),
+      ).required,
+    ).toBe(true);
+    expect(
+      authSecurityPolicy(
+        new Request("https://public.example.com/api/auth/security"),
+      ).required,
+    ).toBe(true);
+    const forwarded = await withAuthProxyProof(lan);
+    expect(forwarded.headers.has(AUTH_PROXY_HEADERS.signature)).toBe(false);
+    vi.stubEnv("CONVEX_DEPLOYMENT", "dev:cloud");
+    expect(authSecurityPolicy(lan).required).toBe(true);
+    vi.stubEnv("CONVEX_DEPLOYMENT", "local:test");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(authSecurityPolicy(lan).required).toBe(true);
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL", "1");
+    expect(authSecurityPolicy(lan).required).toBe(true);
+  });
+
   it("materializes framework-wrapped requests before signing", async () => {
     const wrapped = new Proxy(request("MK"), {
       get(target, property) {

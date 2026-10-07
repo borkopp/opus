@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { IconAdjustmentsHorizontal, IconPlus } from "@tabler/icons-react";
 import {
-  IconAdjustmentsHorizontal,
-  IconLayoutColumns,
-  IconLayoutRows,
-  IconLayoutList,
-  IconPlus,
-} from "@tabler/icons-react";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -25,10 +27,16 @@ import type { StaffView } from "./types";
 import { BookingsDateNavigation } from "./BookingsDateNavigation";
 
 export type BookingStatusFilter = "all" | "upcoming" | "completed" | "no-show";
-export type BookingViewVariant = "horizontal" | "vertical" | "list";
+export type BookingViewVariant =
+  | "horizontal"
+  | "vertical"
+  | "list"
+  | "week"
+  | "month";
 
 export function BookingsToolbar({
   currentDate,
+  today,
   bookingDateCounts,
   onDateChange,
   onNewBooking,
@@ -42,6 +50,7 @@ export function BookingsToolbar({
   onStaffChange,
 }: {
   currentDate: Date;
+  today?: Date;
   bookingDateCounts: ReadonlyMap<string, number>;
   onDateChange: (date: Date) => void;
   onNewBooking: () => void;
@@ -57,10 +66,10 @@ export function BookingsToolbar({
   const { t } = useDashboardI18n();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const statuses: { value: BookingStatusFilter; label: string }[] = [
-    { value: "all", label: t("All", "Сите") },
-    { value: "upcoming", label: t("Upcoming", "Претстојни") },
-    { value: "completed", label: t("Completed", "Завршени") },
-    { value: "no-show", label: t("No-show", "Не се појави") },
+    { value: "all", label: t("All", "Сите", "Të gjitha") },
+    { value: "upcoming", label: t("Upcoming", "Претстојни", "Të ardhshme") },
+    { value: "completed", label: t("Completed", "Завршени", "Të përfunduara") },
+    { value: "no-show", label: t("No-show", "Не се појави", "Mosparaqitje") },
   ];
   const statusOptions = (
     <ToggleGroup
@@ -70,7 +79,7 @@ export function BookingsToolbar({
         if (value) onStatusChange(value as BookingStatusFilter);
       }}
       spacing={1}
-      aria-label={t("Booking status", "Статус на термин")}
+      aria-label={t("Booking status", "Статус на термин", "Statusi i terminit")}
       className={isMobile ? "grid w-full grid-cols-2 gap-2" : "flex-wrap"}
     >
       {statuses.map((item) => (
@@ -90,6 +99,8 @@ export function BookingsToolbar({
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 md:gap-3 lg:grid-cols-[auto_minmax(0,1fr)_auto_auto]">
         <BookingsDateNavigation
           date={currentDate}
+          today={today}
+          period={variant === "week" || variant === "month" ? variant : "day"}
           bookingDateCounts={bookingDateCounts}
           onDateChange={onDateChange}
         />
@@ -99,19 +110,24 @@ export function BookingsToolbar({
               <Button variant="outline" className="min-h-11 gap-2">
                 <IconAdjustmentsHorizontal data-icon="inline-start" />
                 {status === "all"
-                  ? t("Filters", "Филтри")
+                  ? t("Filters", "Филтри", "Filtra")
                   : statuses.find((item) => item.value === status)?.label}
               </Button>
             </DrawerTrigger>
             <DrawerContent className="dashboard-panel">
               <DrawerHeader>
                 <DrawerTitle data-replay-public>
-                  {t("Filter appointments", "Филтрирај термини")}
+                  {t(
+                    "Filter appointments",
+                    "Филтрирај термини",
+                    "Filtro terminet",
+                  )}
                 </DrawerTitle>
                 <DrawerDescription data-replay-public>
                   {t(
-                    "Choose which appointments to show for this day.",
-                    "Изберете кои термини да се прикажат за овој ден.",
+                    "Choose which appointments to show.",
+                    "Изберете кои термини да се прикажат.",
+                    "Zgjidhni cilat termine të shfaqen.",
                   )}
                 </DrawerDescription>
               </DrawerHeader>
@@ -119,7 +135,11 @@ export function BookingsToolbar({
               <DrawerFooter className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
                 <DrawerClose asChild>
                   <Button data-replay-public className="min-h-11">
-                    {t("Show appointments", "Прикажи термини")}
+                    {t(
+                      "Show appointments",
+                      "Прикажи термини",
+                      "Shfaq terminet",
+                    )}
                   </Button>
                 </DrawerClose>
               </DrawerFooter>
@@ -128,60 +148,81 @@ export function BookingsToolbar({
         ) : (
           statusOptions
         )}
-        <ToggleGroup
-          type="single"
+        <Select
           value={variant}
-          onValueChange={(value) => {
-            if (value) onVariantChange(value as BookingViewVariant);
-          }}
-          spacing={1}
-          aria-label={t("Calendar view", "Приказ на календар")}
-          className="justify-self-end"
+          onValueChange={(value) =>
+            onVariantChange(value as BookingViewVariant)
+          }
         >
-          {!isMobile && (
-            <ToggleGroupItem
-              value="horizontal"
-              aria-label={t("Horizontal", "Хоризонтално")}
-              className="min-h-9"
-            >
-              <IconLayoutColumns />
-              <span data-replay-public className="hidden xl:inline">
-                {t("Horizontal", "Хоризонтално")}
-              </span>
-            </ToggleGroupItem>
-          )}
-          <ToggleGroupItem
-            value="vertical"
-            aria-label={t("Calendar", "Календар")}
-            className="min-h-11 md:min-h-9"
+          <SelectTrigger
+            aria-label={t(
+              "Calendar view",
+              "Приказ на календар",
+              "Pamja e kalendarit",
+            )}
+            className="min-h-11 w-28 justify-self-end md:min-h-9"
           >
-            <IconLayoutRows />
-            <span data-replay-public className="hidden xl:inline">
-              {t("Calendar", "Календар")}
-            </span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="list"
-            aria-label={t("Agenda", "Листа")}
-            className="min-h-11 md:min-h-9"
-          >
-            <IconLayoutList />
-            <span data-replay-public className="hidden xl:inline">
-              {t("Agenda", "Листа")}
-            </span>
-          </ToggleGroupItem>
-        </ToggleGroup>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {!isMobile && (
+                <SelectItem value="horizontal">
+                  {t("Horizontal", "Хоризонтално", "Horizontale")}
+                </SelectItem>
+              )}
+              <SelectItem value="vertical">
+                {t("Day", "Ден", "Ditë")}
+              </SelectItem>
+              <SelectItem value="week">
+                {t("Week", "Недела", "Javë")}
+              </SelectItem>
+              <SelectItem value="month">
+                {t("Month", "Месец", "Muaj")}
+              </SelectItem>
+              <SelectItem value="list">
+                {t("Agenda", "Листа", "Axhenda")}
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <Button
           className="size-11 shrink-0 md:h-9 md:w-auto"
           onClick={onNewBooking}
-          aria-label={t("New Booking", "Нов термин")}
+          aria-label={t("New Booking", "Нов термин", "Termin i ri")}
         >
           <IconPlus data-icon="inline-start" />
           <span data-replay-public className="hidden md:inline">
-            {t("New Booking", "Нов термин")}
+            {t("New Booking", "Нов термин", "Termin i ri")}
           </span>
         </Button>
       </div>
+      {(variant === "week" || variant === "month") && (
+        <Select value={staffId} onValueChange={onStaffChange}>
+          <SelectTrigger
+            aria-label={t(
+              "Staff calendar",
+              "Календар на тимот",
+              "Kalendari i stafit",
+            )}
+            className="min-h-11 w-full sm:max-w-72 md:min-h-9"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="all">
+                {t("All team", "Цел тим", "I gjithë ekipi")}
+              </SelectItem>
+              {staffMembers.map((staff) => (
+                <SelectItem key={staff._id} value={staff._id}>
+                  {staff.displayName}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      )}
       {isMobile && variant === "vertical" && staffMembers.length > 1 && (
         <div className="min-w-0 overflow-x-auto overscroll-x-contain pb-1">
           <ToggleGroup
@@ -192,7 +233,11 @@ export function BookingsToolbar({
             }}
             spacing={2}
             variant="outline"
-            aria-label={t("Staff calendar", "Календар на тимот")}
+            aria-label={t(
+              "Staff calendar",
+              "Календар на тимот",
+              "Kalendari i stafit",
+            )}
           >
             {staffMembers.map((staff) => (
               <ToggleGroupItem

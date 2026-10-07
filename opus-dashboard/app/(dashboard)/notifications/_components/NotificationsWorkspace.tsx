@@ -93,12 +93,21 @@ export function NotificationsWorkspace() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
 
   const tabs: { id: FilterTab; label: string }[] = [
-    { id: "all", label: t("All", "Сите") },
-    { id: "unread", label: t("Unread", "Непрочитани") },
-    { id: "ai_handoff", label: t("AI handoffs", "AI разговори") },
-    { id: "new_booking", label: t("New Bookings", "Нови термини") },
-    { id: "booking_cancelled", label: t("Cancellations", "Откажани") },
-    { id: "no_show", label: t("No-Shows", "Непојавувања") },
+    { id: "all", label: t("All", "Сите", "Të gjitha") },
+    { id: "unread", label: t("Unread", "Непрочитани", "Të palexuara") },
+    {
+      id: "ai_handoff",
+      label: t("AI handoffs", "AI разговори", "Bisedat e kaluara te stafi"),
+    },
+    {
+      id: "new_booking",
+      label: t("New Bookings", "Нови термини", "Termine të reja"),
+    },
+    {
+      id: "booking_cancelled",
+      label: t("Cancellations", "Откажани", "Të anuluara"),
+    },
+    { id: "no_show", label: t("No-Shows", "Непојавувања", "Mosparaqitje") },
   ];
 
   if (profile === undefined || notifications === undefined) {
@@ -134,7 +143,7 @@ export function NotificationsWorkspace() {
   }
 
   if (profile === null || !orgId)
-    return <div data-replay-public>{t("Not found", "Не е пронајдено")}</div>;
+    return <div data-replay-public>{t("Not found", "Не е пронајдено", "Nuk u gjet")}</div>;
 
   const filtered = (notifications ?? []).filter((n) => {
     if (activeTab === "all") return true;
@@ -160,10 +169,11 @@ export function NotificationsWorkspace() {
       {/* Header */}
       <DashboardPageHeader
         replayPublicTitle
-        title={t("Notifications", "Известувања")}
+        title={t("Notifications", "Известувања", "Njoftimet")}
         description={t(
           `${unreadCount ?? 0} unread notifications. Your latest booking updates, in one place.`,
           `${unreadCount ?? 0} непрочитани известувања. Сите новости за термините на едно место.`,
+          `${unreadCount ?? 0} njoftime të palexuara. Përditësimet më të fundit të rezervimeve, në një vend.`,
         )}
       >
         {(unreadCount ?? 0) > 0 && (
@@ -175,7 +185,11 @@ export function NotificationsWorkspace() {
             className="w-full transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none sm:w-auto cursor-pointer"
           >
             <IconCheck className="mr-1.5 h-4 w-4" />
-            {t("Mark all read", "Означи ги сите како прочитани")}
+            {t(
+              "Mark all read",
+              "Означи ги сите како прочитани",
+              "Shënoji të gjitha si të lexuara",
+            )}
           </Button>
         )}
       </DashboardPageHeader>
@@ -219,7 +233,7 @@ export function NotificationsWorkspace() {
               data-replay-public
               className="font-display text-base font-semibold text-foreground"
             >
-              {t("Nothing here", "Нема ништо тука")}
+              {t("Nothing here", "Нема ништо тука", "Nuk ka asgjë këtu")}
             </p>
             <p
               data-replay-public
@@ -229,10 +243,12 @@ export function NotificationsWorkspace() {
                 ? t(
                     "You're all caught up on new notifications.",
                     "Ги прочитавте сите нови известувања.",
+                    "Keni lexuar të gjitha njoftimet e reja.",
                   )
                 : t(
                     "No notifications in this category yet.",
                     "Сè уште нема известувања во оваа категорија.",
+                    "Ende nuk ka njoftime në këtë kategori.",
                   )}
             </p>
           </div>
@@ -295,7 +311,11 @@ export function NotificationsWorkspace() {
                     dismiss({ orgId, notificationId: n._id });
                   }}
                   className="absolute right-2 top-3 flex size-11 items-center justify-center opacity-100 md:right-4 md:top-4.5 md:size-7 md:opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground/50 cursor-pointer"
-                  aria-label={t("Dismiss notification", "Отфрли известување")}
+                  aria-label={t(
+                    "Dismiss notification",
+                    "Отфрли известување",
+                    "Hiq njoftimin",
+                  )}
                 >
                   <IconX size={15} />
                 </button>

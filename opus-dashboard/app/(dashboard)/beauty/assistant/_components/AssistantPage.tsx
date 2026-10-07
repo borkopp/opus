@@ -49,11 +49,14 @@ export function AssistantPage() {
           <EmptyMedia variant="icon">
             <LockKeyhole />
           </EmptyMedia>
-          <EmptyTitle>{t("Business assistant", "Деловен асистент")}</EmptyTitle>
+          <EmptyTitle>
+            {t("Business assistant", "Деловен асистент", "Asistent biznesi")}
+          </EmptyTitle>
           <EmptyDescription>
             {t(
               "Business analysis is available to studio owners and managers.",
               "Деловната анализа е достапна за сопственици и менаџери.",
+              "Analiza e biznesit është e disponueshme për pronarët dhe menaxherët e studios.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -149,7 +152,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
   return (
     <section
       className="flex min-h-0 w-full flex-1 flex-col"
-      aria-label={t("Business assistant", "Деловен асистент")}
+      aria-label={t("Business assistant", "Деловен асистент", "Asistent biznesi")}
     >
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
         <div className="flex flex-col gap-2">
@@ -158,7 +161,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
               data-replay-public
               className="text-2xl font-semibold tracking-tight"
             >
-              {t("Business assistant", "Деловен асистент")}
+              {t("Business assistant", "Деловен асистент", "Asistent biznesi")}
             </h1>
             <Badge data-replay-public variant="secondary">
               Pro
@@ -168,8 +171,9 @@ function AssistantWorkspace({ access }: { access: Access }) {
             {t(
               `${access.remaining} of ${access.limit} answers remaining`,
               `Преостанати одговори: ${access.remaining} од ${access.limit}`,
+              `Përgjigje të mbetura: ${access.remaining} nga ${access.limit}`,
             )}{" "}
-            · {t("Renews", "Се обновува")}{" "}
+            · {t("Renews", "Се обновува", "Rinovohet")}{" "}
             {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
               access.resetAt,
             )}
@@ -181,7 +185,11 @@ function AssistantWorkspace({ access }: { access: Access }) {
               <Button
                 variant="outline"
                 size="icon"
-                aria-label={t("Conversation history", "Историја на разговори")}
+                aria-label={t(
+                  "Conversation history",
+                  "Историја на разговори",
+                  "Historia e bisedave",
+                )}
               >
                 <History />
               </Button>
@@ -202,7 +210,11 @@ function AssistantWorkspace({ access }: { access: Access }) {
                   ))
                 ) : (
                   <DropdownMenuItem data-replay-public disabled>
-                    {t("No conversations yet", "Сè уште нема разговори")}
+                    {t(
+                      "No conversations yet",
+                      "Сè уште нема разговори",
+                      "Ende nuk ka biseda",
+                    )}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuGroup>
@@ -215,7 +227,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
             disabled={submitting}
           >
             <Plus data-icon="inline-start" />
-            {t("New chat", "Нов разговор")}
+            {t("New chat", "Нов разговор", "Bisedë e re")}
           </Button>
         </div>
       </header>
@@ -226,6 +238,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
               {t(
                 "New analyses are temporarily unavailable. Your saved conversations and reports remain available.",
                 "Новите анализи се привремено недостапни. Зачуваните разговори и извештаи остануваат достапни.",
+                "Analizat e reja janë përkohësisht të padisponueshme. Bisedat dhe raportet tuaja të ruajtura mbeten të disponueshme.",
               )}
             </AlertDescription>
           </Alert>

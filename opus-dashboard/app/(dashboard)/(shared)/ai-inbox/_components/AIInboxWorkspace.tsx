@@ -54,6 +54,7 @@ export function AIInboxWorkspace() {
       featureLabel={t(
         "AI inbox requires OPUS Pro",
         "AI сандачето бара OPUS Pro",
+        "Kutia postare AI kërkon OPUS Pro",
       )}
       className="flex min-h-full flex-1"
       contentClassName="flex min-h-full flex-1"
@@ -62,16 +63,21 @@ export function AIInboxWorkspace() {
         <DashboardPageHeader
           replayPublicDescription
           replayPublicTitle
-          title={t("AI inbox", "AI сандаче")}
+          title={t("AI inbox", "AI сандаче", "Kutia postare AI")}
           description={t(
             "Follow Instagram conversations and step in when clients need you.",
             "Следете ги Instagram разговорите и вклучете се кога на клиентите им треба вашата помош.",
+            "Ndiqni bisedat në Instagram dhe ndërhyni kur klientët kanë nevojë për ju.",
           )}
         >
           <Button asChild variant="outline">
             <Link data-replay-public href="/settings?tab=ai">
               <Settings2 data-icon="inline-start" />
-              {t("Front-desk settings", "Поставки за AI рецепција")}
+              {t(
+                "Front-desk settings",
+                "Поставки за AI рецепција",
+                "Cilësimet e recepsionit",
+              )}
             </Link>
           </Button>
         </DashboardPageHeader>
@@ -84,7 +90,7 @@ export function AIInboxWorkspace() {
                 onClick={() => setSelectedId(null)}
               >
                 <ArrowLeft data-icon="inline-start" />
-                {t("Conversations", "Разговори")}
+                {t("Conversations", "Разговори", "Bisedat")}
               </Button>
             </div>
           )}
@@ -130,12 +136,14 @@ export function AIInboxWorkspace() {
                       {t(
                         "Your conversations, in one place",
                         "Сите разговори на едно место",
+                        "Bisedat tuaja, në një vend",
                       )}
                     </EmptyTitle>
                     <EmptyDescription>
                       {t(
                         "Choose a conversation to read messages, review AI replies, or reply as your team.",
                         "Изберете разговор за да ги прочитате пораките, да ги прегледате AI одговорите или да одговорите како тим.",
+                        "Zgjidhni një bisedë për të lexuar mesazhet, për të shqyrtuar përgjigjet e AI ose për t'u përgjigjur si ekipi juaj.",
                       )}
                     </EmptyDescription>
                   </EmptyHeader>

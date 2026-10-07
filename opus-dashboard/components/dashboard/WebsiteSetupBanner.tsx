@@ -30,6 +30,7 @@ export function WebsiteSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
             {t(
               "Improve your website (optional)",
               "Подобрете ја страницата (незадолжително)",
+              "Përmirësoni uebsajtin tuaj (opsionale)",
             )}
           </summary>
           <div className="flex flex-col gap-1 pb-2">
@@ -42,6 +43,7 @@ export function WebsiteSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
                 {t(
                   "Add photos, a logo, or contact details",
                   "Додајте фотографии, лого или контакт",
+                  "Shtoni foto, një logo ose të dhëna kontakti",
                 )}
               </span>
               <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
@@ -55,6 +57,7 @@ export function WebsiteSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
                 {t(
                   "Add more services or team members",
                   "Додајте услуги или членови на тимот",
+                  "Shtoni më shumë shërbime ose anëtarë të ekipit",
                 )}
               </span>
               <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
@@ -66,7 +69,7 @@ export function WebsiteSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
           size="icon"
           className="absolute right-4 top-1 size-11"
           onClick={() => setDismissed(true)}
-          aria-label={t("Dismiss suggestions", "Сокриј предлози")}
+          aria-label={t("Dismiss suggestions", "Сокриј предлози", "Hiq sugjerimet")}
         >
           <X />
         </Button>
@@ -81,7 +84,7 @@ export function WebsiteSetupBanner({ orgId }: { orgId: Id<"orgs"> }) {
       className="dashboard-setup-banner mb-4 flex min-h-12 shrink-0 items-center gap-3 rounded-2xl bg-warning/10 px-4 py-3 text-sm text-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <span data-replay-public className="min-w-0 flex-1">
-        {t(next.label[0], next.label[1])}
+        {t(next.label[0], next.label[1], next.label[2])}
       </span>
       <ArrowRight className="size-4 shrink-0" />
     </Link>

@@ -20,6 +20,30 @@ export const initials = (name: string) =>
     .slice(0, 2)
     .join("")
     .toUpperCase();
+
+export function resolveAccountAvatar(profile: {
+  staffAvatarUrl?: string | null;
+  user?: { avatarUrl?: string | null } | null;
+  orgLogoUrl?: string | null;
+}): { src: string | null; isFallbackToLogo: boolean } {
+  const userAvatar =
+    profile.staffAvatarUrl?.trim() || profile.user?.avatarUrl?.trim() || null;
+  if (userAvatar) {
+    return { src: userAvatar, isFallbackToLogo: false };
+  }
+  const salonLogo = profile.orgLogoUrl?.trim() || null;
+  if (salonLogo) {
+    return { src: salonLogo, isFallbackToLogo: true };
+  }
+  return { src: null, isFallbackToLogo: false };
+}
+
+export function resolveAccountDisplayName(profile: {
+  staffDisplayName?: string | null;
+  user?: { name?: string | null } | null;
+}): string | null {
+  return profile.staffDisplayName?.trim() || profile.user?.name?.trim() || null;
+}
 export const overviewNumber = (minor: number | null, locale: string) =>
   minor === null
     ? "—"

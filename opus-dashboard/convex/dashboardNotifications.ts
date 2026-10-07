@@ -1,6 +1,7 @@
 import { v, ConvexError } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { queueStaffPushEvent } from "./lib/staffPush";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTERNAL — called from booking mutations (createBooking, cancelBooking, etc.)
@@ -18,6 +19,7 @@ export const create = internalMutation({
     body: v.string(),
     bookingId: v.optional(v.id("bookings")),
     customerId: v.optional(v.id("customers")),
+    queuePush: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("dashboard_notifications", {
@@ -31,6 +33,13 @@ export const create = internalMutation({
       isDismissed: false,
       createdAt: Date.now(),
     });
+    if (args.queuePush ?? true) {
+      await queueStaffPushEvent(ctx, {
+        orgId: args.orgId,
+        event: args.type,
+        bookingId: args.bookingId,
+      });
+    }
   },
 });
 
@@ -108,6 +117,9 @@ export const dismiss = mutation({
     await requireAuth(ctx, args.orgId);
     const n = await ctx.db.get(args.notificationId);
     if (!n || n.orgId !== args.orgId) throw new ConvexError("Not found.");
-    await ctx.db.patch(args.notificationId, { isDismissed: true, isRead: true });
+    await ctx.db.patch(args.notificationId, {
+      isDismissed: true,
+      isRead: true,
+    });
   },
 });

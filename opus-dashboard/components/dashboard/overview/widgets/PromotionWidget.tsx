@@ -18,28 +18,31 @@ export function PromotionWidget() {
     {
       tab: "opening",
       icon: ImagePlus,
-      title: t("Share an opening", "Сподели термин"),
+      title: t("Share an opening", "Сподели термин", "Ndani një termin të lirë"),
       description: t(
         "A ready-to-post Instagram Story.",
         "Instagram Story подготвено за објава.",
+        "Një Instagram Story gati për t'u postuar.",
       ),
     },
     {
       tab: "kit",
       icon: QrCode,
-      title: t("Booking promotion kit", "Промотивен пакет"),
+      title: t("Booking promotion kit", "Промотивен пакет", "Paketa e promovimit të rezervimeve"),
       description: t(
         "Your QR code, counter sign, and booking Story.",
         "QR-код, постер за пулт и Story за закажување.",
+        "Kodi juaj QR, shenja e banakut dhe Story e rezervimit.",
       ),
     },
     {
       tab: "replies",
       icon: MessageSquareText,
-      title: t("Saved replies", "Зачувани одговори"),
+      title: t("Saved replies", "Зачувани одговори", "Përgjigje të ruajtura"),
       description: t(
         "Your answers, ready to copy.",
         "Вашите одговори, подготвени за копирање.",
+        "Përgjigjet tuaja, gati për t'u kopjuar.",
       ),
     },
   ];
@@ -47,10 +50,11 @@ export function PromotionWidget() {
     <WidgetFrame
       replayPublicSubtitle
       replayPublicTitle
-      title={t("Promote your studio", "Промовирајте го студиото")}
+      title={t("Promote your studio", "Промовирајте го студиото", "Promovoni studion tuaj")}
       subtitle={t(
         "Share your booking link and fill your calendar.",
         "Олеснете им на клиентите да закажат.",
+        "Ndani linkun tuaj të rezervimit dhe mbushni kalendarin tuaj.",
       )}
       action={
         <Badge data-replay-public variant="secondary">

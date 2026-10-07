@@ -62,16 +62,19 @@ export function GapList({
               ? t(
                   "No bookable openings found",
                   "Не се пронајдени соодветни слободни термини",
+                  "Nuk u gjetën hapësira të rezervueshme",
                 )
               : t(
                   "Scan a day to find openings",
                   "Скенирајте ден за да пронајдете слободни термини",
+                  "Skanoni një ditë për të gjetur hapësira",
                 )}
           </EmptyTitle>
           <EmptyDescription>
             {t(
               "Results depend on working hours, services, buffers, and your minimum opening duration.",
               "Резултатите зависат од работното време, услугите, паузите меѓу термини и минималното времетраење.",
+              "Rezultatet varen nga orari i punës, shërbimet, koha e pushimit dhe kohëzgjatja minimale e hapësirës.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -118,20 +121,21 @@ function GapCard({
         </CardTitle>
         <CardDescription>
           {gap.serviceDate} · {gap.durationMins}{" "}
-          {t("minutes of open time", "минути слободно време")}
-          {!active && ` · ${t("Closed", "Затворено")}`}
+          {t("minutes of open time", "минути слободно време", "minuta kohë e lirë")}
+          {!active && ` · ${t("Closed", "Затворено", "Mbyllur")}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {gap.activeOffer && (
           <Alert>
             <AlertTitle data-replay-public>
-              {t("Waiting for a response", "Се чека одговор")}
+              {t("Waiting for a response", "Се чека одговор", "Në pritje të përgjigjes")}
             </AlertTitle>
             <AlertDescription data-replay-public>
               {t(
                 "One offer is active. You can choose another client after it expires or is declined.",
                 "Има една активна понуда. Може да изберете друг клиент по истекување или одбивање.",
+                "Një ofertë është aktive. Mund të zgjidhni një klient tjetër pasi ajo të skadojë ose të refuzohet.",
               )}
             </AlertDescription>
           </Alert>
@@ -141,6 +145,7 @@ function GapCard({
             {t(
               "No eligible clients yet. Review client permissions, then scan again or choose a client.",
               "Сè уште нема соодветни клиенти. Проверете ги дозволите, па скенирајте повторно или изберете клиент.",
+              "Nuk ka ende klientë të përshtatshëm. Rishikoni lejet e klientëve, pastaj skanoni përsëri ose zgjidhni një klient.",
             )}
           </p>
         ) : (
@@ -172,7 +177,7 @@ function GapCard({
             onClick={dismissOpening}
             disabled={busy}
           >
-            {t("Dismiss opening", "Отфрли слободен термин")}
+            {t("Dismiss opening", "Отфрли слободен термин", "Hiq hapësirën")}
           </Button>
         </CardFooter>
       )}
@@ -207,6 +212,7 @@ function CandidateRow({
         t(
           "Email queued. Delivery status will update here.",
           "Пораката е во ред за испраќање. Статусот ќе се ажурира тука.",
+          "Email-i u fut në radhë. Statusi i dërgimit do të përditësohet këtu.",
         ),
       );
     } catch (error) {
@@ -246,13 +252,17 @@ function CandidateRow({
       </p>
       <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
         {candidate.reasons.map((reason, i) => (
-          <li key={i}>{t(reason.en, reason.mk)}</li>
+          <li key={i}>{t(reason.en, reason.mk, (reason as { sq?: string }).sq)}</li>
         ))}
       </ul>
       {candidate.failureReason && candidate.status === "failed" && (
         <Alert variant="destructive">
           <AlertTitle data-replay-public>
-            {t("The email was not delivered", "Пораката не е доставена")}
+            {t(
+              "The email was not delivered",
+              "Пораката не е доставена",
+              "Email-i nuk u dorëzua",
+            )}
           </AlertTitle>
           <AlertDescription>{candidate.failureReason}</AlertDescription>
         </Alert>
@@ -262,13 +272,17 @@ function CandidateRow({
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button data-replay-public size="sm" variant="outline">
-                {t("Review email", "Прегледај порака")}
+                {t("Review email", "Прегледај порака", "Shqyrto email-in")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle data-replay-public>
-                  {t("Opening offer", "Понуда за слободен термин")}
+                  {t(
+                    "Opening offer",
+                    "Понуда за слободен термин",
+                    "Ofertë për hapësirë të lirë",
+                  )}
                 </DialogTitle>
                 <DialogDescription>
                   {candidate.customerEmail} · {candidate.serviceName} ·{" "}
@@ -280,6 +294,7 @@ function CandidateRow({
                 {t(
                   "The email includes a booking link. The offer lasts up to two hours, while the appointment remains available.",
                   "Пораката содржи линк за резервирање. Понудата важи најмногу два часа, додека терминот е слободен.",
+                  "Email-i përfshin një lidhje rezervimi. Oferta zgjat deri në dy orë, ndërsa termini mbetet i disponueshëm.",
                 )}
               </p>
               <DialogFooter>
@@ -289,8 +304,8 @@ function CandidateRow({
                 >
                   {busy && <Spinner data-icon="inline-start" />}
                   {candidate.status === "failed"
-                    ? t("Retry email", "Испрати повторно")
-                    : t("Approve email", "Одобри порака")}
+                    ? t("Retry email", "Испрати повторно", "Riprovo email-in")
+                    : t("Approve email", "Одобри порака", "Mirato email-in")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -303,7 +318,7 @@ function CandidateRow({
               onClick={skipClient}
               disabled={busy}
             >
-              {t("Skip client", "Прескокни клиент")}
+              {t("Skip client", "Прескокни клиент", "Kalo klientin")}
             </Button>
           )}
         </div>

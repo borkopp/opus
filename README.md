@@ -18,6 +18,7 @@ Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scop
 | `opus-mk/`        | Dormant marketplace package retained for possible future work; do not modify by default                      | `3001`                 |
 | `opus-landing/`   | Truthful beauty-focused `opus.mk` marketing website                                                          | `3000`                 |
 | `opus-owner/`     | Private read-only platform overview for the OPUS owner at `admin.opus.mk`                                     | `3002`                 |
+| `opus-mobile/`    | Authorized Expo / React Native studio dashboard using the shared Convex backend                              | `8081`                 |
 
 `opus-dashboard/convex` is the backend source of truth. `opus-mk/convex` points to that shared backend.
 
@@ -78,6 +79,19 @@ npm install
 npm run dev
 ```
 
+### Mobile dashboard preview
+
+```bash
+cd opus-mobile
+npm install
+npm start
+# Press i for iOS, a for Android, or w for the web preview.
+```
+
+The mobile app matches the dashboard themes and uses bottom tabs. It connects to
+the existing Convex backend with email OTP and server-checked appointment actions.
+See [`opus-mobile/README.md`](opus-mobile/README.md) for setup and boundaries.
+
 ## Quality checks
 
 Run the checks for each affected package:
@@ -88,6 +102,12 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+
+# opus-mobile
+npm run lint
+npm run typecheck
+npm run doctor
+npm run export
 
 # opus-landing (and opus-mk only when explicitly affected)
 npm run lint

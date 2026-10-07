@@ -59,7 +59,7 @@ const mkTerms: LegalDocument = {
   effectiveLabel: "Стапува во сила",
   effectiveDate: "1 септември 2026",
   lastUpdatedLabel: "Последно ажурирање",
-  lastUpdatedDate: "1 септември 2026",
+  lastUpdatedDate: "7 октомври 2026",
   tocLabel: "Во овој документ",
   highlights: [
     "OPUS е платформа за закажување, а не салон или давател на третмани.",
@@ -73,11 +73,11 @@ const mkTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Овие Услови го уредуваат користењето на opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk и поврзаните функции, содржини и пораки (заедно, „Услугата“).",
+          text: "Овие Услови го уредуваат користењето на opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio во App Store) и поврзаните функции, содржини и пораки (заедно, „Услугата“).",
         },
         {
           type: "paragraph",
-          text: "Со пристапување, отворање профил, приклучување кон тим или закажување термин преку Услугата, потврдувате дека сте ги прочитале и ги прифаќате овие Услови. Ако ја користите Услугата во име на деловен субјект, потврдувате дека сте овластени да го обврзете тој субјект.",
+          text: "Со преземање, најава или користење на мобилната апликација, пристапување, отворање профил, приклучување кон тим или закажување термин преку Услугата, потврдувате дека сте ги прочитале и ги прифаќате овие Услови. Ако ја користите Услугата во име на деловен субјект, потврдувате дека сте овластени да го обврзете тој субјект.",
         },
         {
           type: "paragraph",
@@ -91,7 +91,7 @@ const mkTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "OPUS е платформа за закажување за салони и студија за убавина во Северна Македонија. Услугата се управува под името OPUS од Скопје, Северна Македонија.",
+          text: "OPUS е платформа за закажување за салони и студија за убавина во Северна Македонија. OPUS е деловно име под кое услугата ја управува Борко Петревски од Прилеп, Северна Македонија, додека формалната регистрација на компанијата е во тек. Во овие Услови, „OPUS“, „ние“ и „наш“ се однесуваат на Борко Петревски кој работи под името OPUS.",
         },
         {
           type: "contacts",
@@ -106,7 +106,7 @@ const mkTerms: LegalDocument = {
               value: "+389 77 826 333",
               href: "tel:+38977826333",
             },
-            { label: "Локација", value: "Скопје, Северна Македонија" },
+            { label: "Локација", value: "Прилеп, Северна Македонија" },
           ],
         },
       ],
@@ -237,11 +237,11 @@ const mkTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Бесплатна и идна платена понуда",
+      title: "10. Бесплатни услуги и студиски претплати",
       blocks: [
         {
           type: "paragraph",
-          text: "Функциите што моментално се означени како бесплатни може да се користат без платежна картичка. OPUS нема да ве задолжи автоматски. Ако во иднина понудиме платена функција или план, цената, даноците, периодот на наплата, обновувањето и условите за откажување ќе бидат прикажани пред да побараме изречно прифаќање или плаќање.",
+          text: "Функциите означени како Free може да се користат без платежна картичка. Кога се нуди платен студиски план, цената, валутата, применливите даноци, периодот на наплата и обновувањето се прикажуваат во веб наплатата пред изречно да го прифатите плаќањето. OPUS Pro е месечна студиска претплата што се обновува до откажување според условите при наплатата. Само овластен сопственик може да ја започне или да управува со неа. Наплатата, фактурите, платежните методи и откажувањето се управуваат преку веб контролната табла и конфигурираниот платежен давател. Откажувањето обично важи од крајот на платениот период; пристапот може да заврши порано при неплаќање или повлечена претплата. Повратот на средства и задолжителните права за откажување се уредуваат според применливото право и условите при наплатата. Преземањето или користењето на мобилната апликација само по себе не започнува платена претплата и не ве задолжува. Плаќањето за третманите останува меѓу клиентот и студиото.",
         },
       ],
     },
@@ -301,7 +301,7 @@ const mkTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Овие Услови се толкуваат според законите на Република Северна Македонија. Прво контактирајте нè за да се обидеме спорот да го решиме директно. За деловни корисници, надлежни се стварно надлежните судови во Скопје. Ако сте потрошувач, оваа одредба не ги ограничува задолжителните права или надлежност што ви следуваат според применливиот закон.",
+          text: "Овие Услови се толкуваат според законите на Република Северна Македонија. Прво контактирајте нè за да се обидеме спорот да го решиме директно. За деловни корисници, надлежни се соодветните судови во Северна Македонија, освен ако задолжителниот закон предвидува поинаку. Ако сте потрошувач, оваа одредба не ги ограничува задолжителните права или надлежност што ви следуваат според применливиот закон.",
         },
       ],
     },
@@ -319,6 +319,20 @@ const mkTerms: LegalDocument = {
         },
       ],
     },
+    {
+      id: "mobile-app",
+      title: "17. Мобилна апликација, ажурирања и затворање сметка",
+      blocks: [
+        { type: "paragraph", text: "Мобилната апликација е придружна контролна табла за постојни сопственици, менаџери и овластени вработени во OPUS студија. Пристапот и функциите зависат од членството, улогата и планот на студиото. Не е апликација за закажување за крајни клиенти. Потребни се интернет и поддржан уред; вашиот мрежен оператор може да наплати пренос на податоци." },
+        { type: "paragraph", text: "Согласно овие Услови и правилата на продавницата, може да ја користите апликацијата за овластена студиска работа на компатибилни уреди што ги поседувате или контролирате. Лиценцата е лична, ограничена, неисклучива и непренослива, освен според правилата на продавницата, вклучително применливи правила за семејно споделување или групно купување. Не дозволува неовластен пристап до податоци на друго студио." },
+        { type: "paragraph", text: "Дозволата за известувања ја управувате во поставките на уредот, а изборот за известувања во апликацијата. Известувањата може да доцнат или да не пристигнат; студискиот календар е изворот за статусот на термините. Вклучен преглед со клиентски детали може да ги открие на споделен или заклучен уред. Одговорни сте за безбедноста на уредот и соодветниот избор на прегледи." },
+        { type: "paragraph", text: "Може да испорачуваме компатибилни ажурирања за одржување преку Expo EAS Update и нови верзии преку продавницата за апликации. Користиме Sentry за дијагностика на падови и перформанси, според Политиката за приватност. Мобилната апликација не снима сесии, слики или видео од екранот, не врши рекламно следење и не собира конзолни дневници." },
+        { type: "paragraph", text: "Користењето на апликацијата значи прифаќање на овие Услови и запознавање со Политиката за приватност. Политиката е известување за обработката и вашите права; прифаќањето на Условите не ги укинува правата за приватност и не е општа согласност за изборна аналитика, снимање или рекламирање. Кога согласност е законски потребна, таа мора да се побара одделно." },
+        { type: "paragraph", text: "Apple не е страна во договорот за OPUS платформските услуги и не обезбедува OPUS поддршка. OPUS одговара за апликацијата и поддршката во обем предвиден со закон. Стандардниот договор за крајни корисници на Apple важи за iOS преземањето кога е обезбеден од App Store. Правилата на продавницата и применливите услови на надворешните даватели важат за нивните услуги. Ова не ги ограничува задолжителните потрошувачки права или правни средства." },
+        { type: "paragraph", text: "Може да побарате бришење на личната сметка во Поставки → Избриши сметка или преку hello@opus.mk. Автентицираните барања ги обработуваме во прикажаниот рок од 30 дена, со законски потребно, ограничено задржување. Бришењето на апликацијата само по себе не ја брише сметката, не ги откажува термините и не ја откажува студиската претплата." },
+        { type: "link", text: "Условите за преземање од App Store се достапни во", label: "Стандарден договор за крајни корисници на Apple", href: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" },
+      ],
+    },
   ],
 };
 
@@ -328,16 +342,16 @@ const mkPrivacy: LegalDocument = {
     "Како OPUS собира, користи, споделува и штити лични податоци на студија, членови на тим, клиенти и посетители.",
   eyebrow: "Правни информации · Документ 02",
   summary:
-    "OPUS користи лични податоци за профили, безбедно закажување и поддршка. Незадолжителната аналитика и мерењето на реклами се вклучуваат само со ваша согласност.",
+    "OPUS користи лични податоци за профили, безбедно закажување, поддршка и мобилна дијагностика за сигурност. Изборната веб аналитика и мерењето на реклами се вклучуваат само со ваша согласност.",
   effectiveLabel: "Стапува во сила",
   effectiveDate: "1 септември 2026",
   lastUpdatedLabel: "Последно ажурирање",
-  lastUpdatedDate: "14 септември 2026",
+  lastUpdatedDate: "7 октомври 2026",
   tocLabel: "Во овој документ",
   highlights: [
     "Студиото е контролор за податоците на своите клиенти; OPUS ја обезбедува платформата.",
-    "PostHog и Meta Pixel имаат одделни, незадолжителни поставки за согласност.",
-    "Може да го смените изборот во Поставки за колачиња во секое време.",
+    "Мобилната апликација користи Sentry за падови и технички перформанси, без снимање сесии.",
+    "PostHog и Meta Pixel се изборни на веб; изборот може да го смените во Поставки за колачиња.",
   ],
   sections: [
     {
@@ -346,11 +360,11 @@ const mkPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Оваа Политика важи за opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk и поврзаните функции, пораки и поддршка (заедно, „Услугата“). Таа објаснува како OPUS обработува лични податоци според Законот за заштита на личните податоци на Република Северна Македонија.",
+          text: "Оваа Политика важи за opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio во App Store) и поврзаните функции, пораки и поддршка (заедно, „Услугата“). Таа објаснува како OPUS обработува лични податоци според Законот за заштита на личните податоци на Република Северна Македонија.",
         },
         {
           type: "paragraph",
-          text: "За обработката за која OPUS е контролор, контакт за приватност е OPUS, Скопје, Северна Македонија.",
+          text: "OPUS е деловно име управувано од Борко Петревски од Прилеп, Северна Македонија, со формална регистрација на компанијата во тек. Кога OPUS е контролор, одговорен е Борко Петревски кој работи под името OPUS; контактот за приватност е hello@opus.mk. Оваа Политика не претставува OPUS како веќе регистрирана компанија. Каде што се применуваат други задолжителни закони, вклучувајќи го GDPR, ги почитуваме и соодветните права и обврски.",
         },
         {
           type: "contacts",
@@ -418,6 +432,26 @@ const mkPrivacy: LegalDocument = {
           type: "paragraph",
           text: "Студио може и рачно да внесе податоци што веќе ги има од клиент или член на тим. Во тој случај студиото е одговорно да ве информира и да има валидна правна основа.",
         },
+        {
+          type: "paragraph",
+          text: "Ако ја користите OPUS Studio мобилната апликација или push известувања во студиската веб контролна табла, обработуваме идентификатор на инсталацијата, токен или претплата за испраќање известувања, поврзана студиска сметка, лични поставки и записи за прифаќање или неуспех на испраќањето. Секој уред или прелистувач се поврзува само по ваш избор и со дозвола за известувања. Клиентските детали се скриени во прегледот по правило; ако ја вклучите таа опција, име на клиент, услуга и време на термин може да се прикажат на заклучениот екран.",
+        },
+        {
+          type: "paragraph",
+          text: "Од верзијата 1.0.3, мобилната апликација OPUS Studio користи Sentry за извештаи за падови и техничка дијагностика на перформансите. Не вклучува PostHog, рекламна аналитика или снимање сесии. Податоците за сметката, најавата, термините, безбедноста и изборните push известувања се обработуваат за обезбедување на Услугата. Expo EAS Update може да испорачува компатибилни ажурирања за одржување и поправки со технички податоци за апликацијата, инсталацијата, верзијата и уредот. Веб-страниците што ги отворате од апликацијата ги користат сопствените поставки за колачиња.",
+        },
+      ],
+    },
+    {
+      id: "mobile-diagnostics",
+      title: "Мобилна дијагностика за сигурност (Sentry)",
+      blocks: [
+        { type: "paragraph", text: "Користиме Sentry, обезбеден од Functional Software, Inc., за дијагностицирање софтверски грешки и одржување на сигурноста на мобилната апликација. Тоа опфаќа JavaScript и нативни падови, застои, времетраење на стартување и вчитување екрани, бавни или замрзнати кадри и технички податоци за стабилноста на верзијата. Ова е оперативна дијагностика, а не рекламирање или снимање сесии." },
+        { type: "paragraph", text: "Извештаите може да содржат случајно генериран идентификатор на инсталација или сесија, верзија и број на издание, канал и идентификатор на ажурирање, верзија на оперативниот систем, модел на уредот и мемориски податоци, приближен регион изведен од врската, време на пад, тип на грешка, технички стек и примероци на мерења. Апликацијата не испраќа намерно OPUS идентитет, име, е-пошта, телефон, клиентски записи, белешки за термини, кодови за најава, автентикациски или push токени, тела на барања или параметри од URL до Sentry. JavaScript извештаите користат строг филтер и ја заменуваат слободната содржина на грешките; нативната историја на дејства и мрежното снимање се исклучени, а заштитното отстранување податоци кај давателот е вклучено." },
+        { type: "paragraph", text: "Снимање сесии, слики од екранот, структура на прикажани елементи, конзолни дневници, снимање допири или гестови и рекламно следење се исклучени. Дијагностиката не ја снима содржината на екраните. Продукциските мерења на перформансите се земаат како примероци за да се ограничат податоците и оптоварувањето; извештаите за падови и бројачите за стабилност помагаат да се откријат инциденти." },
+        { type: "paragraph", text: "OPUS се потпира на легитимен интерес за откривање и поправка на софтверски грешки, заштита на достапноста и спречување повторени прекини, одмерен со вашите права за приватност. Тоа е различно од согласноста за изборна веб аналитика или рекламирање. Прифаќањето на Условите не е општа согласност за обработка. За прашања или приговор на обработката врз основа на легитимен интерес пишете на hello@opus.mk; секое барање го оценуваме според применливото право." },
+        { type: "paragraph", text: "Мобилниот Sentry проект е конфигуриран во ЕУ регионот на Sentry. Sentry и неговите овластени поддаватели може да обработуваат ограничени сервисни податоци и меѓународно, според договорите за обработка и применливите заштитни механизми за пренос. Суровите дијагностички настани го следат периодот за задржување на сервисниот план и автоматски се отстрануваат по неговиот истек. Ограничени записи за конкретни инциденти може да се задржат одделно за безбедност, законска обврска или правно барање. Дијагностичката меморија на телефонот е ограничена и се отстранува со апликацијата; одјавувањето не ги брише веќе примените дијагностички записи." },
+        { type: "link", text: "Повеќе за договорите за обработка на Sentry:", label: "Sentry Trust Center", href: "https://sentry.io/trust/" },
       ],
     },
     {
@@ -484,11 +518,17 @@ const mkPrivacy: LegalDocument = {
             "Со студиото и неговите овластени членови на тим: за да го видат и исполнат терминот и да водат клиентска евиденција.",
             "Со Vercel: за хостирање и испорака на веб-апликациите, кога Услугата е поставена таму.",
             "Со Convex: за базата, складирањето, серверските функции и инфраструктурата за најава.",
+            "Со Cloudflare Turnstile: за проверка против автоматизирана злоупотреба при најава, со технички податоци за прелистувачот или уредот и мрежата. Ова е безбедносна проверка, а не рекламирање.",
             "Со Resend и/или Sender: за еднократни кодови и трансакциски е-пораки, само кога соодветниот давател е конфигуриран.",
+            "Со Twilio: за изборни трансакциски SMS известувања за термини, само кога студиото и давателот ја имаат овозможено функцијата; добива телефонски број и содржина на пораката.",
+            "Со Polar или друг давател наведен на наплатата: за веб-претплати, фактури и статус на плаќање. Податоците за картичка се внесуваат кај давателот, не во мобилната апликација; OPUS добива информации за претплатата и трансакцијата потребни за управување со пристапот.",
+            "Со Meta и OpenAI: само за Instagram асистентот кога студиото ја има поврзано и овозможено таа функција; потребните пораки и контекст за закажување се обработуваат за одговор и потврден термин. Ова е одделно од изборниот Meta Pixel и не опфаќа пристап до неповрзани студија.",
             "Со Formspree: кога ја испраќате контакт-формата на opus.mk.",
             "Со PostHog: за аналитика на платформата, само со аналитичка согласност. Со Meta: за мерење и оптимизација на рекламите за OPUS и рекламни публики, само со рекламна согласност. Не испраќаме имиња, е-пошта, телефонски броеви или содржина на клиентски термини како параметри на Meta Pixel.",
             "Со Mapbox: кога се користи пребарување адреса, мапа или насока и функцијата е конфигурирана; за пресметка на рута може да ги добие координатите на студиото и на вашиот уред.",
             "Со професионални советници, надлежен орган или суд кога тоа е законски потребно или неопходно за заштита на права, безбедност и корисници.",
+            "Со Expo и Apple APNs или Google FCM: за push известувања во OPUS Studio кога се конфигурирани и го поврзувате уредот. За веб push се користи push услугата на прелистувачот. Добиваат податоци за насочување до уредот и содржина на известувањето; клиентски детали се вклучуваат само ако го вклучите нивниот преглед.",
+            "Sentry (Functional Software, Inc.): за мобилни падови, стабилност на изданијата и примероци на технички мерења на перформансите. Проектот е во ЕУ регионот на Sentry и не вклучува снимање сесии или рекламно следење.",
           ],
         },
         {
@@ -537,6 +577,10 @@ const mkPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
+          text: "OPUS Studio ги чува неопходните податоци за најава и изборот за известувања во заштитената меморија на телефонот. Веб контролната табла чува локален идентификатор за поврзаниот прелистувач. Push работникот не зачувува копии од приватни студиски страници. Може да исклучите или да го прекинете поврзувањето на известувањата од личните поставки и да ја повлечете дозволата на уредот. Одјавувањето ја прекинува регистрацијата за известувања за таа инсталација.",
+        },
+        {
+          type: "paragraph",
           text: "Неопходните технологии овозможуваат најава, безбедност и вашите поставки. Аналитиката и рекламните технологии се одделни и исклучени додека не ги прифатите:",
         },
         {
@@ -544,7 +588,7 @@ const mkPrivacy: LegalDocument = {
           items: [
             "Неопходни колачиња за сесија и безбедност на studio.opus.mk, за да се најавите и да останете безбедно најавени.",
             "opus_consent_v1 го памети вашиот избор до 180 дена на opus.mk и studio.opus.mk. Локален сигнал ги известува другите отворени картички за промена на изборот.",
-            "PostHog: аналитички колачиња со префикс ph_ и локална меморија, само со аналитичка согласност. Периодот на колачињата е поставен на 180 дена; локалната меморија останува до повлекување на согласноста или бришење. На маркетинг-страницата opus.mk може да снимаме сесии со аналитичка согласност за да разбереме како ја користите страницата. Внесените вредности во полињата се маскирани. Снимањето сесии во студискиот контролен панел останува исклучено.",
+            "PostHog: аналитички колачиња со префикс ph_ и локална меморија, само со аналитичка согласност. Периодот на колачињата е поставен на 180 дена; локалната меморија останува до повлекување на согласноста или бришење. На маркетинг-страницата opus.mk може да снимаме сесии со аналитичка согласност за да разбереме како ја користите страницата. Внесените вредности во полињата се маскирани. Во веб контролниот панел снимањето е исто така условено со аналитичка согласност и текстот е маскиран. Овие веб-алатки не се вклучени во мобилната апликација.",
             "Meta Pixel: _fbp и, кога постои идентификатор на рекламен клик, _fbc, вообичаено до 90 дена и обновувани при користење. Се вчитува само по рекламна согласност, на маркетинг и регистрациските страници на OPUS. Не го вчитуваме на јавните веб-сајтови за закажување на студијата или на приватните страници на контролниот панел.",
             "Колачето opus_locale, кое се поставува кога самите ќе го смените јазикот и го памети изборот до една година.",
             "Локална меморија за избраната светла или темна тема и за одредени поставки на интерфејсот. Овие вредности остануваат на уредот додека не ги исчистите.",
@@ -552,7 +596,7 @@ const mkPrivacy: LegalDocument = {
         },
         {
           type: "paragraph",
-          text: "Изберете Само неопходни, Прифати ги сите или зачувајте одделен избор за аналитика и рекламирање. Поставки за колачиња се достапни во подножјето на opus.mk и во студиската апликација. Повлекувањето го запира идното незадолжително следење; не ја поништува претходната обработка. Може и да ја исчистите меморијата во прелистувачот. Блокирањето на неопходните колачиња може да спречи најава.",
+          text: "Изберете Само неопходни, Прифати ги сите или зачувајте одделен избор за аналитика и рекламирање. Поставки за колачиња се достапни во подножјето на opus.mk и во студиската веб контролна табла. Повлекувањето го запира идното незадолжително следење; не ја поништува претходната обработка. Може и да ја исчистите меморијата во прелистувачот. Блокирањето на неопходните колачиња може да спречи најава.",
         },
       ],
     },
@@ -593,6 +637,10 @@ const mkPrivacy: LegalDocument = {
         {
           type: "paragraph",
           text: "Испратете барање на hello@opus.mk. Може да побараме разумна потврда на идентитетот и контекстот на студиото за да не откриеме податоци на погрешно лице. Одредени права може да бидат ограничени кога законот дозволува или бара задржување.",
+        },
+        {
+          type: "paragraph",
+          text: "Во мобилната апликација може да поднесете автентицирано барање преку Поставки → Избриши сметка, и ако немате пристап до студио. Барањата се обработуваат во рок од 30 дена. Ја отстрануваме или анонимизираме личната сметка и поврзаните податоци што немаат потребна законска основа за задржување; студиските записи, сопственоста и претплатите се прегледуваат во рамките на обработката. Клиентските записи контролирани од студио се обработуваат според неговите законски обврски и инструкции. Деинсталирање или одјавување не ја брише сметката ниту веќе примените дијагностички податоци.",
         },
         {
           type: "link",
@@ -655,7 +703,7 @@ const enTerms: LegalDocument = {
   effectiveLabel: "Effective",
   effectiveDate: "1 September 2026",
   lastUpdatedLabel: "Last updated",
-  lastUpdatedDate: "1 September 2026",
+  lastUpdatedDate: "7 October 2026",
   tocLabel: "In this document",
   highlights: [
     "OPUS is booking software, not a salon or treatment provider.",
@@ -669,11 +717,11 @@ const enTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "These Terms govern your use of opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, and the related features, content, and communications (together, the “Service”).",
+          text: "These Terms govern your use of opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (listed as OPUS Beauty Studio in the App Store), and the related features, content, and communications (together, the “Service”).",
         },
         {
           type: "paragraph",
-          text: "By accessing the Service, creating an account, joining a studio team, or booking an appointment through the Service, you confirm that you have read and accept these Terms. If you use the Service for a business, you confirm that you are authorised to bind that business.",
+          text: "By downloading, signing in to or using the mobile app, accessing the Service, creating an account, joining a studio team, or booking an appointment through the Service, you confirm that you have read and accept these Terms. If you use the Service for a business, you confirm that you are authorised to bind that business.",
         },
         {
           type: "paragraph",
@@ -687,7 +735,7 @@ const enTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "OPUS is a booking platform for small beauty salons and studios in North Macedonia. The Service is operated under the OPUS name from Skopje, North Macedonia.",
+          text: "OPUS is a booking platform for small beauty salons and studios in North Macedonia. OPUS is a business name operated by Borko Petrevski in Prilep, North Macedonia, pending formal company registration. In these Terms, “OPUS”, “we”, “us” and “our” refer to Borko Petrevski operating under the OPUS name.",
         },
         {
           type: "contacts",
@@ -702,7 +750,7 @@ const enTerms: LegalDocument = {
               value: "+389 77 826 333",
               href: "tel:+38977826333",
             },
-            { label: "Location", value: "Skopje, North Macedonia" },
+            { label: "Location", value: "Prilep, North Macedonia" },
           ],
         },
       ],
@@ -833,11 +881,11 @@ const enTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Free and future paid services",
+      title: "10. Free services and studio subscriptions",
       blocks: [
         {
           type: "paragraph",
-          text: "Features currently labelled free can be used without a payment card. OPUS will not charge you automatically. If we later offer a paid feature or plan, its price, taxes, billing period, renewal, and cancellation terms will be shown before we ask for express acceptance or payment.",
+          text: "Features labelled Free can be used without a payment card. Where a paid studio plan is offered, the price, currency, applicable taxes, billing period and renewal terms are shown in the web checkout before you expressly accept payment. OPUS Pro is a monthly studio subscription that renews until cancelled under the checkout terms. Only an authorised studio owner may start or manage it. Billing, invoices, payment methods and cancellation are managed through the web dashboard and the configured payment provider. Cancellation normally takes effect at the end of the paid period; plan access may end sooner for non-payment or a revoked subscription. Refunds and mandatory cancellation rights follow applicable law and the terms displayed at checkout. Downloading or using the mobile app does not itself start a paid subscription or charge you. Payments for beauty treatments remain between the client and studio.",
         },
       ],
     },
@@ -897,7 +945,7 @@ const enTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "These Terms are governed by the laws of the Republic of North Macedonia. Contact us first so we can try to resolve a dispute directly. For business users, the competent courts in Skopje have jurisdiction. If you are a consumer, this does not limit any mandatory right or jurisdiction available to you under applicable law.",
+          text: "These Terms are governed by the laws of the Republic of North Macedonia. Contact us first so we can try to resolve a dispute directly. For business users, the competent courts in North Macedonia have jurisdiction unless mandatory law provides otherwise. If you are a consumer, this does not limit any mandatory right or jurisdiction available to you under applicable law.",
         },
       ],
     },
@@ -915,6 +963,20 @@ const enTerms: LegalDocument = {
         },
       ],
     },
+    {
+      id: "mobile-app",
+      title: "17. Mobile app, updates and account closure",
+      blocks: [
+        { type: "paragraph", text: "The mobile app is a companion dashboard for existing OPUS studio owners, managers and authorised staff. Access and available features depend on studio membership, role and plan. It is not a consumer booking app. An internet connection and a supported device are required; your network provider may charge for data." },
+        { type: "paragraph", text: "Subject to these Terms and the store usage rules, you may use the app on compatible devices you own or control for authorised studio work. This licence is personal, limited, non-exclusive and non-transferable, except as allowed by the store rules, including applicable Family Sharing or volume-purchase rules. It does not permit access to another studio’s data without authorisation." },
+        { type: "paragraph", text: "You control notification permission in your device settings and alert preferences in the app. Notifications can be delayed or fail; the studio calendar remains the source for appointment status. Enabling client details in previews can expose them on a shared or locked device. You are responsible for securing the device and using preview settings appropriately." },
+        { type: "paragraph", text: "We may deliver compatible maintenance updates through Expo EAS Update and new versions through the app store. We use Sentry crash and performance diagnostics to maintain reliability as described in the Privacy Policy. The mobile app does not perform session replay, screenshot or screen recording, advertising tracking or console-log collection." },
+        { type: "paragraph", text: "Using the app means accepting these Terms and acknowledging the Privacy Policy. The Policy is a notice about processing and your rights; accepting these Terms does not waive privacy rights or create blanket consent for optional analytics, recording or advertising. Where consent is legally required, it must be requested separately." },
+        { type: "paragraph", text: "Apple is not a party to the agreement for OPUS platform services and does not provide OPUS support. OPUS is responsible for its app and support to the extent required by law. Apple’s Standard End User Licence Agreement applies to the iOS download where supplied by the App Store. The store rules and applicable third-party service terms also apply to their respective services. Nothing here removes mandatory consumer rights or remedies." },
+        { type: "paragraph", text: "You can request deletion of your personal account in Settings → Delete account or contact hello@opus.mk. We process authenticated requests within the displayed 30-day period, subject to lawful, limited retention. Removing the app does not itself delete an account, cancel studio appointments or cancel a studio subscription." },
+        { type: "link", text: "The App Store download terms are available in the", label: "Apple Standard EULA", href: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" },
+      ],
+    },
   ],
 };
 
@@ -924,16 +986,16 @@ const enPrivacy: LegalDocument = {
     "How OPUS collects, uses, shares, and protects personal data about studios, team members, clients, and visitors.",
   eyebrow: "Legal information · Document 02",
   summary:
-    "OPUS uses personal data for accounts, secure booking, and support. Optional analytics and advertising measurement are enabled only with your consent.",
+    "OPUS uses personal data for accounts, secure booking, support and mobile reliability diagnostics. Optional website analytics and advertising measurement are enabled only with your consent.",
   effectiveLabel: "Effective",
   effectiveDate: "1 September 2026",
   lastUpdatedLabel: "Last updated",
-  lastUpdatedDate: "14 September 2026",
+  lastUpdatedDate: "7 October 2026",
   tocLabel: "In this document",
   highlights: [
     "The studio controls its client records; OPUS provides the platform.",
-    "PostHog and Meta Pixel have separate, optional consent settings.",
-    "You can change your choice in Cookie settings at any time.",
+    "The mobile app uses Sentry for crashes and technical performance, without session recording.",
+    "PostHog and Meta Pixel are optional on the web; change your choice in Cookie settings.",
   ],
   sections: [
     {
@@ -942,11 +1004,11 @@ const enPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "This Policy applies to opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, and related features, communications, and support (together, the “Service”). It explains how OPUS processes personal data under the Law on Personal Data Protection of the Republic of North Macedonia.",
+          text: "This Policy applies to opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (OPUS Beauty Studio in the App Store), and related features, communications, and support (together, the “Service”). It explains how OPUS processes personal data under the Law on Personal Data Protection of the Republic of North Macedonia.",
         },
         {
           type: "paragraph",
-          text: "For processing where OPUS is the controller, the privacy contact is OPUS, Skopje, North Macedonia.",
+          text: "OPUS is a business name operated by Borko Petrevski in Prilep, North Macedonia, pending formal company registration. Where OPUS is the controller, Borko Petrevski operating under the OPUS name is responsible; the privacy contact is hello@opus.mk. This Policy does not represent OPUS as an already registered company. Where other mandatory laws apply, including the GDPR, we also respect the relevant rights and obligations.",
         },
         {
           type: "contacts",
@@ -1014,6 +1076,26 @@ const enPrivacy: LegalDocument = {
           type: "paragraph",
           text: "A studio may also manually enter information it already holds about a client or team member. In that case, the studio is responsible for informing the person and having a valid legal basis.",
         },
+        {
+          type: "paragraph",
+          text: "If you use the OPUS Studio mobile app or push alerts in the studio web dashboard, we process an installation identifier, push token or browser subscription, linked studio account, personal preferences and provider acceptance or failure records. Each phone or browser is connected only when you choose to enable it and grant notification permission. Client details are hidden in previews by default; if you enable that option, a client name, service and appointment time may appear on your lock screen.",
+        },
+        {
+          type: "paragraph",
+          text: "From version 1.0.3, the OPUS Studio mobile app uses Sentry for crash reports and technical performance diagnostics. It does not include PostHog, advertising analytics or session recording. Account, authentication, appointment, security and optional push-notification data are processed to provide the Service. Expo EAS Update can deliver compatible maintenance updates and fixes using technical app, installation, version and device information. Web pages opened from the app follow their own cookie preferences.",
+        },
+      ],
+    },
+    {
+      id: "mobile-diagnostics",
+      title: "Mobile reliability diagnostics (Sentry)",
+      blocks: [
+        { type: "paragraph", text: "We use Sentry, provided by Functional Software, Inc., to diagnose software failures and maintain the reliability of the mobile app. This includes JavaScript and native crash reports, app hangs, startup and screen-loading durations, slow or frozen frame counts, and technical release health. It is operational diagnostics, not advertising or session replay." },
+        { type: "paragraph", text: "Reports can include a randomly generated installation or session identifier, app and build version, update channel and update identifier, operating-system version, device model and memory information, a coarse region inferred from the connection, crash time, exception type, technical stack traces and sampled timing measurements. Our app does not intentionally send your OPUS account identity, name, email, phone, client records, appointment notes, sign-in codes, authentication or push tokens, request bodies or query parameters to Sentry. JavaScript diagnostic reports use a strict field filter and replace free-form error messages; native breadcrumb and network capture are disabled and provider-side scrubbing is enabled." },
+        { type: "paragraph", text: "Session replay, screenshots, view hierarchies, console logs, touch/gesture recording and advertising tracking are disabled. Diagnostics do not record the contents of the app screens. We sample production performance traces to limit data and processing overhead; crash reports and release-health counts help us detect incidents affecting stability." },
+        { type: "paragraph", text: "OPUS relies on its legitimate interest in detecting and fixing software failures, protecting service availability and avoiding repeated disruptions, balanced against your privacy rights. This is distinct from the consent used for optional website analytics or advertising. Accepting the Terms does not constitute blanket consent to data processing. You can ask questions or object to legitimate-interest processing at hello@opus.mk; we assess each request under applicable law." },
+        { type: "paragraph", text: "The OPUS mobile Sentry project is configured in Sentry’s EU region. Sentry and its authorised subprocessors may also process limited service data internationally under their processing arrangements and applicable transfer safeguards. Raw diagnostic events follow the project’s service-plan retention and are automatically removed when that period ends. Relevant, limited incident records may be retained separately where needed for security, a legal obligation or a legal claim. Diagnostic caches on your phone are limited and are removed with the app; signing out does not erase already received diagnostic records." },
+        { type: "link", text: "More about Sentry’s processing arrangements:", label: "Sentry Trust Center", href: "https://sentry.io/trust/" },
       ],
     },
     {
@@ -1080,11 +1162,17 @@ const enPrivacy: LegalDocument = {
             "The studio and its authorised team members: so they can view and fulfil the appointment and manage their client records.",
             "Vercel: for hosting and delivering the web applications when the Service is deployed there.",
             "Convex: for the database, storage, server functions, and sign-in infrastructure.",
+            "Cloudflare Turnstile: for sign-in anti-abuse checks using technical browser or device and network information. This is a security check, not advertising.",
             "Resend and/or Sender: for one-time codes and transactional email, only when the relevant provider is configured.",
+            "Twilio: for optional transactional appointment SMS, only when the studio and provider enable the feature; it receives the phone number and message content.",
+            "Polar or another provider identified at checkout: for web subscriptions, invoices and payment status. Card details are entered with the provider, not in the mobile app; OPUS receives the subscription and transaction information needed to manage access.",
+            "Meta and OpenAI: only for the Instagram assistant when a studio connects and enables that feature; the necessary messages and booking context are processed to respond and arrange a confirmed appointment. This is separate from the optional Meta Pixel and does not give access to unrelated studios.",
             "Formspree: when you submit the contact form on opus.mk.",
             "PostHog: for platform analytics, only with analytics consent. Meta: for OPUS advertising measurement, optimisation, and audiences, only with advertising consent. We do not send names, emails, phone numbers, or customer appointment content as Meta Pixel event parameters.",
             "Mapbox: when address search, a map, or directions are used and the feature is configured; it may receive the studio and device coordinates to calculate a route.",
             "Professional advisers, a competent authority, or a court where legally required or necessary to protect rights, security, and users.",
+            "Expo and Apple APNs or Google FCM: for OPUS Studio mobile push when configured and you connect your phone. Browser push uses your browser’s push service. These services receive device routing data and notification content; client details are included only when you enable previews containing them.",
+            "Sentry (Functional Software, Inc.): for mobile crash reporting, release health and sampled technical performance diagnostics. The mobile project uses Sentry’s EU region and excludes session replay and advertising tracking.",
           ],
         },
         {
@@ -1133,6 +1221,10 @@ const enPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
+          text: "OPUS Studio keeps necessary sign-in data and device notification choices in secure phone storage. The web dashboard keeps a local identifier for a connected browser. The push worker does not cache private studio pages. You can disable or disconnect alerts in your personal preferences and withdraw notification permission on your device. Signing out revokes that installation’s notification registration.",
+        },
+        {
+          type: "paragraph",
           text: "Necessary technologies support sign-in, security, and your preferences. Analytics and advertising technologies are separate and remain off until you accept them:",
         },
         {
@@ -1140,7 +1232,7 @@ const enPrivacy: LegalDocument = {
           items: [
             "Necessary session and security cookies on studio.opus.mk so you can sign in and remain securely signed in.",
             "opus_consent_v1 remembers your choice for up to 180 days across opus.mk and studio.opus.mk. A local storage signal informs other open tabs when your choice changes.",
-            "PostHog: analytics cookies beginning with ph_ and local storage, only with analytics consent. Cookie expiry is configured to 180 days; local storage remains until consent is withdrawn or storage is cleared. On the opus.mk marketing website, we may record sessions with analytics consent to understand how you use the site. Input field values are masked. Session recording in the studio dashboard remains disabled.",
+            "PostHog: analytics cookies beginning with ph_ and local storage, only with analytics consent. Cookie expiry is configured to 180 days; local storage remains until consent is withdrawn or storage is cleared. On the opus.mk marketing website, we may record sessions with analytics consent to understand how you use the site. Input field values are masked. Web dashboard recording also requires analytics consent and masks text. These website tools are not included in the mobile app.",
             "Meta Pixel: _fbp and, when an ad-click identifier is present, _fbc, typically lasting up to 90 days and renewed with use. It loads only after advertising consent on OPUS marketing and registration pages. We do not load it on studios' public booking websites or private dashboard pages.",
             "The opus_locale cookie, set when you choose another language, which remembers that choice for up to one year.",
             "Local storage for your light or dark theme and certain interface preferences. These values stay on your device until you clear them.",
@@ -1148,7 +1240,7 @@ const enPrivacy: LegalDocument = {
         },
         {
           type: "paragraph",
-          text: "Choose Necessary only, Accept all, or save separate analytics and advertising choices. Cookie settings are available in the opus.mk footer and studio application. Withdrawal stops future optional tracking; it does not undo prior processing. You can also clear browser storage. Blocking necessary cookies may prevent sign-in.",
+          text: "Choose Necessary only, Accept all, or save separate analytics and advertising choices. Cookie settings are available in the opus.mk footer and studio web dashboard. Withdrawal stops future optional tracking; it does not undo prior processing. You can also clear browser storage. Blocking necessary cookies may prevent sign-in.",
         },
       ],
     },
@@ -1189,6 +1281,10 @@ const enPrivacy: LegalDocument = {
         {
           type: "paragraph",
           text: "Send a request to hello@opus.mk. We may ask for reasonable proof of identity and the studio context so we do not disclose data to the wrong person. Some rights may be limited where law permits or requires retention.",
+        },
+        {
+          type: "paragraph",
+          text: "In the mobile app, you can file an authenticated request through Settings → Delete account, including if you no longer have studio access. Requests are processed within 30 days. We remove or anonymise the personal account and related data that have no required lawful retention; studio records, ownership and subscriptions are reviewed as part of processing. Studio-controlled client records are handled under the studio’s lawful obligations and instructions. Uninstalling or signing out does not delete the account or diagnostic data already received.",
         },
         {
           type: "link",
@@ -1251,7 +1347,7 @@ const sqTerms: LegalDocument = {
   effectiveLabel: "Hyn në fuqi",
   effectiveDate: "1 shtator 2026",
   lastUpdatedLabel: "Përditësimi i fundit",
-  lastUpdatedDate: "1 shtator 2026",
+  lastUpdatedDate: "7 tetor 2026",
   tocLabel: "Në këtë dokument",
   highlights: [
     "OPUS është softuer rezervimesh, jo sallon apo ofrues trajtimesh.",
@@ -1265,11 +1361,11 @@ const sqTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Këto Kushte rregullojnë përdorimin tuaj të opus.mk, studio.opus.mk, uebfaqeve të studiove në nëndomenet e opus.mk dhe funksioneve, përmbajtjeve dhe komunikimeve përkatëse (së bashku, “Shërbimi”).",
+          text: "Këto Kushte rregullojnë përdorimin tuaj të opus.mk, studio.opus.mk, uebfaqeve të studiove në nëndomenet e opus.mk, aplikacionit celular OPUS Studio (OPUS Beauty Studio në App Store) dhe funksioneve, përmbajtjeve dhe komunikimeve përkatëse (së bashku, “Shërbimi”).",
         },
         {
           type: "paragraph",
-          text: "Duke hyrë në Shërbim, duke krijuar një llogari, duke iu bashkuar një ekipi studioje ose duke rezervuar një termin përmes Shërbimit, konfirmoni se i keni lexuar dhe i pranoni këto Kushte. Nëse përdorni Shërbimin për një biznes, konfirmoni se jeni të autorizuar të përfaqësoni dhe detyroni atë biznes.",
+          text: "Duke shkarkuar, duke u kyçur ose duke përdorur aplikacionin celular, duke hyrë në Shërbim, duke krijuar një llogari, duke iu bashkuar një ekipi studioje ose duke rezervuar një termin përmes Shërbimit, konfirmoni se i keni lexuar dhe i pranoni këto Kushte. Nëse përdorni Shërbimin për një biznes, konfirmoni se jeni të autorizuar të përfaqësoni dhe detyroni atë biznes.",
         },
         {
           type: "paragraph",
@@ -1283,7 +1379,7 @@ const sqTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "OPUS është një platformë rezervimesh për sallone dhe studio bukurie në Maqedoninë e Veriut. Shërbimi operohet me emrin OPUS nga Shkupi, Maqedonia e Veriut.",
+          text: "OPUS është platformë rezervimesh për sallone dhe studio bukurie në Maqedoninë e Veriut. OPUS është emër biznesi i operuar nga Borko Petrevski në Prilep, Maqedonia e Veriut, në pritje të regjistrimit formal të kompanisë. Në këto Kushte, “OPUS”, “ne” dhe “ynë” i referohen Borko Petrevskit që operon me emrin OPUS.",
         },
         {
           type: "contacts",
@@ -1298,7 +1394,7 @@ const sqTerms: LegalDocument = {
               value: "+389 77 826 333",
               href: "tel:+38977826333",
             },
-            { label: "Vendndodhja", value: "Shkup, Maqedonia e Veriut" },
+            { label: "Vendndodhja", value: "Prilep, Maqedonia e Veriut" },
           ],
         },
       ],
@@ -1429,11 +1525,11 @@ const sqTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Ofertat falas dhe me pagesë në të ardhmen",
+      title: "10. Shërbimet falas dhe abonimet e studios",
       blocks: [
         {
           type: "paragraph",
-          text: "Funksionet që aktualisht janë shënuar si falas mund të përdoren pa kartelë pagese. OPUS nuk do t'ju tarifojë automatikisht. Nëse në të ardhmen ofrojmë funksione ose plane me pagesë, çmimi, taksat, periudha e faturimit, rinovimi dhe kushtet e anulimit do të shfaqen qartë para se të kërkojmë pranim shprehimor ose pagesë.",
+          text: "Funksionet e shënuara Free mund të përdoren pa kartelë pagese. Kur ofrohet një plan me pagesë për studion, çmimi, valuta, taksat e zbatueshme, periudha e faturimit dhe rinovimi shfaqen në pagesën në ueb përpara pranimit tuaj të shprehur. OPUS Pro është abonim mujor i studios që rinovohet deri në anulim sipas kushteve të pagesës. Vetëm pronari i autorizuar mund ta nisë ose menaxhojë. Faturimi, faturat, mënyrat e pagesës dhe anulimi menaxhohen përmes panelit të uebit dhe ofruesit të konfiguruar të pagesave. Anulimi zakonisht hyn në fuqi në fund të periudhës së paguar; qasja mund të përfundojë më herët për mospagesë ose abonim të revokuar. Rimbursimet dhe të drejtat e detyrueshme të anulimit ndjekin ligjin e zbatueshëm dhe kushtet e pagesës. Shkarkimi ose përdorimi i aplikacionit celular nuk nis vetvetiu abonim me pagesë dhe nuk ju tarifon. Pagesat për trajtimet mbeten ndërmjet klientit dhe studios.",
         },
       ],
     },
@@ -1493,7 +1589,7 @@ const sqTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Këto Kushte rregullohen nga ligjet e Republikës së Maqedonisë së Veriut. Na kontaktoni fillimisht në mënyrë që të përpiqemi ta zgjidhim mosmarrëveshjen drejtpërdrejt. Për përdoruesit e biznesit, kompetente janë gjykatat përkatëse në Shkup. Nëse jeni konsumator, kjo dispozitë nuk kufizon të drejtat tuaja të detyrueshme apo juridiksionin sipas ligjit të zbatueshëm.",
+          text: "Këto Kushte rregullohen nga ligjet e Republikës së Maqedonisë së Veriut. Na kontaktoni fillimisht në mënyrë që të përpiqemi ta zgjidhim mosmarrëveshjen drejtpërdrejt. Për përdoruesit e biznesit, kompetente janë gjykatat përkatëse në Maqedoninë e Veriut, përveç kur ligji i detyrueshëm parashikon ndryshe. Nëse jeni konsumator, kjo dispozitë nuk kufizon të drejtat tuaja të detyrueshme apo juridiksionin sipas ligjit të zbatueshëm.",
         },
       ],
     },
@@ -1511,6 +1607,20 @@ const sqTerms: LegalDocument = {
         },
       ],
     },
+    {
+      id: "mobile-app",
+      title: "17. Aplikacioni celular, përditësimet dhe mbyllja e llogarisë",
+      blocks: [
+        { type: "paragraph", text: "Aplikacioni celular është panel shoqërues për pronarët, menaxherët dhe punonjësit e autorizuar të studiove ekzistuese OPUS. Qasja dhe funksionet varen nga anëtarësimi, roli dhe plani i studios. Nuk është aplikacion rezervimi për klientët fundorë. Kërkohen internet dhe pajisje e mbështetur; ofruesi i rrjetit mund të tarifojë trafikun e të dhënave." },
+        { type: "paragraph", text: "Sipas këtyre Kushteve dhe rregullave të dyqanit, mund ta përdorni aplikacionin në pajisje të përputhshme që i zotëroni ose kontrolloni për punë të autorizuar të studios. Licenca është personale, e kufizuar, joekskluzive dhe e patransferueshme, përveç rasteve të lejuara nga dyqani, përfshirë rregullat e zbatueshme të Family Sharing ose blerjeve në vëllim. Nuk lejon qasje të paautorizuar në të dhënat e një studioje tjetër." },
+        { type: "paragraph", text: "Lejen e njoftimeve e menaxhoni në cilësimet e pajisjes dhe preferencat e njoftimeve në aplikacion. Njoftimet mund të vonohen ose dështojnë; kalendari i studios mbetet burimi për statusin e termineve. Aktivizimi i detajeve të klientit në pamje paraprake mund t’i zbulojë në një pajisje të përbashkët ose të kyçur. Jeni përgjegjës për sigurinë e pajisjes dhe zgjedhjet e përshtatshme të pamjes paraprake." },
+        { type: "paragraph", text: "Mund të dërgojmë përditësime të përputhshme për mirëmbajtje përmes Expo EAS Update dhe versione të reja përmes dyqanit të aplikacioneve. Përdorim Sentry për diagnostikën e dështimeve dhe performancës sipas Politikës së privatësisë. Aplikacioni celular nuk regjistron sesione, pamje apo video të ekranit, nuk bën gjurmim reklamues dhe nuk mbledh regjistra të konsolës." },
+        { type: "paragraph", text: "Përdorimi i aplikacionit nënkupton pranimin e këtyre Kushteve dhe njohjen me Politikën e privatësisë. Politika është njoftim për përpunimin dhe të drejtat tuaja; pranimi i Kushteve nuk heq të drejtat e privatësisë dhe nuk krijon pëlqim të përgjithshëm për analitikë fakultative, regjistrim apo reklama. Kur ligji kërkon pëlqim, ai duhet të kërkohet veçmas." },
+        { type: "paragraph", text: "Apple nuk është palë në marrëveshjen për shërbimet e platformës OPUS dhe nuk ofron mbështetje OPUS. OPUS është përgjegjës për aplikacionin dhe mbështetjen në masën e kërkuar nga ligji. Marrëveshja standarde e licencës për përdoruesit fundorë e Apple zbatohet për shkarkimin iOS kur ofrohet nga App Store. Rregullat e dyqanit dhe kushtet e zbatueshme të ofruesve të jashtëm vlejnë për shërbimet e tyre. Asgjë këtu nuk kufizon të drejtat apo mjetet juridike të detyrueshme të konsumatorit." },
+        { type: "paragraph", text: "Mund të kërkoni fshirjen e llogarisë personale në Cilësimet → Fshi llogarinë ose të kontaktoni hello@opus.mk. Kërkesat e autentikuara i përpunojmë brenda afatit të shfaqur prej 30 ditësh, duke respektuar ruajtjen e kufizuar të kërkuar me ligj. Heqja e aplikacionit nuk e fshin vetvetiu llogarinë, nuk anulon terminet dhe nuk anulon abonimin e studios." },
+        { type: "link", text: "Kushtet e shkarkimit nga App Store janë në", label: "Marrëveshja standarde EULA e Apple", href: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" },
+      ],
+    },
   ],
 };
 
@@ -1520,16 +1630,16 @@ const sqPrivacy: LegalDocument = {
     "Si i mbledh, përdor, ndan dhe mbron OPUS të dhënat personale të studiove, anëtarëve të ekipit, klientëve dhe vizitorëve.",
   eyebrow: "Informacione ligjore · Dokumenti 02",
   summary:
-    "OPUS përdor të dhëna personale për llogaritë, rezervimet e sigurta dhe mbështetjen. Analitika fakultative dhe matja e reklamave aktivizohen vetëm me pëlqimin tuaj.",
+    "OPUS përdor të dhëna personale për llogaritë, rezervimet e sigurta, mbështetjen dhe diagnostikën e besueshmërisë në celular. Analitika fakultative në ueb dhe matja e reklamave aktivizohen vetëm me pëlqimin tuaj.",
   effectiveLabel: "Hyn në fuqi",
   effectiveDate: "1 shtator 2026",
   lastUpdatedLabel: "Përditësimi i fundit",
-  lastUpdatedDate: "14 shtator 2026",
+  lastUpdatedDate: "7 tetor 2026",
   tocLabel: "Në këtë dokument",
   highlights: [
     "Studioja kontrollon të dhënat e klientëve të saj; OPUS siguron platformën.",
-    "PostHog dhe Meta Pixel kanë cilësime të veçanta, fakultative të pëlqimit.",
-    "Mund ta ndryshoni zgjedhjen tuaj te Cilësimet e biskotave në çdo kohë.",
+    "Aplikacioni celular përdor Sentry për dështime dhe performancë teknike, pa regjistrim sesionesh.",
+    "PostHog dhe Meta Pixel janë fakultative në ueb; ndryshoni zgjedhjen te Cilësimet e biskotave.",
   ],
   sections: [
     {
@@ -1538,11 +1648,11 @@ const sqPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Kjo Politikë zbatohet për opus.mk, studio.opus.mk, uebfaqet e studiove në nëndomenet e opus.mk dhe funksionet, komunikimet dhe mbështetjen përkatëse (së bashku, “Shërbimi”). Ajo shpjegon se si OPUS përpunon të dhënat personale sipas Ligjit për Mbrojtjen e të Dhënave Personale të Republikës së Maqedonisë së Veriut.",
+          text: "Kjo Politikë zbatohet për opus.mk, studio.opus.mk, uebfaqet e studiove në nëndomenet e opus.mk, aplikacionin celular OPUS Studio (OPUS Beauty Studio në App Store) dhe funksionet, komunikimet dhe mbështetjen përkatëse (së bashku, “Shërbimi”). Ajo shpjegon se si OPUS përpunon të dhënat personale sipas Ligjit për Mbrojtjen e të Dhënave Personale të Republikës së Maqedonisë së Veriut.",
         },
         {
           type: "paragraph",
-          text: "Për përpunimin ku OPUS është kontrollues, kontakti për privatësinë është OPUS, Shkup, Maqedonia e Veriut.",
+          text: "OPUS është emër biznesi i operuar nga Borko Petrevski në Prilep, Maqedonia e Veriut, në pritje të regjistrimit formal të kompanisë. Kur OPUS është kontrollues, përgjegjës është Borko Petrevski që operon me emrin OPUS; kontakti për privatësinë është hello@opus.mk. Kjo Politikë nuk e paraqet OPUS si kompani tashmë të regjistruar. Kur zbatohen ligje të tjera të detyrueshme, përfshirë GDPR, respektojmë edhe të drejtat dhe detyrimet përkatëse.",
         },
         {
           type: "contacts",
@@ -1610,6 +1720,26 @@ const sqPrivacy: LegalDocument = {
           type: "paragraph",
           text: "Një studio mund të vendosë manualisht edhe të dhëna që tashmë i ka nga një klient ose anëtar ekipi. Në atë rast studioja është përgjegjëse t'ju informojë dhe të ketë bazë të vlefshme ligjore.",
         },
+        {
+          type: "paragraph",
+          text: "Nëse përdorni aplikacionin OPUS Studio ose njoftimet push në panelin e studios, përpunojmë identifikuesin e instalimit, tokenin push ose abonimin e shfletuesit, llogarinë e lidhur të studios, preferencat personale dhe regjistrat e pranimit ose dështimit nga ofruesi. Çdo telefon ose shfletues lidhet vetëm kur e aktivizoni dhe jepni lejen për njoftime. Detajet e klientit fshihen në pamjen paraprake si parazgjedhje; nëse e aktivizoni këtë mundësi, emri i klientit, shërbimi dhe ora e terminit mund të shfaqen në ekranin e kyçur.",
+        },
+        {
+          type: "paragraph",
+          text: "Nga versioni 1.0.3, aplikacioni celular OPUS Studio përdor Sentry për raporte të dështimeve dhe diagnostikë teknike të performancës. Nuk përfshin PostHog, analitikë reklamuese apo regjistrim sesionesh. Të dhënat e llogarisë, hyrjes, termineve, sigurisë dhe njoftimeve push fakultative përpunohen për ofrimin e Shërbimit. Expo EAS Update mund të ofrojë përditësime të përputhshme për mirëmbajtje dhe rregullime duke përdorur të dhëna teknike të aplikacionit, instalimit, versionit dhe pajisjes. Faqet e uebit të hapura nga aplikacioni ndjekin preferencat e tyre për biskotat.",
+        },
+      ],
+    },
+    {
+      id: "mobile-diagnostics",
+      title: "Diagnostika e besueshmërisë në celular (Sentry)",
+      blocks: [
+        { type: "paragraph", text: "Përdorim Sentry, të ofruar nga Functional Software, Inc., për të diagnostikuar gabimet e softuerit dhe ruajtur besueshmërinë e aplikacionit celular. Kjo përfshin dështimet JavaScript dhe native, ngecjet, kohëzgjatjen e nisjes dhe ngarkimit të ekraneve, numrin e kuadrove të ngadalta ose të ngrira dhe të dhënat teknike të stabilitetit të versionit. Është diagnostikë operative, jo reklamim apo regjistrim sesionesh." },
+        { type: "paragraph", text: "Raportet mund të përfshijnë identifikues të rastësishëm instalimi ose sesioni, versionin dhe numrin e ndërtimit, kanalin dhe identifikuesin e përditësimit, versionin e sistemit operativ, modelin e pajisjes dhe informacionin e memories, një rajon të përafërt të nxjerrë nga lidhja, kohën e dështimit, llojin e përjashtimit, gjurmët teknike të kodit dhe matjet e kampionuara. Aplikacioni nuk dërgon qëllimisht identitetin OPUS, emrin, email-in, telefonin, regjistrat e klientëve, shënimet e termineve, kodet e hyrjes, tokenët e autentikimit ose push, trupat e kërkesave apo parametrat e URL-së te Sentry. Raportet JavaScript përdorin filtër të rreptë dhe zëvendësojnë mesazhet e lira të gabimit; historia native e veprimeve dhe kapja e rrjetit janë të çaktivizuara, ndërsa pastrimi i të dhënave te ofruesi është aktiv." },
+        { type: "paragraph", text: "Regjistrimi i sesioneve, pamjet e ekranit, hierarkitë e pamjeve, regjistrat e konsolës, regjistrimi i prekjeve ose gjesteve dhe gjurmimi reklamues janë të çaktivizuara. Diagnostika nuk regjistron përmbajtjen e ekraneve. Gjurmët e performancës në prodhim kampionohen për të kufizuar të dhënat dhe ngarkesën; raportet e dështimeve dhe numëruesit e stabilitetit ndihmojnë në zbulimin e incidenteve." },
+        { type: "paragraph", text: "OPUS mbështetet në interesin legjitim për të zbuluar dhe rregulluar gabime të softuerit, mbrojtur disponueshmërinë dhe shmangur ndërprerjet e përsëritura, të balancuar me të drejtat tuaja të privatësisë. Kjo ndryshon nga pëlqimi për analitikë fakultative në ueb ose reklama. Pranimi i Kushteve nuk është pëlqim i përgjithshëm për përpunim. Për pyetje ose kundërshtim të përpunimit mbi interesin legjitim, shkruani në hello@opus.mk; vlerësojmë çdo kërkesë sipas ligjit të zbatueshëm." },
+        { type: "paragraph", text: "Projekti celular Sentry është konfiguruar në rajonin e BE-së të Sentry. Sentry dhe nënofruesit e autorizuar mund të përpunojnë të dhëna të kufizuara të shërbimit edhe ndërkombëtarisht sipas marrëveshjeve të përpunimit dhe masave të zbatueshme të transferimit. Ngjarjet e papërpunuara diagnostike ndjekin periudhën e ruajtjes së planit të shërbimit dhe hiqen automatikisht pas skadimit. Regjistra të kufizuar për incidente mund të ruhen veçmas kur nevojiten për siguri, detyrim ligjor ose kërkesë juridike. Memoria diagnostike në telefon është e kufizuar dhe hiqet me aplikacionin; çkyçja nuk fshin regjistrat diagnostikë të marrë më parë." },
+        { type: "link", text: "Më shumë për marrëveshjet e përpunimit të Sentry:", label: "Sentry Trust Center", href: "https://sentry.io/trust/" },
       ],
     },
     {
@@ -1676,11 +1806,17 @@ const sqPrivacy: LegalDocument = {
             "Me studion dhe anëtarët e autorizuar të ekipit: për të parë dhe përmbushur terminin dhe për të mbajtur evidencën e klientëve.",
             "Me Vercel: për pritjen (hosting) dhe shpërndarjen e aplikacioneve të uebit, kur Shërbimi është i vendosur aty.",
             "Me Convex: për bazën e të dhënave, ruajtjen, funksionet e serverit dhe infrastrukturën e kyçjes.",
+            "Me Cloudflare Turnstile: për kontrollet kundër abuzimit të automatizuar gjatë hyrjes, duke përdorur informacion teknik për shfletuesin ose pajisjen dhe rrjetin. Është kontroll sigurie, jo reklamim.",
             "Me Resend dhe/ose Sender: për kodet njëpërdorimshme dhe email-et e transaksioneve, vetëm kur ofruesi përkatës është i konfiguruar.",
+            "Me Twilio: për SMS transaksionale fakultative për termine, vetëm kur studioja dhe ofruesi e aktivizojnë funksionin; merr numrin e telefonit dhe përmbajtjen e mesazhit.",
+            "Me Polar ose ofrues tjetër të identifikuar gjatë pagesës: për abonimet në ueb, faturat dhe statusin e pagesës. Të dhënat e kartës futen te ofruesi, jo në aplikacionin celular; OPUS merr informacionin e abonimit dhe transaksionit të nevojshëm për menaxhimin e qasjes.",
+            "Me Meta dhe OpenAI: vetëm për asistentin Instagram kur studioja lidh dhe aktivizon atë funksion; mesazhet dhe konteksti i nevojshëm i rezervimit përpunohen për përgjigje dhe termin të konfirmuar. Është e ndarë nga Meta Pixel fakultativ dhe nuk jep qasje në studio të tjera.",
             "Me Formspree: kur dërgoni formularin e kontaktit në opus.mk.",
             "Me PostHog: për analizën e platformës, vetëm me pëlqim analitik. Me Meta: për matjen dhe optimizimin e reklamave të OPUS dhe audiencave të synuara, vetëm me pëlqim reklamimi. Ne nuk dërgojmë emra, email-e, numra telefoni apo përmbajtje të termineve të klientëve si parametra në Meta Pixel.",
             "Me Mapbox: kur përdoret kërkimi i adresave, harta ose drejtimi dhe funksioni është i konfiguruar; për llogaritjen e rrugës mund të marrë koordinatat e studios dhe pajisjes suaj.",
             "Me këshilltarë profesionalë, organe kompetente ose gjykata kur kjo kërkohet me ligj ose është e nevojshme për mbrojtjen e të drejtave, sigurisë dhe përdoruesve.",
+            "Me Expo dhe Apple APNs ose Google FCM: për njoftimet push në OPUS Studio kur janë të konfiguruara dhe lidhni telefonin tuaj. Push në ueb përdor shërbimin push të shfletuesit. Këto shërbime marrin të dhëna për drejtimin te pajisja dhe përmbajtjen e njoftimit; detajet e klientit përfshihen vetëm kur e aktivizoni këtë pamje paraprake.",
+            "Sentry (Functional Software, Inc.): për dështimet e aplikacionit celular, stabilitetin e versioneve dhe matjet teknike të kampionuara të performancës. Projekti përdor rajonin e BE-së të Sentry dhe përjashton regjistrimin e sesioneve dhe gjurmimin reklamues.",
           ],
         },
         {
@@ -1729,6 +1865,10 @@ const sqPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
+          text: "OPUS Studio ruan të dhënat e nevojshme të kyçjes dhe zgjedhjet e njoftimeve në ruajtjen e sigurt të telefonit. Paneli i uebit ruan një identifikues lokal për shfletuesin e lidhur. Punëtori push nuk ruan kopje të faqeve private të studios. Mund t’i çaktivizoni ose shkëputni njoftimet te preferencat personale dhe të hiqni lejen në pajisje. Çkyçja revokon regjistrimin e njoftimeve për atë instalim.",
+        },
+        {
+          type: "paragraph",
           text: "Teknologjitë e nevojshme mundësojnë hyrjen, sigurinë dhe cilësimet tuaja. Analitika dhe teknologjitë e reklamave janë të veçanta dhe të çaktivizuara derisa t'i pranoni:",
         },
         {
@@ -1736,7 +1876,7 @@ const sqPrivacy: LegalDocument = {
           items: [
             "Biskotat e nevojshme për sesionin dhe sigurinë në studio.opus.mk, për t'u kyçur dhe për të qëndruar të kyçur në mënyrë të sigurt.",
             "opus_consent_v1 ruan zgjedhjen tuaj deri në 180 ditë në opus.mk dhe studio.opus.mk. Një sinjal lokal njofton skedat e tjera të hapura për ndryshimin e zgjedhjes.",
-            "PostHog: biskota analitike me parashtesë ph_ dhe memorie lokale, vetëm me pëlqim analitik. Kohëzgjatja e biskotave është 180 ditë; memoria lokale mbetet deri në tërheqjen e pëlqimit ose fshirjen. Në faqen e marketingut opus.mk mund të regjistrojmë sesione me pëlqim analitik për të kuptuar përdorimin e faqes. Vlerat e fushave janë të maskuara. Regjistrimi i sesioneve në panelin e studios mbetet i çaktivizuar.",
+            "PostHog: biskota analitike me parashtesë ph_ dhe memorie lokale, vetëm me pëlqim analitik. Kohëzgjatja e biskotave është 180 ditë; memoria lokale mbetet deri në tërheqjen e pëlqimit ose fshirjen. Në faqen e marketingut opus.mk mund të regjistrojmë sesione me pëlqim analitik për të kuptuar përdorimin e faqes. Vlerat e fushave janë të maskuara. Regjistrimi në panelin e uebit kërkon gjithashtu pëlqim analitik dhe maskon tekstin. Këto mjete të uebit nuk përfshihen në aplikacionin celular.",
             "Meta Pixel: _fbp dhe, kur ekziston identifikuesi i klikimit të reklamës, _fbc, zakonisht deri në 90 ditë dhe të rinovuara gjatë përdorimit. Ngarkohet vetëm pas pëlqimit për reklama, në faqet e marketingut dhe regjistrimit të OPUS. Nuk ngarkohet në faqet publike të rezervimit të studiove apo në faqet private të panelit.",
             "Biskota opus_locale, e cila vendoset kur vetë e ndryshoni gjuhën dhe ruan zgjedhjen deri në një vit.",
             "Memoria lokale për temën e errët apo të çelët dhe për disa cilësime të ndërfaqes. Këto vlera mbeten në pajisje derisa t'i pastroni.",
@@ -1744,7 +1884,7 @@ const sqPrivacy: LegalDocument = {
         },
         {
           type: "paragraph",
-          text: "Zgjidhni Vetëm të nevojshmet, Prano të gjitha ose ruani zgjedhje të veçantë për analiza dhe reklama. Cilësimet e biskotave janë të disponueshme në fund të faqes në opus.mk dhe në aplikacionin e studios. Tërheqja e pëlqimit ndalon gjurmimin e ardhshëm fakultativ; nuk e zhbën përpunimin e mëparshëm. Bllokimi i biskotave të nevojshme mund të parandalojë hyrjen në llogari.",
+          text: "Zgjidhni Vetëm të nevojshmet, Prano të gjitha ose ruani zgjedhje të veçantë për analiza dhe reklama. Cilësimet e biskotave janë të disponueshme në fund të faqes në opus.mk dhe në panelin e studios në ueb. Tërheqja e pëlqimit ndalon gjurmimin e ardhshëm fakultativ; nuk e zhbën përpunimin e mëparshëm. Bllokimi i biskotave të nevojshme mund të parandalojë hyrjen në llogari.",
         },
       ],
     },
@@ -1785,6 +1925,10 @@ const sqPrivacy: LegalDocument = {
         {
           type: "paragraph",
           text: "Dërgoni kërkesën tuaj në hello@opus.mk. Mund të kërkojmë konfirmim të arsyeshëm të identitetit dhe kontekstit të studios për të shmangur zbulimin e të dhënave tek personi i gabuar. Disa të drejta mund të kufizohen kur ligji lejon ose kërkon ruajtjen e të dhënave.",
+        },
+        {
+          type: "paragraph",
+          text: "Në aplikacionin celular mund të paraqisni kërkesë të autentikuar përmes Cilësimet → Fshi llogarinë, edhe pa qasje në studio. Kërkesat përpunohen brenda 30 ditëve. Heqim ose anonimizojmë llogarinë personale dhe të dhënat që nuk kanë arsye të nevojshme ligjore për ruajtje; regjistrat e studios, pronësia dhe abonimet shqyrtohen gjatë përpunimit. Të dhënat e klientëve të kontrolluara nga studioja trajtohen sipas detyrimeve dhe udhëzimeve të saj të ligjshme. Çinstalimi ose dalja nuk fshin llogarinë apo të dhënat diagnostike të marra më parë.",
         },
         {
           type: "link",

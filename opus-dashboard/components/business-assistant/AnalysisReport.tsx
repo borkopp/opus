@@ -51,7 +51,7 @@ export function AnalysisReport({
     }).format(ms);
   const value = (n: number | null, currency = report.currency) =>
     n === null
-      ? t("Unavailable", "Не е достапно")
+      ? t("Unavailable", "Не е достапно", "E padisponueshme")
       : report.unit === "money" && currency
         ? new Intl.NumberFormat(locale, { style: "currency", currency }).format(
             n / 100,
@@ -76,7 +76,7 @@ export function AnalysisReport({
           </p>
           {report.previous && (
             <p className="text-sm text-muted-foreground">
-              {t("Previous", "Претходно")}:{" "}
+              {t("Previous", "Претходно", "Më parë")}:{" "}
               {value(report.previous.total.value, report.previous.currency)}
               <span className="block text-xs">
                 {date(report.previous.startMs)} –{" "}
@@ -87,7 +87,7 @@ export function AnalysisReport({
         </div>
         <p className="text-xs text-muted-foreground">
           {report.total.appointments}{" "}
-          {t("recorded appointments", "евидентирани термини")}
+          {t("recorded appointments", "евидентирани термини", "termine të regjistruara")}
           {report.request.staffName ? ` · ${report.request.staffName}` : ""}
           {report.request.serviceName ? ` · ${report.request.serviceName}` : ""}
         </p>
@@ -124,6 +124,7 @@ export function AnalysisReport({
             {t(
               "The chart shows the first fourteen groups. All groups appear below.",
               "Графиконот ги прикажува првите четиринаесет групи. Сите групи се во табелата.",
+              "Grafiku tregon katërmbëdhjetë grupet e para. Të gjitha grupet shfaqen më poshtë.",
             )}
           </p>
         )}
@@ -131,15 +132,15 @@ export function AnalysisReport({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("Group", "Група")}</TableHead>
+                <TableHead>{t("Group", "Група", "Grupi")}</TableHead>
                 <TableHead className="text-right">
-                  {t("Value", "Вредност")}
+                  {t("Value", "Вредност", "Vlera")}
                 </TableHead>
                 <TableHead className="hidden text-right md:table-cell">
-                  {t("Appointments", "Термини")}
+                  {t("Appointments", "Термини", "Terminet")}
                 </TableHead>
                 <TableHead className="hidden text-right md:table-cell">
-                  {t("Observed days", "Набљудувани денови")}
+                  {t("Observed days", "Набљудувани денови", "Ditët e vëzhguara")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -149,11 +150,11 @@ export function AnalysisReport({
                   <TableCell className="whitespace-normal">
                     {row.label}
                     <span className="mt-1 block text-xs text-muted-foreground md:hidden">
-                      {row.appointments} {t("appointments", "термини")} ·{" "}
+                      {row.appointments} {t("appointments", "термини", "termine")} ·{" "}
                       {row.observedDays}{" "}
                       {row.observedDays === 1
-                        ? t("day", "ден")
-                        : t("days", "денови")}
+                        ? t("day", "ден", "ditë")
+                        : t("days", "денови", "ditë")}
                     </span>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
@@ -180,7 +181,7 @@ export function AnalysisReport({
       </CardContent>
       <CardFooter className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          {t("Calculated", "Пресметано")}:{" "}
+          {t("Calculated", "Пресметано", "E llogaritur")}:{" "}
           {new Intl.DateTimeFormat(locale, {
             dateStyle: "medium",
             timeStyle: "short",
@@ -193,7 +194,7 @@ export function AnalysisReport({
               data-replay-public
               href={`/beauty/assistant/reports/${turnId}#${report.key}`}
             >
-              {t("View report", "Види извештај")}
+              {t("View report", "Види извештај", "Shiko raportin")}
               <ArrowUpRight data-icon="inline-end" />
             </Link>
           </Button>

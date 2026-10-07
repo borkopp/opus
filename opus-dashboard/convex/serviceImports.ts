@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireRole } from "./lib/auth";
+import { requireLiveStudio } from "./lib/appReview";
 import {
   MAX_IMPORT_SERVICES,
   normalizeServiceName,
@@ -12,6 +13,7 @@ export const reserve = internalMutation({
   args: {},
   handler: async (ctx) => {
     const { org, staffMember } = await requireRole(ctx, undefined, "owner");
+    requireLiveStudio(org);
     if (org.industry !== "beauty_wellness")
       throw new ConvexError("Unauthorised");
     const settings = await ctx.db

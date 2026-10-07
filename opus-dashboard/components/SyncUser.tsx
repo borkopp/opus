@@ -1,9 +1,11 @@
 "use client";
 
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import posthog from "posthog-js";
 import { api } from "@/convex/_generated/api";
+import { authClient } from "@/lib/auth-client";
 import {
   canCaptureAnalytics,
   syncPostHogConsent,
@@ -12,18 +14,25 @@ import { subscribeConsent } from "../../shared/analytics/consent";
 
 export function SyncUser() {
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const { data: session } = authClient.useSession();
+  const authUserId = session?.user.id;
+  const pathname = usePathname();
+  const isClientArea =
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/book/") ||
+    pathname.startsWith("/sites/");
   const ensureUser = useMutation(api.users.ensureUser);
   const profile = useQuery(
     api.users.getMyProfile,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated && !isClientArea ? {} : "skip",
   );
-  const hasSyncedRef = useRef(false);
+  const syncedUserIdRef = useRef<string | null>(null);
   const identifiedUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      hasSyncedRef.current = false;
+      syncedUserIdRef.current = null;
       if (identifiedUserIdRef.current) {
         posthog.reset();
         syncPostHogConsent();
@@ -31,14 +40,16 @@ export function SyncUser() {
       }
       return;
     }
-    if (hasSyncedRef.current) return;
+    if (isClientArea || !authUserId || syncedUserIdRef.current === authUserId)
+      return;
 
-    hasSyncedRef.current = true;
+    syncedUserIdRef.current = authUserId;
     void ensureUser().catch((error: unknown) => {
-      hasSyncedRef.current = false;
+      if (syncedUserIdRef.current === authUserId)
+        syncedUserIdRef.current = null;
       console.error("Failed to synchronize the signed-in user", error);
     });
-  }, [ensureUser, isAuthenticated, isLoading]);
+  }, [authUserId, ensureUser, isAuthenticated, isLoading, isClientArea]);
 
   useEffect(() => {
     const identify = () => {

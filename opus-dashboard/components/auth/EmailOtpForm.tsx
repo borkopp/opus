@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Mail, MailCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
+import { clientSignInDestination } from "@/lib/client-account";
 import { authDestination } from "@/lib/auth-destination";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,12 @@ import {
 } from "@/components/ui/input-otp";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Spinner } from "@/components/ui/spinner";
-import type { AuthSecurityPolicy } from "@/lib/auth-protection";
+import { useAuthSecurity } from "@/hooks/use-auth-security";
 import { AuthCaptcha } from "./AuthCaptcha";
 import s from "./auth.module.css";
 
 type EmailOtpFormProps = {
+  purpose?: "studio" | "client";
   title: string;
   description: string;
   callbackUrl?: string;
@@ -72,6 +74,7 @@ function networkErrorMessage(error: unknown) {
 }
 
 export function EmailOtpForm({
+  purpose = "studio",
   title,
   description,
   callbackUrl,
@@ -84,20 +87,27 @@ export function EmailOtpForm({
   const { isAuthenticated } = useConvexAuth();
   const profile = useQuery(
     api.users.getMyProfile,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated && purpose === "studio" ? {} : "skip",
   );
   const activation = useQuery(
     api.activation.getState,
-    profile?.orgId ? {} : "skip",
+    profile?.orgId && profile.bookingAccess !== "own" ? {} : "skip",
   );
-  const destination = authDestination(
-    callbackUrl,
-    activation?.onboardingComplete ?? false,
-  );
+  const destination =
+    purpose === "client"
+      ? clientSignInDestination(callbackUrl)
+      : authDestination(
+          callbackUrl,
+          profile?.bookingAccess === "own" ||
+            (activation?.onboardingComplete ?? false),
+        );
   const readyToRedirect =
     isAuthenticated &&
-    Boolean(profile) &&
-    (!profile?.orgId || Boolean(activation));
+    (purpose === "client" ||
+      (Boolean(profile) &&
+        (!profile?.orgId ||
+          profile.bookingAccess === "own" ||
+          Boolean(activation))));
   const [step, setStep] = useState<"email" | "code">("email");
   const [direction, setDirection] = useState(0);
   const [email, setEmail] = useState("");
@@ -105,12 +115,14 @@ export function EmailOtpForm({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaPolicy, setCaptchaPolicy] = useState<AuthSecurityPolicy | null>(
-    null,
-  );
-  const [captchaUnavailable, setCaptchaUnavailable] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaGeneration, setCaptchaGeneration] = useState(0);
+  const security = useAuthSecurity();
+  const {
+    policy: captchaPolicy,
+    unavailable: captchaUnavailable,
+    token: captchaToken,
+    setToken: setCaptchaToken,
+    generation: captchaGeneration,
+  } = security;
   const [showResendCaptcha, setShowResendCaptcha] = useState(false);
   const captchaError = useCallback(() => {
     setCaptchaToken(null);
@@ -118,32 +130,10 @@ export function EmailOtpForm({
       t(
         "The security check could not load. Refresh the page and try again.",
         "Безбедносната проверка не се вчита. Освежете ја страницата и обидете се повторно.",
+        "Kontrolli i sigurisë nuk mund të ngarkohej. Rifreskoni faqen dhe provoni përsëri.",
       ),
     );
-  }, [t]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void fetch("/api/auth/security", {
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Security check unavailable");
-        const policy: AuthSecurityPolicy = await response.json();
-        if (
-          typeof policy.required !== "boolean" ||
-          (policy.required && !policy.siteKey)
-        ) {
-          throw new Error("Security check unavailable");
-        }
-        setCaptchaPolicy(policy);
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setCaptchaUnavailable(true);
-      });
-    return () => controller.abort();
-  }, []);
+  }, [t, setCaptchaToken]);
 
   useEffect(() => {
     if (readyToRedirect) {
@@ -162,6 +152,7 @@ export function EmailOtpForm({
         t(
           "Complete the security check to send another code.",
           "Завршете ја безбедносната проверка за да испратите нов код.",
+          "Përfundoni kontrollin e sigurisë për të dërguar një kod tjetër.",
         ),
       );
       return;
@@ -188,6 +179,7 @@ export function EmailOtpForm({
           t(
             result.error.message || "We could not send a code. Try again.",
             "Кодот не се испрати. Проверете ја е-поштата и обидете се повторно.",
+            "Kodi nuk u dërgua. Kontrolloni emailin tuaj dhe provoni përsëri.",
           ),
         );
         return;
@@ -198,18 +190,24 @@ export function EmailOtpForm({
       setDirection(1);
       setStep("code");
       setShowResendCaptcha(false);
-      setStatus(t("A fresh code was sent.", "Испратен е нов код."));
+      setStatus(
+        t(
+          "A fresh code was sent.",
+          "Испратен е нов код.",
+          "Një kod i ri u dërgua.",
+        ),
+      );
     } catch (caught) {
       setError(
         t(
           networkErrorMessage(caught),
           "Врската не успеа. Обидете се повторно.",
+          "Lidhja dështoi. Provoni përsëri.",
         ),
       );
     } finally {
       // Turnstile tokens are single-use, including a failed send attempt.
-      setCaptchaToken(null);
-      setCaptchaGeneration((generation) => generation + 1);
+      security.reset();
       setIsSubmitting(false);
     }
   };
@@ -217,7 +215,13 @@ export function EmailOtpForm({
   const verifyCode = async (event: FormEvent) => {
     event.preventDefault();
     if (code.length !== 6) {
-      setError(t("Enter the six-digit code.", "Внесете го шестцифрениот код."));
+      setError(
+        t(
+          "Enter the six-digit code.",
+          "Внесете го шестцифрениот код.",
+          "Shënoni kodin gjashtëshifror.",
+        ),
+      );
       return;
     }
 
@@ -237,6 +241,7 @@ export function EmailOtpForm({
             result.error.message ||
               "That code is not valid. Request a new one.",
             "Кодот не е валиден или е истечен. Побарајте нов код.",
+            "Ai kod nuk është i vlefshëm ose ka skaduar. Kërkoni një kod të ri.",
           ),
         );
         return;
@@ -247,6 +252,7 @@ export function EmailOtpForm({
           t(
             "Sign-in could not be confirmed. Try again.",
             "Најавата не успеа. Обидете се повторно.",
+            "Hyrja nuk mund të konfirmohej. Provoni përsëri.",
           ),
         );
         return;
@@ -254,8 +260,15 @@ export function EmailOtpForm({
 
       setStatus(
         t(
-          "Signed in. Opening your studio…",
-          "Успешна најава. Го отвораме вашето студио…",
+          purpose === "client"
+            ? "Signed in. Opening your account…"
+            : "Signed in. Opening your studio…",
+          purpose === "client"
+            ? "Успешна најава. Ја отвораме вашата сметка…"
+            : "Успешна најава. Го отвораме вашето студио…",
+          purpose === "client"
+            ? "U identifikuat. Po hapim llogarinë tuaj…"
+            : "U identifikuat. Po hapim studion tuaj…",
         ),
       );
     } catch (caught) {
@@ -263,6 +276,7 @@ export function EmailOtpForm({
         t(
           networkErrorMessage(caught),
           "Врската не успеа. Обидете се повторно.",
+          "Lidhja dështoi. Provoni përsëri.",
         ),
       );
     } finally {
@@ -279,7 +293,11 @@ export function EmailOtpForm({
       >
         <Spinner />
         <p data-replay-public className="text-sm text-muted-foreground">
-          {t("Opening your studio…", "Го отвораме вашето студио…")}
+          {t(
+            "Opening your studio…",
+            "Го отвораме вашето студио…",
+            "Po hapim studion tuaj…",
+          )}
         </p>
       </section>
     );
@@ -309,7 +327,11 @@ export function EmailOtpForm({
             >
               {step === "email"
                 ? title
-                : t("Check your email", "Проверете ја вашата е-пошта")}
+                : t(
+                    "Check your email",
+                    "Проверете ја вашата е-пошта",
+                    "Kontrolloni emailin tuaj",
+                  )}
             </h1>
             <p
               data-replay-public={
@@ -322,6 +344,7 @@ export function EmailOtpForm({
                 : t(
                     `Enter the six-digit code sent to ${email}.`,
                     `Внесете го шестцифрениот код испратен на ${email}.`,
+                    `Shënoni kodin gjashtëshifror të dërguar në ${email}.`,
                   )}
             </p>
           </header>
@@ -331,7 +354,7 @@ export function EmailOtpForm({
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
                   <FieldLabel data-replay-public htmlFor="auth-email">
-                    {t("Email address", "Е-пошта")}
+                    {t("Email address", "Е-пошта", "Adresa e emailit")}
                   </FieldLabel>
                   <Input
                     id="auth-email"
@@ -352,6 +375,7 @@ export function EmailOtpForm({
                     {t(
                       "We’ll email you a six-digit code. No password needed.",
                       "Ќе ви испратиме шестцифрен код по е-пошта. Не ви треба лозинка.",
+                      "Do t'ju dërgojmë një kod gjashtëshifror me email. Nuk nevojitet fjalëkalim.",
                     )}
                   </FieldDescription>
                 </Field>
@@ -377,11 +401,19 @@ export function EmailOtpForm({
                   {isSubmitting ? (
                     <>
                       <Spinner data-icon="inline-start" />
-                      {t("Sending code…", "Испраќање код…")}
+                      {t(
+                        "Sending code…",
+                        "Испраќање код…",
+                        "Duke dërguar kodin…",
+                      )}
                     </>
                   ) : (
                     <>
-                      {t("Continue with email", "Продолжи со е-пошта")}
+                      {t(
+                        "Continue with email",
+                        "Продолжи со е-пошта",
+                        "Vazhdo me email",
+                      )}
                       <ArrowRight data-icon="inline-end" aria-hidden="true" />
                     </>
                   )}
@@ -393,7 +425,7 @@ export function EmailOtpForm({
               <FieldGroup className="gap-5">
                 <Field data-invalid={Boolean(error)}>
                   <FieldLabel data-replay-public htmlFor="auth-code">
-                    {t("Sign-in code", "Код за најава")}
+                    {t("Sign-in code", "Код за најава", "Kodi i hyrjes")}
                   </FieldLabel>
                   <InputOTP
                     id="auth-code"
@@ -429,11 +461,19 @@ export function EmailOtpForm({
                   {isSubmitting ? (
                     <>
                       <Spinner data-icon="inline-start" />
-                      {t("Checking code…", "Проверка на кодот…")}
+                      {t(
+                        "Checking code…",
+                        "Проверка на кодот…",
+                        "Duke kontrolluar kodin…",
+                      )}
                     </>
                   ) : (
                     <>
-                      {t("Verify and continue", "Потврди и продолжи")}
+                      {t(
+                        "Verify and continue",
+                        "Потврди и продолжи",
+                        "Verifiko dhe vazhdo",
+                      )}
                       <ArrowRight data-icon="inline-end" aria-hidden="true" />
                     </>
                   )}
@@ -463,7 +503,7 @@ export function EmailOtpForm({
                       setStatus(null);
                     }}
                   >
-                    {t("Change email", "Промени е-пошта")}
+                    {t("Change email", "Промени е-пошта", "Ndrysho emailin")}
                   </Button>
                   <Button
                     data-replay-public
@@ -476,7 +516,7 @@ export function EmailOtpForm({
                       isSubmitting || !captchaPolicy || captchaUnavailable
                     }
                   >
-                    {t("Send again", "Испрати повторно")}
+                    {t("Send again", "Испрати повторно", "Dërgo përsëri")}
                   </Button>
                 </div>
               </FieldGroup>
@@ -492,6 +532,7 @@ export function EmailOtpForm({
             {t(
               "Sign-in is temporarily unavailable. Please try again later.",
               "Најавата е привремено недостапна. Обидете се повторно подоцна.",
+              "Hyrja është përkohësisht e padisponueshme. Ju lutemi provoni përsëri më vonë.",
             )}
           </p>
         ) : null}

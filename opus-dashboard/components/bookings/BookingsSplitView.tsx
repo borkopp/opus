@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -9,6 +9,9 @@ import { IconCalendarOff } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { BookingsHorizontalTimeline } from "./BookingsHorizontalTimeline";
 import { BookingsTimeline } from "./BookingsTimeline";
+import { calendarRange } from "../../../shared/calendar";
+import { wallClockNow } from "@/convex/lib/bookingTime";
+import { BookingsPeriodView } from "./BookingsPeriodView";
 import { BookingsList } from "./BookingsList";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
@@ -22,6 +25,8 @@ import {
   dateKey,
   isBookingOnDate,
   dateFromKey,
+  bookingDateKey,
+  bookingTimestampForDate,
 } from "@/lib/booking-wall-clock";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import {
@@ -41,9 +46,33 @@ export function BookingsSplitView({
   const { t } = useDashboardI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const isMobile = !isDesktop;
-  const [mobileVariant, setMobileVariant] = useState<"vertical" | "list">(
-    "list",
+  const [mobileVariant, setMobileVariant] = useState<
+    Exclude<BookingViewVariant, "horizontal">
+  >(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("opus_bookings_timeline_variant");
+      if (
+        saved === "vertical" ||
+        saved === "list" ||
+        saved === "week" ||
+        saved === "month"
+      )
+        return saved;
+    }
+    return "list";
+  });
+  const [periodStaffId, setPeriodStaffId] = useState("all");
+  const settings = useQuery(api.orgSettings.getOrgSettings, { orgId });
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setClock(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
+  const now = wallClockNow(
+    settings?.settings?.timezone ?? "Europe/Skopje",
+    clock,
   );
+  const today = dateFromKey(bookingDateKey(now))!;
   const [mobileStaffId, setMobileStaffId] = useState<string>("");
   const activeStaffId = staffMembers.some(
     (staff) => staff._id === mobileStaffId,
@@ -72,27 +101,30 @@ export function BookingsSplitView({
         if (parsed) return startOfDay(parsed);
       }
     }
-    return startOfDay(new Date());
+    return startOfDay(
+      dateFromKey(bookingDateKey(wallClockNow("Europe/Skopje")))!,
+    );
   });
-  const [viewVariant, setViewVariant] = useState<
-    "horizontal" | "vertical" | "list"
-  >(() => {
+  const [viewVariant, setViewVariant] = useState<BookingViewVariant>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("opus_bookings_timeline_variant");
-      if (saved === "horizontal" || saved === "vertical" || saved === "list") {
+      if (
+        saved === "horizontal" ||
+        saved === "vertical" ||
+        saved === "list" ||
+        saved === "week" ||
+        saved === "month"
+      ) {
         return saved;
       }
     }
     return "horizontal";
   });
 
-  const handleVariantChange = (variant: "horizontal" | "vertical" | "list") => {
+  const handleVariantChange = (variant: BookingViewVariant) => {
     setSelectedBookingId(null);
-    if (isMobile) {
-      if (variant !== "horizontal") setMobileVariant(variant);
-      return;
-    }
     setViewVariant(variant);
+    if (variant !== "horizontal") setMobileVariant(variant);
     if (typeof window !== "undefined") {
       localStorage.setItem("opus_bookings_timeline_variant", variant);
     }
@@ -118,14 +150,37 @@ export function BookingsSplitView({
       isBookingOnDate(b.startAt, currentDate) && isVisibleCalendarBooking(b),
   );
 
-  // Filtering logic for the main view
-  const filteredBookings = todayBookings.filter((b) => {
-    if (statusFilter === "all") return true;
-    if (statusFilter === "completed") return b.status === "completed";
-    if (statusFilter === "no-show") return b.status === "no_show";
-    if (statusFilter === "upcoming") return b.status === "confirmed";
-    return true;
-  });
+  const range = calendarRange(
+    bookingTimestampForDate(currentDate, 0),
+    activeVariant === "week" || activeVariant === "month"
+      ? activeVariant
+      : "day",
+  );
+  const visibleBookings = bookings.filter(
+    (b) =>
+      isVisibleCalendarBooking(b) &&
+      b.startAt >= range.startAt &&
+      b.startAt < range.endAt,
+  );
+  function matchesStatus(b: BookingView) {
+    return (
+      statusFilter === "all" ||
+      (statusFilter === "completed" && b.status === "completed") ||
+      (statusFilter === "no-show" && b.status === "no_show") ||
+      (statusFilter === "upcoming" && b.status === "confirmed")
+    );
+  }
+  const filteredBookings = todayBookings.filter(matchesStatus);
+  const periodBookings = visibleBookings.filter(
+    (b) =>
+      matchesStatus(b) &&
+      (periodStaffId === "all" || b.staffId === periodStaffId),
+  );
+  function openDay(date: Date) {
+    setCurrentDate(startOfDay(date));
+    setSelectedBookingId(null);
+    handleVariantChange("vertical");
+  }
 
   // Reschedule handler
   const handleReschedule = useCallback(
@@ -137,7 +192,13 @@ export function BookingsSplitView({
           newStartAt,
         });
         setSelectedBookingId(null);
-        toast.success(t("Booking rescheduled", "Терминот е презакажан"));
+        toast.success(
+          t(
+            "Booking rescheduled",
+            "Терминот е презакажан",
+            "Termini u ricaktua",
+          ),
+        );
         return true;
       } catch (error: unknown) {
         console.error("Reschedule failed:", error);
@@ -147,6 +208,7 @@ export function BookingsSplitView({
             : t(
                 "Failed to reschedule. The slot may conflict with another booking.",
                 "Не успеа презакажувањето. Терминот може да се преклопува со друго закажување.",
+                "Ricaktimi dështoi. Orari mund të përplaset me një termin tjetër.",
               ),
         );
         return false;
@@ -173,11 +235,20 @@ export function BookingsSplitView({
           await markNoShow({ orgId, bookingId });
         }
         const actionMessages = {
-          cancel: t("Booking cancelled", "Терминот е откажан"),
-          complete: t("Booking completed", "Терминот е завршен"),
+          cancel: t(
+            "Booking cancelled",
+            "Терминот е откажан",
+            "Termini u anulua",
+          ),
+          complete: t(
+            "Booking completed",
+            "Терминот е завршен",
+            "Termini përfundoi",
+          ),
           "no-show": t(
             "Booking marked as no-show",
             "Терминот е означен како неостварен",
+            "Termini u shënua si mosparaqitje",
           ),
         };
         toast.success(actionMessages[action]);
@@ -188,6 +259,7 @@ export function BookingsSplitView({
             : t(
                 "Could not update the booking.",
                 "Не може да се ажурира терминот.",
+                "Nuk mund të përditësohej termini.",
               ),
         );
       }
@@ -199,6 +271,7 @@ export function BookingsSplitView({
     <div className="dashboard-calendar-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-card">
       <BookingsToolbar
         currentDate={currentDate}
+        today={today}
         bookingDateCounts={bookingDateCounts}
         onDateChange={(date) => {
           setSelectedBookingId(null);
@@ -214,10 +287,16 @@ export function BookingsSplitView({
           setStatusFilter(value);
         }}
         staffMembers={staffMembers}
-        staffId={activeStaffId}
+        staffId={
+          activeVariant === "week" || activeVariant === "month"
+            ? periodStaffId
+            : activeStaffId
+        }
         onStaffChange={(value) => {
           setSelectedBookingId(null);
-          setMobileStaffId(value);
+          if (activeVariant === "week" || activeVariant === "month")
+            setPeriodStaffId(value);
+          else setMobileStaffId(value);
         }}
       />
 
@@ -233,9 +312,33 @@ export function BookingsSplitView({
               data-replay-public
               className="font-semibold text-foreground text-base"
             >
-              {t("No staff members found", "Не се пронајдени членови на тимот")}
+              {t(
+                "No staff members found",
+                "Не се пронајдени членови на тимот",
+                "Nuk u gjet asnjë anëtar i ekipit",
+              )}
             </p>
           </div>
+        ) : activeVariant === "week" || activeVariant === "month" ? (
+          <BookingsPeriodView
+            period={activeVariant}
+            currentDate={currentDate}
+            now={now}
+            isMobile={isMobile}
+            bookings={periodBookings}
+            staffMembers={staffMembers}
+            selectedBookingId={selectedBookingId}
+            onSelectBooking={setSelectedBookingId}
+            onSelectDay={(date) => {
+              setSelectedBookingId(null);
+              setCurrentDate(startOfDay(date));
+            }}
+            onOpenDay={openDay}
+            onNewBooking={(date) => openQuickBooking({ date })}
+            onComplete={(id) => runBookingAction("complete", id)}
+            onCancel={(id) => runBookingAction("cancel", id)}
+            onMarkNoShow={(id) => runBookingAction("no-show", id)}
+          />
         ) : activeVariant === "horizontal" ? (
           <BookingsHorizontalTimeline
             bookings={filteredBookings}
@@ -281,12 +384,17 @@ export function BookingsSplitView({
               data-replay-public
               className="font-semibold text-foreground text-base"
             >
-              {t("No bookings found", "Нема пронајдени термини")}
+              {t(
+                "No bookings found",
+                "Нема пронајдени термини",
+                "Nuk u gjet asnjë termin",
+              )}
             </p>
             <p data-replay-public className="text-xs mt-1">
               {t(
                 "Try a different filter or date.",
                 "Обидете се со друг филтер или датум.",
+                "Provoni një filtër ose datë tjetër.",
               )}
             </p>
           </div>

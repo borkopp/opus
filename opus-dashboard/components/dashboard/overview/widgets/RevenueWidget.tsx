@@ -45,22 +45,23 @@ export function RevenueWidget({
       replayPublicSubtitle
       replayPublicTitle
       delay={100}
-      title={t("Appointment value", "Вредност на термините")}
+      title={t("Appointment value", "Вредност на термините", "Vlera e termineve")}
       subtitle={t(
         "Value of completed appointments",
         "Вредност на завршени термини",
+        "Vlera e termineve të përfunduara",
       )}
       action={
         <label className={s.periodSelect}>
           <span data-replay-public className={s.srOnly}>
-            {t("Analytics period", "Период на анализа")}
+            {t("Analytics period", "Период на анализа", "Periudha e analizës")}
           </span>
           <select
             value={revenue.days}
             onChange={(e) => onDaysChange(Number(e.target.value) as 7 | 30)}
           >
-            <option value={7}>{t("Last 7 days", "Последни 7 дена")}</option>
-            <option value={30}>{t("Last 30 days", "Последни 30 дена")}</option>
+            <option value={7}>{t("Last 7 days", "Последни 7 дена", "7 ditët e fundit")}</option>
+            <option value={30}>{t("Last 30 days", "Последни 30 дена", "30 ditët e fundit")}</option>
           </select>
           <ChevronDown size={13} />
         </label>
@@ -70,7 +71,7 @@ export function RevenueWidget({
         <strong>
           {overviewNumber(revenue.totalMinor, locale)}
           <small>
-            {revenue.currency ?? t("Mixed currencies", "Повеќе валути")}
+            {revenue.currency ?? t("Mixed currencies", "Повеќе валути", "Valuta të përziera")}
           </small>
         </strong>
         <span>
@@ -78,7 +79,7 @@ export function RevenueWidget({
             ? "—"
             : `${revenue.changePct > 0 ? "+" : ""}${revenue.changePct.toFixed(1)}%`}
           <small data-replay-public>
-            {t("vs. previous period", "споредено со претходен период")}
+            {t("vs. previous period", "споредено со претходен период", "krahasuar me periudhën e mëparshme")}
           </small>
         </span>
       </div>
@@ -86,13 +87,14 @@ export function RevenueWidget({
         label={t(
           "Appointment value by period",
           "Вредност на термините по период",
+          "Vlera e termineve sipas periudhës",
         )}
         maximum={maximum}
         axisLabels={[axis(maximum), axis(maximum / 2), "0"]}
         points={revenue.buckets.map((bucket) => ({
           label: range(bucket.startAt, bucket.endAt),
           value: bucket.valueMinor,
-          detail: `${range(bucket.startAt, bucket.endAt)}: ${overviewNumber(bucket.valueMinor, locale)} ${revenue.currency ?? t("Mixed currencies", "Повеќе валути")}`,
+          detail: `${range(bucket.startAt, bucket.endAt)}: ${overviewNumber(bucket.valueMinor, locale)} ${revenue.currency ?? t("Mixed currencies", "Повеќе валути", "Valuta të përziera")}`,
         }))}
       />
     </WidgetFrame>

@@ -11,10 +11,12 @@ import React, {
 import { usePathname } from "next/navigation";
 import {
   getDashboardPageTitle,
+  getTranslations,
   normalizeDashboardLocale,
   resolveDashboardLanguage,
   translate,
   type DashboardLanguage,
+  type DashboardTranslations,
 } from "@/lib/i18n/types";
 
 import { setClientLocale } from "../../shared/i18n/locale";
@@ -23,7 +25,8 @@ export interface DashboardI18nContextValue {
   setLanguage: (language: DashboardLanguage) => void;
   language: DashboardLanguage;
   locale: string;
-  t: (english: string, macedonian: string, albanian?: string) => string;
+  t: (english: string, macedonian?: string, albanian?: string) => string;
+  translations: DashboardTranslations;
 }
 
 const DashboardI18nContext = createContext<DashboardI18nContextValue | null>(
@@ -60,7 +63,8 @@ export function DashboardI18nProvider({
       language,
       setLanguage,
       locale: activeLocale,
-      t: (english: string, macedonian: string, albanian?: string) =>
+      translations: getTranslations(language),
+      t: (english: string, macedonian?: string, albanian?: string) =>
         translate(language, english, macedonian, albanian),
     };
   }, [language, activeLocale, setLanguage]);

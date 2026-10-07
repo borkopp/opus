@@ -10,6 +10,7 @@ import { OverviewLayout } from "./OverviewLayout";
 import { OpenSlotsWidget } from "./widgets/OpenSlotsWidget";
 import { AssistantWidget } from "./widgets/AssistantWidget";
 import { RecoveryWidget } from "./widgets/RecoveryWidget";
+import { resolveAccountDisplayName } from "@/lib/dashboard-overview";
 
 export function DashboardOverview() {
   const { data, isUpdating, utilisation, analytics, setDays, setDate } =
@@ -21,7 +22,7 @@ export function DashboardOverview() {
     return (
       <div
         className="grid gap-5 p-8"
-        aria-label={t("Loading dashboard", "Се вчитува контролната табла")}
+        aria-label={t("Loading dashboard", "Се вчитува контролната табла", "Po ngarkohet paneli")}
       >
         <Skeleton className="h-24 w-2/3" />
         <div className="grid grid-cols-3 gap-5">
@@ -39,7 +40,7 @@ export function DashboardOverview() {
       isUpdating={isUpdating}
       utilisation={utilisation}
       analytics={analytics}
-      firstName={profile.user?.name?.split(" ")[0] || ""}
+      firstName={(resolveAccountDisplayName(profile) || "").split(/\s+/)[0] || ""}
       onDaysChange={setDays}
       onDateChange={setDate}
       onNewAppointment={() =>

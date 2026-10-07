@@ -28,13 +28,14 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
       await navigator.clipboard.writeText(websiteUrl);
       setCopied(true);
       toast.success(
-        t("Website link copied", "Линкот до веб-страницата е копиран"),
+        t("Website link copied", "Линкот до веб-страницата е копиран", "Linku i uebsajtit u kopjua"),
       );
     } catch {
       toast.error(
         t(
           "Could not copy the website link",
           "Не можеше да се копира линкот до веб-страницата",
+          "Nuk mund të kopjohej linku i uebsajtit",
         ),
       );
     }
@@ -45,7 +46,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
       as="section"
       delay={90}
       className="flex min-w-0 flex-col gap-4 rounded-[25px] bg-card p-5 md:min-h-[272px] md:gap-5 md:p-6"
-      aria-label={t("Studio website", "Веб-страница на студиото")}
+      aria-label={t("Studio website", "Веб-страница на студиото", "Uebsajti i studios")}
     >
       <div
         className="flex items-center gap-3 md:items-start"
@@ -63,7 +64,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           data-replay-public
           className="min-w-0 flex-1 self-center text-sm font-medium leading-snug tracking-tight md:text-base"
         >
-          {t("Website is live", "Веб-страницата е активна")}
+          {t("Website is live", "Веб-страницата е активна", "Faqja e internetit është aktive")}
         </h2>
         <Button
           asChild
@@ -75,7 +76,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
             href={websiteUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label={t("Open website", "Отвори страница")}
+            aria-label={t("Open website", "Отвори страница", "Hap uebsajtin")}
           >
             <ExternalLink />
           </a>
@@ -91,6 +92,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
         {t(
           "Share your website so clients can find a service and book a time.",
           "Споделете ја веб-страницата за клиентите да изберат услуга и да закажат термин.",
+          "Ndani uebsajtin tuaj që klientët të gjejnë një shërbim dhe të rezervojnë një orar.",
         )}
       </p>
 
@@ -105,7 +107,7 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           rel="noreferrer"
           title={address}
           className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-          aria-label={t(`Open ${address}`, `Отвори ${address}`)}
+          aria-label={t(`Open ${address}`, `Отвори ${address}`, `Hap ${address}`)}
         >
           {address}
         </a>
@@ -118,15 +120,15 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
               onClick={() => void copyLink()}
               aria-label={
                 copied
-                  ? t("Link copied", "Линкот е копиран")
-                  : t("Copy website link", "Копирај линк до веб-страницата")
+                  ? t("Link copied", "Линкот е копиран", "Linku u kopjua")
+                  : t("Copy website link", "Копирај линк до веб-страницата", "Kopjo linkun e uebsajtit")
               }
             >
               {copied ? <Check /> : <Copy />}
             </Button>
           </TooltipTrigger>
           <TooltipContent data-replay-public>
-            {copied ? t("Copied", "Копирано") : t("Copy link", "Копирај линк")}
+            {copied ? t("Copied", "Копирано", "U kopjua") : t("Copy link", "Копирај линк", "Kopjo linkun")}
           </TooltipContent>
         </Tooltip>
       </div>
@@ -138,8 +140,8 @@ export function LiveWebsiteCard({ websiteUrl }: { websiteUrl: string }) {
           className="min-h-12 h-auto w-full justify-between whitespace-normal"
         >
           {copied
-            ? t("Link copied", "Линкот е копиран")
-            : t("Copy booking link", "Копирај линк за закажување")}
+            ? t("Link copied", "Линкот е копиран", "Linku u kopjua")
+            : t("Copy booking link", "Копирај линк за закажување", "Kopjo linkun e rezervimit")}
           {copied ? (
             <Check data-icon="inline-end" />
           ) : (

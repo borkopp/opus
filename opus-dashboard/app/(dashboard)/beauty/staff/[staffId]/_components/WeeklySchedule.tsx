@@ -201,7 +201,7 @@ export function WeeklySchedule({
           : current,
       );
       toast.success(
-        t("Regular hours saved.", "Редовното работно време е зачувано."),
+        t("Regular hours saved.", "Редовното работно време е зачувано.", "Orari i rregullt u ruajt."),
       );
     } catch (error: unknown) {
       toast.error(
@@ -210,6 +210,7 @@ export function WeeklySchedule({
           t(
             "Could not save regular hours",
             "Не може да се зачува редовното работно време",
+            "Orari i rregullt nuk mund të ruhej",
           ),
         ),
       );
@@ -224,6 +225,7 @@ export function WeeklySchedule({
         t(
           "Save these hours before applying them to the team.",
           "Зачувајте ги овие часови пред да ги примените на тимот.",
+          "Ruani këto orë para se t'i aplikoni tek ekipi.",
         ),
       );
       return;
@@ -234,6 +236,7 @@ export function WeeklySchedule({
         t(
           "Apply these regular hours to every other staff member? Their current regular hours will be replaced.",
           "Дали сакате да го примените ова редовно работно време на сите останати вработени? Нивното тековно работно време ќе биде заменето.",
+          "A dëshironi të aplikoni këtë orar të rregullt për çdo anëtar tjetër të stafit? Orari i tyre aktual do të zëvendësohet.",
         ),
       )
     ) {
@@ -247,6 +250,7 @@ export function WeeklySchedule({
         t(
           "Regular hours applied to the whole team.",
           "Редовното работно време е применето на целиот тим.",
+          "Orari i rregullt u aplikua për të gjithë ekipin.",
         ),
       );
     } catch (error: unknown) {
@@ -256,6 +260,7 @@ export function WeeklySchedule({
           t(
             "Could not apply hours to the team",
             "Не може да се примени работното време на тимот",
+            "Orari nuk mund të aplikohej për ekipin",
           ),
         ),
       );
@@ -270,12 +275,13 @@ export function WeeklySchedule({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle data-replay-public>
-              {t("Regular hours", "Редовно работно време")}
+              {t("Regular hours", "Редовно работно време", "Orari i rregullt")}
             </CardTitle>
             <CardDescription data-replay-public className="mt-1.5">
               {t(
                 "Customers can only book this team member during these hours.",
                 "Клиентите можат да закажуваат кај овој член на тимот само во ова работно време.",
+                "Klientët mund të rezervojnë tek ky anëtar stafi vetëm gjatë këtyre orëve.",
               )}
             </CardDescription>
           </div>
@@ -290,6 +296,7 @@ export function WeeklySchedule({
                     aria-label={t(
                       "More schedule actions",
                       "Повеќе опции за распоредот",
+                      "Më shumë veprime për orarin",
                     )}
                   >
                     <MoreHorizontalIcon />
@@ -305,6 +312,7 @@ export function WeeklySchedule({
                       {t(
                         "Apply saved hours to all staff",
                         "Примени зачувано работно време на сите вработени",
+                        "Apliko orarin e ruajtur për gjithë stafin",
                       )}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
@@ -323,8 +331,8 @@ export function WeeklySchedule({
                 <SaveIcon data-icon="inline-start" />
               )}
               {isSaving
-                ? t("Saving…", "Се зачувува…")
-                : t("Save changes", "Зачувај промени")}
+                ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+                : t("Save changes", "Зачувај промени", "Ruaj ndryshimet")}
             </Button>
           </div>
         </div>
@@ -400,6 +408,7 @@ function DayRow({
           aria-label={t(
             `Set ${dayLabel} as a working day`,
             `Постави го ${dayLabel} како работен ден`,
+            `Cakto ${dayLabel} si ditë pune`,
           )}
         />
         <Label htmlFor={`working-${day.dayOfWeek}`} className="font-medium">
@@ -411,7 +420,7 @@ function DayRow({
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <Label htmlFor={`start-${day.dayOfWeek}`} className="sr-only">
-              {t(`${dayLabel} start time`, `Почетно време за ${dayLabel}`)}
+              {t(`${dayLabel} start time`, `Почетно време за ${dayLabel}`, `Koha e fillimit për ${dayLabel}`)}
             </Label>
             <Input
               id={`start-${day.dayOfWeek}`}
@@ -421,10 +430,10 @@ function DayRow({
               className="w-[8.5rem] tabular-nums"
             />
             <span data-replay-public className="text-sm text-muted-foreground">
-              {t("to", "до")}
+              {t("to", "до", "deri më")}
             </span>
             <Label htmlFor={`end-${day.dayOfWeek}`} className="sr-only">
-              {t(`${dayLabel} end time`, `Крајно време за ${dayLabel}`)}
+              {t(`${dayLabel} end time`, `Крајно време за ${dayLabel}`, `Koha e përfundimit për ${dayLabel}`)}
             </Label>
             <Input
               id={`end-${day.dayOfWeek}`}
@@ -442,7 +451,7 @@ function DayRow({
               disabled={day.breaks.length >= 3}
             >
               <PlusIcon data-icon="inline-start" />
-              {t("Add break", "Додај пауза")}
+              {t("Add break", "Додај пауза", "Shto pushim")}
             </Button>
           </div>
 
@@ -458,7 +467,7 @@ function DayRow({
                     data-replay-public
                     className="mr-1 text-xs font-medium text-muted-foreground"
                   >
-                    {t("Break", "Пауза")}
+                    {t("Break", "Пауза", "Pushim")}
                   </span>
                   <Label
                     htmlFor={`break-start-${day.dayOfWeek}-${index}`}
@@ -467,6 +476,7 @@ function DayRow({
                     {t(
                       `${dayLabel} break start time`,
                       `Почетно време на пауза за ${dayLabel}`,
+                      `Koha e fillimit të pushimit për ${dayLabel}`,
                     )}
                   </Label>
                   <Input
@@ -482,7 +492,7 @@ function DayRow({
                     data-replay-public
                     className="text-sm text-muted-foreground"
                   >
-                    {t("to", "до")}
+                    {t("to", "до", "deri më")}
                   </span>
                   <Label
                     htmlFor={`break-end-${day.dayOfWeek}-${index}`}
@@ -491,6 +501,7 @@ function DayRow({
                     {t(
                       `${dayLabel} break end time`,
                       `Крајно време на пауза за ${dayLabel}`,
+                      `Koha e përfundimit të pushimit për ${dayLabel}`,
                     )}
                   </Label>
                   <Input
@@ -509,6 +520,7 @@ function DayRow({
                     aria-label={t(
                       `Remove ${dayLabel} break ${index + 1}`,
                       `Отстрани ја паузата ${index + 1} за ${dayLabel}`,
+                      `Hiq pushimin ${index + 1} për ${dayLabel}`,
                     )}
                     onClick={() => removeBreak(index)}
                   >
@@ -524,7 +536,7 @@ function DayRow({
           data-replay-public
           className="self-center text-sm text-muted-foreground"
         >
-          {t("Not available for bookings", "Не е достапен за закажувања")}
+          {t("Not available for bookings", "Не е достапен за закажувања", "Nuk është i disponueshëm për rezervime")}
         </p>
       )}
     </div>

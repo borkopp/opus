@@ -58,10 +58,10 @@ export function OverviewLayout({
   const hour = new Date(data.now).getUTCHours();
   const greeting =
     hour < 12
-      ? t("Good morning", "Добро утро")
+      ? t("Good morning", "Добро утро", "Mirëmëngjes")
       : hour < 18
-        ? t("Good afternoon", "Добар ден")
-        : t("Good evening", "Добровечер");
+        ? t("Good afternoon", "Добар ден", "Mirëdita")
+        : t("Good evening", "Добровечер", "Mirëmbrëma");
   return (
     <div className={s.clarityBody} aria-busy={isUpdating}>
       <div className={s.clarityMain}>
@@ -79,18 +79,20 @@ export function OverviewLayout({
                 ? t(
                     "A good day starts with a little clarity",
                     "Добриот ден почнува со јасен преглед",
+                    "Një ditë e mirë fillon me pak qartësi",
                   )
                 : `${greeting}${firstName ? `, ${firstName}` : ""}`}
               <span data-replay-public>.</span>
             </h1>
             {/* <p data-replay-public data-appear="item" style={appearStep(3)}>
-              {t("You have", "Имате")}{" "}
+              {t("You have", "Имате", "Keni")}{" "}
               <strong>
-                {data.todayCount} {t("appointments", "термини")}
+                {data.todayCount} {t("appointments", "термини", "termine")}
               </strong>{" "}
               {t(
                 "today. Let’s make it a good day.",
                 "денес. Ви посакуваме успешен ден.",
+                "sot. Ju urojmë një ditë të mbarë.",
               )}
             </p> */}
           </div>
@@ -103,7 +105,7 @@ export function OverviewLayout({
             onClick={() => onNewAppointment()}
           >
             <Plus size={18} />
-            {t("New appointment", "Нов термин")}
+            {t("New appointment", "Нов термин", "Termin i ri")}
           </button>
         </Appear>
         <div className={studio ? s.studioMetrics : undefined}>
@@ -122,7 +124,7 @@ export function OverviewLayout({
                 <Plus size={24} />
               </span>
               <span data-replay-public>
-                {t("Book a client", "Закажи термин")}
+                {t("Book a client", "Закажи термин", "Rezervo një klient")}
               </span>
             </button>
           )}

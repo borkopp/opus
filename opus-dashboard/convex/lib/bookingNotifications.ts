@@ -7,6 +7,7 @@ import {
   queueBookingRescheduledEmail,
 } from "./bookingEmailNotifications";
 import { wallClockTimestampToInstant } from "./bookingTime";
+import { queueStaffPushEvent } from "./staffPush";
 import {
   normalizeSmsPhone,
   smsProviderConfigured,
@@ -14,6 +15,7 @@ import {
 } from "./sms";
 
 type BookingNotificationArgs = {
+  clientAccountUrl?: string;
   org: Doc<"orgs">;
   settings: Doc<"org_settings">;
   booking: Doc<"bookings">;
@@ -78,6 +80,12 @@ export async function queueBookingNotifications(
 ) {
   await queueBookingEmailNotifications(ctx, args);
   await queueBookingSmsNotifications(ctx, args);
+  if (args.scheduleReminders ?? true)
+    await queueStaffPushEvent(ctx, {
+      orgId: args.org._id,
+      bookingId: args.booking._id,
+      event: "booking_reminder",
+    });
 }
 
 export async function queueBookingSmsNotifications(
@@ -107,4 +115,14 @@ export async function queueBookingRescheduledNotifications(
 ) {
   await queueBookingRescheduledEmail(ctx, args);
   await queueBookingSms(ctx, args, "booking_rescheduled");
+  await queueStaffPushEvent(ctx, {
+    orgId: args.org._id,
+    bookingId: args.booking._id,
+    event: "booking_changed",
+  });
+  await queueStaffPushEvent(ctx, {
+    orgId: args.org._id,
+    bookingId: args.booking._id,
+    event: "booking_reminder",
+  });
 }

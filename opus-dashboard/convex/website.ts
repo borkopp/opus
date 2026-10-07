@@ -2,13 +2,14 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
 import { getWebsiteStatus } from "./lib/publication";
-import { requireActiveOrg, requireRole } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
 import { ensurePublishableTenantSlug } from "./lib/tenantSlug";
+import { requireLiveStudio } from "./lib/appReview";
 
 export const getReadiness = query({
   args: { orgId: v.optional(v.id("orgs")) },
   handler: async (ctx, args) => {
-    const { orgId } = await requireActiveOrg(ctx, args.orgId);
+    const { orgId } = await requireAuth(ctx, args.orgId);
     const state = await getBeautyActivationState(ctx, orgId);
     if (!state) return null;
 
@@ -52,6 +53,7 @@ export const publish = mutation({
     if (org.industry !== "beauty_wellness") {
       throw new ConvexError("Hospitality websites are coming soon.");
     }
+    requireLiveStudio(org);
 
     const state = await getBeautyActivationState(ctx, orgId);
     if (!state) throw new ConvexError("Business not found.");

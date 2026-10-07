@@ -19,16 +19,17 @@ export function TeamWidget({
       replayPublicSubtitle
       replayPublicTitle
       delay={0}
-      title={t("Team availability", "Достапност на тимот")}
+      title={t("Team availability", "Достапност на тимот", "Disponueshmëria e ekipit")}
       subtitle={t(
         "Today’s bookings · weekly occupancy",
         "Денешни термини · неделна зафатеност",
+        "Terminet e sotme · zënia javore",
       )}
       action={
         <Link
           href="/beauty/services?tab=staff"
           className={s.smallIcon}
-          aria-label={t("Manage team", "Управувај со тимот")}
+          aria-label={t("Manage team", "Управувај со тимот", "Menaxho ekipin")}
         >
           <ArrowUpRight size={16} />
         </Link>
@@ -56,8 +57,8 @@ export function TeamWidget({
                 <strong>{person.name}</strong>
                 <span>
                   {load == null
-                    ? t("Occupancy unavailable", "Нема податоци за зафатеност")
-                    : `${Math.round(load)}% ${t("booked this week", "зафатено оваа недела")}`}
+                    ? t("Occupancy unavailable", "Нема податоци за зафатеност", "Zënia e padisponueshme")
+                    : `${Math.round(load)}% ${t("booked this week", "зафатено оваа недела", "e rezervuar këtë javë")}`}
                 </span>
                 <div className={s.teamProgress}>
                   <i
@@ -68,14 +69,14 @@ export function TeamWidget({
               </div>
               <div className={s.teamCount}>
                 <strong>{person.todayCount}</strong>
-                <span data-replay-public>{t("bookings", "термини")}</span>
+                <span data-replay-public>{t("bookings", "термини", "rezervime")}</span>
               </div>
             </Link>
           );
         })}
         {staff.length === 0 && (
           <WidgetEmpty>
-            {t("Add your first team member.", "Додајте член во тимот.")}
+            {t("Add your first team member.", "Додајте член во тимот.", "Shtoni anëtarin tuaj të parë të ekipit.")}
           </WidgetEmpty>
         )}
       </div>

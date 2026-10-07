@@ -50,12 +50,12 @@ export function ScheduleWidget({
       replayPublicSubtitle
       replayPublicTitle
       delay={0}
-      title={t("Your appointment schedule", "Вашиот распоред на термини")}
-      subtitle={t("One appointment at a time.", "Секој термин на свое место.")}
+      title={t("Your appointment schedule", "Вашиот распоред на термини", "Orari juaj i termineve")}
+      subtitle={t("One appointment at a time.", "Секој термин на свое место.", "Një termin në një kohë.")}
       className={s.schedule}
       action={
         <span className={s.countPill}>
-          {data.schedule.length} {t("appointments", "термини")}
+          {data.schedule.length} {t("appointments", "термини", "termine")}
         </span>
       }
     >
@@ -67,7 +67,7 @@ export function ScheduleWidget({
           <button
             type="button"
             className={s.smallIcon}
-            aria-label={t("Previous day", "Претходен ден")}
+            aria-label={t("Previous day", "Претходен ден", "Dita e mëparshme")}
             onClick={() => changeDate(data.selected - DAY)}
           >
             <ChevronLeft size={16} />
@@ -75,7 +75,7 @@ export function ScheduleWidget({
           <button
             type="button"
             className={s.smallIcon}
-            aria-label={t("Next day", "Следен ден")}
+            aria-label={t("Next day", "Следен ден", "Dita tjetër")}
             onClick={() => changeDate(data.selected + DAY)}
           >
             <ChevronRight size={16} />
@@ -85,7 +85,7 @@ export function ScheduleWidget({
       <div
         className={s.weekPicker}
         role="group"
-        aria-label={t("Appointment date", "Датум на термин")}
+        aria-label={t("Appointment date", "Датум на термин", "Data e terminit")}
       >
         {Array.from({ length: 7 }, (_, i) => monday + i * DAY).map(
           (at, index) => (
@@ -113,12 +113,13 @@ export function ScheduleWidget({
         >
           <Search size={15} />
           <input
-            aria-label={t("Search appointments", "Пребарај термини")}
+            aria-label={t("Search appointments", "Пребарај термини", "Kërko terminet")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t(
               "Find a client or service",
               "Пребарај клиент или услуга",
+              "Gjeni një klient ose shërbim",
             )}
           />
         </label>
@@ -129,10 +130,10 @@ export function ScheduleWidget({
         >
           <Users size={14} />
           <span data-replay-public className={s.srOnly}>
-            {t("Filter by team member", "Филтрирај по член на тимот")}
+            {t("Filter by team member", "Филтрирај по член на тимот", "Filtro sipas anëtarit të ekipit")}
           </span>
           <select value={staff} onChange={(e) => setStaff(e.target.value)}>
-            <option value="">{t("Everyone", "Сите")}</option>
+            <option value="">{t("Everyone", "Сите", "Të gjithë")}</option>
             {data.staff.map((person) => (
               <option key={person.id} value={person.id}>
                 {person.name}
@@ -179,10 +180,10 @@ export function ScheduleWidget({
             >
               <i />
               {booking.status === "completed"
-                ? t("Completed", "Завршен")
+                ? t("Completed", "Завршен", "Përfunduar")
                 : booking.status === "checked_in"
-                  ? t("Arrived", "Пристигнат")
-                  : t("Confirmed", "Потврден")}
+                  ? t("Arrived", "Пристигнат", "Mbërriti")
+                  : t("Confirmed", "Потврден", "Konfirmuar")}
             </span>
             <span className={s.rowArrow}>
               {booking.status === "completed" ? (
@@ -200,10 +201,12 @@ export function ScheduleWidget({
               ? t(
                   "No appointments match these filters.",
                   "Нема термини за овие филтри.",
+                  "Asnjë termin nuk përputhet me këta filtra.",
                 )
               : t(
                   "No appointments on this day yet.",
                   "Сè уште нема термини за овој ден.",
+                  "Ende nuk ka termine në këtë ditë.",
                 )}
           </WidgetEmpty>
         )}
@@ -218,13 +221,13 @@ export function ScheduleWidget({
           type="button"
           onClick={() => changeDate(data.today)}
         >
-          {t("Back to today", "Назад на денес")}
+          {t("Back to today", "Назад на денес", "Kthehu te dita e sotme")}
         </button>
         <Link
           data-replay-public
           href={`/beauty/bookings?date=${new Date(data.selected).toISOString().slice(0, 10)}`}
         >
-          {t("Open calendar", "Отвори календар")} ↗
+          {t("Open calendar", "Отвори календар", "Hap kalendarin")} ↗
         </Link>
       </div>
     </WidgetFrame>

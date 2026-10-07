@@ -35,51 +35,76 @@ import { NotificationsQueueTab } from "./tabs/NotificationsQueueTab";
 import { ThemeTab } from "./tabs/ThemeTab";
 
 const SETTINGS_TABS = [
-  { value: "general", labelEn: "General", labelMk: "Општо", icon: Settings2 },
+  {
+    value: "general",
+    labelEn: "General",
+    labelMk: "Општо",
+    labelSq: "Të përgjithshme",
+    icon: Settings2,
+  },
   {
     value: "billing",
     labelEn: "Subscription",
     labelMk: "Претплата",
+    labelSq: "Abonimi",
     icon: CreditCard,
   },
-  { value: "themes", labelEn: "Themes", labelMk: "Теми", icon: SwatchBook },
+  {
+    value: "themes",
+    labelEn: "Themes",
+    labelMk: "Теми",
+    labelSq: "Temat",
+    icon: SwatchBook,
+  },
   {
     value: "branding",
     labelEn: "Branding",
     labelMk: "Брендирање",
+    labelSq: "Identiteti",
     icon: Palette,
   },
   {
     value: "location",
     labelEn: "Location",
     labelMk: "Локација",
+    labelSq: "Vendndodhja",
     icon: MapPin,
   },
   {
     value: "booking",
     labelEn: "Booking rules",
     labelMk: "Закажување",
+    labelSq: "Rregullat e rezervimit",
     icon: CalendarClock,
   },
   {
     value: "notifications",
     labelEn: "Notifications",
     labelMk: "Известувања",
+    labelSq: "Njoftimet",
     icon: BellRing,
   },
   {
     value: "gaps",
     labelEn: "Gap optimizer",
     labelMk: "Празни термини",
+    labelSq: "Optimizuesi i hapësirave",
     icon: Sparkles,
   },
   {
     value: "surge",
     labelEn: "Surge pricing",
     labelMk: "Динамични цени",
+    labelSq: "Çmimet dinamike",
     icon: Flame,
   },
-  { value: "ai", labelEn: "AI front desk", labelMk: "AI рецепција", icon: Bot },
+  {
+    value: "ai",
+    labelEn: "AI front desk",
+    labelMk: "AI рецепција",
+    labelSq: "Recepsioni AI",
+    icon: Bot,
+  },
 ] as const;
 
 type SettingsTab = (typeof SETTINGS_TABS)[number]["value"];
@@ -135,6 +160,7 @@ export function SettingsWorkspace() {
           {t(
             "Unable to load settings. Please make sure onboarding is complete.",
             "Поставките не може да се вчитаат. Проверете дали воведот е завршен.",
+            "Nuk mund të ngarkohen cilësimet. Sigurohuni që konfigurimi fillestar ka përfunduar.",
           )}
         </p>
       </div>
@@ -178,10 +204,11 @@ export function SettingsWorkspace() {
     >
       <DashboardPageHeader
         replayPublicTitle
-        title={t("Settings", "Поставки")}
+        title={t("Settings", "Поставки", "Cilësimet")}
         description={t(
           `Keep ${org.name}'s studio details, booking rules, and team preferences in one place.`,
           `Податоците за ${org.name}, правилата за закажување и поставките на тимот на едно место.`,
+          `Mbani detajet e studios së ${org.name}, rregullat e rezervimit dhe preferencat e ekipit në një vend.`,
         )}
       />
 
@@ -199,10 +226,10 @@ export function SettingsWorkspace() {
           />
           <div className="hidden md:block">
             <TabsList
-              aria-label={t("Settings sections", "Секции за поставки")}
+              aria-label={t("Settings sections", "Секции за поставки", "Seksionet e cilësimeve")}
               className="h-auto w-max min-w-full justify-start gap-1 rounded-xl p-1 bg-muted/80 border border-border/70 shadow-2xs dark:bg-muted/70 dark:border-transparent dark:shadow-none"
             >
-              {SETTINGS_TABS.map(({ value, labelEn, labelMk, icon: Icon }) => (
+              {SETTINGS_TABS.map(({ value, labelEn, labelMk, labelSq, icon: Icon }) => (
                 <TabsTrigger
                   data-replay-public
                   key={value}
@@ -210,7 +237,7 @@ export function SettingsWorkspace() {
                   className="h-9 min-w-max flex-1 gap-2 rounded-lg px-3 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card/40 transition-all data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:font-semibold data-[state=active]:shadow-xs data-[state=active]:border data-[state=active]:border-border/60 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-transparent dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 dark:data-[state=active]:text-foreground dark:data-[state=active]:shadow-none"
                 >
                   <Icon />
-                  {t(labelEn, labelMk)}
+                  {t(labelEn, labelMk, labelSq)}
                 </TabsTrigger>
               ))}
             </TabsList>

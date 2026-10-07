@@ -6,6 +6,9 @@ export function canCaptureAnalytics() {
     typeof window !== "undefined" &&
     isPlatformHost(window.location.hostname) &&
     !window.location.pathname.startsWith("/sites/") &&
+    !window.location.pathname.startsWith("/book/") &&
+    !window.location.pathname.startsWith("/account") &&
+    !window.location.pathname.startsWith("/invites/") &&
     !window.location.pathname.startsWith("/onboarding/preview") &&
     getConsent().analytics
   );

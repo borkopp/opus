@@ -56,7 +56,7 @@ export function UpgradeRedirect() {
     >
       <Spinner />
       <p className="text-sm text-muted-foreground">
-        {t("Opening OPUS Pro…", "Го отвораме OPUS Pro…")}
+        {t("Opening OPUS Pro…", "Го отвораме OPUS Pro…", "Duke hapur OPUS Pro…")}
       </p>
     </main>
   );

@@ -449,7 +449,7 @@ export function BookingsHorizontalTimeline({
             className="shrink-0 flex items-center px-4 font-semibold text-sm text-foreground sticky left-0 z-40 bg-card border-r border-border/50"
             style={{ width: STAFF_COL_WIDTH, height: HEADER_HEIGHT }}
           >
-            <span data-replay-public>{t("Staff", "Тим")}</span>
+            <span data-replay-public>{t("Staff", "Тим", "Ekipi")}</span>
             <span className="ml-2 text-xs font-normal text-muted-foreground">
               ({staffMembers.length})
             </span>
@@ -550,7 +550,7 @@ export function BookingsHorizontalTimeline({
                       data-replay-public
                       className="text-xs text-muted-foreground truncate"
                     >
-                      {t("Availability: 8h", "Достапност: 8ч")}
+                      {t("Availability: 8h", "Достапност: 8ч", "Disponueshmëria: 8orë")}
                     </span>
                   </div>
                 </div>
@@ -594,6 +594,7 @@ export function BookingsHorizontalTimeline({
                       aria-label={t(
                         `Book slot from ${bookingTimeLabel(staffQuickSlot.startAt)} to ${bookingTimeLabel(staffQuickSlot.endAt)} with ${staff.displayName}`,
                         `Закажи термин од ${bookingTimeLabel(staffQuickSlot.startAt)} до ${bookingTimeLabel(staffQuickSlot.endAt)} со ${staff.displayName}`,
+                        `Rezervo termin nga ${bookingTimeLabel(staffQuickSlot.startAt)} deri në ${bookingTimeLabel(staffQuickSlot.endAt)} me ${staff.displayName}`,
                       )}
                     >
                       <IconPlus className="size-3.5 shrink-0" />
@@ -605,7 +606,7 @@ export function BookingsHorizontalTimeline({
                         data-replay-public
                         className="text-[10px] opacity-70 hidden sm:inline"
                       >
-                        · {t("Open", "Слободен")}
+                        · {t("Open", "Слободен", "I lirë")}
                       </span>
                     </button>
                   )}
@@ -756,8 +757,8 @@ export function BookingsHorizontalTimeline({
                 if (firstSlot) onQuickBooking(firstSlot);
               }}
               className="ml-4 flex items-center justify-center size-9 rounded-2xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border/50 shadow-xs transition-all active:scale-[0.96]"
-              aria-label={t("Add booking", "Додај термин")}
-              title={t("Add booking", "Додај термин")}
+              aria-label={t("Add booking", "Додај термин", "Shto termin")}
+              title={t("Add booking", "Додај термин", "Shto termin")}
             >
               <IconPlus className="size-4" />
             </button>
@@ -765,7 +766,7 @@ export function BookingsHorizontalTimeline({
               data-replay-public
               className="ml-3 text-xs font-medium text-muted-foreground"
             >
-              {t("Quick booking", "Брзо закажување")}
+              {t("Quick booking", "Брзо закажување", "Rezervim i shpejtë")}
             </span>
           </div>
         </div>
@@ -783,23 +784,25 @@ export function BookingsHorizontalTimeline({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("Confirm reschedule", "Потврди презакажување")}
+              {t("Confirm reschedule", "Потврди презакажување", "Konfirmo ripërcaktimin")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {pendingDragReschedule
                 ? t(
                     `Move ${pendingDragReschedule.booking.customer?.name ?? "this client"}’s ${bookingServiceLabel(pendingDragReschedule.booking)} from ${formatBookingDate(pendingDragReschedule.booking.startAt, locale === "mk" ? "mk-MK" : "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} to ${formatBookingDate(pendingDragReschedule.newStartAt, locale === "mk" ? "mk-MK" : "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " The client will receive an email with the new time." : ""}`,
                     `Дали сакате да го преместите терминот (${bookingServiceLabel(pendingDragReschedule.booking, "Услуга")}) за ${pendingDragReschedule.booking.customer?.name ?? "клиентот"} од ${formatBookingDate(pendingDragReschedule.booking.startAt, "mk-MK")}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} на ${formatBookingDate(pendingDragReschedule.newStartAt, "mk-MK")}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " Клиентот ќе добие е-порака со новото време." : ""}`,
+                    `Dëshironi të zhvendosni terminin (${bookingServiceLabel(pendingDragReschedule.booking, "Shërbimi")}) për ${pendingDragReschedule.booking.customer?.name ?? "klientin"} nga ${formatBookingDate(pendingDragReschedule.booking.startAt, locale === "sq" ? "sq-AL" : "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.booking.startAt)}–${bookingTimeLabel(pendingDragReschedule.booking.endAt)} në ${formatBookingDate(pendingDragReschedule.newStartAt, locale === "sq" ? "sq-AL" : "en-GB")}, ${bookingTimeLabel(pendingDragReschedule.newStartAt)}–${bookingTimeLabel(pendingDragReschedule.newEndAt)}?${pendingDragReschedule.booking.customer?.email ? " Klienti do të marrë një email me orarin e ri." : ""}`,
                   )
                 : t(
                     "Review the new appointment time before confirming.",
                     "Прегледајте го новото време на терминот пред да потврдите.",
+                    "Shikoni orarin e ri të terminit para se të konfirmoni.",
                   )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isConfirmingReschedule}>
-              {t("Keep original time", "Задржи го оригиналното време")}
+              {t("Keep original time", "Задржи го оригиналното време", "Mbaj orarin origjinal")}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isConfirmingReschedule}
@@ -810,8 +813,8 @@ export function BookingsHorizontalTimeline({
             >
               {isConfirmingReschedule && <Spinner data-icon="inline-start" />}
               {isConfirmingReschedule
-                ? t("Rescheduling...", "Презакажување...")
-                : t("Confirm reschedule", "Потврди презакажување")}
+                ? t("Rescheduling...", "Презакажување...", "Duke ripërcaktuar...")
+                : t("Confirm reschedule", "Потврди презакажување", "Konfirmo ripërcaktimin")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

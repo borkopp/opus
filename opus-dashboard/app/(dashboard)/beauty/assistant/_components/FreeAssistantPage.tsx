@@ -40,6 +40,7 @@ export function FreeAssistantPage() {
     const reply = t(
       "This feature is available with OPUS Pro. Upgrade to get answers about your studio, backed by your business data.",
       "Оваа функција е достапна со OPUS Pro. Надгради за да добиваш одговори за студиото врз основа на податоците од твоето работење.",
+      "Kjo veçori është e disponueshme me OPUS Pro. Përmirësoni për të marrë përgjigje rreth studios suaj, bazuar në të dhënat e biznesit tuaj.",
     );
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -92,7 +93,7 @@ export function FreeAssistantPage() {
             role="log"
             aria-live="polite"
             aria-busy={streaming}
-            aria-label={t("Conversation", "Разговор")}
+            aria-label={t("Conversation", "Разговор", "Biseda")}
             className="flex max-h-[55dvh] flex-1 flex-col gap-6 overflow-y-auto py-6 pr-1"
           >
             {questions.map((turn, index) => (
@@ -115,6 +116,7 @@ export function FreeAssistantPage() {
                       {t(
                         "OPUS · Business assistant",
                         "OPUS · Деловен асистент",
+                        "OPUS · Asistent biznesi",
                       )}
                     </MessageHeader>
                     <Bubble variant="muted">
@@ -123,7 +125,7 @@ export function FreeAssistantPage() {
                           {turn.visible === 0 && !turn.complete ? (
                             <span
                               className={styles.typing}
-                              aria-label={t("Typing…", "Пишува…")}
+                              aria-label={t("Typing…", "Пишува…", "Duke shkruar…")}
                             >
                               <i />
                               <i />
@@ -152,6 +154,7 @@ export function FreeAssistantPage() {
                             {t(
                               "Learn more about OPUS Pro",
                               "Дознај повеќе за OPUS Pro",
+                              "Mësoni më shumë rreth OPUS Pro",
                             )}
                             <ArrowUpRight
                               className="size-4"

@@ -1,0 +1,91 @@
+{
+  "name": "opus-mobile",
+  "version": "1.0.3",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@better-auth/expo": "1.6.30",
+    "@convex-dev/better-auth": "0.12.5",
+    "@expo-google-fonts/audiowide": "^0.4.1",
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/manrope": "^0.4.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@sentry/react-native": "8.29.0",
+    "better-auth": "1.6.30",
+    "convex": "1.31.7",
+    "expo": "~57.0.27",
+    "expo-application": "~57.0.3",
+    "expo-constants": "~57.0.20",
+    "expo-crypto": "~57.0.3",
+    "expo-device": "~57.0.2",
+    "expo-font": "~57.0.4",
+    "expo-linking": "~57.0.12",
+    "expo-localization": "~57.0.2",
+    "expo-network": "~57.0.2",
+    "expo-notifications": "~57.0.22",
+    "expo-router": "~57.0.25",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
+    "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
+    "expo-updates": "~57.0.25",
+    "expo-web-browser": "~57.0.3",
+    "lucide-react-native": "^1.51.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "^0.21.2",
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "expo-doctor": "^1.20.4",
+    "opentype.js": "^2.0.0",
+    "sharp": "^0.35.5",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start --port 8081",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web --port 8081",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "export": "expo export --platform all",
+    "doctor": "expo-doctor",
+    "test": "node --experimental-strip-types --test scripts/*.test.cjs",
+    "assets:generate": "node scripts/generate-brand-assets.cjs",
+    "release:check": "npm run typecheck && npm run lint && npm test && npm run doctor",
+    "ota:prepare-build": "node scripts/ota.cjs prepare-build",
+    "ota:record-build": "node scripts/ota.cjs record-build",
+    "ota:check": "node scripts/ota.cjs check",
+    "ota:publish:production": "node scripts/ota.cjs publish --profile production",
+    "ota:publish:preview": "node scripts/ota.cjs publish --profile preview",
+    "build:production:ios": "node scripts/eas-build.cjs --profile production --platform ios",
+    "build:preview:ios": "node scripts/eas-build.cjs --profile preview --platform ios",
+    "build:simulator:ios": "node scripts/eas-build.cjs --profile simulator --platform ios",
+    "ota:publish:preview-simulator": "node scripts/ota.cjs publish --profile preview-simulator --platform ios"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "overrides": {
+    "@convex-dev/better-auth": {
+      "convex-helpers": "0.1.110"
+    }
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "@sentry/react-native"
+      ]
+    }
+  }
+}

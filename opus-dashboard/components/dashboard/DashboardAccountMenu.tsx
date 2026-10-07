@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -11,12 +12,18 @@ import {
   MessagesSquare,
   SwatchBook,
   CreditCard,
+  Bell,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FunctionReturnType } from "convex/server";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
-import { initials } from "@/lib/dashboard-overview";
+import { usePushSignOut } from "@/hooks/use-push-sign-out";
+import {
+  initials,
+  resolveAccountAvatar,
+  resolveAccountDisplayName,
+} from "@/lib/dashboard-overview";
 import { CookiePreferencesMenuItem } from "@/components/account/CookiePreferencesMenuItem";
 import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
 import { Badge } from "@/components/ui/badge";
@@ -37,11 +44,24 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import s from "./clarity.module.css";
-export type DashboardProfile = Pick<
-  NonNullable<FunctionReturnType<typeof api.users.getMyProfile>>,
-  "orgId" | "role" | "plan"
+export type DashboardProfile = Partial<
+  Pick<
+    NonNullable<FunctionReturnType<typeof api.users.getMyProfile>>,
+    | "orgId"
+    | "role"
+    | "plan"
+    | "bookingAccess"
+    | "orgLogoUrl"
+    | "orgName"
+    | "staffAvatarUrl"
+    | "staffDisplayName"
+  >
 > & {
   user?: { name?: string; email?: string; avatarUrl?: string } | null;
+  orgLogoUrl?: string;
+  orgName?: string;
+  staffAvatarUrl?: string;
+  staffDisplayName?: string;
 };
 export function DashboardAccountMenu({
   profile,
@@ -49,14 +69,36 @@ export function DashboardAccountMenu({
   profile: DashboardProfile;
 }) {
   const { t, language, setLanguage } = useDashboardI18n();
+  const signOutAccount = usePushSignOut();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const orgSettings = useQuery(
+    api.orgSettings.getOrgSettings,
+    profile.orgId && !profile.orgLogoUrl ? { orgId: profile.orgId } : "skip",
+  );
+
+  const effectiveProfile = {
+    ...profile,
+    orgLogoUrl: profile.orgLogoUrl || orgSettings?.org?.logoUrl,
+  };
+
+  const { src: avatarSrc } = resolveAccountAvatar(effectiveProfile);
+
+  const [lastSrc, setLastSrc] = useState(avatarSrc);
+  if (avatarSrc !== lastSrc) {
+    setLastSrc(avatarSrc);
+    setImageError(false);
+  }
+
   const name =
-    profile.user?.name || t("Your account", "Вашата сметка", "Llogaria juaj");
+    resolveAccountDisplayName(profile) ||
+    t("Your account", "Вашата сметка", "Llogaria juaj");
   async function signOut() {
     setSigningOut(true);
     try {
-      const result = await authClient.signOut();
+      const result = await signOutAccount();
       if (result.error) throw new Error(result.error.message);
       router.replace("/login");
     } catch {
@@ -84,7 +126,20 @@ export function DashboardAccountMenu({
           )}
         >
           <span className={s.avatar} data-tone="peach">
-            {initials(name)}
+            {avatarSrc && !imageError ? (
+              <Image
+                key={avatarSrc}
+                src={avatarSrc}
+                alt=""
+                width={39}
+                height={39}
+                unoptimized
+                className={s.avatarImage}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              initials(name)
+            )}
           </span>
           <span className={s.profileLabel}>
             <strong>{name}</strong>
@@ -119,6 +174,16 @@ export function DashboardAccountMenu({
             <Link data-replay-public href="/settings">
               <Settings2 />
               {t("Settings", "Поставки", "Cilësimet")}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link data-replay-public href="/notifications/preferences">
+              <Bell />
+              {t(
+                "Notification preferences",
+                "Поставки за известувања",
+                "Preferencat e njoftimeve",
+              )}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

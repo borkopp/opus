@@ -1,0 +1,62 @@
+{
+  "easBuildId": "dc2999de-84f7-429c-9fe0-a3d5737dce74",
+  "appVersion": "1.0.3",
+  "nativeBuild": "8",
+  "runtimeVersion": "1.0.3",
+  "channel": "production",
+  "nativeSignature": "dc76dac7cf451843ae06aad8f038f44e84afc6468f39fac64bcd29107b009066",
+  "signatureVerified": true,
+  "privateBuildTokenAbsent": true,
+  "privacyTypes": 14,
+  "privacyPurposes": "App Functionality only",
+  "tracking": false,
+  "actualReviewSubmission": false,
+  "appStoreConnect": {
+    "appId": "6819737970",
+    "appleBuildId": "370629b6-d1c8-4a72-8ea2-e8393bdefafa",
+    "version": "1.0.3",
+    "buildNumber": "8",
+    "status": "Ready for Review",
+    "draftSubmissionCreated": true,
+    "submittedForReview": false,
+    "publicReleaseMode": "manual",
+    "privacyLabelsPublished": true,
+    "nativeIPhoneScreenshots": 3,
+    "nativeIPadScreenshots": 3,
+    "internalTester": "operator",
+    "internalTesterStatus": "Invited",
+    "internalTesterCount": 1
+  },
+  "sentryVerification": {
+    "sourceMapUploadId": "2a531a6e-8834-5167-9606-df7543b37253",
+    "sourceMapRelease": "mk.opus.studio@1.0.3+8",
+    "sourceMapDistribution": "8",
+    "nativeExecutableUuid": "06049ee3-60e7-3d89-8e6a-cce4ed5d4227",
+    "nativeDebugFileMatched": true,
+    "controlledSimulatorCrashEvent": "466bbd75920b437494018361f8f63eb9",
+    "controlledSimulatorCrashIssue": "OPUS-MOBILE-1",
+    "testIssueResolved": true,
+    "nativeCrashSymbolicated": true,
+    "nativeCrashEnvironment": "preview",
+    "nativeCrashBuild": "1.0.3 (1)",
+    "physicalPhoneFinalBuildVerified": false
+  },
+  "landingPolicy": {
+    "deploymentId": "dpl_E3BNGc4WjssGDi4HorpvQHW9GRyh",
+    "terms": "https://opus.mk/terms",
+    "privacy": "https://opus.mk/privacy",
+    "localesVerified": [
+      "en",
+      "mk",
+      "sq"
+    ]
+  },
+  "qa": {
+    "nativeIPhoneSessionRestored": true,
+    "nativeIPadSessionRestored": true,
+    "nativeIPadCreateAndCancelAppointment": true,
+    "nativeIPadOutsideTapDismissal": true,
+    "nativeIPhoneSwipeDismissalVerified": false,
+    "finalProductionPushVerified": false
+  }
+}

@@ -9,6 +9,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import { requireRole } from "./lib/auth";
+import { isAppReviewOrg, requireLiveStudio } from "./lib/appReview";
 import {
   externalCustomerIdForOrg,
   orgIdFromExternalCustomerId,
@@ -48,11 +49,17 @@ export const getStatus = query({
     const sameEnvironment = !account || account.environment === config.server;
     return {
       plan: org.plan,
-      canManage: staffMember.role === "owner",
+      canManage: staffMember.role === "owner" && !isAppReviewOrg(org),
       checkoutAvailable:
-        config.configured && config.checkoutEnabled && sameEnvironment,
+        config.configured &&
+        config.checkoutEnabled &&
+        sameEnvironment &&
+        !isAppReviewOrg(org),
       portalAvailable: Boolean(
-        config.configured && sameEnvironment && account?.customerId,
+        config.configured &&
+        sameEnvironment &&
+        account?.customerId &&
+        !isAppReviewOrg(org),
       ),
       managed: account?.managed ?? false,
       subscription: account?.subscription ?? null,
@@ -72,6 +79,7 @@ export const getOwnerContext = internalQuery({
   args: {},
   handler: async (ctx) => {
     const { org, user } = await requireRole(ctx, undefined, "owner");
+    requireLiveStudio(org);
     return {
       orgId: org._id,
       plan: org.plan,
@@ -91,6 +99,7 @@ export const reserveCheckout = internalMutation({
   args: { attemptId: v.string() },
   handler: async (ctx, { attemptId }) => {
     const { org, user } = await requireRole(ctx, undefined, "owner");
+    requireLiveStudio(org);
     const config = requirePolarConfig();
     if (!config.checkoutEnabled) throw new ConvexError("BILLING_UNAVAILABLE");
     if (org.industry !== "beauty_wellness")
@@ -192,6 +201,7 @@ export const requestOwnerSync = internalMutation({
   args: {},
   handler: async (ctx) => {
     const { org } = await requireRole(ctx, undefined, "owner");
+    requireLiveStudio(org);
     requirePolarConfig();
     const account = await accountForOrg(ctx, org._id);
     if (!account) return;

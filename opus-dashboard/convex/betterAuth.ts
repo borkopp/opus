@@ -2,7 +2,8 @@ import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
 import { emailOTP } from "better-auth/plugins/email-otp";
-import { components } from "./_generated/api";
+import { expo } from "@better-auth/expo";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import authConfig from "./auth.config";
 import {
@@ -13,6 +14,7 @@ import {
 import { renderAccountOtpEmail } from "./lib/emailTemplates";
 import { authenticateAuthProxy, verifyAuthCaptcha } from "./lib/authProtection";
 import { AUTH_CLIENT_IP_HEADER } from "../lib/auth-protection";
+import { appReviewOtp, isAppReviewEmail } from "./lib/appReview";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -50,6 +52,11 @@ function getTrustedOrigins(siteUrl: string) {
   return Array.from(
     new Set([
       siteUrl,
+      "opus-studio://",
+      ...(process.env.AUTH_MOBILE_WEB_ORIGINS ?? "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
       ...(isLocalUrl(siteUrl)
         ? [
             "http://localhost:3000",
@@ -58,6 +65,9 @@ function getTrustedOrigins(siteUrl: string) {
             "http://127.0.0.1:3001",
             "http://localhost:3002",
             "http://127.0.0.1:3002",
+            "http://localhost:8081",
+            "http://127.0.0.1:8081",
+            "exp://**",
           ]
         : []),
       ...configured,
@@ -123,6 +133,9 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     secret: getAuthSecret(),
     trustedOrigins: getTrustedOrigins(siteUrl),
     database: authComponent.adapter(ctx),
+    // Rolling host-scoped sessions let clients reuse one verified sign-in.
+    // Keep the existing cookie name, signing secret, and studio origin.
+    session: { expiresIn: 30 * 24 * 60 * 60, updateAge: 24 * 60 * 60 },
     advanced: { ipAddress: { ipAddressHeaders: [AUTH_CLIENT_IP_HEADER] } },
     rateLimit: {
       // Convex does not set NODE_ENV=production. Never rely on that default.
@@ -134,6 +147,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
       },
     },
     plugins: [
+      expo(),
       {
         id: "opus-auth-captcha",
         onRequest: async (request) => {
@@ -145,8 +159,25 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
         allowedAttempts: 5,
         expiresIn: 300,
         storeOTP: "hashed",
-        ...(testOtp ? { generateOTP: () => testOtp } : {}),
+        generateOTP: ({ email, type }) => {
+          if (isAppReviewEmail(email)) {
+            const otp = type === "sign-in" ? appReviewOtp() : undefined;
+            if (!otp) throw new Error("App review access is unavailable.");
+            return otp;
+          }
+          // Returning undefined preserves Better Auth's cryptographic generator.
+          return testOtp;
+        },
         async sendVerificationOTP({ email, otp, type }) {
+          if (isAppReviewEmail(email)) {
+            if (
+              type !== "sign-in" ||
+              !appReviewOtp() ||
+              !(await ctx.runQuery(internal.appReview.signInAvailable, {}))
+            )
+              throw new Error("App review access is unavailable.");
+            return; // Only this pre-provisioned, isolated reviewer receives no email.
+          }
           await deliverOtp({ email, otp, type, siteUrl });
         },
       }),
@@ -157,7 +188,33 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     ...auth,
     handler: async (request: Request) => {
       const secured = await authenticateAuthProxy(request, siteUrl);
-      return secured instanceof Response ? secured : auth.handler(secured);
+      if (secured instanceof Response) return secured;
+      if (secured.method === "POST") {
+        const body = await secured
+          .clone()
+          .json()
+          .catch(() => null);
+        if (
+          body &&
+          typeof body.email === "string" &&
+          isAppReviewEmail(body.email)
+        ) {
+          const path = new URL(secured.url).pathname;
+          const validPath =
+            path.endsWith("/sign-in/email-otp") ||
+            (path.endsWith("/email-otp/send-verification-otp") &&
+              body.type === "sign-in");
+          if (
+            !validPath ||
+            !(await ctx.runQuery(internal.appReview.signInAvailable, {}))
+          )
+            return Response.json(
+              { message: "App review access is unavailable." },
+              { status: 403 },
+            );
+        }
+      }
+      return auth.handler(secured);
     },
   };
 };

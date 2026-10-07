@@ -45,7 +45,7 @@ export function ClientEmailReminders({
       <SettingsToggleRow
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
-            {t("Client email reminders", "Потсетници за клиенти по е-пошта")}
+            {t("Client email reminders", "Потсетници за клиенти по е-пошта", "Kujtesa me email për klientët")}
             {!isPaid && (
               <Badge data-replay-public variant="pro">
                 Pro
@@ -58,10 +58,12 @@ export function ClientEmailReminders({
             ? t(
                 "Email clients before their confirmed appointments.",
                 "Испраќајте е-пошта на клиентите пред потврдените термини.",
+                "Dërgoni email klientëve para termineve të tyre të konfirmuara.",
               )
             : t(
                 "Upgrade to Pro to send clients appointment reminders by email.",
                 "Надградете на Pro за да испраќате потсетници за термини по е-пошта.",
+                "Përmirësoni në Pro për t'u dërguar klientëve kujtesa të termineve me email.",
               )
         }
         control={
@@ -70,6 +72,7 @@ export function ClientEmailReminders({
             aria-label={t(
               "Client reminder emails",
               "Е-пораки за потсетување на клиенти",
+              "Email kujtues për klientët",
             )}
             checked={isPaid && enabled}
             disabled={!isPaid || saving}
@@ -80,7 +83,7 @@ export function ClientEmailReminders({
       <FieldGroup className="max-w-xl">
         <Field data-disabled={disabled} data-invalid={Boolean(error)}>
           <FieldLabel data-replay-public id="customer-reminder-label">
-            {t("Before the appointment", "Пред терминот")}
+            {t("Before the appointment", "Пред терминот", "Para terminit")}
           </FieldLabel>
           <ToggleGroup
             type="multiple"
@@ -102,11 +105,13 @@ export function ClientEmailReminders({
                 aria-label={t(
                   `${hoursBefore} ${hoursBefore === 1 ? "hour" : "hours"} before the appointment`,
                   `${hoursBefore} ${hoursBefore === 1 ? "час" : "часа"} пред терминот`,
+                  `${hoursBefore} ${hoursBefore === 1 ? "orë" : "orë"} para terminit`,
                 )}
               >
                 {t(
                   `${hoursBefore} ${hoursBefore === 1 ? "hour" : "hours"}`,
                   `${hoursBefore} ${hoursBefore === 1 ? "час" : "часа"}`,
+                  `${hoursBefore} ${hoursBefore === 1 ? "orë" : "orë"}`,
                 )}
               </ToggleGroupItem>
             ))}
@@ -118,6 +123,7 @@ export function ClientEmailReminders({
             {t(
               "Select one or more times. A reminder is sent at each selected time.",
               "Изберете едно или повеќе времиња. За секое избрано време се испраќа потсетник.",
+              "Zgjidhni një ose më shumë orare. Një kujtesë dërgohet në secilin orar të zgjedhur.",
             )}
           </FieldDescription>
           <FieldError id="customer-reminder-error">{error}</FieldError>

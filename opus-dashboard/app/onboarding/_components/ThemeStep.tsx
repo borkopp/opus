@@ -34,6 +34,7 @@ export function ThemeStep({
         t(
           "Could not save your theme. Please try again.",
           "Темата не е зачувана. Обидете се повторно.",
+          "Tema nuk mund të ruhej. Ju lutemi provoni përsëri.",
         ),
       );
     }
@@ -47,10 +48,12 @@ export function ThemeStep({
         title={t(
           "Choose your dashboard theme",
           "Изберете тема за контролната табла",
+          "Zgjidhni temën e panelit tuaj",
         )}
         description={t(
           "Make your workspace your own.",
           "Прилагодете го работниот простор по ваш вкус.",
+          "Përshtateni hapësirën tuaj të punës sipas dëshirës.",
         )}
         wide
       >

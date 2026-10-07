@@ -27,22 +27,24 @@ export function OpenSlotsCard({
         <span className={s.roundIcon}>
           <ArrowDownLeft size={20} />
         </span>
-        <span data-replay-public>{t("AVAILABLE TODAY", "СЛОБОДНО ДЕНЕС")}</span>
+        <span data-replay-public>{t("AVAILABLE TODAY", "СЛОБОДНО ДЕНЕС", "E LIRË SOT")}</span>
       </div>
       <h2 data-appear="item" style={appearStep(2)}>
         {loaded
           ? t(
               `${available.length} openings.`,
               `${available.length} слободни термини.`,
+              `${available.length} termine të lira.`,
             )
-          : t("Finding openings…", "Се бараат слободни термини…")}
+          : t("Finding openings…", "Се бараат слободни термини…", "Po kërkohen termine të lira…")}
         <br />
-        {t("Make room for more.", "Место за уште еден клиент.")}
+        {t("Make room for more.", "Место за уште еден клиент.", "Bëni vend për më shumë.")}
       </h2>
       <p data-replay-public data-appear="item" style={appearStep(3)}>
         {t(
           "Book a client into an available slot.",
           "Закажете клиент во слободен термин.",
+          "Rezervoni një klient në një orar të lirë.",
         )}
       </p>
       <div className={s.openingList}>
@@ -74,6 +76,7 @@ export function OpenSlotsCard({
                 aria-label={t(
                   `Share the ${bookingTimeLabel(slot.startAt)} opening`,
                   `Сподели го терминот во ${bookingTimeLabel(slot.startAt)}`,
+                  `Ndaj terminin e orës ${bookingTimeLabel(slot.startAt)}`,
                 )}
               >
                 <Share2 />
@@ -90,7 +93,7 @@ export function OpenSlotsCard({
         className={s.openSlotsFooter}
         onClick={() => onBook()}
       >
-        {t("View all available times", "Прегледај ги сите слободни термини")} ↗
+        {t("View all available times", "Прегледај ги сите слободни термини", "Shiko të gjitha oraret e lira")} ↗
       </button>
     </Appear>
   );

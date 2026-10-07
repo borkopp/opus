@@ -1,9 +1,11 @@
 import { ConvexError } from "convex/values";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { rejectAppReviewIdentity } from "./appReview";
 
 export async function getCurrentOpusUser(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
+  rejectAppReviewIdentity(identity);
 
   const user = await ctx.db
     .query("opus_users")
@@ -25,6 +27,11 @@ export async function requireCurrentOpusUser(ctx: QueryCtx) {
 export async function ensureCurrentOpusUser(ctx: MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new ConvexError("Unauthenticated");
+  rejectAppReviewIdentity(identity);
+  if (identity.emailVerified === false)
+    throw new ConvexError(
+      "Verify your account email before booking or linking appointments.",
+    );
 
   const authUserId = identity.subject;
   const email = identity.email?.trim().toLowerCase();
@@ -35,14 +42,21 @@ export async function ensureCurrentOpusUser(ctx: MutationCtx) {
 
   const current = await getCurrentOpusUser(ctx);
   if (current) {
-    await ctx.db.patch(current.user._id, {
+    const updates = {
       email,
       phone: identity.phoneNumber ?? current.user.phone,
       avatarUrl: identity.pictureUrl ?? current.user.avatarUrl,
       updatedAt: Date.now(),
-    });
-    return current.user;
+    };
+    await ctx.db.patch(current.user._id, updates);
+    return { ...current.user, ...updates };
   }
+
+  const erasedIdentity = await ctx.db
+    .query("opus_users")
+    .withIndex("by_auth_user_id", (q) => q.eq("authUserId", authUserId))
+    .first();
+  if (erasedIdentity?.isDeleted) throw new ConvexError("Account unavailable");
 
   const emailMatches = await ctx.db
     .query("opus_users")

@@ -22,6 +22,8 @@ import {
 } from "@/lib/public-booking-format";
 
 interface OtpVerificationStepProps {
+  createAccount?: boolean;
+  securityCheck?: React.ReactNode;
   customerEmail: string;
   serviceName: string;
   staffName: string;
@@ -38,6 +40,8 @@ interface OtpVerificationStepProps {
 }
 
 export function OtpVerificationStep({
+  createAccount = false,
+  securityCheck,
   customerEmail,
   serviceName,
   staffName,
@@ -154,7 +158,11 @@ export function OtpVerificationStep({
 
         <div className="flex items-start gap-2 text-sm leading-6 text-muted-foreground">
           <ShieldCheck className="mt-1 size-4 shrink-0" aria-hidden="true" />
-          <p>Кодот е еднократен и не создава кориснички профил.</p>
+          <p>
+            {createAccount
+              ? "Со овој код го потврдувате терминот и автоматски се најавувате на вашата OPUS сметка."
+              : "Кодот го потврдува само терминот. Продолжувате како гостин."}
+          </p>
         </div>
 
         <Button
@@ -173,6 +181,7 @@ export function OtpVerificationStep({
           Потврди го терминот
         </Button>
 
+        {securityCheck}
         <Button
           type="button"
           variant="outline"

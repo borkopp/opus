@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
-import { requireActiveOrg, requireRole } from "./lib/auth";
+import { requireAuth, requireRole } from "./lib/auth";
 import { getBeautyActivationState } from "./lib/activation";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { isActiveIndustry } from "./lib/productScope";
@@ -20,7 +20,7 @@ import {
 const language = v.union(v.literal("mk"), v.literal("en"));
 
 async function promotionContext(ctx: QueryCtx) {
-  const auth = await requireActiveOrg(ctx);
+  const auth = await requireAuth(ctx);
   if (!isActiveIndustry(auth.org.industry))
     throw new ConvexError("Promotion tools are available for beauty studios.");
   return auth;

@@ -43,7 +43,11 @@ export function GapOptimizerHeader({
         detectedBy: "manual_scan",
       });
       toast.success(
-        `${result.gapsFound} ${t("bookable openings found", "пронајдени слободни термини")}`,
+        `${result.gapsFound} ${t(
+          "bookable openings found",
+          "пронајдени слободни термини",
+          "termine të lira të gjetura",
+        )}`,
       );
     } catch (error) {
       toast.error(recoveryErrorMessage(error, t));
@@ -58,7 +62,7 @@ export function GapOptimizerHeader({
           data-replay-public
           className="text-2xl font-semibold tracking-tight"
         >
-          {t("Fill openings", "Пополнување слободни термини")}
+          {t("Fill openings", "Пополнување слободни термини", "Plotëso hapësirat e lira")}
         </h1>
         <p
           data-replay-public
@@ -67,21 +71,23 @@ export function GapOptimizerHeader({
           {t(
             "Find a service that fits and review who to invite. You approve every email.",
             "Пронајдете соодветна услуга и изберете кого да поканите. Вие ја одобрувате секоја порака.",
+            "Gjeni një shërbim të përshtatshëm dhe shqyrtoni kë të ftoni. Ju e miratoni çdo email.",
           )}
         </p>
         <p className="text-xs text-muted-foreground">
           {lastScanAt
-            ? `${t("Last scanned", "Последно скенирање")}: ${new Date(lastScanAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+            ? `${t("Last scanned", "Последно скенирање", "Skanuar së fundi")}: ${new Date(lastScanAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
             : t(
                 "This date has not been scanned yet.",
                 "Овој датум сè уште не е скениран.",
+                "Kjo datë nuk është skanuar ende.",
               )}
         </p>
       </div>
       <div className="flex items-end gap-2">
         <Field className="w-auto">
           <FieldLabel data-replay-public htmlFor="recovery-date">
-            {t("Date", "Датум")}
+            {t("Date", "Датум", "Data")}
           </FieldLabel>
           <Input
             id="recovery-date"
@@ -98,7 +104,7 @@ export function GapOptimizerHeader({
           ) : (
             <RefreshCw data-icon="inline-start" />
           )}
-          {t("Scan", "Скенирај")}
+          {t("Scan", "Скенирај", "Skano")}
         </Button>
       </div>
     </header>

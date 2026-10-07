@@ -77,7 +77,7 @@ export function BookingPopoverCard({
   const { t, locale } = useDashboardI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга"));
+  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbimi"));
   const startLabel = bookingTimeLabel(booking.startAt);
   const endLabel = bookingTimeLabel(booking.endAt);
   const durationMinutes = Math.max(
@@ -95,7 +95,7 @@ export function BookingPopoverCard({
   // Staff avatar and display
   const staffMember = staff ?? booking.staff;
   const staffDisplayName =
-    staffMember?.displayName || t("Staff", "Член на тим");
+    staffMember?.displayName || t("Staff", "Член на тим", "Stafi");
   const staffAvatarUrl = staffMember?.avatarUrl
     ? getImageStorageUrl(staffMember.avatarUrl)
     : null;
@@ -133,12 +133,12 @@ export function BookingPopoverCard({
               className="text-[11px] text-muted-foreground font-medium truncate"
             >
               {staffMember?.role === "owner"
-                ? t("Studio Owner", "Сопственик")
+                ? t("Studio Owner", "Сопственик", "Pronar")
                 : staffMember?.role === "manager"
-                  ? t("Manager", "Менаџер")
-                  : t("Professional", "Стилист")}
+                  ? t("Manager", "Менаџер", "Menaxher")
+                  : t("Professional", "Стилист", "Stilist")}
               {" · "}
-              {t("Availability: On duty", "Достапност: На смена")}
+              {t("Availability: On duty", "Достапност: На смена", "Disponueshmëria: Në punë")}
             </span>
           </div>
         </div>
@@ -147,7 +147,7 @@ export function BookingPopoverCard({
           type="button"
           onClick={() => onOpenChange(false)}
           className="size-11 md:size-7 shrink-0 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-          aria-label={t("Close", "Затвори")}
+          aria-label={t("Close", "Затвори", "Mbyll")}
         >
           <IconX className="size-4" />
         </button>
@@ -162,7 +162,7 @@ export function BookingPopoverCard({
               data-replay-public
               className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground"
             >
-              {t("Service", "Услуга")}
+              {t("Service", "Услуга", "Shërbimi")}
             </span>
             <span className="font-medium text-muted-foreground text-[11px]">
               {formatDurationLabel(durationMinutes, locale)}
@@ -180,7 +180,7 @@ export function BookingPopoverCard({
               data-replay-public
               className="font-semibold uppercase tracking-wider text-[10.5px] text-muted-foreground"
             >
-              {t("Price", "Цена")}
+              {t("Price", "Цена", "Çmimi")}
             </span>
             <span className="font-mono font-medium text-muted-foreground text-[11px] tabular-nums">
               {startLabel}–{endLabel}
@@ -244,13 +244,13 @@ export function BookingPopoverCard({
       {/* Status indicator bar if not normal */}
       {(isCompleted || isCancelled || isNoShow) && (
         <div className="mb-3 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center justify-between bg-muted/60 text-muted-foreground">
-          <span data-replay-public>{t("Status", "Статус")}</span>
+          <span data-replay-public>{t("Status", "Статус", "Statusi")}</span>
           <span data-replay-public className="font-semibold capitalize">
             {isCompleted
-              ? t("Completed", "Завршен")
+              ? t("Completed", "Завршен", "Përfunduar")
               : isCancelled
-                ? t("Cancelled", "Откажан")
-                : t("No-Show", "Не се појави")}
+                ? t("Cancelled", "Откажан", "Anuluar")
+                : t("No-Show", "Не се појави", "Mosparaqitje")}
           </span>
         </div>
       )}
@@ -270,7 +270,7 @@ export function BookingPopoverCard({
               }}
             >
               <IconCheck className="size-3.5 mr-1 text-emerald-600" />
-              {t("Complete", "Заврши")}
+              {t("Complete", "Заврши", "Përfundo")}
             </Button>
           )}
 
@@ -286,7 +286,7 @@ export function BookingPopoverCard({
               }}
             >
               <IconCalendarEvent className="size-3.5 mr-1 text-primary" />
-              {t("Reschedule", "Презакажи")}
+              {t("Reschedule", "Презакажи", "Ripërcakto")}
             </Button>
           )}
 
@@ -302,7 +302,7 @@ export function BookingPopoverCard({
               }}
             >
               <IconUserX className="size-3.5 mr-1 text-rose-500" />
-              {t("No-Show", "Не се појави")}
+              {t("No-Show", "Не се појави", "Mosparaqitje")}
             </Button>
           )}
 
@@ -318,7 +318,7 @@ export function BookingPopoverCard({
               }}
             >
               <IconX className="size-3.5 mr-1" />
-              {t("Cancel", "Откажи")}
+              {t("Cancel", "Откажи", "Anulo")}
             </Button>
           )}
         </div>
@@ -332,12 +332,13 @@ export function BookingPopoverCard({
         <DrawerTrigger asChild>{children}</DrawerTrigger>
         <DrawerContent className="dashboard-panel data-[vaul-drawer-direction=bottom]:max-h-[92dvh] data-[vaul-drawer-direction=bottom]:rounded-t-3xl">
           <DrawerTitle data-replay-public className="sr-only">
-            {t("Appointment details", "Детали за термин")}
+            {t("Appointment details", "Детали за термин", "Detajet e terminit")}
           </DrawerTitle>
           <DrawerDescription data-replay-public className="sr-only">
             {t(
               "View the client, service and appointment actions.",
               "Прегледајте го клиентот, услугата и дејствата за терминот.",
+              "Shikoni klientin, shërbimin dhe veprimet e terminit.",
             )}
           </DrawerDescription>
           <div className="min-h-0 overflow-y-auto overscroll-contain px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

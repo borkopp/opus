@@ -17,6 +17,7 @@ export const dashboardThemeDetails = {
     description: {
       en: "A clear view of your day, with crisp blue accents.",
       mk: "Јасен преглед на денот со сини детали.",
+      sq: "Një pamje e qartë e ditës suaj, me thekse të freskëta blu.",
     },
   },
   studio: {
@@ -25,6 +26,7 @@ export const dashboardThemeDetails = {
     description: {
       en: "Soft pinks, rounded cards, and room to breathe.",
       mk: "Нежни розови тонови и заоблени картички со повеќе простор.",
+      sq: "Ngjyra rozë të buta, karta të rrumbullakosura dhe më shumë hapësirë.",
     },
   },
 } as const;

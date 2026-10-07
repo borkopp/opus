@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { ACTIVE_INDUSTRY, isActiveIndustry } from "./lib/productScope";
+import { isAppReviewOrg } from "./lib/appReview";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC QUERIES — opus.mk
@@ -57,7 +58,7 @@ export const listPublished = query({
         const allOrgs = await orgsQuery.collect();
 
         // Filter in memory (Convex doesn't support multi-field index filtering on different fields)
-        let filtered = allOrgs.filter((org) => isActiveIndustry(org.industry));
+        let filtered = allOrgs.filter((org) => isActiveIndustry(org.industry) && !isAppReviewOrg(org));
 
         if (args.city) {
             const cityLower = args.city.toLowerCase();
@@ -150,6 +151,7 @@ export const getPublicProfile = query({
         if (
             !org ||
             org.isDeleted ||
+            isAppReviewOrg(org) ||
             org.listingStatus !== "published" ||
             !isActiveIndustry(org.industry)
         ) return null;
@@ -175,7 +177,7 @@ export const searchPublished = query({
             .take(20);
 
         const now = Date.now();
-        const activeResults = results.filter((org) => org.industry === ACTIVE_INDUSTRY);
+        const activeResults = results.filter((org) => org.industry === ACTIVE_INDUSTRY && !isAppReviewOrg(org));
         const filtered = args.city
             ? activeResults.filter((o) => o.city?.toLowerCase() === args.city!.toLowerCase())
             : activeResults;

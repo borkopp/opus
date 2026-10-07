@@ -35,12 +35,13 @@ export function BookingDetailsPanel(
     >
       <DrawerContent className="dashboard-panel h-[90dvh] data-[vaul-drawer-direction=bottom]:mt-0 data-[vaul-drawer-direction=bottom]:max-h-[90dvh]">
         <DrawerTitle data-replay-public className="sr-only">
-          {t("Booking details", "Детали за термин")}
+          {t("Booking details", "Детали за термин", "Detajet e terminit")}
         </DrawerTitle>
         <DrawerDescription data-replay-public className="sr-only">
           {t(
             "View and manage the selected appointment.",
             "Прегледајте и управувајте со избраниот термин.",
+            "Shikoni dhe menaxhoni terminin e zgjedhur.",
           )}
         </DrawerDescription>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

@@ -1,13 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import {
-  CalendarClockIcon,
-  MailIcon,
+  UserRoundCogIcon,
   MoreHorizontalIcon,
-  PencilIcon,
   PlusIcon,
   RotateCcwIcon,
   SearchXIcon,
@@ -42,28 +39,23 @@ import { Doc, Id } from "@/convex/_generated/dataModel";
 import { getErrorMessage } from "@/lib/file-validation";
 import { getStaffErrorMessage } from "@/lib/staff-errors";
 import { cn } from "@/lib/utils";
-import { StaffFormDialog } from "@/components/staff/StaffFormDialog";
 
 export function StaffList({
   orgId,
   searchQuery,
   onClearSearch,
   onAddClick,
-  canManageAppointmentEmail,
 }: {
   orgId: Id<"orgs">;
   searchQuery: string;
   onClearSearch: () => void;
   onAddClick: () => void;
-  canManageAppointmentEmail: boolean;
 }) {
   const { language, t } = useDashboardI18n();
   const staff = useQuery(api.staff.listStaffMembers, { orgId });
   const planStatus = useQuery(api.staff.getStaffPlanStatus, {});
   const deactivateStaffMember = useMutation(api.staff.deactivateStaffMember);
   const updateStaffMember = useMutation(api.staff.updateStaffMember);
-  const [editingStaffId, setEditingStaffId] =
-    useState<Id<"staff_members"> | null>(null);
 
   if (staff === undefined) {
     return (
@@ -98,11 +90,14 @@ export function StaffList({
           <EmptyMedia variant="icon">
             <UsersIcon />
           </EmptyMedia>
-          <EmptyTitle>{t("No staff yet", "Сè уште нема вработени")}</EmptyTitle>
+          <EmptyTitle>
+            {t("No staff yet", "Сè уште нема вработени", "Ende nuk ka staf")}
+          </EmptyTitle>
           <EmptyDescription>
             {t(
               "Add your first team member, then set the hours customers can book.",
               "Додајте го вашиот прв член на тимот, па поставете го работното време за закажување.",
+              "Shtoni anëtarin tuaj të parë të ekipit, pastaj vendosni orarin që klientët mund të rezervojnë.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -114,7 +109,7 @@ export function StaffList({
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
             <PlusIcon data-icon="inline-start" />
-            {t("Add staff member", "Додај вработен")}
+            {t("Add staff member", "Додај вработен", "Shto anëtar stafi")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -134,15 +129,23 @@ export function StaffList({
             <SearchXIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {t("No matching staff", "Нема пронајдени вработени")}
+            {t(
+              "No matching staff",
+              "Нема пронајдени вработени",
+              "Nuk u gjet asnjë anëtar stafi",
+            )}
           </EmptyTitle>
           <EmptyDescription>
-            {t("Try another name.", "Обидете се со друго име.")}
+            {t(
+              "Try another name.",
+              "Обидете се со друго име.",
+              "Provoni një emër tjetër.",
+            )}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button data-replay-public variant="outline" onClick={onClearSearch}>
-            {t("Clear search", "Исчисти пребарување")}
+            {t("Clear search", "Исчисти пребарување", "Pastro kërkimin")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -158,6 +161,7 @@ export function StaffList({
         t(
           `Remove ${displayName} from the team? They will no longer be available for bookings.`,
           `Дали сакате да го отстраните ${displayName} од тимот? Повеќе нема да биде достапен за закажување.`,
+          `Dëshironi të hiqni ${displayName} nga ekipi? Nuk do të jetë më i disponueshëm për rezervime.`,
         ),
       )
     ) {
@@ -170,6 +174,7 @@ export function StaffList({
         t(
           `${displayName} was removed from the team.`,
           `${displayName} беше отстранет од тимот.`,
+          `${displayName} u hoq nga ekipi.`,
         ),
       );
     } catch (error: unknown) {
@@ -179,6 +184,7 @@ export function StaffList({
           t(
             "Could not remove staff member",
             "Не може да се отстрани вработениот",
+            "Nuk mund të hiqej anëtari i stafit",
           ),
         ),
       );
@@ -195,6 +201,7 @@ export function StaffList({
         t(
           `${displayName} is available for bookings again.`,
           `${displayName} е повторно достапен за закажување.`,
+          `${displayName} është përsëri i disponueshëm për rezervime.`,
         ),
       );
     } catch (error: unknown) {
@@ -204,6 +211,7 @@ export function StaffList({
           t(
             "Could not reactivate staff member",
             "Не може повторно да се активира вработениот",
+            "Nuk mund të riaktivizohej anëtari i stafit",
           ),
           language,
         ),
@@ -241,22 +249,13 @@ export function StaffList({
                   </p>
                   {!member.isActive && (
                     <Badge data-replay-public variant="secondary">
-                      {t("Inactive", "Неактивен")}
+                      {t("Inactive", "Неактивен", "Joaktiv")}
                     </Badge>
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {formatRole(member.role, t)}
                 </p>
-                {canManageAppointmentEmail && (
-                  <p className="mt-1 flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-                    <MailIcon className="size-3.5 shrink-0" />
-                    <span className="truncate">
-                      {member.appointmentEmail ||
-                        t("No appointment email", "Нема е-пошта за термини")}
-                    </span>
-                  </p>
-                )}
               </div>
             </div>
 
@@ -270,8 +269,8 @@ export function StaffList({
                 className="h-11 min-w-0 flex-1 xl:flex-none"
               >
                 <Link data-replay-public href={`/beauty/staff/${member._id}`}>
-                  <CalendarClockIcon data-icon="inline-start" />
-                  {t("Manage hours", "Управувај со часови")}
+                  <UserRoundCogIcon data-icon="inline-start" />
+                  {t("Manage staff", "Уреди вработен", "Menaxho stafin")}
                 </Link>
               </Button>
 
@@ -284,6 +283,7 @@ export function StaffList({
                     aria-label={t(
                       `Actions for ${member.displayName}`,
                       `Опции за ${member.displayName}`,
+                      `Veprimet për ${member.displayName}`,
                     )}
                   >
                     <MoreHorizontalIcon />
@@ -291,13 +291,6 @@ export function StaffList({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      data-replay-public
-                      onSelect={() => setEditingStaffId(member._id)}
-                    >
-                      <PencilIcon />
-                      {t("Edit details", "Уреди детали")}
-                    </DropdownMenuItem>
                     {!member.isActive && (
                       <DropdownMenuItem
                         data-replay-public
@@ -311,7 +304,11 @@ export function StaffList({
                         }
                       >
                         <RotateCcwIcon />
-                        {t("Mark as active", "Означи како активен")}
+                        {t(
+                          "Mark as active",
+                          "Означи како активен",
+                          "Shëno si aktiv",
+                        )}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuGroup>
@@ -327,7 +324,11 @@ export function StaffList({
                           }
                         >
                           <Trash2Icon />
-                          {t("Remove from team", "Отстрани од тимот")}
+                          {t(
+                            "Remove from team",
+                            "Отстрани од тимот",
+                            "Hiq nga ekipi",
+                          )}
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </>
@@ -338,18 +339,6 @@ export function StaffList({
           </div>
         ))}
       </div>
-
-      {editingStaffId !== null && (
-        <StaffFormDialog
-          orgId={orgId}
-          staffId={editingStaffId}
-          open
-          canManageAppointmentEmail={canManageAppointmentEmail}
-          onOpenChange={(open) => {
-            if (!open) setEditingStaffId(null);
-          }}
-        />
-      )}
     </>
   );
 }
@@ -382,22 +371,33 @@ function ScheduleSummary({
   );
   const hoursLabel =
     activeDays.length === 0
-      ? t("No working hours set", "Нема поставено работно време")
+      ? t(
+          "No working hours set",
+          "Нема поставено работно време",
+          "Nuk është caktuar orar pune",
+        )
       : uniqueHours.size === 1
         ? activeDays.length === 1
           ? t(
               `1 day · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
               `1 ден · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+              `1 ditë · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
             )
           : t(
               `${activeDays.length} days · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
               `${activeDays.length} дена · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
+              `${activeDays.length} ditë · ${activeDays[0].startTime}–${activeDays[0].endTime}`,
             )
         : activeDays.length === 1
-          ? t("1 day · Hours vary", "1 ден · Различно време")
+          ? t(
+              "1 day · Hours vary",
+              "1 ден · Различно време",
+              "1 ditë · Orari varion",
+            )
           : t(
               `${activeDays.length} days · Hours vary`,
               `${activeDays.length} дена · Различно време`,
+              `${activeDays.length} ditë · Orari varion`,
             );
 
   return (
@@ -406,7 +406,7 @@ function ScheduleSummary({
         data-replay-public
         className="text-xs font-medium text-muted-foreground"
       >
-        {t("Regular hours", "Редовно работно време")}
+        {t("Regular hours", "Редовно работно време", "Orari i rregullt")}
       </p>
       <p
         className={cn(

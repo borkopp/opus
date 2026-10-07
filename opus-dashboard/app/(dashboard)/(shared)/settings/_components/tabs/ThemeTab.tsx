@@ -25,6 +25,7 @@ export function ThemeTab() {
         t(
           `${dashboardThemeDetails[next].name} theme saved`,
           `Темата ${dashboardThemeDetails[next].name} е зачувана`,
+          `Tema ${dashboardThemeDetails[next].name} u ruajt`,
         ),
       );
     } catch {
@@ -32,6 +33,7 @@ export function ThemeTab() {
         t(
           "Could not save your theme. Please try again.",
           "Темата не е зачувана. Обидете се повторно.",
+          "Tema nuk mund të ruhej. Provoni përsëri.",
         ),
       );
     }
@@ -40,10 +42,11 @@ export function ThemeTab() {
   return (
     <TabsContent value="themes" className="m-0">
       <SettingsCard
-        title={t("Themes", "Теми")}
+        title={t("Themes", "Теми", "Temat")}
         description={t(
           "Choose a style that feels like you.",
           "Изберете изглед што ви одговара.",
+          "Zgjidhni një stil që ju përshtatet.",
         )}
       >
         <DashboardThemePicker
@@ -57,10 +60,11 @@ export function ThemeTab() {
           className="mt-4 min-h-5 text-sm text-muted-foreground"
         >
           {isSaving
-            ? t("Saving your theme…", "Се зачувува темата…")
+            ? t("Saving your theme…", "Се зачувува темата…", "Po ruhet tema juaj…")
             : t(
                 "Changes are saved automatically.",
                 "Промените се зачувуваат автоматски.",
+                "Ndryshimet ruhen automatikisht.",
               )}
         </p>
       </SettingsCard>

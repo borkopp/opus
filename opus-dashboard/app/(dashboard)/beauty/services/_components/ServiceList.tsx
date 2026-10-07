@@ -107,7 +107,7 @@ export function ServiceList({
     if (uncategorized.length > 0) {
       groups.push({
         key: "uncategorized",
-        name: t("Other", "Друго"),
+        name: t("Other", "Друго", "Të tjera"),
         services: uncategorized,
       });
     }
@@ -146,6 +146,7 @@ export function ServiceList({
         t(
           `Remove “${serviceName}”? Customers will no longer be able to book it.`,
           `Дали сакате да ја отстраните „${serviceName}“? Клиентите повеќе нема да можат да ја закажуваат.`,
+          `Dëshironi të hiqni “${serviceName}”? Klientët nuk do të mund ta rezervojnë më atë.`,
         ),
       )
     ) {
@@ -158,7 +159,7 @@ export function ServiceList({
       toast.error(
         getErrorMessage(
           error,
-          t("Could not remove service", "Не може да се отстрани услугата"),
+          t("Could not remove service", "Не може да се отстрани услугата", "Shërbimi nuk mund të hiqej"),
         ),
       );
     }
@@ -190,6 +191,7 @@ export function ServiceList({
           t(
             "Could not reorder services",
             "Не може да се промени редоследот на услугите",
+            "Nuk mund të ndryshohej renditja e shërbimeve",
           ),
         ),
       );
@@ -203,11 +205,12 @@ export function ServiceList({
           <EmptyMedia variant="icon">
             <ScissorsIcon />
           </EmptyMedia>
-          <EmptyTitle>{t("No services yet", "Сè уште нема услуги")}</EmptyTitle>
+          <EmptyTitle>{t("No services yet", "Сè уште нема услуги", "Ende nuk ka shërbime")}</EmptyTitle>
           <EmptyDescription>
             {t(
               "Add your first service so customers can start booking.",
               "Додајте ја вашата прва услуга за клиентите да можат да закажуваат.",
+              "Shtoni shërbimin tuaj të parë që klientët të mund të fillojnë rezervimet.",
             )}
           </EmptyDescription>
         </EmptyHeader>
@@ -218,7 +221,7 @@ export function ServiceList({
             className="transition-transform duration-150 active:scale-[0.97] motion-reduce:transform-none"
           >
             <PlusIcon data-icon="inline-start" />
-            {t("Add service", "Додај услуга")}
+            {t("Add service", "Додај услуга", "Shto shërbim")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -233,18 +236,19 @@ export function ServiceList({
             <SearchXIcon />
           </EmptyMedia>
           <EmptyTitle>
-            {t("No matching services", "Нема пронајдено услуги")}
+            {t("No matching services", "Нема пронајдено услуги", "Nuk u gjet asnjë shërbim")}
           </EmptyTitle>
           <EmptyDescription>
             {t(
               "Try a different name or category.",
               "Обидете се со друго име или категорија.",
+              "Provoni një emër ose kategori tjetër.",
             )}
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button data-replay-public variant="outline" onClick={onClearSearch}>
-            {t("Clear search", "Исчисти пребарување")}
+            {t("Clear search", "Исчисти пребарување", "Pastro kërkimin")}
           </Button>
         </EmptyContent>
       </Empty>
@@ -301,17 +305,17 @@ export function ServiceList({
                         </span>
                         {!service.isActive && (
                           <Badge data-replay-public variant="secondary">
-                            {t("Inactive", "Неактивна")}
+                            {t("Inactive", "Неактивна", "Joaktive")}
                           </Badge>
                         )}
                       </span>
                       <span className="mt-1 block text-sm text-muted-foreground">
-                        {service.durationMins} {t("min", "мин")}
+                        {service.durationMins} {t("min", "мин", "min")}
                       </span>
                       {staff && (
                         <span className="mt-1 block break-words text-xs text-muted-foreground">
                           {service.staffIds.length === 0
-                            ? t("No staff assigned", "Нема доделени вработени")
+                            ? t("No staff assigned", "Нема доделени вработени", "Nuk është caktuar staf")
                             : staff
                                 .filter((member) =>
                                   service.staffIds.includes(member._id),
@@ -321,6 +325,7 @@ export function ServiceList({
                               t(
                                 "No staff available",
                                 "Нема достапни вработени",
+                                "Nuk ka staf të disponueshëm",
                               )}
                         </span>
                       )}
@@ -340,6 +345,7 @@ export function ServiceList({
                         aria-label={t(
                           `Actions for ${service.name}`,
                           `Опции за ${service.name}`,
+                          `Veprimet për ${service.name}`,
                         )}
                       >
                         <MoreHorizontalIcon />
@@ -352,7 +358,7 @@ export function ServiceList({
                           onSelect={() => setEditingServiceId(service._id)}
                         >
                           <PencilIcon />
-                          {t("Edit service", "Уреди услуга")}
+                          {t("Edit service", "Уреди услуга", "Ndrysho shërbimin")}
                         </DropdownMenuItem>
                         {!searchQuery.trim() && group.services.length > 1 && (
                           <>
@@ -364,7 +370,7 @@ export function ServiceList({
                               }
                             >
                               <ArrowUpIcon />
-                              {t("Move up", "Помести нагоре")}
+                              {t("Move up", "Помести нагоре", "Lëviz lart")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               data-replay-public
@@ -374,7 +380,7 @@ export function ServiceList({
                               }
                             >
                               <ArrowDownIcon />
-                              {t("Move down", "Помести надолу")}
+                              {t("Move down", "Помести надолу", "Lëviz poshtë")}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -389,7 +395,7 @@ export function ServiceList({
                           }
                         >
                           <Trash2Icon />
-                          {t("Remove service", "Отстрани услуга")}
+                          {t("Remove service", "Отстрани услуга", "Hiq shërbimin")}
                         </DropdownMenuItem>
                       </DropdownMenuGroup>
                     </DropdownMenuContent>

@@ -140,11 +140,48 @@ export function authRequestLocation(request: Request) {
   const ip = onVercel
     ? (request.headers.get("x-vercel-forwarded-for")?.trim() ?? "")
     : "";
-  const hostname = new URL(request.url).hostname;
+  let url = new URL(request.url);
+  // Next's development server uses its bind address in Request.url. Resolve
+  // the actual Host only for a local backend; production never trusts it here.
+  if (
+    !onVercel &&
+    process.env.NODE_ENV !== "production" &&
+    process.env.CONVEX_DEPLOYMENT?.startsWith("local:") &&
+    url.hostname === "0.0.0.0"
+  ) {
+    const host = request.headers.get("host");
+    if (host && !/[\s/\\?#@]/.test(host)) {
+      try {
+        url = new URL(`${url.protocol}//${host}`);
+      } catch {
+        // Invalid Host values retain the bind address and require verification.
+      }
+    }
+  }
+  const hostname = url.hostname;
+  // A phone cannot use the host computer's loopback URL. Permit explicitly
+  // configured private LAN origins only on a local Convex development setup.
+  const octets = hostname.split(".").map(Number);
+  const privateIp =
+    octets.length === 4 &&
+    octets.every(
+      (part) => Number.isInteger(part) && part >= 0 && part <= 255,
+    ) &&
+    (octets[0] === 10 ||
+      (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
+      (octets[0] === 192 && octets[1] === 168));
+  const configuredLan =
+    process.env.CONVEX_DEPLOYMENT?.startsWith("local:") &&
+    url.protocol === "http:" &&
+    privateIp &&
+    (process.env.AUTH_LOCAL_MOBILE_ORIGINS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .includes(url.origin);
   const local =
     !onVercel &&
     process.env.NODE_ENV !== "production" &&
-    (hostname === "localhost" || hostname === "127.0.0.1");
+    (hostname === "localhost" || hostname === "127.0.0.1" || !!configuredLan);
   return { country, ip, hostname, local };
 }
 
@@ -179,7 +216,7 @@ export async function withAuthProxyProof(request: Request) {
   headers.set(AUTH_PROXY_HEADERS.ip, location.ip);
   headers.set(AUTH_PROXY_HEADERS.hostname, location.hostname);
   headers.set(AUTH_PROXY_HEADERS.issuedAt, String(Date.now()));
-  for (const [name, value] of headers) forwarded.headers.set(name, value);
+  headers.forEach((value, name) => forwarded.headers.set(name, value));
   headers.set(
     AUTH_PROXY_HEADERS.signature,
     await signAuthProxyRequest(forwarded, secret),

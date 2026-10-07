@@ -1,6 +1,9 @@
 import { getRequestLocale } from "@/lib/i18n/server";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
+import { studioAppMetadata } from "@/lib/studio-app-metadata";
+
+export const metadata = studioAppMetadata;
 
 export default async function Login({
   searchParams,

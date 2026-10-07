@@ -217,3 +217,57 @@ describe("dashboard notification localization", () => {
     });
   });
 });
+
+describe("separate translation files (en.ts, mk.ts, al.ts, sq.ts)", () => {
+  it("translates using dictionary lookup with a single argument", () => {
+    expect(translate("en", "Settings")).toBe("Settings");
+    expect(translate("mk", "Settings")).toBe("Поставки");
+    expect(translate("sq", "Settings")).toBe("Cilësimet");
+    expect(translate("al", "Settings")).toBe("Cilësimet");
+  });
+
+  it("exports matching structures across en, mk, and al translation bundles", async () => {
+    const { en } = await import("../../lib/i18n/en");
+    const { mk } = await import("../../lib/i18n/mk");
+    const { al } = await import("../../lib/i18n/al");
+    const { default: sq } = await import("../../lib/i18n/sq");
+
+    expect(sq).toBe(al);
+
+    // Page titles
+    expect(Object.keys(en.pageTitles).sort()).toEqual(
+      Object.keys(mk.pageTitles).sort(),
+    );
+    expect(Object.keys(en.pageTitles).sort()).toEqual(
+      Object.keys(al.pageTitles).sort(),
+    );
+
+    // Nav
+    expect(Object.keys(en.nav).sort()).toEqual(Object.keys(mk.nav).sort());
+    expect(Object.keys(en.nav).sort()).toEqual(Object.keys(al.nav).sort());
+
+    // Analyst metrics
+    expect(Object.keys(en.analyst.metrics).sort()).toEqual(
+      Object.keys(mk.analyst.metrics).sort(),
+    );
+    expect(Object.keys(en.analyst.metrics).sort()).toEqual(
+      Object.keys(al.analyst.metrics).sort(),
+    );
+
+    // Onboarding categories
+    expect(Object.keys(en.onboarding.categories).sort()).toEqual(
+      Object.keys(mk.onboarding.categories).sort(),
+    );
+    expect(Object.keys(en.onboarding.categories).sort()).toEqual(
+      Object.keys(al.onboarding.categories).sort(),
+    );
+
+    // Messages dictionary keys
+    const enKeys = Object.keys(en.messages).sort();
+    const mkKeys = Object.keys(mk.messages).sort();
+    const alKeys = Object.keys(al.messages).sort();
+    expect(mkKeys).toEqual(enKeys);
+    expect(alKeys).toEqual(enKeys);
+  });
+});
+

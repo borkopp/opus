@@ -35,12 +35,22 @@ export function StaffReply({
     try {
       await reply({ orgId, conversationId, text });
       setText("");
-      toast.success(t("Reply queued", "Одговорот е ставен во редица"));
+      toast.success(
+        t(
+          "Reply queued",
+          "Одговорот е ставен во редица",
+          "Përgjigjja u fut në radhë",
+        ),
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : t("Unable to send reply.", "Одговорот не може да се испрати."),
+          : t(
+              "Unable to send reply.",
+              "Одговорот не може да се испрати.",
+              "Përgjigjja nuk mund të dërgohet.",
+            ),
       );
     } finally {
       setSending(false);
@@ -54,12 +64,20 @@ export function StaffReply({
       <FieldGroup className="gap-3">
         <Field>
           <FieldLabel data-replay-public htmlFor="staff-reply">
-            {t("Reply as your team", "Одговорете како тим")}
+            {t(
+              "Reply as your team",
+              "Одговорете како тим",
+              "Përgjigjuni si ekipi juaj",
+            )}
           </FieldLabel>
           <InputGroup>
             <InputGroupTextarea
               id="staff-reply"
-              placeholder={t("Write a reply…", "Напишете одговор…")}
+              placeholder={t(
+                "Write a reply…",
+                "Напишете одговор…",
+                "Shkruani një përgjigje…",
+              )}
               className="max-h-32 min-h-20"
               value={text}
               onChange={(event) => setText(event.target.value)}
@@ -72,6 +90,7 @@ export function StaffReply({
             {t(
               "Sending a reply pauses AI for this conversation. Instagram allows replies within 24 hours of the client’s last message.",
               "Испраќањето одговор го паузира AI за овој разговор. Instagram дозволува одговори во рок од 24 часа од последната порака на клиентот.",
+              "Dërgimi i një përgjigjeje pezullon AI për këtë bisedë. Instagram lejon përgjigje brenda 24 orëve nga mesazhi i fundit i klientit.",
             )}
           </FieldDescription>
         </Field>
@@ -85,7 +104,7 @@ export function StaffReply({
           ) : (
             <Send data-icon="inline-start" />
           )}
-          {t("Send reply", "Испрати одговор")}
+          {t("Send reply", "Испрати одговор", "Dërgo përgjigjen")}
         </Button>
       </FieldGroup>
     </form>

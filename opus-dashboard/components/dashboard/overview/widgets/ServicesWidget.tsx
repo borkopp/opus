@@ -22,16 +22,17 @@ export function ServicesWidget({
       replayPublicSubtitle
       replayPublicTitle
       delay={45}
-      title={t("Popular services", "Популарни услуги")}
+      title={t("Popular services", "Популарни услуги", "Shërbime të njohura")}
       subtitle={t(
         "Completed appointments · last 30 days",
         "Завршени термини · последни 30 дена",
+        "Termine të përfunduara · 30 ditët e fundit",
       )}
       action={
         <Link
           className={s.smallIcon}
           href="/beauty/services"
-          aria-label={t("Manage services", "Управувај со услуги")}
+          aria-label={t("Manage services", "Управувај со услуги", "Menaxho shërbimet")}
         >
           <ArrowUpRight size={16} />
         </Link>
@@ -59,12 +60,12 @@ export function ServicesWidget({
               <strong>
                 {service.names
                   .map(
-                    (name) => name ?? t("Removed service", "Отстранета услуга"),
+                    (name) => name ?? t("Removed service", "Отстранета услуга", "Shërbim i hequr"),
                   )
                   .join(" + ")}
               </strong>
               <span>
-                {service.appointments} {t("bookings", "термини")}
+                {service.appointments} {t("bookings", "термини", "rezervime")}
               </span>
             </Link>
           ))}
@@ -83,13 +84,13 @@ export function ServicesWidget({
                   {service.names
                     .map(
                       (name) =>
-                        name ?? t("Removed service", "Отстранета услуга"),
+                        name ?? t("Removed service", "Отстранета услуга", "Shërbim i hequr"),
                     )
                     .join(" + ")}
                 </span>
                 <strong>
                   {service.appointments}
-                  <small data-replay-public> {t("bookings", "термини")}</small>
+                  <small data-replay-public> {t("bookings", "термини", "rezervime")}</small>
                 </strong>
               </div>
               <div className={s.serviceTrack}>
@@ -109,8 +110,9 @@ export function ServicesWidget({
             ? t(
                 "Completed appointments will appear here.",
                 "Завршените термини ќе се прикажат тука.",
+                "Terminet e përfunduara do të shfaqen këtu.",
               )
-            : t("Loading services…", "Се вчитуваат услугите…")}
+            : t("Loading services…", "Се вчитуваат услугите…", "Po ngarkohen shërbimet…")}
         </WidgetEmpty>
       )}
     </WidgetFrame>

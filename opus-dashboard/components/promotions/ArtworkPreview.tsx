@@ -39,7 +39,7 @@ export function ArtworkPreview({
       const file = new File([blob], `${filename}.png`, { type: "image/png" });
       const download = () => {
         downloadPromotion(blob, file.name);
-        toast.success(t("Image downloaded", "Сликата е преземена"));
+        toast.success(t("Image downloaded", "Сликата е преземена", "Imazhi u shkarkua"));
       };
       if (share && navigator.canShare?.({ files: [file] })) {
         try {
@@ -62,6 +62,7 @@ export function ArtworkPreview({
           : t(
               "Could not create the image. Try again.",
               "Не успеа создавањето на сликата. Обидете се повторно.",
+              "Nuk mund të krijohej imazhi. Provoni përsëri.",
             ),
       );
     } finally {
@@ -81,6 +82,7 @@ export function ArtworkPreview({
           alt={t(
             `Promotion preview for ${artwork.name}`,
             `Преглед на промоцијата за ${artwork.name}`,
+            `Pamja paraprake e promovimit për ${artwork.name}`,
           )}
           className="h-auto w-full max-w-[280px] rounded-xl shadow-lg lg:max-h-[calc(100dvh-16rem)] lg:w-auto lg:object-contain"
         />
@@ -92,7 +94,7 @@ export function ArtworkPreview({
           onClick={() => void exportImage(false)}
         >
           {busy ? <Spinner /> : <Download data-icon="inline-start" />}
-          {t("Download PNG", "Преземи PNG")}
+          {t("Download PNG", "Преземи PNG", "Shkarko PNG")}
         </Button>
         <Button
           data-replay-public
@@ -102,11 +104,11 @@ export function ArtworkPreview({
           onClick={() => void exportImage(true)}
         >
           <Share2 data-icon="inline-start" />
-          {t("Share image", "Сподели слика")}
+          {t("Share image", "Сподели слика", "Shpërndaj imazhin")}
         </Button>
         <CopyButton
           text={artwork.bookingUrl}
-          label={t("Copy booking link", "Копирај линк за закажување")}
+          label={t("Copy booking link", "Копирај линк за закажување", "Kopjo linkun e rezervimit")}
         />
       </div>
       <p
@@ -114,10 +116,11 @@ export function ArtworkPreview({
         className="text-center text-xs text-muted-foreground"
       >
         {artwork.kind === "poster"
-          ? t("Print at A5 · 1748 × 2480 px", "Печатете во A5 · 1748 × 2480 px")
+          ? t("Print at A5 · 1748 × 2480 px", "Печатете во A5 · 1748 × 2480 px", "Printoni në A5 · 1748 × 2480 px")
           : artwork.kind === "qr"
             ? "1080 × 1080 px"
             : t(
+                "Instagram Story · 1080 × 1920 px",
                 "Instagram Story · 1080 × 1920 px",
                 "Instagram Story · 1080 × 1920 px",
               )}

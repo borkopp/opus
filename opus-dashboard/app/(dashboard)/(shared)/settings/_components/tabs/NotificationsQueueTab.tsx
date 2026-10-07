@@ -33,6 +33,7 @@ import {
 import { parseReminderHours } from "../validation";
 import { SmsNotificationsCard } from "./SmsNotificationsCard";
 import { ClientEmailReminders } from "./ClientEmailReminders";
+import { PushPreferencesCard } from "@/components/notifications/PushPreferencesCard";
 
 type EmailRecipient = {
   userId: Id<"users">;
@@ -67,26 +68,32 @@ const DASHBOARD_OPTIONS = [
     id: "dashboard-sound-enabled",
     labelEn: "Sound",
     labelMk: "Звук",
+    labelSq: "Tingull",
     descriptionEn: "Play a chime when a new notification arrives.",
     descriptionMk: "Пушти звучен сигнал кога ќе пристигне ново известување.",
+    descriptionSq: "Luaj një tingull kur mbërrin një njoftim i ri.",
     key: "dashboardSoundEnabled",
   },
   {
     id: "dashboard-toast-enabled",
     labelEn: "Toast preview",
     labelMk: "Преглед на известување",
+    labelSq: "Parashikim i njoftimit",
     descriptionEn: "Show a brief notification card beneath the bell.",
     descriptionMk: "Прикажи кратка картичка со известување под ѕвончето.",
+    descriptionSq: "Shfaq një kartë të shkurtër njoftimi poshtë ziles.",
     key: "dashboardToastEnabled",
   },
 ] as const;
 
-const ROLE_LABELS: Record<EmailRecipient["role"], { en: string; mk: string }> =
-  {
-    owner: { en: "Owner", mk: "Сопственик" },
-    manager: { en: "Manager", mk: "Менаџер" },
-    staff: { en: "Staff", mk: "Вработен" },
-  };
+const ROLE_LABELS: Record<
+  EmailRecipient["role"],
+  { en: string; mk: string; sq: string }
+> = {
+  owner: { en: "Owner", mk: "Сопственик", sq: "Pronar" },
+  manager: { en: "Manager", mk: "Менаџер", sq: "Menaxher" },
+  staff: { en: "Staff", mk: "Вработен", sq: "Staf" },
+};
 
 export function NotificationsQueueTab({
   orgId,
@@ -157,6 +164,7 @@ export function NotificationsQueueTab({
         t(
           "Select at least one reminder time.",
           "Изберете барем едно време за потсетување.",
+          "Zgjidhni të paktën një kohë për rikujtues.",
         ),
       );
       invalid = true;
@@ -171,6 +179,7 @@ export function NotificationsQueueTab({
         t(
           "Enter up to eight whole-hour reminders between 1 and 336, such as 24, 2.",
           "Внесете до осум потсетници во цели часови помеѓу 1 и 336, на пример 24, 2.",
+          "Vendosni deri në tetë rikujtues në orë të plota midis 1 dhe 336, si 24, 2.",
         ),
       );
       invalid = true;
@@ -197,6 +206,7 @@ export function NotificationsQueueTab({
           t(
             "Email and alert settings saved",
             "Поставките за е-пошта и известувања се зачувани",
+            "Cilësimet e email-it dhe njoftimeve u ruajtën",
           ),
         );
       }
@@ -208,6 +218,7 @@ export function NotificationsQueueTab({
             : t(
                 "Failed to save email settings.",
                 "Не успеа зачувувањето на поставките за е-пошта.",
+                "Ruajtja e cilësimeve të email-it dështoi.",
               ),
         );
       }
@@ -218,6 +229,7 @@ export function NotificationsQueueTab({
 
   return (
     <TabsContent value="notifications" className="m-0 flex flex-col gap-5">
+      <PushPreferencesCard />
       <SmsNotificationsCard
         orgId={orgId}
         isPaid={isPaid}
@@ -226,10 +238,15 @@ export function NotificationsQueueTab({
         initialReminderHours={initialData.smsReminderHoursBefore}
       />
       <SettingsCard
-        title={t("Email & alerts", "Е-пошта и известувања")}
+        title={t(
+          "Email & alerts",
+          "Е-пошта и известувања",
+          "Email dhe njoftime",
+        )}
         description={t(
           "Keep clients verified and informed, then decide exactly which dashboard users hear about new and upcoming appointments.",
           "Осигурете верификација и информираност на клиентите, и изберете кои корисници на контролната табла добиваат известувања за нови и претстојни термини.",
+          "Mbajini klientët e verifikuar dhe të informuar, pastaj vendosni saktësisht cilët përdorues të panelit njoftohen për terminet e reja dhe të ardhshme.",
         )}
         contentClassName="flex flex-col gap-7"
         footer={
@@ -240,16 +257,25 @@ export function NotificationsQueueTab({
               <Save data-icon="inline-start" />
             )}
             {isSaving
-              ? t("Saving…", "Се зачувува…")
-              : t("Save email settings", "Зачувај поставки за е-пошта")}
+              ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
+              : t(
+                  "Save email settings",
+                  "Зачувај поставки за е-пошта",
+                  "Ruaj cilësimet e email-it",
+                )}
           </Button>
         }
       >
         <SettingsSection
-          title={t("Client journey", "Патување на клиентот")}
+          title={t(
+            "Client journey",
+            "Патување на клиентот",
+            "Rrugëtimi i klientit",
+          )}
           description={t(
             "Verification and confirmation are transactional parts of online booking, so clients cannot switch them off.",
             "Верификацијата и потврдата се трансакциски дел од онлајн закажувањето, па клиентите не можат да ги исклучат.",
+            "Verifikimi dhe konfirmimi janë pjesë thelbësore e rezervimit në internet, prandaj klientët nuk mund t'i çaktivizojnë ato.",
           )}
         >
           <div className="flex flex-col gap-3">
@@ -257,28 +283,35 @@ export function NotificationsQueueTab({
               title={t(
                 "Email verification code",
                 "Код за верификација на е-пошта",
+                "Kodi i verifikimit me email",
               )}
               description={t(
                 "Confirms that the client owns the email address before the appointment is created.",
                 "Потврдува дека клиентот е сопственик на е-адресата пред да се креира терминот.",
+                "Konfirmon që klienti zotëron adresën e email-it përpara se të krijohet termini.",
               )}
               control={
                 <Badge data-replay-public variant="secondary">
                   <ShieldCheck data-icon="inline-start" />
-                  {t("Required", "Задолжително")}
+                  {t("Required", "Задолжително", "E detyrueshme")}
                 </Badge>
               }
             />
             <SettingsToggleRow
-              title={t("Appointment confirmation", "Потврда за термин")}
+              title={t(
+                "Appointment confirmation",
+                "Потврда за термин",
+                "Konfirmimi i terminit",
+              )}
               description={t(
                 "Sends the appointment overview, calendar file, directions, and studio contact actions.",
                 "Испраќа преглед на терминот, датотека за календар, насоки и контакт информации за студиото.",
+                "Dërgon përmbledhjen e terminit, skedarin e kalendarit, udhëzimet dhe kontaktet e studios.",
               )}
               control={
                 <Badge data-replay-public variant="secondary">
                   <MailCheck data-icon="inline-start" />
-                  {t("Always on", "Секогаш вклучено")}
+                  {t("Always on", "Секогаш вклучено", "Gjithmonë aktive")}
                 </Badge>
               }
             />
@@ -310,18 +343,20 @@ export function NotificationsQueueTab({
         <Separator />
 
         <SettingsSection
-          title={t("Team email", "Тимска е-пошта")}
+          title={t("Team email", "Тимска е-пошта", "Email-i i ekipit")}
           description={t(
             "Choose which appointment events are emailed to assigned staff and additional dashboard recipients.",
             "Изберете кои настани за термини се испраќаат по е-пошта на доделениот персонал и дополнителни корисници.",
+            "Zgjidhni cilat ngjarje të termineve u dërgohen me email stafit të caktuar dhe marrësve shtesë në panel.",
           )}
         >
           <div className="flex flex-col gap-3">
             <SettingsToggleRow
-              title={t("New appointments", "Нови термини")}
+              title={t("New appointments", "Нови термини", "Termine të reja")}
               description={t(
                 "Email the assigned staff when an appointment is added. Selected dashboard recipients also receive new online bookings.",
                 "Испраќа е-пошта на доделениот вработен при додавање нов термин. Избраните корисници на контролната табла исто така добиваат известувања за нови онлајн закажувања.",
+                "Dërgon email te stafi i caktuar kur shtohet një termin. Marrësit e përzgjedhur të panelit marrin gjithashtu rezervimet e reja online.",
               )}
               control={
                 <Switch
@@ -329,6 +364,7 @@ export function NotificationsQueueTab({
                   aria-label={t(
                     "New booking emails",
                     "Е-пораки за нови закажувања",
+                    "Email-e për rezervime të reja",
                   )}
                   checked={email.staffNewBookingEmailEnabled}
                   onCheckedChange={(checked) =>
@@ -344,10 +380,12 @@ export function NotificationsQueueTab({
               title={t(
                 "Upcoming appointment reminders",
                 "Потсетници за претстојни термини",
+                "Rikujtues për terminet e ardhshme",
               )}
               description={t(
                 "Email assigned staff and selected dashboard recipients before confirmed appointments.",
                 "Испраќа е-пошта на доделениот вработен и избраните корисници пред потврдените термини.",
+                "Dërgon email te stafi i caktuar dhe marrësit e përzgjedhur para termineve të konfirmuara.",
               )}
               control={
                 <Switch
@@ -355,6 +393,7 @@ export function NotificationsQueueTab({
                   aria-label={t(
                     "Team appointment reminders",
                     "Тимски потсетници за термини",
+                    "Rikujtues të ekipit për terminet",
                   )}
                   checked={email.staffReminderEmailEnabled}
                   onCheckedChange={(checked) =>
@@ -375,6 +414,7 @@ export function NotificationsQueueTab({
                   {t(
                     "Team reminder schedule (hours before)",
                     "Распоред за тимски потсетници (часови однапред)",
+                    "Orari i rikujtuesve të ekipit (orë përpara)",
                   )}
                 </FieldLabel>
                 <DebouncedInput
@@ -399,6 +439,7 @@ export function NotificationsQueueTab({
                   {t(
                     "This schedule is independent from the client reminder schedule.",
                     "Овој распоред е независен од распоредот за потсетување на клиенти.",
+                    "Ky orar është i pavarur nga orari i rikujtuesve për klientët.",
                   )}
                 </FieldDescription>
                 <FieldError>{staffReminderError}</FieldError>
@@ -411,12 +452,14 @@ export function NotificationsQueueTab({
               {t(
                 "Additional dashboard recipients",
                 "Дополнителни примачи од контролната табла",
+                "Marrës shtesë nga paneli",
               )}
             </FieldLegend>
             <FieldDescription data-replay-public>
               {t(
                 "Staff with an appointment email receive only their assigned appointments. Select dashboard users here if they should also receive studio-wide team emails.",
                 "Вработените со е-пошта за термини ги добиваат само своите доделени термини. Изберете корисници тука доколку треба да добиваат е-пораки за целото студио.",
+                "Stafi me email për termine merr vetëm terminet e caktuara për ta. Zgjidhni përdoruesit e panelit këtu nëse duhet të marrin edhe email-e të përgjithshme të studios.",
               )}
             </FieldDescription>
             <FieldGroup data-slot="checkbox-group">
@@ -457,6 +500,7 @@ export function NotificationsQueueTab({
                           {t(
                             ROLE_LABELS[recipient.role].en,
                             ROLE_LABELS[recipient.role].mk,
+                            ROLE_LABELS[recipient.role].sq,
                           )}
                         </Badge>
                       </FieldLabel>
@@ -471,6 +515,7 @@ export function NotificationsQueueTab({
                 {t(
                   "There are no active dashboard users to add. Appointment emails are linked from the Staff page.",
                   "Нема активни корисници за додавање. Е-поштата за термини се поврзува на страницата Тим.",
+                  "Nuk ka përdorues aktivë të panelit për të shtuar. Email-et e termineve lidhen te faqja Stafi.",
                 )}
               </FieldDescription>
             )}
@@ -480,17 +525,27 @@ export function NotificationsQueueTab({
         <Separator />
 
         <SettingsSection
-          title={t("Dashboard alerts", "Известувања на контролната табла")}
+          title={t(
+            "Dashboard alerts",
+            "Известувања на контролната табла",
+            "Njoftimet në panel",
+          )}
           description={t(
             "Control real-time feedback for staff working inside OPUS.",
             "Контролирајте ги известувањата во реално време за персоналот во OPUS.",
+            "Kontrolloni njoftimet në kohë reale për stafin brenda OPUS-it.",
           )}
         >
           <SettingsToggleRow
-            title={t("In-app notifications", "Известувања во апликацијата")}
+            title={t(
+              "In-app notifications",
+              "Известувања во апликацијата",
+              "Njoftime brenda aplikacionit",
+            )}
             description={t(
               "Show new bookings, cancellations, and no-shows in the notification bell.",
               "Прикажувај нови закажувања, откажувања и пропуштени термини во ѕвончето за известувања.",
+              "Shfaq rezervimet e reja, anulimet dhe mosparaqitjet te zilja e njoftimeve.",
             )}
             control={
               <Switch
@@ -498,6 +553,7 @@ export function NotificationsQueueTab({
                 aria-label={t(
                   "In-app notifications",
                   "Известувања во апликацијата",
+                  "Njoftime brenda aplikacionit",
                 )}
                 checked={dashboard.dashboardNotificationsEnabled}
                 onCheckedChange={(checked) =>
@@ -517,18 +573,20 @@ export function NotificationsQueueTab({
                   id,
                   labelEn,
                   labelMk,
+                  labelSq,
                   descriptionEn,
                   descriptionMk,
+                  descriptionSq,
                   key,
                 }) => (
                   <SettingsToggleRow
                     key={id}
-                    title={t(labelEn, labelMk)}
-                    description={t(descriptionEn, descriptionMk)}
+                    title={t(labelEn, labelMk, labelSq)}
+                    description={t(descriptionEn, descriptionMk, descriptionSq)}
                     control={
                       <Switch
                         id={id}
-                        aria-label={t(labelEn, labelMk)}
+                        aria-label={t(labelEn, labelMk, labelSq)}
                         checked={dashboard[key]}
                         onCheckedChange={(checked) =>
                           setDashboard((current) => ({

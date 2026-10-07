@@ -12,6 +12,11 @@ import { computeSlotsForDate } from "./slots";
 import { recordRecoveryBooking, recoveryOfferContext } from "./lib/gapRecovery";
 import { hashRecoveryToken } from "./lib/gapRecoveryRules";
 import { isActiveIndustry } from "./lib/productScope";
+import {
+  clientClaimUrl,
+  createClientClaimToken,
+  requireClientAccounts,
+} from "./lib/clientAccounts";
 import { ensureCurrentOpusUser } from "./lib/opusUserAuth";
 import { acceptsPublicBookings } from "./lib/publication";
 import { isWithinPublicBookingWindow } from "./lib/publicBookingRules";
@@ -56,6 +61,7 @@ type PublicBookingInput = {
 };
 
 type PublicBookingResult = {
+  claimToken?: string;
   bookingId: Id<"bookings">;
   serviceName: string;
   staffName: string;
@@ -379,19 +385,38 @@ async function createPublicBookingRecord(
     });
   }
 
-  if (args.gapRecoveryEmailOptIn === true) {
+  const recoveryEmailEnabled = args.gapRecoveryEmailOptIn ?? true;
+  // The simplified booking default never reverses a recorded unsubscribe.
+  const hasExistingOptOut = customer?.gapRecoveryEmailOptIn === false;
+  if (
+    recoveryEmailEnabled &&
+    !hasExistingOptOut &&
+    customer?.gapRecoveryEmailOptIn !== true
+  ) {
     await ctx.db.patch(customerId, {
       gapRecoveryEmailOptIn: true,
       gapRecoveryConsentAt: Date.now(),
-      gapRecoveryConsentSource: "guest_booking",
+      gapRecoveryConsentSource:
+        args.gapRecoveryEmailOptIn === true
+          ? "guest_booking"
+          : "booking_default",
     });
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
       actorType: "system",
-      action: "gap_optimizer.consent_recorded",
+      action:
+        args.gapRecoveryEmailOptIn === true
+          ? "gap_optimizer.consent_recorded"
+          : "gap_optimizer.preference_defaulted",
       resourceType: "customers",
       resourceId: customerId,
-      after: { optedIn: true, source: "guest_booking" },
+      after: {
+        optedIn: true,
+        source:
+          args.gapRecoveryEmailOptIn === true
+            ? "guest_booking"
+            : "booking_default",
+      },
       createdAt: Date.now(),
     });
   }
@@ -427,6 +452,9 @@ async function createPublicBookingRecord(
     }
   }
 
+  // Guest proof is issued only after email verification, with no historical-account merge.
+  const claim =
+    !opusUserId && customerEmail ? await createClientClaimToken() : null;
   // ── Insert booking ──
   const bookingId = await ctx.db.insert("bookings", {
     orgId: args.orgId,
@@ -434,6 +462,13 @@ async function createPublicBookingRecord(
     serviceId: args.serviceId,
     customerId,
     opusUserId,
+    clientVerifiedEmail: customerEmail,
+    ...(claim
+      ? {
+          clientClaimTokenHash: claim.hash,
+          clientClaimTokenExpiresAt: claim.expiresAt,
+        }
+      : {}),
     startAt: args.startAt,
     endAt,
     priceMinorUnits,
@@ -482,6 +517,9 @@ async function createPublicBookingRecord(
     customer: bookingCustomer,
     service,
     staff,
+    ...(claim
+      ? { clientAccountUrl: clientClaimUrl(bookingId, claim.token) }
+      : {}),
     sendCustomerConfirmation: true,
     notifyTeamOfNewBooking: true,
     notifyAssignedStaffOfNewBooking: true,
@@ -500,6 +538,7 @@ async function createPublicBookingRecord(
   });
 
   return {
+    ...(claim ? { claimToken: claim.token } : {}),
     bookingId,
     serviceName: service.name,
     staffName: staff.displayName,
@@ -521,6 +560,8 @@ export const createPublicBooking = mutation({
     if (!identity?.email) {
       throw new ConvexError("Verify your email before booking.");
     }
+    // Retain the old API name, but apply the same studio opt-in boundary.
+    await requireClientAccounts(ctx, args.orgId);
     const opusUser = await ensureCurrentOpusUser(ctx);
     return await createPublicBookingRecord(
       ctx,
@@ -736,6 +777,44 @@ export const requestBookingEmailOtp = action({
 
 type BookingOtpFailureReason = "expired" | "invalid" | "locked" | "inactive";
 
+async function resolveRecoveryBooking(
+  ctx: MutationCtx,
+  args: {
+    orgId: Id<"orgs">;
+    serviceId: Id<"services">;
+    staffId: Id<"staff_members">;
+    startAt: number;
+    recoveryToken?: string;
+  },
+  email: string,
+): Promise<Id<"gap_outreach_candidates"> | undefined> {
+  if (args.recoveryToken) {
+    const hash = await hashRecoveryToken(args.recoveryToken);
+    const candidate = hash
+      ? await ctx.db
+          .query("gap_outreach_candidates")
+          .withIndex("by_org_token", (q) =>
+            q.eq("orgId", args.orgId).eq("offerTokenHash", hash),
+          )
+          .unique()
+      : null;
+    const offer = candidate ? await recoveryOfferContext(ctx, candidate) : null;
+    if (
+      !offer ||
+      offer.candidate.recipientEmail !== email ||
+      offer.option.serviceId !== args.serviceId ||
+      offer.option.staffId !== args.staffId ||
+      offer.option.startAt !== args.startAt
+    ) {
+      throw new ConvexError(
+        "This opening offer is no longer available. Choose another appointment.",
+      );
+    }
+    return offer.candidate._id;
+  }
+  return undefined;
+}
+
 export const createVerifiedPublicBooking = internalMutation({
   args: {
     ...publicBookingArgs,
@@ -787,33 +866,7 @@ export const createVerifiedPublicBooking = internalMutation({
       };
     }
 
-    let recoveryCandidateId: Id<"gap_outreach_candidates"> | undefined;
-    if (args.recoveryToken) {
-      const hash = await hashRecoveryToken(args.recoveryToken);
-      const candidate = hash
-        ? await ctx.db
-            .query("gap_outreach_candidates")
-            .withIndex("by_org_token", (q) =>
-              q.eq("orgId", args.orgId).eq("offerTokenHash", hash),
-            )
-            .unique()
-        : null;
-      const offer = candidate
-        ? await recoveryOfferContext(ctx, candidate)
-        : null;
-      if (
-        !offer ||
-        offer.candidate.recipientEmail !== email ||
-        offer.option.serviceId !== args.serviceId ||
-        offer.option.staffId !== args.staffId ||
-        offer.option.startAt !== args.startAt
-      ) {
-        throw new ConvexError(
-          "This opening offer is no longer available. Choose another appointment.",
-        );
-      }
-      recoveryCandidateId = offer.candidate._id;
-    }
+    const recoveryCandidateId = await resolveRecoveryBooking(ctx, args, email);
     const booking = await createPublicBookingRecord(
       ctx,
       {
@@ -1013,5 +1066,33 @@ export const getPublicAvailableDates = query({
 
     const results = await Promise.all(promises);
     return results.filter((r) => r.hasSlots).map((r) => r.date);
+  },
+});
+
+/** Remembered client booking; identity and email come exclusively from the session. */
+export const createAccountBooking = mutation({
+  args: { ...publicBookingArgs, recoveryToken: v.optional(v.string()) },
+  handler: async (ctx, args): Promise<PublicBookingResult> => {
+    await requireClientAccounts(ctx, args.orgId);
+    const user = await ensureCurrentOpusUser(ctx);
+    const recoveryCandidateId = await resolveRecoveryBooking(
+      ctx,
+      args,
+      user.email,
+    );
+    const result = await createPublicBookingRecord(
+      ctx,
+      { ...args, customerEmail: user.email },
+      user._id,
+      recoveryCandidateId,
+    );
+    await ctx.db.patch(user._id, {
+      name: args.customerName.trim(),
+      ...(args.customerPhone?.trim()
+        ? { phone: normalizePublicBookingPhone(args.customerPhone) }
+        : {}),
+      updatedAt: Date.now(),
+    });
+    return result;
   },
 });

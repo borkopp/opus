@@ -1,7 +1,5 @@
 "use client";
 
-import { usePublicBookingI18n } from "./PublicBookingI18n";
-
 import { useQuery } from "convex/react";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -9,20 +7,20 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPrice } from "@/lib/format-price";
 import {
   formatBookingDateValue,
   formatBookingTime,
@@ -30,6 +28,8 @@ import {
 import { cn } from "@/lib/utils";
 import { PublicBookingDatePicker } from "./PublicBookingDatePicker";
 import { BookingStepShell } from "./BookingStepShell";
+import { BookingSummary } from "./BookingSummary";
+import { usePublicBookingI18n } from "./PublicBookingI18n";
 import type { PublicSite } from "./types";
 
 interface DateTimeSelectionStepProps {
@@ -38,6 +38,7 @@ interface DateTimeSelectionStepProps {
   selectedServiceId: string;
   selectedDate: string;
   selectedSlotTimestamp: number | null;
+  selectedSlotStaffId: string | null;
   onSelectDate: (date: string) => void;
   onSelectSlot: (startAt: number, staffId: string) => void;
   onContinue: () => void;
@@ -51,6 +52,7 @@ export function DateTimeSelectionStep({
   selectedServiceId,
   selectedDate,
   selectedSlotTimestamp,
+  selectedSlotStaffId,
   onSelectDate,
   onSelectSlot,
   onContinue,
@@ -79,133 +81,164 @@ export function DateTimeSelectionStep({
         }
       : "skip",
   );
+  const selectedSlot = slots?.find(
+    (slot) =>
+      slot.startAt === selectedSlotTimestamp &&
+      selectedSlotStaffId &&
+      (slot.availableStaffIds as string[]).includes(selectedSlotStaffId),
+  );
+  const assignedStaff = selectedSlot
+    ? site.staff.find((member) => member._id === selectedSlotStaffId)
+    : null;
 
   return (
     <BookingStepShell
-      title={text("Изберете термин")}
+      title={text("Изберете датум и време")}
+      description={text("Изберете слободен датум, па време што ви одговара.")}
       backLabel={text("Назад кон специјалисти")}
       onBack={onBack}
-    >
-      <div
-        className="flex items-start justify-between gap-4 rounded-2xl border bg-card p-4 text-sm"
-        data-booking-selection-summary="true"
-      >
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="font-medium">{service?.name}</p>
-          <p className="text-muted-foreground">
-            {staff?.displayName || text("Прв достапен")} ·{" "}
-            {service?.durationMins} {text("мин")}
-          </p>
-        </div>
-        <p className="shrink-0 font-mono font-medium">
-          {service &&
-            formatPrice(
-              service.priceMinorUnits,
-              service.currency,
-              site.bookingSettings.locale,
-            )}
-        </p>
-      </div>
-      <FieldGroup className="gap-6 md:grid md:grid-cols-2 md:items-start md:gap-8">
-        <Field>
-          <FieldLabel className="hidden md:block">{text("Датум")}</FieldLabel>
-          <PublicBookingDatePicker
-            site={site}
-            selectedServiceId={selectedServiceId}
-            selectedStaffId={selectedStaffId}
-            selectedDate={selectedDate}
-            onSelectDate={onSelectDate}
+      summary={
+        service && (
+          <BookingSummary
+            serviceName={service.name}
+            durationMins={service.durationMins}
+            priceMinorUnits={service.priceMinorUnits}
+            currency={service.currency}
+            staffName={
+              staff?.displayName ||
+              assignedStaff?.displayName ||
+              text("Без претпочитан специјалист")
+            }
+            startAt={selectedSlot?.startAt}
           />
-        </Field>
-
-        <Field>
-          <FieldLabel>{text("Слободни термини")}</FieldLabel>
-          <FieldDescription>
-            {formatBookingDateValue(selectedDate, locale)}
-          </FieldDescription>
-          {sharedOpeningStartAt && slots !== undefined && (
-            <Alert>
-              <AlertDescription>
-                {slots.some((slot) => slot.startAt === sharedOpeningStartAt)
-                  ? text(
-                      "Терминот од објавата е во {v0}. Изберете го времето за да продолжите.",
-                      { v0: formatBookingTime(sharedOpeningStartAt) },
-                    )
-                  : text(
-                      "Терминот од објавата веќе не е достапен за овој избор. Изберете друго слободно време или датум.",
-                    )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {slots === undefined ? (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <Skeleton key={index} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : slots.length === 0 ? (
-            <Empty className="py-8">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <CalendarDays />
-                </EmptyMedia>
-                <EmptyTitle>{text("Нема слободни термини")}</EmptyTitle>
-                <EmptyDescription>
+        )
+      }
+    >
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <Card className="min-w-0 rounded-2xl" data-booking-date-panel>
+          <CardHeader>
+            <CardTitle>
+              <h2>{text("Датум")}</h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PublicBookingDatePicker
+              site={site}
+              selectedServiceId={selectedServiceId}
+              selectedStaffId={selectedStaffId}
+              selectedDate={selectedDate}
+              onSelectDate={onSelectDate}
+            />
+          </CardContent>
+        </Card>
+        <Card
+          className="min-w-0 rounded-2xl"
+          data-booking-time-panel
+          aria-busy={slots === undefined}
+        >
+          <CardHeader>
+            <CardTitle>
+              <h2>{text("Слободни термини")}</h2>
+            </CardTitle>
+            <CardDescription>
+              {formatBookingDateValue(selectedDate, locale)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {sharedOpeningStartAt && slots !== undefined && (
+              <Alert>
+                <AlertDescription>
+                  {slots.some((slot) => slot.startAt === sharedOpeningStartAt)
+                    ? text(
+                        "Терминот од објавата е во {v0}. Изберете го времето за да продолжите.",
+                        { v0: formatBookingTime(sharedOpeningStartAt) },
+                      )
+                    : text(
+                        "Терминот од објавата веќе не е достапен за овој избор. Изберете друго слободно време или датум.",
+                      )}
+                </AlertDescription>
+              </Alert>
+            )}
+            {selectedSlotTimestamp && slots !== undefined && !selectedSlot && (
+              <Alert>
+                <AlertDescription>
                   {text(
-                    "Изберете друг датум или вратете се и сменете го специјалистот.",
+                    "Овој термин повеќе не е достапен. Изберете друг термин.",
                   )}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div
-              className="grid grid-cols-3 gap-2 sm:grid-cols-4"
-              role="group"
-              aria-label={text("Слободни термини")}
-            >
-              {slots.map((slot) => {
-                const availableStaffId = slot.availableStaffIds[0];
-                const isSelected = selectedSlotTimestamp === slot.startAt;
-
-                return (
-                  <button
-                    key={slot.startAt}
-                    type="button"
-                    aria-pressed={isSelected}
-                    disabled={!availableStaffId}
-                    onClick={() =>
-                      availableStaffId &&
-                      onSelectSlot(slot.startAt, availableStaffId)
-                    }
-                    className={cn(
-                      "min-h-12 rounded-xl border px-3 py-3 font-mono text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
-                      isSelected
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card hover:border-primary hover:bg-accent",
+                </AlertDescription>
+              </Alert>
+            )}
+            {slots === undefined ? (
+              <div
+                className="grid grid-cols-3 gap-2 min-[320px]:grid-cols-4"
+                role="status"
+                aria-label={text("Ги проверуваме слободните термини…")}
+              >
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <Skeleton key={index} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : slots.length === 0 ? (
+              <Empty className="px-0 py-6">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <CalendarDays />
+                  </EmptyMedia>
+                  <EmptyTitle>{text("Нема слободни термини")}</EmptyTitle>
+                  <EmptyDescription>
+                    {text(
+                      "Изберете друг датум или вратете се и сменете го специјалистот.",
                     )}
-                  >
-                    {formatBookingTime(slot.startAt)}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </Field>
-      </FieldGroup>
-
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div
+                className="grid grid-cols-3 gap-2 min-[320px]:grid-cols-4"
+                role="group"
+                aria-label={text("Слободни термини")}
+              >
+                {slots.map((slot) => {
+                  const availableStaffId = slot.availableStaffIds[0];
+                  const isSelected = selectedSlotTimestamp === slot.startAt;
+                  return (
+                    <button
+                      key={slot.startAt}
+                      type="button"
+                      aria-pressed={isSelected}
+                      disabled={!availableStaffId}
+                      onClick={() =>
+                        availableStaffId &&
+                        onSelectSlot(slot.startAt, availableStaffId)
+                      }
+                      className={cn(
+                        "min-h-12 min-w-0 rounded-xl border px-2 py-3 text-sm font-medium tabular-nums transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card hover:border-primary/40 hover:bg-accent",
+                      )}
+                    >
+                      {formatBookingTime(slot.startAt)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
       <div
-        className="sticky bottom-0 z-20 -mx-4 flex items-center justify-between gap-3 border-t bg-background px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:mx-0 md:rounded-2xl md:border md:p-5"
-        data-booking-action-card="true"
+        className="sticky bottom-0 z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-background/95 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-lg lg:mx-0 lg:rounded-2xl lg:border lg:p-4"
+        data-booking-action-card
       >
-        <p className="min-w-0 text-sm" role="status" aria-live="polite">
-          {selectedSlotTimestamp ? (
+        <p className="min-w-0 flex-1 text-sm" role="status" aria-live="polite">
+          {selectedSlot ? (
             <>
               <span className="block text-xs text-muted-foreground">
                 {text("Избрано време")}
               </span>
-              <span className="font-mono text-lg font-semibold">
-                {formatBookingTime(selectedSlotTimestamp)}
+              <span className="font-semibold tabular-nums">
+                {formatBookingTime(selectedSlot.startAt)}
               </span>
             </>
           ) : (
@@ -215,7 +248,7 @@ export function DateTimeSelectionStep({
         <Button
           type="button"
           size="lg"
-          disabled={!selectedSlotTimestamp}
+          disabled={!selectedSlot}
           onClick={onContinue}
           className="min-h-12 shrink-0"
         >

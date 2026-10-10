@@ -1,9 +1,7 @@
 "use client";
 
-import { usePublicBookingI18n } from "./PublicBookingI18n";
-
 import Image from "next/image";
-import { ArrowRight, Check } from "lucide-react";
+import { Clock3 } from "lucide-react";
 import {
   Empty,
   EmptyDescription,
@@ -11,13 +9,13 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { formatPrice } from "@/lib/format-price";
-import { cn } from "@/lib/utils";
+import { BookingChoiceCard } from "./BookingChoiceCard";
 import { BookingStepShell } from "./BookingStepShell";
+import { usePublicBookingI18n } from "./PublicBookingI18n";
 import type { PublicSite } from "./types";
 
 interface ServiceSelectionStepProps {
   site: PublicSite;
-  selectedStaffId?: string | "any";
   selectedServiceId?: string;
   onSelectService: (serviceId: string) => void;
   onBack: () => void;
@@ -25,110 +23,79 @@ interface ServiceSelectionStepProps {
 
 export function ServiceSelectionStep({
   site,
-  selectedStaffId,
   selectedServiceId,
   onSelectService,
   onBack,
 }: ServiceSelectionStepProps) {
-  const { text } = usePublicBookingI18n();
-  const selectedStaff =
-    selectedStaffId && selectedStaffId !== "any"
-      ? site.staff.find((member) => member._id === selectedStaffId)
-      : null;
-  const services = selectedStaff
-    ? site.services.filter((service) =>
-        (service.staffIds as string[]).includes(selectedStaff._id),
-      )
-    : site.services;
-
+  const { text, locale } = usePublicBookingI18n();
   return (
     <BookingStepShell
       title={text("Изберете услуга")}
+      description={text(
+        "Изберете ја услугата што сакате да ја резервирате. Потоа изберете специјалист и термин.",
+      )}
       backLabel={text("Назад кон {v0}", { v0: site.name })}
       onBack={onBack}
     >
-      {services.length > 0 ? (
+      {site.services.length > 0 ? (
         <div className="grid gap-3">
-          {services.map((service) => {
-            const isSelected = selectedServiceId === service._id;
-
-            return (
-              <button
-                key={service._id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => onSelectService(service._id)}
-                className={cn(
-                  "group grid w-full gap-4 rounded-2xl border bg-card p-4 text-left shadow-s transition-[transform,box-shadow,border-color,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5 motion-reduce:transform-none",
-                  isSelected
-                    ? "border-primary/40 bg-primary/5 ring-1 ring-primary/15"
-                    : "hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-m",
+          {site.services.map((service) => (
+            <BookingChoiceCard
+              key={service._id}
+              selected={selectedServiceId === service._id}
+              onClick={() => onSelectService(service._id)}
+            >
+              <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
+                {service.photoUrl && (
+                  <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-secondary">
+                    <Image
+                      src={service.photoUrl}
+                      alt=""
+                      fill
+                      unoptimized
+                      className="object-cover"
+                      sizes="56px"
+                    />
+                  </span>
                 )}
-              >
-                <div className="flex min-w-0 items-center gap-4">
-                  {service.photoUrl && (
-                    <span className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                      <Image
-                        src={service.photoUrl}
-                        alt=""
-                        fill
-                        unoptimized
-                        className="object-cover"
-                        sizes="48px"
-                      />
-                    </span>
-                  )}
+                <div className="grid min-w-0 flex-1 gap-2.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
                   <div className="flex min-w-0 flex-col gap-1">
-                    <h2 className="font-display text-lg font-semibold">
+                    <h2 className="text-base font-semibold leading-6 [overflow-wrap:anywhere]">
                       {service.name}
                     </h2>
                     {(service.consumerDescription || service.categoryName) && (
-                      <p className="line-clamp-2 text-sm leading-6 text-muted-foreground">
+                      <p className="line-clamp-2 text-sm leading-5 text-muted-foreground">
                         {service.consumerDescription || service.categoryName}
                       </p>
                     )}
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-5 sm:justify-end">
-                  <span className="text-sm text-muted-foreground">
-                    {service.durationMins} {text("мин")}
-                  </span>
-                  <span className="font-mono text-sm font-medium">
-                    {formatPrice(
-                      service.priceMinorUnits,
-                      service.currency,
-                      site.bookingSettings.locale,
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground",
-                    )}
-                  >
-                    {isSelected ? (
-                      <Check className="size-4" aria-hidden="true" />
-                    ) : (
-                      <ArrowRight
-                        className="size-4 transition-transform group-hover:translate-x-0.5"
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 sm:flex-col sm:items-end sm:gap-1">
+                    <span className="font-medium tabular-nums">
+                      {formatPrice(
+                        service.priceMinorUnits,
+                        service.currency,
+                        locale,
+                      )}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <Clock3
+                        className="size-3.5 shrink-0"
                         aria-hidden="true"
                       />
-                    )}
-                  </span>
+                      {service.durationMins} {text("мин")}
+                    </span>
+                  </div>
                 </div>
-              </button>
-            );
-          })}
+              </div>
+            </BookingChoiceCard>
+          ))}
         </div>
       ) : (
         <Empty>
           <EmptyHeader>
             <EmptyTitle>{text("Нема достапни услуги")}</EmptyTitle>
             <EmptyDescription>
-              {text("Вратете се назад и изберете друг специјалист.")}
+              {text("Контактирајте го студиото за да закажете термин.")}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

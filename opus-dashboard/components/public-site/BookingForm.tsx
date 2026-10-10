@@ -16,6 +16,7 @@ import {
 import { addDays, dateInTimezone } from "@/lib/public-booking-format";
 import { validPromotionDate } from "@/lib/promotions";
 import { BookingConfirmationStep } from "./BookingConfirmationStep";
+import { BookingSummary } from "./BookingSummary";
 import { BookingStepProgress, type BookingStep } from "./BookingStepProgress";
 import { CustomerDetailsStep } from "./CustomerDetailsStep";
 import { DateTimeSelectionStep } from "./DateTimeSelectionStep";
@@ -209,6 +210,10 @@ export function BookingForm({
       completed.add("datetime");
     }
     if (
+      selectedServiceId &&
+      selectedStaffId &&
+      selectedSlotTimestamp &&
+      selectedSlotStaffId &&
       customerName.trim() &&
       customerEmail.trim() &&
       isValidPublicBookingPhone(normalizePublicBookingPhone(customerPhone))
@@ -227,6 +232,9 @@ export function BookingForm({
 
   const scrollToFlowStart = () => {
     window.requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLElement>("[data-booking-step-heading]")
+        ?.focus({ preventScroll: true });
       window.scrollTo({ top: 0, behavior: "auto" });
     });
   };
@@ -248,8 +256,9 @@ export function BookingForm({
     );
     if (!service) return;
 
+    const serviceChanged = selectedServiceId !== serviceId;
     setSelectedServiceId(serviceId);
-    resetSlot();
+    if (serviceChanged) resetSlot();
     setError(null);
 
     const currentStaffStillEligible =
@@ -270,13 +279,14 @@ export function BookingForm({
 
   const handleSelectStaff = (staffId: string | "any") => {
     setSelectedStaffId(staffId);
-    resetSlot();
+    if (staffId !== selectedStaffId) resetSlot();
     setError(null);
     setCurrentStep("datetime");
     scrollToFlowStart();
   };
 
   const handleSelectDate = (date: string) => {
+    if (date === selectedDate) return;
     setSelectedDate(date);
     resetSlot();
     setError(null);
@@ -532,7 +542,7 @@ export function BookingForm({
 
   if (bookingResult) {
     return (
-      <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
+      <main className="public-booking-flow min-h-[calc(100dvh-9rem)] bg-secondary/30">
         <BookingConfirmationStep
           site={site}
           result={{
@@ -572,12 +582,24 @@ export function BookingForm({
         ?.displayName || text("Специјалист");
 
     return (
-      <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
+      <main className="public-booking-flow min-h-[calc(100dvh-9rem)] bg-secondary/30">
         <OtpVerificationStep
           customerEmail={pendingBooking.customerEmail}
-          serviceName={selectedService?.name || text("Услуга")}
-          staffName={staffName}
-          startAt={pendingBooking.startAt}
+          summary={
+            selectedService && (
+              <BookingSummary
+                serviceName={selectedService.name}
+                durationMins={selectedService.durationMins}
+                priceMinorUnits={
+                  recoveryOffer?.priceMinorUnits ??
+                  selectedService.priceMinorUnits
+                }
+                currency={selectedService.currency}
+                staffName={staffName}
+                startAt={pendingBooking.startAt}
+              />
+            )
+          }
           otp={otp}
           expiresAt={pendingBooking.expiresAt}
           resendAfter={pendingBooking.resendAfter}
@@ -605,20 +627,20 @@ export function BookingForm({
   }
 
   return (
-    <main className="min-h-[calc(100dvh-9rem)] bg-secondary/45">
+    <main className="public-booking-flow min-h-[calc(100dvh-9rem)] bg-secondary/30">
       {accountsEnabled && (
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <p className="text-sm text-muted-foreground">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 pt-4 sm:px-6">
+          <p className="min-w-0 text-xs leading-5 text-muted-foreground">
             {rememberedClient
               ? t(
-                  "Your details are remembered. Confirm this appointment without another email code.",
-                  "Вашите детали се зачувани. Потврдете го терминот без нов код по е-пошта.",
-                  "Detajet tuaja janë ruajtur. Konfirmoni terminin pa kod tjetër emaili.",
+                  "Your details are saved.",
+                  "Вашите податоци се зачувани.",
+                  "Detajet tuaja janë ruajtur.",
                 )
               : t(
-                  "Have an OPUS account? Sign in to reuse your details, or continue as a guest.",
-                  "Имате OPUS сметка? Најавете се со зачувани детали или продолжете како гостин.",
-                  "Keni llogari OPUS? Hyni për të përdorur detajet tuaja, ose vazhdoni si mysafir.",
+                  "Book as a guest. No account needed.",
+                  "Резервирајте како гостин, без сметка.",
+                  "Rezervoni si mysafir, pa llogari.",
                 )}
           </p>
           {rememberedClient ? (
@@ -630,12 +652,12 @@ export function BookingForm({
           ) : (
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={accountBooking && account.isLoading}
               onClick={handoffToAccount}
             >
-              {t("Sign in with OPUS", "Најава со OPUS", "Hyni me OPUS")}
+              {t("Sign in", "Најава", "Hyni")}
             </Button>
           )}
         </div>
@@ -652,7 +674,6 @@ export function BookingForm({
       {currentStep === "service" && (
         <ServiceSelectionStep
           site={site}
-          selectedStaffId={selectedStaffId}
           selectedServiceId={selectedServiceId}
           onSelectService={handleSelectService}
           onBack={() =>
@@ -685,6 +706,7 @@ export function BookingForm({
           selectedServiceId={selectedServiceId}
           selectedDate={selectedDate}
           selectedSlotTimestamp={selectedSlotTimestamp}
+          selectedSlotStaffId={selectedSlotStaffId}
           sharedOpeningStartAt={
             selectedServiceId === initialServiceId
               ? sharedOpeningStartAt

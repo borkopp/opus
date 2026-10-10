@@ -3,6 +3,7 @@
 import { usePublicBookingI18n } from "./PublicBookingI18n";
 
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 export type BookingStep = "service" | "staff" | "datetime" | "details";
 
@@ -22,47 +23,36 @@ export function BookingStepProgress({
   const { text } = usePublicBookingI18n();
   const STEPS: { id: BookingStep; label: string }[] = [
     { id: "service", label: text("Услуга") },
-    { id: "staff", label: text("Специјалист") },
+    { id: "staff", label: text("Тим") },
     { id: "datetime", label: text("Термин") },
     { id: "details", label: text("Податоци") },
   ];
   const currentIndex = STEPS.findIndex((step) => step.id === currentStep);
-  const progress = ((currentIndex + 1) / STEPS.length) * 100;
-
   return (
     <nav
       aria-label={text("Прогрес на резервација")}
-      className="bg-secondary/45"
+      className="mx-auto w-full max-w-5xl px-4 pt-5 sm:px-6 sm:pt-7"
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-4 py-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4 text-xs">
-          <span className="font-medium text-foreground">
-            {text("Чекор")} {currentIndex + 1} {text("од")} {STEPS.length}
-          </span>
-          <span className="text-muted-foreground">
-            {STEPS[currentIndex]?.label}
-          </span>
-        </div>
-
+      <p className="sr-only" aria-live="polite">
+        {text("Чекор")} {currentIndex + 1} {text("од")} {STEPS.length}:{" "}
+        {STEPS[currentIndex]?.label}
+      </p>
+      <div className="relative">
         <div
-          role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={STEPS.length}
-          aria-valuenow={currentIndex + 1}
-          className="h-1 overflow-hidden rounded-full bg-secondary"
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-[width] duration-200"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <ol className="hidden grid-cols-4 gap-4 sm:grid">
+          className="absolute top-4 right-[12.5%] left-[12.5%] h-px bg-border sm:hidden"
+          aria-hidden="true"
+        />
+        <ol className="relative grid grid-cols-4 gap-1 sm:gap-3">
           {STEPS.map((step, index) => {
             const isCurrent = step.id === currentStep;
-            const isCompleted = completedSteps.has(step.id);
+            const isCompleted =
+              index < currentIndex && completedSteps.has(step.id);
             const isClickable =
-              !disabled && (isCompleted || index < currentIndex);
+              !disabled &&
+              !isCurrent &&
+              STEPS.slice(0, index).every((previous) =>
+                completedSteps.has(previous.id),
+              );
 
             return (
               <li key={step.id}>
@@ -72,15 +62,28 @@ export function BookingStepProgress({
                   aria-current={isCurrent ? "step" : undefined}
                   onClick={() => isClickable && onStepClick(step.id)}
                   className={cn(
-                    "w-full rounded-md text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "flex min-h-14 w-full flex-col items-center gap-2 rounded-xl px-1 py-1 text-center text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-12 sm:flex-row sm:gap-2.5 sm:px-3 sm:py-2 sm:text-left sm:text-sm",
                     isCurrent
-                      ? "font-semibold text-foreground"
-                      : isCompleted
-                        ? "text-foreground hover:text-primary"
+                      ? "bg-transparent font-semibold text-primary sm:bg-primary/5"
+                      : isClickable
+                        ? "text-foreground hover:bg-accent"
                         : "text-muted-foreground",
                   )}
                 >
-                  {index + 1}. {step.label}
+                  <span
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-full border bg-background font-medium",
+                      isCurrent
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : isCompleted
+                          ? "border-primary/25 bg-accent text-primary"
+                          : "border-border",
+                    )}
+                    aria-hidden="true"
+                  >
+                    {isCompleted ? <Check className="size-4" /> : index + 1}
+                  </span>
+                  <span>{step.label}</span>
                 </button>
               </li>
             );

@@ -457,6 +457,14 @@
   aspect-ratio: auto;
   font-size: 0.875rem;
 }
+.public-booking-calendar
+  button[data-day]:not(:disabled):not([data-selected-single="true"]) {
+  border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent);
+  background-color: color-mix(in oklab, var(--primary) 6%, var(--card));
+}
+.public-booking-flow [data-slot="card"] {
+  box-shadow: none;
+}
 
 @media (max-width: 767px) {
   .public-site :is([data-slot="button"], [data-slot="input"]) {
@@ -1798,9 +1806,27 @@ body:has(.dashboard-shell)
   color: var(--site-muted);
 }
 .opus-site-powered {
-  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  padding-block: 10px;
+  font-size: 13px;
+  line-height: 24px;
+  text-wrap: pretty;
+  text-underline-offset: 4px;
+}
+.opus-site-footer .opus-site-powered {
+  color: var(--site-text);
+}
+.opus-site-powered:hover {
+  text-decoration: underline;
+}
+.opus-site-powered-brand {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 .opus-site-powered svg,
 .opus-site-footer a > svg {

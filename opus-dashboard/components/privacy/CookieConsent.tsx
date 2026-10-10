@@ -27,6 +27,7 @@ import {
   type CookieConsent as Consent,
 } from "../../../shared/analytics/consent";
 import { observePixel } from "../../../shared/analytics/meta-pixel";
+import { cn } from "@/lib/utils";
 
 const serverSnapshot = () => "server";
 
@@ -96,10 +97,16 @@ export function CookieConsent() {
       return null;
 
     return (
-      <div className="fixed bottom-3 left-3 z-40">
+      <div
+        className={cn(
+          pathname.startsWith("/book/")
+            ? "flex justify-center px-4 pb-6"
+            : "fixed bottom-3 left-3 z-40",
+        )}
+      >
         <Button
           size="sm"
-          variant="outline"
+          variant={pathname.startsWith("/book/") ? "ghost" : "outline"}
           onClick={() => {
             setDraft(getConsent());
             setIsConfiguring(true);

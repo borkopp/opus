@@ -565,10 +565,16 @@ export function WebsiteCanvas(props: WebsiteCanvasProps) {
             <p>
               © {new Date().getFullYear()} {site.name}
             </p>
-            <a href="https://opus.mk" className="opus-site-powered">
-              {labels.powered}
-              <Logo className="text-xs" markClassName="h-3.5" />
-              <ArrowUpRight aria-hidden="true" />
+            <a
+              href="https://opus.mk"
+              className="opus-site-powered"
+              aria-label={`${labels.powered} OPUS`}
+            >
+              {labels.powered}{" "}
+              <span className="opus-site-powered-brand">
+                <Logo className="text-xs" markClassName="h-3.5" />
+                <ArrowUpRight aria-hidden="true" />
+              </span>
             </a>
             {design.footer.showSocial && instagram && (
               <a

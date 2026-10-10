@@ -2,6 +2,131 @@ import type { Locale } from "../../shared/i18n/locale";
 
 // Public booking labels are supplied by OPUS, never entered by a studio owner.
 const copy: [string, string, string][] = [
+  ["Денес", "Today", "Sot"],
+  ["Избрано", "Selected", "Zgjedhur"],
+  ["Навигација низ календар", "Calendar navigation", "Navigimi i kalendarit"],
+  ["Тим", "Team", "Ekipi"],
+  ["Вашиот термин", "Your appointment", "Termini juaj"],
+  [
+    "Изберете датум и време",
+    "Choose a date and time",
+    "Zgjidhni datën dhe orën",
+  ],
+  [
+    "Изберете слободен датум, па време што ви одговара.",
+    "Choose an available date, then a time that works for you.",
+    "Zgjidhni një datë të lirë, pastaj orën që ju përshtatet.",
+  ],
+  [
+    "Изберете ја услугата што сакате да ја резервирате. Потоа изберете специјалист и термин.",
+    "Choose your service, then your specialist and appointment time.",
+    "Zgjidhni shërbimin, pastaj specialistin dhe orën e terminit.",
+  ],
+  [
+    "Контактирајте го студиото за да закажете термин.",
+    "Contact the studio to arrange an appointment.",
+    "Kontaktoni studion për të caktuar një termin.",
+  ],
+  [
+    "Изберете член од тимот или прикажете термини кај сите достапни специјалисти.",
+    "Choose a team member, or see appointments with any available specialist.",
+    "Zgjidhni një anëtar të ekipit ose shihni terminet me cilindo specialist të lirë.",
+  ],
+  [
+    "Прикажи ги сите слободни термини за оваа услуга.",
+    "See all available times for this service.",
+    "Shihni të gjitha oraret e lira për këtë shërbim.",
+  ],
+  [
+    "Нема достапни специјалисти",
+    "No specialists available",
+    "Nuk ka specialistë të lirë",
+  ],
+  [
+    "Изберете друга услуга или контактирајте го студиото.",
+    "Choose another service or contact the studio.",
+    "Zgjidhni një shërbim tjetër ose kontaktoni studion.",
+  ],
+  [
+    "Ги проверуваме слободните термини…",
+    "Checking available times…",
+    "Po kontrollojmë oraret e lira…",
+  ],
+  [
+    "Изберете означен датум за да ги видите слободните термини.",
+    "Choose a highlighted date to see available times.",
+    "Zgjidhni një datë të theksuar për të parë oraret e lira.",
+  ],
+  [
+    "Проверете ги вашите податоци и потврдете го терминот.",
+    "Review your details and confirm your appointment.",
+    "Kontrolloni detajet tuaja dhe konfirmoni terminin.",
+  ],
+  [
+    "Внесете ги вашите податоци. Ќе добиете код по е-пошта за да го потврдите терминот.",
+    "Enter your details. We'll email you a code to confirm your appointment.",
+    "Shkruani detajet tuaja. Do t'ju dërgojmë një kod me email për të konfirmuar terminin.",
+  ],
+  ["Контакт податоци", "Contact details", "Detajet e kontaktit"],
+  [
+    "Студиото ќе ги користи овие податоци за вашиот термин.",
+    "The studio will use these details for your appointment.",
+    "Studioja do t'i përdorë këto detaje për terminin tuaj.",
+  ],
+  [
+    "Зачувај ги податоците со OPUS сметка",
+    "Save my details with an OPUS account",
+    "Ruaj detajet e mia me një llogari OPUS",
+  ],
+  [
+    "Опционално. Со истиот код ќе создадете сметка за побрзо закажување следниот пат.",
+    "Optional. Use the same code to create an account and book faster next time.",
+    "Opsionale. Përdorni të njëjtin kod për të krijuar një llogari dhe për të rezervuar më shpejt herën tjetër.",
+  ],
+  [
+    "Со еден код ќе ја создадете сметката и ќе го потврдите терминот.",
+    "One code creates your account and confirms your appointment.",
+    "Një kod krijon llogarinë tuaj dhe konfirmon terminin.",
+  ],
+  ["Се обработува…", "Processing…", "Duke përpunuar…"],
+  [
+    "Уште еден чекор. Внесете го кодот за да го потврдите терминот.",
+    "One last step. Enter the code to confirm your appointment.",
+    "Edhe një hap. Shkruani kodin për të konfirmuar terminin.",
+  ],
+  [
+    "Внесете го шестцифрениот код",
+    "Enter your 6-digit code",
+    "Shkruani kodin gjashtëshifror",
+  ],
+  [
+    "Не добивте код? Проверете во спам или побарајте нов код.",
+    "No code yet? Check your spam folder or request a new code.",
+    "Nuk e morët kodin? Kontrolloni dosjen spam ose kërkoni një kod të ri.",
+  ],
+  [
+    "Вашата резервација е потврдена. Деталите за терминот се подолу.",
+    "Your booking is confirmed. Your appointment details are below.",
+    "Rezervimi juaj është konfirmuar. Detajet e terminit janë më poshtë.",
+  ],
+  ["Додајте го во календар", "Add to your calendar", "Shtojeni në kalendar"],
+  ["Преземи покана", "Download invite", "Shkarko ftesën"],
+  ["Вашата OPUS сметка", "Your OPUS account", "Llogaria juaj OPUS"],
+  [
+    "Зачувајте го терминот во OPUS сметка за полесно следно закажување.",
+    "Save this appointment to an OPUS account to book faster next time.",
+    "Ruajeni këtë termin në një llogari OPUS për të rezervuar më shpejt herën tjetër.",
+  ],
+  [
+    "Терминот е зачуван во вашата OPUS сметка.",
+    "This appointment is saved to your OPUS account.",
+    "Ky termin është ruajtur në llogarinë tuaj OPUS.",
+  ],
+  [
+    "Отвори ја мојата OPUS сметка",
+    "Open my OPUS account",
+    "Hap llogarinë time OPUS",
+  ],
   [
     "Изберете услуга, специјалист и слободен термин.",
     "Choose a service, specialist and available appointment.",

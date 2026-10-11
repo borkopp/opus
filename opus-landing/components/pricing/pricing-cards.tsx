@@ -6,12 +6,27 @@ import { ArrowUpRight, Check, Sparkle, Sparkles } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
 import { useI18n } from "@/lib/i18n/context";
-import { formatProPrice, PRO_TEAM_TIERS } from "@/lib/pro-pricing";
+import {
+  formatProPrice,
+  proPriceMinorUnits,
+  PRO_TEAM_TIERS,
+} from "@/lib/pro-pricing";
 import { cn } from "@/lib/utils";
 import { CustomSoftwarePlan } from "./custom-software-plan";
+import { CurrencySelector } from "./currency-selector";
+import { useBillingCurrency } from "./billing-currency-provider";
 
 export function PricingCards({ animated = false }: { animated?: boolean }) {
   const { t, locale } = useI18n();
+  const { currency } = useBillingCurrency();
+  const currencyLabel =
+    currency === "eur"
+      ? "EUR"
+      : locale === "mk"
+        ? "ден."
+        : locale === "sq"
+          ? "den."
+          : "MKD";
   const [tierIndex, setTierIndex] = useState(0);
   const selectorId = useId();
   const tier = PRO_TEAM_TIERS[tierIndex];
@@ -22,6 +37,7 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
 
   return (
     <>
+      <CurrencySelector />
       <div className="pricing-grid">
         <article className={cn("price-card", { reveal: animated })}>
           <div className="plan-heading">
@@ -31,7 +47,7 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
           </div>
           <h3>{t.pricing.free.name}</h3>
           <div className="price">
-            {t.pricing.free.price} <span>{t.pricing.free.currency}</span>
+            {t.pricing.free.price} <span>{currencyLabel}</span>
           </div>
           <p>{t.pricing.free.desc}</p>
           <a
@@ -67,8 +83,15 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
             aria-live="polite"
             aria-atomic="true"
           >
-            {formatProPrice(tier.monthlyPriceMinorUnits, locale)}{" "}
-            <span>{t.pricing.pro.currency}</span>
+            {formatProPrice(
+              proPriceMinorUnits(tier, currency),
+              locale,
+              currency,
+            )}{" "}
+            <span>
+              {currencyLabel} /{" "}
+              {locale === "mk" ? "месечно" : locale === "sq" ? "muaj" : "month"}
+            </span>
           </div>
           <p>{t.pricing.pro.desc}</p>
           <FieldGroup className="pro-team-selector">
@@ -115,7 +138,7 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
           </FieldGroup>
           <Link
             className="button button-dark"
-            href={`https://studio.opus.mk/upgrade?team=${tier.teamLimit}`}
+            href={`https://studio.opus.mk/upgrade?team=${tier.teamLimit}&currency=${currency}`}
           >
             {t.pricing.pro.cta}{" "}
             <span>

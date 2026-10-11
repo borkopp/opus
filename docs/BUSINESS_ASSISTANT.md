@@ -1,6 +1,6 @@
 # Business assistant
 
-Authorized on 16 September 2026 as a read-only Pro feature for beauty studio owners and managers. The dashboard entry is `/beauty/assistant`. This is separate from the dormant customer-facing AI front desk.
+Authorized on 16 September 2026 as a read-only Pro feature for beauty studio owners and managers. The dashboard entry is `/beauty/assistant`. This is separate from the dormant customer-facing AI Receptionist.
 
 ## Runtime
 

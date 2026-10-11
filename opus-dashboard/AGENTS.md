@@ -28,7 +28,7 @@ Do not infer active product scope from dormant schemas or old integrations. The 
 | Frontend       | Next.js 16 (App Router) with PPR (Partial Prerendering)                                        |
 | Deferred       | Native clients and autonomous AI foundations; preserve but do not expose or expand             |
 | Auth           | Better Auth email OTP through Convex                                                           |
-| AI             | OpenAI Luna (`gpt-6-luna`) via the Responses API for the configured Instagram frontdesk          |
+| AI             | OpenAI Luna (`gpt-6-luna`) via the Responses API for the configured Instagram receptionist          |
 | Voice AI       | Vapi or Retell AI (future)                                                                     |
 | Messaging      | Twilio (SMS + WhatsApp), Resend + Sender (transactional email)                                 |
 | Domain routing | Vercel — `proxy.ts` handles white-label subdomain routing                                      |
@@ -190,9 +190,9 @@ Website publication uses `websiteStatus` and is independent from dormant marketp
 
 ---
 
-## AI Frontdesk
+## AI Receptionist
 
-Instagram AI frontdesk implementation was explicitly authorized on September 24, 2026. Use OpenAI Luna, owner-supplied studio context, and explicit customer confirmation before creating a new booking. Follow [../docs/AI_FRONTDESK.md](../docs/AI_FRONTDESK.md). Keep claims conditional on verified provider configuration. WhatsApp and broader AI campaigns remain deferred; the removed public web-chat API stays disabled.
+Instagram AI Receptionist implementation was explicitly authorized on September 24, 2026. Use OpenAI Luna, owner-supplied studio context, and explicit customer confirmation before creating a new booking. Follow [../docs/AI_FRONTDESK.md](../docs/AI_FRONTDESK.md). Keep claims conditional on verified provider configuration. WhatsApp and broader AI campaigns remain deferred; the removed public web-chat API stays disabled.
 
 ### Confidence threshold
 

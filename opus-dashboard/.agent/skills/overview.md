@@ -133,7 +133,7 @@ Public booking inputs include an `orgId`, service, staff member, and time becaus
 
 Never call an external provider from a Convex mutation. Queue work or use an Action.
 
-Do not claim that email, SMS, WhatsApp, reminders, or AI actions were delivered unless the relevant provider is configured and the result is verified. AI front-desk code is P2 and must not be expanded or advertised during web stabilization without explicit authorization.
+Do not claim that email, SMS, WhatsApp, reminders, or AI actions were delivered unless the relevant provider is configured and the result is verified. AI Receptionist code is P2 and must not be expanded or advertised during web stabilization without explicit authorization.
 
 ## Code Organization
 

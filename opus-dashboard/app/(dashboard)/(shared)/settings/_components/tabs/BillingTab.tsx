@@ -21,6 +21,9 @@ import {
   type ProTeamLimit,
 } from "../../../../../../../shared/pro-pricing";
 import { formatBillingDate } from "@/lib/billing";
+import { parseBillingCurrency } from "../../../../../../../shared/billing-currency";
+import { useBillingCurrency } from "@/hooks/use-billing-currency";
+import { BillingCurrencySelector } from "@/components/settings/BillingCurrencySelector";
 
 export function BillingTab() {
   const { t, locale } = useDashboardI18n();
@@ -29,6 +32,11 @@ export function BillingTab() {
   const portal = useAction(api.billingActions.createPortal);
   const refresh = useAction(api.billingActions.refresh);
   const params = useSearchParams();
+  const {
+    currency,
+    ready: currencyReady,
+    selectCurrency,
+  } = useBillingCurrency(parseBillingCurrency(params.get("currency")));
   const returned = params.get("checkout") === "returned";
   const [chosenLimit, setChosenLimit] = useState<ProTeamLimit>();
   const selectedLimit =
@@ -78,7 +86,7 @@ export function BillingTab() {
       if (kind === "refresh") await refresh();
       else {
         const result = await (kind === "checkout"
-          ? checkout({ teamLimit: selectedLimit })
+          ? checkout({ teamLimit: selectedLimit, currency })
           : portal());
         window.location.assign(result.url);
       }
@@ -122,7 +130,8 @@ export function BillingTab() {
 
   return (
     <TabsContent value="billing" className="m-0">
-      {data === undefined ? (
+      {data === undefined ||
+      (!currencyReady && data.plan === "free" && !data.hasOpenSubscription) ? (
         <Skeleton className="h-64 w-full rounded-2xl" />
       ) : (
         <SettingsCard
@@ -141,6 +150,7 @@ export function BillingTab() {
                     onClick={() => void run("checkout")}
                     disabled={
                       pending !== null ||
+                      !currencyReady ||
                       !selectedTier?.checkoutAvailable ||
                       data.teamCount > selectedLimit
                     }
@@ -198,17 +208,25 @@ export function BillingTab() {
           }
         >
           <div className="flex flex-col gap-5">
-            <BillingPlanSummary data={data} />
+            <BillingPlanSummary data={data} currency={currency} />
             {data.canManage &&
               data.plan === "free" &&
               !data.hasOpenSubscription && (
-                <BillingPackageSelector
-                  tiers={data.tiers}
-                  value={selectedLimit}
-                  onChange={setChosenLimit}
-                  teamCount={data.teamCount}
-                  disabled={pending !== null}
-                />
+                <>
+                  <BillingCurrencySelector
+                    value={currency}
+                    onChange={selectCurrency}
+                    disabled={pending !== null}
+                  />
+                  <BillingPackageSelector
+                    tiers={data.tiers}
+                    value={selectedLimit}
+                    onChange={setChosenLimit}
+                    teamCount={data.teamCount}
+                    disabled={pending !== null}
+                    currency={currency}
+                  />
+                </>
               )}
             <p
               data-replay-public

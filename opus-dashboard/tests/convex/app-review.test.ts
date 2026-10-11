@@ -372,7 +372,7 @@ describe("isolated App Review access", () => {
       reviewer.query(internal.auth.assertPaidOrgRole, {
         orgId: binding.orgId,
         role: "owner",
-        feature: "AI front desk",
+        feature: "AI Receptionist",
       }),
     ).rejects.toThrow("unavailable");
     vi.stubEnv("APP_REVIEW_ENABLED", "false");

@@ -12,6 +12,7 @@ import { requireRole } from "./lib/auth";
 import { isAppReviewOrg, requireLiveStudio } from "./lib/appReview";
 import {
   externalCustomerIdForOrg,
+  billingCurrency,
   orgIdFromExternalCustomerId,
   polarConfig,
   polarSubscription,
@@ -69,6 +70,7 @@ export const getStatus = query({
       tiers: config.tiers.map((tier) => ({
         teamLimit: tier.teamLimit,
         monthlyPriceMinorUnits: tier.monthlyPriceMinorUnits,
+        monthlyPriceEurMinorUnits: tier.monthlyPriceEurMinorUnits,
         checkoutAvailable: checkoutAvailable && Boolean(tier.productId),
       })),
       portalAvailable: Boolean(
@@ -179,6 +181,7 @@ export const finishCheckout = internalMutation({
         url: v.string(),
         expiresAt: v.number(),
         productId: v.string(),
+        currency: v.optional(billingCurrency),
       }),
     ),
   },
@@ -201,7 +204,8 @@ export const finishCheckout = internalMutation({
     if (
       checkout &&
       (checkout.id !== account.checkoutId ||
-        checkout.productId !== account.checkoutProductId)
+        checkout.productId !== account.checkoutProductId ||
+        checkout.currency)
     )
       await ctx.db.insert("audit_log", {
         orgId,
@@ -209,7 +213,11 @@ export const finishCheckout = internalMutation({
         action: "billing.checkout_created",
         resourceType: "billing_accounts",
         resourceId: account._id,
-        after: { checkoutId: checkout.id, productId: checkout.productId },
+        after: {
+          checkoutId: checkout.id,
+          productId: checkout.productId,
+          ...(checkout.currency ? { currency: checkout.currency } : {}),
+        },
         createdAt: Date.now(),
       });
     return true;

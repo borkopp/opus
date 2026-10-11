@@ -48,7 +48,7 @@ function client() {
   const apiKey =
     process.env.AI_FRONTDESK_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
   if (process.env.AI_FRONTDESK_ENABLED !== "true" || !apiKey)
-    throw new ConvexError("The AI frontdesk provider is not configured yet.");
+    throw new ConvexError("The AI Receptionist provider is not configured yet.");
   return new OpenAI({ apiKey, timeout: 30_000, maxRetries: 0 });
 }
 
@@ -134,7 +134,7 @@ export const processConversation = internalAction({
           buildSystemPrompt(settings, studio).length >
         80_000
       )
-        throw new Error("Frontdesk context limit reached");
+        throw new Error("Receptionist context limit reached");
       const provider = client();
       const slots = new Map<
         string,

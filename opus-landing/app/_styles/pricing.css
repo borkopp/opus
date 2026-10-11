@@ -23,6 +23,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.pricing-currency-selector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 20px;
+  color: var(--color-muted-foreground);
+  font-size: 13px;
+}
+
 .pro-team-selector {
   --primary: var(--color-brand-primary);
   margin-top: 20px;

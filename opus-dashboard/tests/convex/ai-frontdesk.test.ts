@@ -142,7 +142,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Instagram frontdesk", () => {
+describe("Instagram receptionist", () => {
   test("persists studio context, omits secrets from status, and rejects cross-tenant and anonymous access", async () => {
     const t = createBackend(),
       a = await studio(t),

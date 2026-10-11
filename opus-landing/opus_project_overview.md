@@ -161,7 +161,7 @@ opus/
 | **Discovery Feed**        | `/` (page.tsx)          | ✅ Built — search, category filter (11 beauty categories), business cards with ratings            |
 | **Business Profile Page** | `/[slug]`               | ✅ Built — cover photo, gallery, bio, services list, location map, ratings/reviews, contact pills |
 | **Booking Flow**          | `/[slug]/book`          | ✅ Built — service selection → date/time picker → customer details → confirmation                 |
-| **AI Chat Widget**        | ChatWidget component    | ✅ Built — floating webchat with AI front-desk, shows on business profiles                        |
+| **AI Chat Widget**        | ChatWidget component    | ✅ Built — floating webchat with AI Receptionist, shows on business profiles                        |
 | **Mapbox Integration**    | BusinessMap component   | ✅ Built — interactive map on business profiles                                                   |
 | **Review Display**        | Profile page            | ✅ Built                                                                                          |
 | **User Accounts**         | `opus_users` table      | 🟡 Schema ready, login flow not yet wired                                                         |
@@ -169,7 +169,7 @@ opus/
 
 ---
 
-### 4.3 AI Front-Desk Agent
+### 4.3 AI Receptionist Agent
 
 The AI system is one of the key differentiators:
 
@@ -347,7 +347,7 @@ businesses (barbers, salons, spas, restaurants). Three apps in a monorepo:
 
 1. opus-dashboard (Next.js 16 + Convex) — B2B dashboard for business owners.
    Features: bookings, staff/service management, availability scheduling, CRM,
-   analytics, AI front-desk inbox, settings, payments (Stripe Connect), hospitality
+   analytics, AI Receptionist inbox, settings, payments (Stripe Connect), hospitality
    module (floor plan builder, reservations, table management).
 
 2. opus-mk (Next.js 16, symlinks to same Convex backend) — B2C marketplace.

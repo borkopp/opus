@@ -576,9 +576,9 @@ export const updateAiSettings = mutation({
   },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     if (org.industry !== "beauty_wellness")
-      throw new ConvexError("AI frontdesk is available for beauty studios.");
+      throw new ConvexError("AI Receptionist is available for beauty studios.");
 
     const settings = await ctx.db
       .query("org_settings")

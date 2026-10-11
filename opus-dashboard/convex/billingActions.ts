@@ -7,10 +7,16 @@ import type { Doc } from "./_generated/dataModel";
 import { action, internalAction } from "./_generated/server";
 import {
   billingReturnUrl,
+  billingCurrency,
   proTeamLimit,
   proTierForProduct,
   requirePolarConfig,
 } from "./lib/polar";
+import {
+  parseBillingCurrency,
+  type BillingCurrency,
+} from "../../shared/billing-currency";
+import { proPriceMinorUnits } from "../../shared/pro-pricing";
 
 function client() {
   const config = requirePolarConfig();
@@ -24,24 +30,30 @@ function client() {
 
 function checkoutUsesTier(
   checkout: Checkout,
-  tier: { productId: string; monthlyPriceMinorUnits: number },
+  tier: {
+    productId: string;
+    monthlyPriceMinorUnits: number;
+    monthlyPriceEurMinorUnits: number;
+  },
+  currency: BillingCurrency,
 ) {
   const prices =
     checkout.prices?.[tier.productId] ?? checkout.product?.prices ?? [];
-  const mkdPrices = prices.filter(
+  const selectedPrices = prices.filter(
     (price) =>
-      price.priceCurrency === "mkd" &&
+      price.priceCurrency === currency &&
       !("isArchived" in price && price.isArchived),
   );
   // Compare the purchased catalog price. A tax-inclusive checkout's net amount
   // can differ after the customer supplies a billing address.
   return (
     checkout.productId === tier.productId &&
-    checkout.currency === "mkd" &&
-    mkdPrices.length === 1 &&
-    mkdPrices[0].amountType === "fixed" &&
-    "priceAmount" in mkdPrices[0] &&
-    mkdPrices[0].priceAmount === tier.monthlyPriceMinorUnits
+    checkout.currency === currency &&
+    checkout.taxBehavior !== "exclusive" &&
+    selectedPrices.length === 1 &&
+    selectedPrices[0].amountType === "fixed" &&
+    "priceAmount" in selectedPrices[0] &&
+    selectedPrices[0].priceAmount === proPriceMinorUnits(tier, currency)
   );
 }
 
@@ -73,7 +85,7 @@ async function readSubscriptions(
       hasOpenSubscription ||= open(subscription);
       if (
         proTierForProduct(subscription.productId) &&
-        subscription.currency.toLowerCase() === "mkd" &&
+        parseBillingCurrency(subscription.currency.toLowerCase()) &&
         subscription.recurringInterval === "month" &&
         subscription.recurringIntervalCount === 1 &&
         Number.isSafeInteger(subscription.amount) &&
@@ -129,8 +141,14 @@ async function readSubscriptions(
 }
 
 export const createCheckout = action({
-  args: { teamLimit: v.optional(proTeamLimit) },
-  handler: async (ctx, { teamLimit = 4 }): Promise<{ url: string }> => {
+  args: {
+    teamLimit: v.optional(proTeamLimit),
+    currency: v.optional(billingCurrency),
+  },
+  handler: async (
+    ctx,
+    { teamLimit = 4, currency = "mkd" },
+  ): Promise<{ url: string }> => {
     const attemptId = crypto.randomUUID();
     const reservation = await ctx.runMutation(
       internal.billing.reserveCheckout,
@@ -139,6 +157,10 @@ export const createCheckout = action({
     try {
       const polar = client();
       const returnUrl = billingReturnUrl();
+      const successUrl = new URL(returnUrl);
+      successUrl.searchParams.set("checkout", "returned");
+      successUrl.searchParams.set("currency", currency);
+      successUrl.searchParams.set("team", String(teamLimit));
       const current = await readSubscriptions(polar, reservation.account);
       if (current.hasOpenSubscription) {
         await ctx.runMutation(internal.billing.requestSync, {
@@ -153,22 +175,22 @@ export const createCheckout = action({
       const products = await Promise.all(
         tiers.map(async (tier) => {
           const product = await polar.products.get({ id: tier.productId });
-          const mkdPrices = product.prices.filter(
+          const selectedPrices = product.prices.filter(
             (price) =>
-              price.priceCurrency === "mkd" &&
+              price.priceCurrency === currency &&
               !("isArchived" in price && price.isArchived),
           );
           // Fail closed if the advertised package cannot be purchased at its
-          // exact monthly MKD price. Provider amounts are already minor units.
+          // exact monthly price in the selected currency.
           if (
             !product.isRecurring ||
             product.isArchived ||
             product.recurringInterval !== "month" ||
             product.recurringIntervalCount !== 1 ||
-            mkdPrices.length !== 1 ||
-            mkdPrices[0].amountType !== "fixed" ||
-            !("priceAmount" in mkdPrices[0]) ||
-            mkdPrices[0].priceAmount !== tier.monthlyPriceMinorUnits
+            selectedPrices.length !== 1 ||
+            selectedPrices[0].amountType !== "fixed" ||
+            !("priceAmount" in selectedPrices[0]) ||
+            selectedPrices[0].priceAmount !== proPriceMinorUnits(tier, currency)
           )
             throw new ConvexError("BILLING_UNAVAILABLE");
           return { tier, product };
@@ -182,6 +204,15 @@ export const createCheckout = action({
       });
       if (
         organization.subscriptionSettings.allowMultipleSubscriptions ||
+        products.some(({ product }) =>
+          product.prices.some(
+            (price) =>
+              price.priceCurrency === currency &&
+              !price.isArchived &&
+              (price.taxBehavior ?? organization.defaultTaxBehavior) !==
+                "inclusive",
+          ),
+        ) ||
         products.some(
           ({ product }) =>
             product.organizationId !== selected.product.organizationId,
@@ -196,9 +227,9 @@ export const createCheckout = action({
           id: reservation.account.checkoutId,
         });
         if (checkout.status === "open") {
-          if (checkoutUsesTier(checkout, reservation.tier))
+          if (checkoutUsesTier(checkout, reservation.tier, currency))
             return { url: checkout.url };
-          // Reuse the same payment session when a buyer changes the slider.
+          // Reuse the payment session when a buyer changes package or currency.
           if (
             checkout.products.some(
               (product) => product.id === reservation.tier.productId,
@@ -208,10 +239,11 @@ export const createCheckout = action({
               id: checkout.id,
               checkoutUpdate: {
                 productId: reservation.tier.productId,
-                currency: "mkd",
+                currency,
+                successUrl: successUrl.toString(),
               },
             });
-            if (!checkoutUsesTier(updated, reservation.tier))
+            if (!checkoutUsesTier(updated, reservation.tier, currency))
               throw new ConvexError("BILLING_UNAVAILABLE");
             await ctx.runMutation(internal.billing.finishCheckout, {
               orgId: reservation.orgId,
@@ -221,6 +253,7 @@ export const createCheckout = action({
                 url: updated.url,
                 expiresAt: updated.expiresAt.getTime(),
                 productId: reservation.tier.productId,
+                currency,
               },
             });
             return { url: updated.url };
@@ -248,12 +281,12 @@ export const createCheckout = action({
         isBusinessCustomer: true,
         allowTrial: false,
         allowDiscountCodes: false,
-        // Keep Macedonian pricing independent of the Convex server's IP.
-        currency: "mkd",
-        successUrl: `${returnUrl}&checkout=returned`,
+        // Use the website selection, independent of the Convex server's IP.
+        currency,
+        successUrl: successUrl.toString(),
         returnUrl,
       });
-      if (!checkoutUsesTier(checkout, reservation.tier))
+      if (!checkoutUsesTier(checkout, reservation.tier, currency))
         throw new ConvexError("BILLING_UNAVAILABLE");
       const saved = await ctx.runMutation(internal.billing.finishCheckout, {
         orgId: reservation.orgId,
@@ -263,6 +296,7 @@ export const createCheckout = action({
           url: checkout.url,
           expiresAt: checkout.expiresAt.getTime(),
           productId: reservation.tier.productId,
+          currency,
         },
       });
       if (!saved) throw new ConvexError("CHECKOUT_PENDING");

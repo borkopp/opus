@@ -34,12 +34,55 @@ studios are preserved and are not automatically enrolled or charged.
 
 ## Configure the sandbox first
 
+### MKD and EUR prices
+
+The October 11 currency implementation uses the fixed price contract in
+`shared/pro-pricing.ts`, with amounts stored as integers in minor units.
+
+| Team limit | MKD/month | EUR/month | EUR API minor units |
+| --- | --- | --- | --- |
+| 4 | 1,490 | 24.90 | 2490 |
+| 5 | 1,790 | 29.90 | 2990 |
+| 6 | 2,090 | 34.90 | 3490 |
+| 8 | 2,490 | 39.90 | 3990 |
+| 12 | 3,290 | 54.90 | 5490 |
+
+Add an EUR fixed price to each existing monthly product, preserving its MKD
+price and product ID. Both currencies must use inclusive tax, either explicitly
+on the price or inherited from the organization's default. The backend validates
+all offered products in the selected currency before creating or reusing checkout.
+A missing, duplicate, incorrect or tax-exclusive price blocks checkout rather than
+silently falling back to another currency or amount.
+
+The website uses Vercel's `x-vercel-ip-country` header for initial selection.
+EUR-country visitors see EUR; other countries or missing geolocation use MKD.
+Language is independent of currency. The `opus-billing-currency` functional cookie
+stores a manual choice for one year and is shared across `opus.mk` hosts. Upgrade
+links carry `currency=mkd|eur` together with team size through authentication and
+onboarding. Subscription settings also detect currency through the uncached
+`/api/billing/currency` endpoint when no preference or upgrade selection exists.
+
+Checkout receives the selected currency explicitly, so the Convex server's IP
+cannot override the advertised price. Existing subscribers continue to see their
+provider-confirmed currency and amount; visiting from another country does not
+alter their subscription. Reconciliation accepts only MKD/EUR monthly subscriptions
+on the server-configured product IDs. Amounts remain grandfathered from Polar;
+current catalogue prices are checked for new purchases, not retroactively applied
+to existing subscribers. Signed webhooks, owner-only billing, expiry and tenant
+boundaries remain required.
+
+Test both currencies in sandbox, including switching an open checkout, signed
+webhook activation, renewal and expiry. Release the compatible backend before the
+dashboard and landing frontends. Product setup alone does not prove payment or
+production activation.
+
 1. Create a dedicated user and organization at
    [Polar Sandbox](https://sandbox.polar.sh). Production credentials and products
    do not work there. Use a separate local/development Convex deployment; do not
    change the production deployment to sandbox mode.
 2. Create five fixed-price, monthly Pro products, each billed every **1 month**
-   in **MKD**, without trials, meters, seat billing, or one-time charges:
+   in **MKD**, and add each package's **EUR** price from the table above, without
+   trials, meters, seat billing, or one-time charges:
 
    | Active team limit | MKD/month | API minor units | Convex environment variable |
    | --- | --- | --- | --- |
@@ -107,7 +150,7 @@ body, delivery ID, and a timestamp within five minutes.
 The browser may select only 4, 5, 6, 8, or 12 members. The server chooses the
 corresponding product, studio identity, owner email, currency, and return URLs.
 It checks existing active team size and each configured product's exact monthly
-MKD price before opening checkout. Polar checkout offers the configured packages;
+price in the selected MKD/EUR currency before opening checkout. Polar checkout offers the configured packages;
 changing the selection reuses the same open session. Browser input cannot supply
 a tenant, amount, arbitrary product, capacity, or portal customer. A Polar customer is keyed by the studio's server-derived external ID,
 not matched by email. Review multi-studio owners in sandbox: Polar's customer
@@ -210,6 +253,28 @@ component preview, including 390px and 320px widths; the preview was removed.
 The authenticated local subscription screen shows the provider-confirmed
 4-person limit. No real payment, production checkout, or package migration was
 performed as part of this update.
+
+### MKD and EUR currency support — October 11, 2026
+
+Each of the five production and sandbox products now has the fixed EUR price
+listed above alongside its existing MKD price. Product IDs, existing subscription
+prices and inclusive-tax settings were preserved. Both catalogues were verified
+through Polar's API after saving the changes.
+
+Ten sandbox checkouts (five packages in each currency) returned the exact
+advertised totals, including German and Macedonian billing countries. Switching
+currency and package reused the same sandbox checkout with the matching total. The
+implementation passed 781 tests (2 skipped), frontend/backend type checks, lint
+and both production builds. Browser checks at 1440px, 390px and 320px across all
+three website languages confirmed country detection, manual selection, all
+package amounts, preserved upgrade links and preference persistence. Automated
+signed-webhook tests cover Pro
+activation in both currencies for every package, plus EUR renewal, scheduled
+cancellation and expiry.
+
+The currency code has not been deployed. No payment was submitted and no real
+EUR subscription activation was performed during this change. Deploy the
+compatible Convex backend before publishing the dashboard and landing changes.
 
 ### Production account setup recorded September 25, 2026
 

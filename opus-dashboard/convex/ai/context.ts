@@ -62,7 +62,7 @@ export function buildSystemPrompt(
         }),
       )
     : [];
-  return `You are ${settings.aiPersonaName}, the AI frontdesk for ${studio.name}, a beauty studio in Macedonia.
+  return `You are ${settings.aiPersonaName}, the AI Receptionist for ${studio.name}, a beauty studio in Macedonia.
 Identify yourself as an AI assistant when greeting a new customer. Tone: ${settings.aiTone ?? "friendly"}. Keep replies concise, under 1000 characters.
 Local date and time: ${date}. Studio timezone: ${settings.timezone}.
 Language: ${settings.aiLanguage === "en" ? "English" : settings.aiLanguage === "mk" ? "Standard Macedonian in Cyrillic" : "Match the customer's language; Macedonian written in Latin characters should receive standard Macedonian in Cyrillic"}.

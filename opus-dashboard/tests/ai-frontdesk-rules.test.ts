@@ -14,7 +14,7 @@ const now = Date.parse("2026-09-28T07:30:00Z"); // Monday 09:30 in Skopje
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe("AI frontdesk trust boundaries", () => {
+describe("AI Receptionist trust boundaries", () => {
   test("verifies the exact signed body and fails closed without a secret", async () => {
     const raw = '{"object":"instagram","entry":[]}';
     const secret = "test-instagram-app-secret";

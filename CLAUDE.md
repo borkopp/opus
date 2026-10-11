@@ -178,7 +178,7 @@ lib/                     — Pure functions, configs, type helpers — no React,
 
 ## Dormant AI Agent Foundations
 
-AI front-desk functionality is P2 and is not part of the active product promise. Preserve its safety foundations, but do not expand or market it without explicit authorization and verified provider configuration.
+AI Receptionist functionality is P2 and is not part of the active product promise. Preserve its safety foundations, but do not expand or market it without explicit authorization and verified provider configuration.
 
 - Every AI response must include a `confidenceScore` (0–1). Below `org_settings.aiConfidenceThreshold` (default `0.7`) → flag as `handed_off`, notify a human.
 - AI must never directly mutate bookings. AI calls Convex Actions, which validate and call mutations.

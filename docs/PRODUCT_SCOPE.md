@@ -95,7 +95,7 @@ configuration boundaries.
 ### Studio settings and personal preferences
 
 The October 7 settings simplification groups studio controls into Studio,
-Booking, Notifications, AI front desk and Subscription. Studio combines profile,
+Booking, Notifications, AI Receptionist and Subscription. Studio combines profile,
 photos and location; all existing currency choices (MKD, EUR, USD and GBP) remain.
 Timezone, public locale, country and existing advanced AI values are retained in
 storage when their controls are hidden. The dormant surge-pricing tab and unused
@@ -127,7 +127,7 @@ the services become bookable. Missing or ambiguous prices must be filled in.
 Imports create services for the owner and never overwrite existing services.
 
 This non-conversation workflow records extraction drafts in `service_imports`
-and actions in `audit_log`; it does not create frontdesk conversations or
+and actions in `audit_log`; it does not create receptionist conversations or
 `ai_messages`. Images are sent transiently to OpenAI and not saved to OPUS
 storage. The backend requires `OPENAI_API_KEY`; `SERVICE_IMPORT_MODEL` may
 override the default `gpt-6-luna`. Imports are limited to 50 services per photo
@@ -157,7 +157,7 @@ does not establish real photo accuracy or production availability.
 
 ### P2 — explicitly deferred
 
-- autonomous AI campaigns and channels beyond the authorized Instagram frontdesk;
+- autonomous AI campaigns and channels beyond the authorized Instagram receptionist;
 - automated gap analysis and campaigns;
 - loyalty;
 - international expansion;
@@ -193,6 +193,16 @@ Activation requires configured credentials, a recurring product, and signed
 webhook delivery; local implementation is not a claim of live billing.
 AI/SMS credit top-ups, yearly plans, and collecting appointment payments for
 studios are not included. See [POLAR_BILLING.md](POLAR_BILLING.md).
+
+MKD and EUR subscription pricing was authorized on October 11, 2026. The marketing
+site and Subscription settings detect EUR-country visitors from Vercel's country
+header, with MKD as the fallback, and offer a manual currency selector. A functional
+cookie preserves the choice across OPUS web hosts; upgrade links retain currency
+and team size through sign-in and onboarding. Fixed prices are shared between the
+website and backend, and checkout validates Polar's exact currency, catalogue price
+and inclusive-tax configuration. Both MKD and EUR provider-confirmed subscriptions
+grant the configured Pro team capacity. This does not change studio service prices
+or authorize other international product expansion.
 
 ### Authorized Pro appointment SMS
 
@@ -301,7 +311,7 @@ It lives in the beauty dashboard at `/beauty/assistant` and is restricted to
 paid-plan owners and managers. It answers questions using tenant-scoped booking
 analytics, attaches inspectable reports, and proposes experiments. It cannot
 change appointments, contact customers, launch campaigns, or infer profit from
-appointment prices. This authorization does not enable the AI front desk or the
+appointment prices. This authorization does not enable the AI Receptionist or the
 dormant marketplace.
 
 New analyses require the Convex `BUSINESS_ANALYST_ENABLED=true` flag and a
@@ -309,15 +319,15 @@ New analyses require the Convex `BUSINESS_ANALYST_ENABLED=true` flag and a
 See [BUSINESS_ASSISTANT.md](BUSINESS_ASSISTANT.md) for metric definitions,
 allowances, configuration, and rollout checks.
 
-### Authorized Instagram AI frontdesk
+### Authorized Instagram AI Receptionist
 
-Instagram frontdesk implementation was explicitly authorized on September 24,
+Instagram receptionist implementation was explicitly authorized on September 24,
 2026, including appointment creation in DMs after a separate customer
 confirmation, and owner-written studio context for product, aftercare and policy
 questions. The user selected OpenAI GPT-6 Luna for this workload.
 
 Paid beauty studios can configure context and connect their own professional
-Instagram account under Settings → AI front desk. A signed webhook durably
+Instagram account under Settings → AI Receptionist. A signed webhook durably
 records messages; the assistant answers from studio facts, checks live slots,
 and proposes appointments. Only a later explicit customer confirmation can
 create a booking, after atomic availability and price checks. Missing facts,

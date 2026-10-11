@@ -39,9 +39,9 @@ export const ownerAccess = internalQuery({
   args: {},
   handler: async (ctx) => {
     const auth = await requireRole(ctx, undefined, "owner");
-    requirePaidPlan(auth.org, "AI front desk");
+    requirePaidPlan(auth.org, "AI Receptionist");
     if (auth.org.industry !== "beauty_wellness")
-      throw new ConvexError("AI frontdesk is available for beauty studios.");
+      throw new ConvexError("AI Receptionist is available for beauty studios.");
     return { orgId: auth.orgId, userId: auth.user._id };
   },
 });

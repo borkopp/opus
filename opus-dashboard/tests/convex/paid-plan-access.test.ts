@@ -55,7 +55,7 @@ describe("paid-plan feature access", () => {
         aiPersonaName: "Aria",
         aiConfidenceThreshold: 0.7,
       }),
-    ).rejects.toThrow("AI front desk requires the paid plan");
+    ).rejects.toThrow("AI Receptionist requires the paid plan");
 
     await expect(
       owner.query(api.ai.gapOptimizerHelpers.getTodaySummary, { orgId }),
@@ -74,14 +74,14 @@ describe("paid-plan feature access", () => {
         startMs: 0,
         endMs: Date.now(),
       }),
-    ).rejects.toThrow("AI front desk requires the paid plan");
+    ).rejects.toThrow("AI Receptionist requires the paid plan");
 
     await expect(
       owner.query(api.ai.conversations.listConversations, { orgId }),
-    ).rejects.toThrow("AI front desk requires the paid plan");
+    ).rejects.toThrow("AI Receptionist requires the paid plan");
     await expect(
       owner.action(api.ai.agent.preview, { question: "Hello" }),
-    ).rejects.toThrow("AI front desk requires the paid plan");
+    ).rejects.toThrow("AI Receptionist requires the paid plan");
   });
 
   test("manually setting paid unlocks authenticated settings and inbox queries", async () => {

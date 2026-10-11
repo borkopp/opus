@@ -81,7 +81,7 @@ export const PUSH_EVENT_OPTIONS = [
   { key: "noShows", en: "No-shows", mk: "Непојавувања", sq: "Mosparaqitje" },
   {
     key: "aiHandoffs",
-    en: "AI front desk needs attention",
+    en: "AI Receptionist needs attention",
     mk: "AI рецепцијата бара внимание",
     sq: "Recepsioni AI kërkon vëmendje",
   },

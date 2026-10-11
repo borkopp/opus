@@ -457,7 +457,7 @@ export default defineSchema({
     dashboardSoundEnabled: v.optional(v.boolean()), // chime sound on new notification
     dashboardToastEnabled: v.optional(v.boolean()), // inline toast popup on new notification
 
-    // AI front desk
+    // AI Receptionist
     aiEnabled: v.boolean(),
     aiPersonaName: v.string(), // "Aria" — shown to customers
     aiConfidenceThreshold: v.number(), // 0–1; below this → human handoff

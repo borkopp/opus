@@ -12,9 +12,9 @@ export const reserve = internalMutation({
       undefined,
       "owner",
     );
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     if (org.industry !== "beauty_wellness" || !providerReadiness().ai)
-      throw new ConvexError("The AI frontdesk provider is not configured yet.");
+      throw new ConvexError("The AI Receptionist provider is not configured yet.");
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", orgId))

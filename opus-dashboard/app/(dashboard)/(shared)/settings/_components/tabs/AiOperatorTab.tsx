@@ -169,7 +169,7 @@ export function AiOperatorTab({
       });
       toast.success(
         t(
-          "AI front-desk settings saved",
+          "AI Receptionist settings saved",
           "Поставките за AI рецепција се зачувани",
           "Cilësimet e recepsionit AI u ruajtën",
         ),
@@ -179,7 +179,7 @@ export function AiOperatorTab({
         error instanceof Error
           ? error.message
           : t(
-              "Failed to save AI front-desk settings.",
+              "Failed to save AI Receptionist settings.",
               "Не успеа зачувувањето на поставките за AI рецепција.",
               "Ruajtja e cilësimeve të recepsionit AI dështoi.",
             ),
@@ -206,7 +206,7 @@ export function AiOperatorTab({
     return (
       <TabsContent value="ai" className="m-0">
         <ProFeatureNotice
-          title={t("AI front desk", "AI рецепција", "Recepsioni AI")}
+          title={t("AI Receptionist", "AI рецепција", "Recepsioni AI")}
           description={t(
             "Connect Instagram and answer client questions with your studio information. Available with Pro after messaging setup.",
             "Поврзете Instagram и одговарајте на прашања со податоците за студиото. Достапно со Pro по поврзување на сервисите.",
@@ -220,7 +220,7 @@ export function AiOperatorTab({
     <TabsContent value="ai" className="m-0">
       <fieldset disabled={controlsDisabled} className="min-w-0">
         <SettingsCard
-          title={t("AI front desk", "AI рецепција", "Recepsioni AI")}
+          title={t("AI Receptionist", "AI рецепција", "Recepsioni AI")}
           description={t(
             "Connect Instagram, choose whether to reply automatically, and add the facts clients should know.",
             "Поврзете Instagram, вклучете автоматски одговори и додајте ги информациите за клиентите.",

@@ -16,7 +16,15 @@ export function clientBookingPath(
   query: Record<string, string | string[] | undefined> = {},
 ) {
   const params = new URLSearchParams();
-  for (const key of ["service", "staff", "date", "at", "offer"] as const) {
+  for (const key of [
+    "service",
+    "staff",
+    "date",
+    "at",
+    "offer",
+    "slotStaff",
+    "resume",
+  ] as const) {
     const value = Array.isArray(query[key]) ? query[key][0] : query[key];
     if (value) params.set(key, value);
   }
@@ -37,4 +45,15 @@ export function clientSignInDestination(callbackUrl?: string) {
   return pathname === "/account" || pathname.startsWith("/book/")
     ? callbackUrl
     : "/account";
+}
+
+export function clientSignInPath(callbackUrl?: string) {
+  const destination = clientSignInDestination(callbackUrl);
+  const params = new URLSearchParams({ callbackUrl: destination });
+  const language = new URL(
+    destination,
+    "https://studio.opus.mk",
+  ).searchParams.get("lang");
+  if (isLocale(language)) params.set("lang", language);
+  return `/account/sign-in?${params}`;
 }

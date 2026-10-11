@@ -7,14 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import s from "../../clarity.module.css";
 export function FrontDeskWidget({ paid }: { paid: boolean }) {
   const { t } = useDashboardI18n();
-  // TODO: Connect the deferred front desk only after explicit product authorization
+  // TODO: Connect the deferred receptionist only after explicit product authorization
   // and provider verification. This concept has no live conversations or actions.
   return (
     <WidgetFrame
       replayPublicSubtitle
       replayPublicTitle
       delay={90}
-      title={t("AI front desk", "AI рецепција", "Recepsioni me AI")}
+      title={t("AI Receptionist", "AI рецепција", "Recepsioni me AI")}
       subtitle={t(
         "Client conversations and team handoffs",
         "Разговори со клиенти и предавање на тимот",

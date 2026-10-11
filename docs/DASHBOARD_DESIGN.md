@@ -31,7 +31,7 @@ Appointment links open the selected date and booking in the calendar, where the
 existing completion, cancellation, no-show and rescheduling actions remain.
 
 The business assistant and manual opening-recovery widgets use real access and
-configuration state. The deferred AI front desk is visibly marked `mock`, with a
+configuration state. The deferred AI Receptionist is visibly marked `mock`, with a
 TODO. Deferred settings have the same label; no new channel is enabled.
 
 ## Preview and verification

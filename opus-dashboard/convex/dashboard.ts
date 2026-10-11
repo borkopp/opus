@@ -568,7 +568,7 @@ export const getAIPerformance = query({
   },
   handler: async (ctx, args) => {
     const { org } = await requireAuth(ctx, args.orgId);
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))

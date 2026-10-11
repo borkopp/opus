@@ -7,7 +7,7 @@ import { aiReplySchema, parseReply } from "../convex/ai/rules";
 // Opt-in provider smoke test: synthetic studio facts only, no Instagram sends.
 // RUN_FRONTDESK_LIVE_TEST=true node --env-file=.env.local node_modules/vitest/vitest.mjs run tests/ai-frontdesk-live.test.ts
 describe.skipIf(process.env.RUN_FRONTDESK_LIVE_TEST !== "true")(
-  "live Luna frontdesk",
+  "live Luna receptionist",
   () => {
     const instructions = buildSystemPrompt(
       {

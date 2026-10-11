@@ -1,11 +1,11 @@
 ---
 name: ai-frontdesk
-description: Covers implementation of the AI front-desk agent in Omni-Service OS. Use when writing code that handles inbound customer messages (WhatsApp, Instagram, webchat), calls Claude, manages conversation state, triggers bookings autonomously, or handles the human handoff flow.
+description: Covers implementation of the AI Receptionist agent in Omni-Service OS. Use when writing code that handles inbound customer messages (WhatsApp, Instagram, webchat), calls Claude, manages conversation state, triggers bookings autonomously, or handles the human handoff flow.
 ---
 
-# AI Front Desk
+# AI Receptionist
 
-The AI front desk uses Claude (`claude-sonnet-4-6`) to autonomously handle inbound customer messages and book appointments without human intervention. It operates across WhatsApp, Instagram DM, and webchat.
+The AI Receptionist uses Claude (`claude-sonnet-4-6`) to autonomously handle inbound customer messages and book appointments without human intervention. It operates across WhatsApp, Instagram DM, and webchat.
 
 ## Architecture overview
 

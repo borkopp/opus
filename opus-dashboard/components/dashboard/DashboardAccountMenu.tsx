@@ -206,7 +206,7 @@ export function DashboardAccountMenu({
             <Link data-replay-public href="/ai-inbox">
               <MessagesSquare />
               {t(
-                "AI frontdesk inbox",
+                "AI Receptionist inbox",
                 "Сандаче на AI рецепција",
                 "Kutia e AI recepsionit",
               )}

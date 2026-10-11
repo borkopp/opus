@@ -88,7 +88,7 @@ npm run build
 | Backend / DB | Convex (real-time DB, mutations, queries, actions, scheduled jobs)                                |
 | Frontend     | Next.js 16 (App Router, PPR)                                                                      |
 | Auth         | Better Auth email OTP through Convex (`staff_members` is the permission boundary)                 |
-| AI frontdesk | OpenAI Luna with Instagram Login messaging; availability requires verified provider configuration |
+| AI Receptionist | OpenAI Luna with Instagram Login messaging; availability requires verified provider configuration |
 | Styling      | Tailwind CSS v4, shadcn/ui                                                                        |
 
 ---
@@ -112,12 +112,12 @@ Next.js App Router
 Convex Backend (convex/)
   ├── schema.ts      — single source of truth for all data shapes
   ├── bookings/      — booking mutations, slot conflict checks
-  ├── ai/            — configured Instagram frontdesk, studio context and confirmed DM bookings
+  ├── ai/            — configured Instagram receptionist, studio context and confirmed DM bookings
   ├── notifications/ — provider-backed queue; availability depends on configuration
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend plus Sender for production transactional email; configured Twilio for Pro appointment SMS; configured OpenAI and Meta integrations for the Instagram frontdesk; WhatsApp remains deferred
+External APIs: Resend plus Sender for production transactional email; configured Twilio for Pro appointment SMS; configured OpenAI and Meta integrations for the Instagram receptionist; WhatsApp remains deferred
 ```
 
 ---
@@ -193,9 +193,9 @@ lib/                     — Pure functions, configs, type helpers — no React,
 
 ---
 
-## AI Frontdesk
+## AI Receptionist
 
-Instagram AI frontdesk implementation was explicitly authorized on September 24, 2026. It uses OpenAI Luna and may complete new bookings only after the customer confirms the exact appointment summary. See [docs/AI_FRONTDESK.md](docs/AI_FRONTDESK.md) for setup and validation boundaries. Keep claims conditional on verified provider configuration.
+Instagram AI Receptionist implementation was explicitly authorized on September 24, 2026. It uses OpenAI Luna and may complete new bookings only after the customer confirms the exact appointment summary. See [docs/AI_FRONTDESK.md](docs/AI_FRONTDESK.md) for setup and validation boundaries. Keep claims conditional on verified provider configuration.
 
 WhatsApp remains deferred, and the removed public web-chat API must stay disabled. Broader AI campaigns still require explicit authorization.
 

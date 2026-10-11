@@ -21,7 +21,7 @@ export const listConversations = query({
   },
   handler: async (ctx, args) => {
     const { org } = await requireAuth(ctx, args.orgId);
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const scoped = args.status
       ? ctx.db
           .query("ai_conversations")
@@ -67,7 +67,7 @@ export const getConversation = query({
   args: { orgId: v.id("orgs"), conversationId: v.id("ai_conversations") },
   handler: async (ctx, args) => {
     const { org } = await requireAuth(ctx, args.orgId);
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId) return null;
     const customer = conv.customerId ? await ctx.db.get(conv.customerId) : null;
@@ -82,7 +82,7 @@ export const resolveConversation = mutation({
   args: { orgId: v.id("orgs"), conversationId: v.id("ai_conversations") },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "staff");
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId)
       throw new ConvexError("Conversation not found.");
@@ -111,7 +111,7 @@ export const handoffConversation = mutation({
   },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "staff");
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId)
       throw new ConvexError("Conversation not found.");
@@ -123,7 +123,7 @@ export const resumeConversation = mutation({
   args: { orgId: v.id("orgs"), conversationId: v.id("ai_conversations") },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "staff");
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId);
     if (!conv || conv.orgId !== args.orgId)
       throw new ConvexError("Conversation not found.");
@@ -194,7 +194,7 @@ export const replyAsStaff = mutation({
   },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "staff");
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId),
       connection = await connectionForOrg(ctx, args.orgId);
     if (!conv || conv.orgId !== args.orgId || conv.channel !== "instagram")

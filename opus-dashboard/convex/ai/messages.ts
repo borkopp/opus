@@ -6,7 +6,7 @@ export const listMessages = query({
   args: { orgId: v.id("orgs"), conversationId: v.id("ai_conversations") },
   handler: async (ctx, args) => {
     const { org } = await requireAuth(ctx, args.orgId);
-    requirePaidPlan(org, "AI front desk");
+    requirePaidPlan(org, "AI Receptionist");
     const conversation = await ctx.db.get(args.conversationId);
     if (!conversation || conversation.orgId !== args.orgId) return [];
     const messages = await ctx.db

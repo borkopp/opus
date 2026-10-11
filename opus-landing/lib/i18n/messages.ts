@@ -198,7 +198,7 @@ export const mkMessages = {
     subheading:
       "AI одговара на пораки, ви дава препораки и ви помага подобро да го разберете вашиот бизнис.",
     usageNote:
-      "AI Chat, AI Frontdesk и останатите алатки се вклучени во Pro. Користете ги директно од вашата сметка.",
+      "AI Chat, AI Receptionist и останатите алатки се вклучени во Pro. Користете ги директно од вашата сметка.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
@@ -237,8 +237,8 @@ export const mkMessages = {
       ],
     },
     receptionist: {
-      name: "AI Frontdesk",
-      title: ["AI Frontdesk"],
+      name: "AI Receptionist",
+      title: ["AI Receptionist"],
       description:
         "AI одговара на Instagram пораките додека вие се посветувате на клиентите. Одговара за услуги, цени и слободни термини, а закажува откако клиентот ќе потврди.",
       note: "Поврзете го вашиот професионален Instagram профил од поставките.",
@@ -311,7 +311,7 @@ export const mkMessages = {
     heading: "Колку чини OPUS?",
     comparePlans: "Споредете ги сите функции",
     subheading:
-      "Започнете бесплатно. Pro започнува од 1.490 ден. месечно за тим до 4 членови. Изберете ја големината на вашиот тим.",
+      "Започнете бесплатно. Pro започнува од {proPrice} месечно за тим до 4 членови. Изберете ја големината на вашиот тим.",
     note: "Онлајн закажувањето, веб-страницата и календарот се бесплатни. Pro е по избор.",
     free: {
       name: "Бесплатен план",
@@ -357,7 +357,7 @@ export const mkMessages = {
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
         "Прашајте го AI за вашиот бизнис и добијте препораки и анализи. 200 одговори месечно, од кои до 20 детални анализи.",
-      aiReceptionistTitle: "AI Frontdesk",
+      aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
         "AI одговара на Instagram пораките додека вие се посветувате на клиентите.",
       end: "Користете ги Pro алатките директно од вашата сметка.",
@@ -417,7 +417,7 @@ export const mkMessages = {
       {
         question: "Кога ми треба Pro?",
         answer:
-          "За AI Chat, AI Frontdesk, поголем тим, историја на клиенти и потсетници. Месечните цени на Pro се: 1.490 ден. за до 4 членови, 1.790 ден. за до 5, 2.090 ден. за до 6, 2.490 ден. за до 8 или 3.290 ден. за до 12. Сите Pro функции се вклучени во секоја опција. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
+          "За AI Chat, AI Receptionist, поголем тим, историја на клиенти и потсетници. Месечните цени на Pro се: {proPrices}. Сите Pro функции се вклучени во секоја опција. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
       },
       {
         question: "Дали OPUS сам испраќа понуди за слободни термини?",
@@ -702,7 +702,7 @@ export const enMessages: Messages = {
     subheading:
       "AI answers messages, gives you recommendations, and helps you understand your business.",
     usageNote:
-      "AI Chat, AI Frontdesk, and the other tools are included in Pro. Use them directly from your account.",
+      "AI Chat, AI Receptionist, and the other tools are included in Pro. Use them directly from your account.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
@@ -741,8 +741,8 @@ export const enMessages: Messages = {
       ],
     },
     receptionist: {
-      name: "AI Frontdesk",
-      title: ["AI Frontdesk"],
+      name: "AI Receptionist",
+      title: ["AI Receptionist"],
       description:
         "AI answers your Instagram DMs while you focus on clients. It handles questions about services, prices, and available times, and books after the client confirms.",
       note: "Connect your professional Instagram account in settings.",
@@ -814,7 +814,7 @@ export const enMessages: Messages = {
     heading: "How much does OPUS cost?",
     comparePlans: "Compare all features",
     subheading:
-      "Start for free. Pro starts at 1,490 MKD per month for up to 4 team members. Choose your team size.",
+      "Start for free. Pro starts at {proPrice} per month for up to 4 team members. Choose your team size.",
     note: "Online booking, your website, and your calendar are free. Pro is optional.",
     free: {
       name: "Free",
@@ -860,7 +860,7 @@ export const enMessages: Messages = {
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
         "Ask AI about your business and get recommendations and insights. 200 answers per month, including up to 20 detailed analyses.",
-      aiReceptionistTitle: "AI Frontdesk",
+      aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
         "AI answers your Instagram DMs while you focus on clients.",
       end: "Use your Pro tools directly from your account.",
@@ -920,7 +920,7 @@ export const enMessages: Messages = {
       {
         question: "When do I need Pro?",
         answer:
-          "For AI Chat, AI Frontdesk, a larger team, client history, and reminders. Pro monthly prices are: 1,490 MKD for up to 4 members, 1,790 MKD for up to 5, 2,090 MKD for up to 6, 2,490 MKD for up to 8, or 3,290 MKD for up to 12. Every option includes all Pro features. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
+          "For AI Chat, AI Receptionist, a larger team, client history, and reminders. Pro monthly prices are: {proPrices}. Every option includes all Pro features. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
       },
       {
         question: "Does OPUS send offers for empty slots by itself?",
@@ -1203,7 +1203,7 @@ export const sqMessages: Messages = {
     subheading:
       "AI u përgjigjet mesazheve, ju jep rekomandime dhe ju ndihmon ta kuptoni më mirë biznesin tuaj.",
     usageNote:
-      "AI Chat, AI Frontdesk dhe veglat e tjera janë të përfshira në Pro. Përdorini direkt nga llogaria juaj.",
+      "AI Chat, AI Receptionist dhe veglat e tjera janë të përfshira në Pro. Përdorini direkt nga llogaria juaj.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
@@ -1242,8 +1242,8 @@ export const sqMessages: Messages = {
       ],
     },
     receptionist: {
-      name: "AI Frontdesk",
-      title: ["AI Frontdesk"],
+      name: "AI Receptionist",
+      title: ["AI Receptionist"],
       description:
         "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve. Përgjigjet për shërbimet, çmimet dhe terminet e lira, dhe rezervon pasi klienti të konfirmojë.",
       note: "Lidhni profilin tuaj profesional të Instagram-it nga cilësimet.",
@@ -1316,7 +1316,7 @@ export const sqMessages: Messages = {
     heading: "Sa kushton OPUS?",
     comparePlans: "Krahasoni të gjitha funksionet",
     subheading:
-      "Filloni falas. Pro fillon nga 1.490 den. në muaj për deri në 4 anëtarë të ekipit. Zgjidhni madhësinë e ekipit tuaj.",
+      "Filloni falas. Pro fillon nga {proPrice} në muaj për deri në 4 anëtarë të ekipit. Zgjidhni madhësinë e ekipit tuaj.",
     note: "Rezervimi online, uebfaqja dhe kalendari janë falas. Pro është me zgjedhje.",
     free: {
       name: "Plani falas",
@@ -1362,7 +1362,7 @@ export const sqMessages: Messages = {
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
         "Pyesni AI për biznesin tuaj dhe merrni rekomandime dhe analiza. 200 përgjigje në muaj, nga të cilat deri në 20 analiza të hollësishme.",
-      aiReceptionistTitle: "AI Frontdesk",
+      aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
         "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
       end: "Përdorni veglat Pro direkt nga llogaria juaj.",
@@ -1423,7 +1423,7 @@ export const sqMessages: Messages = {
       {
         question: "Kur më nevojitet Pro?",
         answer:
-          "Për AI Chat, AI Frontdesk, ekip më të madh, historinë e klientëve dhe rikujtues. Çmimet mujore të Pro janë: 1.490 den. për deri në 4 anëtarë, 1.790 den. për deri në 5, 2.090 den. për deri në 6, 2.490 den. për deri në 8 ose 3.290 den. për deri në 12. Çdo opsion përfshin të gjitha funksionet Pro. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
+          "Për AI Chat, AI Receptionist, ekip më të madh, historinë e klientëve dhe rikujtues. Çmimet mujore të Pro janë: {proPrices}. Çdo opsion përfshin të gjitha funksionet Pro. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
       },
       {
         question: "A dërgon OPUS vetë oferta për termine të lira?",

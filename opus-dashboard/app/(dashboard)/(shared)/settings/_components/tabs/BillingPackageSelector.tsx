@@ -1,6 +1,10 @@
 import type { FunctionReturnType } from "convex/server";
 import type { api } from "@/convex/_generated/api";
-import type { ProTeamLimit } from "../../../../../../../shared/pro-pricing";
+import {
+  proPriceMinorUnits,
+  type ProTeamLimit,
+} from "../../../../../../../shared/pro-pricing";
+import type { BillingCurrency } from "../../../../../../../shared/billing-currency";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
@@ -12,12 +16,14 @@ export function BillingPackageSelector({
   onChange,
   teamCount,
   disabled,
+  currency,
 }: {
   tiers: FunctionReturnType<typeof api.billing.getStatus>["tiers"];
   value: ProTeamLimit;
   onChange: (value: ProTeamLimit) => void;
   teamCount: number;
   disabled: boolean;
+  currency: BillingCurrency;
 }) {
   const { t, locale } = useDashboardI18n();
   const index = tiers.findIndex((tier) => tier.teamLimit === value);
@@ -44,7 +50,12 @@ export function BillingPackageSelector({
           className="flex flex-wrap items-baseline gap-1.5"
         >
           <span className="text-2xl font-semibold tabular-nums tracking-tight">
-            {formatPrice(selected.monthlyPriceMinorUnits, "MKD", locale, false)}
+            {formatPrice(
+              proPriceMinorUnits(selected, currency),
+              currency.toUpperCase(),
+              locale,
+              currency === "eur",
+            )}
           </span>
           <span className="text-sm text-muted-foreground">
             / {t("month", "месечно", "muaj")}

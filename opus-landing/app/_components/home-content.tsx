@@ -21,6 +21,12 @@ import { IntelligenceRotation } from "./intelligence-rotation";
 import { CloudShader } from "@/components/landing/cloud-shader";
 import { LandingInteractions } from "@/components/landing/landing-interactions";
 import { useI18n } from "@/lib/i18n/context";
+import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import {
+  PRO_TEAM_TIERS,
+  proPriceMinorUnits,
+  proPriceLabel,
+} from "@/lib/pro-pricing";
 
 const carouselImages = [
   {
@@ -48,7 +54,17 @@ const carouselImages = [
 const offsets = [0, 1, 2, -2, -1];
 
 export function HomeContent() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { currency } = useBillingCurrency();
+  const startingPrice = proPriceLabel(
+    proPriceMinorUnits(PRO_TEAM_TIERS[0], currency),
+    locale,
+    currency,
+  );
+  const proPrices = PRO_TEAM_TIERS.map(
+    (tier) =>
+      `${proPriceLabel(proPriceMinorUnits(tier, currency), locale, currency)} ${locale === "mk" ? "за до" : locale === "sq" ? "për deri në" : "for up to"} ${tier.teamLimit} ${locale === "mk" ? "членови" : locale === "sq" ? "anëtarë" : "members"}`,
+  ).join(", ");
 
   return (
     <>
@@ -376,7 +392,7 @@ export function HomeContent() {
         <section className="pricing-section" id="pricing">
           <div className="section-heading centered reveal">
             <h2>{t.pricing.heading}</h2>
-            <p>{t.pricing.subheading}</p>
+            <p>{t.pricing.subheading.replace("{proPrice}", startingPrice)}</p>
           </div>
           <PricingCards animated />
           <div className="pricing-compare-link">
@@ -400,7 +416,7 @@ export function HomeContent() {
                     <Plus aria-hidden="true" />
                   </span>
                 </summary>
-                <p>{item.answer}</p>
+                <p>{item.answer.replace("{proPrices}", proPrices)}</p>
               </details>
             ))}
           </div>

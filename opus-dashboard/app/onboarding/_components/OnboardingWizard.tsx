@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  parseBillingCurrency,
+  type BillingCurrency,
+} from "../../../../shared/billing-currency";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -83,12 +88,14 @@ export function OnboardingWizard() {
   const requestedStep = onboardingStep(params.get("step"));
   const upgrading = params.get("plan") === "pro";
   const teamLimit = parseProTeamLimit(params.get("team"));
+  const currency = parseBillingCurrency(params.get("currency"));
   return (
     <OnboardingFlow
-      key={`${upgrading}:${requestedStep}:${teamLimit}`}
+      key={`${upgrading}:${requestedStep}:${teamLimit}:${currency}`}
       requestedStep={requestedStep}
       upgrading={upgrading}
       teamLimit={teamLimit}
+      currency={currency}
     />
   );
 }
@@ -97,10 +104,12 @@ function OnboardingFlow({
   requestedStep,
   upgrading,
   teamLimit,
+  currency,
 }: {
   requestedStep: WizardStep | null;
   upgrading: boolean;
   teamLimit?: ProTeamLimit;
+  currency?: BillingCurrency;
 }) {
   const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
@@ -122,8 +131,10 @@ function OnboardingFlow({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated)
-      router.replace(upgrading ? upgradeLoginPath(teamLimit) : "/login");
-  }, [isAuthenticated, isLoading, router, upgrading, teamLimit]);
+      router.replace(
+        upgrading ? upgradeLoginPath(teamLimit, currency) : "/login",
+      );
+  }, [isAuthenticated, isLoading, router, upgrading, teamLimit, currency]);
   const shouldLeave = upgrading
     ? profile &&
       upgradeDestination({
@@ -136,9 +147,11 @@ function OnboardingFlow({
   useEffect(() => {
     if (shouldLeave)
       router.replace(
-        upgrading ? withProTeamLimit(BILLING_PATH, teamLimit) : "/beauty",
+        upgrading
+          ? withProTeamLimit(BILLING_PATH, teamLimit, currency)
+          : "/beauty",
       );
-  }, [shouldLeave, upgrading, router, teamLimit]);
+  }, [shouldLeave, upgrading, router, teamLimit, currency]);
 
   if (
     isLoading ||

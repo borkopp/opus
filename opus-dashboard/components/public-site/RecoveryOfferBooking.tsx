@@ -11,15 +11,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingForm } from "./BookingForm";
 import type { PublicSite } from "./types";
+import type { BookingResumeStep } from "@/lib/booking-sign-in";
 
 export function RecoveryOfferBooking({
   site,
   token,
   accountBooking = false,
+  resumeStep,
 }: {
   site: PublicSite;
   token: string;
   accountBooking?: boolean;
+  resumeStep?: BookingResumeStep;
 }) {
   const { text, locale } = usePublicBookingI18n();
   const offer = useQuery(api.ai.gapOptimizerHelpers.getPublicOffer, {
@@ -54,6 +57,7 @@ export function RecoveryOfferBooking({
         <BookingForm
           site={site}
           accountBooking={accountBooking}
+          resumeStep={resumeStep}
           initialServiceId={offer.serviceId}
           initialStaffId={offer.staffId}
           recoveryOffer={{ ...offer, token }}

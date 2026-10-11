@@ -11,9 +11,11 @@ import s from "./auth.module.css";
 export function AuthLayout({
   children,
   purpose = "studio",
+  bookingHref,
 }: {
   children: ReactNode;
   purpose?: "studio" | "client";
+  bookingHref?: string;
 }) {
   const { t } = useDashboardI18n();
 
@@ -22,15 +24,29 @@ export function AuthLayout({
       <div className={s.workspace}>
         <header className={s.topbar}>
           <a
-            href="https://opus.mk"
-            aria-label={t("OPUS home", "OPUS почетна", "Kreu i OPUS")}
+            href={bookingHref ?? "https://opus.mk"}
+            aria-label={
+              bookingHref
+                ? t(
+                    "Back to your booking",
+                    "Назад кон резервацијата",
+                    "Kthehu te rezervimi juaj",
+                  )
+                : t("OPUS home", "OPUS почетна", "Kreu i OPUS")
+            }
           >
             <Logo className={s.brand} />
           </a>
           <Button asChild variant="outline" className={s.backLink}>
-            <a data-replay-public href="https://opus.mk">
+            <a data-replay-public href={bookingHref ?? "https://opus.mk"}>
               <ArrowLeft data-icon="inline-start" aria-hidden="true" />
-              {t("Back to OPUS", "Назад кон OPUS", "Kthehu te OPUS")}
+              {bookingHref
+                ? t(
+                    "Continue as guest",
+                    "Продолжете како гостин",
+                    "Vazhdoni si mysafir",
+                  )
+                : t("Back to OPUS", "Назад кон OPUS", "Kthehu te OPUS")}
             </a>
           </Button>
         </header>

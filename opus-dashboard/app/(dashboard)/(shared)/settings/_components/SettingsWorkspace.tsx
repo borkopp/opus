@@ -54,7 +54,7 @@ const SETTINGS_TABS = [
   },
   {
     value: "ai",
-    labelEn: "AI front desk",
+    labelEn: "AI Receptionist",
     labelMk: "AI рецепција",
     labelSq: "Recepsioni AI",
     icon: Bot,

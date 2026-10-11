@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useAction, useMutation } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { publicBookingErrorMessage } from "@/lib/public-booking-errors";
@@ -26,9 +26,19 @@ import { StaffSelectionStep } from "./StaffSelectionStep";
 import type { PublicSite } from "./types";
 import posthog from "posthog-js";
 import { useClientAccount } from "@/hooks/use-client-account";
-import { clientAreaUrl } from "@/lib/client-account";
+import {
+  clientAreaUrl,
+  clientBookingPath,
+  clientSignInPath,
+} from "@/lib/client-account";
+import {
+  BOOKING_SIGN_IN_DRAFT_KEY,
+  parseBookingSignInDetails,
+  type BookingResumeStep,
+} from "@/lib/booking-sign-in";
 import { useAuthSecurity } from "@/hooks/use-auth-security";
 import { AuthCaptcha } from "@/components/auth/AuthCaptcha";
+import { Skeleton } from "@/components/ui/skeleton";
 import { accountErrorMessage, AccountLinkError } from "@/lib/account-errors";
 import {
   requestBookingAccountCode,
@@ -45,6 +55,8 @@ interface BookingFormProps {
   initialStaffId?: string;
   initialDate?: string;
   sharedOpeningStartAt?: number;
+  resumeStep?: BookingResumeStep;
+  initialSlotStaffId?: string;
   recoveryOffer?: {
     token: string;
     available: boolean;
@@ -89,6 +101,8 @@ export function BookingForm({
   initialStaffId,
   initialDate,
   sharedOpeningStartAt,
+  resumeStep,
+  initialSlotStaffId,
   recoveryOffer,
 }: BookingFormProps) {
   const router = useRouter();
@@ -116,11 +130,16 @@ export function BookingForm({
         ? initialStaff
         : undefined
       : initialStaff;
-  const initialStep: BookingStep = initialService
-    ? compatibleInitialStaff
-      ? "datetime"
-      : "staff"
-    : "service";
+  const initialStep: BookingStep =
+    resumeStep === "service"
+      ? "service"
+      : resumeStep === "staff" && initialService
+        ? "staff"
+        : initialService
+          ? compatibleInitialStaff
+            ? "datetime"
+            : "staff"
+          : "service";
   const today = useMemo(
     () => dateInTimezone(new Date(), site.bookingSettings.timezone),
     [site.bookingSettings.timezone],
@@ -135,18 +154,14 @@ export function BookingForm({
   const [selectedStaffId, setSelectedStaffId] = useState<
     string | "any" | undefined
   >(compatibleInitialStaff);
-  const [selectedDate, setSelectedDate] = useState(
-    recoveryOffer
-      ? new Date(recoveryOffer.startAt).toISOString().slice(0, 10)
-      : validPromotionDate(
-          initialDate,
-          today,
-          addDays(
-            today,
-            Math.max(1, site.bookingSettings.bookingWindowDays) - 1,
-          ),
-        ),
-  );
+  const initialBookingDate = recoveryOffer
+    ? new Date(recoveryOffer.startAt).toISOString().slice(0, 10)
+    : validPromotionDate(
+        initialDate,
+        today,
+        addDays(today, Math.max(1, site.bookingSettings.bookingWindowDays) - 1),
+      );
+  const [selectedDate, setSelectedDate] = useState(initialBookingDate);
   const [selectedSlotTimestamp, setSelectedSlotTimestamp] = useState<
     number | null
   >(recoveryOffer?.startAt ?? null);
@@ -171,6 +186,79 @@ export function BookingForm({
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(
     null,
   );
+  const [resumePending, setResumePending] = useState(
+    Boolean(
+      !recoveryOffer &&
+      resumeStep &&
+      initialService &&
+      compatibleInitialStaff &&
+      sharedOpeningStartAt &&
+      initialSlotStaffId &&
+      (initialService.staffIds as string[]).includes(initialSlotStaffId) &&
+      (compatibleInitialStaff === "any" ||
+        compatibleInitialStaff === initialSlotStaffId),
+    ),
+  );
+  const resumeSlots = useQuery(
+    api.publicBooking.getPublicSlots,
+    resumePending && initialService && compatibleInitialStaff
+      ? {
+          orgId: site._id,
+          serviceId: initialService._id,
+          staffId: compatibleInitialStaff as Id<"staff_members"> | "any",
+          date: initialBookingDate,
+        }
+      : "skip",
+  );
+
+  useEffect(() => {
+    if (!resumePending || resumeSlots === undefined) return;
+    setResumePending(false);
+    const available = resumeSlots.some(
+      (slot) =>
+        slot.startAt === sharedOpeningStartAt &&
+        (slot.availableStaffIds as string[]).includes(initialSlotStaffId ?? ""),
+    );
+    if (available && sharedOpeningStartAt && initialSlotStaffId) {
+      setSelectedSlotTimestamp(sharedOpeningStartAt);
+      setSelectedSlotStaffId(initialSlotStaffId);
+      setCurrentStep(resumeStep ?? "datetime");
+    } else {
+      setCurrentStep("datetime");
+      setError(
+        t(
+          "This time is no longer available. Choose another appointment.",
+          "Овој термин повеќе не е достапен. Изберете друг термин.",
+          "Ky orar nuk është më i disponueshëm. Zgjidhni një termin tjetër.",
+        ),
+      );
+    }
+  }, [
+    initialSlotStaffId,
+    resumePending,
+    resumeSlots,
+    resumeStep,
+    sharedOpeningStartAt,
+    t,
+  ]);
+
+  useEffect(() => {
+    if (!accountBooking || !resumeStep) return;
+    try {
+      const draft = parseBookingSignInDetails(
+        sessionStorage.getItem(BOOKING_SIGN_IN_DRAFT_KEY),
+        `${window.location.pathname}${window.location.search}`,
+      );
+      sessionStorage.removeItem(BOOKING_SIGN_IN_DRAFT_KEY);
+      if (!draft) return;
+      setCustomerName(draft.name);
+      setCustomerEmail(draft.email);
+      setCustomerPhone(draft.phone);
+      setCustomerNote(draft.note);
+    } catch {
+      // Booking selections still return through the URL when storage is unavailable.
+    }
+  }, [accountBooking, resumeStep]);
 
   const requestBookingEmailOtp = useAction(
     api.publicBooking.requestBookingEmailOtp,
@@ -185,18 +273,33 @@ export function BookingForm({
     setCustomerPhone((value) => value || rememberedClient.phone || "");
   }, [rememberedClient]);
   const handoffToAccount = () => {
-    const query = new URLSearchParams({ lang: locale });
-    if (selectedServiceId) query.set("service", selectedServiceId);
-    if (selectedStaffId) query.set("staff", selectedStaffId);
-    if (selectedDate) query.set("date", selectedDate);
-    if (selectedSlotTimestamp) query.set("at", String(selectedSlotTimestamp));
-    if (recoveryOffer) query.set("offer", recoveryOffer.token);
-    const bookingPath = `/book/${encodeURIComponent(site.slug)}?${query}`;
+    const bookingPath = clientBookingPath(site.slug, {
+      lang: locale,
+      service: selectedServiceId,
+      staff: selectedStaffId,
+      date: selectedDate,
+      at: selectedSlotTimestamp ? String(selectedSlotTimestamp) : undefined,
+      slotStaff: selectedSlotStaffId ?? undefined,
+      resume: currentStep,
+      offer: recoveryOffer?.token,
+    });
+    try {
+      sessionStorage.setItem(
+        BOOKING_SIGN_IN_DRAFT_KEY,
+        JSON.stringify({
+          path: bookingPath,
+          savedAt: Date.now(),
+          name: customerName,
+          email: customerEmail,
+          phone: customerPhone,
+          note: customerNote,
+        }),
+      );
+    } catch {
+      // Optional draft storage must never block sign-in or guest booking.
+    }
     window.location.assign(
-      clientAreaUrl(
-        `/account/sign-in?callbackUrl=${encodeURIComponent(bookingPath)}`,
-        window.location.origin,
-      ),
+      clientAreaUrl(clientSignInPath(bookingPath), window.location.origin),
     );
   };
   const selectedService = site.services.find(
@@ -540,6 +643,27 @@ export function BookingForm({
     />
   ) : null;
 
+  if (resumePending) {
+    return (
+      <main className="public-booking-flow min-h-[calc(100dvh-9rem)] bg-secondary/30">
+        <div
+          className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 sm:px-6"
+          role="status"
+        >
+          <p className="text-sm text-muted-foreground">
+            {t(
+              "Checking your selected appointment…",
+              "Го проверуваме избраниот термин…",
+              "Po kontrollojmë terminin tuaj të zgjedhur…",
+            )}
+          </p>
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-80 w-full rounded-2xl" />
+        </div>
+      </main>
+    );
+  }
+
   if (bookingResult) {
     return (
       <main className="public-booking-flow min-h-[calc(100dvh-9rem)] bg-secondary/30">
@@ -654,12 +778,19 @@ export function BookingForm({
               type="button"
               variant="ghost"
               size="sm"
-              disabled={accountBooking && account.isLoading}
+              disabled={account.isLoading || resumePending}
               onClick={handoffToAccount}
             >
-              {t("Sign in", "Најава", "Hyni")}
+              {t("Client sign-in", "Најава за клиенти", "Hyrja e klientëve")}
             </Button>
           )}
+        </div>
+      )}
+      {error && currentStep !== "details" && (
+        <div className="mx-auto max-w-5xl px-4 pt-4 sm:px-6">
+          <Alert>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         </div>
       )}
       {!recoveryOffer && (
@@ -708,7 +839,7 @@ export function BookingForm({
           selectedSlotTimestamp={selectedSlotTimestamp}
           selectedSlotStaffId={selectedSlotStaffId}
           sharedOpeningStartAt={
-            selectedServiceId === initialServiceId
+            !resumeStep && selectedServiceId === initialServiceId
               ? sharedOpeningStartAt
               : undefined
           }

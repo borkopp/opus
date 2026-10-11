@@ -21,7 +21,7 @@ were verified against the local backend on October 6, 2026, as recorded below.
   mobile and web without changing teammates' settings or client email/SMS choices.
 - Switch mobile/browser push independently; choose new appointments,
   rescheduling, cancellations, reminders and no-shows. Eligible Pro members can
-  also choose AI front-desk handoffs. Appointment scope can be your assignments
+  also choose AI Receptionist handoffs. Appointment scope can be your assignments
   or all appointments your role permits; personal-only staff are always limited
   to their assignments and cannot receive AI handoffs.
 - Reminder choices: 15, 30, 60, 120 minutes or one day before the appointment.

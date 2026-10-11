@@ -50,7 +50,7 @@ export function MessageBubble({ message }: { message: Message }) {
             ? t("Client", "Клиент", "Klient")
             : message.author === "staff"
               ? t("Your team", "Вашиот тим", "Ekipi juaj")
-              : t("AI front desk", "AI рецепција", "Recepsioni AI")}
+              : t("AI Receptionist", "AI рецепција", "Recepsioni AI")}
         </MessageHeader>
         <Bubble
           variant={isUser ? "outline" : "tinted"}

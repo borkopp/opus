@@ -8,10 +8,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { upgradeDestination, upgradeLoginPath } from "@/lib/upgrade";
 import { parseProTeamLimit } from "../../../../shared/pro-pricing";
+import { parseBillingCurrency } from "../../../../shared/billing-currency";
 
 export function UpgradeRedirect() {
   const router = useRouter();
-  const teamLimit = parseProTeamLimit(useSearchParams().get("team"));
+  const params = useSearchParams();
+  const teamLimit = parseProTeamLimit(params.get("team"));
+  const currency = parseBillingCurrency(params.get("currency"));
   const { t } = useDashboardI18n();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
@@ -29,7 +32,7 @@ export function UpgradeRedirect() {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      router.replace(upgradeLoginPath(teamLimit));
+      router.replace(upgradeLoginPath(teamLimit, currency));
       return;
     }
     if (!profile || (needsSetupCheck && activation === undefined)) return;
@@ -40,6 +43,7 @@ export function UpgradeRedirect() {
         plan: profile.plan,
         operationalSetupComplete: activation?.operationalSetupComplete ?? false,
         teamLimit,
+        currency,
       }),
     );
   }, [
@@ -50,6 +54,7 @@ export function UpgradeRedirect() {
     activation,
     router,
     teamLimit,
+    currency,
   ]);
 
   return (

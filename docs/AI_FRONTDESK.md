@@ -1,6 +1,6 @@
-# Instagram AI frontdesk
+# Instagram AI Receptionist
 
-The frontdesk is an opt-in capability for paid beauty studios. It uses
+The receptionist is an opt-in capability for paid beauty studios. It uses
 `gpt-6-luna` through the OpenAI Responses API, with low reasoning effort,
 structured output, a maximum of four model requests per incoming message, and
 no provider-side conversation storage (`store: false`). It shares no customer
@@ -8,7 +8,7 @@ data across studios. WhatsApp and the previous public web chat are not enabled.
 
 ## Studio setup
 
-1. Open **Settings → AI front desk**.
+1. Open **Settings → AI Receptionist**.
 2. Fill in **Context for the AI** with the studio's actual products/brands,
    typical treatment longevity, aftercare, removal/repair policies, and FAQs.
    Up to 12,000 characters are supported. Examples in the form are placeholders,
@@ -17,7 +17,7 @@ data across studios. WhatsApp and the previous public web chat are not enabled.
    preview cannot send a DM or make an appointment. Preview requests and replies
    are recorded separately from the customer inbox and consume the daily allowance.
 4. Connect the studio's professional Instagram account and grant messaging access.
-5. Enable the frontdesk and Instagram replies, choose the language/tone, and save.
+5. Enable the receptionist and Instagram replies, choose the language/tone, and save.
    Optional reply hours use the studio's configured timezone; enabled schedules
    require at least one day and an away message.
 6. The connection status shows whether automatic replies are ready. An enabled
@@ -133,7 +133,7 @@ and [Instagram Login configuration](https://developers.facebook.com/docs/instagr
 - `instagram_business_basic` and `instagram_business_manage_messages` are
   added with **Ready for testing** status. Advanced access is not approved.
 - `@opus.mk` accepted the **OPUS-IG** Instagram tester invitation. This is a
-  tester role, not a connection to an OPUS studio's frontdesk.
+  tester role, not a connection to an OPUS studio's receptionist.
 - The app has its OPUS icon, `opus.mk` domain, privacy and terms URLs, and
   existing deletion-request instructions at `https://opus.mk/privacy#rights`.
   Meta reports that the required basic app settings are complete.

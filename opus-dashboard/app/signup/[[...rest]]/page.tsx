@@ -1,6 +1,11 @@
 import { getRequestLocale } from "@/lib/i18n/server";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
+import { redirect } from "next/navigation";
+import {
+  clientSignInDestination,
+  clientSignInPath,
+} from "@/lib/client-account";
 
 export default async function SignUpPage({
   searchParams,
@@ -11,6 +16,10 @@ export default async function SignUpPage({
   const params = await searchParams;
   const callbackUrl =
     typeof params.callbackUrl === "string" ? params.callbackUrl : undefined;
+
+  if (callbackUrl && clientSignInDestination(callbackUrl) === callbackUrl) {
+    redirect(clientSignInPath(callbackUrl));
+  }
 
   return (
     <AuthLayout>

@@ -31,7 +31,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Цени и планови — OPUS",
       description:
-        "Споредете ги бесплатниот план и Pro од 1.490 ден. месечно. Изберете тим до 4, 5, 6, 8 или 12 членови, со историја на клиенти, потсетници и AI алатки.",
+        "Споредете ги бесплатниот план и Pro од {proPrice} месечно. Изберете тим до 4, 5, 6, 8 или 12 членови, со историја на клиенти, потсетници и AI алатки.",
     },
     heading: "Изберете што му треба на вашето студио.",
     description:
@@ -170,7 +170,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             pro: true,
           },
           {
-            feature: "AI Frontdesk",
+            feature: "AI Receptionist",
             description:
               "AI одговара на Instagram пораките додека вие се посветувате на клиентите.",
             free: false,
@@ -185,7 +185,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     ],
     activationTitle: "За SMS и AI алатките",
     activationNote:
-      "* AI и SMS ги поставувате сами од вашата сметка. За AI Frontdesk, поврзете го вашиот професионален Instagram профил во поставките. Планот не вклучува неограничени SMS пораки.",
+      "* AI и SMS ги поставувате сами од вашата сметка. За AI Receptionist, поврзете го вашиот професионален Instagram профил во поставките. Планот не вклучува неограничени SMS пораки.",
     customTitle: "Ви треба нешто по мерка?",
     customDescription:
       "Софтверот по мерка има посебна понуда. Заедно ги договараме функциите, интеграциите, рокот и месечниот план за вашиот проект.",
@@ -195,7 +195,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Pricing and plans — OPUS",
       description:
-        "Compare Free and Pro from 1,490 MKD/month. Choose a team of up to 4, 5, 6, 8, or 12, with client history, reminders, and AI tools.",
+        "Compare Free and Pro from {proPrice}/month. Choose a team of up to 4, 5, 6, 8, or 12, with client history, reminders, and AI tools.",
     },
     heading: "Choose what works for your studio.",
     description:
@@ -333,7 +333,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             pro: true,
           },
           {
-            feature: "AI Frontdesk",
+            feature: "AI Receptionist",
             description:
               "AI answers your Instagram DMs while you focus on clients.",
             free: false,
@@ -348,7 +348,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     ],
     activationTitle: "About SMS and AI tools",
     activationNote:
-      "* Set up AI and SMS yourself from your account. For AI Frontdesk, connect your professional Instagram account in settings. The plan does not include unlimited SMS messages.",
+      "* Set up AI and SMS yourself from your account. For AI Receptionist, connect your professional Instagram account in settings. The plan does not include unlimited SMS messages.",
     customTitle: "Need something built for you?",
     customDescription:
       "Custom software is quoted separately. We agree on the features, integrations, timeline, and monthly plan for your project together.",
@@ -358,7 +358,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Çmimet dhe planet — OPUS",
       description:
-        "Krahasoni planin falas dhe Pro nga 1.490 den. në muaj. Zgjidhni ekip me deri në 4, 5, 6, 8 ose 12 anëtarë, me histori klientësh, rikujtues dhe vegla AI.",
+        "Krahasoni planin falas dhe Pro nga {proPrice} në muaj. Zgjidhni ekip me deri në 4, 5, 6, 8 ose 12 anëtarë, me histori klientësh, rikujtues dhe vegla AI.",
     },
     heading: "Zgjidhni atë që i nevojitet studios tuaj.",
     description:
@@ -501,7 +501,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             pro: true,
           },
           {
-            feature: "AI Frontdesk",
+            feature: "AI Receptionist",
             description:
               "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
             free: false,
@@ -516,7 +516,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     ],
     activationTitle: "Rreth veglave SMS dhe AI",
     activationNote:
-      "* AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për AI Frontdesk, lidhni profilin tuaj profesional të Instagram-it në cilësime. Plani nuk përfshin SMS të pakufizuara.",
+      "* AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për AI Receptionist, lidhni profilin tuaj profesional të Instagram-it në cilësime. Plani nuk përfshin SMS të pakufizuara.",
     customTitle: "Ju nevojitet diçka e përshtatur posaçërisht?",
     customDescription:
       "Softueri sipas porosisë ka ofertë të veçantë. Bashkërisht dakordohemi për funksionet, integrimet, afatin dhe planin mujor për projektin tuaj.",

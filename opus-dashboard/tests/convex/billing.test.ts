@@ -6,7 +6,14 @@ import type { Id } from "../../convex/_generated/dataModel";
 import schema from "../../convex/schema";
 import { convexModules } from "../../convex-test.setup";
 import { formatBillingDate } from "../../lib/billing";
-import { PRO_TEAM_TIERS } from "../../../shared/pro-pricing";
+import {
+  PRO_TEAM_TIERS,
+  proPriceMinorUnits,
+} from "../../../shared/pro-pricing";
+import {
+  BILLING_CURRENCIES,
+  type BillingCurrency,
+} from "../../../shared/billing-currency";
 
 const provider = vi.hoisted(() => ({
   list: vi.fn(),
@@ -171,20 +178,32 @@ beforeEach(() => {
           priceAmount: tier.monthlyPriceMinorUnits,
           priceCurrency: "mkd",
         },
+        {
+          amountType: "fixed",
+          priceAmount: tier.monthlyPriceEurMinorUnits,
+          priceCurrency: "eur",
+        },
       ],
     };
   });
   provider.organization.mockResolvedValue({
     subscriptionSettings: { allowMultipleSubscriptions: false },
+    defaultTaxBehavior: "inclusive",
   });
-  const checkoutForProduct = (productId: string) => ({
+  const checkoutForProduct = (
+    productId: string,
+    currency: BillingCurrency = "mkd",
+  ) => ({
     id: "checkout-1",
     status: "open",
     productId,
-    amount: PRO_TEAM_TIERS.find(
-      (tier) => productIdForLimit(tier.teamLimit) === productId,
-    )!.monthlyPriceMinorUnits,
-    currency: "mkd",
+    amount: proPriceMinorUnits(
+      PRO_TEAM_TIERS.find(
+        (tier) => productIdForLimit(tier.teamLimit) === productId,
+      )!,
+      currency,
+    ),
+    currency,
     url: "https://sandbox.polar.sh/checkout/test",
     expiresAt: new Date(NOW + 3600_000),
     products: PRO_TEAM_TIERS.map((tier) => ({
@@ -199,17 +218,31 @@ beforeEach(() => {
             priceCurrency: "mkd",
             priceAmount: tier.monthlyPriceMinorUnits,
           },
+          {
+            amountType: "fixed",
+            priceCurrency: "eur",
+            priceAmount: tier.monthlyPriceEurMinorUnits,
+          },
         ],
       ]),
     ),
   });
-  provider.checkout.mockImplementation(({ products }: { products: string[] }) =>
-    checkoutForProduct(products[0]),
+  provider.checkout.mockImplementation(
+    ({
+      products,
+      currency,
+    }: {
+      products: string[];
+      currency: BillingCurrency;
+    }) => checkoutForProduct(products[0], currency),
   );
   provider.getCheckout.mockResolvedValue(checkoutForProduct("pro-monthly"));
   provider.updateCheckout.mockImplementation(
-    ({ checkoutUpdate }: { checkoutUpdate: { productId: string } }) =>
-      checkoutForProduct(checkoutUpdate.productId),
+    ({
+      checkoutUpdate,
+    }: {
+      checkoutUpdate: { productId: string; currency: BillingCurrency };
+    }) => checkoutForProduct(checkoutUpdate.productId, checkoutUpdate.currency),
   );
   provider.portal.mockResolvedValue({
     customerPortalUrl: "https://sandbox.polar.sh/portal/session",
@@ -222,6 +255,176 @@ afterEach(() => {
 });
 
 describe("Polar subscription checkout", () => {
+  test.each(
+    PRO_TEAM_TIERS.flatMap((tier) =>
+      BILLING_CURRENCIES.map((currency) => ({ ...tier, currency })),
+    ),
+  )(
+    "opens the $teamLimit-member checkout in $currency and activates only after signed provider confirmation",
+    async (tier) => {
+      const { owner, orgId } = await studio();
+      await owner.action(api.billingActions.createCheckout, {
+        teamLimit: tier.teamLimit,
+        currency: tier.currency,
+      });
+      expect(provider.checkout).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: tier.currency }),
+      );
+      expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+      subscriptions([
+        subscription(orgId, {
+          productId: productIdForLimit(tier.teamLimit),
+          currency: tier.currency,
+          amount: proPriceMinorUnits(tier, tier.currency),
+        }),
+      ]);
+      expect((await sendWebhook(orgId)).status).toBe(200);
+      const state = await account(orgId);
+      await t.action(internal.billingActions.syncSubscription, {
+        orgId,
+        version: state!.syncVersion,
+        attempt: 0,
+      });
+      expect(await owner.query(api.billing.getStatus)).toMatchObject({
+        plan: "paid",
+        teamLimit: tier.teamLimit,
+        subscription: {
+          currency: tier.currency,
+          amount: proPriceMinorUnits(tier, tier.currency),
+        },
+      });
+    },
+  );
+
+  test("changing currency reuses checkout with the correct EUR price and return destination", async () => {
+    const { owner, orgId } = await studio();
+    await owner.action(api.billingActions.createCheckout, { currency: "mkd" });
+    await owner.action(api.billingActions.createCheckout, { currency: "eur" });
+    expect(provider.checkout).toHaveBeenCalledTimes(1);
+    expect(provider.updateCheckout).toHaveBeenCalledWith({
+      id: "checkout-1",
+      checkoutUpdate: {
+        productId: "pro-monthly",
+        currency: "eur",
+        successUrl:
+          "http://localhost:3000/settings?tab=billing&checkout=returned&currency=eur&team=4",
+      },
+    });
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+    const audits = await t.run((ctx) =>
+      ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(
+      audits.some(
+        (entry) =>
+          entry.action === "billing.checkout_created" &&
+          entry.after?.currency === "eur",
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects unsupported checkout currencies before contacting Polar", async () => {
+    const { owner } = await studio();
+    await expect(
+      owner.action(api.billingActions.createCheckout, {
+        currency: "usd",
+      } as never),
+    ).rejects.toThrow();
+    expect(provider.checkout).not.toHaveBeenCalled();
+  });
+
+  test.each(["missing", "wrong", "duplicate", "exclusive"])(
+    "refuses EUR checkout when its catalog price is %s",
+    async (kind) => {
+      const { owner } = await studio();
+      const original = provider.product.getMockImplementation()!;
+      provider.product.mockImplementation(async (args) => {
+        const product = await original(args);
+        const eur = {
+          amountType: "fixed",
+          priceCurrency: "eur",
+          priceAmount: 2490,
+          taxBehavior: "inclusive",
+        };
+        return {
+          ...product,
+          prices: [
+            product.prices[0],
+            ...(kind === "missing"
+              ? []
+              : kind === "duplicate"
+                ? [eur, eur]
+                : [
+                    {
+                      ...eur,
+                      priceAmount: kind === "wrong" ? 1 : 2490,
+                      taxBehavior:
+                        kind === "exclusive" ? "exclusive" : "inclusive",
+                    },
+                  ]),
+          ],
+        };
+      });
+      await expect(
+        owner.action(api.billingActions.createCheckout, { currency: "eur" }),
+      ).rejects.toThrow("BILLING_UNAVAILABLE");
+      expect(provider.checkout).not.toHaveBeenCalled();
+    },
+  );
+
+  test("refuses a provider checkout that returns MKD after EUR was selected", async () => {
+    const { owner } = await studio();
+    provider.checkout.mockResolvedValue(await provider.getCheckout());
+    await expect(
+      owner.action(api.billingActions.createCheckout, { currency: "eur" }),
+    ).rejects.toThrow("BILLING_UNAVAILABLE");
+  });
+
+  test("refuses a checkout whose tax is added above the advertised price", async () => {
+    const { owner } = await studio();
+    provider.checkout.mockResolvedValue({
+      ...(await provider.getCheckout()),
+      taxBehavior: "exclusive",
+    });
+    await expect(
+      owner.action(api.billingActions.createCheckout, {}),
+    ).rejects.toThrow("BILLING_UNAVAILABLE");
+  });
+
+  test("EUR renewal, scheduled cancellation and expiry preserve the Pro lifecycle", async () => {
+    const { owner, orgId } = await studio();
+    await owner.action(api.billingActions.createCheckout, { currency: "eur" });
+    subscriptions([
+      subscription(orgId, {
+        currency: "eur",
+        amount: 2490,
+        cancelAtPeriodEnd: true,
+      }),
+    ]);
+    await sync(orgId);
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("paid");
+    const renewedEnd = END + 30 * 86400_000;
+    subscriptions([
+      subscription(orgId, {
+        currency: "eur",
+        amount: 2490,
+        currentPeriodEnd: new Date(renewedEnd),
+      }),
+    ]);
+    await sync(orgId);
+    await t.mutation(internal.billing.expireAccess, { orgId, periodEnd: END });
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("paid");
+    vi.setSystemTime(renewedEnd + 1);
+    await t.mutation(internal.billing.expireAccess, {
+      orgId,
+      periodEnd: renewedEnd,
+    });
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+  });
+
   test.each(PRO_TEAM_TIERS)(
     "selects the $teamLimit-member product at the advertised price without granting capacity",
     async ({ teamLimit, monthlyPriceMinorUnits }) => {
@@ -267,7 +470,12 @@ describe("Polar subscription checkout", () => {
     expect(provider.checkout).toHaveBeenCalledTimes(1);
     expect(provider.updateCheckout).toHaveBeenCalledWith({
       id: "checkout-1",
-      checkoutUpdate: { productId: "pro-monthly-8", currency: "mkd" },
+      checkoutUpdate: {
+        productId: "pro-monthly-8",
+        currency: "mkd",
+        successUrl:
+          "http://localhost:3000/settings?tab=billing&checkout=returned&currency=mkd&team=8",
+      },
     });
     expect((await account(orgId))?.checkoutProductId).toBe("pro-monthly-8");
     expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
@@ -555,7 +763,7 @@ describe("subscription access reconciliation", () => {
   });
 
   test.each([
-    { currency: "eur" },
+    { currency: "usd" },
     { recurringInterval: "year" },
     { recurringIntervalCount: 2 },
     { amount: 149000.5 },

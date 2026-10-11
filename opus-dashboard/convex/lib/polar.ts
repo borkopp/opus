@@ -9,6 +9,8 @@ export const proTeamLimit = v.union(
   v.literal(12),
 );
 
+export const billingCurrency = v.union(v.literal("mkd"), v.literal("eur"));
+
 const productEnvironmentKeys = {
   4: "POLAR_PRO_PRODUCT_ID",
   5: "POLAR_PRO_5_PRODUCT_ID",

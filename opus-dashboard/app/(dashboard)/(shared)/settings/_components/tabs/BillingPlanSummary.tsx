@@ -6,11 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { formatPrice } from "@/lib/format-price";
 import { formatBillingDate } from "@/lib/billing";
+import type { BillingCurrency } from "../../../../../../../shared/billing-currency";
 
 export function BillingPlanSummary({
   data,
+  currency,
 }: {
   data: FunctionReturnType<typeof api.billing.getStatus>;
+  currency: BillingCurrency;
 }) {
   const { t, locale } = useDashboardI18n();
   const paid = data.plan === "paid";
@@ -93,7 +96,12 @@ export function BillingPlanSummary({
                   )
                 : paid
                   ? t("Pro enabled", "Pro е активиран", "Pro i aktivizuar")
-                  : formatPrice(0, "MKD", locale, false)}
+                  : formatPrice(
+                      0,
+                      currency.toUpperCase(),
+                      locale,
+                      currency === "eur",
+                    )}
             </span>
             {subscription && (
               <span

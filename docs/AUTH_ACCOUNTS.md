@@ -104,6 +104,20 @@ shows linked upcoming/history appointments, saved details, booking again,
 sign-out and sign-out of other devices. Client and shared booking routes exclude
 analytics capture, and recovery-token pages use a no-referrer policy.
 
+Booking sign-in opens the client interface in the booking's language and returns
+to the same studio, service, specialist preference, assigned specialist, date,
+time and step. The selected time is checked against current public availability
+before it is restored; an unavailable time returns the client to the calendar.
+Signing in never confirms an appointment automatically. Names, contact details
+and notes are kept only in the current tab's session storage for up to 30 minutes,
+matched to the exact booking return and removed when restored. They are never
+included in the return URL. The signed-in account's verified email takes precedence.
+If session storage is unavailable, selections still return through the URL.
+**Continue as guest** on the client sign-in screen returns to the same booking
+without authentication. Legacy `/login` and `/signup` links with a valid client
+booking or account callback redirect to `/account/sign-in` before business profile
+synchronization can run. Ordinary studio login and signup keep their business flow.
+
 For newly verified guest bookings at a published beauty studio, the confirmation page
 and customer confirmation email offer a seven-day, single-booking claim link.
 Only its hash is stored on the booking. The secret travels in a URL fragment,

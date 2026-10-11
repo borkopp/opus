@@ -108,6 +108,24 @@ export function EmailOtpForm({
         (!profile?.orgId ||
           profile.bookingAccess === "own" ||
           Boolean(activation))));
+  const openingMessage =
+    purpose === "client"
+      ? destination.startsWith("/book/")
+        ? t(
+            "Returning to your booking…",
+            "Се враќаме на вашата резервација…",
+            "Po kthehemi te rezervimi juaj…",
+          )
+        : t(
+            "Opening your appointments…",
+            "Ги отвораме вашите термини…",
+            "Po hapim terminet tuaja…",
+          )
+      : t(
+          "Opening your studio…",
+          "Го отвораме вашето студио…",
+          "Po hapim studion tuaj…",
+        );
   const [step, setStep] = useState<"email" | "code">("email");
   const [direction, setDirection] = useState(0);
   const [email, setEmail] = useState("");
@@ -258,19 +276,7 @@ export function EmailOtpForm({
         return;
       }
 
-      setStatus(
-        t(
-          purpose === "client"
-            ? "Signed in. Opening your account…"
-            : "Signed in. Opening your studio…",
-          purpose === "client"
-            ? "Успешна најава. Ја отвораме вашата сметка…"
-            : "Успешна најава. Го отвораме вашето студио…",
-          purpose === "client"
-            ? "U identifikuat. Po hapim llogarinë tuaj…"
-            : "U identifikuat. Po hapim studion tuaj…",
-        ),
-      );
+      setStatus(openingMessage);
     } catch (caught) {
       setError(
         t(
@@ -293,11 +299,7 @@ export function EmailOtpForm({
       >
         <Spinner />
         <p data-replay-public className="text-sm text-muted-foreground">
-          {t(
-            "Opening your studio…",
-            "Го отвораме вашето студио…",
-            "Po hapim studion tuaj…",
-          )}
+          {openingMessage}
         </p>
       </section>
     );
@@ -362,7 +364,9 @@ export function EmailOtpForm({
                     variant="surface"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@studio.mk"
+                    placeholder={
+                      purpose === "client" ? "you@example.com" : "you@studio.mk"
+                    }
                     autoComplete="email"
                     required
                     disabled={isSubmitting}

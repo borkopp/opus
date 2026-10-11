@@ -56,7 +56,7 @@ const titles: Record<PushEvent, [string, string, string]> = {
     "Klienti nuk u paraqit",
   ],
   ai_handoff: [
-    "Front desk needs attention",
+    "Receptionist needs attention",
     "Рецепцијата бара внимание",
     "Recepsioni kërkon vëmendje",
   ],

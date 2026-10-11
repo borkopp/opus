@@ -10,6 +10,7 @@ import { PublicBookingI18n } from "@/components/public-site/PublicBookingI18n";
 import { resolveWebsiteLocale } from "../../../../shared/website-design";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { websiteBookingContent } from "@/lib/website-booking-content";
+import { bookingResumeStep } from "@/lib/booking-sign-in";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -35,6 +36,9 @@ export default async function AccountBookingPage({
       )
     : "mk";
   const site = websiteBookingContent(original, locale);
+  const resumeStep = bookingResumeStep(
+    typeof query.resume === "string" ? query.resume : undefined,
+  );
   return (
     <PublicBookingI18n locale={locale}>
       <PublicSiteFrame
@@ -50,11 +54,16 @@ export default async function AccountBookingPage({
             site={site}
             token={query.offer}
             accountBooking
+            resumeStep={resumeStep}
           />
         ) : (
           <BookingForm
             site={site}
             accountBooking
+            resumeStep={resumeStep}
+            initialSlotStaffId={
+              typeof query.slotStaff === "string" ? query.slotStaff : undefined
+            }
             initialServiceId={
               typeof query.service === "string" ? query.service : undefined
             }

@@ -6,6 +6,9 @@ import { CookieConsent } from "@/components/privacy/cookie-consent";
 import { I18nProvider } from "@/lib/i18n/context";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/messages";
+import { headers } from "next/headers";
+import { requestBillingCurrency } from "../../shared/billing-currency";
+import { BillingCurrencyProvider } from "@/components/pricing/billing-currency-provider";
 import "./globals.css";
 
 const bodyFont = DM_Sans({
@@ -76,15 +79,19 @@ export default async function RootLayout({
     >
       <body>
         <I18nProvider initialLocale={locale}>
-          <a className="skip" href="#main">
-            {messages.accessibility.skipToContent}
-          </a>
-          <div className="site-shell">
-            <SiteHeader />
-            {children}
-            <SiteFooter />
-          </div>
-          <CookieConsent />
+          <BillingCurrencyProvider
+            initialCurrency={requestBillingCurrency(await headers())}
+          >
+            <a className="skip" href="#main">
+              {messages.accessibility.skipToContent}
+            </a>
+            <div className="site-shell">
+              <SiteHeader />
+              {children}
+              <SiteFooter />
+            </div>
+            <CookieConsent />
+          </BillingCurrencyProvider>
         </I18nProvider>
       </body>
     </html>

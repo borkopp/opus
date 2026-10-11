@@ -4,7 +4,7 @@ import { requirePaidPlan, requireRole } from "./lib/auth";
 
 const paidFeature = v.union(
   v.literal("Gap optimizer"),
-  v.literal("AI front desk"),
+  v.literal("AI Receptionist"),
 );
 
 export const assertOrgRole = internalQuery({

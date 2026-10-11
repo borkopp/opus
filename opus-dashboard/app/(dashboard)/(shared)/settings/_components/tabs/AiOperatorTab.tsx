@@ -218,15 +218,62 @@ export function AiOperatorTab({
     );
   return (
     <TabsContent value="ai" className="m-0">
-      <fieldset disabled={controlsDisabled} className="min-w-0">
+      <fieldset
+        disabled={controlsDisabled}
+        className="flex min-w-0 flex-col gap-5"
+      >
         <SettingsCard
-          title={t("AI Receptionist", "AI рецепција", "Recepsioni AI")}
+          title={t(
+            "1. Connect Instagram",
+            "1. Поврзете Instagram",
+            "1. Lidhni Instagram-in",
+          )}
           description={t(
-            "Connect Instagram, choose whether to reply automatically, and add the facts clients should know.",
-            "Поврзете Instagram, вклучете автоматски одговори и додајте ги информациите за клиентите.",
-            "Lidhni Instagram-in, zgjidhni përgjigjet automatike dhe shtoni faktet për klientët.",
+            "Connect your studio account and check whether automatic replies are ready.",
+            "Поврзете ја сметката на студиото и проверете дали автоматските одговори се подготвени.",
+            "Lidhni llogarinë e studios dhe kontrolloni nëse përgjigjet automatike janë gati.",
           )}
           contentClassName="flex flex-col gap-6"
+        >
+          <InstagramConnection disabled={controlsDisabled} />
+        </SettingsCard>
+        <SettingsCard
+          title={t(
+            "2. Teach your receptionist",
+            "2. Подгответе ја рецепцијата",
+            "2. Përgatitni recepsionin",
+          )}
+          description={t(
+            "Add studio facts, save them, then try a customer question.",
+            "Додајте информации за студиото, зачувајте ги, па пробајте прашање од клиент.",
+            "Shtoni faktet e studios, ruajini, pastaj provoni një pyetje nga klienti.",
+          )}
+        >
+          <AiStudioContext
+            value={ai.aiStudioContext}
+            onChange={(value) =>
+              setAi((current) => ({ ...current, aiStudioContext: value }))
+            }
+            canPreview={!controlsDisabled && !isDirty && !!status?.provider.ai}
+            providerReady={!!status?.provider.ai}
+            isDirty={isDirty}
+            isSaving={isSaving}
+            disabled={controlsDisabled}
+            onSave={handleSave}
+          />
+        </SettingsCard>
+        <SettingsCard
+          title={t(
+            "3. Choose how to reply",
+            "3. Изберете како да одговара",
+            "3. Zgjidhni si të përgjigjet",
+          )}
+          description={t(
+            "Personalize replies and choose when your receptionist is available.",
+            "Прилагодете ги одговорите и изберете кога рецепцијата е достапна.",
+            "Personalizoni përgjigjet dhe zgjidhni kur është i disponueshëm recepsioni.",
+          )}
+          contentClassName="flex flex-col gap-5"
           footer={
             <Button
               onClick={handleSave}
@@ -245,56 +292,17 @@ export function AiOperatorTab({
             </Button>
           }
         >
-          <InstagramConnection disabled={controlsDisabled} />
-          <SettingsToggleRow
-            title={t(
-              "Automatic Instagram replies",
-              "Автоматски Instagram одговори",
-              "Përgjigje automatike në Instagram",
-            )}
-            description={t(
-              "The assistant replies only when Instagram and messaging delivery are ready. You can pause replies here anytime.",
-              "Асистентот одговара само кога Instagram и сервисите се поврзани. Тука можете да ги паузирате одговорите.",
-              "Asistenti përgjigjet vetëm kur Instagram-i dhe mesazhet janë gati. Mund t'i pezulloni përgjigjet këtu.",
-            )}
-            control={
-              <Switch
-                disabled={controlsDisabled}
-                id="ai-enabled"
-                aria-label={t(
-                  "Automatic Instagram replies",
-                  "Автоматски Instagram одговори",
-                  "Përgjigje automatike në Instagram",
-                )}
-                checked={ai.aiEnabled && ai.aiInstagramEnabled}
-                onCheckedChange={(enabled) =>
-                  setAi((current) => ({
-                    ...current,
-                    aiEnabled: enabled,
-                    aiInstagramEnabled: enabled,
-                  }))
-                }
-              />
-            }
-          />
-          <AiStudioContext
-            value={ai.aiStudioContext}
-            onChange={(value) =>
-              setAi((current) => ({ ...current, aiStudioContext: value }))
-            }
-            canPreview={!controlsDisabled && !isDirty && !!status?.provider.ai}
-            providerReady={!!status?.provider.ai}
-          />
           <Disclosure
+            open={personaError ? true : undefined}
             title={t(
-              "Reply style and schedule",
-              "Стил и распоред на одговори",
-              "Stili dhe orari i përgjigjeve",
+              "Name and reply style",
+              "Име и стил на одговори",
+              "Emri dhe stili i përgjigjeve",
             )}
             description={t(
-              "Optional name, tone, language, instructions and reply hours.",
-              "Изборно име, тон, јазик, упатства и распоред на одговори.",
-              "Emri, toni, gjuha, udhëzimet dhe orari opsional.",
+              "Assistant name, tone, language and greeting.",
+              "Име на асистентот, тон, јазик и поздрав.",
+              "Emri i asistentit, toni, gjuha dhe përshëndetja.",
             )}
           >
             <SettingsSection
@@ -304,9 +312,9 @@ export function AiOperatorTab({
                 "Identiteti i asistentit",
               )}
               description={t(
-                "Optional assistant name and alternate contact number.",
-                "Изборно име на асистентот и друг контакт телефон.",
-                "Emri opsional i asistentit dhe numri alternativ i kontaktit.",
+                "Choose an assistant name. An alternate contact number is optional.",
+                "Изберете име на асистентот. Друг контакт телефон е изборен.",
+                "Zgjidhni emrin e asistentit. Numri alternativ është opsional.",
               )}
             >
               <FieldGroup className="max-w-2xl">
@@ -536,9 +544,23 @@ export function AiOperatorTab({
                 </Field>
               </FieldGroup>
             </SettingsSection>
-
-            <Separator />
-
+          </Disclosure>
+          <Disclosure
+            title={t("Reply hours", "Време за одговори", "Orari i përgjigjeve")}
+            description={
+              ai.aiWorkingHoursEnabled
+                ? t(
+                    "Custom schedule · uses your studio’s timezone",
+                    "Прилагоден распоред · во временската зона на студиото",
+                    "Orar i personalizuar · në zonën kohore të studios",
+                  )
+                : t(
+                    "No schedule limit · reply whenever a client messages",
+                    "Без ограничување · одговор кога клиент ќе пише",
+                    "Pa kufizim orari · përgjigje kur klienti shkruan",
+                  )
+            }
+          >
             <SettingsSection
               title={t(
                 "Reply schedule",
@@ -689,6 +711,50 @@ export function AiOperatorTab({
               )}
             </SettingsSection>
           </Disclosure>
+          <SettingsToggleRow
+            title={t(
+              "Automatic Instagram replies",
+              "Автоматски Instagram одговори",
+              "Përgjigje automatike në Instagram",
+            )}
+            description={t(
+              "The assistant replies only when Instagram and messaging delivery are ready. You can pause replies here anytime.",
+              "Асистентот одговара само кога Instagram и сервисите се поврзани. Тука можете да ги паузирате одговорите.",
+              "Asistenti përgjigjet vetëm kur Instagram-i dhe mesazhet janë gati. Mund t'i pezulloni përgjigjet këtu.",
+            )}
+            control={
+              <Switch
+                disabled={controlsDisabled}
+                id="ai-enabled"
+                aria-label={t(
+                  "Automatic Instagram replies",
+                  "Автоматски Instagram одговори",
+                  "Përgjigje automatike në Instagram",
+                )}
+                checked={ai.aiEnabled && ai.aiInstagramEnabled}
+                onCheckedChange={(enabled) =>
+                  setAi((current) => ({
+                    ...current,
+                    aiEnabled: enabled,
+                    aiInstagramEnabled: enabled,
+                  }))
+                }
+              />
+            }
+          />
+          <p role="status" className="text-sm text-muted-foreground">
+            {isDirty
+              ? t(
+                  "You have unsaved changes. Save to apply them and test your replies.",
+                  "Имате незачувани промени. Зачувајте ги за да се применат и да ги тестирате одговорите.",
+                  "Keni ndryshime të paruajtura. Ruajini për t'i zbatuar dhe testuar përgjigjet.",
+                )
+              : t(
+                  "All changes saved. Automatic replies also require a ready Instagram connection.",
+                  "Сите промени се зачувани. За автоматски одговори е потребна и подготвена Instagram врска.",
+                  "Të gjitha ndryshimet u ruajtën. Përgjigjet automatike kërkojnë edhe një lidhje Instagram të gatshme.",
+                )}
+          </p>
         </SettingsCard>
       </fieldset>
     </TabsContent>

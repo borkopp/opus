@@ -150,8 +150,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 )}
                 <DashboardAnnouncementCarousel
                   key={`announcements:${profile.orgId}`}
-                  orgId={profile.orgId}
-                  canEditWebsite={profile.role === "owner"}
                 />
                 {children}
               </main>

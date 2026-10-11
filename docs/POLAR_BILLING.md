@@ -36,8 +36,8 @@ studios are preserved and are not automatically enrolled or charged.
    do not work there. Use a separate local/development Convex deployment; do not
    change the production deployment to sandbox mode.
 2. Create one fixed-price, monthly product for OPUS Pro: every **1 month**, with
-   **MKD** pricing. The current landing offer is **1,190 MKD/month**; in API minor
-   units that is **119000**. Use tax-inclusive pricing, matching production, and
+   **MKD** pricing. The current landing offer is **1,490 MKD/month**; in API minor
+   units that is **149000**. Use tax-inclusive pricing, matching production, and
    verify that the checkout total matches the advertised price. No trial, usage
    meters, credits, seat billing, or one-time product is used by this integration.
 3. In Polar's subscription settings, turn **Allow multiple subscriptions off**.
@@ -133,6 +133,14 @@ only stops new checkout; existing reconciliation and portal access remain usable
 Keep the product ID stable. Change the price of the existing product in Polar
 when appropriate; do not replace the environment variable with a different
 product without a deliberate subscription migration.
+
+### Pro price update — October 11, 2026
+
+The advertised Pro price is now **1,490 MKD/month** (**149000** minor units).
+Update the existing monthly product in both Polar production and sandbox and
+verify the hosted checkout total before deploying the new advertised price.
+This repository change does not update Polar or migrate existing subscriptions.
+The setup records below describe historical verification at the previous price.
 
 ### Production account setup recorded September 25, 2026
 

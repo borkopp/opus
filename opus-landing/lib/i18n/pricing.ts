@@ -31,7 +31,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Цени и планови — OPUS",
       description:
-        "Споредете ги бесплатниот план, Pro за 1.190 ден. месечно и софтверот по мерка. Погледнете што е вклучено за закажување, промоција и управување со студиото.",
+        "Споредете ги бесплатниот план, Pro за 1.490 ден. месечно и софтверот по мерка. Погледнете што е вклучено за закажување, промоција и управување со студиото.",
     },
     heading: "Изберете што му треба на вашето студио.",
     description:
@@ -195,7 +195,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Pricing and plans — OPUS",
       description:
-        "Compare Free, Pro at 1,190 MKD per month, and custom software. See what is included for booking, promotion, and managing your studio.",
+        "Compare Free, Pro at 1,490 MKD per month, and custom software. See what is included for booking, promotion, and managing your studio.",
     },
     heading: "Choose what works for your studio.",
     description:
@@ -358,7 +358,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Çmimet dhe planet — OPUS",
       description:
-        "Krahasoni planin falas, Pro për 1.190 den. në muaj dhe softuerin sipas porosisë. Shihni çfarë përfshihet për rezervime, promovim dhe menaxhim të studios.",
+        "Krahasoni planin falas, Pro për 1.490 den. në muaj dhe softuerin sipas porosisë. Shihni çfarë përfshihet për rezervime, promovim dhe menaxhim të studios.",
     },
     heading: "Zgjidhni atë që i nevojitet studios tuaj.",
     description:

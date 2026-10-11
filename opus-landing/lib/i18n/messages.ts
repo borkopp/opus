@@ -311,7 +311,7 @@ export const mkMessages = {
     heading: "Колку чини OPUS?",
     comparePlans: "Споредете ги сите функции",
     subheading:
-      "Започнете бесплатно. Pro е 1.190 ден. месечно за дополнителни алатки и поголем тим.",
+      "Започнете бесплатно. Pro е 1.490 ден. месечно за дополнителни алатки и поголем тим.",
     note: "Онлајн закажувањето, веб-страницата и календарот се бесплатни. Pro е по избор.",
     free: {
       name: "Бесплатен план",
@@ -337,7 +337,7 @@ export const mkMessages = {
     },
     pro: {
       name: "Pro",
-      price: "1.190",
+      price: "1.490",
       currency: "ден. / месечно",
       desc: "AI алатки, поголем тим, историја на клиенти и потсетници.",
       cta: "Изберете Pro",
@@ -416,7 +416,7 @@ export const mkMessages = {
       {
         question: "Кога ми треба Pro?",
         answer:
-          "За AI Chat, AI Frontdesk, повеќе од 4 членови во тимот, историја на клиенти и потсетници. Pro е 1.190 ден. месечно и поддржува до 12 членови. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
+          "За AI Chat, AI Frontdesk, повеќе од 4 членови во тимот, историја на клиенти и потсетници. Pro е 1.490 ден. месечно и поддржува до 12 членови. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
       },
       {
         question: "Дали OPUS сам испраќа понуди за слободни термини?",
@@ -813,7 +813,7 @@ export const enMessages: Messages = {
     heading: "How much does OPUS cost?",
     comparePlans: "Compare all features",
     subheading:
-      "Start for free. Pro is 1,190 MKD per month for more tools and a larger team.",
+      "Start for free. Pro is 1,490 MKD per month for more tools and a larger team.",
     note: "Online booking, your website, and your calendar are free. Pro is optional.",
     free: {
       name: "Free",
@@ -839,7 +839,7 @@ export const enMessages: Messages = {
     },
     pro: {
       name: "Pro",
-      price: "1,190",
+      price: "1,490",
       currency: "MKD / month",
       desc: "AI tools, a larger team, client history, and reminders.",
       cta: "Choose Pro",
@@ -918,7 +918,7 @@ export const enMessages: Messages = {
       {
         question: "When do I need Pro?",
         answer:
-          "For AI Chat, AI Frontdesk, more than 4 team members, client history, and reminders. Pro costs 1,190 MKD per month and supports up to 12 members. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
+          "For AI Chat, AI Frontdesk, more than 4 team members, client history, and reminders. Pro costs 1,490 MKD per month and supports up to 12 members. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
       },
       {
         question: "Does OPUS send offers for empty slots by itself?",
@@ -1313,7 +1313,7 @@ export const sqMessages: Messages = {
     heading: "Sa kushton OPUS?",
     comparePlans: "Krahasoni të gjitha funksionet",
     subheading:
-      "Filloni falas. Pro është 1.190 den. në muaj për vegla shtesë dhe ekip më të madh.",
+      "Filloni falas. Pro është 1.490 den. në muaj për vegla shtesë dhe ekip më të madh.",
     note: "Rezervimi online, uebfaqja dhe kalendari janë falas. Pro është me zgjedhje.",
     free: {
       name: "Plani falas",
@@ -1339,7 +1339,7 @@ export const sqMessages: Messages = {
     },
     pro: {
       name: "Pro",
-      price: "1.190",
+      price: "1.490",
       currency: "den. / muaj",
       desc: "Vegla AI, ekip më i madh, historia e klientëve dhe rikujtues.",
       cta: "Zgjidhni Pro",
@@ -1418,7 +1418,7 @@ export const sqMessages: Messages = {
       {
         question: "Kur më nevojitet Pro?",
         answer:
-          "Për AI Chat, AI Frontdesk, më shumë se 4 anëtarë në ekip, historinë e klientëve dhe rikujtues. Pro kushton 1.190 den. në muaj dhe mbështet deri në 12 anëtarë. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
+          "Për AI Chat, AI Frontdesk, më shumë se 4 anëtarë në ekip, historinë e klientëve dhe rikujtues. Pro kushton 1.490 den. në muaj dhe mbështet deri në 12 anëtarë. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
       },
       {
         question: "A dërgon OPUS vetë oferta për termine të lira?",

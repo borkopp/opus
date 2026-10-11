@@ -439,7 +439,8 @@ export default defineSchema({
 
     // Notifications
     reminderHoursBefore: v.array(v.number()), // e.g. [24, 2]
-    smsEnabled: v.boolean(),
+    // Legacy SMS fields are read-only compatibility for stored records.
+    smsEnabled: v.optional(v.boolean()),
     smsReminderHoursBefore: v.optional(v.array(v.number())),
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
@@ -1303,7 +1304,7 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   // DASHBOARD NOTIFICATIONS
   // In-app notifications shown in the navbar bell.
-  // Separate from the `notifications` table (external SMS/Email delivery queue).
+  // Separate from the `notifications` table (external delivery queue).
   // ─────────────────────────────────────────────────────
   dashboard_notifications: defineTable({
     orgId: v.id("orgs"),

@@ -348,7 +348,6 @@ export const mkMessages = {
         "Галерија со најмногу 15 фотографии",
         "Именик на клиенти со историја и статистика на посети",
         "Потсетници за клиенти по е-пошта пред терминот",
-        "SMS потврди и потсетници, со вклучување од поставките",
         "Понуди по е-пошта за слободни термини, со ваше одобрение",
         "Детални извештаи за термините во студиото",
         "Поголема контрола врз е-поштата, маркетингот и известувањата",
@@ -417,7 +416,7 @@ export const mkMessages = {
       {
         question: "Кога ми треба Pro?",
         answer:
-          "За AI Chat, AI Receptionist, поголем тим, историја на клиенти и потсетници. Месечните цени на Pro се: {proPrices}. Сите Pro функции се вклучени во секоја опција. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
+          "За AI Chat, AI Receptionist, поголем тим, историја на клиенти и потсетници. Месечните цени на Pro се: {proPrices}. Сите Pro функции се вклучени во секоја опција. AI го поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
       },
       {
         question: "Дали OPUS сам испраќа понуди за слободни термини?",
@@ -851,7 +850,6 @@ export const enMessages: Messages = {
         "Gallery with up to 15 photos",
         "Client directory with visit history and statistics",
         "Client email reminders before appointments",
-        "SMS confirmations and reminders, enabled in settings",
         "Email offers for empty slots, approved by you",
         "Detailed reports on your studio’s appointments",
         "More email, marketing, and notification controls",
@@ -920,7 +918,7 @@ export const enMessages: Messages = {
       {
         question: "When do I need Pro?",
         answer:
-          "For AI Chat, AI Receptionist, a larger team, client history, and reminders. Pro monthly prices are: {proPrices}. Every option includes all Pro features. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
+          "For AI Chat, AI Receptionist, a larger team, client history, and reminders. Pro monthly prices are: {proPrices}. Every option includes all Pro features. Set up AI yourself from your account. The Free plan covers everyday booking.",
       },
       {
         question: "Does OPUS send offers for empty slots by itself?",
@@ -1353,7 +1351,6 @@ export const sqMessages: Messages = {
         "Galeri me deri në 15 fotografi",
         "Regjistër klientësh me histori dhe statistika të vizitave",
         "Kujtesa për klientët me email para terminit",
-        "Konfirmime dhe kujtesa me SMS, me aktivizim nga cilësimet",
         "Oferta me email për termine të lira, me miratimin tuaj",
         "Raporte të hollësishme për terminet në studio",
         "Më shumë kontroll mbi email-in, marketingun dhe njoftimet",
@@ -1423,7 +1420,7 @@ export const sqMessages: Messages = {
       {
         question: "Kur më nevojitet Pro?",
         answer:
-          "Për AI Chat, AI Receptionist, ekip më të madh, historinë e klientëve dhe rikujtues. Çmimet mujore të Pro janë: {proPrices}. Çdo opsion përfshin të gjitha funksionet Pro. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
+          "Për AI Chat, AI Receptionist, ekip më të madh, historinë e klientëve dhe rikujtues. Çmimet mujore të Pro janë: {proPrices}. Çdo opsion përfshin të gjitha funksionet Pro. AI i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
       },
       {
         question: "A dërgon OPUS vetë oferta për termine të lira?",

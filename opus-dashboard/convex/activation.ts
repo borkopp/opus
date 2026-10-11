@@ -181,7 +181,6 @@ export const startBeautyBusiness = mutation({
       bufferTimeMins: 0,
       surgePricingEnabled: false,
       reminderHoursBefore: [24, 2],
-      smsEnabled: false,
       emailEnabled: true,
       whatsappEnabled: false,
       staffNewBookingEmailEnabled: true,

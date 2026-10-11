@@ -152,9 +152,9 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
         </CardTitle>
         <CardDescription>
           {t(
-            "Personal preferences for this studio, synced with OPUS Studio on your phone. Client email and SMS settings are separate.",
-            "Лични поставки за ова студио, усогласени со OPUS Studio на телефонот. Поставките за клиентска е-пошта и SMS се одделни.",
-            "Preferenca personale për këtë studio, të sinkronizuara me OPUS Studio në telefon. Cilësimet e email-it dhe SMS-it të klientëve janë të veçanta.",
+            "Personal preferences for this studio, synced with OPUS Studio on your phone. Client email settings are separate.",
+            "Лични поставки за ова студио, усогласени со OPUS Studio на телефонот. Поставките за клиентска е-пошта се одделни.",
+            "Preferenca personale për këtë studio, të sinkronizuara me OPUS Studio në telefon. Cilësimet e email-it të klientëve janë të veçanta.",
           )}
         </CardDescription>
       </CardHeader>

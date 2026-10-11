@@ -388,7 +388,7 @@ describe("isolated App Review access", () => {
     expect(
       await t.query(api.publicSite.getBySlug, { slug: APP_REVIEW_SLUG }),
     ).toBeNull();
-    for (const channel of ["email", "sms", "whatsapp"] as const) {
+    for (const channel of ["email", "whatsapp"] as const) {
       const notificationId = await t.mutation(
         internal.notifications.scheduleNotification,
         {

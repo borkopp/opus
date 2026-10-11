@@ -18,7 +18,7 @@ were verified against the local backend on October 6, 2026, as recorded below.
   never prompts for permission. Existing permitted registrations refresh on app
   foreground/browser focus and native token changes.
 - Preferences belong to the signed-in person **in this studio**. They sync across
-  mobile and web without changing teammates' settings or client email/SMS choices.
+  mobile and web without changing teammates' settings or client email choices.
 - Switch mobile/browser push independently; choose new appointments,
   rescheduling, cancellations, reminders and no-shows. Eligible Pro members can
   also choose AI Receptionist handoffs. Appointment scope can be your assignments

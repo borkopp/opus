@@ -11,7 +11,6 @@ import {
 export type PaidFeature =
   | "Gap optimizer"
   | "AI Receptionist"
-  | "SMS notifications"
   | "Client directory"
   | "Client email reminders"
   | "Staff accounts"
@@ -22,9 +21,7 @@ export function requirePaidPlan(
   feature: PaidFeature,
 ): void {
   if ((org._id && isAppReviewOrg(org._id)) || org.slug === "opus-app-review") {
-    if (
-      ["Gap optimizer", "AI Receptionist", "SMS notifications"].includes(feature)
-    )
+    if (["Gap optimizer", "AI Receptionist"].includes(feature))
       throw new ConvexError(
         "This action is unavailable in the App Review demo studio.",
       );

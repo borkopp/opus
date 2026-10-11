@@ -11,8 +11,9 @@ import {
 import { cn } from "@/lib/utils";
 
 interface SettingsCardProps {
-  title: ReactNode;
-  description: ReactNode;
+  title?: ReactNode;
+  description?: ReactNode;
+  header?: ReactNode;
   action?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -23,6 +24,7 @@ interface SettingsCardProps {
 export function SettingsCard({
   title,
   description,
+  header,
   action,
   children,
   footer,
@@ -36,15 +38,17 @@ export function SettingsCard({
         className,
       )}
     >
-      <CardHeader className="px-5 pb-2 sm:px-6 sm:pt-6">
-        <CardTitle className="text-xl font-medium tracking-tight">
-          {title}
-        </CardTitle>
-        <CardDescription className="max-w-2xl leading-5">
-          {description}
-        </CardDescription>
-        {action && <CardAction>{action}</CardAction>}
-      </CardHeader>
+      {header ?? (
+        <CardHeader className="px-5 pb-2 sm:px-6 sm:pt-6">
+          <CardTitle className="text-xl font-medium tracking-tight">
+            {title}
+          </CardTitle>
+          <CardDescription className="max-w-2xl leading-5">
+            {description}
+          </CardDescription>
+          {action && <CardAction>{action}</CardAction>}
+        </CardHeader>
+      )}
       <CardContent
         className={cn(
           "px-5 sm:px-6",

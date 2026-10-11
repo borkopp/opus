@@ -140,7 +140,6 @@ describe("public booking email flow", () => {
     };
     const legacySettings = {
       orgId: fixture.orgId,
-      smsEnabled: false,
       emailEnabled: false,
       whatsappEnabled: false,
       reminderHoursBefore: [24, 2],
@@ -996,22 +995,19 @@ describe("public booking email flow", () => {
     expect(rescheduleBody?.html).toContain("opus-email-logo-blue.png");
   });
 
-  test("adds Pro SMS to a verified public booking while preserving email", async () => {
+  test("keeps verified booking email without SMS even for legacy enabled settings", async () => {
     const fixture = await setupPublishedStudio(t);
-    for (const [key, value] of Object.entries({
-      SMS_ENABLED: "true",
-      TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
-      TWILIO_AUTH_TOKEN: "test-token",
-      TWILIO_FROM_NUMBER: "+15005550006",
-      TWILIO_MESSAGING_SERVICE_SID: "",
-      TWILIO_STATUS_CALLBACK_URL: "https://test.convex.site/webhooks/twilio",
-    }))
-      vi.stubEnv(key, value);
-    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
-    await fixture.owner.mutation(
-      api.orgSettings.updateSmsNotificationSettings,
-      { orgId: fixture.orgId, smsEnabled: true, smsReminderHoursBefore: [2] },
-    );
+    await t.run(async (ctx) => {
+      await ctx.db.patch(fixture.orgId, { plan: "paid" });
+      const settings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+        .unique();
+      await ctx.db.patch(settings!._id, {
+        smsEnabled: true,
+        smsReminderHoursBefore: [2],
+      });
+    });
     const args = {
       ...bookingArgs(fixture),
       customerEmail: "sms-public@example.com",
@@ -1039,7 +1035,7 @@ describe("public booking email flow", () => {
         .filter((n) => n.channel === "sms")
         .map((n) => n.type)
         .sort(),
-    ).toEqual(["booking_confirmation", "booking_reminder"]);
+    ).toEqual([]);
     expect(
       bookingNotifications.some(
         (n) => n.channel === "email" && n.type === "booking_confirmation",
@@ -1050,6 +1046,53 @@ describe("public booking email flow", () => {
         .filter((n) => n.type === "booking_verification")
         .every((n) => n.channel === "email"),
     ).toBe(true);
+  });
+
+  test("cancels historical queued SMS without contacting a provider", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const notificationId = await t.run((ctx) =>
+      ctx.db.insert("notifications", {
+        orgId: fixture.orgId,
+        channel: "sms",
+        type: "booking_confirmation",
+        recipientAddress: "+38970123456",
+        templateData: {},
+        scheduledFor: Date.now(),
+        status: "pending",
+        createdAt: Date.now(),
+        smsDispatchStartedAt: Date.now() - 60_000,
+      }),
+    );
+    fetchMock.mockClear();
+    await expect(
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId,
+      }),
+    ).resolves.toBe("cancelled");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
+      status: "cancelled",
+      failureReason: "Notification channel is no longer supported.",
+    });
+    await expect(
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId,
+      }),
+    ).resolves.toBe("ignored");
+  });
+
+  test("rejects new SMS queue entries", async () => {
+    const fixture = await setupPublishedStudio(t);
+    await expect(
+      t.mutation(internal.notifications.scheduleNotification, {
+        orgId: fixture.orgId,
+        // @ts-expect-error Retired channels must also be rejected at runtime.
+        channel: "sms",
+        type: "booking_confirmation",
+        recipientAddress: "+38970123456",
+        templateData: {},
+      }),
+    ).rejects.toThrow();
   });
 
   test("locks a verification challenge after five incorrect codes", async () => {

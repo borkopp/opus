@@ -32,13 +32,10 @@ import { normalizeBookingEmail } from "./lib/bookingEmailSecurity";
 
 function getPrimaryContact(
   customer: Doc<"customers">,
-): { channel: "email" | "sms" | "whatsapp" | "push"; address: string } | null {
+): { channel: "email" | "whatsapp" | "push"; address: string } | null {
   if (customer.preferredChannel === "whatsapp" && customer.phone)
     return { channel: "whatsapp", address: customer.phone };
-  if (customer.preferredChannel === "sms" && customer.phone)
-    return { channel: "sms", address: customer.phone };
   if (customer.email) return { channel: "email", address: customer.email };
-  if (customer.phone) return { channel: "sms", address: customer.phone };
   return null;
 }
 

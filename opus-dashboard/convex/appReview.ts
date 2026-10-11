@@ -126,7 +126,6 @@ export const provision = internalMutation({
       bufferTimeMins: 0,
       surgePricingEnabled: false,
       reminderHoursBefore: [],
-      smsEnabled: false,
       emailEnabled: false,
       whatsappEnabled: false,
       staffNewBookingEmailEnabled: false,

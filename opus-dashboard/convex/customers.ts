@@ -126,7 +126,6 @@ export const updateCustomer = mutation({
         phone: v.optional(v.string()),
         preferredChannel: v.optional(v.union(
             v.literal("whatsapp"),
-            v.literal("sms"),
             v.literal("email"),
         )),
         whatsappOptIn: v.optional(v.boolean()),

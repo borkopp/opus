@@ -245,10 +245,7 @@ export function SettingsWorkspace() {
           <NotificationsQueueTab
             orgId={orgId}
             isPaid={org.plan === "paid"}
-            smsAvailable={data.smsAvailable}
             initialData={{
-              smsEnabled: settings.smsEnabled,
-              smsReminderHoursBefore: settings.smsReminderHoursBefore ?? [24],
               emailEnabled: settings.emailEnabled,
               reminderHoursBefore: settings.reminderHoursBefore,
               staffNewBookingEmailEnabled:

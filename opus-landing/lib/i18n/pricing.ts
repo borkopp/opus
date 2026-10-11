@@ -139,11 +139,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             free: false,
             pro: "1, 2, 3 или 24 ч. пред терминот",
           },
-          {
-            feature: "SMS потврди и потсетници",
-            free: false,
-            pro: "Да*",
-          },
         ],
       },
       {
@@ -183,9 +178,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [{ feature: "Приоритетна поддршка", free: false, pro: true }],
       },
     ],
-    activationTitle: "За SMS и AI алатките",
+    activationTitle: "За AI алатките",
     activationNote:
-      "* AI и SMS ги поставувате сами од вашата сметка. За AI Receptionist, поврзете го вашиот професионален Instagram профил во поставките. Планот не вклучува неограничени SMS пораки.",
+      "* AI го поставувате сами од вашата сметка. За AI Receptionist, поврзете го вашиот професионален Instagram профил во поставките.",
     customTitle: "Ви треба нешто по мерка?",
     customDescription:
       "Софтверот по мерка има посебна понуда. Заедно ги договараме функциите, интеграциите, рокот и месечниот план за вашиот проект.",
@@ -302,11 +297,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             free: false,
             pro: "1, 2, 3, or 24 hours before",
           },
-          {
-            feature: "SMS confirmations and reminders",
-            free: false,
-            pro: "Yes*",
-          },
         ],
       },
       {
@@ -346,9 +336,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [{ feature: "Priority support", free: false, pro: true }],
       },
     ],
-    activationTitle: "About SMS and AI tools",
+    activationTitle: "About AI tools",
     activationNote:
-      "* Set up AI and SMS yourself from your account. For AI Receptionist, connect your professional Instagram account in settings. The plan does not include unlimited SMS messages.",
+      "* Set up AI yourself from your account. For AI Receptionist, connect your professional Instagram account in settings.",
     customTitle: "Need something built for you?",
     customDescription:
       "Custom software is quoted separately. We agree on the features, integrations, timeline, and monthly plan for your project together.",
@@ -470,11 +460,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             free: false,
             pro: "1, 2, 3 ose 24 orë para",
           },
-          {
-            feature: "Konfirmime dhe kujtesa me SMS",
-            free: false,
-            pro: "Po*",
-          },
         ],
       },
       {
@@ -514,9 +499,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [{ feature: "Mbështetje prioritare", free: false, pro: true }],
       },
     ],
-    activationTitle: "Rreth veglave SMS dhe AI",
+    activationTitle: "Rreth veglave AI",
     activationNote:
-      "* AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për AI Receptionist, lidhni profilin tuaj profesional të Instagram-it në cilësime. Plani nuk përfshin SMS të pakufizuara.",
+      "* AI i konfiguroni vetë nga llogaria juaj. Për AI Receptionist, lidhni profilin tuaj profesional të Instagram-it në cilësime.",
     customTitle: "Ju nevojitet diçka e përshtatur posaçërisht?",
     customDescription:
       "Softueri sipas porosisë ka ofertë të veçantë. Bashkërisht dakordohemi për funksionet, integrimet, afatin dhe planin mujor për projektin tuaj.",

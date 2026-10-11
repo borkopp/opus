@@ -84,7 +84,7 @@ opus/
 | **Auth**         | Clerk (session-based, org-scoped)                                                      |
 | **Payments**     | Stripe Connect (primary) + Braintree (secondary)                                       |
 | **AI**           | Anthropic Claude (claude-haiku-4-5 for AI agent, claude-sonnet-4-6 for advanced tasks) |
-| **Messaging**    | Twilio (SMS/WhatsApp), Resend (email)                                                  |
+| **Messaging**    | Resend + Sender (email), Expo + Web Push (personal alerts)                                                  |
 | **Maps**         | Mapbox GL                                                                              |
 | **Styling**      | Tailwind CSS v4, shadcn/ui                                                             |
 | **Deployment**   | Docker → Hetzner VPS via GitHub Actions                                                |
@@ -128,7 +128,7 @@ opus/
 | **AI Inbox**                | `/ai-inbox`                        | ✅ Built — view AI conversations, handoffs                                                                            |
 | **Customer CRM**            | `convex/customers.ts`              | ✅ Built — customer profiles, visit history, spend tracking, no-show risk                                             |
 | **Customer Notes**          | `convex/schema:customer_notes`     | ✅ Schema ready                                                                                                       |
-| **Notification System**     | `convex/notifications.ts`          | ✅ Built — queued outbound SMS, email, WhatsApp with scheduling                                                       |
+| **Notification System**     | `convex/notifications.ts`          | ✅ Built — queued email and personal push with scheduling                                                       |
 | **Dashboard Notifications** | `convex/dashboardNotifications.ts` | ✅ Built — in-app bell notifications for new bookings, cancellations                                                  |
 | **Audit Log**               | `convex/auditLog.ts`               | ✅ Built — append-only log of all significant mutations                                                               |
 | **Onboarding Wizard**       | `/onboarding`                      | ✅ Built — 5-step flow (Industry → Identity → Location → Hours → Profile/Setup)                                       |
@@ -291,7 +291,7 @@ Roles within an org: `owner` → `manager` → `staff`
 | **OPUS mobile app**              | `booking.source: "opus_app"`, AGENTS.md mentions React Native/Expo | No mobile code in repo                                            |
 | **opus_users login flow**        | `opus_users` table, `clerkId` field                                | Schema ready but no auth flow on opus-mk                          |
 | **Review submission UI**         | `reviews` table fully modeled                                      | Backend queries exist, no submission form on opus-mk              |
-| **WhatsApp AI channel**          | `ai_conversations.channel: "whatsapp"`                             | Schema + conversation model ready, no Twilio webhook              |
+| **WhatsApp AI channel**          | `ai_conversations.channel: "whatsapp"`                             | Schema + conversation model ready, no provider webhook              |
 | **Hospitality: Menu management** | Nav has "Menu" link for hospitality                                | Route exists in nav config, no page built                         |
 | **Hospitality: Staff page**      | Nav has "Staff" link for hospitality                               | Route exists in nav config, no page built                         |
 | **Hospitality: Finances page**   | Nav has "Finances" link for hospitality                            | Route exists in nav config, no page built                         |

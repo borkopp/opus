@@ -204,17 +204,14 @@ and inclusive-tax configuration. Both MKD and EUR provider-confirmed subscriptio
 grant the configured Pro team capacity. This does not change studio service prices
 or authorize other international product expansion.
 
-### Authorized Pro appointment SMS
+### SMS notifications removed
 
-Client appointment SMS was explicitly authorized on September 24, 2026 for
-the Pro plan. Pro beauty studios can enable confirmations, reschedules,
-cancellations, and configurable reminders under Settings → Notifications.
-SMS requires a configured Twilio provider and explicit studio activation.
-Free studios cannot enable or send SMS, including after a plan downgrade.
-Email reminders remain independently configurable on Pro. This authorization does
-not enable SMS campaigns, recovery offers, WhatsApp, or SMS verification.
-
-See [SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md) for setup and validation.
+The user authorized complete removal of appointment SMS on October 11, 2026.
+SMS delivery, scheduling, settings, Twilio callbacks and marketing claims are
+removed. Email and personal push notifications remain supported. Historical
+SMS records and optional stored settings remain readable for compatibility;
+retired notification channels cannot be queued and pending records are cancelled
+when processed.
 
 ### Free studio promotion tools
 

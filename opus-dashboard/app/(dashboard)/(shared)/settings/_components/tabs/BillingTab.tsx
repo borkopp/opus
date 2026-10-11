@@ -136,12 +136,7 @@ export function BillingTab() {
       ) : (
         <SettingsCard
           className="min-w-0"
-          title={t("Subscription", "Претплата", "Abonimi")}
-          description={t(
-            "Your studio’s plan, payments, and invoices.",
-            "Планот на вашето студио, плаќањата и фактурите.",
-            "Plani i studios suaj, pagesat dhe faturat.",
-          )}
+          header={<BillingPlanSummary data={data} currency={currency} />}
           footer={
             data.canManage ? (
               <>
@@ -208,7 +203,6 @@ export function BillingTab() {
           }
         >
           <div className="flex flex-col gap-5">
-            <BillingPlanSummary data={data} currency={currency} />
             {data.canManage &&
               data.plan === "free" &&
               !data.hasOpenSubscription && (

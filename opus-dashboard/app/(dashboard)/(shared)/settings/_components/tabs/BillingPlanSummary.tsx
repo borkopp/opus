@@ -1,5 +1,5 @@
 import type { FunctionReturnType } from "convex/server";
-import { CalendarDays, CreditCard, Check } from "lucide-react";
+import { CalendarDays, CreditCard, Check, Users } from "lucide-react";
 import type { api } from "@/convex/_generated/api";
 import { LogoMark } from "@/components/Logo";
 import { Badge } from "@/components/ui/badge";
@@ -61,9 +61,9 @@ export function BillingPlanSummary({
             >
               {paid
                 ? t(
-                    "More tools for your studio.",
-                    "Повеќе алатки за вашето студио.",
-                    "Më shumë mjete për studion tuaj.",
+                    `Up to ${data.teamLimit} active team members.`,
+                    `До ${data.teamLimit} активни членови на тимот.`,
+                    `Deri në ${data.teamLimit} anëtarë aktivë të ekipit.`,
                   )
                 : t(
                     "Everything you need to start taking bookings.",
@@ -74,7 +74,7 @@ export function BillingPlanSummary({
           </div>
         </div>
       </div>
-      <dl className="grid divide-y divide-border/60 border-t border-border/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+      <dl className="grid divide-y divide-border/60 border-t border-border/60 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <div className="flex min-w-0 flex-col gap-3 p-5 sm:p-6">
           <dt
             data-replay-public
@@ -135,6 +135,19 @@ export function BillingPlanSummary({
                     "Без плаќање",
                     "Nuk kërkohet pagesë",
                   )}
+          </dd>
+        </div>
+        <div className="flex min-w-0 flex-col gap-3 p-5 sm:p-6">
+          <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Users className="size-4" aria-hidden="true" />
+            {t(
+              "Active team members",
+              "Активни членови на тимот",
+              "Anëtarë aktivë të ekipit",
+            )}
+          </dt>
+          <dd className="text-xl font-medium tabular-nums tracking-tight">
+            {data.teamCount} / {data.teamLimit}
           </dd>
         </div>
       </dl>

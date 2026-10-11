@@ -27,8 +27,13 @@ import type { BusinessLocation } from "@/lib/mapbox";
 import {
   BILLING_PATH,
   upgradeDestination,
-  UPGRADE_LOGIN_PATH,
+  upgradeLoginPath,
+  withProTeamLimit,
 } from "@/lib/upgrade";
+import {
+  parseProTeamLimit,
+  type ProTeamLimit,
+} from "../../../../shared/pro-pricing";
 import { BusinessStep } from "./BusinessStep";
 import { CategoryStep } from "./CategoryStep";
 import { OwnerStep } from "./OwnerStep";
@@ -77,11 +82,13 @@ export function OnboardingWizard() {
   const params = useSearchParams();
   const requestedStep = onboardingStep(params.get("step"));
   const upgrading = params.get("plan") === "pro";
+  const teamLimit = parseProTeamLimit(params.get("team"));
   return (
     <OnboardingFlow
-      key={`${upgrading}:${requestedStep}`}
+      key={`${upgrading}:${requestedStep}:${teamLimit}`}
       requestedStep={requestedStep}
       upgrading={upgrading}
+      teamLimit={teamLimit}
     />
   );
 }
@@ -89,9 +96,11 @@ export function OnboardingWizard() {
 function OnboardingFlow({
   requestedStep,
   upgrading,
+  teamLimit,
 }: {
   requestedStep: WizardStep | null;
   upgrading: boolean;
+  teamLimit?: ProTeamLimit;
 }) {
   const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
@@ -113,8 +122,8 @@ function OnboardingFlow({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated)
-      router.replace(upgrading ? UPGRADE_LOGIN_PATH : "/login");
-  }, [isAuthenticated, isLoading, router, upgrading]);
+      router.replace(upgrading ? upgradeLoginPath(teamLimit) : "/login");
+  }, [isAuthenticated, isLoading, router, upgrading, teamLimit]);
   const shouldLeave = upgrading
     ? profile &&
       upgradeDestination({
@@ -125,8 +134,11 @@ function OnboardingFlow({
       }) === BILLING_PATH
     : state?.onboardingComplete && !requestedStep;
   useEffect(() => {
-    if (shouldLeave) router.replace(upgrading ? BILLING_PATH : "/beauty");
-  }, [shouldLeave, upgrading, router]);
+    if (shouldLeave)
+      router.replace(
+        upgrading ? withProTeamLimit(BILLING_PATH, teamLimit) : "/beauty",
+      );
+  }, [shouldLeave, upgrading, router, teamLimit]);
 
   if (
     isLoading ||

@@ -6,11 +6,26 @@ const FREE_STAFF_LIMIT = 3;
 const FREE_OWNER_LIMIT = 1;
 const PRO_TEAM_LIMIT = 12;
 
+export async function getProTeamLimitForOrg(ctx: QueryCtx, org: Doc<"orgs">) {
+  const account = await ctx.db
+    .query("billing_accounts")
+    .withIndex("by_org", (q) => q.eq("orgId", org._id))
+    .unique();
+  // Preserve manually granted/legacy Pro until its first verified tier sync.
+  return account && !account.isDeleted
+    ? (account.subscription?.teamLimit ?? PRO_TEAM_LIMIT)
+    : PRO_TEAM_LIMIT;
+}
+
 export async function getStaffPlanStatusForOrg(
   ctx: QueryCtx,
   org: Doc<"orgs">,
   existingStaff?: Doc<"staff_members">,
 ) {
+  const totalLimit =
+    org.plan === "paid"
+      ? await getProTeamLimitForOrg(ctx, org)
+      : FREE_STAFF_LIMIT + FREE_OWNER_LIMIT;
   const activeStaff = await ctx.db
     .query("staff_members")
     .withIndex("by_org_active", (q) =>
@@ -37,7 +52,7 @@ export async function getStaffPlanStatusForOrg(
     const nextTotal = nextOwners + nextStaff;
 
     if (org.plan === "paid") {
-      return !(nextTotal > PRO_TEAM_LIMIT && nextTotal > activeStaff.length);
+      return !(nextTotal > totalLimit && nextTotal > activeStaff.length);
     }
 
     // Existing teams above the limit may still edit profiles and reduce their
@@ -59,10 +74,7 @@ export async function getStaffPlanStatusForOrg(
     totalCount: activeStaff.length,
     staffLimit: FREE_STAFF_LIMIT,
     ownerLimit: FREE_OWNER_LIMIT,
-    totalLimit:
-      org.plan === "paid"
-        ? PRO_TEAM_LIMIT
-        : FREE_STAFF_LIMIT + FREE_OWNER_LIMIT,
+    totalLimit,
     canUseStaffRole: canUseRole("staff"),
     canUseOwnerRole: canUseRole("owner"),
   };
@@ -81,8 +93,8 @@ export async function requireStaffPlanCapacity(
     if (org.plan === "paid") {
       throw new ConvexError({
         code: "PRO_STAFF_LIMIT",
-        message:
-          "The Pro plan allows up to 12 active team members. Deactivate a team member to add more.",
+        limit: status.totalLimit,
+        message: `Your Pro package allows up to ${status.totalLimit} active team members. Choose a larger package or deactivate a team member to add more.`,
       });
     }
     throw new ConvexError({

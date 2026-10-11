@@ -4,11 +4,17 @@ import schema from "../../convex/schema";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { convexModules } from "../../convex-test.setup";
+import { PRO_TEAM_TIERS, type ProTeamLimit } from "../../../shared/pro-pricing";
 
 const backend = () => convexTest(schema, convexModules);
 type Backend = ReturnType<typeof backend>;
 
-async function studio(t: Backend, plan: "free" | "paid", name = "Luna") {
+async function studio(
+  t: Backend,
+  plan: "free" | "paid",
+  name = "Luna",
+  teamLimit?: ProTeamLimit,
+) {
   const owner = t.withIdentity({ subject: name, email: `${name}@example.com` });
   await owner.mutation(api.users.ensureUser);
   const { orgId } = await owner.mutation(api.activation.startBeautyBusiness, {
@@ -17,6 +23,33 @@ async function studio(t: Backend, plan: "free" | "paid", name = "Luna") {
   });
   await t.run(async (ctx) => {
     await ctx.db.patch(orgId, { plan });
+    if (teamLimit)
+      await ctx.db.insert("billing_accounts", {
+        orgId,
+        externalCustomerId: `opus:${orgId}`,
+        environment: "sandbox",
+        productId: `pro-${teamLimit}`,
+        managed: true,
+        hasOpenSubscription: true,
+        syncVersion: 1,
+        syncedVersion: 1,
+        isDeleted: false,
+        subscription: {
+          id: `subscription-${teamLimit}`,
+          status: "active",
+          teamLimit,
+          productId: `pro-${teamLimit}`,
+          amount: PRO_TEAM_TIERS.find((tier) => tier.teamLimit === teamLimit)!
+            .monthlyPriceMinorUnits,
+          currency: "mkd",
+          interval: "month",
+          intervalCount: 1,
+          currentPeriodEnd: Date.now() + 30 * 86400_000,
+          cancelAtPeriodEnd: false,
+        },
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
   });
   return {
     owner,
@@ -159,56 +192,102 @@ describe("studio plan limits", () => {
     ).rejects.toThrow("FREE_STAFF_LIMIT");
   });
 
-  test("Pro counts all roles toward 12 and blocks creation and reactivation at capacity", async () => {
-    const t = backend();
-    const s = await studio(t, "paid");
-    await s.addStaff(1, "owner");
-    await s.addStaff(2, "manager");
-    const ids = [];
-    for (let i = 3; i < 12; i++) ids.push(await s.addStaff(i));
-    expect(await s.owner.query(api.staff.getStaffPlanStatus, {})).toMatchObject(
-      {
-        totalCount: 12,
-        totalLimit: 12,
+  test.each(PRO_TEAM_TIERS)(
+    "Pro $teamLimit counts all roles and blocks creation and reactivation at capacity",
+    async ({ teamLimit }) => {
+      const t = backend();
+      const s = await studio(t, "paid", "Luna", teamLimit);
+      await s.addStaff(1, "owner");
+      await s.addStaff(2, "manager");
+      const ids = [];
+      for (let i = 3; i < teamLimit; i++) ids.push(await s.addStaff(i));
+      expect(
+        await s.owner.query(api.staff.getStaffPlanStatus, {}),
+      ).toMatchObject({
+        totalCount: teamLimit,
+        totalLimit: teamLimit,
         canUseStaffRole: false,
         canUseOwnerRole: false,
-      },
+      });
+      for (const role of ["staff", "manager", "owner"] as const) {
+        await expect(s.addStaff(teamLimit, role)).rejects.toThrow(
+          "PRO_STAFF_LIMIT",
+        );
+      }
+      await s.owner.mutation(api.staff.updateStaffMember, {
+        orgId: s.orgId,
+        staffId: ids[0],
+        role: "manager",
+        displayName: "Edited at capacity",
+      });
+      expect(
+        await s.owner.query(api.staff.getStaffPlanStatus, { staffId: ids[0] }),
+      ).toMatchObject({ canUseStaffRole: true, canUseOwnerRole: true });
+      await s.owner.mutation(api.staff.updateStaffMember, {
+        orgId: s.orgId,
+        staffId: ids[0],
+        isActive: false,
+      });
+      const replacement = await s.addStaff(teamLimit);
+      await expect(
+        s.owner.mutation(api.staff.updateStaffMember, {
+          orgId: s.orgId,
+          staffId: ids[0],
+          isActive: true,
+        }),
+      ).rejects.toThrow("PRO_STAFF_LIMIT");
+      await s.owner.mutation(api.staff.updateStaffMember, {
+        orgId: s.orgId,
+        staffId: replacement,
+        isActive: false,
+      });
+      await s.owner.mutation(api.staff.updateStaffMember, {
+        orgId: s.orgId,
+        staffId: ids[0],
+        isActive: true,
+      });
+    },
+  );
+
+  test("a package downgrade keeps team history and permits edits and reductions until the team fits", async () => {
+    const t = backend();
+    const s = await studio(t, "paid", "Luna", 8);
+    const ids = [];
+    for (let i = 1; i < 8; i++) ids.push(await s.addStaff(i));
+    await t.run(async (ctx) => {
+      const account = await ctx.db
+        .query("billing_accounts")
+        .withIndex("by_org", (q) => q.eq("orgId", s.orgId))
+        .unique();
+      await ctx.db.patch(account!._id, {
+        subscription: { ...account!.subscription!, teamLimit: 4 },
+      });
+    });
+    expect(await s.owner.query(api.staff.getStaffPlanStatus, {})).toMatchObject(
+      { totalLimit: 4, totalCount: 8 },
     );
-    for (const role of ["staff", "manager", "owner"] as const) {
-      await expect(s.addStaff(12, role)).rejects.toThrow("PRO_STAFF_LIMIT");
-    }
+    await expect(s.addStaff(8)).rejects.toThrow("PRO_STAFF_LIMIT");
     await s.owner.mutation(api.staff.updateStaffMember, {
       orgId: s.orgId,
       staffId: ids[0],
       role: "manager",
-      displayName: "Edited at capacity",
+      displayName: "Still editable",
     });
-    expect(
-      await s.owner.query(api.staff.getStaffPlanStatus, { staffId: ids[0] }),
-    ).toMatchObject({ canUseStaffRole: true, canUseOwnerRole: true });
-    await s.owner.mutation(api.staff.updateStaffMember, {
-      orgId: s.orgId,
-      staffId: ids[0],
-      isActive: false,
-    });
-    await s.addStaff(12);
-    await expect(
-      s.owner.mutation(api.staff.updateStaffMember, {
+    for (const staffId of ids.slice(0, 5)) {
+      await s.owner.mutation(api.staff.updateStaffMember, {
         orgId: s.orgId,
-        staffId: ids[0],
-        isActive: true,
-      }),
-    ).rejects.toThrow("PRO_STAFF_LIMIT");
-    await s.owner.mutation(api.staff.updateStaffMember, {
+        staffId,
+        isActive: false,
+      });
+    }
+    await s.addStaff(8);
+    expect(await s.owner.query(api.staff.getStaffPlanStatus, {})).toMatchObject(
+      { totalLimit: 4, totalCount: 4 },
+    );
+    const stored = await s.owner.query(api.staff.listStaffMembers, {
       orgId: s.orgId,
-      staffId: ids[1],
-      isActive: false,
     });
-    await s.owner.mutation(api.staff.updateStaffMember, {
-      orgId: s.orgId,
-      staffId: ids[0],
-      isActive: true,
-    });
+    expect(stored).toHaveLength(9);
   });
 
   test("legacy Pro teams above 12 may edit and reduce usage, but cannot grow", async () => {

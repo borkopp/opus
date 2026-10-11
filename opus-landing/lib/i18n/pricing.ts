@@ -31,7 +31,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Цени и планови — OPUS",
       description:
-        "Споредете ги бесплатниот план, Pro за 1.490 ден. месечно и софтверот по мерка. Погледнете што е вклучено за закажување, промоција и управување со студиото.",
+        "Споредете ги бесплатниот план и Pro од 1.490 ден. месечно. Изберете тим до 4, 5, 6, 8 или 12 членови, со историја на клиенти, потсетници и AI алатки.",
     },
     heading: "Изберете што му треба на вашето студио.",
     description:
@@ -76,7 +76,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "Тим",
             free: "4",
-            pro: "До 12",
+            pro: "4, 5, 6, 8 или 12, според избраната опција",
           },
           {
             feature: "Галерија на веб-сајтот",
@@ -195,7 +195,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Pricing and plans — OPUS",
       description:
-        "Compare Free, Pro at 1,490 MKD per month, and custom software. See what is included for booking, promotion, and managing your studio.",
+        "Compare Free and Pro from 1,490 MKD/month. Choose a team of up to 4, 5, 6, 8, or 12, with client history, reminders, and AI tools.",
     },
     heading: "Choose what works for your studio.",
     description:
@@ -239,7 +239,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "Team members",
             free: "4",
-            pro: "Up to 12",
+            pro: "4, 5, 6, 8, or 12, depending on your option",
           },
           {
             feature: "Website gallery",
@@ -358,7 +358,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Çmimet dhe planet — OPUS",
       description:
-        "Krahasoni planin falas, Pro për 1.490 den. në muaj dhe softuerin sipas porosisë. Shihni çfarë përfshihet për rezervime, promovim dhe menaxhim të studios.",
+        "Krahasoni planin falas dhe Pro nga 1.490 den. në muaj. Zgjidhni ekip me deri në 4, 5, 6, 8 ose 12 anëtarë, me histori klientësh, rikujtues dhe vegla AI.",
     },
     heading: "Zgjidhni atë që i nevojitet studios tuaj.",
     description:
@@ -403,7 +403,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "Anëtarët e ekipit",
             free: "4",
-            pro: "Deri në 12",
+            pro: "4, 5, 6, 8 ose 12, sipas opsionit të zgjedhur",
           },
           {
             feature: "Galeria në uebfaqe",
@@ -440,7 +440,11 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             free: true,
             pro: true,
           },
-          { feature: "Përgjigje të ruajtura për klientët", free: true, pro: true },
+          {
+            feature: "Përgjigje të ruajtura për klientët",
+            free: true,
+            pro: true,
+          },
         ],
       },
       {

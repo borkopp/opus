@@ -267,7 +267,7 @@ export const en: DashboardTranslations = {
   },
   staffErrors: {
     "FREE_STAFF_LIMIT": "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
-    "PRO_STAFF_LIMIT": "The Pro plan allows up to 12 active team members. Deactivate a team member to add more."
+    "PRO_STAFF_LIMIT": "Your Pro team limit has been reached. Choose a larger package or deactivate a team member."
 },
   gapRecovery: {
     errors: {

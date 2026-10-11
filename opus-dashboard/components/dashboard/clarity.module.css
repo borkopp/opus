@@ -1835,38 +1835,6 @@
     margin-top: 12px;
   }
 }
-@media (max-width: 600px) {
-  .navigation {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(70px, 1fr);
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
-    border-radius: 22px;
-  }
-  .navigation a {
-    min-width: 0;
-    min-height: 60px;
-    flex-direction: column;
-    gap: 6px;
-    padding: 10px 2px;
-    border-radius: 17px;
-    font-size: 11px;
-    line-height: 1.2;
-  }
-  .navigation a svg {
-    width: 18px;
-    height: 18px;
-  }
-}
-@media (max-width: 360px) {
-  .navigation a {
-    padding-inline: 0;
-    font-size: 10px;
-  }
-}
-
 /* Studio keeps the same live widgets and actions with the approved softer layout. */
 .scope[data-dashboard-theme="studio"] .dashboard {
   border-radius: 38px;
@@ -1881,11 +1849,6 @@
 .scope[data-dashboard-theme="studio"] .navigation a[aria-current] {
   background: #252330;
   color: white;
-}
-@media (max-width: 600px) {
-  .scope[data-dashboard-theme="studio"] .navigation {
-    gap: 3px;
-  }
 }
 .scope[data-dashboard-theme="studio"] .greeting {
   padding-block: 18px 12px;
@@ -2302,5 +2265,68 @@
   }
   .serviceTileArt {
     height: 108px;
+  }
+}
+
+/* Mobile route navigation stays within thumb reach, above the device safe area. */
+@media (max-width: 760px) {
+  .scope {
+    --mobile-tabbar-height: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+  .dashboard {
+    padding-bottom: var(--mobile-tabbar-height);
+  }
+  .scope .navigation,
+  .scope[data-dashboard-theme="studio"] .navigation {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 2px;
+    width: 100%;
+    height: var(--mobile-tabbar-height);
+    padding: 6px max(6px, env(safe-area-inset-right, 0px))
+      calc(6px + env(safe-area-inset-bottom, 0px))
+      max(6px, env(safe-area-inset-left, 0px));
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--card);
+    box-shadow: 0 -4px 20px rgb(0 0 0 / 4%);
+  }
+  .scope .navigation a,
+  .scope[data-dashboard-theme="studio"] .navigation a {
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 2px;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--muted-foreground);
+    font-size: clamp(10px, 2.6vw, 12px);
+    line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .scope .navigation a[aria-current],
+  .scope[data-dashboard-theme="studio"] .navigation a[aria-current] {
+    background: var(--secondary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .scope .navigation a svg {
+    width: 22px;
+    height: 22px;
+  }
+  .scope .navigation a span {
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .scope .navigation a:focus-visible {
+    outline-offset: -3px;
   }
 }

@@ -33,14 +33,14 @@ export function StaffPlanFooter() {
             {!planStatus.isFree
               ? planStatus.canUseStaffRole
                 ? t(
-                    "Up to 12 active team members, including owners and managers. Inactive members do not use a slot.",
-                    "До 12 активни членови на тимот, вклучувајќи сопственици и менаџери. Неактивните членови не зафаќаат место.",
-                    "Deri në 12 anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët. Anëtarët joaktivë nuk zënë vend.",
+                    `Up to ${planStatus.totalLimit} active team members, including owners and managers. Inactive members do not use a slot.`,
+                    `До ${planStatus.totalLimit} активни членови на тимот, вклучувајќи сопственици и менаџери. Неактивните членови не зафаќаат место.`,
+                    `Deri në ${planStatus.totalLimit} anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët. Anëtarët joaktivë nuk zënë vend.`,
                   )
                 : t(
-                    "Team limit reached. Deactivate a team member to add more.",
-                    "Лимитот за тимот е достигнат. Деактивирајте член на тимот за да додадете повеќе.",
-                    "Kufiri i ekipit është arritur. Çaktivizoni një anëtar të ekipit për të shtuar më shumë.",
+                    "Team limit reached. Choose a larger Pro package or deactivate a team member to add more.",
+                    "Лимитот за тимот е достигнат. Изберете поголем Pro пакет или деактивирајте член на тимот за да додадете повеќе.",
+                    "Kufiri i ekipit është arritur. Zgjidhni një paketë më të madhe Pro ose çaktivizoni një anëtar të ekipit për të shtuar më shumë.",
                   )
               : planStatus.canUseStaffRole
                 ? t(

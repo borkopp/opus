@@ -23,9 +23,12 @@ account menu. Subscribe opens a hosted Polar checkout. The price and taxes are
 shown before the owner confirms payment. Manage billing opens an authenticated
 Polar customer portal for invoices, payment methods, and cancellation.
 
+Choose a team package before Subscribe. Landing-page selections survive login
+and onboarding. Existing subscribers change packages in Manage billing.
+
 The return URL does not activate Pro. A signed webhook durably schedules a
-provider lookup; only a current `active` subscription for the studio's configured
-Pro product and an unexpired period enables `orgs.plan = "paid"`. Owners can also
+provider lookup; only a current `active` subscription for one of the server-configured
+Pro products and an unexpired period enables `orgs.plan = "paid"`. Owners can also
 refresh status to recover from delayed events. Existing manually enabled Pro
 studios are preserved and are not automatically enrolled or charged.
 
@@ -35,14 +38,25 @@ studios are preserved and are not automatically enrolled or charged.
    [Polar Sandbox](https://sandbox.polar.sh). Production credentials and products
    do not work there. Use a separate local/development Convex deployment; do not
    change the production deployment to sandbox mode.
-2. Create one fixed-price, monthly product for OPUS Pro: every **1 month**, with
-   **MKD** pricing. The current landing offer is **1,490 MKD/month**; in API minor
-   units that is **149000**. Use tax-inclusive pricing, matching production, and
-   verify that the checkout total matches the advertised price. No trial, usage
-   meters, credits, seat billing, or one-time product is used by this integration.
-3. In Polar's subscription settings, turn **Allow multiple subscriptions off**.
-   The checkout action verifies this setting. Keep customer plan switching and
-   pauses disabled for this single-plan launch.
+2. Create five fixed-price, monthly Pro products, each billed every **1 month**
+   in **MKD**, without trials, meters, seat billing, or one-time charges:
+
+   | Active team limit | MKD/month | API minor units | Convex environment variable |
+   | --- | --- | --- | --- |
+   | 4 | 1,490 | 149000 | `POLAR_PRO_PRODUCT_ID` |
+   | 5 | 1,790 | 179000 | `POLAR_PRO_5_PRODUCT_ID` |
+   | 6 | 2,090 | 209000 | `POLAR_PRO_6_PRODUCT_ID` |
+   | 8 | 2,490 | 249000 | `POLAR_PRO_8_PRODUCT_ID` |
+   | 12 | 3,290 | 329000 | `POLAR_PRO_12_PRODUCT_ID` |
+
+   Use inclusive tax and verify the hosted total. Set each product's visibility
+   to **Public** so subscribers can choose it in the customer portal. Product
+   `team_limit` metadata is an administrative label; OPUS grants capacity from
+   its server-side product mapping, never customer input or metadata.
+3. Turn **Allow multiple subscriptions off** and **Enable subscription plan
+   changes on**. Keep seat/unit management, usage, and pausing disabled. Portal
+   changes follow Polar's proration settings. OPUS keeps the current limit until
+   a scheduled product change is applied by Polar.
 4. Create an organization access token with the required scopes:
    `checkouts:read`, `checkouts:write`, `products:read`, `organizations:read`,
    `subscriptions:read`, and `customer_sessions:write`.
@@ -54,7 +68,11 @@ studios are preserved and are not automatically enrolled or charged.
    POLAR_ENABLED=true
    POLAR_SERVER=sandbox
    POLAR_ACCESS_TOKEN=<organization access token>
-   POLAR_PRO_PRODUCT_ID=<monthly Pro product ID>
+   POLAR_PRO_PRODUCT_ID=<4-member monthly Pro product ID>
+   POLAR_PRO_5_PRODUCT_ID=<5-member monthly Pro product ID>
+   POLAR_PRO_6_PRODUCT_ID=<6-member monthly Pro product ID>
+   POLAR_PRO_8_PRODUCT_ID=<8-member monthly Pro product ID>
+   POLAR_PRO_12_PRODUCT_ID=<12-member monthly Pro product ID>
    POLAR_WEBHOOK_SECRET=<webhook signing secret>
    SITE_URL=http://localhost:3000
    ```
@@ -86,9 +104,12 @@ with the Standard Webhooks library. The legacy verifier in SDK 0.49 is deliberat
 not used: it only supports the older signing format. Signatures cover the raw
 body, delivery ID, and a timestamp within five minutes.
 
-The server chooses the product, studio identity, owner email, MKD currency, and
-return URLs. Browser input cannot choose a tenant, price, product, or portal
-customer. A Polar customer is keyed by the studio's server-derived external ID,
+The browser may select only 4, 5, 6, 8, or 12 members. The server chooses the
+corresponding product, studio identity, owner email, currency, and return URLs.
+It checks existing active team size and each configured product's exact monthly
+MKD price before opening checkout. Polar checkout offers the configured packages;
+changing the selection reuses the same open session. Browser input cannot supply
+a tenant, amount, arbitrary product, capacity, or portal customer. A Polar customer is keyed by the studio's server-derived external ID,
 not matched by email. Review multi-studio owners in sandbox: Polar's customer
 email uniqueness rules may require separate billing email arrangements; never
 merge two studios' billing customers to work around that restriction.
@@ -130,17 +151,65 @@ credentials, `POLAR_SERVER=production`, and `SITE_URL=https://studio.opus.mk`.
 Keep `POLAR_ENABLED=false` until the sandbox checks below are verified. That flag
 only stops new checkout; existing reconciliation and portal access remain usable.
 
-Keep the product ID stable. Change the price of the existing product in Polar
-when appropriate; do not replace the environment variable with a different
-product without a deliberate subscription migration.
+Keep all five product IDs stable. Reconciliation reads subscription history
+across the configured products, so changing packages retains the same studio
+customer and subscription. Existing manually granted Pro studios are preserved
+with their previous 12-person capacity and are never automatically charged.
 
-### Pro price update — October 11, 2026
+### Pro team packages — October 11, 2026
 
-The advertised Pro price is now **1,490 MKD/month** (**149000** minor units).
-Update the existing monthly product in both Polar production and sandbox and
-verify the hosted checkout total before deploying the new advertised price.
-This repository change does not update Polar or migrate existing subscriptions.
-The setup records below describe historical verification at the previous price.
+The production `opus-mk` catalogue was updated in the logged-in Polar browser.
+There were no subscriptions or orders on the original Pro product. Its ID was
+retained for the 4-person package; four additional monthly products were created.
+All five are public in the customer portal, have no trial, and include the same
+Pro features. Inclusive tax and one-subscription-per-customer remain configured;
+self-service plan changes are now enabled with the existing **Prorate on next
+invoice** setting.
+
+| Team limit | MKD/month | Production product ID |
+| --- | --- | --- |
+| 4 | 1,490 | `76a4e725-6d5d-43ae-b84b-8e76ac403b6f` |
+| 5 | 1,790 | `2166a073-984e-4d5e-aceb-c61d440b260e` |
+| 6 | 2,090 | `fd244a57-34fd-4536-9ce8-244e191e0e73` |
+| 8 | 2,490 | `78ffea5a-f85f-49f3-8055-6ec072607db2` |
+| 12 | 3,290 | `d5c7f8f6-8868-41a4-8a1d-b7dbecc68f85` |
+
+The corresponding product variables are configured on production Convex
+`calm-dachshund-294`. On inspection, production already had
+`POLAR_ENABLED=true` and `POLAR_SERVER=production`; this work preserves them.
+The backend and dashboard were released together on October 11, 2026, through
+Vercel production deployment `dpl_EBwMvpnC5BE8Zy9CRQXD95mMsXgB`. The build published
+the matching Convex functions to `calm-dachshund-294` before promoting the dashboard
+at `studio.opus.mk` and `*.opus.mk`. The release started from production commit
+`7f64ae5a1e37668e6efff4a36f93d9823e8533fe` and included only the dashboard/backend
+team-package changes and their shared pricing contract; the separate local
+dashboard styling edit and landing-page changes were excluded.
+
+The isolated release passed 730 tests (2 skipped), frontend/backend type checks,
+lint, and the production build. Production function metadata confirms checkout
+accepts only 4, 5, 6, 8, or 12 members. The authenticated subscription screen loads
+the new active-team counter and confirmed limit. Login and auth-session checks
+passed, anonymous subscription access redirects to login, production preview
+routes remain unavailable, and unsigned Polar webhooks remain rejected.
+Historical setup and payment verification below predate these packages.
+
+The sandbox catalogue and portal settings now match production. The local
+`local-digilence-opus` Convex deployment uses these separate sandbox products:
+
+| Team limit | Sandbox product ID |
+| --- | --- |
+| 4 | `1fcb24bd-9343-4e6b-897e-230ed69f7a4c` |
+| 5 | `328a98f2-ee81-42bd-8118-0d8138a7f5e1` |
+| 6 | `db411349-94ae-4b03-9d00-153066184edd` |
+| 8 | `a9594764-9b5b-4e19-9dae-14a6d3be411b` |
+| 12 | `2f35e792-1d4b-4a08-b6e4-1efb6b984dc8` |
+
+The existing sandbox subscription remains at its previously purchased price.
+All five selector prices and capacity counters were checked in a temporary
+component preview, including 390px and 320px widths; the preview was removed.
+The authenticated local subscription screen shows the provider-confirmed
+4-person limit. No real payment, production checkout, or package migration was
+performed as part of this update.
 
 ### Production account setup recorded September 25, 2026
 
@@ -268,8 +337,9 @@ alias) if you also want to receive Polar's test emails.
 Start from **Settings → Subscription → Subscribe to Pro**
 (`/settings?tab=billing`). Do not start from a standalone Polar product link:
 OPUS creates the checkout with the studio's billing identity. Confirm that the
-hosted checkout is on `sandbox.polar.sh`, shows **1,190 MKD/month**, and has no
-trial before entering a test card.
+hosted checkout is on `sandbox.polar.sh`, shows the selected package's monthly
+MKD price (1,490 / 1,790 / 2,090 / 2,490 / 3,290), and has no trial before entering
+a test card. An existing subscription may retain its older price.
 
 For a successful sandbox payment use **4242 4242 4242 4242**, expiry **12/34**,
 and CVC **123**. For a declined payment use **4000 0000 0000 0002** with the
@@ -280,6 +350,8 @@ details. See [Polar's sandbox guide](https://polar.sh/docs/integrate/sandbox) an
 | Test | Expected result |
 | --- | --- |
 | Open checkout, then leave without paying | Studio stays Free. Returning to a success-looking URL alone must not activate Pro. |
+| Repeat checkout for each of the five packages | The monthly price matches the selection; only a verified active subscription grants its 4 / 5 / 6 / 8 / 12 team limit. |
+| Change package through the customer portal | OPUS follows the confirmed product. A pending change retains the current limit until Polar applies it. A downgrade preserves existing staff and blocks additions above the new limit. |
 | Pay with the declined card | Payment fails and the studio stays Free. Retry with the successful card. |
 | Complete a successful payment | Returning to OPUS shows **OPUS Pro / Active**, the monthly amount, and the current period end. If delivery is delayed, use **Refresh status**. Reloading preserves Pro. |
 | Open a Pro-only screen, such as the client directory | Access is available after activation; confirm an actual operation as well as the badge. |

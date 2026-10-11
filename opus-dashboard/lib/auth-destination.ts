@@ -1,5 +1,6 @@
 import { ACTIVE_DASHBOARD_PATH } from "./product-scope";
-import { UPGRADE_PATH } from "./upgrade";
+import { UPGRADE_PATH, withProTeamLimit } from "./upgrade";
+import { parseProTeamLimit } from "../../shared/pro-pricing";
 
 /** Keep explicit local destinations, but never return a finished studio to setup. */
 export function authDestination(
@@ -22,7 +23,12 @@ export function authDestination(
     new URL(callbackUrl, "https://studio.opus.mk").searchParams.get("plan") ===
       "pro"
   ) {
-    return UPGRADE_PATH;
+    return withProTeamLimit(
+      UPGRADE_PATH,
+      parseProTeamLimit(
+        new URL(callbackUrl, "https://studio.opus.mk").searchParams.get("team"),
+      ),
+    );
   }
   if (
     pathname === "/login" ||

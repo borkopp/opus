@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { upgradeDestination, UPGRADE_LOGIN_PATH } from "@/lib/upgrade";
+import { upgradeDestination, upgradeLoginPath } from "@/lib/upgrade";
+import { parseProTeamLimit } from "../../../../shared/pro-pricing";
 
 export function UpgradeRedirect() {
   const router = useRouter();
+  const teamLimit = parseProTeamLimit(useSearchParams().get("team"));
   const { t } = useDashboardI18n();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
@@ -27,7 +29,7 @@ export function UpgradeRedirect() {
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      router.replace(UPGRADE_LOGIN_PATH);
+      router.replace(upgradeLoginPath(teamLimit));
       return;
     }
     if (!profile || (needsSetupCheck && activation === undefined)) return;
@@ -37,6 +39,7 @@ export function UpgradeRedirect() {
         role: profile.role,
         plan: profile.plan,
         operationalSetupComplete: activation?.operationalSetupComplete ?? false,
+        teamLimit,
       }),
     );
   }, [
@@ -46,6 +49,7 @@ export function UpgradeRedirect() {
     needsSetupCheck,
     activation,
     router,
+    teamLimit,
   ]);
 
   return (
@@ -56,7 +60,11 @@ export function UpgradeRedirect() {
     >
       <Spinner />
       <p className="text-sm text-muted-foreground">
-        {t("Opening OPUS Pro…", "Го отвораме OPUS Pro…", "Duke hapur OPUS Pro…")}
+        {t(
+          "Opening OPUS Pro…",
+          "Го отвораме OPUS Pro…",
+          "Duke hapur OPUS Pro…",
+        )}
       </p>
     </main>
   );

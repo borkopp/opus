@@ -91,6 +91,7 @@ export default defineSchema({
     checkoutId: v.optional(v.string()),
     checkoutUrl: v.optional(v.string()),
     checkoutExpiresAt: v.optional(v.number()),
+    checkoutProductId: v.optional(v.string()),
     isDeleted: v.boolean(),
     deletedAt: v.optional(v.number()),
     createdAt: v.number(),

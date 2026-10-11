@@ -254,10 +254,18 @@ availability.
 
 ### Studio team limits
 
-Free retains 1 active owner plus up to 3 active staff members. Pro supports up
-to 12 active team members in total, including owners and managers. Inactive and
-soft-deleted members do not use a slot. Creation and reactivation enforce these
-limits; existing teams above a limit can still edit profiles and reduce usage.
+Free retains 1 active owner plus up to 3 active staff members. The monthly Pro
+packages authorized on October 11, 2026 are up to 4 active team members for
+1,490 MKD, 5 for 1,790 MKD, 6 for 2,090 MKD, 8 for 2,490 MKD, and 12 for
+3,290 MKD. Every package includes the same Pro features. Owners and managers
+count toward the chosen package; inactive and soft-deleted members do not.
+
+Only a verified Polar subscription determines a purchased package's capacity.
+A selection or checkout return cannot grant extra slots. Creation and
+reactivation enforce the current limit. Downgrades keep existing members,
+bookings, and profiles; over-limit teams may edit and reduce usage but cannot
+grow. Manually granted and legacy Pro retain their previous 12-person limit
+until a verified package is available. See [POLAR_BILLING.md](POLAR_BILLING.md).
 
 ### Studio gallery limits
 

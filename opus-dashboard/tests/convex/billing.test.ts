@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import schema from "../../convex/schema";
 import { convexModules } from "../../convex-test.setup";
 import { formatBillingDate } from "../../lib/billing";
+import { PRO_TEAM_TIERS } from "../../../shared/pro-pricing";
 
 const provider = vi.hoisted(() => ({
   list: vi.fn(),
@@ -13,6 +14,7 @@ const provider = vi.hoisted(() => ({
   organization: vi.fn(),
   checkout: vi.fn(),
   getCheckout: vi.fn(),
+  updateCheckout: vi.fn(),
   portal: vi.fn(),
 }));
 vi.mock("@polar-sh/sdk", () => ({
@@ -20,7 +22,11 @@ vi.mock("@polar-sh/sdk", () => ({
     subscriptions = { list: provider.list };
     products = { get: provider.product };
     organizations = { get: provider.organization };
-    checkouts = { create: provider.checkout, get: provider.getCheckout };
+    checkouts = {
+      create: provider.checkout,
+      get: provider.getCheckout,
+      update: provider.updateCheckout,
+    };
     customerSessions = { create: provider.portal };
   },
 }));
@@ -28,6 +34,8 @@ vi.mock("@polar-sh/sdk", () => ({
 const NOW = Date.parse("2026-09-25T10:00:00Z");
 const END = NOW + 30 * 24 * 60 * 60 * 1000;
 const SECRET = `whsec_${Buffer.from("a-long-test-webhook-secret").toString("base64")}`;
+const productIdForLimit = (limit: number) =>
+  limit === 4 ? "pro-monthly" : `pro-monthly-${limit}`;
 const createBackend = () => convexTest(schema, convexModules);
 let t: ReturnType<typeof createBackend>;
 
@@ -55,7 +63,7 @@ function subscription(
     customerId: `customer-${orgId}`,
     customer: { externalId: `opus:${orgId}` },
     status: "active",
-    amount: 119000,
+    amount: 149000,
     currency: "mkd",
     recurringInterval: "month",
     recurringIntervalCount: 1,
@@ -135,6 +143,10 @@ beforeEach(() => {
     POLAR_SERVER: "sandbox",
     POLAR_ACCESS_TOKEN: "test-token",
     POLAR_PRO_PRODUCT_ID: "pro-monthly",
+    POLAR_PRO_5_PRODUCT_ID: "pro-monthly-5",
+    POLAR_PRO_6_PRODUCT_ID: "pro-monthly-6",
+    POLAR_PRO_8_PRODUCT_ID: "pro-monthly-8",
+    POLAR_PRO_12_PRODUCT_ID: "pro-monthly-12",
     POLAR_WEBHOOK_SECRET: SECRET,
     SITE_URL: "http://localhost:3000",
     BETTER_AUTH_SECRET: "billing-test-auth-secret",
@@ -142,25 +154,63 @@ beforeEach(() => {
     vi.stubEnv(key, value);
   t = createBackend();
   subscriptions([]);
-  provider.product.mockResolvedValue({
-    isRecurring: true,
-    isArchived: false,
-    recurringInterval: "month",
-    recurringIntervalCount: 1,
-    prices: [{ amountType: "fixed", priceAmount: 119000 }],
+  provider.product.mockImplementation(({ id }: { id: string }) => {
+    const tier = PRO_TEAM_TIERS.find(
+      (tier) => productIdForLimit(tier.teamLimit) === id,
+    )!;
+    return {
+      id,
+      organizationId: "opus-provider-org",
+      isRecurring: true,
+      isArchived: false,
+      recurringInterval: "month",
+      recurringIntervalCount: 1,
+      prices: [
+        {
+          amountType: "fixed",
+          priceAmount: tier.monthlyPriceMinorUnits,
+          priceCurrency: "mkd",
+        },
+      ],
+    };
   });
   provider.organization.mockResolvedValue({
     subscriptionSettings: { allowMultipleSubscriptions: false },
   });
-  provider.checkout.mockResolvedValue({
+  const checkoutForProduct = (productId: string) => ({
     id: "checkout-1",
+    status: "open",
+    productId,
+    amount: PRO_TEAM_TIERS.find(
+      (tier) => productIdForLimit(tier.teamLimit) === productId,
+    )!.monthlyPriceMinorUnits,
+    currency: "mkd",
     url: "https://sandbox.polar.sh/checkout/test",
     expiresAt: new Date(NOW + 3600_000),
+    products: PRO_TEAM_TIERS.map((tier) => ({
+      id: productIdForLimit(tier.teamLimit),
+    })),
+    prices: Object.fromEntries(
+      PRO_TEAM_TIERS.map((tier) => [
+        productIdForLimit(tier.teamLimit),
+        [
+          {
+            amountType: "fixed",
+            priceCurrency: "mkd",
+            priceAmount: tier.monthlyPriceMinorUnits,
+          },
+        ],
+      ]),
+    ),
   });
-  provider.getCheckout.mockResolvedValue({
-    status: "open",
-    url: "https://sandbox.polar.sh/checkout/test",
-  });
+  provider.checkout.mockImplementation(({ products }: { products: string[] }) =>
+    checkoutForProduct(products[0]),
+  );
+  provider.getCheckout.mockResolvedValue(checkoutForProduct("pro-monthly"));
+  provider.updateCheckout.mockImplementation(
+    ({ checkoutUpdate }: { checkoutUpdate: { productId: string } }) =>
+      checkoutForProduct(checkoutUpdate.productId),
+  );
   provider.portal.mockResolvedValue({
     customerPortalUrl: "https://sandbox.polar.sh/portal/session",
   });
@@ -172,14 +222,110 @@ afterEach(() => {
 });
 
 describe("Polar subscription checkout", () => {
+  test.each(PRO_TEAM_TIERS)(
+    "selects the $teamLimit-member product at the advertised price without granting capacity",
+    async ({ teamLimit, monthlyPriceMinorUnits }) => {
+      const { owner, orgId } = await studio();
+      await owner.action(api.billingActions.createCheckout, { teamLimit });
+      expect(provider.checkout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          products: [
+            productIdForLimit(teamLimit),
+            ...PRO_TEAM_TIERS.filter(
+              (tier) => tier.teamLimit !== teamLimit,
+            ).map((tier) => productIdForLimit(tier.teamLimit)),
+          ],
+        }),
+      );
+      expect((await account(orgId))?.checkoutProductId).toBe(
+        productIdForLimit(teamLimit),
+      );
+      expect(
+        (await owner.query(api.staff.getStaffPlanStatus, {})).totalLimit,
+      ).toBe(4);
+      subscriptions([
+        subscription(orgId, {
+          productId: productIdForLimit(teamLimit),
+          amount: monthlyPriceMinorUnits,
+        }),
+      ]);
+      await sync(orgId);
+      expect(await owner.query(api.billing.getStatus)).toMatchObject({
+        plan: "paid",
+        teamLimit,
+      });
+      expect(await owner.query(api.staff.getStaffPlanStatus, {})).toMatchObject(
+        { totalLimit: teamLimit },
+      );
+    },
+  );
+
+  test("changing the selected package updates the same open checkout", async () => {
+    const { owner, orgId } = await studio();
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 4 });
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 8 });
+    expect(provider.checkout).toHaveBeenCalledTimes(1);
+    expect(provider.updateCheckout).toHaveBeenCalledWith({
+      id: "checkout-1",
+      checkoutUpdate: { productId: "pro-monthly-8", currency: "mkd" },
+    });
+    expect((await account(orgId))?.checkoutProductId).toBe("pro-monthly-8");
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+  });
+
+  test("rejects arbitrary capacities and unavailable or duplicate product mappings", async () => {
+    const { owner } = await studio();
+    await expect(
+      owner.action(api.billingActions.createCheckout, {
+        teamLimit: 7,
+      } as never),
+    ).rejects.toThrow();
+    vi.stubEnv("POLAR_PRO_8_PRODUCT_ID", "");
+    await expect(
+      owner.action(api.billingActions.createCheckout, { teamLimit: 8 }),
+    ).rejects.toThrow("BILLING_UNAVAILABLE");
+    vi.stubEnv("POLAR_PRO_8_PRODUCT_ID", "pro-monthly");
+    await expect(
+      owner.action(api.billingActions.createCheckout, { teamLimit: 8 }),
+    ).rejects.toThrow("BILLING_UNAVAILABLE");
+    expect(provider.checkout).not.toHaveBeenCalled();
+  });
+
+  test("refuses a package smaller than the current active team", async () => {
+    const { owner, orgId } = await studio();
+    await t.run(async (ctx) => {
+      for (let i = 0; i < 5; i++)
+        await ctx.db.insert("staff_members", {
+          orgId,
+          displayName: `Legacy ${i}`,
+          role: "staff",
+          specialties: [],
+          isActive: true,
+          isDeleted: false,
+          createdAt: NOW,
+          updatedAt: NOW,
+        });
+    });
+    await expect(
+      owner.action(api.billingActions.createCheckout, { teamLimit: 5 }),
+    ).rejects.toThrow("TEAM_EXCEEDS_PACKAGE");
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      teamCount: 6,
+      recommendedTeamLimit: 6,
+    });
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 6 });
+    expect(provider.checkout).toHaveBeenCalledTimes(1);
+  });
   test("checkout uses the owner's active studio and configured product without granting access", async () => {
     const { owner, orgId } = await studio();
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).resolves.toEqual({ url: "https://sandbox.polar.sh/checkout/test" });
     expect(provider.checkout).toHaveBeenCalledWith(
       expect.objectContaining({
-        products: ["pro-monthly"],
+        products: PRO_TEAM_TIERS.map((tier) =>
+          productIdForLimit(tier.teamLimit),
+        ),
         externalCustomerId: `opus:${orgId}`,
         customerEmail: "owner@example.com",
         allowTrial: false,
@@ -192,9 +338,9 @@ describe("Polar subscription checkout", () => {
   });
 
   test("anonymous users, managers, and staff cannot create checkout, portal, or refresh billing", async () => {
-    await expect(t.action(api.billingActions.createCheckout)).rejects.toThrow(
-      "Unauthenticated",
-    );
+    await expect(
+      t.action(api.billingActions.createCheckout, {}),
+    ).rejects.toThrow("Unauthenticated");
     const { owner, orgId } = await studio();
     for (const role of ["manager", "staff"] as const) {
       await t.run(async (ctx) => {
@@ -217,24 +363,54 @@ describe("Polar subscription checkout", () => {
 
   test("a second click reuses an open checkout and concurrent requests are reserved", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
+    await owner.action(api.billingActions.createCheckout, {});
     expect(provider.checkout).toHaveBeenCalledTimes(1);
     await owner.mutation(internal.billing.reserveCheckout, {
       attemptId: "reserved",
     });
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("CHECKOUT_BUSY");
     expect((await account(orgId))?.checkoutAttemptId).toBe("reserved");
   });
 
+  test("tax calculation does not prevent reusing a correctly priced checkout", async () => {
+    const { owner } = await studio();
+    await owner.action(api.billingActions.createCheckout, {});
+    const existing = await provider.getCheckout();
+    provider.getCheckout.mockResolvedValue({
+      ...existing,
+      prices: {
+        ...existing.prices,
+        "pro-monthly": [
+          {
+            ...existing.prices["pro-monthly"][0],
+            isArchived: true,
+            priceAmount: 119000,
+          },
+          ...existing.prices["pro-monthly"],
+        ],
+      },
+      amount: 126271,
+      netAmount: 126271,
+      taxAmount: 22729,
+      totalAmount: 149000,
+      taxBehavior: "inclusive",
+    });
+    await expect(
+      owner.action(api.billingActions.createCheckout, {}),
+    ).resolves.toEqual({ url: "https://sandbox.polar.sh/checkout/test" });
+    expect(provider.checkout).toHaveBeenCalledTimes(1);
+    expect(provider.updateCheckout).not.toHaveBeenCalled();
+  });
+
   test("a completed checkout awaiting reconciliation cannot create another charge", async () => {
     const { owner } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     provider.getCheckout.mockResolvedValue({ status: "succeeded" });
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("CHECKOUT_PENDING");
     expect(provider.checkout).toHaveBeenCalledTimes(1);
   });
@@ -243,7 +419,7 @@ describe("Polar subscription checkout", () => {
     const { owner, orgId } = await studio();
     subscriptions([subscription(orgId, { status: "past_due" })]);
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("SUBSCRIPTION_EXISTS");
     expect(provider.checkout).not.toHaveBeenCalled();
   });
@@ -254,7 +430,7 @@ describe("Polar subscription checkout", () => {
       subscriptionSettings: { allowMultipleSubscriptions: true },
     });
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("BILLING_UNAVAILABLE");
     expect(provider.checkout).not.toHaveBeenCalled();
   });
@@ -265,6 +441,16 @@ describe("Polar subscription checkout", () => {
     { recurringInterval: "year" },
     { prices: [{ amountType: "metered_unit", priceAmount: 1 }] },
     { prices: [{ amountType: "free" }] },
+    {
+      prices: [
+        { amountType: "fixed", priceAmount: 119000, priceCurrency: "mkd" },
+      ],
+    },
+    {
+      prices: [
+        { amountType: "fixed", priceAmount: 149000, priceCurrency: "eur" },
+      ],
+    },
   ])("rejects misconfigured subscription products: %j", async (changes) => {
     const { owner } = await studio();
     provider.product.mockResolvedValue({
@@ -272,11 +458,13 @@ describe("Polar subscription checkout", () => {
       isArchived: false,
       recurringInterval: "month",
       recurringIntervalCount: 1,
-      prices: [{ amountType: "fixed", priceAmount: 119000 }],
+      prices: [
+        { amountType: "fixed", priceAmount: 149000, priceCurrency: "mkd" },
+      ],
       ...changes,
     });
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("BILLING_UNAVAILABLE");
     expect(provider.checkout).not.toHaveBeenCalled();
   });
@@ -288,12 +476,12 @@ describe("Polar subscription checkout", () => {
       false,
     );
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("BILLING_UNAVAILABLE");
     vi.stubEnv("POLAR_ENABLED", "true");
     provider.checkout.mockRejectedValue(new Error("provider unavailable"));
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("BILLING_UNAVAILABLE");
     expect((await account(orgId))?.checkoutAttemptId).toBeUndefined();
   });
@@ -302,7 +490,7 @@ describe("Polar subscription checkout", () => {
     const { owner, orgId } = await studio();
     await t.run((ctx) => ctx.db.patch(orgId, { plan: "paid" }));
     await expect(
-      owner.action(api.billingActions.createCheckout),
+      owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("ALREADY_PRO");
     await owner.action(api.billingActions.refresh);
     expect((await owner.query(api.billing.getStatus)).plan).toBe("paid");
@@ -310,6 +498,78 @@ describe("Polar subscription checkout", () => {
 });
 
 describe("subscription access reconciliation", () => {
+  test("portal package changes update capacity only when applied, including scheduled downgrades", async () => {
+    const { owner, orgId } = await studio();
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 12 });
+    subscriptions([
+      subscription(orgId, {
+        productId: "pro-monthly-12",
+        amount: 329000,
+        pendingUpdate: { productId: "pro-monthly-5", appliesAt: new Date(END) },
+      }),
+    ]);
+    await sync(orgId);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      teamLimit: 12,
+      subscription: { pendingChange: { teamLimit: 5, appliesAt: END } },
+    });
+    subscriptions([
+      subscription(orgId, {
+        productId: "pro-monthly-5",
+        amount: 179000,
+        currentPeriodEnd: new Date(END + 30 * 86400_000),
+      }),
+    ]);
+    await sync(orgId);
+    expect(await owner.query(api.staff.getStaffPlanStatus, {})).toMatchObject({
+      totalLimit: 5,
+    });
+    const audit = await t.run((ctx) =>
+      ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(
+      audit.filter((entry) => entry.action === "billing.subscription_synced"),
+    ).toHaveLength(2);
+  });
+
+  test("capacity comes from the configured product, never a requested package or metadata", async () => {
+    const { owner, orgId } = await studio();
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 12 });
+    subscriptions([subscription(orgId, { metadata: { team_limit: 12 } })]);
+    await sync(orgId);
+    expect(
+      (await owner.query(api.staff.getStaffPlanStatus, {})).totalLimit,
+    ).toBe(4);
+    subscriptions([
+      subscription(orgId, {
+        productId: "untrusted-product",
+        amount: 329000,
+        metadata: { team_limit: 12 },
+      }),
+    ]);
+    await sync(orgId);
+    expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+  });
+
+  test.each([
+    { currency: "eur" },
+    { recurringInterval: "year" },
+    { recurringIntervalCount: 2 },
+    { amount: 149000.5 },
+    { amount: 0 },
+  ])(
+    "misconfigured provider subscriptions do not grant Pro: %j",
+    async (changes) => {
+      const { owner, orgId } = await studio();
+      await owner.action(api.billingActions.createCheckout, {});
+      subscriptions([subscription(orgId, changes)]);
+      await sync(orgId);
+      expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
+    },
+  );
   test("billing dates use Skopje time and bundled Macedonian month names", () => {
     const timestamp = Date.parse("2026-09-24T23:30:00Z");
     expect(formatBillingDate(timestamp, "mk-MK")).toBe("25 септ 2026");
@@ -318,7 +578,7 @@ describe("subscription access reconciliation", () => {
 
   test("turning off new checkout preserves reconciliation and portal access", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     vi.stubEnv("POLAR_ENABLED", "false");
     subscriptions([subscription(orgId)]);
     await sync(orgId);
@@ -334,7 +594,7 @@ describe("subscription access reconciliation", () => {
 
   test("a stale queued job can be superseded by an owner refresh", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     await owner.action(api.billingActions.refresh);
     const previous = (await account(orgId))!;
     vi.setSystemTime(NOW + 6_000);
@@ -344,7 +604,7 @@ describe("subscription access reconciliation", () => {
 
   test("unchanged reconciliations do not duplicate subscription audit entries", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     await sync(orgId);
@@ -361,7 +621,7 @@ describe("subscription access reconciliation", () => {
 
   test("verified provider state grants Pro, including after a delayed checkout return", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     await owner.action(api.billingActions.refresh);
     expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
     subscriptions([subscription(orgId)]);
@@ -370,7 +630,7 @@ describe("subscription access reconciliation", () => {
       plan: "paid",
       managed: true,
       portalAvailable: true,
-      subscription: { amount: 119000, currentPeriodEnd: END },
+      subscription: { amount: 149000, currentPeriodEnd: END },
     });
     await expect(
       owner.action(api.billingActions.createPortal),
@@ -383,7 +643,7 @@ describe("subscription access reconciliation", () => {
 
   test("end-of-period cancellation preserves Pro; final revocation returns to Free", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId, { cancelAtPeriodEnd: true })]);
     await sync(orgId);
     expect((await owner.query(api.billing.getStatus)).plan).toBe("paid");
@@ -412,7 +672,7 @@ describe("subscription access reconciliation", () => {
     "trialing",
   ])("%s does not retain paid access", async (status) => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     subscriptions([subscription(orgId, { status })]);
@@ -425,7 +685,7 @@ describe("subscription access reconciliation", () => {
 
   test("an unrelated product never grants Pro, and an old cancellation cannot revoke a newer active subscription", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId, { productId: "ai-credit-pack" })]);
     await sync(orgId);
     expect((await owner.query(api.billing.getStatus)).plan).toBe("free");
@@ -442,7 +702,7 @@ describe("subscription access reconciliation", () => {
 
   test("a slow, stale reconciliation cannot restore access after a newer revocation", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     const old = (await account(orgId))!;
@@ -460,7 +720,7 @@ describe("subscription access reconciliation", () => {
 
   test("a renewal extends access and invalidates the previous period's expiry job", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     subscriptions([
@@ -474,7 +734,7 @@ describe("subscription access reconciliation", () => {
 
   test("missed events cannot leave access enabled after the last confirmed period", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     vi.setSystemTime(END + 10);
@@ -484,7 +744,7 @@ describe("subscription access reconciliation", () => {
 
   test("provider outages preserve the last confirmed state, queue retries, and expose exhausted retries", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     await sync(orgId);
     provider.list.mockRejectedValue(new Error("network error"));
@@ -502,14 +762,14 @@ describe("subscription access reconciliation", () => {
   test("customer and environment mismatches cannot activate the wrong studio", async () => {
     const one = await studio("one");
     const two = await studio("two");
-    await one.owner.action(api.billingActions.createCheckout);
+    await one.owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(two.orgId)]);
     await sync(one.orgId);
     expect((await one.owner.query(api.billing.getStatus)).plan).toBe("free");
     expect((await two.owner.query(api.billing.getStatus)).plan).toBe("free");
     vi.stubEnv("POLAR_SERVER", "production");
     await expect(
-      one.owner.action(api.billingActions.createCheckout),
+      one.owner.action(api.billingActions.createCheckout, {}),
     ).rejects.toThrow("BILLING_UNAVAILABLE");
   });
 });
@@ -517,7 +777,7 @@ describe("subscription access reconciliation", () => {
 describe("signed Polar webhooks", () => {
   test("rejects invalid signatures and stale deliveries without mutating access", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     expect(
       (
         await sendWebhook(orgId, {
@@ -535,7 +795,7 @@ describe("signed Polar webhooks", () => {
     "verifies signatures (legacy=%s), persists once, and schedules authoritative reconciliation",
     async (legacy) => {
       const { owner, orgId } = await studio();
-      await owner.action(api.billingActions.createCheckout);
+      await owner.action(api.billingActions.createCheckout, {});
       expect((await sendWebhook(orgId, { id: "event-1", legacy })).status).toBe(
         200,
       );
@@ -564,7 +824,7 @@ describe("signed Polar webhooks", () => {
 
   test("customer state and refund events reconcile current subscription state, including partial refunds", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     subscriptions([subscription(orgId)]);
     expect(
       (await sendWebhook(orgId, { type: "customer.state_changed" })).status,
@@ -579,7 +839,7 @@ describe("signed Polar webhooks", () => {
 
   test("unknown tenants and mismatched provider customers are ignored", async () => {
     const { owner, orgId } = await studio();
-    await owner.action(api.billingActions.createCheckout);
+    await owner.action(api.billingActions.createCheckout, {});
     expect(
       (await sendWebhook(orgId, { externalId: "opus:not-a-convex-id" })).status,
     ).toBe(200);

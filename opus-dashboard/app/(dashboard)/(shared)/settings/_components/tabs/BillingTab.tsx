@@ -15,14 +15,30 @@ import { Spinner } from "@/components/ui/spinner";
 import { TabsContent } from "@/components/ui/tabs";
 import { BillingPlanSummary } from "./BillingPlanSummary";
 import { SettingsCard } from "@/components/settings/SettingsCard";
+import { BillingPackageSelector } from "./BillingPackageSelector";
+import {
+  parseProTeamLimit,
+  type ProTeamLimit,
+} from "../../../../../../../shared/pro-pricing";
+import { formatBillingDate } from "@/lib/billing";
 
 export function BillingTab() {
-  const { t } = useDashboardI18n();
+  const { t, locale } = useDashboardI18n();
   const data = useQuery(api.billing.getStatus);
   const checkout = useAction(api.billingActions.createCheckout);
   const portal = useAction(api.billingActions.createPortal);
   const refresh = useAction(api.billingActions.refresh);
-  const returned = useSearchParams().get("checkout") === "returned";
+  const params = useSearchParams();
+  const returned = params.get("checkout") === "returned";
+  const [chosenLimit, setChosenLimit] = useState<ProTeamLimit>();
+  const selectedLimit =
+    chosenLimit ??
+    parseProTeamLimit(params.get("team")) ??
+    data?.recommendedTeamLimit ??
+    4;
+  const selectedTier = data?.tiers.find(
+    (tier) => tier.teamLimit === selectedLimit,
+  );
   const refreshed = useRef(false);
   const [pending, setPending] = useState<
     "checkout" | "portal" | "refresh" | null
@@ -61,29 +77,43 @@ export function BillingTab() {
     try {
       if (kind === "refresh") await refresh();
       else {
-        const result = await (kind === "checkout" ? checkout() : portal());
+        const result = await (kind === "checkout"
+          ? checkout({ teamLimit: selectedLimit })
+          : portal());
         window.location.assign(result.url);
       }
     } catch (error) {
       const code = error instanceof ConvexError ? error.data : null;
       const message =
-        code === "ALREADY_PRO" || code === "SUBSCRIPTION_EXISTS"
+        code === "TEAM_EXCEEDS_PACKAGE"
           ? t(
-              "A subscription already exists. Refresh the status, then open Manage billing.",
-              "Веќе постои претплата. Освежете го статусот, па отворете Управување со наплата.",
-              "Një abonim ekziston tashmë. Rifreskoni statusin, pastaj hapni Menaxho faturimin.",
+              "Your active team is larger than this package. Choose a larger package or deactivate members first.",
+              "Вашиот активен тим е поголем од овој пакет. Изберете поголем пакет или прво деактивирајте членови.",
+              "Ekipi juaj aktiv është më i madh se kjo paketë. Zgjidhni një paketë më të madhe ose çaktivizoni anëtarët fillimisht.",
             )
-          : code === "CHECKOUT_BUSY" || code === "CHECKOUT_PENDING"
+          : code === "CHECKOUT_PACKAGE_LOCKED"
             ? t(
-                "Your checkout is still being processed. Please wait, then refresh the status.",
-                "Плаќањето сè уште се обработува. Почекајте, па освежете го статусот.",
-                "Pagesa juaj është ende duke u përpunuar. Ju lutemi prisni, pastaj rifreskoni statusin.",
+                "An earlier checkout is still open. Finish it or wait for it to expire before choosing another package.",
+                "Претходно плаќање сè уште е отворено. Завршете го или почекајте да истече пред да изберете друг пакет.",
+                "Një pagesë e mëparshme është ende e hapur. Përfundojeni ose prisni të skadojë para se të zgjidhni një paketë tjetër.",
               )
-            : t(
-                "Billing is temporarily unavailable. Please try again later.",
-                "Наплатата моментално не е достапна. Обидете се повторно подоцна.",
-                "Faturimi është përkohësisht i padisponueshëm. Ju lutemi provoni përsëri më vonë.",
-              );
+            : code === "ALREADY_PRO" || code === "SUBSCRIPTION_EXISTS"
+              ? t(
+                  "A subscription already exists. Refresh the status, then open Manage billing.",
+                  "Веќе постои претплата. Освежете го статусот, па отворете Управување со наплата.",
+                  "Një abonim ekziston tashmë. Rifreskoni statusin, pastaj hapni Menaxho faturimin.",
+                )
+              : code === "CHECKOUT_BUSY" || code === "CHECKOUT_PENDING"
+                ? t(
+                    "Your checkout is still being processed. Please wait, then refresh the status.",
+                    "Плаќањето сè уште се обработува. Почекајте, па освежете го статусот.",
+                    "Pagesa juaj është ende duke u përpunuar. Ju lutemi prisni, pastaj rifreskoni statusin.",
+                  )
+                : t(
+                    "Billing is temporarily unavailable. Please try again later.",
+                    "Наплатата моментално не е достапна. Обидете се повторно подоцна.",
+                    "Faturimi është përkohësisht i padisponueshëm. Ju lutemi provoni përsëri më vonë.",
+                  );
       toast.error(message);
     } finally {
       setPending(null);
@@ -109,7 +139,11 @@ export function BillingTab() {
                 {data.plan === "free" && !data.hasOpenSubscription && (
                   <Button
                     onClick={() => void run("checkout")}
-                    disabled={pending !== null || !data.checkoutAvailable}
+                    disabled={
+                      pending !== null ||
+                      !selectedTier?.checkoutAvailable ||
+                      data.teamCount > selectedLimit
+                    }
                   >
                     {pending === "checkout" ? (
                       <Spinner data-icon="inline-start" />
@@ -165,6 +199,17 @@ export function BillingTab() {
         >
           <div className="flex flex-col gap-5">
             <BillingPlanSummary data={data} />
+            {data.canManage &&
+              data.plan === "free" &&
+              !data.hasOpenSubscription && (
+                <BillingPackageSelector
+                  tiers={data.tiers}
+                  value={selectedLimit}
+                  onChange={setChosenLimit}
+                  teamCount={data.teamCount}
+                  disabled={pending !== null}
+                />
+              )}
             <p
               data-replay-public
               className="max-w-2xl text-sm leading-6 text-muted-foreground"
@@ -183,9 +228,9 @@ export function BillingTab() {
                     )
                   : data.portalAvailable
                     ? t(
-                        "Open Manage billing to update your card, download invoices, or cancel your subscription.",
-                        "Отворете Управување со наплата за промена на картичката, преземање фактури или откажување на претплатата.",
-                        "Hapni Menaxho faturimin për të përditësuar kartën tuaj, shkarkuar faturat ose anuluar abonimin tuaj.",
+                        "Open Manage billing to change your team package, update your card, download invoices, or cancel your subscription.",
+                        "Отворете Управување со наплата за промена на пакетот за тимот или картичката, преземање фактури или откажување на претплатата.",
+                        "Hapni Menaxho faturimin për të ndryshuar paketën e ekipit, përditësuar kartën tuaj, shkarkuar faturat ose anuluar abonimin tuaj.",
                       )
                     : t(
                         "Subscribe monthly to Pro. Review the price and any taxes before confirming your payment at checkout.",
@@ -193,6 +238,28 @@ export function BillingTab() {
                         "Abonohuni çdo muaj në Pro. Rishikoni çmimin dhe taksat para se të konfirmoni pagesën tuaj.",
                       )}
             </p>
+            {data.subscription?.pendingChange && data.plan === "paid" && (
+              <Alert>
+                <AlertDescription>
+                  {t(
+                    `Your package will change to up to ${data.subscription.pendingChange.teamLimit} team members on ${formatBillingDate(data.subscription.pendingChange.appliesAt, locale)}.`,
+                    `Вашиот пакет ќе се промени на до ${data.subscription.pendingChange.teamLimit} членови на тимот на ${formatBillingDate(data.subscription.pendingChange.appliesAt, locale)}.`,
+                    `Paketa juaj do të ndryshojë në deri në ${data.subscription.pendingChange.teamLimit} anëtarë të ekipit më ${formatBillingDate(data.subscription.pendingChange.appliesAt, locale)}.`,
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            {data.teamCount > data.teamLimit && (
+              <Alert>
+                <AlertDescription>
+                  {t(
+                    "Your active team exceeds your current limit. Existing members and bookings are kept. Choose a larger package or deactivate members before adding anyone.",
+                    "Вашиот активен тим го надминува тековниот лимит. Постојните членови и термини се зачувани. Изберете поголем пакет или деактивирајте членови пред да додадете некого.",
+                    "Ekipi juaj aktiv tejkalon kufirin aktual. Anëtarët dhe rezervimet ekzistuese ruhen. Zgjidhni një paketë më të madhe ose çaktivizoni anëtarët para se të shtoni dikë.",
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
             {data.subscription?.cancelAtPeriodEnd && data.plan === "paid" && (
               <Alert>
                 <AlertDescription data-replay-public>

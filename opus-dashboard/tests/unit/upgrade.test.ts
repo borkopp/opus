@@ -2,9 +2,48 @@ import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import proxy from "../../proxy";
 import { authDestination } from "../../lib/auth-destination";
-import { upgradeDestination } from "../../lib/upgrade";
+import { upgradeDestination, upgradeLoginPath } from "../../lib/upgrade";
+import { PRO_TEAM_TIERS, parseProTeamLimit } from "../../../shared/pro-pricing";
 
 describe("Pro entry journey", () => {
+  it.each(PRO_TEAM_TIERS)(
+    "retains the $teamLimit-member selection through login, onboarding, and billing",
+    ({ teamLimit }) => {
+      const loginPath = new URL(
+        upgradeLoginPath(teamLimit),
+        "https://studio.opus.mk",
+      );
+      expect(
+        authDestination(loginPath.searchParams.get("callbackUrl")!, false),
+      ).toBe(`/upgrade?team=${teamLimit}`);
+      expect(
+        upgradeDestination({
+          hasStudio: false,
+          operationalSetupComplete: false,
+          teamLimit,
+        }),
+      ).toBe(`/onboarding?plan=pro&team=${teamLimit}`);
+      expect(
+        authDestination(`/onboarding?plan=pro&team=${teamLimit}`, true),
+      ).toBe(`/upgrade?team=${teamLimit}`);
+      expect(
+        upgradeDestination({
+          hasStudio: true,
+          role: "owner",
+          plan: "free",
+          operationalSetupComplete: true,
+          teamLimit,
+        }),
+      ).toBe(`/settings?tab=billing&team=${teamLimit}`);
+    },
+  );
+
+  it.each(["7", "9", "13", "0", "4.5", "product-id", "", null])(
+    "ignores an unsupported package in the URL: %s",
+    (value) => {
+      expect(parseProTeamLimit(value)).toBeUndefined();
+    },
+  );
   it("takes anonymous visitors through email sign-in without losing Pro intent", () => {
     const response = proxy(
       new NextRequest("https://studio.opus.mk/upgrade", {

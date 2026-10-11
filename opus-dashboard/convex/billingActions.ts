@@ -1,10 +1,16 @@
 import { Polar } from "@polar-sh/sdk";
 import type { Subscription } from "@polar-sh/sdk/models/components/subscription";
+import type { Checkout } from "@polar-sh/sdk/models/components/checkout";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { action, internalAction } from "./_generated/server";
-import { billingReturnUrl, requirePolarConfig } from "./lib/polar";
+import {
+  billingReturnUrl,
+  proTeamLimit,
+  proTierForProduct,
+  requirePolarConfig,
+} from "./lib/polar";
 
 function client() {
   const config = requirePolarConfig();
@@ -16,6 +22,29 @@ function client() {
   });
 }
 
+function checkoutUsesTier(
+  checkout: Checkout,
+  tier: { productId: string; monthlyPriceMinorUnits: number },
+) {
+  const prices =
+    checkout.prices?.[tier.productId] ?? checkout.product?.prices ?? [];
+  const mkdPrices = prices.filter(
+    (price) =>
+      price.priceCurrency === "mkd" &&
+      !("isArchived" in price && price.isArchived),
+  );
+  // Compare the purchased catalog price. A tax-inclusive checkout's net amount
+  // can differ after the customer supplies a billing address.
+  return (
+    checkout.productId === tier.productId &&
+    checkout.currency === "mkd" &&
+    mkdPrices.length === 1 &&
+    mkdPrices[0].amountType === "fixed" &&
+    "priceAmount" in mkdPrices[0] &&
+    mkdPrices[0].priceAmount === tier.monthlyPriceMinorUnits
+  );
+}
+
 async function readSubscriptions(
   polar: Polar,
   account: Doc<"billing_accounts">,
@@ -23,6 +52,9 @@ async function readSubscriptions(
   if (account.environment !== requirePolarConfig().server)
     throw new Error("Polar environment mismatch");
   const subscriptions: Subscription[] = [];
+  let hasOpenSubscription = false;
+  const open = (s: Subscription) =>
+    !["canceled", "incomplete_expired"].includes(s.status);
   // Include ended subscriptions so payment failures and cancellations remain
   // visible. Never silently truncate a customer's subscription history.
   for (let page = 1; ; page++) {
@@ -38,7 +70,15 @@ async function readSubscriptions(
       ) {
         throw new Error("Polar customer mismatch");
       }
-      if (subscription.productId === account.productId)
+      hasOpenSubscription ||= open(subscription);
+      if (
+        proTierForProduct(subscription.productId) &&
+        subscription.currency.toLowerCase() === "mkd" &&
+        subscription.recurringInterval === "month" &&
+        subscription.recurringIntervalCount === 1 &&
+        Number.isSafeInteger(subscription.amount) &&
+        subscription.amount > 0
+      )
         subscriptions.push(subscription);
     }
     if (page >= response.result.pagination.maxPage) break;
@@ -49,8 +89,6 @@ async function readSubscriptions(
   }
   const active = (s: Subscription) =>
     s.status === "active" && s.currentPeriodEnd.getTime() > Date.now();
-  const open = (s: Subscription) =>
-    !["canceled", "incomplete_expired"].includes(s.status);
   subscriptions.sort(
     (a, b) =>
       Number(active(b)) - Number(active(a)) ||
@@ -58,6 +96,10 @@ async function readSubscriptions(
       b.createdAt.getTime() - a.createdAt.getTime(),
   );
   const current = subscriptions[0];
+  const tier = current ? proTierForProduct(current.productId) : undefined;
+  const pendingTier = current?.pendingUpdate?.productId
+    ? proTierForProduct(current.pendingUpdate.productId)
+    : undefined;
   return {
     customerId: current?.customerId,
     subscription: current
@@ -70,19 +112,29 @@ async function readSubscriptions(
           intervalCount: current.recurringIntervalCount,
           currentPeriodEnd: current.currentPeriodEnd.getTime(),
           cancelAtPeriodEnd: current.cancelAtPeriodEnd,
+          productId: current.productId,
+          teamLimit: tier!.teamLimit,
+          ...(pendingTier && current.pendingUpdate
+            ? {
+                pendingChange: {
+                  teamLimit: pendingTier.teamLimit,
+                  appliesAt: current.pendingUpdate.appliesAt.getTime(),
+                },
+              }
+            : {}),
         }
       : undefined,
-    hasOpenSubscription: subscriptions.some(open),
+    hasOpenSubscription,
   };
 }
 
 export const createCheckout = action({
-  args: {},
-  handler: async (ctx): Promise<{ url: string }> => {
+  args: { teamLimit: v.optional(proTeamLimit) },
+  handler: async (ctx, { teamLimit = 4 }): Promise<{ url: string }> => {
     const attemptId = crypto.randomUUID();
     const reservation = await ctx.runMutation(
       internal.billing.reserveCheckout,
-      { attemptId },
+      { attemptId, teamLimit },
     );
     try {
       const polar = client();
@@ -94,6 +146,48 @@ export const createCheckout = action({
         });
         throw new ConvexError("SUBSCRIPTION_EXISTS");
       }
+      const tiers = requirePolarConfig().tiers.filter(
+        (tier): tier is typeof tier & { productId: string } =>
+          Boolean(tier.productId),
+      );
+      const products = await Promise.all(
+        tiers.map(async (tier) => {
+          const product = await polar.products.get({ id: tier.productId });
+          const mkdPrices = product.prices.filter(
+            (price) =>
+              price.priceCurrency === "mkd" &&
+              !("isArchived" in price && price.isArchived),
+          );
+          // Fail closed if the advertised package cannot be purchased at its
+          // exact monthly MKD price. Provider amounts are already minor units.
+          if (
+            !product.isRecurring ||
+            product.isArchived ||
+            product.recurringInterval !== "month" ||
+            product.recurringIntervalCount !== 1 ||
+            mkdPrices.length !== 1 ||
+            mkdPrices[0].amountType !== "fixed" ||
+            !("priceAmount" in mkdPrices[0]) ||
+            mkdPrices[0].priceAmount !== tier.monthlyPriceMinorUnits
+          )
+            throw new ConvexError("BILLING_UNAVAILABLE");
+          return { tier, product };
+        }),
+      );
+      const selected = products.find(
+        ({ tier }) => tier.teamLimit === teamLimit,
+      )!;
+      const organization = await polar.organizations.get({
+        id: selected.product.organizationId,
+      });
+      if (
+        organization.subscriptionSettings.allowMultipleSubscriptions ||
+        products.some(
+          ({ product }) =>
+            product.organizationId !== selected.product.organizationId,
+        )
+      )
+        throw new ConvexError("BILLING_UNAVAILABLE");
       if (
         reservation.account.checkoutId &&
         (reservation.account.checkoutExpiresAt ?? 0) > Date.now()
@@ -101,7 +195,38 @@ export const createCheckout = action({
         const checkout = await polar.checkouts.get({
           id: reservation.account.checkoutId,
         });
-        if (checkout.status === "open") return { url: checkout.url };
+        if (checkout.status === "open") {
+          if (checkoutUsesTier(checkout, reservation.tier))
+            return { url: checkout.url };
+          // Reuse the same payment session when a buyer changes the slider.
+          if (
+            checkout.products.some(
+              (product) => product.id === reservation.tier.productId,
+            )
+          ) {
+            const updated = await polar.checkouts.update({
+              id: checkout.id,
+              checkoutUpdate: {
+                productId: reservation.tier.productId,
+                currency: "mkd",
+              },
+            });
+            if (!checkoutUsesTier(updated, reservation.tier))
+              throw new ConvexError("BILLING_UNAVAILABLE");
+            await ctx.runMutation(internal.billing.finishCheckout, {
+              orgId: reservation.orgId,
+              attemptId,
+              checkout: {
+                id: updated.id,
+                url: updated.url,
+                expiresAt: updated.expiresAt.getTime(),
+                productId: reservation.tier.productId,
+              },
+            });
+            return { url: updated.url };
+          }
+          throw new ConvexError("CHECKOUT_PACKAGE_LOCKED");
+        }
         if (["confirmed", "succeeded"].includes(checkout.status)) {
           await ctx.runMutation(internal.billing.requestSync, {
             orgId: reservation.orgId,
@@ -109,35 +234,13 @@ export const createCheckout = action({
           throw new ConvexError("CHECKOUT_PENDING");
         }
       }
-      const product = await polar.products.get({
-        id: reservation.account.productId,
-      });
-      // This integration only sells the existing monthly Pro subscription.
-      // Misconfigured one-time, free, metered, or seat products fail closed.
-      if (
-        !product.isRecurring ||
-        product.isArchived ||
-        product.recurringInterval !== "month" ||
-        product.recurringIntervalCount !== 1 ||
-        !product.prices.length ||
-        !product.prices.every(
-          (price) =>
-            price.amountType === "fixed" &&
-            "priceAmount" in price &&
-            price.priceAmount > 0,
-        )
-      ) {
-        throw new ConvexError("BILLING_UNAVAILABLE");
-      }
-      const organization = await polar.organizations.get({
-        id: product.organizationId,
-      });
-      // Local reservations cover simultaneous requests. Polar must also reject
-      // duplicate subscriptions if a network timeout loses a checkout response.
-      if (organization.subscriptionSettings.allowMultipleSubscriptions)
-        throw new ConvexError("BILLING_UNAVAILABLE");
       const checkout = await polar.checkouts.create({
-        products: [reservation.account.productId],
+        products: [
+          reservation.tier.productId,
+          ...tiers
+            .filter((tier) => tier.teamLimit !== teamLimit)
+            .map((tier) => tier.productId),
+        ],
         externalCustomerId: reservation.account.externalCustomerId,
         customerEmail: reservation.email,
         customerName: reservation.name,
@@ -150,6 +253,8 @@ export const createCheckout = action({
         successUrl: `${returnUrl}&checkout=returned`,
         returnUrl,
       });
+      if (!checkoutUsesTier(checkout, reservation.tier))
+        throw new ConvexError("BILLING_UNAVAILABLE");
       const saved = await ctx.runMutation(internal.billing.finishCheckout, {
         orgId: reservation.orgId,
         attemptId,
@@ -157,6 +262,7 @@ export const createCheckout = action({
           id: checkout.id,
           url: checkout.url,
           expiresAt: checkout.expiresAt.getTime(),
+          productId: reservation.tier.productId,
         },
       });
       if (!saved) throw new ConvexError("CHECKOUT_PENDING");

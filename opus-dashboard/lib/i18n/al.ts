@@ -267,7 +267,7 @@ export const al: DashboardTranslations = {
   },
   staffErrors: {
     "FREE_STAFF_LIMIT": "Plani Falas lejon 1 pronar aktiv dhe deri në 3 anëtarë stafi aktivë (gjithsej 4 persona). Çaktivizoni një anëtar të ekipit ose kaloni në OPUS Pro për të shtuar më shumë.",
-    "PRO_STAFF_LIMIT": "Plani Pro lejon deri në 12 anëtarë aktivë të ekipit. Çaktivizoni një anëtar të ekipit për të shtuar më shumë."
+    "PRO_STAFF_LIMIT": "Kufiri i ekipit tuaj Pro është arritur. Zgjidhni një paketë më të madhe ose çaktivizoni një anëtar të ekipit."
 },
   gapRecovery: {
     errors: {

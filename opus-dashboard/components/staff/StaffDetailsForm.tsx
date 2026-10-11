@@ -97,9 +97,9 @@ export function StaffDetailsForm({
         "Plani falas lejon 1 pronar aktiv dhe deri në 3 anëtarë stafi aktivë (gjithsej 4 persona). Çaktivizoni një anëtar të ekipit ose përmirësoni në OPUS Pro për të shtuar më shumë.",
       )
     : t(
-        "The Pro plan allows up to 12 active team members. Deactivate a team member to add more.",
-        "Pro дозволува најмногу 12 активни членови на тимот. Деактивирајте член на тимот за да додадете повеќе.",
-        "Plani Pro lejon deri në 12 anëtarë aktivë të ekipit. Çaktivizoni një anëtar të ekipit për të shtuar më shumë.",
+        `Your Pro package allows up to ${planStatus?.totalLimit ?? 4} active team members. Choose a larger package or deactivate a team member to add more.`,
+        `Вашиот Pro пакет дозволува најмногу ${planStatus?.totalLimit ?? 4} активни членови на тимот. Изберете поголем пакет или деактивирајте член на тимот за да додадете повеќе.`,
+        `Paketa juaj Pro lejon deri në ${planStatus?.totalLimit ?? 4} anëtarë aktivë të ekipit. Zgjidhni një paketë më të madhe ose çaktivizoni një anëtar të ekipit për të shtuar më shumë.`,
       );
 
   useEffect(() => {
@@ -400,9 +400,9 @@ export function StaffDetailsForm({
                       "Falas: 1 pronar dhe 3 staf. Menaxherët përdorin një vend stafi.",
                     )
                   : t(
-                      "Pro: up to 12 active team members, including owners and managers.",
-                      "Pro: до 12 активни членови на тимот, вклучувајќи сопственици и менаџери.",
-                      "Pro: deri në 12 anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët.",
+                      `Pro: up to ${planStatus.totalLimit} active team members, including owners and managers.`,
+                      `Pro: до ${planStatus.totalLimit} активни членови на тимот, вклучувајќи сопственици и менаџери.`,
+                      `Pro: deri në ${planStatus.totalLimit} anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët.`,
                     )}
               </FieldDescription>
             )}

@@ -15,8 +15,13 @@ import {
   orgIdFromExternalCustomerId,
   polarConfig,
   polarSubscription,
+  proTeamLimit,
+  proTierForProduct,
+  requireProTier,
   requirePolarConfig,
 } from "./lib/polar";
+import { getStaffPlanStatusForOrg } from "./lib/staffPlanLimits";
+import { proTierForTeamSize } from "../../shared/pro-pricing";
 
 async function accountForOrg(ctx: QueryCtx, orgId: Id<"orgs">) {
   const account = await ctx.db
@@ -47,14 +52,25 @@ export const getStatus = query({
     const account = await accountForOrg(ctx, org._id);
     const config = polarConfig();
     const sameEnvironment = !account || account.environment === config.server;
+    const staff = await getStaffPlanStatusForOrg(ctx, org);
+    const checkoutAvailable =
+      config.configured &&
+      config.checkoutEnabled &&
+      sameEnvironment &&
+      !isAppReviewOrg(org);
     return {
       plan: org.plan,
       canManage: staffMember.role === "owner" && !isAppReviewOrg(org),
-      checkoutAvailable:
-        config.configured &&
-        config.checkoutEnabled &&
-        sameEnvironment &&
-        !isAppReviewOrg(org),
+      checkoutAvailable,
+      teamCount: staff.totalCount,
+      teamLimit: staff.totalLimit,
+      recommendedTeamLimit:
+        proTierForTeamSize(staff.totalCount)?.teamLimit ?? null,
+      tiers: config.tiers.map((tier) => ({
+        teamLimit: tier.teamLimit,
+        monthlyPriceMinorUnits: tier.monthlyPriceMinorUnits,
+        checkoutAvailable: checkoutAvailable && Boolean(tier.productId),
+      })),
       portalAvailable: Boolean(
         config.configured &&
         sameEnvironment &&
@@ -96,8 +112,8 @@ export const getAccount = internalQuery({
 });
 
 export const reserveCheckout = internalMutation({
-  args: { attemptId: v.string() },
-  handler: async (ctx, { attemptId }) => {
+  args: { attemptId: v.string(), teamLimit: v.optional(proTeamLimit) },
+  handler: async (ctx, { attemptId, teamLimit = 4 }) => {
     const { org, user } = await requireRole(ctx, undefined, "owner");
     requireLiveStudio(org);
     const config = requirePolarConfig();
@@ -105,12 +121,13 @@ export const reserveCheckout = internalMutation({
     if (org.industry !== "beauty_wellness")
       throw new ConvexError("BILLING_UNAVAILABLE");
     if (org.plan === "paid") throw new ConvexError("ALREADY_PRO");
+    const tier = requireProTier(teamLimit);
+    const staff = await getStaffPlanStatusForOrg(ctx, org);
+    if (staff.totalCount > teamLimit) {
+      throw new ConvexError("TEAM_EXCEEDS_PACKAGE");
+    }
     let account = await accountForOrg(ctx, org._id);
-    if (
-      account &&
-      (account.environment !== config.server ||
-        account.productId !== config.productId)
-    ) {
+    if (account && account.environment !== config.server) {
       throw new ConvexError("BILLING_UNAVAILABLE");
     }
     const now = Date.now();
@@ -121,7 +138,7 @@ export const reserveCheckout = internalMutation({
         orgId: org._id,
         externalCustomerId: externalCustomerIdForOrg(org._id),
         environment: config.server,
-        productId: config.productId,
+        productId: tier.productId,
         managed: false,
         hasOpenSubscription: false,
         syncVersion: 0,
@@ -138,7 +155,7 @@ export const reserveCheckout = internalMutation({
         action: "billing.account_created",
         resourceType: "billing_accounts",
         resourceId: id,
-        after: { environment: config.server, productId: config.productId },
+        after: { environment: config.server, productId: tier.productId },
         createdAt: now,
       });
     }
@@ -148,7 +165,7 @@ export const reserveCheckout = internalMutation({
       checkoutLockUntil: now + 120_000,
       updatedAt: now,
     });
-    return { account, orgId: org._id, email: user.email, name: org.name };
+    return { account, tier, orgId: org._id, email: user.email, name: org.name };
   },
 });
 
@@ -157,7 +174,12 @@ export const finishCheckout = internalMutation({
     orgId: v.id("orgs"),
     attemptId: v.string(),
     checkout: v.optional(
-      v.object({ id: v.string(), url: v.string(), expiresAt: v.number() }),
+      v.object({
+        id: v.string(),
+        url: v.string(),
+        expiresAt: v.number(),
+        productId: v.string(),
+      }),
     ),
   },
   handler: async (ctx, { orgId, attemptId, checkout }) => {
@@ -171,18 +193,23 @@ export const finishCheckout = internalMutation({
             checkoutId: checkout.id,
             checkoutUrl: checkout.url,
             checkoutExpiresAt: checkout.expiresAt,
+            checkoutProductId: checkout.productId,
           }
         : {}),
       updatedAt: Date.now(),
     });
-    if (checkout && checkout.id !== account.checkoutId)
+    if (
+      checkout &&
+      (checkout.id !== account.checkoutId ||
+        checkout.productId !== account.checkoutProductId)
+    )
       await ctx.db.insert("audit_log", {
         orgId,
         actorType: "system",
         action: "billing.checkout_created",
         resourceType: "billing_accounts",
         resourceId: account._id,
-        after: { checkoutId: checkout.id },
+        after: { checkoutId: checkout.id, productId: checkout.productId },
         createdAt: Date.now(),
       });
     return true;
@@ -287,6 +314,12 @@ export const applySnapshot = internalMutation({
       throw new Error("Polar customer mismatch");
     const now = Date.now();
     const subscription = args.subscription;
+    if (subscription?.productId) {
+      const tier = proTierForProduct(subscription.productId);
+      if (!tier || tier.teamLimit !== subscription.teamLimit) {
+        throw new Error("Polar package mismatch");
+      }
+    }
     const paid =
       subscription?.status === "active" && subscription.currentPeriodEnd > now;
     const managed = account.managed || Boolean(subscription);

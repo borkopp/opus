@@ -63,6 +63,8 @@ npx vitest run tests/convex/beauty-journey.test.ts
 
 The full `npm test` command also includes the existing authentication, publication/readiness, booking integrity, availability, settings, notifications, and other regression suites.
 
+The dashboard test runner explicitly uses its own TypeScript configuration, including for the pure mobile calendar and price-input helpers it tests. A clean checkout needs only `npm ci` in `opus-dashboard` for this gate; installing `opus-mobile` dependencies is not required.
+
 ## Isolation and provider boundaries
 
 [`run-beauty-e2e.mjs`](../opus-dashboard/scripts/run-beauty-e2e.mjs) and [`e2e-environment.mjs`](../opus-dashboard/scripts/e2e-environment.mjs) create a temporary application copy, an empty local Convex database/storage directory, a localhost mailbox, and their own frontend/backend processes on available ports. Installed dependencies are copied into the disposable application so production standalone packaging can trace them within the temporary monorepo; `.env` files are not copied. Its process environment is allowlisted: production provider credentials, deployment selectors, and `NODE_OPTIONS` are not inherited. All application endpoints and generated credentials belong to this disposable run. Cleanup stops the owned processes and removes its temporary files.

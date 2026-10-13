@@ -7,7 +7,12 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { getBeautyActivationState } from "./lib/activation";
-import { requireAuth, requireRole, requireUser } from "./lib/auth";
+import {
+  requireAuth,
+  requireRole,
+  requireUser,
+  resolveActiveMembership,
+} from "./lib/auth";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { allocateUniqueTenantSlug } from "./lib/tenantSlug";
 import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
@@ -107,12 +112,12 @@ export const startBeautyBusiness = mutation({
       throw new ConvexError("Business name must be at least 2 characters.");
     }
 
-    if (user.activeOrgId) {
-      const { org, staffMember } = await requireRole(
-        ctx,
-        user.activeOrgId,
-        "owner",
-      );
+    const membership = await resolveActiveMembership(ctx, user);
+    if (membership) {
+      const { org, staffMember } = membership;
+      if (staffMember.role !== "owner") {
+        throw new ConvexError("Unauthorised");
+      }
       if (org.industry !== "beauty_wellness") {
         throw new ConvexError("Hospitality onboarding is coming soon.");
       }
@@ -122,6 +127,9 @@ export const startBeautyBusiness = mutation({
           ? org.slug
           : await allocateUniqueTenantSlug(ctx, name, org._id);
       const now = Date.now();
+      if (user.activeOrgId !== org._id) {
+        await ctx.db.patch(user._id, { activeOrgId: org._id, updatedAt: now });
+      }
       const category = args.category ?? org.beautyCategory;
       await ctx.db.patch(org._id, {
         name,

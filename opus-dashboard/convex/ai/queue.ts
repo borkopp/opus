@@ -409,7 +409,8 @@ export async function storeReply(
   options: {
     model?: string;
     withheld?: boolean;
-    staffId?: string;
+    staffId?: Id<"staff_members">;
+    userId?: Id<"users">;
     handoffNotice?: boolean;
   } = {},
 ) {
@@ -418,6 +419,8 @@ export async function storeReply(
     conversationId: conv._id,
     role: "assistant",
     author: options.staffId ? "staff" : "ai",
+    authorStaffId: options.staffId,
+    authorUserId: options.userId,
     content: content.slice(0, REPLY_LIMIT),
     confidenceScore,
     model: options.model,

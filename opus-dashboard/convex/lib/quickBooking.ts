@@ -92,3 +92,19 @@ export function rangeFitsFreeInterval(
       interval.startAt <= startAt && interval.endAt >= endWithBuffer,
   );
 }
+
+/** Manual calendars and service pickers retain their existing start-time grids. */
+export function isManualBookingStartOnGrid(
+  startAt: number,
+  workingStartAt: number | null,
+  slotDurationMins: number,
+) {
+  if (!Number.isInteger(slotDurationMins) || slotDurationMins <= 0)
+    return false;
+  const stepMs = slotDurationMins * 60_000;
+  const dayStartAt = Math.floor(startAt / 86_400_000) * 86_400_000;
+  return (
+    (startAt - dayStartAt) % stepMs === 0 ||
+    (workingStartAt !== null && (startAt - workingStartAt) % stepMs === 0)
+  );
+}

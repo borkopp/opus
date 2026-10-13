@@ -313,6 +313,8 @@ export function BookingSidebar({
                 </span>
                 <Price
                   amount={booking.priceMinorUnits}
+                  currency={booking.currency}
+                  locale={locale}
                   className="font-mono text-base font-bold text-foreground"
                 />
               </div>

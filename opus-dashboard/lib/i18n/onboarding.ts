@@ -148,3 +148,28 @@ export function onboardingError(
   }
   return dict.onboarding.genericError;
 }
+
+export const businessTypes = [
+  {
+    industry: "beauty_wellness",
+    label: ["Beauty", "Убавина", "Bukuri"],
+    description: [
+      "Salons, studios, barbershops and wellness appointments.",
+      "Салони, студија, берберници и велнес термини.",
+      "Sallone, studio, berberhane dhe termine mirëqenieje.",
+    ],
+  },
+  {
+    industry: "hospitality",
+    label: [
+      "Restaurants and cafés",
+      "Ресторани и кафулиња",
+      "Restorante dhe kafene",
+    ],
+    description: [
+      "Table reservations, guests and your daily service.",
+      "Резервации на маси, гости и секојдневна услуга.",
+      "Rezervime tavolinash, mysafirë dhe shërbimi juaj ditor.",
+    ],
+  },
+] as const;

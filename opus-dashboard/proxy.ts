@@ -5,6 +5,7 @@ import { tenantSlugFromHost } from "./lib/tenant-sites";
 
 const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk";
 const protectedPrefixes = [
+  "/hospitality",
   "/beauty",
   "/settings",
   "/website",

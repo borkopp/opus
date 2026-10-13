@@ -12,8 +12,11 @@ import {
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
 import { queueBookingNotifications } from "./lib/bookingNotifications";
-import { decryptBookingOtp } from "./lib/bookingEmailSecurity";
-import { wallClockNow } from "./lib/bookingTime";
+import {
+  BOOKING_EMAIL_OTP_TTL_MS,
+  decryptBookingOtp,
+} from "./lib/bookingEmailSecurity";
+import { wallClockNow, wallClockTimestampToInstant } from "./lib/bookingTime";
 import { isAppReviewOrg } from "./lib/appReview";
 import {
   deliverEmail,
@@ -29,6 +32,12 @@ import {
   type EmailProviderAttempt,
 } from "./lib/emailDeliveryTypes";
 import { isActiveIndustry } from "./lib/productScope";
+import { isHospitalityOrg } from "./lib/hospitalityAccess";
+import {
+  reservationEmailContext,
+  renderReservationNotification,
+  type ReservationEmailContext,
+} from "./lib/reservationEmailNotifications";
 import { pushEventValidator } from "./lib/pushValidators";
 import { mobilePushConfigured, browserPushConfigured } from "./lib/staffPush";
 import {
@@ -50,6 +59,12 @@ import {
 } from "./lib/emailTemplates";
 
 const notificationType = v.union(
+  v.literal("reservation_verification"),
+  v.literal("reservation_confirmation"),
+  v.literal("reservation_changed"),
+  v.literal("reservation_cancelled"),
+  v.literal("reservation_reminder"),
+  v.literal("staff_reservation"),
   v.literal("booking_verification"),
   v.literal("booking_confirmation"),
   v.literal("booking_rescheduled"),
@@ -63,11 +78,7 @@ const notificationType = v.union(
   v.literal("staff_invite"),
 );
 
-const notificationChannel = v.union(
-  v.literal("email"),
-  v.literal("whatsapp"),
-  v.literal("push"),
-);
+const notificationChannel = v.union(v.literal("email"), v.literal("push"));
 
 type DeliveryContext = {
   notification: Doc<"notifications">;
@@ -80,6 +91,8 @@ type DeliveryContext = {
   verification: Doc<"booking_email_verifications"> | null;
   staffRecipientEmails: string[];
   gapOfferError: string | null;
+  reservationEmail: ReservationEmailContext | null;
+  hospitalityInviteError: string | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -120,6 +133,8 @@ export const scheduleNotification = internalMutation({
     pushReminderMinutes: v.optional(v.number()),
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
+    reservationId: v.optional(v.id("reservations")),
+    reservationRevision: v.optional(v.number()),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
     gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
     channel: notificationChannel,
@@ -130,6 +145,13 @@ export const scheduleNotification = internalMutation({
     dedupeKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    if (
+      args.type.startsWith("reservation_") ||
+      args.type === "staff_reservation"
+    ) {
+      if (args.channel !== "email")
+        throw new Error("Reservations only support email notifications.");
+    }
     const recipientAddress = args.recipientAddress.trim().toLowerCase();
     let skipReason: string | null = null;
     const orgForIsolation = await ctx.db.get(args.orgId);
@@ -164,6 +186,8 @@ export const scheduleNotification = internalMutation({
       pushReminderMinutes: args.pushReminderMinutes,
       customerId: args.customerId,
       bookingId: args.bookingId,
+      reservationId: args.reservationId,
+      reservationRevision: args.reservationRevision,
       bookingEmailVerificationId: args.bookingEmailVerificationId,
       gapRecoveryCandidateId: args.gapRecoveryCandidateId,
       channel: args.channel,
@@ -184,7 +208,8 @@ export const scheduleNotification = internalMutation({
     if (
       !skipReason &&
       (args.channel === "email" || args.channel === "push") &&
-      args.type !== "booking_verification"
+      args.type !== "booking_verification" &&
+      args.type !== "reservation_verification"
     ) {
       await ctx.scheduler.runAfter(
         Math.max(0, scheduledFor - Date.now()),
@@ -203,6 +228,18 @@ export const getPendingNotificationsToProcess = internalQuery({
       .query("notifications")
       .withIndex("by_status_scheduled", (query) =>
         query.eq("status", "pending").lte("scheduledFor", Date.now()),
+      )
+      // OTP request actions await their own delivery result. A periodic worker
+      // must not steal their lease and make a sent code look like a failure.
+      // Expired orphan jobs remain eligible for cancellation and redaction.
+      .filter((q) =>
+        q.or(
+          q.and(
+            q.neq(q.field("type"), "booking_verification"),
+            q.neq(q.field("type"), "reservation_verification"),
+          ),
+          q.lte(q.field("scheduledFor"), Date.now() - BOOKING_EMAIL_OTP_TTL_MS),
+        ),
       )
       .take(50);
   },
@@ -266,6 +303,35 @@ export const getNotificationDeliveryContext = internalQuery({
         ...(assignedStaffRecipient ? [assignedStaffRecipient.email] : []),
       ]),
     );
+    let hospitalityInviteError: string | null = null;
+    if (
+      notification.type === "staff_invite" &&
+      org?.industry === "hospitality"
+    ) {
+      const token = stringValue(asRecord(notification.templateData).token);
+      const invitation = token
+        ? await ctx.db
+            .query("staff_invites")
+            .withIndex("by_org", (q) => q.eq("orgId", org._id))
+            .filter((q) => q.eq(q.field("token"), token))
+            .first()
+        : null;
+      const member = invitation ? await ctx.db.get(invitation.staffId) : null;
+      if (
+        !isHospitalityOrg(org) ||
+        !invitation ||
+        invitation.isDeleted ||
+        invitation.status !== "pending" ||
+        invitation.expiresAt <= Date.now() ||
+        invitation.email.trim().toLowerCase() !==
+          notification.recipientAddress ||
+        !member ||
+        member.orgId !== org._id ||
+        member.isDeleted ||
+        !member.isActive
+      )
+        hospitalityInviteError = "Venue invitation is no longer available.";
+    }
 
     return {
       notification,
@@ -278,11 +344,14 @@ export const getNotificationDeliveryContext = internalQuery({
       verification,
       staffRecipientEmails,
       gapOfferError: await recoveryDeliverySkipReason(ctx, notification),
+      reservationEmail: await reservationEmailContext(ctx, notification),
+      hospitalityInviteError,
     };
   },
 });
 
 function deliverySkipReason(context: DeliveryContext) {
+  if (context.reservationEmail) return context.reservationEmail.skipReason;
   const {
     notification,
     org,
@@ -298,9 +367,14 @@ function deliverySkipReason(context: DeliveryContext) {
   if (isAppReviewOrg(org))
     return "External messages are disabled in the App Review demo studio.";
   if (context.gapOfferError) return context.gapOfferError;
+  if (context.hospitalityInviteError) return context.hospitalityInviteError;
 
   if (notification.type === "booking_verification") {
-    if (!verification || verification.orgId !== notification.orgId) {
+    if (
+      !verification ||
+      verification.purpose === "reservation" ||
+      verification.orgId !== notification.orgId
+    ) {
       return "Verification challenge unavailable";
     }
     if (
@@ -314,7 +388,8 @@ function deliverySkipReason(context: DeliveryContext) {
 
   if (
     notification.type === "staff_new_booking" ||
-    notification.type === "staff_booking_reminder"
+    notification.type === "staff_booking_reminder" ||
+    notification.type === "no_show_warning"
   ) {
     if (
       !staffRecipientEmails.includes(
@@ -363,6 +438,32 @@ function deliverySkipReason(context: DeliveryContext) {
       booking.status !== "cancelled"
     ) {
       return "Appointment is not cancelled";
+    }
+    if (
+      notification.type === "no_show_warning" &&
+      booking.status !== "no_show"
+    ) {
+      return "Appointment is no longer marked as a no-show";
+    }
+    if (
+      notification.type === "booking_reminder" ||
+      notification.type === "staff_booking_reminder"
+    ) {
+      // A queued reminder may outlive a completion/no-show or a worker outage.
+      // Re-read lifecycle and local appointment time before contacting anyone.
+      if (
+        booking.status !== "confirmed" ||
+        wallClockTimestampToInstant(booking.startAt, settings.timezone) <=
+          Date.now()
+      ) {
+        return "Appointment reminder is no longer relevant";
+      }
+      const queuedStartAt = numberValue(
+        asRecord(notification.templateData).startAt,
+      );
+      if (queuedStartAt !== undefined && queuedStartAt !== booking.startAt) {
+        return "Appointment was rescheduled";
+      }
     }
   }
 
@@ -450,6 +551,8 @@ function appointmentData(context: DeliveryContext): AppointmentEmailData {
 async function renderNotificationEmail(
   context: DeliveryContext,
 ): Promise<RenderedEmail> {
+  if (context.reservationEmail)
+    return renderReservationNotification(context.reservationEmail);
   const { notification } = context;
   const data = asRecord(notification.templateData);
 
@@ -468,6 +571,7 @@ async function renderNotificationEmail(
   if (notification.type === "staff_invite") {
     return renderStaffInviteEmail({
       studioName: context.org?.name ?? "OPUS Studio",
+      hospitality: context.org?.industry === "hospitality",
       dashboardUrl: stringValue(data.token)
         ? `${configuredSiteUrl()}/invites/${encodeURIComponent(stringValue(data.token))}`
         : configuredSiteUrl(),
@@ -511,9 +615,9 @@ async function renderNotificationEmail(
     case "no_show_warning":
       return renderSimpleAppointmentEmail({
         data: appointment,
-        subject: `Appointment update · ${appointment.studioName}`,
-        title: "We missed you today.",
-        intro: "Contact the studio if you would like to arrange another time.",
+        subject: `Client no-show · ${appointment.studioName}`,
+        title: "An appointment was marked as a no-show.",
+        intro: `${appointment.customerName}'s appointment with ${appointment.staffName} was marked as a no-show. Review the appointment in OPUS Studio if a correction is needed.`,
       });
     default:
       throw new Error(`Unsupported email template: ${notification.type}`);
@@ -535,6 +639,7 @@ export const claimNotificationForProcessing = internalMutation({
       return false;
     }
     const now = Date.now();
+    if (existing.scheduledFor > now) return false;
     if (
       existing.processingStartedAt !== undefined &&
       existing.processingStartedAt > now - NOTIFICATION_PROCESSING_LEASE_MS
@@ -572,7 +677,9 @@ export const updateNotificationStatus = internalMutation({
       return args.status;
     }
 
-    const isBookingVerification = existing.type === "booking_verification";
+    const isBookingVerification =
+      existing.type === "booking_verification" ||
+      existing.type === "reservation_verification";
     const redactedTemplateData = isBookingVerification
       ? { redacted: true }
       : existing.templateData;
@@ -641,10 +748,13 @@ export const recordNotificationFailure = internalMutation({
     const mayRetry =
       args.retryable &&
       existing.type !== "booking_verification" &&
+      existing.type !== "reservation_verification" &&
       attemptCount < 3;
     if (!mayRetry) {
       await syncRecoveryDelivery(ctx, existing, "failed");
-      const isBookingVerification = existing.type === "booking_verification";
+      const isBookingVerification =
+        existing.type === "booking_verification" ||
+        existing.type === "reservation_verification";
       const redactedTemplateData = isBookingVerification
         ? { redacted: true }
         : existing.templateData;

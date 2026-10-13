@@ -3,7 +3,11 @@ import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireRole } from "./lib/auth";
 import { internal } from "./_generated/api";
-import { ensureScheduleBaseline, recordScheduleVersion } from "./analyst/schedules";
+import {
+  ensureScheduleBaseline,
+  recordScheduleVersion,
+} from "./analyst/schedules";
+import { assertWorkingHours } from "./lib/availabilityValidation";
 
 export const setAvailabilityRule = mutation({
   args: {
@@ -29,9 +33,14 @@ export const setAvailabilityRule = mutation({
       "manager",
     );
 
-    if (args.dayOfWeek < 0 || args.dayOfWeek > 6) {
+    if (
+      !Number.isInteger(args.dayOfWeek) ||
+      args.dayOfWeek < 0 ||
+      args.dayOfWeek > 6
+    ) {
       throw new ConvexError("Invalid dayOfWeek (must be 0-6).");
     }
+    assertWorkingHours(args.startTime, args.endTime, args.breaks);
 
     const targetStaff = await ctx.db.get(args.staffId);
     if (
@@ -45,8 +54,11 @@ export const setAvailabilityRule = mutation({
     // Check if rule already exists for this day
     const existingRule = await ctx.db
       .query("availability_rules")
-      .withIndex("by_staff_day", (q) =>
-        q.eq("staffId", args.staffId).eq("dayOfWeek", args.dayOfWeek),
+      .withIndex("by_org_staff_day_active", (q) =>
+        q
+          .eq("orgId", args.orgId)
+          .eq("staffId", args.staffId)
+          .eq("dayOfWeek", args.dayOfWeek),
       )
       .first();
 
@@ -191,7 +203,9 @@ export const copyScheduleToAllStaff = mutation({
     // Fetch source rules
     const sourceRules = await ctx.db
       .query("availability_rules")
-      .withIndex("by_staff", (q) => q.eq("staffId", args.sourceStaffId))
+      .withIndex("by_org_staff_day_active", (q) =>
+        q.eq("orgId", args.orgId).eq("staffId", args.sourceStaffId),
+      )
       .collect();
 
     if (sourceRules.length === 0) {
@@ -216,8 +230,11 @@ export const copyScheduleToAllStaff = mutation({
       for (const sourceRule of sourceRules) {
         const existingTargetRule = await ctx.db
           .query("availability_rules")
-          .withIndex("by_staff_day", (q) =>
-            q.eq("staffId", target._id).eq("dayOfWeek", sourceRule.dayOfWeek),
+          .withIndex("by_org_staff_day_active", (q) =>
+            q
+              .eq("orgId", args.orgId)
+              .eq("staffId", target._id)
+              .eq("dayOfWeek", sourceRule.dayOfWeek),
           )
           .first();
 
@@ -278,7 +295,9 @@ export const listAvailabilityRules = query({
     await requireAuth(ctx, args.orgId);
     const rules = await ctx.db
       .query("availability_rules")
-      .withIndex("by_staff", (q) => q.eq("staffId", args.staffId))
+      .withIndex("by_org_staff_day_active", (q) =>
+        q.eq("orgId", args.orgId).eq("staffId", args.staffId),
+      )
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 
@@ -296,7 +315,9 @@ export const getWeeklySchedule = query({
 
     const rules = await ctx.db
       .query("availability_rules")
-      .withIndex("by_staff", (q) => q.eq("staffId", args.staffId))
+      .withIndex("by_org_staff_day_active", (q) =>
+        q.eq("orgId", args.orgId).eq("staffId", args.staffId),
+      )
       .filter((q) => q.eq(q.field("isDeleted"), false))
       .collect();
 

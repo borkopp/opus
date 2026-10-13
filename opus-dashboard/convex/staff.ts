@@ -4,7 +4,7 @@ import {
   recordScheduleVersion,
 } from "./analyst/schedules";
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import {
   requireActiveOrg,
@@ -27,6 +27,7 @@ import {
   requireBookingAccess,
 } from "./lib/staffAccess";
 import { wallClockNow } from "./lib/bookingTime";
+import { isHospitalityOrg } from "./lib/hospitalityAccess";
 import {
   isAppReviewEmail,
   rejectAppReviewIdentity,
@@ -71,6 +72,27 @@ function normalizeSignInEmail(value: string | null | undefined) {
     throw new ConvexError("Enter a valid sign-in email address.");
   }
   return email;
+}
+
+async function requireRemainingOwnerAccess(
+  ctx: QueryCtx,
+  removed: Doc<"staff_members">,
+) {
+  const activeStaff = await ctx.db
+    .query("staff_members")
+    .withIndex("by_org_active", (q) =>
+      q.eq("orgId", removed.orgId).eq("isActive", true).eq("isDeleted", false),
+    )
+    .collect();
+  for (const member of activeStaff) {
+    if (member._id === removed._id || member.role !== "owner" || !member.userId)
+      continue;
+    const user = await ctx.db.get(member.userId);
+    if (user && !user.isDeleted) return;
+  }
+  throw new ConvexError(
+    "The business must keep at least one active owner with account access",
+  );
 }
 
 export const getStaffPlanStatus = query({
@@ -267,19 +289,7 @@ export const updateStaffMember = mutation({
       ((args.role !== undefined && args.role !== "owner") ||
         args.isActive === false);
     if (removesActiveOwner) {
-      const activeOwners = await ctx.db
-        .query("staff_members")
-        .withIndex("by_org_active", (q) =>
-          q.eq("orgId", args.orgId).eq("isActive", true).eq("isDeleted", false),
-        )
-        .collect();
-      if (
-        activeOwners.filter((member) => member.role === "owner").length <= 1
-      ) {
-        throw new ConvexError(
-          "The business must keep at least one active owner",
-        );
-      }
+      await requireRemainingOwnerAccess(ctx, existingStaff);
     }
 
     const nextRole = args.role ?? existingStaff.role;
@@ -373,19 +383,7 @@ export const deactivateStaffMember = mutation({
       throw new ConvexError("Only an owner can deactivate another owner");
     }
     if (existingStaff.role === "owner" && existingStaff.isActive) {
-      const activeOwners = await ctx.db
-        .query("staff_members")
-        .withIndex("by_org_active", (q) =>
-          q.eq("orgId", args.orgId).eq("isActive", true).eq("isDeleted", false),
-        )
-        .collect();
-      if (
-        activeOwners.filter((member) => member.role === "owner").length <= 1
-      ) {
-        throw new ConvexError(
-          "The business must keep at least one active owner",
-        );
-      }
+      await requireRemainingOwnerAccess(ctx, existingStaff);
     }
 
     const updates = {
@@ -594,7 +592,10 @@ export const acceptStaffInvite = mutation({
         "Staff member is already linked to another account.",
       );
     requireLiveStudio(org);
-    if (invite.personalAccount) requirePaidPlan(org, "Staff accounts");
+    if (org.industry === "hospitality") {
+      if (!isHospitalityOrg(org))
+        throw new ConvexError("This invitation is no longer available.");
+    } else if (invite.personalAccount) requirePaidPlan(org, "Staff accounts");
     const memberships = await ctx.db
       .query("staff_members")
       .withIndex("by_org_user", (q) =>
@@ -641,11 +642,12 @@ export const acceptStaffInvite = mutation({
       createdAt: Date.now(),
     });
 
-    await ctx.scheduler.runAfter(
-      0,
-      internal.notifications.reconcileBookingRemindersForOrg,
-      { orgId: invite.orgId },
-    );
+    if (org.industry === "beauty_wellness")
+      await ctx.scheduler.runAfter(
+        0,
+        internal.notifications.reconcileBookingRemindersForOrg,
+        { orgId: invite.orgId },
+      );
 
     return null;
   },
@@ -803,6 +805,7 @@ export const getInvite = query({
     if (
       !org ||
       org.isDeleted ||
+      (org.industry === "hospitality" && !isHospitalityOrg(org)) ||
       !staff ||
       staff.isDeleted ||
       !staff.isActive ||
@@ -812,6 +815,7 @@ export const getInvite = query({
     const identity = await ctx.auth.getUserIdentity();
     return {
       studioName: org.name,
+      industry: org.industry,
       staffName: staff.displayName,
       emailMatches: Boolean(
         identity?.email &&

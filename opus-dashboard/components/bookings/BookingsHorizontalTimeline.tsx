@@ -97,6 +97,7 @@ export function BookingsHorizontalTimeline({
   onComplete,
   onCancel,
   onMarkNoShow,
+  onRescheduleClick,
   currentDate,
   quickBookingSlots,
   slotDurationMins,
@@ -113,6 +114,7 @@ export function BookingsHorizontalTimeline({
   onComplete?: (bookingId: Id<"bookings">) => void;
   onCancel?: (bookingId: Id<"bookings">) => void;
   onMarkNoShow?: (bookingId: Id<"bookings">) => void;
+  onRescheduleClick?: (booking: BookingView) => void;
   currentDate: Date;
   quickBookingSlots: QuickBookingSelection[];
   slotDurationMins: number;
@@ -546,12 +548,6 @@ export function BookingsHorizontalTimeline({
                     <span className="font-semibold text-sm text-foreground tracking-tight truncate">
                       {staff.displayName}
                     </span>
-                    <span
-                      data-replay-public
-                      className="text-xs text-muted-foreground truncate"
-                    >
-                      {t("Availability: 8h", "Достапност: 8ч", "Disponueshmëria: 8orë")}
-                    </span>
                   </div>
                 </div>
 
@@ -712,9 +708,7 @@ export function BookingsHorizontalTimeline({
                           onComplete={onComplete}
                           onCancel={onCancel}
                           onMarkNoShow={onMarkNoShow}
-                          onRescheduleClick={() => {
-                            // Can trigger custom reschedule modal
-                          }}
+                          onRescheduleClick={onRescheduleClick}
                           side="bottom"
                           align="center"
                         >

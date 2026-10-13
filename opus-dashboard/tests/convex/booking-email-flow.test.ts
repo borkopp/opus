@@ -4,6 +4,10 @@ import { api, internal } from "../../convex/_generated/api";
 import { wallClockTimestampToInstant } from "../../convex/lib/bookingTime";
 import schema from "../../convex/schema";
 import { convexModules } from "../../convex-test.setup";
+import {
+  encryptBookingOtp,
+  hashBookingOtp,
+} from "../../convex/lib/bookingEmailSecurity";
 
 const createBackend = () => convexTest(schema, convexModules);
 type TestBackend = ReturnType<typeof createBackend>;
@@ -229,6 +233,68 @@ describe("public booking email flow", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  test("beauty OTP confirmation rejects reservation-purpose challenges even with the correct code", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const args = bookingArgs(fixture);
+    const challenge = await t.action(api.publicBooking.requestBookingEmailOtp, {
+      orgId: fixture.orgId,
+      email: args.customerEmail,
+    });
+    await t.run((ctx) =>
+      ctx.db.patch(challenge.challengeId, { purpose: "reservation" }),
+    );
+    await expect(
+      t.action(api.publicBooking.confirmPublicBooking, {
+        ...args,
+        challengeId: challenge.challengeId,
+        otp: TEST_OTP,
+      }),
+    ).rejects.toThrow();
+    expect(
+      await t.run((ctx) =>
+        ctx.db
+          .query("bookings")
+          .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+          .collect(),
+      ),
+    ).toEqual([]);
+    expect(
+      await t.run((ctx) => ctx.db.get(challenge.challengeId)),
+    ).toMatchObject({
+      status: "pending",
+      attempts: 0,
+    });
+  });
+
+  test("periodic delivery leaves fresh beauty OTPs to their requesting action", async () => {
+    const fixture = await setupPublishedStudio(t);
+    const email = "elena@example.com";
+    const challenge = await t.mutation(
+      internal.publicBooking.createBookingEmailChallenge,
+      {
+        orgId: fixture.orgId,
+        email,
+        codeHash: await hashBookingOtp(email, TEST_OTP),
+        encryptedCode: await encryptBookingOtp(TEST_OTP),
+      },
+    );
+    expect(
+      await t.action(internal.notifications.processNotifications, {}),
+    ).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(
+      await t.action(internal.notifications.processIndividualNotification, {
+        notificationId: challenge.notificationId,
+      }),
+    ).toBe("sent");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(
+      await t.run((ctx) => ctx.db.get(challenge.challengeId)),
+    ).toMatchObject({
+      status: "pending",
+    });
+  });
+
   test("Pro schedules selected reminder times and a downgrade blocks queued delivery and reconciliation", async () => {
     const fixture = await setupPublishedStudio(t);
     vi.useFakeTimers();
@@ -268,6 +334,7 @@ describe("public booking email flow", () => {
     expect(reminders.map((n) => n.templateData.hoursBefore)).toEqual([
       24, 3, 2, 1,
     ]);
+    vi.setSystemTime(reminders[0].scheduledFor);
     await expect(
       t.action(internal.notifications.processIndividualNotification, {
         notificationId: reminders[0]._id,
@@ -277,6 +344,7 @@ describe("public booking email flow", () => {
 
     await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "free" }));
     for (const reminder of reminders.slice(1)) {
+      vi.setSystemTime(reminder.scheduledFor);
       await expect(
         t.action(internal.notifications.processIndividualNotification, {
           notificationId: reminder._id,
@@ -295,6 +363,109 @@ describe("public booking email flow", () => {
       failureReason: "Client email reminders require Pro",
     });
   });
+
+  test("does not deliver a reminder early or bypass its retry backoff", async () => {
+    const fixture = await setupPublishedStudio(t);
+    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
+    const bookingId = await fixture.owner.mutation(
+      api.bookings.createManualBooking,
+      {
+        orgId: fixture.orgId,
+        staffId: fixture.staffId,
+        serviceIds: [fixture.serviceId],
+        startAt: fixture.slot.startAt,
+        customerName: "Reminder Client",
+        customerEmail: "reminder@example.com",
+      },
+    );
+    const reminder = await t.run(async (ctx) =>
+      (
+        await ctx.db
+          .query("notifications")
+          .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+          .collect()
+      ).find((n) => n.bookingId === bookingId && n.type === "booking_reminder"),
+    );
+    if (!reminder) throw new Error("Client reminder was not queued");
+    const process = () =>
+      t.action(internal.notifications.processIndividualNotification, {
+        notificationId: reminder._id,
+      });
+    await expect(process()).resolves.toBe("ignored");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(await t.run((ctx) => ctx.db.get(reminder._id))).toMatchObject({
+      status: "pending",
+      attemptCount: 0,
+    });
+
+    vi.setSystemTime(reminder.scheduledFor);
+    await t.mutation(internal.notifications.recordNotificationFailure, {
+      notificationId: reminder._id,
+      orgId: fixture.orgId,
+      failureReason: "Temporary provider outage",
+      retryable: true,
+    });
+    await expect(process()).resolves.toBe("ignored");
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.setSystemTime(reminder.scheduledFor + 60_000);
+    await expect(process()).resolves.toBe("sent");
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  test.each(["completed", "no_show", "started", "rescheduled"] as const)(
+    "cancels client and team reminders when the appointment is %s",
+    async (change) => {
+      const fixture = await setupPublishedStudio(t);
+      await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
+      const bookingId = await fixture.owner.mutation(
+        api.bookings.createManualBooking,
+        {
+          orgId: fixture.orgId,
+          staffId: fixture.staffId,
+          serviceIds: [fixture.serviceId],
+          startAt: fixture.slot.startAt,
+          customerName: "Reminder Client",
+          customerEmail: "reminder@example.com",
+        },
+      );
+      const reminders = await t.run(async (ctx) => {
+        if (change === "completed" || change === "no_show") {
+          await ctx.db.patch(bookingId, { status: change });
+        } else if (change === "rescheduled") {
+          await ctx.db.patch(bookingId, {
+            startAt: fixture.slot.startAt + 3_600_000,
+            endAt: fixture.slot.endAt + 3_600_000,
+          });
+        }
+        return (
+          await ctx.db
+            .query("notifications")
+            .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+            .collect()
+        ).filter(
+          (n) =>
+            n.bookingId === bookingId &&
+            ["booking_reminder", "staff_booking_reminder"].includes(n.type),
+        );
+      });
+      expect(new Set(reminders.map((n) => n.type))).toEqual(
+        new Set(["booking_reminder", "staff_booking_reminder"]),
+      );
+      vi.setSystemTime(
+        change === "started"
+          ? wallClockTimestampToInstant(fixture.slot.startAt, "Europe/Skopje")
+          : Math.max(...reminders.map((n) => n.scheduledFor)),
+      );
+      for (const reminder of reminders) {
+        await expect(
+          t.action(internal.notifications.processIndividualNotification, {
+            notificationId: reminder._id,
+          }),
+        ).resolves.toBe("cancelled");
+      }
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
 
   test("sends an OTP, creates nothing for a wrong code, then books once and sends the premium confirmation", async () => {
     const fixture = await setupPublishedStudio(t);
@@ -632,6 +803,7 @@ describe("public booking email flow", () => {
         staffEmailRecipientUserIds: [],
       },
     );
+    vi.setSystemTime(staffReminders[0].scheduledFor);
     await expect(
       t.action(internal.notifications.processIndividualNotification, {
         notificationId: staffReminders[0]._id,
@@ -806,6 +978,7 @@ describe("public booking email flow", () => {
       (notification) => notification.type === "staff_booking_reminder",
     );
     if (!reminder) throw new Error("Assigned staff reminder was not queued");
+    vi.setSystemTime(reminder.scheduledFor);
     await expect(
       t.action(internal.notifications.processIndividualNotification, {
         notificationId: reminder._id,
@@ -995,6 +1168,57 @@ describe("public booking email flow", () => {
     expect(rescheduleBody?.html).toContain("opus-email-logo-blue.png");
   });
 
+  test.each([false, true])(
+    "no-show email addresses the assigned staff member and respects revoked access: %s",
+    async (revoked) => {
+      const fixture = await setupPublishedStudio(t);
+      const bookingId = await fixture.owner.mutation(
+        api.bookings.createManualBooking,
+        {
+          orgId: fixture.orgId,
+          staffId: fixture.staffId,
+          serviceIds: [fixture.serviceId],
+          startAt: fixture.slot.startAt,
+          customerName: "Absent Client",
+        },
+      );
+      vi.setSystemTime(
+        wallClockTimestampToInstant(fixture.slot.endAt, "Europe/Skopje"),
+      );
+      await fixture.owner.mutation(api.bookings.markNoShow, {
+        orgId: fixture.orgId,
+        bookingId,
+      });
+      const warning = await t.run(async (ctx) => {
+        if (revoked) await ctx.db.patch(fixture.staffId, { isActive: false });
+        return (
+          await ctx.db
+            .query("notifications")
+            .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+            .collect()
+        ).find(
+          (n) => n.bookingId === bookingId && n.type === "no_show_warning",
+        );
+      });
+      if (!warning) throw new Error("No-show email was not queued");
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId: warning._id,
+        }),
+      ).resolves.toBe(revoked ? "cancelled" : "sent");
+      if (revoked) {
+        expect(fetchMock).not.toHaveBeenCalled();
+      } else {
+        expect(fetchMock).toHaveBeenCalledOnce();
+        const body = JSON.parse(String(fetchMock.mock.calls[0][1].body));
+        expect(body.to).toEqual(["owner@atelier.example"]);
+        expect(body.text).toContain("Absent Client's appointment");
+        expect(body.text).toContain("was marked as a no-show");
+        expect(body.text).not.toContain("We missed you today");
+      }
+    },
+  );
+
   test("keeps verified booking email without SMS even for legacy enabled settings", async () => {
     const fixture = await setupPublishedStudio(t);
     await t.run(async (ctx) => {
@@ -1048,52 +1272,58 @@ describe("public booking email flow", () => {
     ).toBe(true);
   });
 
-  test("cancels historical queued SMS without contacting a provider", async () => {
-    const fixture = await setupPublishedStudio(t);
-    const notificationId = await t.run((ctx) =>
-      ctx.db.insert("notifications", {
-        orgId: fixture.orgId,
-        channel: "sms",
-        type: "booking_confirmation",
-        recipientAddress: "+38970123456",
-        templateData: {},
-        scheduledFor: Date.now(),
-        status: "pending",
-        createdAt: Date.now(),
-        smsDispatchStartedAt: Date.now() - 60_000,
-      }),
-    );
-    fetchMock.mockClear();
-    await expect(
-      t.action(internal.notifications.processIndividualNotification, {
-        notificationId,
-      }),
-    ).resolves.toBe("cancelled");
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
-      status: "cancelled",
-      failureReason: "Notification channel is no longer supported.",
-    });
-    await expect(
-      t.action(internal.notifications.processIndividualNotification, {
-        notificationId,
-      }),
-    ).resolves.toBe("ignored");
-  });
+  test.each(["sms", "whatsapp"] as const)(
+    "cancels historical queued %s without contacting a provider",
+    async (channel) => {
+      const fixture = await setupPublishedStudio(t);
+      const notificationId = await t.run((ctx) =>
+        ctx.db.insert("notifications", {
+          orgId: fixture.orgId,
+          channel,
+          type: "booking_confirmation",
+          recipientAddress: "+38970123456",
+          templateData: {},
+          scheduledFor: Date.now(),
+          status: "pending",
+          createdAt: Date.now(),
+          smsDispatchStartedAt: Date.now() - 60_000,
+        }),
+      );
+      fetchMock.mockClear();
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId,
+        }),
+      ).resolves.toBe("cancelled");
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
+        status: "cancelled",
+        failureReason: "Notification channel is no longer supported.",
+      });
+      await expect(
+        t.action(internal.notifications.processIndividualNotification, {
+          notificationId,
+        }),
+      ).resolves.toBe("ignored");
+    },
+  );
 
-  test("rejects new SMS queue entries", async () => {
-    const fixture = await setupPublishedStudio(t);
-    await expect(
-      t.mutation(internal.notifications.scheduleNotification, {
-        orgId: fixture.orgId,
-        // @ts-expect-error Retired channels must also be rejected at runtime.
-        channel: "sms",
-        type: "booking_confirmation",
-        recipientAddress: "+38970123456",
-        templateData: {},
-      }),
-    ).rejects.toThrow();
-  });
+  test.each(["sms", "whatsapp"] as const)(
+    "rejects new %s queue entries",
+    async (channel) => {
+      const fixture = await setupPublishedStudio(t);
+      await expect(
+        t.mutation(internal.notifications.scheduleNotification, {
+          orgId: fixture.orgId,
+          // @ts-expect-error Retired channels must also be rejected at runtime.
+          channel,
+          type: "booking_confirmation",
+          recipientAddress: "+38970123456",
+          templateData: {},
+        }),
+      ).rejects.toThrow();
+    },
+  );
 
   test("locks a verification challenge after five incorrect codes", async () => {
     const fixture = await setupPublishedStudio(t);

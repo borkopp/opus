@@ -7,6 +7,7 @@ import {
 } from "./lib/auth";
 import { dashboardThemeValidator } from "./lib/dashboardTheme";
 import { resolveStoredImageUrl } from "./lib/imageUrl";
+import { isHospitalityOrg } from "./lib/hospitalityAccess";
 import {
   appReviewBindings,
   assertAppReviewUser,
@@ -229,7 +230,7 @@ export const listMemberships = query({
           const org = await ctx.db.get(member.orgId);
           return org &&
             !org.isDeleted &&
-            org.industry === "beauty_wellness" &&
+            (org.industry === "beauty_wellness" || isHospitalityOrg(org)) &&
             (isAppReviewEmail(user.email) || !isAppReviewOrg(org))
             ? { orgId: org._id, name: org.name, role: member.role }
             : null;
@@ -245,12 +246,15 @@ export const switchOrg = mutation({
     const { user } = await requireUser(ctx);
     if (isAppReviewEmail(user.email) && orgId !== appReviewBindings().orgId)
       throw new ConvexError("App Review access is limited to its demo studio.");
-    const membership = await ctx.db
+    const memberships = await ctx.db
       .query("staff_members")
       .withIndex("by_org_user", (q) =>
         q.eq("orgId", orgId).eq("userId", user._id),
       )
-      .first();
+      .collect();
+    const membership = memberships.find(
+      (member) => !member.isDeleted && member.isActive,
+    );
     const org = await ctx.db.get(orgId);
     if (
       !membership ||
@@ -259,7 +263,7 @@ export const switchOrg = mutation({
       !org ||
       org.isDeleted ||
       (!isAppReviewEmail(user.email) && isAppReviewOrg(org)) ||
-      org.industry !== "beauty_wellness"
+      (org.industry !== "beauty_wellness" && !isHospitalityOrg(org))
     )
       throw new ConvexError("No active access to this studio.");
     await ctx.db.patch(user._id, { activeOrgId: orgId, updatedAt: Date.now() });

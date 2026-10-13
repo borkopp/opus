@@ -26,6 +26,7 @@ import OpenAI from "openai";
 import { v } from "convex/values";
 import { action } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { requireMarketplaceEnabled } from "../lib/productScope";
 import { Doc, Id } from "../_generated/dataModel";
 import { extractTimeIntent, TimeIntent } from "./timeIntent";
 import { isOpenAt, isOpenNow, openingHoursToday } from "./openingHours";
@@ -165,6 +166,7 @@ export const retrieve = action({
     history: Array<{ role: "user" | "assistant" | "system"; content: string }>;
     availableCategories: string[];
   }> => {
+    requireMarketplaceEnabled();
     const trimmedQuery = args.query.trim().slice(0, 500);
     if (trimmedQuery.length === 0) {
       throw new Error("query must be non-empty");

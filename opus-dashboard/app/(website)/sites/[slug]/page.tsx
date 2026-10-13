@@ -10,6 +10,8 @@ import {
   translatedWebsiteText,
 } from "../../../../../shared/website-design";
 import { getRequestLocale } from "@/lib/i18n/server";
+import { getTenantReservationVenue } from "@/lib/reservation-server";
+import { ReservationWebsite } from "@/components/reservations/public/ReservationWebsite";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const site = await getPublicSite(slug);
   if (!site) {
+    const venue = await getTenantReservationVenue(slug);
+    if (venue)
+      return {
+        title: venue.name,
+        description: venue.acceptingReservations
+          ? `Reserve a table at ${venue.name}.`
+          : `Contact ${venue.name} to arrange a visit.`,
+        alternates: {
+          canonical: tenantSiteUrl(
+            venue.slug,
+            process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk",
+          ),
+        },
+        robots: { index: false, follow: false },
+      };
     return {
       title: "Website unavailable",
       robots: { index: false, follow: false },
@@ -91,7 +108,11 @@ export default async function PublicStudioPage({
 }) {
   const { slug } = await params;
   const site = await getPublicSite(slug);
-  if (!site) notFound();
+  if (!site) {
+    const venue = await getTenantReservationVenue(slug);
+    if (!venue) notFound();
+    return <ReservationWebsite venue={venue} />;
+  }
   if (site.design) {
     const query = await searchParams;
     const locale = resolveWebsiteLocale(

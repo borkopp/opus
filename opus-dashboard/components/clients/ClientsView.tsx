@@ -9,9 +9,7 @@ import {
   CalendarCheck2,
   X,
 } from "lucide-react";
-import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -103,25 +101,6 @@ export function ClientsView({
 
   return (
     <div className="flex min-w-0 flex-col gap-7">
-      <div className="relative">
-        <DashboardPageHeader
-          replayPublicDescription
-          replayPublicTitle
-          title={t("Clients", "Клиенти", "Klientët")}
-          description={t(
-            "Contact details, past visits and the next appointment.",
-            "Контакт, претходни посети и следниот закажан термин.",
-            "Detajet e kontaktit, vizitat e kaluara dhe termini i ardhshëm.",
-          )}
-        />
-        <Badge
-          data-replay-public
-          variant="pro"
-          className="absolute top-0 right-0"
-        >
-          Pro
-        </Badge>
-      </div>
       {locked ? (
         <PaidFeatureOverlay
           locked

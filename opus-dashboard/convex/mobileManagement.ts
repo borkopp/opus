@@ -5,6 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { requireRole } from "./lib/auth";
 import { isActiveIndustry } from "./lib/productScope";
 import { getStaffPlanStatusForOrg } from "./lib/staffPlanLimits";
+import { assertWorkingHours } from "./lib/availabilityValidation";
 import {
   isValidBookingEmail,
   normalizeBookingEmail,
@@ -39,12 +40,6 @@ function text(value: string, label: string, limit: number, required = false) {
     );
   return trimmed;
 }
-function minute(value: string) {
-  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value) && value !== "24:00")
-    throw new ConvexError("Use HH:MM for working hours.");
-  const [h, m] = value.split(":").map(Number);
-  return h * 60 + m;
-}
 function validateHours(week: import("../../shared/mobile").WeeklyHours[]) {
   if (week.length !== 7 || new Set(week.map((d) => d.dayOfWeek)).size !== 7)
     throw new ConvexError("Provide all seven days of working hours.");
@@ -55,23 +50,7 @@ function validateHours(week: import("../../shared/mobile").WeeklyHours[]) {
       day.dayOfWeek > 6
     )
       throw new ConvexError("Invalid weekday.");
-    const start = minute(day.startTime),
-      end = minute(day.endTime);
-    if (start >= end || start === 1440)
-      throw new ConvexError("Working hours must end after they start.");
-    if (day.breaks.length > 20) throw new ConvexError("Too many breaks.");
-    let previousEnd = start;
-    for (const pause of [...day.breaks].sort((a, b) =>
-      a.startTime.localeCompare(b.startTime),
-    )) {
-      const from = minute(pause.startTime),
-        to = minute(pause.endTime);
-      if (from < previousEnd || to > end || from >= to)
-        throw new ConvexError(
-          "Breaks must fit within working hours and must not overlap.",
-        );
-      previousEnd = to;
-    }
+    assertWorkingHours(day.startTime, day.endTime, day.breaks);
   }
 }
 

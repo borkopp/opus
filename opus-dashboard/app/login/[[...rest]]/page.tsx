@@ -32,17 +32,17 @@ export default async function Login({
         replayPublicDescription
         title={
           locale === "sq"
-            ? "Mirësevini në studion tuaj"
+            ? "Mirësevini në OPUS"
             : locale === "mk"
-              ? "Добредојдовте во вашето студио"
-              : "Welcome to your studio"
+              ? "Добредојдовте во OPUS"
+              : "Welcome to OPUS"
         }
         description={
           locale === "sq"
-            ? "Kyçuni ose krijoni llogari për të menaxhuar studion tuaj të bukurisë."
+            ? "Kyçuni ose krijoni llogari për të menaxhuar biznesin tuaj."
             : locale === "mk"
-              ? "Најавете се или создајте сметка за да управувате со вашето студио."
-              : "Log in or create an account to manage your beauty studio."
+              ? "Најавете се или создајте сметка за да управувате со вашиот бизнис."
+              : "Log in or create an account to manage your business."
         }
         callbackUrl={callbackUrl}
       />

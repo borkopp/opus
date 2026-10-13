@@ -117,6 +117,7 @@ async function ownAppointments(ctx: QueryCtx) {
                 .withIndex("by_org_booking", (q) =>
                   q.eq("orgId", orgId).eq("bookingId", booking._id),
                 )
+                .filter((q) => q.eq(q.field("isDeleted"), false))
                 .first(),
             ]);
             return {

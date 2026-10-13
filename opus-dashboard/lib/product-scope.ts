@@ -9,5 +9,7 @@ export const ACTIVE_CAPABILITIES = {
 } as const;
 
 export function isActiveIndustry(industry: string | null | undefined): boolean {
+  // This legacy helper selects beauty features, not all supported businesses.
+  // Restaurant/café navigation and reservations use their own capability checks.
   return industry === ACTIVE_INDUSTRY;
 }

@@ -79,9 +79,9 @@ export function AuthLayout({
                       "TERMINET TUAJA, SË BASHKU",
                     )
                   : t(
-                      "YOUR STUDIO, CONNECTED",
-                      "ВАШЕТО СТУДИО, ПОВРЗАНО",
-                      "STUDIOJA JUAJ, E LIDHUR",
+                      "YOUR BUSINESS, CONNECTED",
+                      "ВАШИОТ БИЗНИС, ПОВРЗАН",
+                      "BIZNESI JUAJ, I LIDHUR",
                     )}
               </p>
               <h2 data-replay-public>
@@ -105,9 +105,9 @@ export function AuthLayout({
                       "Rezervoni në studio bukurie pjesëmarrëse, ruani detajet dhe mbani terminet në një vend.",
                     )
                   : t(
-                      "Your appointments, your team, and your clients. Together in one simple workspace.",
-                      "Вашите термини, вашиот тим и вашите клиенти. Заедно на едно место.",
-                      "Terminet tuaja, ekipi juaj dhe klientët tuaj. Së bashku në një hapësirë të thjeshtë pune.",
+                      "Your bookings, your team, and your day. Together in one simple workspace.",
+                      "Вашите резервации, вашиот тим и вашиот ден. Заедно на едно место.",
+                      "Rezervimet tuaja, ekipi juaj dhe dita juaj. Së bashku në një hapësirë të thjeshtë pune.",
                     )}
               </p>
             </div>

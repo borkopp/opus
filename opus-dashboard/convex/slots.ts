@@ -3,11 +3,15 @@ import { internalQuery, query, QueryCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import {
+  assertBookingAccess,
   hasPersonalBookingAccess,
   requireBookingAccess,
 } from "./lib/staffAccess";
 import { defaultQuickBookingDurationMins } from "./lib/orgSettingsValidation";
-import { buildQuickBookingSlots } from "./lib/quickBooking";
+import {
+  buildQuickBookingSlots,
+  isManualBookingStartOnGrid,
+} from "./lib/quickBooking";
 import { BOOKING_NOTICE_MS } from "./lib/gapRecoveryRules";
 import { wallClockNow } from "./lib/bookingTime";
 
@@ -254,6 +258,87 @@ export const getAvailableSlots = query({
   },
 });
 
+/** Choices for an existing appointment, retaining its saved duration and price. */
+export const getRescheduleSlots = query({
+  args: {
+    orgId: v.id("orgs"),
+    bookingId: v.id("bookings"),
+    date: v.string(),
+  },
+  handler: async (ctx, args): Promise<{ startAt: number; endAt: number }[]> => {
+    const auth = await requireBookingAccess(ctx, args.orgId);
+    const booking = await ctx.db.get(args.bookingId);
+    if (!booking || booking.isDeleted)
+      throw new ConvexError("Booking not found.");
+    assertBookingAccess(auth, booking);
+    if (["cancelled", "completed", "no_show"].includes(booking.status))
+      return [];
+    if (dayStartAtForDate(args.date) === null)
+      throw new ConvexError("Enter a valid booking date.");
+    const [staff, settings, services] = await Promise.all([
+      ctx.db.get(booking.staffId),
+      ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+        .first(),
+      Promise.all(
+        (booking.serviceIds ?? [booking.serviceId]).map((id) => ctx.db.get(id)),
+      ),
+    ]);
+    if (
+      !settings ||
+      !staff ||
+      staff.orgId !== args.orgId ||
+      staff.isDeleted ||
+      !staff.isActive ||
+      services.some(
+        (service) =>
+          !service || service.orgId !== args.orgId || service.isDeleted,
+      )
+    )
+      return [];
+    const durationMins = (booking.endAt - booking.startAt) / 60_000;
+    if (
+      !Number.isInteger(durationMins) ||
+      durationMins <= 0 ||
+      durationMins > 1_440
+    )
+      return [];
+    const availability = await computeFreeIntervalsForStaffDate(
+      ctx,
+      args.orgId,
+      booking.staffId,
+      args.date,
+      settings,
+      booking._id,
+    );
+    const result: { startAt: number; endAt: number }[] = [];
+    const durationMs = durationMins * 60_000;
+    const bufferMs = settings.bufferTimeMins * 60_000;
+    // Iterate whole minutes once per free interval, accepting the exact union of
+    // calendar and staff-opening grids used by the atomic reschedule mutation.
+    for (const interval of availability.freeIntervals) {
+      for (
+        let startAt = Math.ceil(interval.startAt / 60_000) * 60_000;
+        startAt + durationMs + bufferMs <= interval.endAt;
+        startAt += 60_000
+      ) {
+        if (
+          startAt <= availability.pseudoUtcNow ||
+          !isManualBookingStartOnGrid(
+            startAt,
+            availability.workingWindow?.startAt ?? null,
+            settings.slotDurationMins,
+          )
+        )
+          continue;
+        result.push({ startAt, endAt: startAt + durationMs });
+      }
+    }
+    return result;
+  },
+});
+
 export const getQuickBookingSlots = query({
   args: {
     orgId: v.id("orgs"),
@@ -385,6 +470,7 @@ export async function computeFreeIntervalsForStaffDate(
   staffId: Id<"staff_members">,
   date: string,
   providedSettings?: Doc<"org_settings">,
+  excludedBookingId?: Id<"bookings">,
 ) {
   const orgSettings =
     providedSettings ??
@@ -478,7 +564,7 @@ export async function computeFreeIntervalsForStaffDate(
     endAt: midnightMs + endMins * 60 * 1000,
   };
 
-  const existingBookings = await ctx.db
+  const matchingBookings = await ctx.db
     .query("bookings")
     .withIndex("by_org_staff_start", (q) =>
       q
@@ -494,6 +580,11 @@ export async function computeFreeIntervalsForStaffDate(
       ),
     )
     .collect();
+  // Only authenticated reschedule choices supply an exclusion; booking writes
+  // still recheck the full index after cancelling the old record atomically.
+  const existingBookings = matchingBookings.filter(
+    (booking) => booking._id !== excludedBookingId,
+  );
 
   const pseudoUtcNow = wallClockNow(orgSettings.timezone || "Europe/Skopje");
 

@@ -72,3 +72,29 @@ export function validateFirstService(
     return "duration";
   return null;
 }
+
+export type OnboardingIndustry = "beauty_wellness" | "hospitality";
+
+export function onboardingIndustry(
+  value: string | null,
+): OnboardingIndustry | null {
+  return value === "beauty_wellness" || value === "hospitality" ? value : null;
+}
+
+/** Selection is only a URL draft. The persisted organization remains authoritative. */
+export function onboardingChoicePath(
+  search: string,
+  industry?: OnboardingIndustry,
+) {
+  const params = new URLSearchParams(search);
+  params.delete("step");
+  if (industry) params.set("industry", industry);
+  else params.delete("industry");
+  const query = params.toString();
+  return `/onboarding${query ? `?${query}` : ""}`;
+}
+
+/** Creating a venue completes onboarding; publication is configured in the dashboard. */
+export function hospitalityHome(hasVenue: boolean, role?: string) {
+  return hasVenue || role === "staff" ? "/hospitality" : "/hospitality/setup";
+}

@@ -9,7 +9,6 @@ import { History, Plus, LockKeyhole } from "lucide-react";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { analystError } from "@/lib/i18n/business-assistant";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -123,7 +122,10 @@ function AssistantWorkspace({ access }: { access: Access }) {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await send({ ...attempt.current, language: analystLanguage });
+      const result = await send({
+        ...attempt.current,
+        language: analystLanguage,
+      });
       setSelection(result.conversationId);
       setQuestion("");
       attempt.current = null;
@@ -152,86 +154,79 @@ function AssistantWorkspace({ access }: { access: Access }) {
   return (
     <section
       className="flex min-h-0 w-full flex-1 flex-col"
-      aria-label={t("Business assistant", "Деловен асистент", "Asistent biznesi")}
+      aria-label={t(
+        "Business assistant",
+        "Деловен асистент",
+        "Asistent biznesi",
+      )}
     >
-      <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1
-              data-replay-public
-              className="text-2xl font-semibold tracking-tight"
-            >
-              {t("Business assistant", "Деловен асистент", "Asistent biznesi")}
-            </h1>
-            <Badge data-replay-public variant="secondary">
-              Pro
-            </Badge>
+      <div className="dashboard-assistant-surface flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-4">
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              {t(
+                `${access.remaining} of ${access.limit} answers remaining`,
+                `Преостанати одговори: ${access.remaining} од ${access.limit}`,
+                `Përgjigje të mbetura: ${access.remaining} nga ${access.limit}`,
+              )}{" "}
+              · {t("Renews", "Се обновува", "Rinovohet")}{" "}
+              {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+                access.resetAt,
+              )}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              `${access.remaining} of ${access.limit} answers remaining`,
-              `Преостанати одговори: ${access.remaining} од ${access.limit}`,
-              `Përgjigje të mbetura: ${access.remaining} nga ${access.limit}`,
-            )}{" "}
-            · {t("Renews", "Се обновува", "Rinovohet")}{" "}
-            {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-              access.resetAt,
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={t(
-                  "Conversation history",
-                  "Историја на разговори",
-                  "Historia e bisedave",
-                )}
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={t(
+                    "Conversation history",
+                    "Историја на разговори",
+                    "Historia e bisedave",
+                  )}
+                >
+                  <History />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="max-h-80 w-72 overflow-y-auto"
               >
-                <History />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="max-h-80 w-72 overflow-y-auto"
-            >
-              <DropdownMenuGroup>
-                {conversations?.length ? (
-                  conversations.map((item) => (
-                    <DropdownMenuItem
-                      key={item._id}
-                      onSelect={() => chooseConversation(item._id)}
-                    >
-                      <span className="truncate">{item.title}</span>
+                <DropdownMenuGroup>
+                  {conversations?.length ? (
+                    conversations.map((item) => (
+                      <DropdownMenuItem
+                        key={item._id}
+                        onSelect={() => chooseConversation(item._id)}
+                      >
+                        <span className="truncate">{item.title}</span>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem data-replay-public disabled>
+                      {t(
+                        "No conversations yet",
+                        "Сè уште нема разговори",
+                        "Ende nuk ka biseda",
+                      )}
                     </DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem data-replay-public disabled>
-                    {t(
-                      "No conversations yet",
-                      "Сè уште нема разговори",
-                      "Ende nuk ka biseda",
-                    )}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            data-replay-public
-            variant="outline"
-            onClick={newConversation}
-            disabled={submitting}
-          >
-            <Plus data-icon="inline-start" />
-            {t("New chat", "Нов разговор", "Bisedë e re")}
-          </Button>
-        </div>
-      </header>
-      <div className="dashboard-assistant-surface flex h-[calc(100dvh-19rem)] min-h-[520px] min-w-0 flex-1 flex-col">
+                  )}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              data-replay-public
+              variant="outline"
+              onClick={newConversation}
+              disabled={submitting}
+            >
+              <Plus data-icon="inline-start" />
+              {t("New chat", "Нов разговор", "Bisedë e re")}
+            </Button>
+          </div>
+        </header>
         {!access.configured && (
           <Alert>
             <AlertDescription data-replay-public>

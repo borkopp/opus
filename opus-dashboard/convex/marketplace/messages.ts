@@ -6,6 +6,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalMutation, internalQuery } from "../_generated/server";
 import { Doc, Id } from "../_generated/dataModel";
+import { requireMarketplaceEnabled } from "../lib/productScope";
 
 const RECOMMENDATION = v.object({
   orgId: v.id("orgs"),
@@ -20,6 +21,7 @@ export const persistUserTurn = mutation({
     content: v.string(),
   },
   handler: async (ctx, { conversationId, content }): Promise<Id<"marketplace_messages">> => {
+    requireMarketplaceEnabled();
     const trimmed = content.trim().slice(0, 1000);
     return await ctx.db.insert("marketplace_messages", {
       conversationId,
@@ -40,6 +42,7 @@ export const persistAssistantTurn = mutation({
     outputTokens: v.optional(v.number()),
   },
   handler: async (ctx, args): Promise<Id<"marketplace_messages">> => {
+    requireMarketplaceEnabled();
     return await ctx.db.insert("marketplace_messages", {
       conversationId: args.conversationId,
       role: "assistant",
@@ -77,6 +80,7 @@ export const listMessages = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, { conversationId, limit }): Promise<Doc<"marketplace_messages">[]> => {
+    requireMarketplaceEnabled();
     return await ctx.db
       .query("marketplace_messages")
       .withIndex("by_conversation", (q) => q.eq("conversationId", conversationId))

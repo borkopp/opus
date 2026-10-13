@@ -28,17 +28,17 @@ export default async function SignUpPage({
         replayPublicDescription
         title={
           locale === "sq"
-            ? "Krijoni hapësirën për studion tuaj"
+            ? "Krijoni llogarinë tuaj të biznesit"
             : locale === "mk"
-              ? "Создајте простор за вашето студио"
-              : "Create your studio space"
+              ? "Создајте деловна сметка"
+              : "Create your business account"
         }
         description={
           locale === "sq"
-            ? "Filloni me emailin e studios tuaj. Do t'ju dërgojmë një kod të sigurt për të vazhduar."
+            ? "Filloni me emailin tuaj të biznesit. Do t'ju dërgojmë një kod të sigurt për të vazhduar."
             : locale === "mk"
-              ? "Внесете ја е-поштата на студиото. Ќе ви испратиме код за да продолжите."
-              : "Start with your studio email. We’ll send one secure code to continue."
+              ? "Внесете ја вашата деловна е-пошта. Ќе ви испратиме код за да продолжите."
+              : "Start with your business email. We’ll send one secure code to continue."
         }
         callbackUrl={callbackUrl}
       />

@@ -13,6 +13,7 @@ import { calendarRange } from "../../../shared/calendar";
 import { wallClockNow } from "@/convex/lib/bookingTime";
 import { BookingsPeriodView } from "./BookingsPeriodView";
 import { BookingsList } from "./BookingsList";
+import { BookingRescheduleDialog } from "./BookingRescheduleDialog";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   BookingsToolbar,
@@ -62,6 +63,8 @@ export function BookingsSplitView({
     return "list";
   });
   const [periodStaffId, setPeriodStaffId] = useState("all");
+  const [reschedulingBooking, setReschedulingBooking] =
+    useState<BookingView | null>(null);
   const settings = useQuery(api.orgSettings.getOrgSettings, { orgId });
   const [clock, setClock] = useState(() => Date.now());
   useEffect(() => {
@@ -338,6 +341,7 @@ export function BookingsSplitView({
             onComplete={(id) => runBookingAction("complete", id)}
             onCancel={(id) => runBookingAction("cancel", id)}
             onMarkNoShow={(id) => runBookingAction("no-show", id)}
+            onRescheduleClick={setReschedulingBooking}
           />
         ) : activeVariant === "horizontal" ? (
           <BookingsHorizontalTimeline
@@ -351,6 +355,7 @@ export function BookingsSplitView({
             onComplete={(bookingId) => runBookingAction("complete", bookingId)}
             onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+            onRescheduleClick={setReschedulingBooking}
             currentDate={currentDate}
             quickBookingSlots={quickBookingSlots?.slots ?? []}
             slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
@@ -372,6 +377,7 @@ export function BookingsSplitView({
             onComplete={(bookingId) => runBookingAction("complete", bookingId)}
             onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+            onRescheduleClick={setReschedulingBooking}
             currentDate={currentDate}
             quickBookingSlots={quickBookingSlots?.slots ?? []}
             slotDurationMins={quickBookingSlots?.slotDurationMins ?? 15}
@@ -409,9 +415,27 @@ export function BookingsSplitView({
             onComplete={(bookingId) => runBookingAction("complete", bookingId)}
             onCancel={(bookingId) => runBookingAction("cancel", bookingId)}
             onMarkNoShow={(bookingId) => runBookingAction("no-show", bookingId)}
+            onRescheduleClick={setReschedulingBooking}
           />
         )}
       </div>
+      {reschedulingBooking && (
+        <BookingRescheduleDialog
+          key={reschedulingBooking._id}
+          booking={reschedulingBooking}
+          timezone={settings?.settings?.timezone ?? "Europe/Skopje"}
+          onClose={() => setReschedulingBooking(null)}
+          onConfirm={async (newStartAt) => {
+            const changed = await handleReschedule(
+              reschedulingBooking._id,
+              newStartAt,
+            );
+            if (changed)
+              setCurrentDate(dateFromKey(bookingDateKey(newStartAt))!);
+            return changed;
+          }}
+        />
+      )}
     </div>
   );
 }

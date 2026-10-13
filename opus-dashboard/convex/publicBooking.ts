@@ -22,6 +22,7 @@ import { acceptsPublicBookings } from "./lib/publication";
 import { isWithinPublicBookingWindow } from "./lib/publicBookingRules";
 import { operationalSettingsError } from "./lib/orgSettingsValidation";
 import {
+  BOOKING_EMAIL_OTP_TTL_MS,
   constantTimeStringEqual,
   encryptBookingOtp,
   generateBookingOtp,
@@ -40,7 +41,6 @@ const PUBLIC_BOOKING_ORG_LIMIT = 12;
 const PUBLIC_BOOKING_ORG_WINDOW_MS = 5 * 60 * 1_000;
 const PUBLIC_BOOKING_CUSTOMER_LIMIT = 3;
 const PUBLIC_BOOKING_CUSTOMER_WINDOW_MS = 10 * 60 * 1_000;
-const BOOKING_OTP_TTL_MS = 10 * 60 * 1_000;
 const BOOKING_OTP_RESEND_COOLDOWN_MS = 60 * 1_000;
 const BOOKING_OTP_RATE_WINDOW_MS = 60 * 60 * 1_000;
 const BOOKING_OTP_RATE_LIMIT = 5;
@@ -663,7 +663,7 @@ export const createBookingEmailChallenge = internalMutation({
       }
     }
 
-    const expiresAt = now + BOOKING_OTP_TTL_MS;
+    const expiresAt = now + BOOKING_EMAIL_OTP_TTL_MS;
     const challengeId = await ctx.db.insert("booking_email_verifications", {
       orgId: args.orgId,
       email,
@@ -835,6 +835,7 @@ export const createVerifiedPublicBooking = internalMutation({
     const email = normalizeBookingEmail(args.customerEmail);
     if (
       !challenge ||
+      challenge.purpose === "reservation" ||
       challenge.orgId !== args.orgId ||
       challenge.email !== email ||
       challenge.status === "superseded" ||

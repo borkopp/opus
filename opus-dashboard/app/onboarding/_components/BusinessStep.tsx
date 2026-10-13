@@ -15,8 +15,10 @@ import { StepFrame, WizardActions } from "./OnboardingStep";
 export function BusinessStep({
   name,
   onSaved,
+  onBack,
 }: {
   name: string;
+  onBack?: () => void;
   onSaved: (name: string) => Promise<void>;
 }) {
   const { t, language } = useDashboardI18n();
@@ -85,8 +87,8 @@ export function BusinessStep({
           {error && <FieldError role="alert">{error}</FieldError>}
         </FieldGroup>
         <WizardActions
-          canGoBack={false}
-          onBack={() => {}}
+          canGoBack={Boolean(onBack)}
+          onBack={onBack ?? (() => {})}
           isSubmitting={saving}
         />
       </StepFrame>

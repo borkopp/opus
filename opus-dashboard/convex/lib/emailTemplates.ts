@@ -636,9 +636,11 @@ export function renderSimpleAppointmentEmail({
 export function renderStaffInviteEmail({
   studioName,
   dashboardUrl,
+  hospitality = false,
 }: {
   studioName: string;
   dashboardUrl: string;
+  hospitality?: boolean;
 }): RenderedEmail {
   return {
     subject: cleanSubject(`Join ${studioName} on OPUS`),
@@ -646,9 +648,13 @@ export function renderStaffInviteEmail({
       preheader: `${studioName} invited you to its OPUS workspace.`,
       eyebrow: "Team invitation",
       title: "Your workspace is ready.",
-      intro: `${studioName} invited you to manage appointments together in OPUS. Sign in with this email address to continue.`,
+      intro: `${studioName} invited you to manage ${hospitality ? "venue reservations" : "appointments"} together in OPUS. Sign in with this email address to continue.`,
       studioName,
-      content: button(dashboardUrl, "Open OPUS Studio", true),
+      content: button(
+        dashboardUrl,
+        hospitality ? "Join the venue team" : "Open OPUS Studio",
+        true,
+      ),
     }),
     text: `${studioName} invited you to its OPUS workspace. Sign in with this email address at ${dashboardUrl}.`,
   };

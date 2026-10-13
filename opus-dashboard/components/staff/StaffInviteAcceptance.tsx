@@ -41,9 +41,15 @@ export function StaffInviteAcceptance({ token }: { token: string }) {
         <CardHeader>
           <CardTitle>
             {t(
-              "Join your studio",
-              "Приклучете се на студиото",
-              "Bashkohuni me studion tuaj",
+              invite?.industry === "hospitality"
+                ? "Join your venue team"
+                : "Join your studio",
+              invite?.industry === "hospitality"
+                ? "Приклучете се на тимот на локалот"
+                : "Приклучете се на студиото",
+              invite?.industry === "hospitality"
+                ? "Bashkohuni me ekipin e lokalit"
+                : "Bashkohuni me studion tuaj",
             )}
           </CardTitle>
           <CardDescription>
@@ -96,7 +102,11 @@ export function StaffInviteAcceptance({ token }: { token: string }) {
                     setError(null);
                     try {
                       await accept({ token });
-                      router.replace("/beauty/bookings");
+                      router.replace(
+                        invite.industry === "hospitality"
+                          ? "/hospitality"
+                          : "/beauty/bookings",
+                      );
                     } catch (caught) {
                       setError(
                         accountErrorMessage(

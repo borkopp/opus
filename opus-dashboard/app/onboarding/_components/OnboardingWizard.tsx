@@ -5,16 +5,12 @@ import {
   type BillingCurrency,
 } from "../../../../shared/billing-currency";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { Store } from "lucide-react";
 import posthog from "posthog-js";
 import { api } from "@/convex/_generated/api";
 import { trackStudioRegistration } from "../../../../shared/analytics/meta-pixel";
-import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -22,12 +18,14 @@ import {
   ONBOARDING_STEPS,
   PRO_ONBOARDING_STEPS,
   onboardingStep,
+  onboardingIndustry,
+  onboardingChoicePath,
+  hospitalityHome,
   type ActivationState,
   type BeautyCategory,
   type ServiceDraft,
   type WizardStep,
 } from "@/lib/onboarding";
-import { cn } from "@/lib/utils";
 import type { BusinessLocation } from "@/lib/mapbox";
 import {
   BILLING_PATH,
@@ -46,6 +44,10 @@ import { LocationStep } from "./LocationStep";
 import { ServiceStep } from "./ServiceStep";
 import { HoursStep, DAYS, type OpeningHour } from "./HoursStep";
 import { ReviewStep } from "./ReviewStep";
+import { BusinessTypeStep } from "./BusinessTypeStep";
+import { OnboardingHeader } from "./OnboardingHeader";
+import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { CreateVenue } from "@/components/reservations/CreateVenue";
 
 function createDraft(state: ActivationState | null | undefined) {
   return {
@@ -85,17 +87,76 @@ function createDraft(state: ActivationState | null | undefined) {
 
 export function OnboardingWizard() {
   const params = useSearchParams();
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const profile = useQuery(
+    api.users.getMyProfile,
+    isAuthenticated ? {} : "skip",
+  );
+  const venueAccess = useQuery(
+    api.hospitality.getAccess,
+    profile?.industry === "hospitality" ? {} : "skip",
+  );
   const requestedStep = onboardingStep(params.get("step"));
   const upgrading = params.get("plan") === "pro";
   const teamLimit = parseProTeamLimit(params.get("team"));
   const currency = parseBillingCurrency(params.get("currency"));
+  const selectedIndustry = profile?.orgId
+    ? profile.industry
+    : onboardingIndustry(params.get("industry"));
+  const redirect =
+    profile?.industry === "hospitality" && venueAccess
+      ? hospitalityHome(venueAccess.onboardingComplete, profile.role)
+      : profile?.orgId && profile.role !== "owner"
+        ? profile.bookingAccess === "own"
+          ? "/beauty/bookings"
+          : "/beauty"
+        : null;
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated)
+      router.replace(
+        `/login?callbackUrl=${encodeURIComponent(`/onboarding${params.size ? `?${params.toString()}` : ""}`)}`,
+      );
+    else if (redirect) router.replace(redirect);
+  }, [isLoading, isAuthenticated, router, params, redirect]);
+  if (
+    isLoading ||
+    !isAuthenticated ||
+    !profile ||
+    redirect ||
+    (profile.industry === "hospitality" && !venueAccess)
+  )
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner className="size-8" />
+      </div>
+    );
+  const backToChoice = () =>
+    router.push(onboardingChoicePath(params.toString()));
+  if (!profile.orgId && selectedIndustry !== "beauty_wellness")
+    return (
+      <main className="min-h-dvh bg-background">
+        <OnboardingHeader />
+        <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-8 sm:px-8 sm:pb-16 sm:pt-12">
+          {selectedIndustry === "hospitality" ? (
+            <CreateVenue
+              onBack={backToChoice}
+              onCreated={() => router.replace("/hospitality")}
+            />
+          ) : (
+            <BusinessTypeStep search={params.toString()} />
+          )}
+        </div>
+      </main>
+    );
   return (
     <OnboardingFlow
-      key={`${upgrading}:${requestedStep}:${teamLimit}:${currency}`}
+      key={`${profile.orgId ?? "new"}:${upgrading}:${requestedStep}:${teamLimit}:${currency}`}
       requestedStep={requestedStep}
       upgrading={upgrading}
       teamLimit={teamLimit}
       currency={currency}
+      onBackToChoice={!profile.orgId ? backToChoice : undefined}
     />
   );
 }
@@ -105,13 +166,15 @@ function OnboardingFlow({
   upgrading,
   teamLimit,
   currency,
+  onBackToChoice,
 }: {
   requestedStep: WizardStep | null;
   upgrading: boolean;
   teamLimit?: ProTeamLimit;
   currency?: BillingCurrency;
+  onBackToChoice?: () => void;
 }) {
-  const { t, language, setLanguage } = useDashboardI18n();
+  const { t } = useDashboardI18n();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const profile = useQuery(
@@ -257,47 +320,9 @@ function OnboardingFlow({
 
   return (
     <main className="min-h-dvh bg-background">
-      <header className="px-4 py-4 sm:px-8 sm:py-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Logo className="text-2xl" />
-          <div className="flex items-center gap-2">
-            <div className="flex items-center rounded-lg border border-border p-0.5 text-xs font-medium">
-              {(["mk", "sq", "en"] as const).map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  onClick={() => setLanguage(lang)}
-                  className={cn(
-                    "px-2 py-1 rounded-md transition-colors",
-                    language === lang
-                      ? "bg-primary text-primary-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  aria-label={
-                    lang === "sq"
-                      ? "Kalo në shqip"
-                      : lang === "mk"
-                        ? "Промени на македонски"
-                        : "Switch to English"
-                  }
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            {state?.operationalSetupComplete && (
-              <Button asChild variant="ghost" className="min-h-11">
-                <Link href="/beauty">
-                  <Store />
-                  <span data-replay-public className="sr-only sm:not-sr-only">
-                    {t("Dashboard", "Контролна табла", "Paneli")}
-                  </span>
-                </Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+      <OnboardingHeader
+        dashboardHref={state?.operationalSetupComplete ? "/beauty" : undefined}
+      />
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-8">
         {upgrading && (
           <Alert className="mb-6 max-w-xl">
@@ -311,52 +336,30 @@ function OnboardingFlow({
             </AlertDescription>
           </Alert>
         )}
-        <div
-          className="mb-8 w-full max-w-xl sm:mb-12"
-          role="progressbar"
-          aria-label={t(
+        <OnboardingProgress
+          step={index + 1}
+          total={steps.length}
+          label={t(
             "Studio setup",
             "Поставување на студиото",
             "Konfigurimi i studios",
           )}
-          aria-valuemin={1}
-          aria-valuemax={steps.length}
-          aria-valuenow={index + 1}
-        >
-          <div className="mb-3 flex justify-between text-xs font-medium text-muted-foreground">
-            <span data-replay-public>
-              {t(
-                "Your booking website",
-                "Вашата страница за закажување",
-                "Faqja juaj e rezervimeve",
-              )}
-            </span>
-            <span data-replay-public>
-              {t(
-                `Step ${index + 1} of ${steps.length}`,
-                `Чекор ${index + 1} од ${steps.length}`,
-                `Hapi ${index + 1} nga ${steps.length}`,
-              )}
-            </span>
-          </div>
-          <div className="flex gap-1.5" aria-hidden="true">
-            {steps.map((item, i) => (
-              <span
-                key={item}
-                className={cn(
-                  "h-1 flex-1 rounded-full",
-                  i <= index ? "bg-primary" : "bg-secondary",
-                )}
-              />
-            ))}
-          </div>
-        </div>
+          description={t(
+            "Your booking website",
+            "Вашата страница за закажување",
+            "Faqja juaj e rezervimeve",
+          )}
+        />
         <div
           key={step}
           className="flex w-full min-w-0 items-start justify-center"
         >
           {step === "business" && (
-            <BusinessStep name={current.name} onSaved={saveName} />
+            <BusinessStep
+              name={current.name}
+              onSaved={saveName}
+              onBack={onBackToChoice}
+            />
           )}
           {step === "category" && (
             <CategoryStep

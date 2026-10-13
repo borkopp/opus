@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import s from "../../clarity.module.css";
 export function FrontDeskWidget({ paid }: { paid: boolean }) {
   const { t } = useDashboardI18n();
-  // TODO: Connect the deferred receptionist only after explicit product authorization
-  // and provider verification. This concept has no live conversations or actions.
+  // This setup entry point does not establish that the studio's Instagram
+  // connection or the required providers are ready to receive messages.
   return (
     <WidgetFrame
       replayPublicSubtitle
@@ -36,9 +36,9 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
           className="text-sm leading-6 text-muted-foreground"
         >
           {t(
-            "Let AI answer your Instagram DMs and book appointments for you, 24/7.",
-            "Оставете AI да одговара на вашите Instagram пораки и да закажува термини за вас, 24/7.",
-            "Lëreni AI t'u përgjigjet mesazheve tuaja në Instagram dhe të rezervojë termine për ju, 24/7.",
+            "Once configured and connected, AI can answer Instagram messages and book appointments after the client confirms.",
+            "По поставувањето и поврзувањето, AI може да одговара на Instagram пораки и да закажува термини по потврда од клиентот.",
+            "Pas konfigurimit dhe lidhjes, AI mund t'u përgjigjet mesazheve në Instagram dhe të rezervojë termine pasi klienti të konfirmojë.",
           )}
         </p>
       </div>
@@ -68,7 +68,11 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
           href="/settings?tab=ai"
           className={`${s.clientButton} mt-5`}
         >
-          {t("Front-desk settings", "Поставки за рецепцијата", "Cilësimet e recepsionit")}
+          {t(
+            "Front-desk settings",
+            "Поставки за рецепцијата",
+            "Cilësimet e recepsionit",
+          )}
           <ArrowUpRight size={17} aria-hidden="true" />
         </Link>
       ) : (
@@ -80,7 +84,11 @@ export function FrontDeskWidget({ paid }: { paid: boolean }) {
           type="button"
           className={`${s.clientButton} mt-5 opacity-50`}
         >
-          {t("Front-desk settings", "Поставки за рецепцијата", "Cilësimet e recepsionit")}
+          {t(
+            "Front-desk settings",
+            "Поставки за рецепцијата",
+            "Cilësimet e recepsionit",
+          )}
           <ArrowUpRight size={17} aria-hidden="true" />
         </button>
       )}

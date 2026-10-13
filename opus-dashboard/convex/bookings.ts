@@ -8,6 +8,7 @@ import {
   internalQuery,
   mutation,
   query,
+  type MutationCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { cancelBookingRecord } from "./lib/bookingCancellation";
@@ -26,17 +27,108 @@ import {
   formatBookingNotificationDateTime,
   wallClockNow,
 } from "./lib/bookingTime";
-import { rangeFitsFreeInterval } from "./lib/quickBooking";
+import {
+  isManualBookingStartOnGrid,
+  rangeFitsFreeInterval,
+} from "./lib/quickBooking";
 import { clientClaimUrl, createClientClaimToken } from "./lib/clientAccounts";
 import { normalizeBookingEmail } from "./lib/bookingEmailSecurity";
 
+async function validateManualBookingTime(
+  ctx: MutationCtx,
+  orgId: Doc<"orgs">["_id"],
+  staffId: Doc<"staff_members">["_id"],
+  settings: Doc<"org_settings">,
+  startAt: number,
+  durationMins: number,
+  unavailableMessage = "The selected services no longer fit this time or conflict with another booking.",
+) {
+  const start = new Date(startAt);
+  if (
+    !Number.isInteger(startAt) ||
+    !Number.isFinite(start.getTime()) ||
+    startAt % 60_000 !== 0
+  ) {
+    throw new ConvexError("Choose a valid booking time on a whole minute.");
+  }
+  if (
+    !Number.isInteger(durationMins) ||
+    durationMins <= 0 ||
+    durationMins > 1_440
+  ) {
+    throw new ConvexError("Selected services have an invalid total duration.");
+  }
+  if (startAt <= wallClockNow(settings.timezone)) {
+    throw new ConvexError("Booking start time must be in the future.");
+  }
+  const availability = await computeFreeIntervalsForStaffDate(
+    ctx,
+    orgId,
+    staffId,
+    start.toISOString().slice(0, 10),
+    settings,
+  );
+  // Public/mobile service slots start from the staff's opening time. Keep the
+  // existing midnight-based manual calendar grid valid as well, so both displayed
+  // sets of choices can be saved when opening hours fall between calendar ticks.
+  if (
+    !isManualBookingStartOnGrid(
+      startAt,
+      availability.workingWindow?.startAt ?? null,
+      settings.slotDurationMins,
+    )
+  ) {
+    throw new ConvexError(
+      `Booking must align to ${settings.slotDurationMins} minute intervals.`,
+    );
+  }
+  if (
+    !rangeFitsFreeInterval(
+      availability.freeIntervals,
+      startAt,
+      durationMins,
+      settings.bufferTimeMins,
+    )
+  ) {
+    throw new ConvexError(unavailableMessage);
+  }
+  return start;
+}
+
 function getPrimaryContact(
   customer: Doc<"customers">,
-): { channel: "email" | "whatsapp" | "push"; address: string } | null {
-  if (customer.preferredChannel === "whatsapp" && customer.phone)
-    return { channel: "whatsapp", address: customer.phone };
+): { channel: "email"; address: string } | null {
+  // Historical WhatsApp preferences do not authorize a different follow-up
+  // channel, and WhatsApp is not an operational notification channel.
+  if (customer.preferredChannel === "whatsapp" && customer.phone) return null;
   if (customer.email) return { channel: "email", address: customer.email };
   return null;
+}
+
+async function customerAttendanceStats(
+  ctx: MutationCtx,
+  orgId: Doc<"orgs">["_id"],
+  customerId: Doc<"customers">["_id"],
+) {
+  const bookings = await ctx.db
+    .query("bookings")
+    .withIndex("by_org_customer_start", (q) =>
+      q.eq("orgId", orgId).eq("customerId", customerId),
+    )
+    .collect();
+  // Legacy totalVisits counts manual booking creation but not public booking
+  // creation. Derive attendance from resolved appointments for every source.
+  const attended = bookings.filter(
+    (item) => !item.isDeleted && item.status === "completed",
+  ).length;
+  const noShowCount = bookings.filter(
+    (item) => !item.isDeleted && item.status === "no_show",
+  ).length;
+  const resolvedCount = attended + noShowCount;
+  return {
+    noShowCount,
+    noShowRiskScore: resolvedCount > 0 ? noShowCount / resolvedCount : 0,
+  };
 }
 
 export const createBooking = mutation({
@@ -58,14 +150,13 @@ export const createBooking = mutation({
     aiConversationId: v.optional(v.id("ai_conversations")),
   },
   handler: async (ctx, args) => {
-    await requireBookingAccess(ctx, args.orgId, args.staffId);
+    const { staffMember: actor } = await requireBookingAccess(
+      ctx,
+      args.orgId,
+      args.staffId,
+    );
     if (args.source !== "manual") {
       throw new ConvexError("Dashboard bookings must use the manual source.");
-    }
-
-    // 1. Basic validation
-    if (args.startAt <= Date.now()) {
-      throw new ConvexError("Booking start time must be in the future.");
     }
 
     const orgSettings = await ctx.db
@@ -107,68 +198,26 @@ export const createBooking = mutation({
       throw new ConvexError("Customer not found.");
     }
 
-    // Alignment check
-    // Convert ms to start of day ms, then diff to get mins, check modulo
-    const d = new Date(args.startAt);
-    const startMins = d.getUTCHours() * 60 + d.getUTCMinutes();
-    if (startMins % orgSettings.slotDurationMins !== 0) {
-      throw new ConvexError(
-        `Booking must align to ${orgSettings.slotDurationMins} minute intervals.`,
-      );
-    }
-
-    // 2. Conflict Prevention
+    // Use the same atomic hours, break, buffer and overlap checks as quick booking.
+    const d = await validateManualBookingTime(
+      ctx,
+      args.orgId,
+      args.staffId,
+      orgSettings,
+      args.startAt,
+      service.durationMins,
+    );
     const endAt = args.startAt + service.durationMins * 60 * 1000;
-
-    // We check for any booking that overlaps with this staff member's requested slot.
-    // An overlap occurs if an existing booking's start time is BEFORE the requested end time,
-    // AND the existing booking's end time is AFTER the requested start time.
-    // Instead of querying all and filtering in memory we can use by_staff_start to narrow it down to the same day loosely
-
-    const midnightMs = new Date(
-      new Date(args.startAt).toISOString().split("T")[0] + "T00:00:00Z",
-    ).getTime();
-    const nextMidnightMs = midnightMs + 24 * 60 * 60 * 1000;
-
-    const existingBookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_staff_start", (q) =>
-        q
-          .eq("staffId", args.staffId)
-          .gte("startAt", midnightMs)
-          .lt("startAt", nextMidnightMs),
-      )
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("isDeleted"), false),
-          q.neq(q.field("status"), "cancelled"),
-        ),
-      )
-      .collect();
-
-    const bufferMs = (orgSettings.bufferTimeMins || 0) * 60 * 1000;
-
-    const conflict = existingBookings.find((b) => {
-      const existingStart = b.startAt;
-      const existingEnd = b.endAt + bufferMs;
-      return existingStart < endAt && existingEnd > args.startAt;
-    });
-
-    if (conflict) {
-      throw new ConvexError(
-        "This slot is already booked or conflicts with buffer time.",
-      );
-    }
 
     // 3. Surge Pricing Snapshot
     let priceMinorUnits = service.priceMinorUnits;
     let surgePriceApplied = false;
     let surgeMultiplierPct: number | undefined = undefined;
 
-    if (orgSettings.surgeRules && orgSettings.surgeRules.length > 0) {
-      const dayOfWeek = d.getDay();
-      const timeH = d.getHours(); // Use local hours assuming host tz represents location
-      const timeM = d.getMinutes();
+    if (orgSettings.surgePricingEnabled && orgSettings.surgeRules?.length) {
+      const dayOfWeek = d.getUTCDay();
+      const timeH = d.getUTCHours();
+      const timeM = d.getUTCMinutes();
       const timeStr = `${String(timeH).padStart(2, "0")}:${String(timeM).padStart(2, "0")}`;
 
       const matchingRule = orgSettings.surgeRules.find(
@@ -219,7 +268,7 @@ export const createBooking = mutation({
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
       actorType: "staff",
-      actorId: "dashboard",
+      actorId: actor._id,
       action: "booking.created",
       resourceType: "bookings",
       resourceId: bookingId,
@@ -362,36 +411,14 @@ export const createManualBooking = mutation({
       );
     }
 
-    const startDate = new Date(args.startAt);
-    const startMins = startDate.getUTCHours() * 60 + startDate.getUTCMinutes();
-    if (startMins % settings.slotDurationMins !== 0) {
-      throw new ConvexError(
-        `Booking must align to ${settings.slotDurationMins} minute intervals.`,
-      );
-    }
-    if (args.startAt <= wallClockNow(settings.timezone)) {
-      throw new ConvexError("Booking start time must be in the future.");
-    }
-
-    const serviceDate = startDate.toISOString().slice(0, 10);
-    const availability = await computeFreeIntervalsForStaffDate(
+    const startDate = await validateManualBookingTime(
       ctx,
       args.orgId,
       args.staffId,
-      serviceDate,
+      settings,
+      args.startAt,
+      durationMins,
     );
-    if (
-      !rangeFitsFreeInterval(
-        availability.freeIntervals,
-        args.startAt,
-        durationMins,
-        settings.bufferTimeMins,
-      )
-    ) {
-      throw new ConvexError(
-        "The selected services no longer fit this time or conflict with another booking.",
-      );
-    }
 
     let customer: Doc<"customers"> | null = null;
     if (customerPhone) {
@@ -613,10 +640,11 @@ export const completeBooking = mutation({
 
     // Update customer total spend
     const customer = await ctx.db.get(booking.customerId);
-    if (customer) {
+    if (customer?.orgId === args.orgId && !customer.isDeleted) {
       await ctx.db.patch(booking.customerId, {
         totalSpendMinorUnits:
           (customer.totalSpendMinorUnits || 0) + booking.priceMinorUnits,
+        ...(await customerAttendanceStats(ctx, args.orgId, customer._id)),
         updatedAt: Date.now(),
       });
     }
@@ -711,15 +739,9 @@ export const markNoShow = mutation({
     });
 
     const customer = await ctx.db.get(booking.customerId);
-    if (customer) {
-      // Recalculate basic risk score (e.g. no_show / total bindings).
-      const newNoShowCount = customer.noShowCount + 1;
-      const newTotalVisits = Math.max(customer.totalVisits || 1, 1);
-      const riskScore = newNoShowCount / newTotalVisits;
-
+    if (customer?.orgId === args.orgId && !customer.isDeleted) {
       await ctx.db.patch(booking.customerId, {
-        noShowCount: newNoShowCount,
-        noShowRiskScore: riskScore,
+        ...(await customerAttendanceStats(ctx, args.orgId, customer._id)),
         updatedAt: Date.now(),
       });
     }
@@ -829,40 +851,17 @@ export const rescheduleBooking = mutation({
       .first();
     if (!settings) throw new ConvexError("Organization settings not found.");
 
-    const durationMins = Math.round(
-      (oldBooking.endAt - oldBooking.startAt) / 60_000,
-    );
+    const durationMins = (oldBooking.endAt - oldBooking.startAt) / 60_000;
     const endAt = args.newStartAt + durationMins * 60_000;
-    const newStart = new Date(args.newStartAt);
-    const startMins = newStart.getUTCHours() * 60 + newStart.getUTCMinutes();
-    if (
-      args.newStartAt <= wallClockNow(settings.timezone) ||
-      startMins % settings.slotDurationMins !== 0
-    ) {
-      throw new ConvexError(
-        "Choose a future time aligned to the booking grid.",
-      );
-    }
-
-    const date = newStart.toISOString().slice(0, 10);
-    const availability = await computeFreeIntervalsForStaffDate(
+    await validateManualBookingTime(
       ctx,
       args.orgId,
       oldBooking.staffId,
-      date,
+      settings,
+      args.newStartAt,
+      durationMins,
+      "The new time is outside working hours or no longer available.",
     );
-    if (
-      !rangeFitsFreeInterval(
-        availability.freeIntervals,
-        args.newStartAt,
-        durationMins,
-        settings.bufferTimeMins,
-      )
-    ) {
-      throw new ConvexError(
-        "The new time is outside working hours or no longer available.",
-      );
-    }
 
     const bookingCustomer = await ctx.db.get(oldBooking.customerId);
     const claim =

@@ -148,10 +148,12 @@ export function emailFromForRoute(
 }
 
 export function emailRouteForNotificationType(type: string): EmailRoute {
-  if (type === "booking_verification") return "auth";
+  if (type === "booking_verification" || type === "reservation_verification")
+    return "auth";
   if (
     [
       "booking_reminder",
+      "reservation_reminder",
       "staff_booking_reminder",
       "review_request",
       "no_show_warning",

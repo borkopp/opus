@@ -70,6 +70,39 @@ function timeToMinutes(value: string): number {
   return hours * 60 + minutes;
 }
 
+function hasRecurringSlot(
+  rule: Doc<"availability_rules">,
+  start: number,
+  end: number,
+  durationMins: number,
+  settings: Doc<"org_settings">,
+) {
+  const anchor = timeToMinutes(rule.startTime);
+  const fits = (from: number, to: number) => {
+    // Match the public slot engine: starts are anchored to the staff's opening
+    // time and the service's buffer must fit before a break or closing time.
+    const alignedStart =
+      anchor +
+      Math.ceil((from - anchor) / settings.slotDurationMins) *
+        settings.slotDurationMins;
+    return alignedStart + durationMins + settings.bufferTimeMins <= to;
+  };
+  const breaks = (rule.breaks ?? [])
+    .map((pause) => ({
+      start: timeToMinutes(pause.startTime),
+      end: timeToMinutes(pause.endTime),
+    }))
+    .sort((a, b) => a.start - b.start);
+  let freeStart = start;
+  for (const pause of breaks) {
+    if (pause.end <= freeStart) continue;
+    if (pause.start >= end) break;
+    if (fits(freeStart, Math.min(pause.start, end))) return true;
+    freeStart = Math.max(freeStart, pause.end);
+  }
+  return fits(freeStart, end);
+}
+
 export async function getBeautyActivationState(
   ctx: ReadCtx,
   orgId: Id<"orgs">,
@@ -117,8 +150,15 @@ export async function getBeautyActivationState(
     staff.find((member) => member.role === "owner" && member.userId) ??
     staff.find((member) => member.role === "owner") ??
     null;
+  const activeStaffIds = new Set(staff.map((member) => member._id));
+  const assignedServices = services.filter((service) =>
+    service.staffIds.some((staffId) => activeStaffIds.has(staffId)),
+  );
   const firstService =
-    services.find((service) => owner && service.staffIds.includes(owner._id)) ??
+    assignedServices.find(
+      (service) => owner && service.staffIds.includes(owner._id),
+    ) ??
+    assignedServices[0] ??
     null;
   const ownerAvailability = owner
     ? availabilityRules.filter((rule) => rule.staffId === owner._id)
@@ -136,14 +176,33 @@ export async function getBeautyActivationState(
     Boolean(org.coordinates);
   const ownerNameComplete = Boolean(owner && org.ownerNameConfirmed !== false);
   const providerComplete = ownerNameComplete;
-  const serviceComplete = Boolean(firstService);
-  const availabilityComplete = Boolean(
-    firstService &&
+  const serviceComplete = assignedServices.length > 0;
+  const validSettings = Boolean(
+    settings && !operationalSettingsError(settings),
+  );
+  // Start intervals determine when appointments may begin, not how long their
+  // services last. Existing 35-minute services work on a 15-minute start grid.
+  const validDurationServices = assignedServices.filter(
+    (service) =>
+      validSettings &&
+      settings &&
+      Number.isInteger(service.durationMins) &&
+      service.durationMins > 0,
+  );
+  // The owner starts as the first provider during setup, but may later manage
+  // the studio without taking appointments. Any active assigned provider can
+  // keep the website bookable, even when the owner's schedule is empty.
+  const availabilityComplete = validDurationServices.some((service) =>
     org.openingHours?.some((displayHours) => {
       if (displayHours.isClosed) return false;
       const availabilityDay = (displayHours.dayOfWeek + 1) % 7;
-      return ownerAvailability.some((rule) => {
-        if (rule.dayOfWeek !== availabilityDay) return false;
+      return availabilityRules.some((rule) => {
+        if (
+          rule.dayOfWeek !== availabilityDay ||
+          !activeStaffIds.has(rule.staffId) ||
+          !service.staffIds.includes(rule.staffId)
+        )
+          return false;
         const overlapStart = Math.max(
           timeToMinutes(displayHours.open),
           timeToMinutes(rule.startTime),
@@ -152,15 +211,21 @@ export async function getBeautyActivationState(
           timeToMinutes(displayHours.close),
           timeToMinutes(rule.endTime),
         );
-        return overlapEnd - overlapStart >= firstService.durationMins;
+        return (
+          settings !== null &&
+          hasRecurringSlot(
+            rule,
+            overlapStart,
+            overlapEnd,
+            service.durationMins,
+            settings,
+          )
+        );
       });
     }),
   );
   const bookingSettingsComplete = Boolean(
-    settings &&
-    !operationalSettingsError(settings) &&
-    firstService &&
-    firstService.durationMins % settings.slotDurationMins === 0,
+    validSettings && validDurationServices.length > 0,
   );
   const logoComplete = hasText(org.logoUrl);
   const bannerComplete = media.some(

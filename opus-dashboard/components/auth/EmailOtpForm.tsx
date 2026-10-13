@@ -91,23 +91,43 @@ export function EmailOtpForm({
   );
   const activation = useQuery(
     api.activation.getState,
-    profile?.orgId && profile.bookingAccess !== "own" ? {} : "skip",
+    profile?.orgId &&
+      profile.industry === "beauty_wellness" &&
+      profile.bookingAccess !== "own" &&
+      profile.role === "owner"
+      ? {}
+      : "skip",
+  );
+  const hospitalityAccess = useQuery(
+    api.hospitality.getAccess,
+    profile?.industry === "hospitality" ? {} : "skip",
   );
   const destination =
     purpose === "client"
       ? clientSignInDestination(callbackUrl)
       : authDestination(
           callbackUrl,
-          profile?.bookingAccess === "own" ||
+          Boolean(profile?.orgId && profile.role !== "owner") ||
+            profile?.bookingAccess === "own" ||
             (activation?.onboardingComplete ?? false),
+          {
+            hasBusiness: Boolean(profile?.orgId),
+            industry: profile?.industry,
+            role: profile?.role,
+            hospitalityOnboardingComplete:
+              hospitalityAccess?.onboardingComplete,
+          },
         );
   const readyToRedirect =
     isAuthenticated &&
     (purpose === "client" ||
       (Boolean(profile) &&
         (!profile?.orgId ||
-          profile.bookingAccess === "own" ||
-          Boolean(activation))));
+          (profile.industry === "hospitality"
+            ? Boolean(hospitalityAccess)
+            : profile.role !== "owner" ||
+              profile.bookingAccess === "own" ||
+              Boolean(activation)))));
   const openingMessage =
     purpose === "client"
       ? destination.startsWith("/book/")
@@ -122,9 +142,9 @@ export function EmailOtpForm({
             "Po hapim terminet tuaja…",
           )
       : t(
-          "Opening your studio…",
-          "Го отвораме вашето студио…",
-          "Po hapim studion tuaj…",
+          "Opening your workspace…",
+          "Го отвораме вашиот работен простор…",
+          "Po hapim hapësirën tuaj të punës…",
         );
   const [step, setStep] = useState<"email" | "code">("email");
   const [direction, setDirection] = useState(0);

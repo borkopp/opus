@@ -728,7 +728,7 @@ body:has(.dashboard-shell) [data-slot="tabs-trigger"][data-state="active"] {
   .dashboard-shell {
     --dashboard-gutter: 24px;
   }
-  .dashboard-account-trigger > span:last-child {
+  .dashboard-account-trigger > span:last-of-type {
     display: none;
   }
 }
@@ -748,7 +748,7 @@ body:has(.dashboard-shell) [data-slot="tabs-trigger"][data-state="active"] {
     display: none !important;
   }
   .dashboard-account-trigger {
-    gap: 0;
+    gap: 6px;
   }
   .dashboard-settings-tabs {
     display: flex !important;

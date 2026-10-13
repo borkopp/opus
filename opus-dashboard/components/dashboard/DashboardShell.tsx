@@ -14,20 +14,35 @@ import { DashboardAnnouncementCarousel } from "@/components/dashboard/DashboardA
 import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
+import { HospitalityShell } from "@/components/reservations/HospitalityShell";
+import { hospitalityHome } from "@/lib/onboarding";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const hospitalityRoute = pathname.startsWith("/hospitality");
 
   const profile = useQuery(
     api.users.getMyProfile,
     isAuthenticated ? {} : "skip",
   );
 
+  const hospitalityAccess = useQuery(
+    api.hospitality.getAccess,
+    profile?.industry === "hospitality" ? {} : "skip",
+  );
+  const hospitalityDestination = hospitalityHome(
+    hospitalityAccess?.onboardingComplete ?? false,
+    profile?.role,
+  );
+
   const orgSettingsData = useQuery(
     api.orgSettings.getOrgSettings,
-    profile?.orgId && profile.bookingAccess !== "own"
+    profile?.orgId &&
+      !hospitalityRoute &&
+      profile.industry === "beauty_wellness" &&
+      profile.bookingAccess !== "own"
       ? { orgId: profile.orgId }
       : "skip",
   );
@@ -35,7 +50,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       const callback =
-        pathname === "/notifications/open"
+        pathname === "/notifications/open" || hospitalityRoute
           ? `${pathname}${window.location.search}`
           : undefined;
       router.replace(
@@ -44,7 +59,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           : "/login",
       );
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
+  }, [isAuthenticated, isLoading, pathname, router, hospitalityRoute]);
 
   useEffect(() => {
     if (profile && !profile.orgId) {
@@ -55,6 +70,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   // ── Industry-based routing ──────────────────────────────
   useEffect(() => {
     if (!profile || !profile.industry) return;
+    if (profile.industry === "hospitality") {
+      if (
+        hospitalityAccess &&
+        (!hospitalityRoute ||
+          (hospitalityDestination === "/hospitality/setup" &&
+            pathname !== hospitalityDestination))
+      )
+        router.replace(hospitalityDestination);
+      return;
+    }
+    if (hospitalityRoute) return;
 
     if (profile.bookingAccess === "own") {
       if (
@@ -87,12 +113,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     if (!pathname.startsWith(targetBase)) {
       router.push(targetBase);
     }
-  }, [profile, pathname, router]);
+  }, [
+    profile,
+    pathname,
+    router,
+    hospitalityRoute,
+    hospitalityAccess,
+    hospitalityDestination,
+  ]);
 
   if (
     isLoading ||
     (isAuthenticated && !profile) ||
+    (profile?.industry === "hospitality" && !hospitalityAccess) ||
     (profile?.orgId &&
+      !hospitalityRoute &&
+      profile.industry === "beauty_wellness" &&
       profile.bookingAccess !== "own" &&
       orgSettingsData === undefined)
   ) {
@@ -105,6 +141,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) return null;
 
+  if (!profile?.orgId) return null;
+  // Wait for the vertical redirect before mounting route-specific tenant queries.
+  if (
+    profile?.industry === "hospitality" &&
+    (!hospitalityRoute ||
+      (hospitalityDestination === "/hospitality/setup" &&
+        pathname !== hospitalityDestination))
+  )
+    return null;
+  if (hospitalityRoute || profile?.industry === "hospitality")
+    return <HospitalityShell profile={profile}>{children}</HospitalityShell>;
   if (!profile?.orgId) return null;
   if (
     profile.bookingAccess === "own" &&
@@ -125,7 +172,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <QuickBookingProvider key={profile.orgId} orgId={profile.orgId}>
         <div
           data-dashboard-theme={resolveDashboardTheme(profile.dashboardTheme)}
-          className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
+          className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" || (pathname === "/beauty/assistant" && profile.plan === "paid") ? s.viewportShell : ""}`}
         >
           <a
             data-replay-public

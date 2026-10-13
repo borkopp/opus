@@ -3,12 +3,24 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Settings2, ChartNoAxesCombined } from "lucide-react";
+import {
+  IconBrandTabler,
+  IconCalendarEvent,
+  IconAddressBook,
+  IconScissors,
+  IconSettings,
+  IconChartBar,
+  IconSpeakerphone,
+  IconTable,
+} from "@tabler/icons-react";
 import { Logo } from "@/components/Logo";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { getNavLinks } from "@/lib/vertical-nav-config";
-import { ACTIVE_INDUSTRY } from "@/lib/product-scope";
+import {
+  getDashboardNavLinks,
+  isDashboardNavActive,
+} from "@/lib/vertical-nav-config";
 import {
   DashboardAccountMenu,
   type DashboardProfile,
@@ -16,6 +28,16 @@ import {
 import { PersonalStaffMenu } from "@/components/staff/PersonalStaffMenu";
 import { StudioSwitcher } from "@/components/staff/StudioSwitcher";
 import s from "./clarity.module.css";
+const navigationIcons = {
+  overview: IconBrandTabler,
+  calendar: IconCalendarEvent,
+  clients: IconAddressBook,
+  services: IconScissors,
+  settings: IconSettings,
+  assistant: IconChartBar,
+  promote: IconSpeakerphone,
+  tables: IconTable,
+};
 export function DashboardHeader({
   profile,
   activePath,
@@ -25,6 +47,7 @@ export function DashboardHeader({
 }) {
   const currentPath = usePathname();
   const pathname = activePath ?? currentPath;
+  const hospitality = profile.industry === "hospitality";
   const { language, t } = useDashboardI18n();
   const navigationRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -45,15 +68,17 @@ export function DashboardHeader({
     observer.observe(nav);
     return () => observer.disconnect();
   }, [pathname, language]);
-  const links = getNavLinks(ACTIVE_INDUSTRY, language).links.filter((link) =>
-    profile.bookingAccess === "own"
-      ? link.href === "/beauty/bookings"
-      : link.href !== "/settings" && link.href !== "/beauty/assistant",
-  );
+  const links = getDashboardNavLinks(profile, language);
   return (
     <header className={s.topbar}>
       <Link
-        href={profile.bookingAccess === "own" ? "/beauty/bookings" : "/beauty"}
+        href={
+          hospitality
+            ? "/hospitality"
+            : profile.bookingAccess === "own"
+              ? "/beauty/bookings"
+              : "/beauty"
+        }
         aria-label={t(
           "OPUS dashboard",
           "OPUS контролна табла",
@@ -62,7 +87,7 @@ export function DashboardHeader({
       >
         <span className={s.brandLockup}>
           <Logo className={s.brand} markClassName={s.brandMark} />
-          {profile.plan === "paid" && (
+          {!hospitality && profile.plan === "paid" && (
             <Badge data-replay-public variant="pro">
               Pro
             </Badge>
@@ -78,34 +103,29 @@ export function DashboardHeader({
           "Navigimi kryesor",
         )}
       >
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            aria-current={
-              (
-                link.href === "/beauty"
-                  ? pathname === link.href
-                  : pathname.startsWith(link.href) ||
-                    (link.href === "/beauty/services" &&
-                      pathname.startsWith("/beauty/staff/"))
-              )
-                ? "page"
-                : undefined
-            }
-          >
-            {link.icon}
-            <span data-replay-public>
-              {link.href === "/beauty"
-                ? t("Overview", "Преглед", "Përmbledhje")
-                : link.label}
-            </span>
-          </Link>
-        ))}
+        {links.map((link) => {
+          const Icon = navigationIcons[link.icon];
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={
+                isDashboardNavActive(link.href, pathname) ? "page" : undefined
+              }
+            >
+              <Icon className="size-5 shrink-0" aria-hidden="true" />
+              <span data-replay-public>
+                {link.href === "/beauty"
+                  ? t("Overview", "Преглед", "Përmbledhje")
+                  : link.label}
+              </span>
+            </Link>
+          );
+        })}
       </nav>
       <div className={s.headerActions}>
         <StudioSwitcher orgId={profile.orgId} />
-        {profile.role !== "staff" && (
+        {!hospitality && profile.role !== "staff" && (
           <Link
             href="/beauty/assistant"
             className={`${s.iconButton} dashboard-assistant-link`}
@@ -121,7 +141,7 @@ export function DashboardHeader({
             <ChartNoAxesCombined size={19} />
           </Link>
         )}
-        {profile.bookingAccess !== "own" && (
+        {!hospitality && profile.bookingAccess !== "own" && (
           <>
             <Link
               href={
@@ -152,7 +172,7 @@ export function DashboardHeader({
           </>
         )}
         <span className={s.headerDivider} />
-        {profile.bookingAccess === "own" ? (
+        {!hospitality && profile.bookingAccess === "own" ? (
           <PersonalStaffMenu />
         ) : (
           <DashboardAccountMenu profile={profile} />

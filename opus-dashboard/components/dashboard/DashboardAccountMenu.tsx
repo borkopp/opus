@@ -11,6 +11,7 @@ import {
   MessagesSquare,
   CreditCard,
   Bell,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { FunctionReturnType } from "convex/server";
@@ -34,12 +35,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import s from "./clarity.module.css";
 export type DashboardProfile = Partial<
   Pick<
     NonNullable<FunctionReturnType<typeof api.users.getMyProfile>>,
     | "orgId"
+    | "industry"
+    | "dashboardTheme"
     | "role"
     | "plan"
     | "bookingAccess"
@@ -60,7 +65,8 @@ export function DashboardAccountMenu({
 }: {
   profile: DashboardProfile;
 }) {
-  const { t } = useDashboardI18n();
+  const { t, language, setLanguage } = useDashboardI18n();
+  const hospitality = profile.industry === "hospitality";
   const signOutAccount = usePushSignOut();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
@@ -68,7 +74,9 @@ export function DashboardAccountMenu({
 
   const orgSettings = useQuery(
     api.orgSettings.getOrgSettings,
-    profile.orgId && !profile.orgLogoUrl ? { orgId: profile.orgId } : "skip",
+    !hospitality && profile.orgId && !profile.orgLogoUrl
+      ? { orgId: profile.orgId }
+      : "skip",
   );
 
   const effectiveProfile = {
@@ -137,94 +145,144 @@ export function DashboardAccountMenu({
             <strong>{name}</strong>
             <span data-replay-public>
               {profile.role === "owner"
-                ? t("Studio owner", "Сопственик", "Pronar i studios")
+                ? hospitality
+                  ? t("Venue owner", "Сопственик", "Pronar i lokalit")
+                  : t("Studio owner", "Сопственик", "Pronar i studios")
                 : profile.role === "manager"
-                  ? t("Studio manager", "Менаџер", "Menaxher i studios")
+                  ? hospitality
+                    ? t("Venue manager", "Менаџер", "Menaxher i lokalit")
+                    : t("Studio manager", "Менаџер", "Menaxher i studios")
                   : t("Team member", "Член на тимот", "Anëtar i ekipit")}
             </span>
           </span>
+          <ChevronDown
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>
           <div className="flex items-center justify-between gap-2">
             <span className="truncate">{name}</span>
-            <Badge
-              data-replay-public
-              variant={profile.plan === "paid" ? "default" : "secondary"}
-            >
-              {profile.plan === "paid" ? "Pro" : "Free"}
-            </Badge>
+            {!hospitality && (
+              <Badge
+                data-replay-public
+                variant={profile.plan === "paid" ? "default" : "secondary"}
+              >
+                {profile.plan === "paid" ? "Pro" : "Free"}
+              </Badge>
+            )}
           </div>
           <div className="truncate text-xs font-normal text-muted-foreground">
             {profile.user?.email}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          {profile.role === "owner" && (
+        {hospitality ? (
+          <>
+            <DropdownMenuGroup>
+              {(profile.role === "owner" || profile.role === "manager") && (
+                <DropdownMenuItem asChild>
+                  <Link href="/hospitality/setup">
+                    <Settings2 />
+                    {t(
+                      "Venue setup",
+                      "Поставување на локалот",
+                      "Konfigurimi i lokalit",
+                    )}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuLabel>
+                {t("Language", "Јазик", "Gjuha")}
+              </DropdownMenuLabel>
+              <DropdownMenuRadioGroup
+                value={language}
+                onValueChange={(value) => {
+                  if (value === "en" || value === "mk" || value === "sq")
+                    setLanguage(value);
+                }}
+              >
+                <DropdownMenuRadioItem value="en">
+                  English
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="mk">
+                  Македонски
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="sq">Shqip</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+              <CookiePreferencesMenuItem />
+            </DropdownMenuGroup>
+          </>
+        ) : (
+          <DropdownMenuGroup>
+            {profile.role === "owner" && (
+              <DropdownMenuItem asChild>
+                <Link data-replay-public href="/settings">
+                  <Settings2 />
+                  {t(
+                    "Studio settings",
+                    "Поставки за студио",
+                    "Cilësimet e studios",
+                  )}
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
-              <Link data-replay-public href="/settings">
-                <Settings2 />
+              <Link data-replay-public href="/notifications/preferences">
+                <Bell />
+                {t("My preferences", "Мои поставки", "Preferencat e mia")}
+              </Link>
+            </DropdownMenuItem>
+            {profile.role !== "staff" && (
+              <DropdownMenuItem asChild>
+                <Link data-replay-public href="/beauty/assistant">
+                  <ChartNoAxesCombined />
+                  {t(
+                    "Business assistant",
+                    "Деловен асистент",
+                    "Asistenti i biznesit",
+                  )}
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <Link data-replay-public href="/gap-optimizer">
+                <CalendarClock />
                 {t(
-                  "Studio settings",
-                  "Поставки за студио",
-                  "Cilësimet e studios",
+                  "Opening recovery",
+                  "Пополнување слободни термини",
+                  "Rikuperimi i hapësirave",
                 )}
               </Link>
             </DropdownMenuItem>
-          )}
-          <DropdownMenuItem asChild>
-            <Link data-replay-public href="/notifications/preferences">
-              <Bell />
-              {t("My preferences", "Мои поставки", "Preferencat e mia")}
-            </Link>
-          </DropdownMenuItem>
-          {profile.role !== "staff" && (
             <DropdownMenuItem asChild>
-              <Link data-replay-public href="/beauty/assistant">
-                <ChartNoAxesCombined />
+              <Link data-replay-public href="/ai-inbox">
+                <MessagesSquare />
                 {t(
-                  "Business assistant",
-                  "Деловен асистент",
-                  "Asistenti i biznesit",
+                  "AI Receptionist inbox",
+                  "Сандаче на AI рецепција",
+                  "Kutia e AI recepsionit",
                 )}
               </Link>
             </DropdownMenuItem>
-          )}
-          <DropdownMenuItem asChild>
-            <Link data-replay-public href="/gap-optimizer">
-              <CalendarClock />
-              {t(
-                "Opening recovery",
-                "Пополнување слободни термини",
-                "Rikuperimi i hapësirave",
-              )}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link data-replay-public href="/ai-inbox">
-              <MessagesSquare />
-              {t(
-                "AI Receptionist inbox",
-                "Сандаче на AI рецепција",
-                "Kutia e AI recepsionit",
-              )}
-            </Link>
-          </DropdownMenuItem>
-          <CookiePreferencesMenuItem />
-        </DropdownMenuGroup>
+            <CookiePreferencesMenuItem />
+          </DropdownMenuGroup>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {profile.role === "owner" && profile.plan === "paid" && (
-            <DropdownMenuItem asChild>
-              <Link data-replay-public href="/settings?tab=billing">
-                <CreditCard />
-                {t("Subscription", "Претплата", "Abonimi")}
-              </Link>
-            </DropdownMenuItem>
-          )}
-          {profile.plan !== "paid" && <OpusProMenuItem />}
+          {!hospitality &&
+            profile.role === "owner" &&
+            profile.plan === "paid" && (
+              <DropdownMenuItem asChild>
+                <Link data-replay-public href="/settings?tab=billing">
+                  <CreditCard />
+                  {t("Subscription", "Претплата", "Abonimi")}
+                </Link>
+              </DropdownMenuItem>
+            )}
+          {!hospitality && profile.plan !== "paid" && <OpusProMenuItem />}
           <DropdownMenuItem
             data-replay-public
             onSelect={signOut}

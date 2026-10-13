@@ -25,6 +25,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClientProfileForm } from "./ClientProfileForm";
 import { ClientAppointments } from "./ClientAppointments";
+import { ClientReservations } from "@/components/reservations/public/ClientReservations";
 
 export function ClientAccountWorkspace() {
   const signOutAccount = usePushSignOut();
@@ -186,7 +187,10 @@ export function ClientAccountWorkspace() {
         </Alert>
       )}
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,0.55fr)]">
-        <ClientAppointments appointments={appointments} />
+        <div className="flex min-w-0 flex-col gap-6">
+          <ClientAppointments appointments={appointments} />
+          <ClientReservations />
+        </div>
         <Card>
           <CardHeader>
             <CardTitle>

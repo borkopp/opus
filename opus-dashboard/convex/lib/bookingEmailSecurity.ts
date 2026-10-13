@@ -1,5 +1,6 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+export const BOOKING_EMAIL_OTP_TTL_MS = 10 * 60_000;
 const BASE64_URL_ALPHABET =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 

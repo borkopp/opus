@@ -1,5 +1,16 @@
 import { isLocale } from "../../shared/i18n/locale";
 
+/** Customer routes must never bootstrap a business account or staff identity. */
+export function isClientAreaPathname(pathname: string) {
+  return (
+    pathname === "/account" ||
+    pathname.startsWith("/account/") ||
+    pathname.startsWith("/book/") ||
+    pathname.startsWith("/reserve/") ||
+    pathname.startsWith("/sites/")
+  );
+}
+
 /** Central client area uses the existing studio origin, keeping business cookies host-scoped. */
 export function clientAreaUrl(path = "/account", currentOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_CLIENT_ACCOUNT_URL;
@@ -42,7 +53,9 @@ export function clientSignInDestination(callbackUrl?: string) {
   )
     return "/account";
   const pathname = new URL(callbackUrl, "https://studio.opus.mk").pathname;
-  return pathname === "/account" || pathname.startsWith("/book/")
+  return pathname === "/account" ||
+    pathname.startsWith("/book/") ||
+    /^\/reserve\/[a-z0-9-]+(?:\/manage\/[a-zA-Z0-9_-]+)?$/.test(pathname)
     ? callbackUrl
     : "/account";
 }

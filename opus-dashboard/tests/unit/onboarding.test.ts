@@ -4,6 +4,9 @@ import {
   PRO_ONBOARDING_STEPS,
   onboardingStep,
   validateFirstService,
+  onboardingIndustry,
+  onboardingChoicePath,
+  hospitalityHome,
 } from "../../lib/onboarding";
 
 test("owner name is the third step in both onboarding flows", () => {
@@ -59,4 +62,36 @@ test("accepts Macedonian decimal prices and prevents incompatible durations", ()
       15,
     ),
   ).toBe("duration");
+});
+
+test("business selection is resumable and reversible without losing beauty Pro intent", () => {
+  const search = "plan=pro&team=5&currency=eur&step=service-duration";
+  const selected = onboardingChoicePath(search, "hospitality");
+  const url = new URL(selected, "https://studio.opus.mk");
+  expect(url.pathname).toBe("/onboarding");
+  expect(Object.fromEntries(url.searchParams)).toEqual({
+    plan: "pro",
+    team: "5",
+    currency: "eur",
+    industry: "hospitality",
+  });
+  expect(onboardingIndustry(url.searchParams.get("industry"))).toBe(
+    "hospitality",
+  );
+  expect(onboardingChoicePath(url.search)).toBe(
+    "/onboarding?plan=pro&team=5&currency=eur",
+  );
+  expect(onboardingChoicePath("", "beauty_wellness")).toBe(
+    "/onboarding?industry=beauty_wellness",
+  );
+  expect(onboardingIndustry("restaurant")).toBeNull();
+  expect(onboardingIndustry(null)).toBeNull();
+});
+
+test("a created venue opens its dashboard without requiring publication", () => {
+  expect(hospitalityHome(false, "owner")).toBe("/hospitality/setup");
+  expect(hospitalityHome(false, "manager")).toBe("/hospitality/setup");
+  expect(hospitalityHome(false, "staff")).toBe("/hospitality");
+  expect(hospitalityHome(true, "owner")).toBe("/hospitality");
+  expect(hospitalityHome(true, "manager")).toBe("/hospitality");
 });

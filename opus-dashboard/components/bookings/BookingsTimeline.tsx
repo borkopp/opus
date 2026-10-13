@@ -93,6 +93,7 @@ export function BookingsTimeline({
   onComplete,
   onCancel,
   onMarkNoShow,
+  onRescheduleClick,
   currentDate,
   quickBookingSlots,
   slotDurationMins,
@@ -109,6 +110,7 @@ export function BookingsTimeline({
   onComplete?: (bookingId: Id<"bookings">) => void;
   onCancel?: (bookingId: Id<"bookings">) => void;
   onMarkNoShow?: (bookingId: Id<"bookings">) => void;
+  onRescheduleClick?: (booking: BookingView) => void;
   currentDate: Date;
   quickBookingSlots: QuickBookingSelection[];
   slotDurationMins: number;
@@ -695,6 +697,7 @@ export function BookingsTimeline({
                         onComplete={onComplete}
                         onCancel={onCancel}
                         onMarkNoShow={onMarkNoShow}
+                        onRescheduleClick={onRescheduleClick}
                         side="bottom"
                         align="start"
                       >

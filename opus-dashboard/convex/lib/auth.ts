@@ -121,6 +121,11 @@ export async function requireActiveOrg(
 
 export async function requireAuth(ctx: QueryCtx, expectedOrgId?: Id<"orgs">) {
   const auth = await requireActiveOrg(ctx, expectedOrgId);
+  // Legacy management endpoints below this boundary operate on beauty services,
+  // providers and plans. Hospitality uses its own explicit capability boundary.
+  if (auth.org.industry !== "beauty_wellness") {
+    throw new ConvexError("This feature is available to beauty studios only.");
+  }
   if (
     auth.staffMember.role === "staff" &&
     auth.staffMember.bookingAccess === "own"

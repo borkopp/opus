@@ -98,7 +98,7 @@ export function ConversationPanel({
     );
   if (!turns.length)
     return (
-      <Empty className="justify-start overflow-y-auto px-2 py-4 sm:justify-center sm:px-6">
+      <Empty className="min-h-0 justify-start overflow-y-auto px-2 py-4 sm:justify-center sm:px-6">
         <EmptyHeader className="shrink-0">
           <EmptyMedia variant="icon">
             <ChartNoAxesCombined />
@@ -192,7 +192,11 @@ export function ConversationPanel({
                               disabled={disabled}
                               onClick={() => onPrompt(turn.question)}
                             >
-                              {t("Ask again", "Прашајте повторно", "Pyesni përsëri")}
+                              {t(
+                                "Ask again",
+                                "Прашајте повторно",
+                                "Pyesni përsëri",
+                              )}
                             </Button>
                           </AlertDescription>
                         </Alert>

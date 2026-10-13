@@ -15,6 +15,7 @@ import { v } from "convex/values";
 import { internalAction, ActionCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
+import { MARKETPLACE_ENABLED } from "../lib/productScope";
 import {
   buildOrgChunk,
   buildServiceChunk,
@@ -225,6 +226,7 @@ export const embedEntity = internalAction({
     entityId: v.string(),
   },
   handler: async (ctx, { entityType, entityId }) => {
+    if (!MARKETPLACE_ENABLED) return { skipped: "marketplace-disabled" };
     if (entityType === "org") {
       return await embedOrg(ctx, entityId as Id<"orgs">);
     }
@@ -240,6 +242,7 @@ export const embedEntity = internalAction({
 export const backfillAll = internalAction({
   args: {},
   handler: async (ctx) => {
+    if (!MARKETPLACE_ENABLED) return { scheduled: 0, orgs: 0, services: 0, reputations: 0 };
     const orgIds: Id<"orgs">[] = await ctx.runQuery(
       internal.marketplace.embeddingsHelpers.listAllOrgIds,
     );
@@ -281,6 +284,7 @@ export const backfillAll = internalAction({
 export const refreshAllReputations = internalAction({
   args: {},
   handler: async (ctx) => {
+    if (!MARKETPLACE_ENABLED) return { scheduled: 0 };
     const orgIds: Id<"orgs">[] = await ctx.runQuery(
       internal.marketplace.embeddingsHelpers.listOrgIdsWithReviews,
     );

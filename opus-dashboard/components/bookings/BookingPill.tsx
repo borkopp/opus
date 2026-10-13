@@ -187,7 +187,7 @@ export const BookingPill = React.forwardRef<HTMLDivElement, BookingPillProps>(
                 </span>
                 <span
                   className={cn(
-                    "text-[11px] font-medium truncate max-w-[90px] sm:max-w-[120px] hidden xs:inline",
+                    "text-[11px] font-medium truncate max-w-[90px] sm:max-w-[120px] hidden sm:inline",
                     isMuted
                       ? "text-zinc-500 dark:text-zinc-400"
                       : "text-white/85",

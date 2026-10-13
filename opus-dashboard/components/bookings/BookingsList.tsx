@@ -34,6 +34,7 @@ export function BookingsList({
   onComplete,
   onCancel,
   onMarkNoShow,
+  onRescheduleClick,
 }: {
   bookings: BookingView[];
   staffMembers?: StaffView[];
@@ -42,8 +43,9 @@ export function BookingsList({
   onComplete?: (bookingId: Id<"bookings">) => void;
   onCancel?: (bookingId: Id<"bookings">) => void;
   onMarkNoShow?: (bookingId: Id<"bookings">) => void;
+  onRescheduleClick?: (booking: BookingView) => void;
 }) {
-  const { t } = useDashboardI18n();
+  const { t, locale } = useDashboardI18n();
 
   const sortedBookings = useMemo(() => {
     return [...bookings].sort((a, b) => a.startAt - b.startAt);
@@ -95,6 +97,7 @@ export function BookingsList({
             onComplete={onComplete}
             onCancel={onCancel}
             onMarkNoShow={onMarkNoShow}
+            onRescheduleClick={onRescheduleClick}
             side="bottom"
             align="center"
           >
@@ -181,6 +184,8 @@ export function BookingsList({
                 <div className="col-start-2 row-start-1 text-right font-semibold text-sm text-foreground tabular-nums">
                   <Price
                     amount={booking.priceMinorUnits || 0}
+                    currency={booking.currency}
+                    locale={locale}
                     showDecimals={false}
                   />
                 </div>

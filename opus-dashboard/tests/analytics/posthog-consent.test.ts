@@ -100,6 +100,8 @@ test.each([
   "/account/sign-in",
   "/invites/secret",
   "/book/studio?offer=secret",
+  "/reserve/cafe?partySize=6",
+  "/reserve/cafe/manage/reservation#token=secret",
   "/website/preview",
 ])("excludes account and invitation links from analytics: %s", async (path) => {
   vi.stubEnv("NODE_ENV", "production");

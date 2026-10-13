@@ -5,6 +5,7 @@ import { connectionForOrg, providerReadiness } from "./connections";
 import { automationReady } from "./queue";
 import { handoff, logEvent } from "./state";
 import { REPLY_WINDOW_MS } from "./rules";
+import { hasPersonalBookingAccess } from "../lib/staffAccess";
 
 export const claim = internalMutation({
   args: { orgId: v.id("orgs"), messageId: v.id("ai_messages") },
@@ -28,6 +29,41 @@ export const claim = internalMutation({
       org.industry !== "beauty_wellness"
     )
       return null;
+    if (message.author === "staff") {
+      const member = message.authorStaffId
+        ? await ctx.db.get(message.authorStaffId)
+        : null;
+      const user = message.authorUserId
+        ? await ctx.db.get(message.authorUserId)
+        : null;
+      // A scheduled reply does not retain permissions after its author loses
+      // studio access. Legacy queued replies lack verifiable authorship.
+      if (
+        !member ||
+        member.orgId !== args.orgId ||
+        member.isDeleted ||
+        !member.isActive ||
+        hasPersonalBookingAccess(member) ||
+        !user ||
+        user.isDeleted ||
+        member.userId !== user._id
+      ) {
+        await ctx.db.patch(message._id, {
+          deliveryStatus: "failed",
+          deliveryError: "The reply author's studio access changed.",
+        });
+        await handoff(
+          ctx,
+          conv,
+          "Reply was not sent because the author's studio access changed.",
+        );
+        await logEvent(ctx, args.orgId, conv._id, "ai.message_failed", {
+          messageId: message._id,
+          reason: "author_access_changed",
+        });
+        return null;
+      }
+    }
     const ready =
       message.author === "staff"
         ? providerReadiness().instagram

@@ -17,6 +17,7 @@ import { v } from "convex/values";
 import { action } from "../_generated/server";
 import { api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
+import { requireMarketplaceEnabled } from "../lib/productScope";
 
 const MAX_RESPONSE_TOKENS = 600;
 const HISTORY_TURN_CAP = 6;
@@ -305,6 +306,7 @@ export const chat = action({
     locale: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<MobileChatResult> => {
+    requireMarketplaceEnabled();
     const trimmedQuery = args.query.trim().slice(0, 500);
     if (!trimmedQuery) throw new Error("query required");
 

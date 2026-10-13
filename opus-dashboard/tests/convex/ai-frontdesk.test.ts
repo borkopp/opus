@@ -264,6 +264,62 @@ describe("Instagram receptionist", () => {
     expect(handoffs.map((conv) => conv._id)).toEqual([old._id]);
   });
 
+  test.each([
+    "inactive",
+    "unlinked",
+    "own-only",
+    "deleted-user",
+    "legacy",
+  ] as const)(
+    "withholds a queued staff reply after its author becomes %s",
+    async (change) => {
+      const t = createBackend(),
+        a = await studio(t);
+      const conv = await a.ingest("hello", "Can someone help?");
+      const messageId = await a.owner.mutation(
+        api.ai.conversations.replyAsStaff,
+        {
+          orgId: a.orgId,
+          conversationId: conv._id,
+          text: "I can help with your booking.",
+        },
+      );
+      expect(await t.run((ctx) => ctx.db.get(messageId))).toMatchObject({
+        authorStaffId: a.staffId,
+        authorUserId: a.userId,
+        deliveryStatus: "queued",
+      });
+      await t.run(async (ctx) => {
+        if (change === "inactive")
+          await ctx.db.patch(a.staffId, { isActive: false });
+        if (change === "unlinked")
+          await ctx.db.patch(a.staffId, { userId: undefined });
+        if (change === "own-only")
+          await ctx.db.patch(a.staffId, {
+            role: "staff",
+            bookingAccess: "own",
+          });
+        if (change === "deleted-user")
+          await ctx.db.patch(a.userId, { isDeleted: true });
+        if (change === "legacy")
+          await ctx.db.patch(messageId, {
+            authorStaffId: undefined,
+            authorUserId: undefined,
+          });
+      });
+      await expect(
+        t.mutation(internal.ai.delivery.claim, { orgId: a.orgId, messageId }),
+      ).resolves.toBeNull();
+      expect(await t.run((ctx) => ctx.db.get(messageId))).toMatchObject({
+        deliveryStatus: "failed",
+        deliveryError: "The reply author's studio access changed.",
+      });
+      expect(await t.run((ctx) => ctx.db.get(conv._id))).toMatchObject({
+        status: "handed_off",
+      });
+    },
+  );
+
   test("keeps staff replies from being overtaken by resumed AI or another outgoing message", async () => {
     const t = createBackend(),
       a = await studio(t);

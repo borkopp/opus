@@ -4,6 +4,9 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "git": {
-    "deploymentEnabled": true
-  }
+    "deploymentEnabled": {
+      "codex/hospitality-vertical": false
+    }
+  },
+  "ignoreCommand": "git log -1 --format=%B | grep -Fq '[skip deploy]'"
 }

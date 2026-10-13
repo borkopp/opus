@@ -2,5 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "npm ci",
-  "buildCommand": "npx convex deploy --cmd 'npm run build'"
+  "buildCommand": "npx convex deploy --cmd 'npm run build'",
+  "ignoreCommand": "git log -1 --format=%B | grep -Fq '[skip deploy]'",
+  "git": {
+    "deploymentEnabled": {
+      "codex/hospitality-vertical": false
+    }
+  }
 }

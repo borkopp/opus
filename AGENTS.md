@@ -10,8 +10,8 @@ Before product work, read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md). It i
 
 Future agents must:
 
-1. Treat beauty appointment booking for small studios in Macedonia as the only active vertical.
-2. Preserve dormant hospitality schemas, data, and reusable backend foundations without exposing hospitality in active UI, routes, discovery, onboarding, metadata, or marketing.
+1. Preserve beauty appointment booking for small studios in Macedonia and the explicitly authorized restaurant/café reservation journey.
+2. New business accounts choose beauty or hospitality before their respective onboarding. Hospitality is a standard capability with no pilot allowlist or enablement environment variables. Preserve historical data and require authenticated roles, venue readiness, and explicit website publication. This code is prepared locally; deployment still requires authorization.
 3. Avoid introducing unrelated product ideas or expanding P2 work.
 4. Prioritize reliability of the documented golden booking journey.
 5. Keep marketing claims aligned with behavior that is genuinely operational and configured.
@@ -23,7 +23,7 @@ Future agents must:
 
 ## What This Project Is
 
-**OPUS** is currently a beauty appointment SaaS for small beauty businesses in Macedonia.
+**OPUS** serves beauty appointments and the authorized restaurant/café reservation workflow. The deployed marketing remains beauty-focused until an explicitly authorized release.
 
 Canonical positioning: **OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.**
 
@@ -35,7 +35,7 @@ Independent Next.js applications, with the studio and owner apps sharing Convex:
 
 | App               | Purpose                                                                       | Dev port                       |
 | ----------------- | ----------------------------------------------------------------------------- | ------------------------------ |
-| `opus-dashboard/` | Beauty-business dashboard plus automatic tenant websites and guest booking    | 3000 (frontend), 3210 (Convex) |
+| `opus-dashboard/` | Beauty and restaurant/café dashboards, tenant websites, and guest booking      | 3000 (frontend), 3210 (Convex) |
 | `opus-mk/`        | Dormant beauty marketplace retained for future work; do not modify by default | 3001                           |
 | `opus-landing/`   | Beauty-focused `opus.mk` marketing site — no backend, no auth                 | 3000                           |
 | `opus-owner/`     | Private platform-owner overview at `admin.opus.mk`; read-only analytics       | 3002                           |

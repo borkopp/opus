@@ -40,6 +40,7 @@ type Props = {
   onComplete: (id: Id<"bookings">) => void;
   onCancel: (id: Id<"bookings">) => void;
   onMarkNoShow: (id: Id<"bookings">) => void;
+  onRescheduleClick?: (booking: BookingView) => void;
 };
 
 export function BookingsPeriodView(props: Props) {
@@ -58,6 +59,7 @@ export function BookingsPeriodView(props: Props) {
     onComplete,
     onCancel,
     onMarkNoShow,
+    onRescheduleClick,
   } = props;
   const { locale, t } = useDashboardI18n();
   const day = bookingTimestampForDate(currentDate, 0);
@@ -128,6 +130,7 @@ export function BookingsPeriodView(props: Props) {
         onComplete={onComplete}
         onCancel={onCancel}
         onMarkNoShow={onMarkNoShow}
+        onRescheduleClick={onRescheduleClick}
       >
         <button
           type="button"
@@ -190,6 +193,7 @@ export function BookingsPeriodView(props: Props) {
             onComplete={onComplete}
             onCancel={onCancel}
             onMarkNoShow={onMarkNoShow}
+            onRescheduleClick={onRescheduleClick}
           />
         ) : (
           <Empty className="py-4">

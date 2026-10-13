@@ -6,7 +6,7 @@ This document is the product-direction authority for the repository. Read it bef
 
 > OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.
 
-For the current phase, OPUS is a beauty appointment SaaS for small beauty businesses in Macedonia. It is not a general local-business marketplace or an international, multi-vertical operating system.
+Beauty remains the deployed product and marketing position. On October 13, 2026, the user authorized preparing normal restaurant/café signup and reservations alongside beauty, locally and in the release source. This does not authorize deployment or marketplace/international expansion.
 
 ## Target customer
 
@@ -18,13 +18,15 @@ The first customers are small teams, usually one to five people, that currently 
 - makeup artists;
 - massage and wellness studios.
 
-## The only active vertical
+## Supported verticals and release boundary
 
-`beauty_wellness` is the only enabled product vertical. The dashboard, onboarding, public studio websites, booking flow, navigation, metadata, and marketing must all present a coherent beauty-only product.
+The dashboard supports `beauty_wellness` and restaurant/café `hospitality`. Newly verified business accounts choose their type before onboarding. Hospitality does not use an environment enablement flag, email allowlist, or organization pilot grant. Existing accounts resume their own business; client booking and team-invitation flows remain separate from business creation. Beauty's services, staff appointments, billing and AI interfaces must not leak into hospitality.
+
+These changes are authorized for local implementation and testing only until a release is explicitly requested. Do not deploy or alter production configuration. The landing site and live marketing remain beauty-focused.
 
 The active web surfaces are:
 
-- `opus-dashboard/` for business onboarding, services, staff, availability, customers, calendar, appointment management, automatic `{slug}.opus.mk` studio websites, and guest booking;
+- `opus-dashboard/` for beauty onboarding and appointment management, restaurant/café setup and reservations, automatic `{slug}.opus.mk` business websites, and guest booking;
 - `opus-landing/` for the truthful beauty-focused `opus.mk` marketing site.
 
 The separate `opus-owner/` app is an internal, read-only platform overview at
@@ -33,7 +35,7 @@ add a customer vertical or a business-facing feature. See [`OWNER_OVERVIEW.md`](
 
 `opus-mk/` is retained as a dormant marketplace package, but marketplace discovery and marketplace publication are paused. Do not delete its schemas or reusable backend foundations, and do not expose or expand the marketplace unless the user explicitly resumes that work.
 
-The enabled-vertical boundaries live in `opus-dashboard/lib/product-scope.ts`, `opus-dashboard/convex/lib/productScope.ts`, and `opus-mk/lib/product-scope.ts`. Deferred dashboard capability flags also live in `opus-dashboard/lib/product-scope.ts`. Do not casually bypass them with a new local condition.
+Beauty capability boundaries live in `opus-dashboard/lib/product-scope.ts` and `opus-dashboard/convex/lib/productScope.ts`. Their legacy `isActiveIndustry` helper deliberately selects beauty-only features; do not broaden those callers to restaurants. Hospitality has separate reservation authorization and readiness checks. `opus-mk/lib/product-scope.ts` remains dormant and untouched. Deferred dashboard capability flags also live in `opus-dashboard/lib/product-scope.ts`.
 
 ## Golden booking journey
 
@@ -53,7 +55,7 @@ Reliability of this path takes priority over optional features:
 
 ### Short studio launch
 
-Onboarding collects the studio name first, then a category chosen from icon
+After the business-type choice, beauty onboarding collects the studio name first, then a category chosen from icon
 cards, the owner's name as step three, address, one service with price and
 duration, and confirmed working hours, then shows the real website preview.
 The studio name is saved independently;
@@ -142,7 +144,7 @@ does not establish real photo accuracy or production availability.
 - services and prices;
 - staff, business hours, and staff availability;
 - guest public booking;
-- automatic, beauty-only studio websites on OPUS subdomains;
+- automatic business websites on OPUS subdomains: beauty in production, with restaurant/café websites prepared on the hospitality branch;
 - calendar and appointment lifecycle management;
 - tenant isolation and booking-conflict protection;
 - clear mobile-responsive states;
@@ -338,11 +340,54 @@ voice, public web chat, campaigns, cancellations and rescheduling by AI are not
 enabled by this authorization. The former unauthenticated web-chat endpoints
 are retired. See [AI_FRONTDESK.md](AI_FRONTDESK.md) for setup and rollout checks.
 
-## Hospitality freeze
+## Restaurant and café reservations
 
-Hospitality was explored during earlier product directions and remains in parts of the schema and backend. It is postponed, not deleted. Preserve historical data and reusable foundations, but do not expose restaurants, cafes, table reservations, floor plans, events, or QR menus in active UI, routes, filters, demo data, metadata, or marketing.
+Restaurant and café reservation implementation was explicitly authorized on
+October 12, 2026, including staff-defined table combinations from the first
+release. On October 13, 2026, the user authorized normal self-service signup:
+after account verification, users choose Beauty or Restaurants and cafés, then
+complete the corresponding onboarding. Remove the pilot allowlist and all
+hospitality enablement environment variables from development and release code.
+No replacement rollout flag or manual account grant is required. **Deployment
+remains unauthorized.** Production is unchanged until an explicitly requested
+release. Existing stored pilot fields may remain inert for schema compatibility.
 
-Published legacy hospitality records must still be excluded at the server-side public discovery and booking boundary. Old dashboard hospitality URLs must resolve to a safe unavailable state instead of showing unfinished screens.
+Hospitality onboarding requires only two details after email verification: the
+venue name, followed by an explicit Café or Restaurant card choice. Creating the
+venue opens the dashboard immediately. Address, contact phone, reservation hours,
+rules, tables, optional combinations and website publication are completed from
+the dashboard at the owner's pace; they do not gate dashboard access. A setup
+guide links to each remaining requirement. Online bookings remain unavailable
+until the existing server-side publication and readiness checks pass. Beauty's
+established onboarding remains unchanged.
+
+The hospitality dashboard shares beauty's design and responsive navigation,
+with Reservations, Tables and Venue setup as its primary destinations. All
+venue staff can view current table state and handle visits; resource and venue
+configuration remains limited to authorized owners and managers, with existing
+owner-only publication and team access rules preserved. Beauty-specific plans,
+AI tools and service management are not exposed in hospitality navigation.
+
+The authorized implementation covers venue setup, areas/tables and explicit
+combinations, service periods and closures, guest reservations and optional
+accounts, secure guest management, phone bookings, walk-ins, daily seating and
+cleaning, transactional notifications, and reservation/cover reporting. Physical
+tables are allocated atomically across every channel. Beauty services, provider
+availability, timestamps and existing client contracts must remain compatible.
+New reservation times use a versioned UTC-instant contract with the venue's
+timezone and operating date, including overnight service.
+
+Restaurant POS, orders, deposits/payments, marketplace discovery, AI, campaigns,
+and native restaurant screens remain deferred. Existing beauty marketing remains
+unchanged. Local and disposable tests exercise the same self-service access
+rules as the release source; this is not evidence of production delivery.
+
+Public reservations require an explicitly published restaurant/café with valid
+current reservation settings, usable physical capacity and resolved legacy
+allocations. Legacy publication alone must not expose an unconverted venue.
+Unpublishing stops new public reservations while authorized staff and guests can
+still manage existing visits. Authentication, tenant roles, proof-link security,
+conflict checks and audit logs are permanent safeguards, not pilot controls.
 
 ## Truthful product claims
 

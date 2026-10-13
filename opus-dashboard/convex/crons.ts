@@ -19,6 +19,13 @@ crons.interval(
   internal.notifications.reconcileAllBookingReminders,
 );
 
+crons.interval(
+  "reconcile-reservation-reminders",
+  { hours: 1 },
+  internal.reservationNotifications.reconcileAll,
+  {},
+);
+
 // Runs daily at 03:00 Europe/Skopje (01:00 UTC) to refresh per-org
 // reputation snippets. Skips orgs where reviews haven't changed
 // (sourceHash dedup in embedEntity keeps OpenAI calls cheap).

@@ -59,7 +59,7 @@ export function ServiceList({
   onAddService: () => void;
   onClearSearch: () => void;
 }) {
-  const { t } = useDashboardI18n();
+  const { t, locale } = useDashboardI18n();
   const categories = useQuery(api.serviceCategories.listCategories, { orgId });
   const services = useQuery(api.services.listServices, { orgId });
   const staff = useQuery(api.staff.listStaffMembers, { orgId });
@@ -333,7 +333,11 @@ export function ServiceList({
                   </button>
 
                   <div className="col-start-1 row-start-2 pl-[3.875rem] text-sm font-medium tabular-nums text-foreground sm:shrink-0 sm:pl-0 sm:text-right sm:text-base">
-                    <Price amount={service.priceMinorUnits} />
+                    <Price
+                      amount={service.priceMinorUnits}
+                      currency={service.currency}
+                      locale={locale}
+                    />
                   </div>
 
                   <DropdownMenu>

@@ -193,7 +193,11 @@ export const replyAsStaff = mutation({
     text: v.string(),
   },
   handler: async (ctx, args) => {
-    const { org, staffMember } = await requireRole(ctx, args.orgId, "staff");
+    const { org, staffMember, user } = await requireRole(
+      ctx,
+      args.orgId,
+      "staff",
+    );
     requirePaidPlan(org, "AI Receptionist");
     const conv = await ctx.db.get(args.conversationId),
       connection = await connectionForOrg(ctx, args.orgId);
@@ -234,7 +238,7 @@ export const replyAsStaff = mutation({
       { ...conv, processingMessageId: undefined },
       text,
       1,
-      { staffId: staffMember._id },
+      { staffId: staffMember._id, userId: user._id },
     );
     await ctx.scheduler.runAfter(0, internal.ai.instagram.sendMessage, {
       orgId: args.orgId,

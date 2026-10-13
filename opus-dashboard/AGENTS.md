@@ -6,13 +6,13 @@ This file provides context, rules, and conventions for AI coding assistants (Cur
 
 ## Product Scope Authority
 
-Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard currently serves beauty appointment businesses in Macedonia only. Hospitality, autonomous AI features, international expansion, and native clients are dormant or deferred; preserve their foundations but do not expose or expand them without explicit user authorization. Prioritize the documented golden booking journey. The explicitly authorized `../opus-mobile/` Expo studio dashboard uses this backend. Personal studio push on native and web was authorized on October 5, 2026; see `../docs/PUSH_NOTIFICATIONS.md`. Native consumer clients remain deferred.
+Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard supports beauty appointments and the restaurant/café reservation workflow authorized on October 13, 2026. New business accounts choose their vertical before onboarding; hospitality needs no pilot or enablement variables. Keep authentication, tenant roles, publication readiness and legacy allocation safeguards. Production deployment remains unauthorized. Preserve the beauty golden journey. International expansion, native hospitality and native consumer clients remain deferred. The explicitly authorized `../opus-mobile/` Expo beauty studio dashboard uses this backend. Personal studio push on native and web was authorized on October 5, 2026; see `../docs/PUSH_NOTIFICATIONS.md`.
 
 ---
 
 ## What This Project Is
 
-**OPUS** is currently a beauty appointment SaaS for small beauty businesses in Macedonia.
+**OPUS** supports beauty appointments and restaurant/café reservations for businesses in Macedonia; live marketing remains beauty-focused until release.
 
 Canonical positioning: **OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.**
 
@@ -182,7 +182,7 @@ if (!staffMember || staffMember.isDeleted)
 
 The authenticated dashboard lives at `studio.opus.mk`. Each published business gets one automatic website such as `studio-luna.opus.mk`; custom domains are not an active feature.
 
-Root `proxy.ts` parses the single tenant label and rewrites it to `/sites/{slug}` without querying Convex. The public page resolves the slug through the `by_slug` index and returns data only for an active, beauty-only, website-published organization. Reserve platform labels such as `studio`, `www`, `api`, `app`, and `admin`. A slug is frozen after the website is first published.
+Root `proxy.ts` parses the single tenant label and rewrites it to `/sites/{slug}` without querying Convex. The public page resolves the slug through the `by_slug` index and returns data only for a published, ready beauty studio or restaurant/café through its own domain-specific API. Reserve platform labels such as `studio`, `www`, `api`, `app`, and `admin`. A slug is frozen after the website is first published.
 
 Website publication uses `websiteStatus` and is independent from dormant marketplace `listingStatus`. Never couple the two states. The legacy `customDomain` field may remain temporarily for stored-document compatibility, but it must not have active UI, mutation, query, or routing behavior.
 

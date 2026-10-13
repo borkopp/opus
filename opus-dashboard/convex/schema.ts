@@ -212,8 +212,10 @@ export default defineSchema({
 
     // ── Vertical ──
     industry: v.union(v.literal("beauty_wellness"), v.literal("hospitality")),
+    // Historical storage compatibility only; this field has no runtime effect.
+    hospitalityPilotEnabled: v.optional(v.boolean()),
 
-    // ── Dormant Hospitality fields (preserved backend foundations) ──
+    // ── Hospitality fields (unsupported historical venue types are retained) ──
     venueType: v.optional(
       v.union(
         v.literal("restaurant"),
@@ -966,6 +968,7 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_customer", ["customerId"])
+    .index("by_org_customer", ["orgId", "customerId"])
     .index("by_org", ["orgId"]),
 
   // ─────────────────────────────────────────────────────
@@ -1082,6 +1085,8 @@ export default defineSchema({
     providerMessageId: v.optional(v.string()),
     providerTimestamp: v.optional(v.number()),
     author: v.optional(v.union(v.literal("ai"), v.literal("staff"))),
+    authorStaffId: v.optional(v.id("staff_members")),
+    authorUserId: v.optional(v.id("users")),
     processingStatus: v.optional(
       v.union(v.literal("pending"), v.literal("processing"), v.literal("done")),
     ),
@@ -1180,6 +1185,8 @@ export default defineSchema({
     customerId: v.optional(v.id("customers")),
     bookingId: v.optional(v.id("bookings")),
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
+    reservationId: v.optional(v.id("reservations")),
+    reservationRevision: v.optional(v.number()),
     gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
 
     channel: v.union(
@@ -1190,6 +1197,12 @@ export default defineSchema({
     ),
     type: v.union(
       v.literal("booking_verification"),
+      v.literal("reservation_verification"),
+      v.literal("reservation_confirmation"),
+      v.literal("reservation_changed"),
+      v.literal("reservation_cancelled"),
+      v.literal("reservation_reminder"),
+      v.literal("staff_reservation"),
       v.literal("booking_confirmation"),
       v.literal("booking_rescheduled"),
       v.literal("booking_reminder"),
@@ -1238,6 +1251,8 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_org_dedupe", ["orgId", "dedupeKey"])
+    .index("by_org_customer", ["orgId", "customerId"])
+    .index("by_org_verification", ["orgId", "bookingEmailVerificationId"])
     .index("by_org_status_scheduled", ["orgId", "status", "scheduledFor"])
     .index("by_status_scheduled", ["status", "scheduledFor"])
     .index("by_booking", ["bookingId"]),
@@ -1281,6 +1296,7 @@ export default defineSchema({
   // an encrypted copy until a configured provider accepts the message.
   // ─────────────────────────────────────────────────────
   booking_email_verifications: defineTable({
+    purpose: v.optional(v.literal("reservation")),
     orgId: v.id("orgs"),
     email: v.string(),
     codeHash: v.string(),
@@ -1515,6 +1531,7 @@ export default defineSchema({
     ),
 
     combinationGroupId: v.optional(v.string()),
+    isActive: v.optional(v.boolean()),
 
     sortOrder: v.number(),
     isDeleted: v.boolean(),
@@ -1524,6 +1541,7 @@ export default defineSchema({
   })
     .index("by_org", ["orgId"])
     .index("by_floor_plan", ["floorPlanId"])
+    .index("by_org_floor_plan", ["orgId", "floorPlanId"])
     .index("by_org_status", ["orgId", "status"])
     .index("by_floor_plan_status", ["floorPlanId", "status"]),
 
@@ -1532,6 +1550,11 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   reservation_settings: defineTable({
     orgId: v.id("orgs"),
+    schemaVersion: v.optional(v.literal(2)),
+    timezone: v.optional(v.string()),
+    bufferMins: v.optional(v.number()),
+    cancellationWindowHours: v.optional(v.number()),
+    noShowGraceMins: v.optional(v.number()),
 
     bookingWindowDays: v.number(),
     minAdvanceBookingHours: v.number(),
@@ -1553,6 +1576,8 @@ export default defineSchema({
           startTime: v.string(),
           endTime: v.string(),
           daysOfWeek: v.array(v.number()),
+          endDayOffset: v.optional(v.union(v.literal(0), v.literal(1))),
+          lastSeatingTime: v.optional(v.string()),
         }),
       ),
     ),
@@ -1575,6 +1600,27 @@ export default defineSchema({
     floorPlanId: v.id("floor_plans"),
     tableId: v.id("tables"),
     customerId: v.id("customers"),
+    schemaVersion: v.optional(v.literal(2)),
+    timeModel: v.optional(v.literal("utc")),
+    timezone: v.optional(v.string()),
+    serviceDate: v.optional(v.string()),
+    guestName: v.optional(v.string()),
+    revision: v.optional(v.number()),
+    tableIds: v.optional(v.array(v.id("tables"))),
+    tableLabels: v.optional(v.array(v.string())),
+    combinationId: v.optional(v.id("table_combinations")),
+    capacitySnapshot: v.optional(v.number()),
+    bufferMins: v.optional(v.number()),
+    requestId: v.optional(v.string()),
+    requestFingerprint: v.optional(v.string()),
+    verifiedEmail: v.optional(v.string()),
+    manageTokenHash: v.optional(v.string()),
+    manageTokenExpiresAt: v.optional(v.number()),
+    manageTokenCiphertext: v.optional(v.string()),
+    arrivedAt: v.optional(v.number()),
+    seatedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    cleaningCompletedAt: v.optional(v.number()),
 
     // Link to opus.mk end-consumer (optional)
     opusUserId: v.optional(v.id("opus_users")),
@@ -1632,10 +1678,72 @@ export default defineSchema({
     .index("by_org", ["orgId"])
     .index("by_org_status", ["orgId", "status"])
     .index("by_table_start", ["tableId", "startAt"]) // conflict check
+    .index("by_org_service_date", ["orgId", "serviceDate"])
+    .index("by_org_request", ["orgId", "requestId"])
+    .index("by_org_opus_user_start", ["orgId", "opusUserId", "startAt"])
+    .index("by_org_customer_start", ["orgId", "customerId", "startAt"])
     .index("by_org_start", ["orgId", "startAt"]) // daily schedule view
     .index("by_customer", ["customerId"])
     .index("by_floor_plan", ["floorPlanId"])
     .index("by_opus_user", ["opusUserId"]),
+
+  table_combinations: defineTable({
+    orgId: v.id("orgs"),
+    floorPlanId: v.id("floor_plans"),
+    name: v.string(),
+    tableIds: v.array(v.id("tables")),
+    minPartySize: v.number(),
+    capacity: v.number(),
+    revision: v.number(),
+    isActive: v.boolean(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_area", ["orgId", "floorPlanId"]),
+
+  reservation_closures: defineTable({
+    orgId: v.id("orgs"),
+    tableIds: v.array(v.id("tables")),
+    startAt: v.number(),
+    endAt: v.number(),
+    reason: v.string(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_start", ["orgId", "startAt"]),
+
+  reservation_allocations: defineTable({
+    orgId: v.id("orgs"),
+    reservationId: v.id("reservations"),
+    revision: v.number(),
+    tableId: v.id("tables"),
+    startAt: v.number(),
+    endAt: v.number(),
+    kind: v.optional(v.union(v.literal("occupancy"), v.literal("cleaning"))),
+    requiresRelease: v.boolean(),
+    isActive: v.boolean(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_table_start", ["orgId", "tableId", "startAt"])
+    .index("by_org_table_active_start", [
+      "orgId",
+      "tableId",
+      "isActive",
+      "startAt",
+    ])
+    .index("by_org_reservation_active", ["orgId", "reservationId", "isActive"])
+    .index("by_org_reservation", ["orgId", "reservationId"])
+    .index("by_org_active", ["orgId", "isActive"]),
 
   // ═══════════════════════════════════════════════════════
   // MARKETPLACE RAG (opus.mk discovery chat)

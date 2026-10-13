@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { upgradeDestination, upgradeLoginPath } from "@/lib/upgrade";
+import { hospitalityHome } from "@/lib/onboarding";
 import { parseProTeamLimit } from "../../../../shared/pro-pricing";
 import { parseBillingCurrency } from "../../../../shared/billing-currency";
 
@@ -22,7 +23,14 @@ export function UpgradeRedirect() {
     isAuthenticated ? {} : "skip",
   );
   const needsSetupCheck = Boolean(
-    profile?.orgId && profile.role === "owner" && profile.plan !== "paid",
+    profile?.orgId &&
+    profile.industry === "beauty_wellness" &&
+    profile.role === "owner" &&
+    profile.plan !== "paid",
+  );
+  const hospitalityAccess = useQuery(
+    api.hospitality.getAccess,
+    profile?.industry === "hospitality" ? {} : "skip",
   );
   const activation = useQuery(
     api.activation.getState,
@@ -36,6 +44,13 @@ export function UpgradeRedirect() {
       return;
     }
     if (!profile || (needsSetupCheck && activation === undefined)) return;
+    if (profile.industry === "hospitality") {
+      if (hospitalityAccess)
+        router.replace(
+          hospitalityHome(hospitalityAccess.onboardingComplete, profile.role),
+        );
+      return;
+    }
     router.replace(
       upgradeDestination({
         hasStudio: Boolean(profile.orgId),
@@ -52,6 +67,7 @@ export function UpgradeRedirect() {
     profile,
     needsSetupCheck,
     activation,
+    hospitalityAccess,
     router,
     teamLimit,
     currency,

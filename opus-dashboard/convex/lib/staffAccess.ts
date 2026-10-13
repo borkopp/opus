@@ -16,6 +16,8 @@ export async function requireBookingAccess(
   staffId?: Id<"staff_members">,
 ) {
   const auth = await requireActiveOrg(ctx, orgId);
+  if (auth.org.industry !== "beauty_wellness")
+    throw new ConvexError("Appointments are available to beauty studios only.");
   if (staffId) {
     const target = await ctx.db.get(staffId);
     if (!target || target.orgId !== auth.orgId || target.isDeleted)

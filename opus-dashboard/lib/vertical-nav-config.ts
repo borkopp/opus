@@ -1,20 +1,10 @@
 import {
-  IconBrandTabler,
-  IconCalendarEvent,
-  IconAddressBook,
-  IconScissors,
-  IconSettings,
-  IconChartBar,
-  IconSpeakerphone,
-} from "@tabler/icons-react";
-import {
   ACTIVE_CAPABILITIES,
   ACTIVE_DASHBOARD_PATH,
   ACTIVE_INDUSTRY,
 } from "@/lib/product-scope";
 import {
   resolveDashboardLanguage,
-  getTranslations,
   type DashboardLanguage,
 } from "@/lib/i18n/types";
 import en from "@/lib/i18n/en";
@@ -37,7 +27,15 @@ export interface NavItem {
     sq: string;
   };
   href: string;
-  icon: React.ReactNode;
+  icon:
+    | "overview"
+    | "calendar"
+    | "clients"
+    | "services"
+    | "settings"
+    | "assistant"
+    | "promote"
+    | "tables";
 }
 
 export interface VerticalNavConfig {
@@ -52,6 +50,7 @@ export interface VerticalNavConfig {
 // ── Route mapping — industry DB value → URL base ─────────────────────────────
 export const industryRoutes: Record<string, string> = {
   [ACTIVE_INDUSTRY]: ACTIVE_DASHBOARD_PATH,
+  hospitality: "/hospitality",
 };
 
 export const verticalNavConfig: Record<string, VerticalNavConfig> = {
@@ -70,7 +69,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.dashboard,
         },
         href: "{base}",
-        icon: <IconBrandTabler className="h-5 w-5 flex-shrink-0" />,
+        icon: "overview",
       },
       {
         label: {
@@ -79,7 +78,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.calendar,
         },
         href: "{base}/bookings",
-        icon: <IconCalendarEvent className="h-5 w-5 flex-shrink-0" />,
+        icon: "calendar",
       },
       {
         label: {
@@ -88,7 +87,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.clients,
         },
         href: "{base}/clients",
-        icon: <IconAddressBook className="h-5 w-5 flex-shrink-0" />,
+        icon: "clients",
       },
       {
         label: {
@@ -97,7 +96,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.management,
         },
         href: "{base}/services",
-        icon: <IconScissors className="h-5 w-5 flex-shrink-0" />,
+        icon: "services",
       },
       {
         label: {
@@ -106,7 +105,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.promote,
         },
         href: "{base}/promote",
-        icon: <IconSpeakerphone className="h-5 w-5 flex-shrink-0" />,
+        icon: "promote",
       },
       {
         label: {
@@ -115,7 +114,7 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
           sq: al.nav.settings,
         },
         href: "/settings",
-        icon: <IconSettings className="h-5 w-5 flex-shrink-0" />,
+        icon: "settings",
       },
       ...(ACTIVE_CAPABILITIES.businessAnalyst
         ? [
@@ -126,10 +125,35 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
                 sq: al.nav.assistant,
               },
               href: "{base}/assistant",
-              icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
+              icon: "assistant" as const,
             },
           ]
         : []),
+    ],
+  },
+  hospitality: {
+    basePath: "/hospitality",
+    label: {
+      en: "Restaurants and cafés",
+      mk: "Ресторани и кафулиња",
+      sq: "Restorante dhe kafene",
+    },
+    primaryLinks: [
+      {
+        label: { en: "Reservations", mk: "Резервации", sq: "Rezervimet" },
+        href: "{base}",
+        icon: "calendar",
+      },
+      {
+        label: { en: "Tables", mk: "Маси", sq: "Tavolinat" },
+        href: "{base}/tables",
+        icon: "tables",
+      },
+      {
+        label: { en: "Venue setup", mk: "Локал", sq: "Lokali" },
+        href: "{base}/setup",
+        icon: "settings",
+      },
     ],
   },
 };
@@ -144,21 +168,48 @@ export function getNavLinks(
 ): {
   basePath: string;
   label: string;
-  links: Array<{ label: string; href: string; icon: React.ReactNode }>;
+  links: Array<{ label: string; href: string; icon: NavItem["icon"] }>;
 } {
   const language = resolveDashboardLanguage(languageOrLocale);
-  const dict = getTranslations(language);
   const config =
     verticalNavConfig[industry] ?? verticalNavConfig[ACTIVE_INDUSTRY];
   const base = config.basePath;
 
   return {
     basePath: base,
-    label: dict.nav.industryLabel,
+    label: config.label[language],
     links: config.primaryLinks.map((item) => ({
       label: (item.label as Record<string, string>)[language] ?? item.label.en,
       href: item.href.replace("{base}", base),
       icon: item.icon,
     })),
   };
+}
+
+export function getDashboardNavLinks(
+  profile: { industry?: string; role?: string; bookingAccess?: string },
+  language: DashboardLanguage,
+) {
+  const hospitality = profile.industry === "hospitality";
+  return getNavLinks(
+    hospitality ? "hospitality" : ACTIVE_INDUSTRY,
+    language,
+  ).links.filter((link) =>
+    hospitality
+      ? link.href !== "/hospitality/setup" ||
+        profile.role === "owner" ||
+        profile.role === "manager"
+      : profile.bookingAccess === "own"
+        ? link.href === "/beauty/bookings"
+        : link.href !== "/settings" && link.href !== "/beauty/assistant",
+  );
+}
+
+export function isDashboardNavActive(href: string, pathname: string) {
+  if (href === "/beauty" || href === "/hospitality") return pathname === href;
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    (href === "/beauty/services" && pathname.startsWith("/beauty/staff/"))
+  );
 }

@@ -11,16 +11,14 @@ import {
   syncPostHogConsent,
 } from "@/lib/analytics-consent";
 import { subscribeConsent } from "../../shared/analytics/consent";
+import { isClientAreaPathname } from "@/lib/client-account";
 
 export function SyncUser() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { data: session } = authClient.useSession();
   const authUserId = session?.user.id;
   const pathname = usePathname();
-  const isClientArea =
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/book/") ||
-    pathname.startsWith("/sites/");
+  const isClientArea = isClientAreaPathname(pathname);
   const ensureUser = useMutation(api.users.ensureUser);
   const profile = useQuery(
     api.users.getMyProfile,

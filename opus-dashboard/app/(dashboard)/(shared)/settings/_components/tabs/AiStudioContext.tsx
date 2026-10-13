@@ -15,18 +15,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { SettingsSection } from "@/components/settings/SettingsCard";
+import { Separator } from "@/components/ui/separator";
 
 export function AiStudioContext({
   value,
   onChange,
   canPreview,
   providerReady,
+  isDirty,
+  isSaving,
+  disabled,
+  onSave,
 }: {
   value: string;
   onChange: (value: string) => void;
   canPreview: boolean;
   providerReady: boolean;
+  isDirty: boolean;
+  isSaving: boolean;
+  disabled: boolean;
+  onSave: () => Promise<void>;
 }) {
   const { t } = useDashboardI18n();
   const preview = useAction(api.ai.agent.preview);
@@ -56,15 +64,8 @@ export function AiStudioContext({
     }
   }
   return (
-    <SettingsSection
-      title={t("Context for the AI", "Контекст за AI", "Konteksti për AI")}
-      description={t(
-        "Tell the assistant what makes your studio different.",
-        "Кажете му на асистентот што треба да знае за вашето студио.",
-        "Tregojini asistentit çfarë e bën studion tuaj të veçantë.",
-      )}
-    >
-      <FieldGroup className="max-w-2xl">
+    <div className="grid min-w-0 gap-6 xl:grid-cols-2">
+      <FieldGroup className="min-w-0">
         <Field>
           <FieldLabel data-replay-public htmlFor="ai-studio-context">
             {t(
@@ -97,78 +98,114 @@ export function AiStudioContext({
             {value.length.toLocaleString()} / 12,000
           </p>
         </Field>
-        <Field>
-          <FieldLabel data-replay-public htmlFor="ai-test-question">
-            {t(
-              "Try a customer question",
-              "Пробајте прашање од клиент",
-              "Provoni një pyetje nga klienti",
-            )}
-          </FieldLabel>
-          <Textarea
-            id="ai-test-question"
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            rows={2}
-            maxLength={2_000}
-            placeholder={t(
-              "How long will my nails last?",
-              "Колку време ќе ми траат ноктите?",
-              "Sa kohë do të zgjasin thonjtë e mi?",
-            )}
-          />
-          <FieldDescription data-replay-public>
-            {providerReady
-              ? t(
-                  "Save your settings first. This test uses saved studio context and does not send messages or create appointments.",
-                  "Прво зачувајте ги поставките. Тестот го користи зачуваниот контекст и не испраќа пораки или закажува термини.",
-                  "Ruani cilësimet fillimisht. Ky test përdor kontekstin e ruajtur të studios dhe nuk dërgon mesazhe ose krijon termine.",
-                )
-              : t(
-                  "Answer testing becomes available after OPUS activates the AI service. You can save your studio context now.",
-                  "Тестирањето одговори е достапно откако OPUS ќе го активира AI сервисот. Сега можете да го зачувате контекстот за студиото.",
-                  "Testimi i përgjigjeve bëhet i disponueshëm pasi OPUS aktivizon shërbimin AI. Mund të ruani kontekstin e studios tani.",
-                )}
-          </FieldDescription>
-        </Field>
         <Button
           type="button"
-          variant="outline"
           className="self-start"
-          disabled={!canPreview || !question.trim() || loading}
-          onClick={testAnswer}
+          disabled={disabled || !isDirty}
+          onClick={onSave}
         >
-          {loading && <Spinner />}
-          {t("Test answer", "Тестирај одговор", "Testo përgjigjen")}
+          {isSaving && <Spinner data-icon="inline-start" />}
+          {t("Save changes", "Зачувај промени", "Ruaj ndryshimet")}
         </Button>
-        {result && (
-          <div
-            className="flex flex-col gap-3 rounded-xl border p-4"
-            aria-live="polite"
-          >
-            <Badge
-              data-replay-public
-              variant="secondary"
-              className="self-start"
-            >
-              {result.handoff
-                ? t(
-                    "Would ask your team",
-                    "Ќе го праша вашиот тим",
-                    "Do të pyeste ekipin tuaj",
-                  )
-                : t(
-                    "Ready to answer",
-                    "Подготвен одговор",
-                    "Gati për t'u përgjigjur",
-                  )}
-            </Badge>
-            <p className="whitespace-pre-wrap break-words text-sm">
-              {result.message}
-            </p>
-          </div>
-        )}
       </FieldGroup>
-    </SettingsSection>
+      <div className="flex min-w-0 flex-col gap-5 rounded-xl bg-secondary p-4 sm:p-5">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold">
+            {t(
+              "Preview a reply",
+              "Преглед на одговор",
+              "Shikoni një përgjigje",
+            )}
+          </h3>
+          <p className="text-xs leading-5 text-muted-foreground">
+            {t(
+              "Try a question before turning on automatic replies. This test sends no DMs and creates no bookings.",
+              "Пробајте прашање пред да ги вклучите автоматските одговори. Тестот не испраќа пораки и не закажува термини.",
+              "Provoni një pyetje para se të aktivizoni përgjigjet automatike. Testi nuk dërgon mesazhe dhe nuk krijon rezervime.",
+            )}
+          </p>
+        </div>
+        <Separator />
+        <FieldGroup>
+          <Field>
+            <FieldLabel data-replay-public htmlFor="ai-test-question">
+              {t(
+                "Try a customer question",
+                "Пробајте прашање од клиент",
+                "Provoni një pyetje nga klienti",
+              )}
+            </FieldLabel>
+            <Textarea
+              id="ai-test-question"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value)}
+              rows={2}
+              maxLength={2_000}
+              placeholder={t(
+                "How long will my nails last?",
+                "Колку време ќе ми траат ноктите?",
+                "Sa kohë do të zgjasin thonjtë e mi?",
+              )}
+            />
+            <FieldDescription data-replay-public>
+              {providerReady && isDirty
+                ? t(
+                    "Save your changes to unlock the preview.",
+                    "Зачувајте ги промените за да го отклучите прегледот.",
+                    "Ruani ndryshimet për të aktivizuar pamjen paraprake.",
+                  )
+                : providerReady
+                  ? t(
+                      "Uses your saved studio information. Enter a question to test the answer.",
+                      "Се користат зачуваните информации за студиото. Внесете прашање за да го тестирате одговорот.",
+                      "Përdor informacionin e ruajtur të studios. Vendosni një pyetje për të testuar përgjigjen.",
+                    )
+                  : t(
+                      "Answer testing becomes available after OPUS activates the AI service. You can save your studio context now.",
+                      "Тестирањето одговори е достапно откако OPUS ќе го активира AI сервисот. Сега можете да го зачувате контекстот за студиото.",
+                      "Testimi i përgjigjeve bëhet i disponueshëm pasi OPUS aktivizon shërbimin AI. Mund të ruani kontekstin e studios tani.",
+                    )}
+            </FieldDescription>
+          </Field>
+          <Button
+            type="button"
+            variant="outline"
+            className="self-start"
+            disabled={!canPreview || !question.trim() || loading}
+            onClick={testAnswer}
+          >
+            {loading && <Spinner />}
+            {t("Test answer", "Тестирај одговор", "Testo përgjigjen")}
+          </Button>
+          {result && (
+            <div
+              className="flex flex-col gap-3 rounded-xl border p-4"
+              aria-live="polite"
+            >
+              <Badge
+                data-replay-public
+                variant="secondary"
+                className="self-start"
+              >
+                {result.handoff
+                  ? t(
+                      "Would ask your team",
+                      "Ќе го праша вашиот тим",
+                      "Do të pyeste ekipin tuaj",
+                    )
+                  : t(
+                      "Ready to answer",
+                      "Подготвен одговор",
+                      "Gati për t'u përgjigjur",
+                    )}
+              </Badge>
+              <p className="whitespace-pre-wrap break-words text-sm">
+                {result.message}
+              </p>
+            </div>
+          )}
+        </FieldGroup>
+      </div>
+    </div>
   );
 }

@@ -20,7 +20,7 @@ export function BillingPlanSummary({
   const subscription = data.subscription;
 
   return (
-    <section className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-background">
+    <section className="flex min-w-0 flex-col overflow-hidden border-b border-border/60 bg-background">
       <div className="flex flex-col gap-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5 sm:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p

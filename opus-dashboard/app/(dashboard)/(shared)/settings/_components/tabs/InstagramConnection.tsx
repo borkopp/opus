@@ -10,6 +10,8 @@ import { api } from "@/convex/_generated/api";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { SettingsSection } from "@/components/settings/SettingsCard";
 
@@ -65,6 +67,8 @@ export function InstagramConnection({
       setBusy(false);
     }
   }
+  if (!status) return <Skeleton className="h-36 w-full rounded-xl" />;
+
   return (
     <SettingsSection
       title="Instagram"
@@ -74,7 +78,7 @@ export function InstagramConnection({
         "Lidhni llogarinë profesionale të Instagram-it të studios për t'iu përgjigjur mesazheve dhe për të rezervuar termine të konfirmuara.",
       )}
     >
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
           <Instagram className="size-5" />
           <span className="min-w-0 break-all text-sm font-medium">
@@ -106,13 +110,15 @@ export function InstagramConnection({
           </Badge>
         </div>
         {status && (!status.provider.instagram || !status.provider.ai) && (
-          <p data-replay-public className="text-sm text-muted-foreground">
-            {t(
-              "OPUS needs to finish the messaging provider setup before automatic replies can start. You can prepare and save your studio context now.",
-              "OPUS треба да го заврши поврзувањето со сервисите пред да започнат автоматските одговори. Можете да го подготвите и зачувате контекстот за студиото сега.",
-              "OPUS duhet të përfundojë konfigurimin e ofruesit të mesazheve përpara se të fillojnë përgjigjet automatike. Mund të përgatitni dhe ruani kontekstin e studios tani.",
-            )}
-          </p>
+          <Alert>
+            <AlertDescription data-replay-public>
+              {t(
+                "OPUS needs to finish the messaging provider setup before automatic replies can start. You can prepare and save your studio context now.",
+                "OPUS треба да го заврши поврзувањето со сервисите пред да започнат автоматските одговори. Можете да го подготвите и зачувате контекстот за студиото сега.",
+                "OPUS duhet të përfundojë konfigurimin e ofruesit të mesazheve përpara se të fillojnë përgjigjet automatike. Mund të përgatitni dhe ruani kontekstin e studios tani.",
+              )}
+            </AlertDescription>
+          </Alert>
         )}
         {(status?.error || search.get("instagram") === "error") && (
           <p

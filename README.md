@@ -2,19 +2,31 @@
 
 ## Current product direction
 
-OPUS is currently a beauty appointment SaaS for small beauty businesses in Macedonia.
+OPUS's deployed product is beauty appointment software for small businesses in Macedonia.
 
 > OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.
 
-The dashboard and automatic studio-website booking journey are the priority. Hospitality and the `opus-mk` marketplace are dormant and must not appear as active product surfaces. Autonomous AI features, loyalty, international expansion, and native consumer apps are deferred.
+Preserve the beauty dashboard and automatic studio-website booking journey.
+Restaurant/café signup, guest reservations and staff table operations are
+implemented locally on `codex/hospitality-vertical`; they are not deployed.
+Hospitality's planned first version adds a website editor, verified custom
+domains, digital menu, QR codes and optional flexible reservations. The October
+17, 2026 request is planning/documentation only: these additions are not yet
+implemented. POS and POS integrations, orders and guest payments are excluded.
+The `opus-mk` marketplace remains dormant; loyalty, international expansion and
+native consumer apps remain deferred. Existing authorized beauty AI capabilities
+retain their own configured-provider boundaries.
 
 Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scope, priorities, golden journey, and expansion rules.
+See [`docs/HOSPITALITY_V1_PLAN.md`](docs/HOSPITALITY_V1_PLAN.md) for the phased plan
+and [`docs/HOSPITALITY_IMPLEMENTATION.md`](docs/HOSPITALITY_IMPLEMENTATION.md) for
+the existing local reservation implementation and verification history.
 
 ## Active repository surfaces
 
 | Path              | Purpose                                                                                                      | Local port             |
 | ----------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------- |
-| `opus-dashboard/` | Beauty-business dashboard, automatic `{slug}.opus.mk` websites, guest booking, and the shared Convex backend | `3000` / Convex `3210` |
+| `opus-dashboard/` | Beauty dashboard/websites, local restaurant/café reservations, and the shared Convex backend | `3000` / Convex `3210` |
 | `opus-mk/`        | Dormant marketplace package retained for possible future work; do not modify by default                      | `3001`                 |
 | `opus-landing/`   | Truthful beauty-focused `opus.mk` marketing website                                                          | `3000`                 |
 | `opus-owner/`     | Private read-only platform overview for the OPUS owner at `admin.opus.mk`                                     | `3002`                 |
@@ -22,7 +34,9 @@ Read [`docs/PRODUCT_SCOPE.md`](docs/PRODUCT_SCOPE.md) for the authoritative scop
 
 `opus-dashboard/convex` is the backend source of truth. `opus-mk/convex` points to that shared backend.
 
-The repository also contains dormant or deferred foundations, including hospitality and ingestion tools. Preserve those foundations, but do not infer active scope from them.
+The repository also contains dormant or deferred foundations, including marketplace
+ingestion tools and legacy hospitality records. Preserve stored data, but do not
+infer operational features from schema fields alone.
 
 ## Technology
 
@@ -127,6 +141,10 @@ npm run build
 ## Deployment
 
 The target web topology is `opus-landing/` on Vercel at `opus.mk` and `opus-dashboard/` on a separate Vercel project at `studio.opus.mk` plus `*.opus.mk`. See [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md) for the environment, domain, and verification runbook. No per-business DNS change or VPS deployment is part of publishing a studio website.
+
+Hospitality custom domains are a planned extension with separate verification and
+hosting setup. This does not change the current subdomain behavior or authorize
+deployment, DNS changes, or a merge of the hospitality branch to `main`.
 
 The separate `opus-owner` Vercel project serves the private owner overview at
 `admin.opus.mk`. It uses email-code access limited to the platform owner and does

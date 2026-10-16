@@ -24,6 +24,7 @@ export async function eraseReservationGuest(
     reservations.every(
       (r) =>
         r.guestName === "Anonymised guest" &&
+        !r.guestContact &&
         !r.verifiedEmail &&
         !r.manageTokenHash &&
         !r.manageTokenCiphertext &&
@@ -86,6 +87,7 @@ export async function eraseReservationGuest(
   for (const reservation of reservations)
     await ctx.db.patch(reservation._id, {
       guestName: "Anonymised guest",
+      guestContact: undefined,
       specialRequests: undefined,
       staffNote: undefined,
       cancellationReason: undefined,

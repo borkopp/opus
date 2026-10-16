@@ -2,6 +2,12 @@
 
 This is the deployment contract for automatic OPUS studio websites.
 
+**Planning update, 17 October 2026:** verified custom domains are included in the
+planned hospitality first version. See
+[HOSPITALITY_V1_PLAN.md](HOSPITALITY_V1_PLAN.md#phase-6--verified-custom-domains).
+This document's current topology remains in force. The planning task changes no
+runtime routing, DNS, hosting, authentication origin or production configuration.
+
 ## Topology
 
 Use two Vercel projects:
@@ -11,7 +17,7 @@ Use two Vercel projects:
 | `opus-landing/`     | `opus.mk`, `www.opus.mk`      | Marketing site                                     |
 | `opus-dashboard/`   | `studio.opus.mk`, `*.opus.mk` | Authenticated dashboard and public tenant websites |
 
-Do not create a Vercel project, DNS record, or certificate for each studio. Once the wildcard is configured, publishing only changes Convex state; `{slug}.opus.mk` is available automatically through the existing wildcard.
+For automatic OPUS subdomains, do not create a Vercel project, DNS record, or certificate for each studio. Once the wildcard is configured, publishing only changes Convex state; `{slug}.opus.mk` is available automatically through the existing wildcard. Future venue-owned domains require explicit verification and attachment to the existing dashboard project; they are not covered by the OPUS wildcard certificate and do not require separate per-venue projects.
 
 `opus-mk/` remains a dormant marketplace package and is not part of this topology. A Hetzner VPS is not required for the two active web projects once Vercel has provisioned the domains and wildcard certificate.
 
@@ -111,7 +117,7 @@ If `opus.mk` is registered through Cloudflare Registrar, or Cloudflare authority
 - [Vercel: Cloudflare with Vercel](https://vercel.com/kb/guide/cloudflare-with-vercel)
 - [Cloudflare Registrar nameserver requirement](https://developers.cloudflare.com/registrar/get-started/register-domain/)
 
-Vercel also advises against placing Cloudflare's reverse proxy in front of Vercel. Do not use that as a wildcard-certificate workaround. Do not use the removed in-app custom-domain settings; OPUS subdomains are the only active tenant-domain model.
+Vercel also advises against placing Cloudflare's reverse proxy in front of Vercel. Do not use that as a wildcard-certificate workaround. OPUS subdomains remain the only currently implemented tenant-domain model. The previous blanket exclusion of custom domains is superseded only as hospitality product direction: do not restore the removed settings or treat legacy domain strings as ownership proof. The new plan requires a verified host registry, TLS readiness, safe removal/reassignment and host checks on both routing and public data reads. Dashboard/client authentication remains on central OPUS origins. Actual provider and DNS work requires later authorization.
 
 ## Release checklist
 

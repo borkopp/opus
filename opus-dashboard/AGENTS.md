@@ -8,11 +8,24 @@ This file provides context, rules, and conventions for AI coding assistants (Cur
 
 Read [`../docs/PRODUCT_SCOPE.md`](../docs/PRODUCT_SCOPE.md) before product work. The dashboard supports beauty appointments and the restaurant/café reservation workflow authorized on October 13, 2026. New business accounts choose their vertical before onboarding; hospitality needs no pilot or enablement variables. Keep authentication, tenant roles, publication readiness and legacy allocation safeguards. Production deployment remains unauthorized. Preserve the beauty golden journey. International expansion, native hospitality and native consumer clients remain deferred. The explicitly authorized `../opus-mobile/` Expo beauty studio dashboard uses this backend. Personal studio push on native and web was authorized on October 5, 2026; see `../docs/PUSH_NOTIFICATIONS.md`.
 
+On October 17, 2026, the user set hospitality's first-version direction to a
+website editor, verified custom domains, digital menu, QR codes and optional
+flexible reservations. Read [`../docs/HOSPITALITY_V1_PLAN.md`](../docs/HOSPITALITY_V1_PLAN.md).
+This request authorizes planning/docs only; do not implement or deploy the new
+capabilities until instructed. Preserve existing reservation operations and
+beauty behavior. POS and POS integrations, order intake, payments, bill splitting,
+AI promotion and table-request inboxes are outside this version. Planned
+website/menu publication must not require reservation resources; retain separate
+server-side booking and staff operational readiness.
+
 ---
 
 ## What This Project Is
 
 **OPUS** supports beauty appointments and restaurant/café reservations for businesses in Macedonia; live marketing remains beauty-focused until release.
+
+The planned hospitality product adds a venue website/menu first, with reservations
+available only when the venue wants them. Planned scope is not implemented behavior.
 
 Canonical positioning: **OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.**
 
@@ -180,11 +193,11 @@ if (!staffMember || staffMember.isDeleted)
 
 ## Tenant Website Routing
 
-The authenticated dashboard lives at `studio.opus.mk`. Each published business gets one automatic website such as `studio-luna.opus.mk`; custom domains are not an active feature.
+The authenticated dashboard lives at `studio.opus.mk`. Each published business gets one automatic website such as `studio-luna.opus.mk`; custom domains are not an active feature. A verified custom-domain lifecycle for hospitality is planned in the first-version document, including ownership, hosting/TLS, revocation, safe host routing and central OPUS authentication. This supersedes the earlier blanket exclusion as product direction, not as a runtime change.
 
 Root `proxy.ts` parses the single tenant label and rewrites it to `/sites/{slug}` without querying Convex. The public page resolves the slug through the `by_slug` index and returns data only for a published, ready beauty studio or restaurant/café through its own domain-specific API. Reserve platform labels such as `studio`, `www`, `api`, `app`, and `admin`. A slug is frozen after the website is first published.
 
-Website publication uses `websiteStatus` and is independent from dormant marketplace `listingStatus`. Never couple the two states. The legacy `customDomain` field may remain temporarily for stored-document compatibility, but it must not have active UI, mutation, query, or routing behavior.
+Website publication uses `websiteStatus` and is independent from dormant marketplace `listingStatus`. Never couple the two states. The legacy `customDomain` field remains inert for stored-document compatibility; it is not a trusted host mapping or ownership proof. Future custom-domain support must use explicit verified state, not expose that old field through a settings form. No DNS, hosting or auth-origin changes are authorized by the planning task.
 
 **Never hardcode org-specific values anywhere in shared components.** All branding (colors, logo, name) must be read from the resolved org context.
 
@@ -263,3 +276,13 @@ Outbound notifications (email and personal push) use the `notifications` queue w
 | `ai_conversation`       | A thread of AI ↔ customer messages on a given channel                           |
 | `surge pricing`         | Automatic price increase during configured high-demand windows                  |
 | `handoff`               | When AI confidence drops below threshold and a human takes over                 |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

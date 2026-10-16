@@ -4,6 +4,16 @@ Authorized October 7, 2026. This feature customizes existing beauty studio tenan
 websites; it does not add a marketplace, custom domains, a new product vertical,
 or native editing.
 
+**Hospitality planning update, October 17:** reuse this editor's mechanics for the
+venue website/menu first version described in
+[HOSPITALITY_V1_PLAN.md](HOSPITALITY_V1_PLAN.md). A hospitality editor and verified
+custom domains are planned additions, not capabilities of the current beauty
+editor. Its service/staff schema, owner authorization, Free/Pro language rules,
+gallery limits and publication checks remain unchanged. Use typed vertical
+adapters and a versioned hospitality content contract; do not remove beauty-only
+guards or turn menu items into beauty services. The rest of this document records
+the existing beauty implementation.
+
 ## Access and editing
 
 Owners open **Settings → OPUS Sites**, or **Customize website** on the dashboard's

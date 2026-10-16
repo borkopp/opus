@@ -1,7 +1,7 @@
 "use client";
 import { useReservationCopy } from "@/hooks/use-reservation-copy";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -18,23 +18,24 @@ import {
 import { ArrowUpRight, Plus, Table2 } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader";
 import { ReservationDayMetrics } from "./ReservationDayMetrics";
+import { ReservationListFilters } from "./ReservationListFilters";
+import {
+  countReservationStatuses,
+  filterReservations,
+  type ReservationStatusFilter,
+} from "@/lib/reservation-list";
 import {
   ReservationListCard,
   type ReservationQuickAction,
 } from "./ReservationListCard";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useReservationAction } from "@/hooks/use-reservation-action";
+import { useLiveReservations } from "@/hooks/use-live-reservations";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ReservationError, ReservationInput } from "./ReservationFields";
 import { ReservationCreateDialog } from "./ReservationCreateDialog";
 import { VenueSetupGuide } from "./VenueSetupGuide";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { ReservationGuestEraseDialog } from "./ReservationGuestEraseDialog";
 import {
   ReservationEditDialog,
   type ReservationEditMode,
@@ -81,15 +82,85 @@ function DayWorkspace({
       ? initialDate
       : localDate(Date.now(), timezone),
   );
-  const reservations = useQuery(
-    api.reservations.listDay,
-    workspace.canReadReservations ? { date } : "skip",
+  const { reservations, connected, refreshing } = useLiveReservations(
+    date,
+    workspace.canReadReservations,
   );
   const summary = useQuery(
     api.reservations.getDaySummary,
     workspace.canReadReservations ? { date } : "skip",
   );
-  const eraseGuest = useMutation(api.reservations.eraseGuest);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<ReservationStatusFilter>("all");
+  const visibleReservations = useMemo(
+    () => filterReservations(reservations ?? [], { search, status }),
+    [reservations, search, status],
+  );
+  const statusCounts = useMemo(
+    () => reservations && countReservationStatuses(reservations, search),
+    [reservations, search],
+  );
+  function resetFilters() {
+    setSearch("");
+    setStatus("all");
+  }
+  const selectedStatus = useRef<HTMLButtonElement>(null);
+  const visitList = useRef<HTMLDivElement>(null);
+  const focusedVisit = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const rememberVisitFocus = (event: FocusEvent) => {
+      const target = event.target;
+      focusedVisit.current =
+        target instanceof HTMLElement && visitList.current?.contains(target)
+          ? target.closest<HTMLElement>('[data-testid="reservation-row"]')
+          : null;
+    };
+    document.addEventListener("focusin", rememberVisitFocus);
+    return () => document.removeEventListener("focusin", rememberVisitFocus);
+  }, []);
+  useEffect(() => {
+    // Live arrival/seating/completion can remove the focused card from a filter.
+    // Restore a useful keyboard destination only if focus was lost with that card.
+    if (focusedVisit.current && !focusedVisit.current.isConnected) {
+      focusedVisit.current = null;
+      if (document.activeElement === document.body)
+        selectedStatus.current?.focus();
+    }
+  }, [visibleReservations]);
+  const focusedReservation = useRef<string | null>(null);
+  useEffect(() => {
+    let frame: number | undefined;
+    const openLinkedVisit = () => {
+      const id = window.location.hash.slice(1);
+      if (!id) focusedReservation.current = null;
+      const key = `${date}:${id}`;
+      if (
+        !reservations?.some((row) => id === `reservation-${row._id}`) ||
+        focusedReservation.current === key
+      )
+        return;
+      // A link from live service must reveal its visit even when filters hide it.
+      // Wait for the visible list to render before focusing the card.
+      if (!visibleReservations.some((row) => id === `reservation-${row._id}`)) {
+        frame = window.requestAnimationFrame(() => {
+          setSearch("");
+          setStatus("all");
+        });
+        return;
+      }
+      const element = document.getElementById(id);
+      if (!element) return;
+      focusedReservation.current = key;
+      element.focus({ preventScroll: true });
+      element.scrollIntoView({ block: "center" });
+    };
+    openLinkedVisit();
+    window.addEventListener("hashchange", openLinkedVisit);
+    return () => {
+      window.removeEventListener("hashchange", openLinkedVisit);
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+    };
+  }, [reservations, visibleReservations, date]);
   const [erasing, setErasing] = useState<StaffReservation | null>(null);
   const change = useMutation(api.reservations.change);
   const action = useReservationAction();
@@ -98,6 +169,24 @@ function DayWorkspace({
     reservation: StaffReservation;
     mode: ReservationEditMode;
   } | null>(null);
+  const dialogVisit = useRef<Id<"reservations"> | null>(null);
+  useEffect(() => {
+    const reservation = editing?.reservation ?? erasing;
+    if (reservation) {
+      dialogVisit.current = reservation._id;
+      return;
+    }
+    const id = dialogVisit.current;
+    if (!id) return;
+    dialogVisit.current = null;
+    // A cancellation or guest correction may hide the dialog's original card.
+    const frame = window.requestAnimationFrame(() => {
+      const destination =
+        document.getElementById(`reservation-${id}`) ?? selectedStatus.current;
+      destination?.focus();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [editing, erasing]);
   const activeTables = workspace.tables.filter(
     (table) => table.isActive !== false,
   );
@@ -145,7 +234,7 @@ function DayWorkspace({
         <Button
           className="w-full rounded-full sm:w-auto"
           onClick={() => setCreating(true)}
-          disabled={!workspace.settings || !workspace.readiness.ready}
+          disabled={!workspace.canCreateReservations || !connected}
         >
           <Plus data-icon="inline-start" />
           {copy("Add reservation")}
@@ -201,6 +290,57 @@ function DayWorkspace({
         </div>
       </section>
       {summary && <ReservationDayMetrics summary={summary} />}
+      {workspace.canReadReservations && (
+        <ReservationListFilters
+          search={search}
+          status={status}
+          counts={statusCounts}
+          total={reservations?.length}
+          visible={visibleReservations.length}
+          hasPending={
+            reservations?.some((row) => row.status === "pending") ?? false
+          }
+          selectedStatusRef={selectedStatus}
+          onSearchChange={setSearch}
+          onStatusChange={setStatus}
+          onReset={resetFilters}
+        />
+      )}
+      {workspace.canReadReservations && (
+        <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+          <p>
+            {t(
+              `Late after ${workspace.settings?.noShowGraceMins ?? 15} min · Ending soon within 15 min · Overdue after the scheduled end.`,
+              `Задоцнување по ${workspace.settings?.noShowGraceMins ?? 15} мин · Завршува во следните 15 мин · Надминато време по закажаниот крај.`,
+              `Vonesë pas ${workspace.settings?.noShowGraceMins ?? 15} min · Përfundon brenda 15 min · Koha tejkalohet pas përfundimit të planifikuar.`,
+            )}
+          </p>
+          <p>
+            {t(
+              "Tables stay held until staff mark them ready. Updates every 30 seconds.",
+              "Масите остануваат зафатени додека персоналот не ги означи како подготвени. Се ажурира на секои 30 секунди.",
+              "Tavolinat mbeten të mbajtura derisa stafi t’i shënojë gati. Përditësohet çdo 30 sekonda.",
+            )}
+            {connected && refreshing && reservations && (
+              <span>
+                {" "}
+                {t("Refreshing…", "Се ажурира…", "Duke përditësuar…")}
+              </span>
+            )}
+          </p>
+          {!connected && (
+            <Alert>
+              <AlertDescription>
+                {t(
+                  "Reconnecting. These indicators may be out of date; actions will be available when the connection returns.",
+                  "Повторно поврзување. Показателите може да се застарени; дејствата ќе бидат достапни кога ќе се врати врската.",
+                  "Duke u rilidhur. Treguesit mund të jenë të vjetëruar; veprimet do të jenë të disponueshme kur të rikthehet lidhja.",
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+      )}
       {!workspace.canReadReservations ? (
         <Empty className="rounded-3xl bg-card">
           <EmptyHeader>
@@ -233,16 +373,36 @@ function DayWorkspace({
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
+      ) : visibleReservations.length === 0 ? (
+        <Empty className="rounded-3xl bg-card">
+          <EmptyHeader>
+            <EmptyTitle role="heading" aria-level={2}>
+              {t(
+                "No matching reservations",
+                "Нема соодветни резервации",
+                "Nuk ka rezervime që përputhen",
+              )}
+            </EmptyTitle>
+            <EmptyDescription>
+              {t(
+                "Try another name or phone number, change the status, or reset the filters above.",
+                "Пробајте друго име или телефон, сменете го статусот или ресетирајте ги филтрите погоре.",
+                "Provoni një emër ose telefon tjetër, ndryshoni statusin ose rivendosni filtrat më sipër.",
+              )}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
-        <div className="flex min-w-0 flex-col gap-3">
-          {reservations.map((reservation) => (
+        <div ref={visitList} className="flex min-w-0 flex-col gap-3">
+          {visibleReservations.map((reservation) => (
             <ReservationListCard
               key={reservation._id}
               reservation={reservation}
               date={date}
               timezone={timezone}
               owner={workspace.role === "owner"}
-              busy={action.busy}
+              busy={action.busy || !connected}
+              showAttention
               onChange={(next, tableIds) =>
                 changeStatus(reservation, next, tableIds)
               }
@@ -269,50 +429,10 @@ function DayWorkspace({
         />
       )}
       {erasing && (
-        <Dialog
-          open
-          onOpenChange={(open) => {
-            if (!open && !action.busy) setErasing(null);
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{copy("Anonymize guest details?")}</DialogTitle>
-              <DialogDescription>
-                {copy(
-                  "This removes guest details, account links and email management links from all of this guest’s reservations at this venue. Reservations and table assignments remain. Historical audit records are retained.",
-                )}
-              </DialogDescription>
-            </DialogHeader>
-            <p className="font-medium">{erasing.customerName}</p>
-            <ReservationError error={action.error} />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                disabled={action.busy}
-                onClick={() => setErasing(null)}
-              >
-                {copy("Cancel")}
-              </Button>
-              <Button
-                variant="destructive"
-                disabled={action.busy}
-                onClick={() =>
-                  void action
-                    .run(
-                      () => eraseGuest({ customerId: erasing.customerId }),
-                      copy("Guest details anonymized"),
-                    )
-                    .then((saved) => {
-                      if (saved) setErasing(null);
-                    })
-                }
-              >
-                {copy("Anonymize guest")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ReservationGuestEraseDialog
+          reservation={erasing}
+          onClose={() => setErasing(null)}
+        />
       )}
     </div>
   );

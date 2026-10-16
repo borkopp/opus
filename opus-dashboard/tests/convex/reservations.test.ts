@@ -261,6 +261,17 @@ describe("physical-table reservation allocation", () => {
       action: "move" as const,
       tableIds: s.tableIds.slice(1),
     };
+    expect(
+      await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: first._id,
+        durationMins: 0,
+      }),
+    ).toEqual([]);
+    expect(
+      await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: first._id,
+      }),
+    ).toHaveLength(1);
     await expect(
       s.owner.mutation(api.reservations.change, move),
     ).rejects.toThrow("no longer available");
@@ -362,6 +373,12 @@ describe("physical-table reservation allocation", () => {
         reservationId: booking._id,
         expectedRevision: 1,
         action: "cancel",
+      }),
+    ).rejects.toThrow("not found");
+    await expect(
+      b.owner.query(api.reservations.getMoveOptions, {
+        reservationId: booking._id,
+        durationMins: 120,
       }),
     ).rejects.toThrow("not found");
     await expect(
@@ -600,6 +617,281 @@ describe("physical-table reservation allocation", () => {
         startAt: instant("12:00"),
       }),
     ).rejects.toThrow();
+  });
+
+  it.each([false, true])(
+    "moves and extends a current confirmed visit after its start (arrived: %s)",
+    async (arrived) => {
+      const s = await venue(backend());
+      let r = await s.owner.mutation(api.reservations.createManual, draft(s));
+      vi.setSystemTime(instant("12:05"));
+      if (arrived)
+        r = await s.owner.mutation(api.reservations.change, {
+          reservationId: r._id,
+          expectedRevision: r.revision!,
+          action: "arrive",
+        });
+      const arrivedAt = r.arrivedAt;
+      const options = await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: r._id,
+      });
+      expect(options.some((o) => o.tableIds.includes(s.tableIds[2]))).toBe(
+        true,
+      );
+      r = await s.owner.mutation(api.reservations.change, {
+        reservationId: r._id,
+        expectedRevision: r.revision!,
+        action: "move",
+        tableIds: s.tableIds.slice(1),
+      });
+      r = await s.owner.mutation(api.reservations.change, {
+        reservationId: r._id,
+        expectedRevision: r.revision!,
+        action: "duration",
+        durationMins: 120,
+      });
+      expect(r).toMatchObject({
+        status: "confirmed",
+        startAt: instant("12:00"),
+        endAt: instant("14:00"),
+        serviceDate: DATE,
+        bufferMins: 15,
+        tableIds: [...s.tableIds.slice(1)].sort(),
+      });
+      expect(r.arrivedAt).toBe(arrivedAt);
+      const allocations = await active(s);
+      expect(allocations).toHaveLength(2);
+      expect(
+        allocations.every(
+          (a) =>
+            a.kind === "occupancy" &&
+            !a.requiresRelease &&
+            a.startAt === instant("12:00") &&
+            a.endAt === instant("14:15"),
+        ),
+      ).toBe(true);
+      await expect(
+        s.owner.mutation(
+          api.reservations.createManual,
+          draft(s, [s.tableIds[0]], "12:00", 2),
+        ),
+      ).rejects.toThrow("no longer available");
+      await expect(
+        s.t.run(async (ctx) =>
+          changeReservation(
+            ctx,
+            (await ctx.db.get(s.orgId))!,
+            r._id,
+            {
+              expectedRevision: r.revision!,
+              action: "reschedule",
+              startAt: instant("14:30"),
+            },
+            { type: "system" },
+          ),
+        ),
+      ).rejects.toThrow("Online changes");
+    },
+  );
+
+  it("keeps current confirmed edits atomic across destination conflicts, closures and stale revisions", async () => {
+    const s = await venue(backend());
+    const r = await s.owner.mutation(api.reservations.createManual, draft(s));
+    const blocker = await s.owner.mutation(
+      api.reservations.createManual,
+      draft(s, [s.tableIds[2]], "12:00", 2),
+    );
+    vi.setSystemTime(instant("12:05"));
+    const before = await active(s);
+    const move = {
+      reservationId: r._id,
+      expectedRevision: r.revision!,
+      action: "move" as const,
+      tableIds: s.tableIds.slice(1),
+    };
+    expect(
+      await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: r._id,
+      }),
+    ).toHaveLength(1);
+    await expect(
+      s.owner.mutation(api.reservations.change, move),
+    ).rejects.toThrow("no longer available");
+    expect(await active(s)).toEqual(before);
+    await s.owner.mutation(api.reservations.change, {
+      reservationId: blocker._id,
+      expectedRevision: blocker.revision!,
+      action: "cancel",
+    });
+    await s.owner.mutation(api.hospitality.saveClosure, {
+      tableIds: [s.tableIds[0]],
+      startAt: instant("13:45"),
+      endAt: instant("15:00"),
+      reason: "Table maintenance",
+    });
+    const beforeExtension = await active(s);
+    await expect(
+      s.owner.mutation(api.reservations.change, {
+        reservationId: r._id,
+        expectedRevision: r.revision!,
+        action: "duration",
+        durationMins: 120,
+      }),
+    ).rejects.toThrow("closed");
+    expect(await active(s)).toEqual(beforeExtension);
+    const moved = await s.owner.mutation(api.reservations.change, move);
+    expect(moved.revision).toBe(r.revision! + 1);
+    await expect(
+      s.owner.mutation(api.reservations.change, move),
+    ).rejects.toThrow("changed");
+  });
+
+  it("retains the original buffer and closing limit for current confirmed edits", async () => {
+    const s = await venue(backend());
+    const r = await s.owner.mutation(
+      api.reservations.createManual,
+      draft(s, undefined, "20:30"),
+    );
+    vi.setSystemTime(instant("20:35"));
+    await s.t.run((ctx) => ctx.db.patch(s.settingsId, { bufferMins: 0 }));
+    const before = await active(s);
+    expect(
+      await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: r._id,
+        durationMins: 150,
+      }),
+    ).toEqual([]);
+    await expect(
+      s.owner.mutation(api.reservations.change, {
+        reservationId: r._id,
+        expectedRevision: r.revision!,
+        action: "duration",
+        durationMins: 150,
+      }),
+    ).rejects.toThrow("service hours");
+    expect(await active(s)).toEqual(before);
+    const changed = await s.owner.mutation(api.reservations.change, {
+      reservationId: r._id,
+      expectedRevision: r.revision!,
+      action: "duration",
+      durationMins: 120,
+    });
+    expect(changed).toMatchObject({
+      startAt: instant("20:30"),
+      endAt: instant("22:30"),
+      bufferMins: 15,
+    });
+    expect((await active(s)).every((a) => a.endAt === instant("22:45"))).toBe(
+      true,
+    );
+  });
+
+  it("does not revive expired or terminal confirmed visits through move or duration edits", async () => {
+    const s = await venue(backend());
+    const expired = await s.owner.mutation(
+      api.reservations.createManual,
+      draft(s),
+    );
+    const cancelled = await s.owner.mutation(
+      api.reservations.createManual,
+      draft(s, undefined, "15:00"),
+    );
+    const terminal = await s.owner.mutation(api.reservations.change, {
+      reservationId: cancelled._id,
+      expectedRevision: cancelled.revision!,
+      action: "cancel",
+    });
+    vi.setSystemTime(expired.endAt);
+    const before = await active(s);
+    for (const r of [expired, terminal]) {
+      expect(
+        await s.owner.query(api.reservations.getMoveOptions, {
+          reservationId: r._id,
+          durationMins: 180,
+        }),
+      ).toEqual([]);
+      for (const action of ["move", "duration"] as const)
+        await expect(
+          s.owner.mutation(api.reservations.change, {
+            reservationId: r._id,
+            expectedRevision: r.revision!,
+            action,
+            tableIds: s.tableIds.slice(1),
+            durationMins: 180,
+          }),
+        ).rejects.toThrow();
+    }
+    expect(await active(s)).toEqual(before);
+  });
+
+  it("moves an overdue seated party with a longer duration when its original tables have a following reservation", async () => {
+    const s = await venue(backend());
+    let r = await s.owner.mutation(api.reservations.createManual, draft(s));
+    const next = await s.owner.mutation(
+      api.reservations.createManual,
+      draft(s, [s.tableIds[0]], "14:00", 2),
+    );
+    vi.setSystemTime(instant("12:00"));
+    r = await s.owner.mutation(api.reservations.change, {
+      reservationId: r._id,
+      expectedRevision: r.revision!,
+      action: "seat",
+    });
+    vi.setSystemTime(instant("13:35"));
+    const before = await active(s);
+    expect(
+      await s.owner.query(api.reservations.getMoveOptions, {
+        reservationId: r._id,
+      }),
+    ).toEqual([]);
+    await expect(
+      s.owner.mutation(api.reservations.change, {
+        reservationId: r._id,
+        expectedRevision: r.revision!,
+        action: "duration",
+        durationMins: 180,
+      }),
+    ).rejects.toThrow("no longer available");
+    expect(await active(s)).toEqual(before);
+    const options = await s.owner.query(api.reservations.getMoveOptions, {
+      reservationId: r._id,
+      durationMins: 180,
+    });
+    expect(options.map((o) => o.tableIds)).toEqual([
+      [...s.tableIds.slice(1)].sort(),
+    ]);
+    r = await s.owner.mutation(api.reservations.change, {
+      reservationId: r._id,
+      expectedRevision: r.revision!,
+      action: "move",
+      tableIds: options[0].tableIds,
+      durationMins: 180,
+    });
+    expect(r).toMatchObject({
+      status: "seated",
+      startAt: instant("12:00"),
+      endAt: instant("15:00"),
+      tableIds: options[0].tableIds,
+    });
+    const rows = await active(s);
+    expect(rows.filter((a) => a.reservationId === next._id)).toEqual(
+      before.filter((a) => a.reservationId === next._id),
+    );
+    expect(
+      rows.filter((a) => a.reservationId === r._id && a.kind === "cleaning"),
+    ).toMatchObject([
+      {
+        tableId: s.tableIds[0],
+        requiresRelease: true,
+        startAt: instant("13:35"),
+        endAt: instant("13:50"),
+      },
+    ]);
+    expect(
+      rows
+        .filter((a) => a.reservationId === r._id && a.kind === "occupancy")
+        .every((a) => a.requiresRelease && a.endAt === instant("15:15")),
+    ).toBe(true);
   });
 
   it("atomically moves a seated combination while keeping removed tables blocked until cleaning is released", async () => {

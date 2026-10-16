@@ -1,21 +1,112 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type QueryCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { requireHospitality } from "./lib/hospitalityAccess";
 import {
   availability,
   changeReservation,
   createReservation,
   safeReservation,
-  seatedMoveOptions,
+  reservationMoveOptions,
   reservationSettings,
+  walkInAvailability,
+  seatWalkInNow,
+  reservationAmendOptions,
+  amendReservation,
 } from "./lib/reservationEngine";
 import { eraseReservationGuest } from "./lib/reservationPrivacy";
 import { localDate, validServiceDate } from "./lib/reservationTime";
+import {
+  reservationCleaningAttention,
+  reservationTimingAttention,
+} from "./lib/reservationAttention";
+
+async function staffReservation(
+  ctx: QueryCtx,
+  r: Doc<"reservations">,
+  asOf: number,
+  noShowGraceMins: number | undefined,
+) {
+  const customer = await ctx.db.get(r.customerId);
+  const own =
+    customer?.orgId === r.orgId && !customer.isDeleted ? customer : null;
+  const cleaning = (
+    await ctx.db
+      .query("reservation_allocations")
+      .withIndex("by_org_reservation_active", (q) =>
+        q.eq("orgId", r.orgId).eq("reservationId", r._id).eq("isActive", true),
+      )
+      .collect()
+  ).filter((a) => !a.isDeleted && a.kind === "cleaning");
+  const cleaningTables = await Promise.all(
+    cleaning.map(async (a) => {
+      const table = await ctx.db.get(a.tableId);
+      return {
+        tableId: a.tableId,
+        label:
+          table?.orgId === r.orgId && !table.isDeleted ? table.label : "Table",
+        readyAt: a.endAt,
+      };
+    }),
+  );
+  return {
+    ...safeReservation(r),
+    cleaningTableIds: cleaning.map((a) => a.tableId),
+    cleaningTables,
+    attention: {
+      asOf,
+      timing: reservationTimingAttention(r, noShowGraceMins, asOf),
+      cleaning: cleaningTables.map((table) => ({
+        ...table,
+        ...reservationCleaningAttention(table.readyAt, asOf),
+      })),
+    },
+    guestName: own ? r.guestName : undefined,
+    opusUserId: own ? r.opusUserId : undefined,
+    occasion: own ? r.occasion : undefined,
+    specialRequests: own ? r.specialRequests : undefined,
+    staffNote: own ? r.staffNote : undefined,
+    cancellationReason: own ? r.cancellationReason : undefined,
+    guestErased: !own,
+    customerName: own ? (r.guestName ?? own.name) : "Anonymised guest",
+    customerEmail: own
+      ? r.guestContact === undefined
+        ? own.email
+        : r.guestContact.email
+      : undefined,
+    customerPhone: own
+      ? r.guestContact === undefined
+        ? own.phone
+        : r.guestContact.phone
+      : undefined,
+  };
+}
+
+export const get = query({
+  args: {
+    reservationId: v.id("reservations"),
+    refreshKey: v.optional(v.number()),
+  },
+  handler: async (ctx, { reservationId }) => {
+    const { orgId } = await requireHospitality(ctx);
+    const asOf = Date.now();
+    const reservation = await ctx.db.get(reservationId);
+    if (!reservation || reservation.orgId !== orgId || reservation.isDeleted)
+      throw new ConvexError("Reservation not found.");
+    const settings = await ctx.db
+      .query("reservation_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", orgId))
+      .unique();
+    // A held/legacy visit remains visible even when current setup needs repair.
+    return staffReservation(ctx, reservation, asOf, settings?.noShowGraceMins);
+  },
+});
 
 export const listDay = query({
-  args: { date: v.string() },
+  args: { date: v.string(), refreshKey: v.optional(v.number()) },
   handler: async (ctx, { date }) => {
     const { org } = await requireHospitality(ctx);
+    const asOf = Date.now();
     if (!validServiceDate(date))
       throw new ConvexError("Choose a valid service date.");
     const reservations = await ctx.db
@@ -25,7 +116,7 @@ export const listDay = query({
       )
       .collect();
     const settings = await reservationSettings(ctx, org);
-    if (date === localDate(Date.now(), settings.timezone)) {
+    if (date === localDate(asOf, settings.timezone)) {
       const outstanding = await ctx.db
         .query("reservation_allocations")
         .withIndex("by_org_active", (q) =>
@@ -52,46 +143,7 @@ export const listDay = query({
       reservations
         .filter((r) => !r.isDeleted)
         .sort((a, b) => a.startAt - b.startAt)
-        .map(async (r) => {
-          const customer = await ctx.db.get(r.customerId);
-          const own =
-            customer?.orgId === org._id && !customer.isDeleted
-              ? customer
-              : null;
-          const cleaning = (
-            await ctx.db
-              .query("reservation_allocations")
-              .withIndex("by_org_reservation_active", (q) =>
-                q
-                  .eq("orgId", org._id)
-                  .eq("reservationId", r._id)
-                  .eq("isActive", true),
-              )
-              .collect()
-          ).filter((a) => !a.isDeleted && a.kind === "cleaning");
-          const cleaningTables = await Promise.all(
-            cleaning.map(async (a) => ({
-              tableId: a.tableId,
-              label: (await ctx.db.get(a.tableId))?.label ?? "Table",
-              readyAt: a.endAt,
-            })),
-          );
-          return {
-            ...safeReservation(r),
-            cleaningTableIds: cleaning.map((a) => a.tableId),
-            cleaningTables,
-            guestName: own ? r.guestName : undefined,
-            opusUserId: own ? r.opusUserId : undefined,
-            occasion: own ? r.occasion : undefined,
-            specialRequests: own ? r.specialRequests : undefined,
-            staffNote: own ? r.staffNote : undefined,
-            cancellationReason: own ? r.cancellationReason : undefined,
-            guestErased: !own,
-            customerName: own ? (r.guestName ?? own.name) : "Anonymised guest",
-            customerEmail: own?.email,
-            customerPhone: own?.phone,
-          };
-        }),
+        .map((r) => staffReservation(ctx, r, asOf, settings?.noShowGraceMins)),
     );
   },
 });
@@ -150,13 +202,53 @@ export const getSlots = query({
 });
 
 export const getMoveOptions = query({
-  args: { reservationId: v.id("reservations") },
-  handler: async (ctx, { reservationId }) => {
+  args: {
+    reservationId: v.id("reservations"),
+    durationMins: v.optional(v.number()),
+  },
+  handler: async (ctx, { reservationId, durationMins }) => {
     const { org } = await requireHospitality(ctx);
     const reservation = await ctx.db.get(reservationId);
     if (!reservation || reservation.orgId !== org._id || reservation.isDeleted)
       throw new ConvexError("Reservation not found.");
-    return seatedMoveOptions(ctx, org, reservation);
+    return reservationMoveOptions(ctx, org, reservation, durationMins);
+  },
+});
+
+export const getAmendOptions = query({
+  args: {
+    reservationId: v.id("reservations"),
+    partySize: v.number(),
+    refreshKey: v.optional(v.number()),
+  },
+  handler: async (ctx, { reservationId, partySize }) => {
+    const { org } = await requireHospitality(ctx);
+    const reservation = await ctx.db.get(reservationId);
+    if (!reservation || reservation.orgId !== org._id || reservation.isDeleted)
+      throw new ConvexError("Reservation not found.");
+    return reservationAmendOptions(ctx, org, reservation, partySize);
+  },
+});
+
+export const amend = mutation({
+  args: {
+    reservationId: v.id("reservations"),
+    expectedRevision: v.number(),
+    customerName: v.optional(v.string()),
+    customerEmail: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    specialRequests: v.optional(v.string()),
+    partySize: v.optional(v.number()),
+    tableIds: v.optional(v.array(v.id("tables"))),
+  },
+  handler: async (ctx, { reservationId, ...changes }) => {
+    const { org, staffMember } = await requireHospitality(ctx);
+    return safeReservation(
+      await amendReservation(ctx, org, reservationId, changes, {
+        type: "staff",
+        id: staffMember._id,
+      }),
+    );
   },
 });
 
@@ -182,6 +274,40 @@ export const createManual = mutation({
     const { org, staffMember } = await requireHospitality(ctx);
     return safeReservation(
       await createReservation(ctx, org, args, {
+        type: "staff",
+        id: staffMember._id,
+      }),
+    );
+  },
+});
+
+export const getWalkInOptions = query({
+  args: {
+    tableId: v.id("tables"),
+    partySize: v.number(),
+    durationMins: v.optional(v.number()),
+    refreshKey: v.optional(v.number()),
+  },
+  handler: async (ctx, { tableId, partySize, durationMins }) => {
+    const { org } = await requireHospitality(ctx);
+    return walkInAvailability(ctx, org, tableId, partySize, durationMins);
+  },
+});
+
+export const seatWalkIn = mutation({
+  args: {
+    requestId: v.string(),
+    tableIds: v.array(v.id("tables")),
+    partySize: v.number(),
+    durationMins: v.optional(v.number()),
+    customerName: v.optional(v.string()),
+    customerPhone: v.optional(v.string()),
+    specialRequests: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { org, staffMember } = await requireHospitality(ctx);
+    return safeReservation(
+      await seatWalkInNow(ctx, org, args, {
         type: "staff",
         id: staffMember._id,
       }),

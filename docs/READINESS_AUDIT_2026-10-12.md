@@ -4,6 +4,13 @@ Date: 12 October 2026. Scope: current beauty product, shared platform, dormant r
 
 Implementation follow-up: the user subsequently authorized building the restaurant/café plan, including explicit table combinations. On October 13, self-service business-type selection and restaurant/café onboarding without pilot controls were authorized; deployment remains unauthorized. The local implementation and its separate test gate are documented in [HOSPITALITY_IMPLEMENTATION.md](HOSPITALITY_IMPLEMENTATION.md). The assessment below preserves the original audit findings; it should not be read as a claim that the new implementation or its providers have been activated in production.
 
+Planning follow-up, October 17: [HOSPITALITY_V1_PLAN.md](HOSPITALITY_V1_PLAN.md)
+now defines the website editor, custom domains, digital menu, QR codes and
+flexible reservations first version. This supersedes the reservation-only roadmap
+and menu deferral below as future direction; it does not rewrite these historical
+findings or authorize implementation/deployment. POS and POS integrations remain
+excluded.
+
 ## Decision
 
 **OPUS has reusable infrastructure for a restaurant/café product, but it is not ready to enable that vertical in production.** The beauty product is substantially implemented and has meaningful backend coverage. The audit nevertheless found tenant-boundary leaks, lifecycle failures, inconsistent scheduling rules, dormant APIs that still performed work, and vulnerable web dependencies.

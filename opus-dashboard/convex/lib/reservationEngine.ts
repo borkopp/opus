@@ -42,6 +42,24 @@ export type ReservationInput = {
   manageTokenExpiresAt?: number;
   manageTokenCiphertext?: string;
 };
+export type WalkInInput = {
+  requestId: string;
+  tableIds: Id<"tables">[];
+  partySize: number;
+  durationMins?: number;
+  customerName?: string;
+  customerPhone?: string;
+  specialRequests?: string;
+};
+export type WalkInOptions = {
+  asOf: number;
+  timezone: string;
+  serviceDate?: string;
+  startAt?: number;
+  endAt?: number;
+  options: ReservationOption[];
+  reason?: string;
+};
 export type ReservationChange = {
   expectedRevision: number;
   action:
@@ -284,6 +302,184 @@ function periodStartTimes(data: Resources, date: string, durationMins: number) {
   return [...result].sort(([a], [b]) => a - b);
 }
 
+/** Actual arrivals use continuous service time, never a rounded future slot. */
+function walkInPeriodFits(
+  data: Resources,
+  date: string,
+  startAt: number,
+  durationMins: number,
+  bufferMins = data.settings.bufferMins,
+) {
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  const localDay = localDate(startAt, data.settings.timezone);
+  if (localDay !== date && localDay !== addServiceDays(date, 1)) return false;
+  const clock = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: data.settings.timezone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(startAt)
+      .map((part) => [part.type, part.value]),
+  );
+  const localMinute =
+    (localDay === date ? 0 : 1440) +
+    Number(clock.hour) * 60 +
+    Number(clock.minute) +
+    Number(clock.second) / 60 +
+    (startAt % 1000) / 60_000;
+  return data.settings.servicePeriods.some((period) => {
+    if (!period.daysOfWeek.includes(weekday)) return false;
+    const startMinute = minutes(period.startTime);
+    let lastMinute = period.lastSeatingTime
+      ? minutes(period.lastSeatingTime)
+      : minutes(period.endTime) + (period.endDayOffset ?? 0) * 1440;
+    if (
+      period.lastSeatingTime &&
+      period.endDayOffset === 1 &&
+      lastMinute < startMinute
+    )
+      lastMinute += 1440;
+    // UTC ordering alone would admit 02:45 in the first repeated hour after
+    // a 02:30 wall-clock last seating in the second occurrence.
+    if (localMinute < startMinute || localMinute > lastMinute) return false;
+    const opening = localDateTimeInstants(
+      date,
+      period.startTime,
+      data.settings.timezone,
+    );
+    const closing = localDateTimeInstants(
+      addServiceDays(date, period.endDayOffset ?? 0),
+      period.endTime,
+      data.settings.timezone,
+    );
+    // An ambiguous boundary spans its first opening through its last closing.
+    // A nonexistent boundary cannot establish a safe service interval.
+    if (!opening.length || !closing.length) return false;
+    let last = closing[closing.length - 1];
+    if (period.lastSeatingTime) {
+      const nextDay =
+        period.endDayOffset === 1 &&
+        minutes(period.lastSeatingTime) < minutes(period.startTime);
+      const instants = localDateTimeInstants(
+        addServiceDays(date, nextDay ? 1 : 0),
+        period.lastSeatingTime,
+        data.settings.timezone,
+      );
+      if (!instants.length) return false;
+      last = instants[instants.length - 1];
+    }
+    return (
+      startAt >= opening[0] &&
+      startAt <= last &&
+      startAt + (durationMins + bufferMins) * 60_000 <=
+        closing[closing.length - 1]
+    );
+  });
+}
+
+function savedVisitFits(
+  data: Resources,
+  reservation: Doc<"reservations">,
+  duration: number,
+  bufferMins: number,
+) {
+  return reservation.source === "walk_in"
+    ? walkInPeriodFits(
+        data,
+        reservation.serviceDate!,
+        reservation.startAt,
+        duration,
+        bufferMins,
+      )
+    : periodStartTimes(
+        { ...data, settings: { ...data.settings, bufferMins } },
+        reservation.serviceDate!,
+        duration,
+      ).some(([start]) => start === reservation.startAt);
+}
+
+async function currentWalkIn(
+  ctx: ReadCtx,
+  org: Doc<"orgs">,
+  partySize: number,
+  durationMins?: number,
+  tableId?: Id<"tables">,
+) {
+  const asOf = Date.now();
+  const data = await resources(ctx, org);
+  const { settings } = data;
+  if (!settings.walkInsAccepted)
+    throw new ConvexError("Walk-ins are not enabled.");
+  if (
+    !Number.isInteger(partySize) ||
+    partySize < settings.minPartySize ||
+    partySize > settings.maxPartySize
+  )
+    throw new ConvexError("Choose a valid party size.");
+  const duration = durationMins ?? settings.defaultDurationMins;
+  if (
+    !Number.isInteger(duration) ||
+    duration < settings.minDurationMins ||
+    duration > settings.maxDurationMins
+  )
+    throw new ConvexError("Choose a valid dining duration.");
+  const today = localDate(asOf, settings.timezone);
+  const serviceDate = [today, addServiceDays(today, -1)].find((date) =>
+    walkInPeriodFits(data, date, asOf, duration),
+  );
+  if (!serviceDate)
+    throw new ConvexError(
+      "There is not enough service time remaining for this visit and reset buffer.",
+    );
+  const endAt = asOf + duration * 60_000;
+  const options = optionsFor(data, partySize).filter(
+    (option) =>
+      (!tableId || option.tableIds.includes(tableId)) &&
+      optionFree(data, option, asOf, endAt + settings.bufferMins * 60_000),
+  );
+  const result: WalkInOptions = {
+    asOf,
+    timezone: settings.timezone,
+    serviceDate,
+    startAt: asOf,
+    endAt,
+    options,
+    ...(options.length
+      ? {}
+      : { reason: "No suitable tables are available for this walk-in." }),
+  };
+  return { data, result };
+}
+
+export async function walkInAvailability(
+  ctx: ReadCtx,
+  org: Doc<"orgs">,
+  tableId: Id<"tables">,
+  partySize: number,
+  durationMins?: number,
+): Promise<WalkInOptions> {
+  const table = await ctx.db.get(tableId);
+  if (!table || table.orgId !== org._id || table.isDeleted)
+    throw new ConvexError("Table unavailable.");
+  let timezone = "Europe/Skopje";
+  try {
+    timezone = (await reservationSettings(ctx, org)).timezone;
+    return (await currentWalkIn(ctx, org, partySize, durationMins, tableId))
+      .result;
+  } catch (error) {
+    if (!(error instanceof ConvexError)) throw error;
+    return {
+      asOf: Date.now(),
+      timezone,
+      options: [],
+      reason: String(error.data),
+    };
+  }
+}
+
 export async function availability(
   ctx: ReadCtx,
   org: Doc<"orgs">,
@@ -386,38 +582,43 @@ async function atomicAllocationCheck(
   }
 }
 
-export async function seatedMoveOptions(
+export async function reservationMoveOptions(
   ctx: ReadCtx,
   org: Doc<"orgs">,
   reservation: Doc<"reservations">,
+  durationMins = reservation.durationMins,
 ) {
   if (reservation.orgId !== org._id || reservation.isDeleted)
     throw new ConvexError("Reservation not found.");
+  const now = Date.now();
+  if (
+    !["confirmed", "seated"].includes(reservation.status) ||
+    (reservation.status === "confirmed" && reservation.endAt <= now) ||
+    reservation.startAt + durationMins * 60_000 <= now
+  )
+    return [];
   const data = await resources(ctx, org);
+  const futureConfirmed =
+    reservation.status === "confirmed" && reservation.startAt > now;
   if (
-    reservation.status !== "seated" ||
-    reservation.endAt <= Date.now() ||
-    reservation.durationMins < data.settings.minDurationMins ||
-    reservation.durationMins > data.settings.maxDurationMins
+    !Number.isInteger(durationMins) ||
+    durationMins < data.settings.minDurationMins ||
+    durationMins > data.settings.maxDurationMins ||
+    (futureConfirmed &&
+      (reservation.partySize < data.settings.minPartySize ||
+        reservation.partySize > data.settings.maxPartySize))
   )
     return [];
-  if (
-    !periodStartTimes(
-      {
-        ...data,
-        settings: { ...data.settings, bufferMins: reservation.bufferMins ?? 0 },
-      },
-      reservation.serviceDate!,
-      reservation.durationMins,
-    ).some(([start]) => start === reservation.startAt)
-  )
-    return [];
+  const bufferMins = futureConfirmed
+    ? data.settings.bufferMins
+    : (reservation.bufferMins ?? 0);
+  if (!savedVisitFits(data, reservation, durationMins, bufferMins)) return [];
   return optionsFor(data, reservation.partySize).filter((option) =>
     optionFree(
       data,
       option,
-      Date.now(),
-      reservation.endAt + (reservation.bufferMins ?? 0) * 60_000,
+      reservation.status === "seated" ? now : reservation.startAt,
+      reservation.startAt + (durationMins + bufferMins) * 60_000,
       reservation._id,
     ),
   );
@@ -477,10 +678,7 @@ async function chooseAllocation(
   return { slot, option, settings, tables: tables as Doc<"tables">[] };
 }
 
-async function allocationsFor(
-  ctx: MutationCtx,
-  reservation: Doc<"reservations">,
-) {
+async function allocationsFor(ctx: ReadCtx, reservation: Doc<"reservations">) {
   return ctx.db
     .query("reservation_allocations")
     .withIndex("by_org_reservation_active", (q) =>
@@ -599,6 +797,124 @@ export async function createReservation(
     input,
     actor.type === "staff",
   );
+  return insertReservation(ctx, org, input, actor, signature, {
+    slot,
+    option,
+    settings,
+    tables,
+  });
+}
+
+/** A retry resolves the stored request before consulting today's clock or settings. */
+export async function seatWalkInNow(
+  ctx: MutationCtx,
+  org: Doc<"orgs">,
+  input: WalkInInput,
+  actor: ReservationActor,
+): Promise<Doc<"reservations">> {
+  if (actor.type !== "staff" || !isHospitalityOrg(org))
+    throw new ConvexError("Unauthorised");
+  if (!/^[A-Za-z0-9_-]{8,120}$/.test(input.requestId))
+    throw new ConvexError("Invalid reservation request.");
+  const name = input.customerName?.trim() || "Walk-in guest";
+  const signature = JSON.stringify({
+    kind: "walk_in_now",
+    party: input.partySize,
+    tables: [...input.tableIds].sort(),
+    duration: input.durationMins,
+    name,
+    phone: input.customerPhone?.replace(/[\s()-]/g, ""),
+    note: input.specialRequests?.trim(),
+  });
+  const existing = await ctx.db
+    .query("reservations")
+    .withIndex("by_org_request", (q) =>
+      q.eq("orgId", org._id).eq("requestId", input.requestId),
+    )
+    .unique();
+  if (existing) {
+    if (existing.requestFingerprint !== signature || existing.isDeleted)
+      throw new ConvexError(
+        "This request has already been used for another reservation.",
+      );
+    return existing;
+  }
+  if (
+    !input.tableIds.length ||
+    input.tableIds.length > 100 ||
+    new Set(input.tableIds).size !== input.tableIds.length
+  )
+    throw new ConvexError("Choose distinct tables.");
+  const { data, result } = await currentWalkIn(
+    ctx,
+    org,
+    input.partySize,
+    input.durationMins,
+  );
+  const selected = [...input.tableIds].sort().join();
+  const option = result.options.find(
+    (o) => [...o.tableIds].sort().join() === selected,
+  );
+  if (
+    !option ||
+    !result.serviceDate ||
+    result.startAt === undefined ||
+    result.endAt === undefined
+  )
+    throw new ConvexError(
+      "These tables are no longer available for this walk-in.",
+    );
+  await atomicAllocationCheck(
+    ctx,
+    org._id,
+    option.tableIds,
+    result.startAt,
+    result.endAt + data.settings.bufferMins * 60_000,
+  );
+  const tables = option.tableIds.map(
+    (id) => data.tables.find((table) => table._id === id)!,
+  );
+  return insertReservation(
+    ctx,
+    org,
+    {
+      ...input,
+      customerName: name,
+      source: "walk_in",
+      serviceDate: result.serviceDate,
+      startAt: result.startAt,
+    },
+    actor,
+    signature,
+    {
+      slot: { startAt: result.startAt, endAt: result.endAt },
+      option,
+      settings: data.settings,
+      tables,
+    },
+    result.asOf,
+  );
+}
+
+async function insertReservation(
+  ctx: MutationCtx,
+  org: Doc<"orgs">,
+  input: ReservationInput,
+  actor: ReservationActor,
+  signature: string,
+  {
+    slot,
+    option,
+    settings,
+    tables,
+  }: {
+    slot: { startAt: number; endAt: number };
+    option: ReservationOption;
+    settings: Awaited<ReturnType<typeof reservationSettings>>;
+    tables: Doc<"tables">[];
+  },
+  seatedAt?: number,
+): Promise<Doc<"reservations">> {
   const name = input.customerName.trim(),
     email = input.customerEmail?.trim().toLowerCase(),
     phone = input.customerPhone?.replace(/[\s()-]/g, "");
@@ -677,6 +993,7 @@ export async function createReservation(
     capacitySnapshot: option.capacity,
     customerId,
     guestName: name,
+    guestContact: { email, phone },
     opusUserId: input.opusUserId,
     schemaVersion: 2,
     timeModel: "utc",
@@ -689,7 +1006,9 @@ export async function createReservation(
     bufferMins: settings.bufferMins,
     partySize: input.partySize,
     specialRequests: input.specialRequests?.trim(),
-    status: "confirmed",
+    status: seatedAt === undefined ? "confirmed" : "seated",
+    arrivedAt: seatedAt,
+    seatedAt,
     source: input.source,
     autoAssigned: !input.tableIds,
     requestId: input.requestId,
@@ -708,13 +1027,22 @@ export async function createReservation(
     reservation,
     slot.startAt,
     slot.endAt + settings.bufferMins * 60_000,
-    false,
+    seatedAt !== undefined,
   );
+  if (seatedAt !== undefined)
+    for (const table of tables)
+      await ctx.db.patch(table._id, {
+        status: "occupied",
+        updatedAt: seatedAt,
+      });
   await audit(ctx, org._id, id, actor, "created", undefined, {
     startAt: slot.startAt,
     partySize: input.partySize,
     tableIds: option.tableIds,
     revision: 1,
+    ...(seatedAt === undefined
+      ? {}
+      : { status: "seated", arrivedAt: seatedAt, seatedAt }),
   });
   await queueReservationEvent(ctx, org, reservation, "confirmation");
   return reservation;
@@ -774,7 +1102,15 @@ export async function changeReservation(
       throw new ConvexError(
         "This reservation cannot be changed in its current state.",
       );
-    if (old.status === "seated") {
+    const currentConfirmedEdit =
+      old.status === "confirmed" &&
+      old.startAt <= now &&
+      ["move", "duration"].includes(change.action);
+    if (currentConfirmedEdit && old.endAt <= now)
+      throw new ConvexError(
+        "Only a current confirmed reservation can be changed.",
+      );
+    if (old.status === "seated" || currentConfirmedEdit) {
       const duration = change.durationMins ?? old.durationMins;
       if (
         !Number.isInteger(duration) ||
@@ -786,16 +1122,7 @@ export async function changeReservation(
       if (endAt <= now)
         throw new ConvexError("The visit must end in the future.");
       const data = await resources(ctx, org);
-      if (
-        !periodStartTimes(
-          {
-            ...data,
-            settings: { ...data.settings, bufferMins: old.bufferMins ?? 0 },
-          },
-          old.serviceDate!,
-          duration,
-        ).some(([start]) => start === old.startAt)
-      )
+      if (!savedVisitFits(data, old, duration, old.bufferMins ?? 0))
         throw new ConvexError("This visit would extend beyond service hours.");
       const tableIds =
         change.action === "move" ? change.tableIds : old.tableIds;
@@ -805,16 +1132,11 @@ export async function changeReservation(
         (o) => [...o.tableIds].sort().join() === [...tableIds].sort().join(),
       );
       blockEnd = endAt + (old.bufferMins ?? 0) * 60_000;
-      if (
-        !option ||
-        !optionFree(
-          data,
-          option,
-          change.action === "move" ? now : blockStart,
-          blockEnd,
-          id,
-        )
-      )
+      // Confirmed visits retain their booked interval. Only an already seated
+      // party transfers occupancy from now and leaves a cleaning hold behind.
+      const allocationStart =
+        old.status === "seated" && change.action === "move" ? now : blockStart;
+      if (!option || !optionFree(data, option, allocationStart, blockEnd, id))
         throw new ConvexError(
           "These tables are closed or no longer available.",
         );
@@ -822,7 +1144,7 @@ export async function changeReservation(
         ctx,
         org._id,
         option.tableIds,
-        change.action === "move" ? now : blockStart,
+        allocationStart,
         blockEnd,
         id,
       );
@@ -840,13 +1162,13 @@ export async function changeReservation(
         combinationId: option.combinationId,
         capacitySnapshot: option.capacity,
       };
-      if (change.action === "move") {
+      if (old.status === "seated" && change.action === "move") {
         cleaningTableIds = old.tableIds.filter(
           (id) => !option.tableIds.includes(id),
         );
         blockStart = now;
       }
-      releaseRequired = true;
+      releaseRequired = old.status === "seated";
     } else {
       const input = {
         serviceDate: change.serviceDate ?? old.serviceDate!,
@@ -1055,6 +1377,334 @@ export async function changeReservation(
     },
   );
   if (event) await queueReservationEvent(ctx, org, updated, event);
+  return updated;
+}
+
+export type ReservationAmendment = {
+  expectedRevision: number;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  specialRequests?: string;
+  partySize?: number;
+  tableIds?: Id<"tables">[];
+};
+
+async function amendableGuest(
+  ctx: ReadCtx,
+  org: Doc<"orgs">,
+  reservation: Doc<"reservations">,
+) {
+  if (reservation.orgId !== org._id || reservation.isDeleted)
+    throw new ConvexError("Reservation not found.");
+  if (
+    reservation.schemaVersion !== 2 ||
+    reservation.timeModel !== "utc" ||
+    !reservation.tableIds?.length
+  )
+    throw new ConvexError("Legacy reservations require review before changes.");
+  if (!["confirmed", "seated"].includes(reservation.status))
+    throw new ConvexError(
+      "Only confirmed or seated reservations can be edited.",
+    );
+  const customer = await ctx.db.get(reservation.customerId);
+  if (
+    !customer ||
+    customer.orgId !== org._id ||
+    customer.isDeleted ||
+    customer.gdprErasureRequestedAt !== undefined
+  )
+    throw new ConvexError("Anonymised guest details cannot be edited.");
+  const assigned = reservation.tableIds;
+  const occupancy = (await allocationsFor(ctx, reservation)).filter(
+    (allocation) => !allocation.isDeleted && allocation.kind !== "cleaning",
+  );
+  if (
+    new Set(assigned).size !== assigned.length ||
+    occupancy.length !== assigned.length ||
+    occupancy.some(
+      (allocation) =>
+        allocation.revision !== reservation.revision ||
+        allocation.requiresRelease !== (reservation.status === "seated") ||
+        !assigned.includes(allocation.tableId) ||
+        !Number.isFinite(allocation.startAt) ||
+        allocation.startAt >= allocation.endAt ||
+        allocation.endAt !==
+          reservation.endAt + (reservation.bufferMins ?? 0) * 60_000,
+    ) ||
+    assigned.some(
+      (tableId) =>
+        occupancy.filter((allocation) => allocation.tableId === tableId)
+          .length !== 1,
+    )
+  )
+    throw new ConvexError("Reservation allocation needs staff review.");
+  for (const tableId of assigned) {
+    const table = await ctx.db.get(tableId);
+    if (!table || table.orgId !== org._id || table.isDeleted)
+      throw new ConvexError("Reservation allocation needs staff review.");
+  }
+  return customer;
+}
+
+const sameTables = (a: Id<"tables">[], b: Id<"tables">[]) =>
+  [...a].sort().join() === [...b].sort().join();
+
+async function amendmentOptions(
+  ctx: ReadCtx,
+  org: Doc<"orgs">,
+  reservation: Doc<"reservations">,
+  partySize: number,
+) {
+  const data = await resources(ctx, org);
+  const now = Date.now();
+  if (
+    !Number.isInteger(partySize) ||
+    partySize < data.settings.minPartySize ||
+    partySize > data.settings.maxPartySize
+  )
+    throw new ConvexError("Choose a valid party size.");
+  if (reservation.status === "confirmed" && reservation.endAt <= now)
+    throw new ConvexError(
+      "Only a current or future confirmed reservation can change party size or tables.",
+    );
+  const overdue = reservation.status === "seated" && reservation.endAt <= now;
+  // A held, overdue visit may correct its cover count without releasing its
+  // tables. Moving that visit first needs a new end time through duration editing.
+  const startAt = reservation.status === "seated" ? now : reservation.startAt;
+  const endAt = overdue
+    ? now + 1
+    : reservation.endAt + (reservation.bufferMins ?? 0) * 60_000;
+  const options = optionsFor(data, partySize).filter(
+    (option) =>
+      (!overdue || sameTables(option.tableIds, reservation.tableIds!)) &&
+      optionFree(data, option, startAt, endAt, reservation._id),
+  );
+  return { data, options, startAt, endAt, overdue };
+}
+
+export async function reservationAmendOptions(
+  ctx: ReadCtx,
+  org: Doc<"orgs">,
+  reservation: Doc<"reservations">,
+  partySize: number,
+): Promise<{
+  asOf: number;
+  revision: number;
+  options: ReservationOption[];
+  minPartySize?: number;
+  maxPartySize?: number;
+  reason?: string;
+}> {
+  const base = { asOf: Date.now(), revision: reservation.revision ?? 0 };
+  let limits: { minPartySize?: number; maxPartySize?: number } = {};
+  try {
+    await amendableGuest(ctx, org, reservation);
+    const settings = await reservationSettings(ctx, org);
+    limits = {
+      minPartySize: settings.minPartySize,
+      maxPartySize: settings.maxPartySize,
+    };
+    const { options, overdue } = await amendmentOptions(
+      ctx,
+      org,
+      reservation,
+      partySize,
+    );
+    return {
+      ...base,
+      ...limits,
+      options,
+      ...(options.length
+        ? {}
+        : {
+            reason: overdue
+              ? "The current tables cannot fit this party. Extend the visit before moving tables."
+              : "No suitable tables are available for this party at the reservation time.",
+          }),
+    };
+  } catch (error) {
+    if (!(error instanceof ConvexError)) throw error;
+    return { ...base, ...limits, options: [], reason: String(error.data) };
+  }
+}
+
+/** Staff corrections never change customer identity, guest proof, or verified delivery. */
+export async function amendReservation(
+  ctx: MutationCtx,
+  org: Doc<"orgs">,
+  id: Id<"reservations">,
+  changes: ReservationAmendment,
+  actor: ReservationActor,
+): Promise<Doc<"reservations">> {
+  if (actor.type !== "staff") throw new ConvexError("Unauthorised");
+  const old = await ctx.db.get(id);
+  if (!old || old.orgId !== org._id || old.isDeleted)
+    throw new ConvexError("Reservation not found.");
+  const customer = await amendableGuest(ctx, org, old);
+  if (changes.expectedRevision !== old.revision)
+    throw new ConvexError("This reservation changed. Refresh and try again.");
+  const name = changes.customerName?.trim();
+  const email = changes.customerEmail?.trim().toLowerCase();
+  const phone = changes.customerPhone?.replace(/[\s()-]/g, "");
+  const requests = changes.specialRequests?.trim();
+  if (
+    (name !== undefined &&
+      (name.length < 2 ||
+        name.length > 120 ||
+        /[\u0000-\u001f\u007f]/.test(name))) ||
+    (email !== undefined &&
+      email !== "" &&
+      (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) ||
+    (phone !== undefined && phone !== "" && !/^\+?[0-9]{7,15}$/.test(phone)) ||
+    (changes.specialRequests?.length ?? 0) > 2000
+  )
+    throw new ConvexError("Enter valid guest details.");
+  if (
+    changes.partySize !== undefined &&
+    (!Number.isInteger(changes.partySize) || changes.partySize < 1)
+  )
+    throw new ConvexError("Choose a valid party size.");
+  if (
+    changes.tableIds &&
+    (!changes.tableIds.length ||
+      new Set(changes.tableIds).size !== changes.tableIds.length)
+  )
+    throw new ConvexError("Choose distinct tables.");
+
+  const oldContact = old.guestContact ?? {
+    email: customer.email,
+    phone: customer.phone,
+  };
+  const contact = {
+    email: email === undefined ? oldContact.email : email || undefined,
+    phone: phone === undefined ? oldContact.phone : phone || undefined,
+  };
+  const partySize = changes.partySize ?? old.partySize;
+  const tableIds = changes.tableIds ?? old.tableIds!;
+  const moved = !sameTables(tableIds, old.tableIds!);
+  const allocationChanged = moved || partySize !== old.partySize;
+  const changedFields: string[] = [];
+  const patch: Partial<Doc<"reservations">> = {};
+  if (name !== undefined && name !== (old.guestName ?? customer.name)) {
+    patch.guestName = name;
+    changedFields.push("customerName");
+  }
+  if (
+    contact.email !== oldContact.email ||
+    contact.phone !== oldContact.phone
+  ) {
+    patch.guestContact = contact;
+    if (contact.email !== oldContact.email) changedFields.push("customerEmail");
+    if (contact.phone !== oldContact.phone) changedFields.push("customerPhone");
+  }
+  if (
+    requests !== undefined &&
+    (requests || undefined) !== (old.specialRequests || undefined)
+  ) {
+    patch.specialRequests = requests || undefined;
+    changedFields.push("specialRequests");
+  }
+  let allocationStart: number | undefined;
+  if (allocationChanged) {
+    const result = await amendmentOptions(ctx, org, old, partySize);
+    const option = result.options.find((candidate) =>
+      sameTables(candidate.tableIds, tableIds),
+    );
+    if (!option)
+      throw new ConvexError(
+        "Choose an available table or saved combination that fits this party.",
+      );
+    await atomicAllocationCheck(
+      ctx,
+      org._id,
+      option.tableIds,
+      result.startAt,
+      result.endAt,
+      old._id,
+    );
+    const tables = option.tableIds.map(
+      (tableId) => result.data.tables.find((table) => table._id === tableId)!,
+    );
+    Object.assign(patch, {
+      partySize,
+      tableIds: option.tableIds,
+      tableId: option.tableIds[0],
+      tableLabels: tables.map((table) => table.label),
+      floorPlanId: tables[0].floorPlanId,
+      combinationId: option.combinationId,
+      capacitySnapshot: option.capacity,
+    });
+    allocationStart = result.startAt;
+    if (partySize !== old.partySize) changedFields.push("partySize");
+    if (moved) changedFields.push("tableIds");
+  }
+  if (!changedFields.length) return old;
+  const now = Date.now();
+  const revision = old.revision! + 1;
+  await ctx.db.patch(id, { ...patch, revision, updatedAt: now });
+  const updated = (await ctx.db.get(id))!;
+  if (moved) {
+    await replaceAllocations(
+      ctx,
+      updated,
+      allocationStart!,
+      old.endAt + (old.bufferMins ?? 0) * 60_000,
+      old.status === "seated",
+    );
+    if (old.status === "seated") {
+      const vacated = old.tableIds!.filter(
+        (tableId) => !updated.tableIds!.includes(tableId),
+      );
+      for (const tableId of vacated) {
+        await ctx.db.insert("reservation_allocations", {
+          orgId: org._id,
+          reservationId: id,
+          revision,
+          tableId,
+          startAt: now,
+          endAt: now + (old.bufferMins ?? 0) * 60_000,
+          kind: "cleaning",
+          requiresRelease: true,
+          isActive: true,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      for (const tableId of new Set([...vacated, ...updated.tableIds!]))
+        await ctx.db.patch(tableId, {
+          status: vacated.includes(tableId) ? "cleaning" : "occupied",
+          updatedAt: now,
+        });
+    }
+  }
+  // Metadata edits must advance allocation revisions without changing occupancy,
+  // cleaning deadlines, or the indefinite hold of an overdue seated party.
+  for (const allocation of await allocationsFor(ctx, updated))
+    if (!allocation.isDeleted && allocation.revision !== revision)
+      await ctx.db.patch(allocation._id, { revision, updatedAt: now });
+  await audit(
+    ctx,
+    org._id,
+    id,
+    actor,
+    "amended",
+    {
+      revision: old.revision,
+      partySize: old.partySize,
+      tableIds: old.tableIds,
+    },
+    {
+      revision,
+      partySize: updated.partySize,
+      tableIds: updated.tableIds,
+      changedFields,
+    },
+  );
+  // Existing proof remains the sole recipient authority. New revisions need
+  // fresh reminders because delivery intentionally rejects stale revisions.
+  await queueReservationEvent(ctx, org, updated, "changed");
   return updated;
 }
 
@@ -1298,6 +1948,7 @@ export function safeReservation(reservation: Doc<"reservations">) {
     manageTokenExpiresAt,
     requestFingerprint,
     verifiedEmail,
+    guestContact,
     ...safe
   } = reservation;
   void manageTokenHash;
@@ -1305,5 +1956,6 @@ export function safeReservation(reservation: Doc<"reservations">) {
   void manageTokenExpiresAt;
   void requestFingerprint;
   void verifiedEmail;
+  void guestContact;
   return safe;
 }

@@ -18,12 +18,17 @@ Future agents must:
 6. Ask for explicit user authorization before changing product scope or enabling another vertical.
 7. Keep web stabilization the priority. The explicitly authorized `opus-mobile/` Expo studio dashboard and its existing-backend integration are retained in this monorepo; native consumer clients remain deferred.
 8. Keep `opus-mk/` dormant and untouched unless the user explicitly resumes marketplace work.
+9. Follow the hospitality first-version direction in [`docs/HOSPITALITY_V1_PLAN.md`](docs/HOSPITALITY_V1_PLAN.md): website editor, verified custom domains, digital menu, QR codes and optional flexible reservations for Macedonian cafés/restaurants. The October 17 request authorizes planning/documentation only, not implementation. Preserve the existing reservation foundation; exclude POS and POS integrations, orders, payments and bill splitting. Future website/menu publication must be independent from booking readiness without weakening booking safeguards.
 
 ---
 
 ## What This Project Is
 
 **OPUS** serves beauty appointments and the authorized restaurant/café reservation workflow. The deployed marketing remains beauty-focused until an explicitly authorized release.
+
+Hospitality's planned first version centers on the venue website and menu with
+optional reservations. The existing reservation implementation is local; the
+new website/menu/domain/QR capabilities are planned, not active claims.
 
 Canonical positioning: **OPUS helps small beauty studios manage appointments and turn cancellations and empty calendar slots into booked appointments.**
 
@@ -218,7 +223,7 @@ SMS notifications were removed on October 11, 2026. Email and personal push rema
 
 **Local:** Each app runs independently. `opus-dashboard` runs frontend + Convex backend together.
 
-**Target production topology:** `opus-landing/` is deployed to Vercel at `opus.mk`; `opus-dashboard/` is deployed as a separate Vercel project at `studio.opus.mk` and `*.opus.mk`. A VPS is not required for those web surfaces once Vercel has provisioned the wildcard domain and certificate. Follow [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md); do not improvise per-tenant DNS records or reintroduce custom-domain settings.
+**Target production topology:** `opus-landing/` is deployed to Vercel at `opus.mk`; `opus-dashboard/` is deployed as a separate Vercel project at `studio.opus.mk` and `*.opus.mk`. A VPS is not required for those web surfaces once Vercel has provisioned the wildcard domain and certificate. Follow [`docs/TENANT_WEBSITES.md`](docs/TENANT_WEBSITES.md); automatic OPUS subdomains need no per-tenant DNS records. Verified hospitality custom domains are now planned in [`docs/HOSPITALITY_V1_PLAN.md`](docs/HOSPITALITY_V1_PLAN.md), but not implemented or authorized for infrastructure changes. Do not reactivate legacy domain strings/settings as verified ownership. Dashboard and client authentication stay on their central OPUS origins.
 
 ---
 

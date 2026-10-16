@@ -12,6 +12,12 @@ import {
   assertHospitalityNavigation,
   captureHospitalityWorkspace,
 } from "./support/hospitality-navigation";
+import { exerciseFloorPlan } from "./support/floor-plan";
+import { exerciseVerifiedGuestAmendment } from "./support/reservation-amendments";
+import {
+  exerciseLiveFloorService,
+  servicePeriodBoundary,
+} from "./support/floor-plan-service";
 
 type Snapshot = {
   org: Doc<"orgs">;
@@ -53,6 +59,25 @@ async function snapshot(slug: string, clientEmail?: string): Promise<Snapshot> {
 async function select(page: Page, label: string, option: string) {
   await page.getByRole("combobox", { name: label, exact: true }).click();
   await page.getByRole("option", { name: option, exact: true }).click();
+}
+async function selectOfferedTime(
+  page: Page,
+  label: string,
+  excluding?: string,
+) {
+  await page.getByRole("combobox", { name: label, exact: true }).click();
+  const options = page.getByRole("option");
+  await expect(options.first()).toBeVisible();
+  const offered = (await options.allTextContents()).map((value) =>
+    value.trim(),
+  );
+  const time = offered.find((value) => value !== excluding);
+  expect(
+    time,
+    `An available ${label.toLowerCase()} must be offered`,
+  ).toBeTruthy();
+  await page.getByRole("option", { name: time!, exact: true }).click();
+  return time!;
 }
 async function captureResponsive(page: Page, stage: string) {
   const initialViewport = page.viewportSize()!;
@@ -124,7 +149,7 @@ async function prepareReservation(
   await dismissConsent(page);
   await page.getByLabel("Party size", { exact: true }).fill("4");
   await page.getByLabel("Date", { exact: true }).fill(date);
-  await select(page, "Available time", "10:00");
+  const time = await selectOfferedTime(page, "Available time");
   await page.getByLabel("Your name", { exact: true }).fill(name);
   await page.getByLabel("Email", { exact: true }).fill(email);
   const after = Date.now();
@@ -132,7 +157,7 @@ async function prepareReservation(
     .getByRole("button", { name: "Send verification code", exact: true })
     .click();
   await expect(page.getByLabel("Email verification code")).toBeVisible();
-  return emailCode(email, after);
+  return { code: await emailCode(email, after), time };
 }
 
 test("short restaurant onboarding → dashboard and optional setup → table combinations → guest management and staff operations", async ({
@@ -334,8 +359,13 @@ test("short restaurant onboarding → dashboard and optional setup → table com
       .getByRole("button", { name: "Add service period", exact: true })
       .click();
     await owner.getByLabel("Period 1 name", { exact: true }).fill("All day");
-    await owner.getByLabel("Period 1 opens", { exact: true }).fill("00:00");
-    await owner.getByLabel("Period 1 closes", { exact: true }).fill("00:00");
+    const serviceBoundary = servicePeriodBoundary();
+    await owner
+      .getByLabel("Period 1 opens", { exact: true })
+      .fill(serviceBoundary);
+    await owner
+      .getByLabel("Period 1 closes", { exact: true })
+      .fill(serviceBoundary);
     await owner.getByLabel("Closes the next day", { exact: true }).check();
     await owner
       .getByRole("button", { name: "Save reservation rules", exact: true })
@@ -446,7 +476,7 @@ test("short restaurant onboarding → dashboard and optional setup → table com
       expect((await context.request.get(`/sites/${slug}`)).status()).toBe(404);
       expect((await context.request.get(`/book/${slug}`)).status()).toBe(404);
     });
-    const codes = await Promise.all(
+    const prepared = await Promise.all(
       guests.map((page, i) =>
         prepareReservation(
           page,
@@ -457,6 +487,12 @@ test("short restaurant onboarding → dashboard and optional setup → table com
         ),
       ),
     );
+    // The all-day service starts relative to real time, so its slot grid need
+    // not contain a round clock time. Both guests must still race for the same
+    // actually offered slot and the overlapping A+B / B+C combinations.
+    expect(prepared[0].time).toBe(prepared[1].time);
+    const bookingTime = prepared[0].time;
+    const codes = prepared.map((reservation) => reservation.code);
     await guests[1].screenshot({
       path: test.info().outputPath("booking-320.png"),
       fullPage: true,
@@ -528,6 +564,55 @@ test("short restaurant onboarding → dashboard and optional setup → table com
     expect(
       (await snapshot(slug)).allocations.filter((row) => row.isActive),
     ).toHaveLength(2);
+    await test.step("Floor-plan edits persist without changing active reservations or public availability", async () => {
+      const before = await snapshot(slug);
+      const publicSlots = async () => {
+        const response = await context.request.post(
+          `${requiredEnv("OPUS_E2E_CONVEX_URL")}/api/query`,
+          {
+            data: {
+              path: "reservationPublic:getSlots",
+              args: { slug, date, partySize: 4 },
+              format: "json",
+            },
+          },
+        );
+        expect(response.ok()).toBe(true);
+        const result = await response.json();
+        expect(result.status).toBe("success");
+        return result.value;
+      };
+      const slotsBefore = await publicSlots();
+      await exerciseFloorPlan(owner, before.tables);
+      const after = await snapshot(slug);
+      expect(after.reservations).toEqual(before.reservations);
+      expect(after.allocations).toEqual(before.allocations);
+      expect(after.combinations).toEqual(before.combinations);
+      const operationalTables = (rows: Snapshot["tables"]) =>
+        rows.map(
+          ({
+            _id,
+            label,
+            capacity,
+            minCapacity,
+            floorPlanId,
+            isActive,
+            status,
+          }) => ({
+            _id,
+            label,
+            capacity,
+            minCapacity,
+            floorPlanId,
+            isActive,
+            status,
+          }),
+        );
+      expect(operationalTables(after.tables)).toEqual(
+        operationalTables(before.tables),
+      );
+      expect(await publicSlots()).toEqual(slotsBefore);
+    });
     const manageUrl = await emailManagementLink(emails[winner]);
     expect(new URL(manageUrl).origin).toBe(baseURL);
     await client.goto(manageUrl);
@@ -543,7 +628,8 @@ test("short restaurant onboarding → dashboard and optional setup → table com
       await client
         .getByRole("button", { name: "Change reservation", exact: true })
         .click();
-      await select(client, "New time", "11:00");
+      const newTime = await selectOfferedTime(client, "New time", bookingTime);
+      expect(newTime).not.toBe(bookingTime);
       await client
         .getByRole("button", { name: "Confirm change", exact: true })
         .click();
@@ -551,6 +637,9 @@ test("short restaurant onboarding → dashboard and optional setup → table com
         .poll(async () => (await snapshot(slug)).reservations[0].revision)
         .toBe(2);
       expect((await snapshot(slug)).reservations[0]._id).toBe(booked._id);
+      expect((await snapshot(slug)).reservations[0].startAt).not.toBe(
+        booked.startAt,
+      );
       await client
         .getByRole("link", { name: "Save to an optional account", exact: true })
         .click();
@@ -567,6 +656,16 @@ test("short restaurant onboarding → dashboard and optional setup → table com
         hasAuthenticatedClient: true,
         businessUserCount: 0,
         venueStaffMembershipCount: 0,
+      });
+      await test.step("Staff edit this visit without transferring the verified guest's account or management link", async () => {
+        await exerciseVerifiedGuestAmendment(
+          owner,
+          client,
+          slug,
+          booked._id,
+          guests[1 - winner],
+          manageUrl,
+        );
       });
       await client
         .getByRole("link", { name: "My account", exact: true })
@@ -594,7 +693,7 @@ test("short restaurant onboarding → dashboard and optional setup → table com
       await client.goto(`/reserve/${slug}`);
       await client.getByLabel("Party size", { exact: true }).fill("4");
       await client.getByLabel("Date", { exact: true }).fill(date);
-      await select(client, "Available time", "10:00");
+      await select(client, "Available time", bookingTime);
       await client
         .getByLabel("Your name", { exact: true })
         .fill("Returning Restaurant Guest");
@@ -621,7 +720,7 @@ test("short restaurant onboarding → dashboard and optional setup → table com
         venueStaffMembershipCount: 0,
       });
     });
-    await test.step("Staff cancel the returning reservation and complete a combined-table walk-in", async () => {
+    await test.step("Staff protect upcoming reservations and complete an immediate combined-table visit on the live floor", async () => {
       await owner.goto(`/hospitality?date=${date}`);
       const returning = owner.getByTestId("reservation-row").filter({
         has: owner.getByText("Returning Restaurant Guest", { exact: true }),
@@ -653,95 +752,21 @@ test("short restaurant onboarding → dashboard and optional setup → table com
             ).length,
         )
         .toBe(0);
-      await owner.goto("/hospitality");
-      await owner
-        .getByRole("button", { name: "Add reservation", exact: true })
-        .click();
-      const dialog = owner.getByRole("dialog", {
-        name: "Add reservation",
-        exact: true,
+      await exerciseLiveFloorService(owner, {
+        slug,
+        tableLabels: ["A", "B", "C"],
+        combinationLabels: ["A + B", "B + C"],
+        guestName: "Walk-in Guest",
+        checkUpcoming: true,
       });
-      await select(owner, "Reservation source", "Walk-in");
-      await dialog.getByLabel("Party size", { exact: true }).fill("4");
-      await dialog
-        .getByLabel("Dining duration (minutes)", { exact: true })
-        .fill("15");
-      await dialog
-        .getByLabel("Guest name", { exact: true })
-        .fill("Walk-in Guest");
-      // A future grid arrival within 30 minutes can be seated immediately; no clock bypass.
-      if (
-        await dialog
-          .getByText(
-            "No tables are available. Try another date, party size or duration.",
-          )
-          .isVisible()
-      ) {
-        await dialog
-          .getByLabel("Service date", { exact: true })
-          .fill(new Date(Date.now() + 86_400_000).toISOString().slice(0, 10));
-      }
-      await owner
-        .getByRole("combobox", { name: "Arrival time", exact: true })
-        .click();
-      const arrivalOptions = owner.getByRole("option");
-      await arrivalOptions
-        .nth((await arrivalOptions.count()) > 1 ? 1 : 0)
-        .click();
-      await select(owner, "Table assignment (optional)", "A + B");
-      await dialog
-        .getByRole("button", { name: "Create reservation", exact: true })
-        .click();
-      await expect(dialog).not.toBeVisible();
-      const visit = owner
-        .getByTestId("reservation-row")
-        .filter({ has: owner.getByText("Walk-in Guest", { exact: true }) });
-      await visit.getByRole("button", { name: "Arrived", exact: true }).click();
-      await expect(
-        visit.getByText("confirmed · arrived", { exact: true }),
-      ).toBeVisible();
-      await visit
-        .getByRole("button", { name: "Seat guests", exact: true })
-        .click();
-      await expect(visit.getByText("seated", { exact: true })).toBeVisible();
-      await visit
-        .getByRole("button", {
-          name: "Reservation actions for Walk-in Guest",
-          exact: true,
-        })
-        .click();
-      await owner
-        .getByRole("menuitem", { name: "Move table", exact: true })
-        .click();
-      await select(owner, "Table assignment", "B + C");
-      await owner
-        .getByRole("dialog", { name: "Move reservation", exact: true })
-        .getByRole("button", { name: "Confirm change", exact: true })
-        .click();
-      await expect(
-        visit.getByRole("button", { name: "Mark A ready", exact: true }),
-      ).toBeVisible();
-      await visit
-        .getByRole("button", { name: "Mark A ready", exact: true })
-        .click();
-      await expect(
-        visit.getByRole("button", { name: "Mark A ready", exact: true }),
-      ).not.toBeVisible();
-      await visit
-        .getByRole("button", { name: "Finish visit", exact: true })
-        .click();
+      const visit = owner.getByTestId("reservation-row").filter({
+        has: owner.getByText("Walk-in Guest", { exact: true }),
+      });
+      // Return to the same visit to exercise the existing owner-only privacy flow.
+      await owner.goto(
+        `/hospitality?date=${(await snapshot(slug)).reservations.find((row) => row.guestName === "Walk-in Guest")!.serviceDate}`,
+      );
       await expect(visit.getByText("completed", { exact: true })).toBeVisible();
-      for (const label of ["B", "C"]) {
-        await visit
-          .getByRole("button", { name: `Mark ${label} ready`, exact: true })
-          .click();
-        await expect(
-          visit.getByRole("button", {
-            name: `Mark ${label} ready`,
-            exact: true,
-          }),
-        ).not.toBeVisible();
-      }
       const final = await snapshot(slug);
       expect(final.tables.every((table) => table.status === "available")).toBe(
         true,

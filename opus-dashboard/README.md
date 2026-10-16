@@ -1,8 +1,19 @@
 # OPUS Dashboard
 
-The dashboard is the business-facing surface for the current beauty appointment product in Macedonia. It covers onboarding, services, staff, availability, customers, the calendar, and appointment lifecycle management.
+The dashboard serves the deployed beauty appointment product in Macedonia and
+the local restaurant/café reservation implementation. Beauty covers onboarding,
+services, staff, availability, customers, the calendar and appointment lifecycle.
+Hospitality currently covers short onboarding, venue setup, reservations, tables,
+combinations, floor plans and staff service operations.
 
-Read the repository-wide [product scope](../docs/PRODUCT_SCOPE.md) before product work. Hospitality and P2 features remain dormant; the Expo/React Native and SwiftUI applications come last and are outside the current web phase.
+Read the repository-wide [product scope](../docs/PRODUCT_SCOPE.md) before product
+work. The [hospitality first-version plan](../docs/HOSPITALITY_V1_PLAN.md) adds a
+website editor, verified custom domains, digital menu, QR materials and flexible
+optional reservations. The October 17, 2026 scope update is documentation-only;
+those additions are not implemented. POS, POS integrations, orders and guest
+payments remain excluded. Work stays on `codex/hospitality-vertical` without
+deployment; preserve beauty's existing contracts and the authorized Expo studio
+dashboard integration. Native hospitality and consumer applications remain deferred.
 
 ## Development
 

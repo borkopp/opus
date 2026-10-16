@@ -10,6 +10,14 @@ import {
   assertHospitalityNavigation,
   captureHospitalityWorkspace,
 } from "./support/hospitality-navigation";
+import {
+  exerciseLiveFloorService,
+  floorServiceSnapshot,
+  servicePeriodBoundary,
+} from "./support/floor-plan-service";
+import { exerciseStaffReservationAmendments } from "./support/reservation-amendments";
+import { exerciseReservationSearch } from "./support/reservation-search";
+import { exerciseReservationAttention } from "./support/reservation-attention";
 
 async function switchBusiness(page: Page, name: string) {
   await page
@@ -71,6 +79,7 @@ test("beauty owner creates a separate café, switches workspaces and invites a h
   const hostName = "Access Journey Host";
   const hostEmail = `hospitality-host-${suffix}@example.test`;
   const tableName = "Host Visible Table";
+  const tableLabels = [tableName, "Host Table B", "Host Table C"] as const;
   const errors: string[] = [];
   owner.on("pageerror", (error) => errors.push(error.message));
   await prepareContext(context, baseURL!);
@@ -157,15 +166,39 @@ test("beauty owner creates a separate café, switches workspaces and invites a h
     await owner
       .getByRole("link", { name: "Manage tables", exact: true })
       .click();
-    await owner.getByRole("button", { name: "Add table", exact: true }).click();
-    const dialog = owner.getByRole("dialog", {
-      name: "Add table",
-      exact: true,
-    });
-    await dialog.getByLabel("Table label", { exact: true }).fill(tableName);
-    await dialog.getByLabel("Capacity", { exact: true }).fill("2");
-    await dialog.getByRole("button", { name: "Save", exact: true }).click();
-    await expect(dialog).not.toBeVisible();
+    for (const label of tableLabels) {
+      await owner
+        .getByRole("button", { name: "Add table", exact: true })
+        .click();
+      const dialog = owner.getByRole("dialog", {
+        name: "Add table",
+        exact: true,
+      });
+      await dialog.getByLabel("Table label", { exact: true }).fill(label);
+      await dialog.getByLabel("Capacity", { exact: true }).fill("2");
+      await dialog.getByRole("button", { name: "Save", exact: true }).click();
+      await expect(dialog).not.toBeVisible();
+    }
+    await owner.getByRole("tab", { name: "Combinations", exact: true }).click();
+    for (const [name, labels] of [
+      ["Host A + B", tableLabels.slice(0, 2)],
+      ["Host B + C", tableLabels.slice(1)],
+    ] as const) {
+      await owner
+        .getByRole("button", { name: "Add combination", exact: true })
+        .click();
+      const dialog = owner.getByRole("dialog", {
+        name: "Add combination",
+        exact: true,
+      });
+      await dialog.getByLabel("Name", { exact: true }).fill(name);
+      await dialog.getByLabel("Capacity", { exact: true }).fill("4");
+      await dialog.getByLabel("Minimum party size", { exact: true }).fill("3");
+      for (const label of labels)
+        await dialog.getByLabel(`${label} · 2 guests`, { exact: true }).check();
+      await dialog.getByRole("button", { name: "Save", exact: true }).click();
+      await expect(dialog).not.toBeVisible();
+    }
     await owner.getByRole("tab", { name: "Overview", exact: true }).click();
     await expect(
       owner.getByRole("article", { name: tableName, exact: true }),
@@ -179,6 +212,39 @@ test("beauty owner creates a separate café, switches workspaces and invites a h
   let inviteURL = "";
   await test.step("The café owner sends an actual host invitation", async () => {
     await owner.getByRole("link", { name: "Venue setup", exact: true }).click();
+    await owner
+      .getByRole("tab", { name: "Hours & rules", exact: true })
+      .click();
+    await owner
+      .getByLabel("Dining duration (minutes)", { exact: true })
+      .fill("30");
+    await owner
+      .getByLabel("Table reset buffer (minutes)", { exact: true })
+      .fill("0");
+    await owner
+      .getByRole("button", { name: "Add service period", exact: true })
+      .click();
+    const boundary = servicePeriodBoundary();
+    await owner
+      .getByLabel("Period 1 name", { exact: true })
+      .fill("Daily service");
+    await owner.getByLabel("Period 1 opens", { exact: true }).fill(boundary);
+    await owner.getByLabel("Period 1 closes", { exact: true }).fill(boundary);
+    await owner.getByLabel("Closes the next day", { exact: true }).check();
+    await owner
+      .getByRole("button", { name: "Save reservation rules", exact: true })
+      .click();
+    await expect
+      .poll(
+        async () =>
+          (await floorServiceSnapshot(venueSlug)).settings.servicePeriods
+            ?.length,
+      )
+      .toBe(1);
+    // Operational staff access does not publish the venue or invent missing profile details.
+    expect((await floorServiceSnapshot(venueSlug)).org.websiteStatus).toBe(
+      "unpublished",
+    );
     await owner.getByRole("tab", { name: "Team", exact: true }).click();
     await owner.getByLabel("Team member name", { exact: true }).fill(hostName);
     await owner.getByLabel("Sign-in email", { exact: true }).fill(hostEmail);
@@ -309,6 +375,47 @@ test("beauty owner creates a separate café, switches workspaces and invites a h
           exact: true,
         }),
       ).toBeVisible();
+      await assertHospitalityNavigation(host, "Reservations", "staff");
+      expect(errors).toEqual([]);
+    });
+    await test.step("The host seats and manages a combined-table walk-in on the live floor without layout permissions", async () => {
+      await exerciseLiveFloorService(host, {
+        slug: venueSlug,
+        tableLabels,
+        combinationLabels: ["Host A + B", "Host B + C"],
+        guestName: "Host Floor Guest",
+        role: "staff",
+        observer: owner,
+      });
+      const venue = await floorServiceSnapshot(venueSlug);
+      expect(venue.org.websiteStatus).toBe("unpublished");
+      expect(venue.org.address).toBeUndefined();
+      expect(venue.allocations.filter((row) => row.isActive)).toHaveLength(0);
+      await host.goto("/hospitality");
+      await assertHospitalityNavigation(host, "Reservations", "staff");
+      expect(errors).toEqual([]);
+    });
+    await test.step("The host edits guest details and party size with explicit table choices, conflict protection and stale-draft recovery", async () => {
+      await exerciseStaffReservationAmendments(
+        host,
+        owner,
+        venueSlug,
+        tableLabels,
+        "Host A + B",
+      );
+      await host.goto("/hospitality");
+      await assertHospitalityNavigation(host, "Reservations", "staff");
+      expect(errors).toEqual([]);
+    });
+    await test.step("The host searches guests and phone numbers, filters live visit stages and follows a hidden visit link", async () => {
+      await exerciseReservationSearch(host, venueSlug, tableLabels);
+      await host.goto("/hospitality");
+      await assertHospitalityNavigation(host, "Reservations", "staff");
+      expect(errors).toEqual([]);
+    });
+    await test.step("The host identifies late, ending and overdue visits and safely resets cleaning tables using server time", async () => {
+      await exerciseReservationAttention(host, venueSlug, tableLabels);
+      await host.goto("/hospitality");
       await assertHospitalityNavigation(host, "Reservations", "staff");
       expect(errors).toEqual([]);
     });

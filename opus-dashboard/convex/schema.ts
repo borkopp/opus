@@ -1487,6 +1487,28 @@ export default defineSchema({
 
     canvasWidth: v.number(),
     canvasHeight: v.number(),
+    layoutRevision: v.optional(v.number()),
+    fixtures: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          kind: v.union(
+            v.literal("wall"),
+            v.literal("bar"),
+            v.literal("door"),
+            v.literal("plant"),
+            v.literal("label"),
+          ),
+          label: v.string(),
+          x: v.number(),
+          y: v.number(),
+          width: v.number(),
+          height: v.number(),
+          rotation: v.number(),
+          locked: v.boolean(),
+        }),
+      ),
+    ),
 
     backgroundImageUrl: v.optional(v.string()),
     backgroundImageOpacity: v.optional(v.number()),
@@ -1516,6 +1538,7 @@ export default defineSchema({
     width: v.number(),
     height: v.number(),
     rotation: v.number(),
+    layoutLocked: v.optional(v.boolean()),
     shape: v.union(
       v.literal("rectangle"),
       v.literal("circle"),
@@ -1605,6 +1628,13 @@ export default defineSchema({
     timezone: v.optional(v.string()),
     serviceDate: v.optional(v.string()),
     guestName: v.optional(v.string()),
+    // Staff contact details for this visit; never establish guest identity or delivery proof.
+    guestContact: v.optional(
+      v.object({
+        email: v.optional(v.string()),
+        phone: v.optional(v.string()),
+      }),
+    ),
     revision: v.optional(v.number()),
     tableIds: v.optional(v.array(v.id("tables"))),
     tableLabels: v.optional(v.array(v.string())),

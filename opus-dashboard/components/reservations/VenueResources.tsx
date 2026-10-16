@@ -55,7 +55,7 @@ import {
 } from "./ReservationFields";
 
 type Workspace = FunctionReturnType<typeof api.hospitality.getWorkspace>;
-type Editor =
+export type VenueResourceEditorState =
   | { kind: "area"; row?: Doc<"floor_plans"> }
   | { kind: "table"; row?: Doc<"tables"> }
   | { kind: "combination"; row?: Doc<"table_combinations"> }
@@ -71,7 +71,7 @@ export function VenueResources({
   section?: "area" | "table" | "combination";
 }) {
   const copy = useReservationCopy();
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [editor, setEditor] = useState<VenueResourceEditorState | null>(null);
   const remove = useMutation(api.hospitality.removeResource);
   const action = useReservationAction();
   const timezone = workspace.settings?.timezone ?? "Europe/Skopje";
@@ -127,7 +127,7 @@ export function VenueResources({
               </div>
               <Button
                 variant="outline"
-                onClick={() => setEditor({ kind } as Editor)}
+                onClick={() => setEditor({ kind } as VenueResourceEditorState)}
               >
                 <Plus data-icon="inline-start" />
                 {copy("Add")} {copy(kind)}
@@ -194,7 +194,9 @@ export function VenueResources({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setEditor({ kind, row } as Editor)}
+                      onClick={() =>
+                        setEditor({ kind, row } as VenueResourceEditorState)
+                      }
                     >
                       {copy("Edit")}
                     </Button>
@@ -230,14 +232,18 @@ export function VenueResources({
   );
 }
 
-function ResourceEditor({
+export function ResourceEditor({
   editor,
   workspace,
   onClose,
+  defaultAreaId,
+  onSaved,
 }: {
-  editor: Editor;
+  editor: VenueResourceEditorState;
   workspace: Workspace;
   onClose: () => void;
+  defaultAreaId?: string;
+  onSaved?: (id: string) => void;
 }) {
   const copy = useReservationCopy();
   const { t } = useDashboardI18n();
@@ -272,7 +278,7 @@ function ResourceEditor({
   const [area, setArea] = useState<string>(
     row && "floorPlanId" in row
       ? row.floorPlanId
-      : (workspace.areas[0]?._id ?? ""),
+      : (defaultAreaId ?? workspace.areas[0]?._id ?? ""),
   );
   const [tableIds, setTableIds] = useState<Id<"tables">[]>(
     row && "tableIds" in row ? row.tableIds : [],
@@ -295,11 +301,16 @@ function ResourceEditor({
     return instant;
   };
   async function save() {
+    let savedId: string | undefined;
     const result = await action.run(async () => {
       if (editor.kind === "area")
-        await saveArea({ areaId: editor.row?._id, name, isActive: active });
+        savedId = await saveArea({
+          areaId: editor.row?._id,
+          name,
+          isActive: active,
+        });
       if (editor.kind === "table")
-        await saveTable({
+        savedId = await saveTable({
           tableId: editor.row?._id,
           areaId: area as Id<"floor_plans">,
           label: name,
@@ -325,7 +336,10 @@ function ResourceEditor({
           endAt: closureInstant(end, savedEnd),
         });
     }, copy("Saved"));
-    if (result) onClose();
+    if (result) {
+      if (savedId) onSaved?.(savedId);
+      onClose();
+    }
   }
   return (
     <Dialog

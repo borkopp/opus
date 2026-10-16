@@ -1,5 +1,50 @@
 // Staff reservation UI copy. Business names, guest data and server errors are not translated.
 export const reservationStaffCopy: Record<string, readonly [string, string]> = {
+  "The current tables cannot fit this party. Extend the visit before moving tables.":
+    [
+      "Тековните маси не одговараат за групата. Продолжете ја посетата пред да ги промените масите.",
+      "Tavolinat aktuale nuk përshtaten për grupin. Zgjateni vizitën para se të ndryshoni tavolinat.",
+    ],
+  "No suitable tables are available for this party at the reservation time.": [
+    "Нема достапни соодветни маси за оваа група во терминот на резервацијата.",
+    "Nuk ka tavolina të përshtatshme për këtë grup në orën e rezervimit.",
+  ],
+  "Choose an available table or saved combination that fits this party.": [
+    "Изберете достапна маса или зачувана комбинација соодветна за групата.",
+    "Zgjidhni një tavolinë të lirë ose kombinim të ruajtur që përshtatet për grupin.",
+  ],
+  "Only a current or future confirmed reservation can change party size or tables.":
+    [
+      "Бројот на гости и масите може да се променат само за тековна или идна потврдена резервација.",
+      "Madhësia e grupit dhe tavolinat mund të ndryshohen vetëm për një rezervim aktual ose të ardhshëm të konfirmuar.",
+    ],
+  "Only confirmed or seated reservations can be edited.": [
+    "Може да се уредуваат само потврдени резервации или сместени гости.",
+    "Mund të redaktohen vetëm rezervimet e konfirmuara ose me mysafirë të ulur.",
+  ],
+  "Anonymised guest details cannot be edited.": [
+    "Анонимизираните податоци за гостинот не може да се уредуваат.",
+    "Të dhënat e anonimizuara të mysafirit nuk mund të redaktohen.",
+  ],
+  "This reservation changed. Refresh and try again.": [
+    "Резервацијата е променета. Вчитајте ги најновите податоци и обидете се повторно.",
+    "Ky rezervim ka ndryshuar. Rifreskoni dhe provoni përsëri.",
+  ],
+
+  "There is not enough service time remaining for this visit and reset buffer.":
+    [
+      "Нема доволно време до затворање за оваа посета и подготовка на масата.",
+      "Nuk ka kohë të mjaftueshme shërbimi për këtë vizitë dhe pastrimin e tavolinës.",
+    ],
+  "No suitable tables are available for this walk-in.": [
+    "Нема достапни соодветни маси за овие гости. Обидете се со пократка посета или друга маса.",
+    "Nuk ka tavolina të përshtatshme për këta mysafirë. Provoni vizitë më të shkurtër ose tavolinë tjetër.",
+  ],
+  "These tables are no longer available for this walk-in.": [
+    "Овие маси повеќе не се достапни за гостите. Проверете ги новите опции.",
+    "Këto tavolina nuk janë më të disponueshme. Kontrolloni opsionet e përditësuara.",
+  ],
+
   "About your venue (optional)": [
     "За локалот (незадолжително)",
     "Rreth lokalit (opsionale)",

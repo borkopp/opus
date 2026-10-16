@@ -209,6 +209,7 @@ describe("verified hospitality owner setup", () => {
       expect(workspace.org.websitePublishedAt).toBeUndefined();
       expect(workspace.settings?.servicePeriods).toEqual([]);
       expect(workspace.canReadReservations).toBe(true);
+      expect(workspace.canCreateReservations).toBe(false);
       expect(workspace.tables).toEqual([]);
       expect(workspace.readiness.ready).toBe(false);
       const date = "2026-10-12";
@@ -279,6 +280,110 @@ describe("verified hospitality owner setup", () => {
     },
   );
 
+  it("allows staff reservations at an operational private venue before completing its public profile", async () => {
+    const t = createBackend();
+    const owner = await venue(t);
+    await owner.client.mutation(api.hospitality.saveSettings, rules);
+    const initial = await owner.client.query(api.hospitality.getWorkspace);
+    await owner.client.mutation(api.hospitality.saveTable, {
+      areaId: initial.areas[0]._id,
+      label: "T1",
+      capacity: 4,
+      minPartySize: 1,
+      isActive: true,
+    });
+    const workspace = await owner.client.query(api.hospitality.getWorkspace);
+    expect(workspace).toMatchObject({
+      canReadReservations: true,
+      canCreateReservations: true,
+      org: { websiteStatus: "unpublished" },
+      readiness: { ready: false },
+    });
+    expect(
+      workspace.readiness.requirements.filter((item) => !item.complete),
+    ).toMatchObject([{ code: "profile" }]);
+    const slots = await owner.client.query(api.reservations.getSlots, {
+      date: "2026-10-13",
+      partySize: 2,
+    });
+    expect(slots.length).toBeGreaterThan(0);
+    const reservation = await owner.client.mutation(
+      api.reservations.createManual,
+      {
+        requestId: "private-venue-phone",
+        serviceDate: "2026-10-13",
+        startAt: slots[0].startAt,
+        partySize: 2,
+        customerName: "Phone guest",
+        customerPhone: "+38970123456",
+        source: "phone",
+      },
+    );
+    expect(reservation.status).toBe("confirmed");
+    expect(
+      await owner.client.query(api.reservations.listDay, {
+        date: "2026-10-13",
+      }),
+    ).toMatchObject([{ _id: reservation._id, customerName: "Phone guest" }]);
+    await expect(
+      owner.client.mutation(api.hospitality.publish, { published: true }),
+    ).rejects.toThrow("Complete setup");
+    expect(
+      await t.query(api.reservationPublic.getVenue, {
+        slug: workspace.org.slug,
+      }),
+    ).toBeNull();
+  });
+
+  it.each(["hours", "tables"] as const)(
+    "keeps staff reservation creation unavailable without usable %s",
+    async (missing) => {
+      const t = createBackend();
+      const owner = await readyVenue(t);
+      const slots = await owner.client.query(api.reservations.getSlots, {
+        date: "2026-10-13",
+        partySize: 2,
+      });
+      if (missing === "hours") {
+        await owner.client.mutation(api.hospitality.saveSettings, {
+          ...rules,
+          servicePeriods: [],
+        });
+      } else {
+        await owner.client.mutation(api.hospitality.removeResource, {
+          kind: "table",
+          id: owner.tableId,
+        });
+      }
+      expect(
+        await owner.client.query(api.hospitality.getWorkspace),
+      ).toMatchObject({
+        canReadReservations: true,
+        canCreateReservations: false,
+        readiness: { ready: false },
+      });
+      expect(
+        await owner.client.query(api.reservations.getSlots, {
+          date: "2026-10-13",
+          partySize: 2,
+        }),
+      ).toEqual([]);
+      await expect(
+        owner.client.mutation(api.reservations.createManual, {
+          requestId: `missing-${missing}-booking`,
+          serviceDate: "2026-10-13",
+          startAt: slots[0].startAt,
+          partySize: 2,
+          customerName: "Guest",
+          source: "phone",
+        }),
+      ).rejects.toThrow("no longer available");
+      await expect(
+        owner.client.mutation(api.hospitality.publish, { published: true }),
+      ).rejects.toThrow("Complete setup");
+    },
+  );
+
   it("keeps a legacy venue workspace accessible when reservation settings are missing", async () => {
     const t = createBackend();
     const owner = await login(t);
@@ -319,6 +424,7 @@ describe("verified hospitality owner setup", () => {
     ).toMatchObject({
       settings: null,
       canReadReservations: false,
+      canCreateReservations: false,
       readiness: { ready: false },
     });
     await expect(
@@ -347,6 +453,7 @@ describe("verified hospitality owner setup", () => {
         await owner.client.query(api.hospitality.getWorkspace),
       ).toMatchObject({
         canReadReservations: false,
+        canCreateReservations: false,
         readiness: { ready: false },
       });
       await expect(
@@ -442,6 +549,10 @@ describe("verified hospitality owner setup", () => {
     expect((await host.client.query(api.hospitality.getWorkspace)).role).toBe(
       "staff",
     );
+    expect(
+      (await host.client.query(api.hospitality.getWorkspace))
+        .canCreateReservations,
+    ).toBe(true);
     expect(
       await host.client.query(api.reservations.listDay, { date: "2026-10-13" }),
     ).toEqual([]);
@@ -757,8 +868,21 @@ describe("verified hospitality owner setup", () => {
       ctx.db.patch(reservation._id, { timeModel: undefined }),
     );
     expect(
-      (await owner.client.query(api.hospitality.getWorkspace)).readiness.ready,
-    ).toBe(false);
+      await owner.client.query(api.hospitality.getWorkspace),
+    ).toMatchObject({
+      canCreateReservations: false,
+      readiness: { ready: false },
+    });
+    await expect(
+      owner.client.mutation(api.reservations.createManual, {
+        requestId: "blocked-by-legacy",
+        serviceDate: "2026-10-13",
+        startAt: slots[1].startAt,
+        partySize: 2,
+        customerName: "Guest",
+        source: "phone",
+      }),
+    ).rejects.toThrow("Legacy reservations require review");
     await t.run(async (ctx) => {
       await ctx.db.patch(reservation._id, { timeModel: "utc" });
       const allocations = await ctx.db
@@ -771,8 +895,11 @@ describe("verified hospitality owner setup", () => {
         await ctx.db.patch(allocation._id, { isActive: false });
     });
     expect(
-      (await owner.client.query(api.hospitality.getWorkspace)).readiness.ready,
-    ).toBe(false);
+      await owner.client.query(api.hospitality.getWorkspace),
+    ).toMatchObject({
+      canCreateReservations: false,
+      readiness: { ready: false },
+    });
     await expect(
       owner.client.query(api.reservations.getSlots, {
         date: "2026-10-13",

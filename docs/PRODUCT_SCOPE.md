@@ -8,9 +8,18 @@ This document is the product-direction authority for the repository. Read it bef
 
 Beauty remains the deployed product and marketing position. On October 13, 2026, the user authorized preparing normal restaurant/café signup and reservations alongside beauty, locally and in the release source. This does not authorize deployment or marketplace/international expansion.
 
+On October 17, 2026, the user defined the hospitality first-version direction:
+**a venue website editor, custom domains, a digital menu, QR codes, and optional,
+flexible reservations** for cafés and restaurants in Macedonia, including venues
+with occasional weekend music. This is an approved product direction and a
+documentation/planning task, **not authorization to implement these additions or
+deploy them**. See [HOSPITALITY_V1_PLAN.md](HOSPITALITY_V1_PLAN.md) for phases,
+reuse, acceptance criteria and exclusions. Existing local reservation work is
+retained; POS is outside this product version.
+
 ## Target customer
 
-The first customers are small teams, usually one to five people, that currently accept appointments through Instagram, phone calls, messages, or notebooks:
+The first beauty customers are small teams, usually one to five people, that currently accept appointments through Instagram, phone calls, messages, or notebooks:
 
 - nail salons;
 - lash and brow studios;
@@ -18,11 +27,20 @@ The first customers are small teams, usually one to five people, that currently 
 - makeup artists;
 - massage and wellness studios.
 
+The planned hospitality first version targets everyday cafés and restaurants in
+Macedonia, including those accepting reservations only for weekend services or
+music events. A venue must be able to use its website and menu without operating
+online reservations. This does not add hotels, a marketplace, or international
+expansion.
+
 ## Supported verticals and release boundary
 
 The dashboard supports `beauty_wellness` and restaurant/café `hospitality`. Newly verified business accounts choose their type before onboarding. Hospitality does not use an environment enablement flag, email allowlist, or organization pilot grant. Existing accounts resume their own business; client booking and team-invitation flows remain separate from business creation. Beauty's services, staff appointments, billing and AI interfaces must not leak into hospitality.
 
-These changes are authorized for local implementation and testing only until a release is explicitly requested. Do not deploy or alter production configuration. The landing site and live marketing remain beauty-focused.
+The existing reservation changes are authorized for local implementation and
+testing only until a release is explicitly requested. The October 17 additions
+are planned only until implementation is requested. Do not deploy or alter
+production configuration. The landing site and live marketing remain beauty-focused.
 
 The active web surfaces are:
 
@@ -340,7 +358,53 @@ voice, public web chat, campaigns, cancellations and rescheduling by AI are not
 enabled by this authorization. The former unauthenticated web-chat endpoints
 are retired. See [AI_FRONTDESK.md](AI_FRONTDESK.md) for setup and rollout checks.
 
-## Restaurant and café reservations
+## Hospitality: website, menu and flexible reservations
+
+### First-version direction — planned October 17, 2026
+
+The hospitality product centers on a venue's public presence and guest journey:
+
+- **Website editor:** reuse OPUS Sites' editing, draft/preview/publication and
+  design foundations with hospitality-specific sections and content contracts.
+- **Custom domains:** an optional verified venue-owned domain alongside the
+  automatic OPUS subdomain. Keep business and client authentication on the
+  existing central OPUS origins. Legacy `customDomain` values are not proof of
+  ownership and must not be activated automatically.
+- **Digital menu:** structured categories and items, prices, optional variants,
+  descriptions, photos, venue-authored dietary/allergen information, availability,
+  and manually maintained Macedonian/English/Albanian content with fallbacks.
+  Dishes are not beauty services or bookable employees.
+- **QR codes:** branded downloadable website/menu codes and printable materials
+  using stable OPUS links. Codes do not accept orders or take payments.
+- **Flexible reservations:** Off, Weekly services, or Selected dates, with dated
+  overrides and optional event information. Opening hours, staff service hours
+  and public booking windows are distinct. Retain the existing atomic table and
+  combination allocation engine.
+
+Planned website/menu publication must be independent from reservation readiness.
+Owners can publish a usable site without tables, reservation hours or unresolved
+reservation setup blocking it. New public bookings still require an explicitly
+published site, enabled booking mode, valid schedule, operational readiness and
+conflict checks. Turning bookings off or editing an event never cancels existing
+visits; authenticated staff operations and secure guest management remain usable.
+These are target contracts, not current runtime behavior.
+
+The short name/type onboarding and existing local reservation operations remain.
+The phased plan adapts navigation and setup guidance around the selected venue
+capabilities without requiring floor-plan setup for a menu-only venue. Beauty
+authorization, services, pricing, website language entitlements and booking
+contracts remain unchanged; do not broaden beauty-only capability helpers.
+
+POS implementation **and POS integrations**, carts/orders, kitchen routing,
+payments/deposits, bill splitting, inventory, fiscal receipts and sales accounting
+are excluded. A possible standalone table-request inbox is a later proposal,
+not part of this version. Hospitality AI image generation, Instagram publishing,
+promotion campaigns, automatic menu import/translation, automated waitlists,
+native hospitality, and marketplace discovery also remain outside this plan.
+No hospitality subscription pricing or beauty-plan reuse is approved by this
+scope update.
+
+### Existing local reservation foundation — retain
 
 Restaurant and café reservation implementation was explicitly authorized on
 October 12, 2026, including staff-defined table combinations from the first
@@ -361,7 +425,7 @@ guide links to each remaining requirement. Online bookings remain unavailable
 until the existing server-side publication and readiness checks pass. Beauty's
 established onboarding remains unchanged.
 
-The hospitality dashboard shares beauty's design and responsive navigation,
+The current hospitality dashboard shares beauty's design and responsive navigation,
 with Reservations, Tables and Venue setup as its primary destinations. All
 venue staff can view current table state and handle visits; resource and venue
 configuration remains limited to authorized owners and managers, with existing
@@ -377,17 +441,35 @@ availability, timestamps and existing client contracts must remain compatible.
 New reservation times use a versioned UTC-instant contract with the venue's
 timezone and operating date, including overnight service.
 
-Restaurant POS, orders, deposits/payments, marketplace discovery, AI, campaigns,
-and native restaurant screens remain deferred. Existing beauty marketing remains
-unchanged. Local and disposable tests exercise the same self-service access
-rules as the release source; this is not evidence of production delivery.
+On October 14, 2026, the user explicitly authorized a graphical floor-plan
+editor for restaurants and cafés. Owners and managers can arrange physical
+tables and decorative fixtures by area, with drag, resize, rotation, group
+alignment/distribution, locks, undo/redo and explicit revision-checked saves.
+Layout edits must preserve capacity, combinations, table status and reservation
+allocations. All staff can use the saved layout in live service mode to select
+tables, atomically seat actual-now walk-ins using explicit combinations, and
+manage reservations and cleaning holds. Editing geometry remains manager/owner
+only. Staff may also amend guest/contact details, party size and special requests
+on active reservations, with revision and capacity/conflict checks. Contact
+amendments remain reservation-specific and preserve verified-email, account and
+proof-link ownership. These authorizations do not expand staff configuration
+permissions or authorize deployment.
 
-Public reservations require an explicitly published restaurant/café with valid
+The October 17 first-version scope above supersedes the earlier reservation-only
+roadmap; it does not mark its new capabilities implemented. Existing beauty
+marketing remains unchanged. Local and disposable tests exercise the same
+self-service access rules as the release source; this is not evidence of
+production delivery.
+
+In the current implementation, website publication and public reservations
+share reservation readiness. Public reservations require an explicitly published restaurant/café with valid
 current reservation settings, usable physical capacity and resolved legacy
 allocations. Legacy publication alone must not expose an unconverted venue.
 Unpublishing stops new public reservations while authorized staff and guests can
 still manage existing visits. Authentication, tenant roles, proof-link security,
 conflict checks and audit logs are permanent safeguards, not pilot controls.
+Separating website/menu readiness from booking readiness is the first planned
+implementation phase; do not simply remove those guards from existing APIs.
 
 ## Truthful product claims
 

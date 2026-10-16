@@ -1,5 +1,7 @@
 "use client";
 import { useReservationCopy } from "@/hooks/use-reservation-copy";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { ReservationAmendDialog } from "./ReservationAmendDialog";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -25,19 +27,41 @@ import {
 export type StaffReservation = FunctionReturnType<
   typeof api.reservations.listDay
 >[number];
-export type ReservationEditMode = "reschedule" | "move" | "duration" | "cancel";
-export function ReservationEditDialog({
+export type ReservationEditMode =
+  | "reschedule"
+  | "move"
+  | "duration"
+  | "cancel"
+  | "details";
+type EditProps = {
+  reservation: StaffReservation;
+  mode: ReservationEditMode;
+  onClose: () => void;
+  onDateChange: (date: string) => void;
+};
+export function ReservationEditDialog(props: EditProps) {
+  return props.mode === "details" ? (
+    <ReservationAmendDialog
+      reservation={props.reservation}
+      onClose={props.onClose}
+    />
+  ) : (
+    <ReservationScheduleEditDialog {...props} mode={props.mode} />
+  );
+}
+function ReservationScheduleEditDialog({
   reservation,
   mode,
   onClose,
   onDateChange,
 }: {
   reservation: StaffReservation;
-  mode: ReservationEditMode;
+  mode: Exclude<ReservationEditMode, "details">;
   onClose: () => void;
   onDateChange: (date: string) => void;
 }) {
   const copy = useReservationCopy();
+  const { t } = useDashboardI18n();
   const change = useMutation(api.reservations.change);
   const action = useReservationAction();
   const [date, setDate] = useState(reservation.serviceDate ?? "");
@@ -45,10 +69,9 @@ export function ReservationEditDialog({
   const [start, setStart] = useState(String(reservation.startAt));
   const [option, setOption] = useState("");
   const [reason, setReason] = useState("");
-  const seatedMove = mode === "move" && reservation.status === "seated";
   const slots = useQuery(
     api.reservations.getSlots,
-    (mode === "reschedule" || (mode === "move" && !seatedMove)) && date
+    mode === "reschedule" && date
       ? {
           date,
           partySize: reservation.partySize,
@@ -59,10 +82,12 @@ export function ReservationEditDialog({
   );
   const moveOptions = useQuery(
     api.reservations.getMoveOptions,
-    seatedMove ? { reservationId: reservation._id } : "skip",
+    mode === "move"
+      ? { reservationId: reservation._id, durationMins: duration }
+      : "skip",
   );
   const slot = slots?.find((item) => String(item.startAt) === start);
-  const options = seatedMove ? moveOptions : slot?.options;
+  const options = mode === "move" ? moveOptions : slot?.options;
   const selected = options?.find((item) => item.tableIds.join(",") === option);
   const title = {
     reschedule: copy("Reschedule reservation"),
@@ -84,7 +109,7 @@ export function ReservationEditDialog({
                 tableIds: selected?.tableIds,
               }
             : mode === "move"
-              ? { tableIds: selected!.tableIds }
+              ? { tableIds: selected!.tableIds, durationMins: duration }
               : mode === "duration"
                 ? { durationMins: duration }
                 : { reason: reason.trim() || undefined }),
@@ -136,9 +161,14 @@ export function ReservationEditDialog({
                 }}
               />
             )}
-            {mode === "duration" && (
+            {(mode === "duration" || mode === "move") && (
               <ReservationInput
                 label={copy("New dining duration (minutes)")}
+                hint={t(
+                  "Total minutes from the booked arrival time, including time already spent.",
+                  "Вкупно минути од резервираното време на пристигнување, вклучувајќи го веќе поминатото време.",
+                  "Minutat totale nga ora e rezervuar e mbërritjes, duke përfshirë kohën e kaluar.",
+                )}
                 type="number"
                 min={1}
                 max={1440}
@@ -178,7 +208,7 @@ export function ReservationEditDialog({
                 </p>
               ))}
             {(mode === "move" || mode === "reschedule") &&
-              (seatedMove && moveOptions === undefined ? (
+              (mode === "move" && moveOptions === undefined ? (
                 <Skeleton className="h-12" />
               ) : options?.length ? (
                 <ReservationSelect

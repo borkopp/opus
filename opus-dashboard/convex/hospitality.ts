@@ -26,6 +26,7 @@ import {
   normalizeBookingEmail,
 } from "./lib/bookingEmailSecurity";
 import { isAppReviewEmail } from "./lib/appReview";
+import { liveReservationFloor } from "./lib/reservationFloor";
 
 const venueType = v.union(v.literal("restaurant"), v.literal("cafe"));
 const servicePeriod = v.object({
@@ -227,12 +228,30 @@ export const getWorkspace = query({
       role: auth.staffMember.role,
       settings,
       canReadReservations,
+      // Staff bookings need operational resources, not the public venue profile.
+      // Keep website readiness intact so publication still requires that profile.
+      canCreateReservations:
+        canReadReservations &&
+        ["access", "settings", "tables", "legacy"].every((code) =>
+          readiness.requirements.some(
+            (requirement) => requirement.code === code && requirement.complete,
+          ),
+        ),
       areas: areas.filter((row) => !row.isDeleted),
       tables: tables.filter((row) => !row.isDeleted),
       combinations: combinations.filter((row) => !row.isDeleted),
       closures: closures.filter((row) => !row.isDeleted),
       readiness,
     };
+  },
+});
+
+export const getLiveTables = query({
+  // Refresh subscriptions as time passes; callers cannot choose the server's clock.
+  args: { refreshKey: v.optional(v.number()) },
+  handler: async (ctx) => {
+    const { orgId } = await requireHospitality(ctx);
+    return liveReservationFloor(ctx, orgId);
   },
 });
 

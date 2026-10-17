@@ -23,10 +23,14 @@ export function StudioSwitcher({ orgId }: { orgId?: Id<"orgs"> }) {
   const memberships = useQuery(api.users.listMemberships);
   const change = useMutation(api.users.switchOrg);
   const [busy, setBusy] = useState(false);
-  if (!orgId || !memberships || memberships.length < 2) return null;
+  if (!orgId || !memberships?.some((membership) => membership.orgId !== orgId))
+    return null;
+  const currentMembership = memberships.find(
+    (membership) => membership.orgId === orgId,
+  );
   return (
     <Select
-      value={orgId}
+      value={currentMembership ? orgId : ""}
       disabled={busy}
       onValueChange={async (value) => {
         setBusy(true);
@@ -53,7 +57,13 @@ export function StudioSwitcher({ orgId }: { orgId?: Id<"orgs"> }) {
         className="max-w-40"
         aria-label={t("Switch studio", "Промени студио", "Ndrysho studion")}
       >
-        <SelectValue />
+        <SelectValue
+          placeholder={t(
+            "Choose a studio",
+            "Избери студио",
+            "Zgjidh një studio",
+          )}
+        />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

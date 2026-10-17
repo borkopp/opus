@@ -2,16 +2,15 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { IconLoader2 } from "@tabler/icons-react";
 import { PersonalStaffCalendar } from "@/components/staff/PersonalStaffCalendar";
 import { BookingsSplitView } from "@/components/bookings/BookingsSplitView";
-import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { BookingsLoading } from "@/components/bookings/BookingsLoading";
 
 export default function BookingsPage() {
-  const { t } = useDashboardI18n();
   // We get orgId from profile
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId;
+  const personal = profile?.bookingAccess === "own";
 
   const bookings = useQuery(
     api.bookings.listBookingsByOrg,
@@ -19,27 +18,15 @@ export default function BookingsPage() {
   );
   const staffMembers = useQuery(
     api.staff.listStaffMembers,
-    orgId ? { orgId } : "skip",
+    orgId && !personal ? { orgId } : "skip",
   );
 
-  if (!orgId || bookings === undefined || staffMembers === undefined) {
-    return (
-      <div
-        className="flex min-h-0 flex-1 items-center justify-center p-12"
-        role="status"
-        aria-label={t(
-          "Loading bookings…",
-          "Вчитување термини…",
-          "Po ngarkohen terminet…",
-        )}
-      >
-        <IconLoader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (!orgId || bookings === undefined) return <BookingsLoading />;
 
-  if (profile?.bookingAccess === "own")
+  if (personal)
     return <PersonalStaffCalendar orgId={orgId} bookings={bookings} />;
+
+  if (staffMembers === undefined) return <BookingsLoading />;
 
   return (
     <div className="flex flex-col gap-6 w-full flex-1 min-h-0">

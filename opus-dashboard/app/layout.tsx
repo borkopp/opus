@@ -1,5 +1,6 @@
 import { DashboardI18nProvider } from "@/components/dashboard-i18n-provider";
 import { getRequestLocale } from "@/lib/i18n/server";
+import { getInitialAuthToken } from "@/lib/auth-server";
 import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
@@ -53,7 +54,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getRequestLocale();
+  const [locale, initialToken] = await Promise.all([
+    getRequestLocale(),
+    getInitialAuthToken(),
+  ]);
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
@@ -65,7 +69,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ConvexClientProvider>
+          <ConvexClientProvider initialToken={initialToken}>
             <DashboardI18nProvider locale={locale}>
               <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
               <Toaster richColors position="bottom-right" />

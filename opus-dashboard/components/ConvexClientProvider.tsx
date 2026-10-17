@@ -2,17 +2,19 @@
 
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { ConvexReactClient } from "convex/react";
-import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { convexAuthClient } from "@/lib/auth-client";
+import { ConvexReactClient, ConvexProviderWithAuth } from "convex/react";
+import { useConvexSession } from "@/hooks/use-convex-session";
+import { SessionRecoveryContext } from "@/hooks/use-session-recovery";
 import { SyncUser } from "./SyncUser";
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default function ConvexClientProvider({
   children,
+  initialToken,
 }: {
   children: ReactNode;
+  initialToken?: string | null;
 }) {
   const pathname = usePathname();
   // The development-only design sandbox must not connect to live studio data.
@@ -25,9 +27,26 @@ export default function ConvexClientProvider({
   }
 
   return (
-    <ConvexBetterAuthProvider client={convex} authClient={convexAuthClient}>
-      <SyncUser />
+    <AuthenticatedProvider initialToken={initialToken}>
       {children}
-    </ConvexBetterAuthProvider>
+    </AuthenticatedProvider>
+  );
+}
+
+function AuthenticatedProvider({
+  children,
+  initialToken,
+}: {
+  children: ReactNode;
+  initialToken?: string | null;
+}) {
+  const { useAuth, recovery } = useConvexSession(initialToken);
+  return (
+    <SessionRecoveryContext.Provider value={recovery}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuth}>
+        <SyncUser />
+        {children}
+      </ConvexProviderWithAuth>
+    </SessionRecoveryContext.Provider>
   );
 }

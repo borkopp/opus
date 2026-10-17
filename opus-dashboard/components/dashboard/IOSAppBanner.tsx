@@ -26,7 +26,10 @@ export function IOSAppBanner({
           aria-hidden="true"
           className="aspect-[433/441] w-full max-w-[180px] justify-self-center overflow-hidden"
         >
-          <Iphone src="/images/mobile/ios-dashboard.png" />
+          <Iphone
+            src="/images/mobile/ios-dashboard.png"
+            sizes="(max-width: 640px) 27vw, 162px"
+          />
         </div>
         <div
           className={cn(

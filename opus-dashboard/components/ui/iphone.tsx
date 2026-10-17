@@ -19,11 +19,13 @@ const RADIUS_V = (SCREEN_RADIUS / SCREEN_HEIGHT) * 100;
 
 export interface IphoneProps extends HTMLAttributes<HTMLDivElement> {
   src?: string;
+  sizes?: string;
   videoSrc?: string;
 }
 
 export function Iphone({
   src,
+  sizes = "(max-width: 640px) 100vw, 433px",
   videoSrc,
   className,
   style,
@@ -77,8 +79,8 @@ export function Iphone({
         >
           <Image
             fill
-            unoptimized
             src={src}
+            sizes={sizes}
             alt=""
             className="block size-full object-cover object-top"
           />

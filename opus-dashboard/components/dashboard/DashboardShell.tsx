@@ -1,13 +1,16 @@
 "use client";
 
-import { useConvexAuth, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import { useSessionRecovery } from "@/hooks/use-session-recovery";
+import { SessionLoading } from "@/components/auth/SessionLoading";
 import { api } from "@/convex/_generated/api";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import s from "@/components/dashboard/clarity.module.css";
 import React from "react";
-import { ACTIVE_DASHBOARD_PATH } from "@/lib/product-scope";
+import { ACTIVE_DASHBOARD_PATH, isActiveIndustry } from "@/lib/product-scope";
+import { BeautyStudioRequired } from "@/components/dashboard/BeautyStudioRequired";
 import { QuickBookingProvider } from "@/components/bookings/QuickBookingProvider";
 import { WebsiteSetupBanner } from "@/components/dashboard/WebsiteSetupBanner";
 import { DashboardAnnouncementCarousel } from "@/components/dashboard/DashboardAnnouncementCarousel";
@@ -16,7 +19,8 @@ import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
+    useSessionRecovery();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,26 +29,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     isAuthenticated ? {} : "skip",
   );
 
-  const orgSettingsData = useQuery(
-    api.orgSettings.getOrgSettings,
-    profile?.orgId && profile.bookingAccess !== "own"
-      ? { orgId: profile.orgId }
-      : "skip",
-  );
-
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      const callback =
-        pathname === "/notifications/open"
-          ? `${pathname}${window.location.search}`
-          : undefined;
-      router.replace(
-        callback
-          ? `/login?callbackUrl=${encodeURIComponent(callback)}`
-          : "/login",
-      );
+    if (isSignedOut) {
+      const callback = `${pathname}${window.location.search}`;
+      router.replace(`/login?callbackUrl=${encodeURIComponent(callback)}`);
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
+  }, [isSignedOut, pathname, router]);
 
   useEffect(() => {
     if (profile && !profile.orgId) {
@@ -54,7 +44,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   // ── Industry-based routing ──────────────────────────────
   useEffect(() => {
-    if (!profile || !profile.industry) return;
+    if (!profile || !isActiveIndustry(profile.industry)) return;
 
     if (profile.bookingAccess === "own") {
       if (
@@ -89,13 +79,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     }
   }, [profile, pathname, router]);
 
-  if (
-    isLoading ||
-    (isAuthenticated && !profile) ||
-    (profile?.orgId &&
-      profile.bookingAccess !== "own" &&
-      orgSettingsData === undefined)
-  ) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <SessionLoading recovering={isRecovering} onRetry={retry} />
+      </div>
+    );
+  }
+
+  if (isAuthenticated && !profile) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -106,6 +98,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   if (!profile?.orgId) return null;
+  // A shared session can still select a business from another product vertical.
+  // Check before mounting any beauty queries, including those on shared routes.
+  if (!isActiveIndustry(profile.industry))
+    return <BeautyStudioRequired orgId={profile.orgId} />;
+
   if (
     profile.bookingAccess === "own" &&
     pathname !== "/beauty/bookings" &&

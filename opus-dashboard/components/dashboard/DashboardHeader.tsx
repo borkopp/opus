@@ -14,7 +14,6 @@ import {
   type DashboardProfile,
 } from "./DashboardAccountMenu";
 import { PersonalStaffMenu } from "@/components/staff/PersonalStaffMenu";
-import { StudioSwitcher } from "@/components/staff/StudioSwitcher";
 import s from "./clarity.module.css";
 export function DashboardHeader({
   profile,
@@ -104,7 +103,6 @@ export function DashboardHeader({
         ))}
       </nav>
       <div className={s.headerActions}>
-        <StudioSwitcher orgId={profile.orgId} />
         {profile.role !== "staff" && (
           <Link
             href="/beauty/assistant"

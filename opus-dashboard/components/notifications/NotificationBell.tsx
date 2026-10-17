@@ -352,9 +352,11 @@ export function NotificationBell({
   const markAllRead = useMutation(api.dashboardNotifications.markAllRead);
   const dismiss = useMutation(api.dashboardNotifications.dismiss);
 
-  // Dashboard notification preferences (default to true if never set)
+  // The shell renders before settings arrive. Wait for saved preferences before
+  // enabling notification effects; defaults apply only after settings resolve.
   const dashEnabled =
-    orgSettings?.settings?.dashboardNotificationsEnabled ?? true;
+    orgSettings !== undefined &&
+    (orgSettings?.settings?.dashboardNotificationsEnabled ?? true);
   const soundEnabled = orgSettings?.settings?.dashboardSoundEnabled ?? true;
   const toastEnabled = orgSettings?.settings?.dashboardToastEnabled ?? true;
 

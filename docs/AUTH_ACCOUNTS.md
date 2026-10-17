@@ -14,6 +14,18 @@ Existing sessions keep their stored expiry until renewed. Clients verify their
 email when signing in; a valid remembered session books without another OTP.
 Expired sessions, new devices, and sign-out require another sign-in.
 
+On the web dashboard, a short-lived Convex token expiring does not itself mean
+the remembered Better Auth session has ended. Returning users recover the
+connection on their current dashboard URL. Session and token request failures
+retry automatically with a bounded backoff; a retry button and reconnect-on-online
+handler cover longer outages. Only a successful missing-session response or an
+explicit unauthorized session response sends them to login, preserving the page
+and query string. Protected queries still wait for Convex to authenticate.
+The root server render can seed a token for a remembered session, and `/login`
+resolves signed-in studio destinations before rendering the form. A slow or
+unavailable auth server falls back to client recovery. None of this extends the
+30-day session lifetime or grants access from a cookie alone.
+
 One authentication identity can have both a business profile (`users`) and a
 client profile (`opus_users`). Neither profile grants business access. Active
 `staff_members` memberships grant that access separately for each studio.

@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { startOfDay } from "date-fns";
-import { enGB, mk, sq } from "date-fns/locale";
-import { labelDayButton } from "react-day-picker";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import dynamic from "next/dynamic";
+import { BookingsLoading } from "./BookingsLoading";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +24,14 @@ import {
   dateKey,
 } from "@/lib/booking-wall-clock";
 
+const BookingsDatePicker = dynamic(() => import("./BookingsDatePicker"), {
+  loading: () => (
+    <div className="w-[284px]">
+      <BookingsLoading />
+    </div>
+  ),
+});
+
 export function BookingsDateNavigation({
   date,
   today = new Date(),
@@ -38,7 +45,7 @@ export function BookingsDateNavigation({
   bookingDateCounts: ReadonlyMap<string, number>;
   onDateChange: (date: Date) => void;
 }) {
-  const { locale, language, t } = useDashboardI18n();
+  const { locale, t } = useDashboardI18n();
   const [pickerOpen, setPickerOpen] = useState(false);
   const timestamp = bookingTimestampForDate(date, 0);
   const days = calendarDays(timestamp, "week");
@@ -107,53 +114,14 @@ export function BookingsDateNavigation({
             "Zgjidh datën e rezervimeve",
           )}
         >
-          <Calendar
-            mode="single"
-            required
-            autoFocus
-            locale={language === "sq" ? sq : language === "mk" ? mk : enGB}
-            defaultMonth={date}
-            selected={date}
-            classNames={{
-              today:
-                "rounded-full bg-accent text-accent-foreground data-[selected=true]:bg-transparent",
-            }}
-            onSelect={(selectedDate) => {
-              onDateChange(startOfDay(selectedDate));
-              setPickerOpen(false);
-            }}
-            modifiers={{
-              hasBookings: (day) => bookingDateCounts.has(dateKey(day)),
-            }}
-            modifiersClassNames={{
-              hasBookings: "dashboard-booking-date-dot",
-            }}
-            labels={{
-              labelNext: () => t("Next month", "Следен месец", "Muaji tjetër"),
-              labelPrevious: () =>
-                t("Previous month", "Претходен месец", "Muaji i mëparshëm"),
-              labelDayButton: (day, modifiers, options) => {
-                const count = bookingDateCounts.get(dateKey(day)) ?? 0;
-                const bookingsLabel = t(
-                  count === 1 ? "1 booking" : `${count} bookings`,
-                  count === 1 ? "1 термин" : `${count} термини`,
-                  count === 1 ? "1 rezervim" : `${count} rezervime`,
-                );
-                return `${labelDayButton(day, modifiers, options)}, ${bookingsLabel}`;
-              },
-            }}
-            className="[--cell-size:2.25rem]"
-          />
-          <p
-            data-replay-public
-            className="flex items-center justify-center gap-2 px-3 pb-3 text-xs text-muted-foreground"
-          >
-            <span
-              aria-hidden="true"
-              className="size-1.5 rounded-full bg-primary"
+          {pickerOpen && (
+            <BookingsDatePicker
+              date={date}
+              bookingDateCounts={bookingDateCounts}
+              onDateChange={onDateChange}
+              onClose={() => setPickerOpen(false)}
             />
-            {t("Days with bookings", "Денови со термини", "Ditë me rezervime")}
-          </p>
+          )}
         </PopoverContent>
       </Popover>
       <Button

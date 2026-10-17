@@ -8,7 +8,9 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
+import { useSessionRecovery } from "@/hooks/use-session-recovery";
+import { SessionLoading } from "@/components/auth/SessionLoading";
 import { Store } from "lucide-react";
 import posthog from "posthog-js";
 import { api } from "@/convex/_generated/api";
@@ -113,7 +115,8 @@ function OnboardingFlow({
 }) {
   const { t, language, setLanguage } = useDashboardI18n();
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
+    useSessionRecovery();
   const profile = useQuery(
     api.users.getMyProfile,
     isAuthenticated ? {} : "skip",
@@ -130,11 +133,11 @@ function OnboardingFlow({
   const saveHours = useMutation(api.activation.saveHours);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated)
+    if (isSignedOut)
       router.replace(
         upgrading ? upgradeLoginPath(teamLimit, currency) : "/login",
       );
-  }, [isAuthenticated, isLoading, router, upgrading, teamLimit, currency]);
+  }, [isSignedOut, router, upgrading, teamLimit, currency]);
   const shouldLeave = upgrading
     ? profile &&
       upgradeDestination({
@@ -153,13 +156,14 @@ function OnboardingFlow({
       );
   }, [shouldLeave, upgrading, router, teamLimit, currency]);
 
-  if (
-    isLoading ||
-    !isAuthenticated ||
-    !profile ||
-    (profile.orgId && !state) ||
-    shouldLeave
-  )
+  if (isLoading)
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background">
+        <SessionLoading recovering={isRecovering} onRetry={retry} />
+      </div>
+    );
+
+  if (!isAuthenticated || !profile || (profile.orgId && !state) || shouldLeave)
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner className="size-8" />

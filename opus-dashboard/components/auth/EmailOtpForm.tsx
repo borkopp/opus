@@ -1,7 +1,10 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import { useSessionRecovery } from "@/hooks/use-session-recovery";
+import { SessionLoading } from "./SessionLoading";
+import { isActiveIndustry } from "@/lib/product-scope";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ArrowRight, Mail, MailCheck } from "lucide-react";
@@ -84,14 +87,19 @@ export function EmailOtpForm({
   const { t } = useDashboardI18n();
   const reduceMotion = useReducedMotion();
   const router = useRouter();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
+    useSessionRecovery();
   const profile = useQuery(
     api.users.getMyProfile,
     isAuthenticated && purpose === "studio" ? {} : "skip",
   );
   const activation = useQuery(
     api.activation.getState,
-    profile?.orgId && profile.bookingAccess !== "own" ? {} : "skip",
+    profile?.orgId &&
+      isActiveIndustry(profile.industry) &&
+      profile.bookingAccess !== "own"
+      ? {}
+      : "skip",
   );
   const destination =
     purpose === "client"
@@ -99,6 +107,7 @@ export function EmailOtpForm({
       : authDestination(
           callbackUrl,
           profile?.bookingAccess === "own" ||
+            Boolean(profile?.orgId && !isActiveIndustry(profile.industry)) ||
             (activation?.onboardingComplete ?? false),
         );
   const readyToRedirect =
@@ -106,6 +115,7 @@ export function EmailOtpForm({
     (purpose === "client" ||
       (Boolean(profile) &&
         (!profile?.orgId ||
+          !isActiveIndustry(profile.industry) ||
           profile.bookingAccess === "own" ||
           Boolean(activation))));
   const openingMessage =
@@ -133,7 +143,7 @@ export function EmailOtpForm({
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const security = useAuthSecurity();
+  const security = useAuthSecurity(isSignedOut);
   const {
     policy: captchaPolicy,
     unavailable: captchaUnavailable,
@@ -289,6 +299,9 @@ export function EmailOtpForm({
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading)
+    return <SessionLoading recovering={isRecovering} onRetry={retry} />;
 
   if (isAuthenticated) {
     return (

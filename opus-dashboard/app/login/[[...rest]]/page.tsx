@@ -3,6 +3,10 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
 import { studioAppMetadata } from "@/lib/studio-app-metadata";
 import { redirect } from "next/navigation";
+import { api } from "@/convex/_generated/api";
+import { fetchAuthQuery, getInitialAuthToken } from "@/lib/auth-server";
+import { authDestination } from "@/lib/auth-destination";
+import { isActiveIndustry } from "@/lib/product-scope";
 import {
   clientSignInDestination,
   clientSignInPath,
@@ -24,6 +28,33 @@ export default async function Login({
   if (callbackUrl && clientSignInDestination(callbackUrl) === callbackUrl) {
     redirect(clientSignInPath(callbackUrl));
   }
+
+  // Returning users arriving from opus.mk should never render the login form.
+  // Keep onboarding, personal staff and explicit return destinations intact.
+  let destination: string | undefined;
+  if (await getInitialAuthToken()) {
+    try {
+      const profile = await fetchAuthQuery(api.users.getMyProfile, {});
+      if (profile) {
+        const needsActivation =
+          profile.orgId &&
+          isActiveIndustry(profile.industry) &&
+          profile.bookingAccess !== "own";
+        const activation = needsActivation
+          ? await fetchAuthQuery(api.activation.getState, {})
+          : undefined;
+        destination = authDestination(
+          callbackUrl,
+          Boolean(profile.orgId && !needsActivation) ||
+            (activation?.onboardingComplete ?? false),
+        );
+      }
+    } catch {
+      // A temporary backend failure must not log out a remembered session.
+      // The client below handles recovery and retries on this same route.
+    }
+  }
+  if (destination) redirect(destination);
 
   return (
     <AuthLayout>

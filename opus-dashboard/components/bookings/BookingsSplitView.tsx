@@ -1,18 +1,17 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { startOfDay } from "date-fns";
 import { IconCalendarOff } from "@tabler/icons-react";
 import { toast } from "sonner";
-import { BookingsHorizontalTimeline } from "./BookingsHorizontalTimeline";
-import { BookingsTimeline } from "./BookingsTimeline";
 import { calendarRange } from "../../../shared/calendar";
 import { wallClockNow } from "@/convex/lib/bookingTime";
-import { BookingsPeriodView } from "./BookingsPeriodView";
 import { BookingsList } from "./BookingsList";
+import { BookingsLoading } from "./BookingsLoading";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   BookingsToolbar,
@@ -33,6 +32,23 @@ import {
   getBookingDateCounts,
   isVisibleCalendarBooking,
 } from "@/lib/booking-calendar";
+
+// Mobile opens in list view. Other calendar layouts load only when selected.
+const BookingsHorizontalTimeline = dynamic(
+  () =>
+    import("./BookingsHorizontalTimeline").then(
+      (m) => m.BookingsHorizontalTimeline,
+    ),
+  { loading: BookingsLoading },
+);
+const BookingsTimeline = dynamic(
+  () => import("./BookingsTimeline").then((m) => m.BookingsTimeline),
+  { loading: BookingsLoading },
+);
+const BookingsPeriodView = dynamic(
+  () => import("./BookingsPeriodView").then((m) => m.BookingsPeriodView),
+  { loading: BookingsLoading },
+);
 
 export function BookingsSplitView({
   bookings,
@@ -139,10 +155,12 @@ export function BookingsSplitView({
     [bookings],
   );
 
-  const quickBookingSlots = useQuery(api.slots.getQuickBookingSlots, {
-    orgId,
-    date: dateKey(currentDate),
-  });
+  const quickBookingSlots = useQuery(
+    api.slots.getQuickBookingSlots,
+    activeVariant === "horizontal" || activeVariant === "vertical"
+      ? { orgId, date: dateKey(currentDate) }
+      : "skip",
+  );
 
   // Exclude bookings that were cancelled as part of a reschedule
   const todayBookings = bookings.filter(

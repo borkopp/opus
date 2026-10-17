@@ -2,7 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
+import { useSessionRecovery } from "@/hooks/use-session-recovery";
+import { SessionLoading } from "@/components/auth/SessionLoading";
 import { api } from "@/convex/_generated/api";
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -16,7 +18,8 @@ export function UpgradeRedirect() {
   const teamLimit = parseProTeamLimit(params.get("team"));
   const currency = parseBillingCurrency(params.get("currency"));
   const { t } = useDashboardI18n();
-  const { isAuthenticated, isLoading } = useConvexAuth();
+  const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
+    useSessionRecovery();
   const profile = useQuery(
     api.users.getMyProfile,
     isAuthenticated ? {} : "skip",
@@ -31,7 +34,7 @@ export function UpgradeRedirect() {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!isAuthenticated) {
+    if (isSignedOut) {
       router.replace(upgradeLoginPath(teamLimit, currency));
       return;
     }
@@ -49,6 +52,7 @@ export function UpgradeRedirect() {
   }, [
     isLoading,
     isAuthenticated,
+    isSignedOut,
     profile,
     needsSetupCheck,
     activation,
@@ -56,6 +60,13 @@ export function UpgradeRedirect() {
     teamLimit,
     currency,
   ]);
+
+  if (isLoading)
+    return (
+      <main className="flex min-h-dvh items-center justify-center bg-background">
+        <SessionLoading recovering={isRecovering} onRetry={retry} />
+      </main>
+    );
 
   return (
     <main

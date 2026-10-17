@@ -103,6 +103,9 @@ export function QuickBookingProvider({
     null,
   );
   const [openSequence, setOpenSequence] = useState(0);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<
+    Id<"services">[]
+  >([]);
 
   const services = useQuery(
     api.services.listServices,
@@ -114,18 +117,26 @@ export function QuickBookingProvider({
   );
   const automaticSlots = useQuery(
     api.slots.getQuickBookingSlots,
-    isOpen ? { orgId, date: requestDate } : "skip",
+    isOpen
+      ? { orgId, date: requestDate, serviceIds: selectedServiceIds }
+      : "skip",
   );
   const availableDates = useQuery(
     api.slots.getQuickBookingAvailableDates,
-    isOpen ? { orgId, month: pickerMonth } : "skip",
+    isOpen
+      ? { orgId, month: pickerMonth, serviceIds: selectedServiceIds }
+      : "skip",
   );
 
-  const resolvedSelection =
-    selection ??
-    automaticSlots?.slots.find((slot) => !slot.isFallback) ??
-    automaticSlots?.slots[0] ??
-    null;
+  const resolvedSelection = selection
+    ? (automaticSlots?.slots.find(
+        (slot) =>
+          slot.staffId === selection.staffId &&
+          slot.startAt === selection.startAt,
+      ) ?? null)
+    : (automaticSlots?.slots.find((slot) => !slot.isFallback) ??
+      automaticSlots?.slots[0] ??
+      null);
 
   const openQuickBooking = useCallback(
     (options: OpenQuickBookingOptions = {}) => {
@@ -141,6 +152,7 @@ export function QuickBookingProvider({
       setRequestDate(nextDate);
       setPickerMonth(nextDate.slice(0, 7));
       setSelection(options.slot ?? null);
+      setSelectedServiceIds([]);
       setOpenSequence((current) => current + 1);
       setIsOpen(true);
     },
@@ -207,6 +219,8 @@ export function QuickBookingProvider({
             availableDates={availableDates?.availableDates}
             availableSlots={automaticSlots?.slots}
             services={services}
+            selectedServiceIds={selectedServiceIds}
+            onServiceIdsChange={setSelectedServiceIds}
             staffMembers={staffMembers}
             isLoadingAutomaticSlot={automaticSlots === undefined}
             isLoadingAvailableDates={availableDates === undefined}

@@ -46,12 +46,14 @@ function datesForCalendarMonth(month: string): string[] | null {
 type QuickBookingResources = {
   settings: Doc<"org_settings">;
   quickBookingDurationMins: number;
+  requiredDurationMins?: number;
   staffMembers: Doc<"staff_members">[];
 };
 
 async function loadQuickBookingResources(
   ctx: Pick<QueryCtx, "db">,
   orgId: Id<"orgs">,
+  serviceIds: Id<"services">[] = [],
 ): Promise<QuickBookingResources> {
   const settings = await ctx.db
     .query("org_settings")
@@ -76,14 +78,44 @@ async function loadQuickBookingResources(
   const staffWithServices = new Set(
     services.flatMap((service) => service.staffIds),
   );
+  const uniqueServiceIds = [...new Set(serviceIds)];
+  if (uniqueServiceIds.length > 20) {
+    throw new ConvexError("Select between 1 and 20 services.");
+  }
+  const selectedServices = uniqueServiceIds.map((serviceId) => {
+    const service = services.find((candidate) => candidate._id === serviceId);
+    if (!service) {
+      throw new ConvexError("One of the selected services is unavailable.");
+    }
+    return service;
+  });
+  const requiredDurationMins = selectedServices.length
+    ? selectedServices.reduce(
+        (total, service) => total + service.durationMins,
+        0,
+      )
+    : undefined;
+  if (
+    requiredDurationMins !== undefined &&
+    (!Number.isInteger(requiredDurationMins) ||
+      requiredDurationMins <= 0 ||
+      requiredDurationMins > 1_440)
+  ) {
+    throw new ConvexError("Selected services have an invalid total duration.");
+  }
 
   return {
     settings,
     quickBookingDurationMins:
       settings.quickBookingDurationMins ??
       defaultQuickBookingDurationMins(settings.slotDurationMins),
-    staffMembers: staffMembers.filter((staff) =>
-      staffWithServices.has(staff._id),
+    requiredDurationMins,
+    staffMembers: staffMembers.filter(
+      (staff) =>
+        staffWithServices.has(staff._id) &&
+        selectedServices.every((service) =>
+          service.staffIds.includes(staff._id),
+        ),
     ),
   };
 }
@@ -115,6 +147,7 @@ async function quickBookingSlotsForDate(
           slotDurationMins: resources.settings.slotDurationMins,
           quickBookingDurationMins: resources.quickBookingDurationMins,
           bufferTimeMins: resources.settings.bufferTimeMins,
+          requiredDurationMins: resources.requiredDurationMins,
         }).map((slot) => ({ ...slot, staffId: staff._id }));
       }),
     )
@@ -258,10 +291,15 @@ export const getQuickBookingSlots = query({
   args: {
     orgId: v.id("orgs"),
     date: v.string(), // "YYYY-MM-DD"
+    serviceIds: v.optional(v.array(v.id("services"))),
   },
   handler: async (ctx, args) => {
     await requireAuth(ctx, args.orgId);
-    const resources = await loadQuickBookingResources(ctx, args.orgId);
+    const resources = await loadQuickBookingResources(
+      ctx,
+      args.orgId,
+      args.serviceIds,
+    );
     const slots = await quickBookingSlotsForDate(
       ctx,
       args.orgId,
@@ -281,13 +319,18 @@ export const getQuickBookingAvailableDates = query({
   args: {
     orgId: v.id("orgs"),
     month: v.string(), // "YYYY-MM"
+    serviceIds: v.optional(v.array(v.id("services"))),
   },
   handler: async (ctx, args) => {
     await requireAuth(ctx, args.orgId);
     const dates = datesForCalendarMonth(args.month);
     if (!dates) throw new ConvexError("Enter a valid booking month.");
 
-    const resources = await loadQuickBookingResources(ctx, args.orgId);
+    const resources = await loadQuickBookingResources(
+      ctx,
+      args.orgId,
+      args.serviceIds,
+    );
     const availableDates: string[] = [];
     for (const date of dates) {
       const slots = await quickBookingSlotsForDate(

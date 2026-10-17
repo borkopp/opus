@@ -40,6 +40,175 @@ describe("manual quick booking", () => {
     t = createBackend();
   });
 
+  test.each([15, 30])(
+    "filters slots and dates for all selected services using a %i-minute start interval",
+    async (slotDurationMins) => {
+      const owner = t.withIdentity(ownerIdentity);
+      await owner.mutation(api.users.ensureUser);
+      const { orgId } = await owner.mutation(
+        api.activation.startBeautyBusiness,
+        {
+          name: "Duration Studio",
+          category: "beauty_salon",
+        },
+      );
+      const cutId = await owner.mutation(api.activation.saveFirstService, {
+        name: "Cut",
+        durationMins: 30,
+        priceMinorUnits: 1_200,
+      });
+      await owner.mutation(api.activation.saveHours, {
+        openingHours: openingHours.map((hours) => ({
+          ...hours,
+          open: "16:00",
+          close: "18:00",
+        })),
+      });
+      const date = nextMonthDate(10);
+      const shortDate = nextMonthDate(11);
+      const fixture = await t.run(async (ctx) => {
+        const cut = await ctx.db.get(cutId);
+        if (!cut) throw new Error("Fixture service is missing.");
+        const staffId = cut.staffIds[0];
+        const settings = await ctx.db
+          .query("org_settings")
+          .withIndex("by_org", (q) => q.eq("orgId", orgId))
+          .first();
+        if (!settings) throw new Error("Fixture settings are missing.");
+        await ctx.db.patch(settings._id, {
+          slotDurationMins,
+          bufferTimeMins: 0,
+        });
+        const colorId = await ctx.db.insert("services", {
+          orgId,
+          name: "Color",
+          durationMins: 60,
+          priceMinorUnits: 2_400,
+          currency: "MKD",
+          staffIds: [staffId],
+          isOpusVisible: true,
+          popularityScore: 0,
+          isActive: true,
+          isDeleted: false,
+          sortOrder: 1,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        await ctx.db.insert("availability_overrides", {
+          orgId,
+          staffId,
+          date: shortDate,
+          type: "custom_hours",
+          startTime: "17:00",
+          endTime: "18:00",
+          isDeleted: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+        return { staffId, colorId };
+      });
+      const serviceIds = [cutId, fixture.colorId];
+      const quickSlots = await owner.query(api.slots.getQuickBookingSlots, {
+        orgId,
+        date,
+        serviceIds,
+      });
+      expect(
+        quickSlots.slots.map((slot) =>
+          new Date(slot.startAt).toISOString().slice(11, 16),
+        ),
+      ).toEqual(
+        slotDurationMins === 15
+          ? ["16:00", "16:15", "16:30"]
+          : ["16:00", "16:30"],
+      );
+      expect(quickSlots.slots.every((slot) => slot.durationMins === 90)).toBe(
+        true,
+      );
+      const genericSlots = await owner.query(api.slots.getQuickBookingSlots, {
+        orgId,
+        date,
+      });
+      expect(genericSlots.slots.at(-1)?.durationMins).toBe(slotDurationMins);
+      const duplicates = await owner.query(api.slots.getQuickBookingSlots, {
+        orgId,
+        date,
+        serviceIds: [...serviceIds, cutId],
+      });
+      expect(duplicates).toEqual(quickSlots);
+
+      const dates = await owner.query(api.slots.getQuickBookingAvailableDates, {
+        orgId,
+        month: date.slice(0, 7),
+        serviceIds,
+      });
+      expect(dates.availableDates).toContain(date);
+      expect(dates.availableDates).not.toContain(shortDate);
+      const genericDates = await owner.query(
+        api.slots.getQuickBookingAvailableDates,
+        { orgId, month: date.slice(0, 7) },
+      );
+      expect(genericDates.availableDates).toContain(shortDate);
+      expect(
+        (
+          await owner.query(api.slots.getQuickBookingSlots, {
+            orgId,
+            date: shortDate,
+            serviceIds,
+          })
+        ).slots,
+      ).toEqual([]);
+
+      const lastSlot = quickSlots.slots.at(-1)!;
+      const bookingId = await owner.mutation(api.bookings.createManualBooking, {
+        orgId,
+        staffId: fixture.staffId,
+        serviceIds,
+        customerName: "Duration Test",
+        startAt: lastSlot.startAt,
+      });
+      const booking = await t.run((ctx) => ctx.db.get(bookingId));
+      expect(booking?.endAt).toBe(new Date(`${date}T18:00:00Z`).getTime());
+      expect(
+        (
+          await owner.query(api.slots.getQuickBookingSlots, {
+            orgId,
+            date,
+            serviceIds,
+          })
+        ).slots,
+      ).toEqual([]);
+      await expect(
+        owner.mutation(api.bookings.createManualBooking, {
+          orgId,
+          staffId: fixture.staffId,
+          serviceIds,
+          customerName: "Overlap Test",
+          startAt: lastSlot.startAt,
+        }),
+      ).rejects.toThrow("no longer fit");
+
+      await t.run((ctx) => ctx.db.patch(fixture.colorId, { staffIds: [] }));
+      expect(
+        (
+          await owner.query(api.slots.getQuickBookingSlots, {
+            orgId,
+            date: nextMonthDate(12),
+            serviceIds,
+          })
+        ).slots,
+      ).toEqual([]);
+      await t.run((ctx) => ctx.db.patch(fixture.colorId, { isActive: false }));
+      await expect(
+        owner.query(api.slots.getQuickBookingSlots, {
+          orgId,
+          date,
+          serviceIds,
+        }),
+      ).rejects.toThrow("unavailable");
+    },
+  );
+
   test("creates a multi-service booking for a name-only customer and rejects overlap", async () => {
     const owner = t.withIdentity(ownerIdentity);
     await owner.mutation(api.users.ensureUser);

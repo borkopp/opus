@@ -7,6 +7,45 @@ import {
 const minute = (value: number) => value * 60_000;
 
 describe("quick booking slots", () => {
+  test.each([15, 30])(
+    "fits 90 minutes before closing with a %i-minute start interval",
+    (slotDurationMins) => {
+      const slots = buildQuickBookingSlots({
+        freeIntervals: [{ startAt: minute(16 * 60), endAt: minute(18 * 60) }],
+        dayStartAt: 0,
+        slotDurationMins,
+        quickBookingDurationMins: 30,
+        requiredDurationMins: 90,
+        bufferTimeMins: 0,
+      });
+
+      expect(slots.map((slot) => slot.startAt / 60_000)).toEqual(
+        slotDurationMins === 15 ? [960, 975, 990] : [960, 990],
+      );
+      expect(
+        slots.every((slot) => slot.durationMins === 90 && !slot.isFallback),
+      ).toBe(true);
+      expect(slots.at(-1)?.endAt).toBe(minute(18 * 60));
+    },
+  );
+
+  test("keeps the whole appointment and buffer inside one free interval", () => {
+    const slots = buildQuickBookingSlots({
+      freeIntervals: [
+        { startAt: minute(9 * 60 + 5), endAt: minute(11 * 60) },
+        { startAt: minute(11 * 60 + 30), endAt: minute(12 * 60) },
+        { startAt: minute(16 * 60), endAt: minute(18 * 60) },
+      ],
+      dayStartAt: 0,
+      slotDurationMins: 15,
+      quickBookingDurationMins: 30,
+      requiredDurationMins: 90,
+      bufferTimeMins: 15,
+    });
+
+    expect(slots.map((slot) => slot.startAt / 60_000)).toEqual([555, 960, 975]);
+  });
+
   test("uses the preferred duration and falls back to the smallest interval at a gap tail", () => {
     const slots = buildQuickBookingSlots({
       freeIntervals: [{ startAt: minute(9 * 60), endAt: minute(9 * 60 + 45) }],

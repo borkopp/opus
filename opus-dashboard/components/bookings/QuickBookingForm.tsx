@@ -170,14 +170,13 @@ function QuickBookingSchedulePicker({
                     value={quickSlotValue(slot)}
                     className="h-auto min-h-10 w-full flex-col gap-0.5 py-2"
                     aria-label={t(
-                      `${bookingTimeLabel(slot.startAt)} to ${bookingTimeLabel(slot.endAt)}${staff ? ` with ${staff.displayName}` : ""}`,
-                      `${bookingTimeLabel(slot.startAt)} до ${bookingTimeLabel(slot.endAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
-                      `${bookingTimeLabel(slot.startAt)} deri ${bookingTimeLabel(slot.endAt)}${staff ? ` me ${staff.displayName}` : ""}`,
+                      `${bookingTimeLabel(slot.startAt)}${staff ? ` with ${staff.displayName}` : ""}`,
+                      `${bookingTimeLabel(slot.startAt)}${staff ? ` кај ${staff.displayName}` : ""}`,
+                      `${bookingTimeLabel(slot.startAt)}${staff ? ` me ${staff.displayName}` : ""}`,
                     )}
                   >
                     <span className="tabular-nums">
-                      {bookingTimeLabel(slot.startAt)}–
-                      {bookingTimeLabel(slot.endAt)}
+                      {bookingTimeLabel(slot.startAt)}
                     </span>
                     {showStaffNames && staff && (
                       <span className="max-w-full truncate text-xs font-normal text-muted-foreground">
@@ -215,6 +214,8 @@ export default function QuickBookingForm({
   availableDates,
   availableSlots,
   services,
+  selectedServiceIds,
+  onServiceIdsChange,
   staffMembers,
   isLoadingAutomaticSlot,
   isLoadingAvailableDates,
@@ -230,6 +231,8 @@ export default function QuickBookingForm({
   availableDates: string[] | undefined;
   availableSlots: QuickBookingSlots | undefined;
   services: Services;
+  selectedServiceIds: Id<"services">[];
+  onServiceIdsChange: (serviceIds: Id<"services">[]) => void;
   staffMembers: StaffMembers;
   isLoadingAutomaticSlot: boolean;
   isLoadingAvailableDates: boolean;
@@ -243,9 +246,6 @@ export default function QuickBookingForm({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
-  const [selectedServiceIds, setSelectedServiceIds] = useState<
-    Id<"services">[]
-  >([]);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -286,12 +286,12 @@ export default function QuickBookingForm({
     !selection || isSubmitting || (totalDurationMins > 0 && !servicesFit);
 
   const toggleService = (serviceId: Id<"services">, checked: boolean) => {
-    setSelectedServiceIds((current) =>
+    onServiceIdsChange(
       checked
-        ? current.includes(serviceId)
-          ? current
-          : [...current, serviceId]
-        : current.filter((id) => id !== serviceId),
+        ? selectedServiceIds.includes(serviceId)
+          ? selectedServiceIds
+          : [...selectedServiceIds, serviceId]
+        : selectedServiceIds.filter((id) => id !== serviceId),
     );
   };
 
@@ -385,7 +385,7 @@ export default function QuickBookingForm({
             ) : (
               orderedServices?.map((service) => {
                 const isAvailableForStaff = Boolean(
-                  selection && service.staffIds.includes(selection.staffId),
+                  !selection || service.staffIds.includes(selection.staffId),
                 );
                 const checked = selectedServiceIds.includes(service._id);
                 return (
@@ -458,13 +458,7 @@ export default function QuickBookingForm({
                   "Изберете барем една услуга.",
                   "Zgjidhni të paktën një shërbim.",
                 )
-              : totalDurationMins > 0 && !servicesFit
-                ? t(
-                    `These services need ${totalDurationMins} minutes, but only ${selection?.availableDurationMins ?? 0} minutes are available from this time.`,
-                    `За овие услуги се потребни ${totalDurationMins} минути, но од ова време се достапни само ${selection?.availableDurationMins ?? 0} минути.`,
-                    `Këto shërbime kërkojnë ${totalDurationMins} minuta, por vetëm ${selection?.availableDurationMins ?? 0} minuta janë të lira nga kjo kohë.`,
-                  )
-                : undefined}
+              : undefined}
           </FieldError>
         </FieldSet>
 

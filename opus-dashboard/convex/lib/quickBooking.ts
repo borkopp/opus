@@ -17,6 +17,7 @@ type BuildQuickBookingSlotsArgs = {
   slotDurationMins: number;
   quickBookingDurationMins: number;
   bufferTimeMins: number;
+  requiredDurationMins?: number;
 };
 
 function alignUp(timestamp: number, origin: number, intervalMs: number) {
@@ -27,6 +28,7 @@ function alignUp(timestamp: number, origin: number, intervalMs: number) {
  * Builds every hoverable start time inside the staff member's free windows.
  * The preferred quick-booking duration wins when it fits. At the tail of a
  * shorter gap, the organization's smallest slot duration is returned instead.
+ * Once services are selected, only starts that fit their full duration remain.
  */
 export function buildQuickBookingSlots({
   freeIntervals,
@@ -34,6 +36,7 @@ export function buildQuickBookingSlots({
   slotDurationMins,
   quickBookingDurationMins,
   bufferTimeMins,
+  requiredDurationMins,
 }: BuildQuickBookingSlotsArgs): QuickBookingSlot[] {
   if (
     !Number.isInteger(slotDurationMins) ||
@@ -42,35 +45,41 @@ export function buildQuickBookingSlots({
     quickBookingDurationMins < slotDurationMins ||
     quickBookingDurationMins % slotDurationMins !== 0 ||
     !Number.isInteger(bufferTimeMins) ||
-    bufferTimeMins < 0
+    bufferTimeMins < 0 ||
+    (requiredDurationMins !== undefined &&
+      (!Number.isInteger(requiredDurationMins) || requiredDurationMins <= 0))
   ) {
     return [];
   }
 
   const intervalMs = slotDurationMins * 60_000;
   const bufferMs = bufferTimeMins * 60_000;
+  const minimumDurationMs = (requiredDurationMins ?? slotDurationMins) * 60_000;
   const results: QuickBookingSlot[] = [];
 
   for (const interval of freeIntervals) {
     let startAt = alignUp(interval.startAt, dayStartAt, intervalMs);
 
-    while (startAt + intervalMs + bufferMs <= interval.endAt) {
+    while (startAt + minimumDurationMs + bufferMs <= interval.endAt) {
       const rawAvailableMins = Math.floor(
         (interval.endAt - startAt - bufferMs) / 60_000,
       );
       const availableDurationMins =
         Math.floor(rawAvailableMins / slotDurationMins) * slotDurationMins;
       const durationMins =
-        availableDurationMins >= quickBookingDurationMins
+        requiredDurationMins ??
+        (availableDurationMins >= quickBookingDurationMins
           ? quickBookingDurationMins
-          : slotDurationMins;
+          : slotDurationMins);
 
       results.push({
         startAt,
         endAt: startAt + durationMins * 60_000,
         durationMins,
         availableDurationMins,
-        isFallback: durationMins !== quickBookingDurationMins,
+        isFallback:
+          requiredDurationMins === undefined &&
+          durationMins !== quickBookingDurationMins,
       });
 
       startAt += intervalMs;

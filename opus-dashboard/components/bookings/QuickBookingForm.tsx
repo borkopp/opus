@@ -145,7 +145,7 @@ function QuickBookingSchedulePicker({
             )}
           </div>
         ) : availableSlots && availableSlots.length > 0 ? (
-          <ScrollArea className="h-44">
+          <ScrollArea className="max-h-44 [&>[data-slot=scroll-area-viewport]]:max-h-44">
             <ToggleGroup
               type="single"
               variant="outline"

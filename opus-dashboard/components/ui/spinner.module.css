@@ -1,17 +1,17 @@
-/* The approved 2.6s loop: release, turn once, reconnect, then rest. */
+/* The approved 2.2s loop: release, turn once, reconnect, then rest. */
 .spinner {
   overflow: visible;
   transform-box: view-box;
   transform-origin: center;
-  animation: turn 2.6s linear infinite;
+  animation: turn 2.2s linear infinite;
 }
 
 .spinner > path:first-child {
-  animation: upper-piece 2.6s linear infinite;
+  animation: upper-piece 2.2s linear infinite;
 }
 
 .spinner > path:last-child {
-  animation: lower-piece 2.6s linear infinite;
+  animation: lower-piece 2.2s linear infinite;
 }
 
 @keyframes turn {

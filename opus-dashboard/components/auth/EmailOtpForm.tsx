@@ -310,7 +310,7 @@ export function EmailOtpForm({
         aria-busy="true"
         aria-live="polite"
       >
-        <Spinner />
+        <Spinner className="text-brand" />
         <p data-replay-public className="text-sm text-muted-foreground">
           {openingMessage}
         </p>

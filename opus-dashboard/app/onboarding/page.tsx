@@ -7,7 +7,7 @@ export default function OnboardingPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-background">
-          <Spinner className="size-8" />
+          <Spinner className="size-8 text-brand" />
         </div>
       }
     >

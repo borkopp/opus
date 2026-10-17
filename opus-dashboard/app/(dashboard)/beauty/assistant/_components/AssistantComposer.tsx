@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowUp, BrainCircuit, LoaderCircle, Zap } from "lucide-react";
+import { ArrowUp, BrainCircuit, Zap } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
@@ -47,7 +48,11 @@ export function AssistantComposer({
             htmlFor="business-question"
             className="sr-only"
           >
-            {t("Ask about your studio", "Прашајте за вашето студио", "Pyesni për studion tuaj")}
+            {t(
+              "Ask about your studio",
+              "Прашајте за вашето студио",
+              "Pyesni për studion tuaj",
+            )}
           </FieldLabel>
           <InputGroup className="dashboard-assistant-composer">
             <InputGroupTextarea
@@ -84,7 +89,11 @@ export function AssistantComposer({
                 variant="default"
                 spacing={1}
                 className="shrink-0 rounded-full border border-border/70 bg-muted/60 p-1"
-                aria-label={t("Analysis depth", "Длабочина на анализа", "Thellësia e analizës")}
+                aria-label={t(
+                  "Analysis depth",
+                  "Длабочина на анализа",
+                  "Thellësia e analizës",
+                )}
                 disabled={pending}
                 onValueChange={(value) => {
                   if (value === "standard" || value === "deep") setDepth(value);
@@ -141,13 +150,13 @@ export function AssistantComposer({
                   !question.trim() ||
                   (depth === "deep" && deepRemaining === 0)
                 }
-                aria-label={t("Send question", "Испрати прашање", "Dërgo pyetjen")}
-              >
-                {pending ? (
-                  <LoaderCircle className="motion-safe:animate-spin" />
-                ) : (
-                  <ArrowUp />
+                aria-label={t(
+                  "Send question",
+                  "Испрати прашање",
+                  "Dërgo pyetjen",
                 )}
+              >
+                {pending ? <Spinner aria-hidden="true" /> : <ArrowUp />}
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>

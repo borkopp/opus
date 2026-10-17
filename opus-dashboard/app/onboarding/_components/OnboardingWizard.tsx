@@ -166,7 +166,7 @@ function OnboardingFlow({
   if (!isAuthenticated || !profile || (profile.orgId && !state) || shouldLeave)
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Spinner className="size-8" />
+        <Spinner className="size-8 text-brand" />
       </div>
     );
 

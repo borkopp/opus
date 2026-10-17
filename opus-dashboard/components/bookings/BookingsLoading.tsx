@@ -15,7 +15,7 @@ export function BookingsLoading() {
         "Po ngarkohen terminet…",
       )}
     >
-      <Spinner className="size-8 text-muted-foreground" />
+      <Spinner className="size-8 text-brand" aria-hidden="true" />
     </div>
   );
 }

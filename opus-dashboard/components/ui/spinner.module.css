@@ -1,0 +1,69 @@
+/* The approved 2.6s loop: release, turn once, reconnect, then rest. */
+.spinner {
+  overflow: visible;
+  transform-box: view-box;
+  transform-origin: center;
+  animation: turn 2.6s linear infinite;
+}
+
+.spinner > path:first-child {
+  animation: upper-piece 2.6s linear infinite;
+}
+
+.spinner > path:last-child {
+  animation: lower-piece 2.6s linear infinite;
+}
+
+@keyframes turn {
+  0%,
+  12.307692% {
+    transform: rotate(0deg);
+    animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  81.923077%,
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes upper-piece {
+  0%,
+  7.692308% {
+    transform: translate(0, 0);
+    animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  }
+  27.692308%,
+  68.076923% {
+    transform: translate(1.8px, -1.8px);
+    animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  }
+  88.076923%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes lower-piece {
+  0%,
+  7.692308% {
+    transform: translate(0, 0);
+    animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  }
+  27.692308%,
+  68.076923% {
+    transform: translate(-1.8px, 1.8px);
+    animation-timing-function: cubic-bezier(0.37, 0, 0.63, 1);
+  }
+  88.076923%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .spinner > path:first-child,
+  .spinner > path:last-child {
+    animation: none;
+  }
+}

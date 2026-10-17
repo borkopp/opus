@@ -24,7 +24,7 @@ export function SessionLoading({
       aria-busy="true"
       aria-live="polite"
     >
-      <Spinner className="size-6" />
+      <Spinner className="size-6 text-brand" />
       <p className="text-sm text-muted-foreground" data-replay-public>
         {recovering
           ? t(

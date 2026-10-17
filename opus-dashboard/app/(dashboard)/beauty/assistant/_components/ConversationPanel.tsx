@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Users,
   TrendingDown,
-  LoaderCircle,
 } from "lucide-react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
@@ -38,6 +37,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 type Turn = FunctionReturnType<
   typeof api.analyst.conversations.get
@@ -174,7 +174,7 @@ export function ConversationPanel({
                           role="status"
                           className="flex items-center gap-2 px-3 text-sm text-muted-foreground"
                         >
-                          <LoaderCircle className="size-4 motion-safe:animate-spin" />
+                          <Spinner aria-hidden="true" />
                           {t(
                             "Reviewing your appointments…",
                             "Ги анализираме вашите термини…",
@@ -192,7 +192,11 @@ export function ConversationPanel({
                               disabled={disabled}
                               onClick={() => onPrompt(turn.question)}
                             >
-                              {t("Ask again", "Прашајте повторно", "Pyesni përsëri")}
+                              {t(
+                                "Ask again",
+                                "Прашајте повторно",
+                                "Pyesni përsëri",
+                              )}
                             </Button>
                           </AlertDescription>
                         </Alert>

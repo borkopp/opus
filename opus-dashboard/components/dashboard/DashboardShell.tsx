@@ -17,6 +17,7 @@ import { DashboardAnnouncementCarousel } from "@/components/dashboard/DashboardA
 import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardAppearanceProvider";
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
+import { Spinner } from "@/components/ui/spinner";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
@@ -90,7 +91,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (isAuthenticated && !profile) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Spinner className="size-8 text-brand" />
       </div>
     );
   }

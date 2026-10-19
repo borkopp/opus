@@ -18,6 +18,7 @@ import { DashboardAppearanceProvider } from "@/components/dashboard/DashboardApp
 import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
 import { Spinner } from "@/components/ui/spinner";
+import { StudioInstallCard } from "@/components/pwa/StudioInstallCard";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
@@ -149,6 +150,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <DashboardAnnouncementCarousel
                   key={`announcements:${profile.orgId}`}
                 />
+                {pathname === "/beauty" && <StudioInstallCard banner />}
                 {children}
               </main>
             </div>

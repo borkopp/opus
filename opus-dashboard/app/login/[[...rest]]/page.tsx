@@ -1,7 +1,12 @@
 import { getRequestLocale } from "@/lib/i18n/server";
+import type { Viewport } from "next";
+import { StudioInstallProvider } from "@/components/pwa/StudioInstallProvider";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { EmailOtpForm } from "@/components/auth/EmailOtpForm";
-import { studioAppMetadata } from "@/lib/studio-app-metadata";
+import {
+  studioAppMetadata,
+  studioAppViewport,
+} from "@/lib/studio-app-metadata";
 import { redirect } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { fetchAuthQuery, getInitialAuthToken } from "@/lib/auth-server";
@@ -13,6 +18,7 @@ import {
 } from "@/lib/client-account";
 
 export const metadata = studioAppMetadata;
+export const viewport: Viewport = { ...studioAppViewport, viewportFit: "auto" };
 
 export default async function Login({
   searchParams,
@@ -57,26 +63,28 @@ export default async function Login({
   if (destination) redirect(destination);
 
   return (
-    <AuthLayout>
-      <EmailOtpForm
-        replayPublicTitle
-        replayPublicDescription
-        title={
-          locale === "sq"
-            ? "Mirësevini në studion tuaj"
-            : locale === "mk"
-              ? "Добредојдовте во вашето студио"
-              : "Welcome to your studio"
-        }
-        description={
-          locale === "sq"
-            ? "Kyçuni ose krijoni llogari për të menaxhuar studion tuaj të bukurisë."
-            : locale === "mk"
-              ? "Најавете се или создајте сметка за да управувате со вашето студио."
-              : "Log in or create an account to manage your beauty studio."
-        }
-        callbackUrl={callbackUrl}
-      />
-    </AuthLayout>
+    <StudioInstallProvider>
+      <AuthLayout>
+        <EmailOtpForm
+          replayPublicTitle
+          replayPublicDescription
+          title={
+            locale === "sq"
+              ? "Mirësevini në studion tuaj"
+              : locale === "mk"
+                ? "Добредојдовте во вашето студио"
+                : "Welcome to your studio"
+          }
+          description={
+            locale === "sq"
+              ? "Kyçuni ose krijoni llogari për të menaxhuar studion tuaj të bukurisë."
+              : locale === "mk"
+                ? "Најавете се или создајте сметка за да управувате со вашето студио."
+                : "Log in or create an account to manage your beauty studio."
+          }
+          callbackUrl={callbackUrl}
+        />
+      </AuthLayout>
+    </StudioInstallProvider>
   );
 }

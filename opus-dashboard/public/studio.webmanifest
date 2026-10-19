@@ -2,12 +2,15 @@
   "id": "/beauty",
   "name": "OPUS Studio",
   "short_name": "OPUS Studio",
-  "description": "Appointments for your beauty studio.",
+  "description": "Manage appointments, your calendar, and your beauty studio with OPUS.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/beauty",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2588c8",
+  "theme_color": "#ffffff",
+  "categories": ["business", "productivity"],
   "icons": [
     {
       "src": "/studio-icon-192.png",
@@ -20,6 +23,38 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/studio-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calendar",
+      "description": "Open your appointment calendar.",
+      "url": "/beauty/bookings",
+      "icons": [
+        {
+          "src": "/studio-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "description": "Open your studio notifications.",
+      "url": "/notifications",
+      "icons": [
+        {
+          "src": "/studio-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

@@ -23,6 +23,7 @@ import {
   resolveAccountDisplayName,
 } from "@/lib/dashboard-overview";
 import { CookiePreferencesMenuItem } from "@/components/account/CookiePreferencesMenuItem";
+import { StudioInstallMenuItem } from "@/components/pwa/StudioInstallMenuItem";
 import { OpusProMenuItem } from "@/components/account/OpusProMenuItem";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -212,6 +213,7 @@ export function DashboardAccountMenu({
               )}
             </Link>
           </DropdownMenuItem>
+          <StudioInstallMenuItem />
           <CookiePreferencesMenuItem />
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

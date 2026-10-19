@@ -2,12 +2,14 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
-function worker() {
+function worker(language = "en-US") {
   const handlers: Record<
     string,
     (event: {
       data?: { json: () => unknown };
       notification?: { close: () => void; data: unknown };
+      request?: { url: string; method: string; mode: string };
+      respondWith?: (response: Promise<Response>) => void;
       waitUntil: (task: Promise<unknown>) => void;
     }) => void
   > = {};
@@ -17,24 +19,43 @@ function worker() {
   const focus = vi.fn().mockResolvedValue(undefined);
   const client = { url: "https://studio.opus.mk/beauty", navigate, focus };
   const matchAll = vi.fn().mockResolvedValue([client]);
+  const fetch = vi.fn().mockResolvedValue(new Response("live dashboard"));
+  const openCache = vi.fn();
+  const skipWaiting = vi.fn().mockResolvedValue(undefined);
+  const claim = vi.fn().mockResolvedValue(undefined);
   runInNewContext(readFileSync("public/opus-push-sw.js", "utf8"), {
     URL,
+    Response,
+    fetch,
+    caches: { open: openCache },
     self: {
       addEventListener: (name: string, handler: (typeof handlers)[string]) => {
         handlers[name] = handler;
       },
-      skipWaiting: vi.fn(),
+      skipWaiting,
       location: { origin: "https://studio.opus.mk" },
+      navigator: { language },
       registration: { showNotification },
-      clients: { matchAll, openWindow, claim: vi.fn() },
+      clients: { matchAll, openWindow, claim },
     },
   });
-  return { handlers, showNotification, openWindow, navigate, focus, matchAll };
+  return {
+    handlers,
+    showNotification,
+    openWindow,
+    navigate,
+    focus,
+    matchAll,
+    fetch,
+    openCache,
+    skipWaiting,
+    claim,
+  };
 }
 const id = "a".repeat(32);
 
-describe("push-only browser worker", () => {
-  it("shows bounded content with a private opaque destination and does not cache pages", async () => {
+describe("studio browser worker", () => {
+  it("shows bounded content with a private opaque destination", async () => {
     const { handlers, showNotification } = worker();
     const waitUntil = vi.fn();
     handlers.push({
@@ -54,7 +75,6 @@ describe("push-only browser worker", () => {
       "A".repeat(120),
       { body: "B".repeat(450), silent: true, data: { notificationId: id } },
     ]);
-    expect(handlers.fetch).toBeUndefined();
     handlers.push({
       data: { json: () => ({ notificationId: "https://attacker.example" }) },
       waitUntil,
@@ -69,6 +89,114 @@ describe("push-only browser worker", () => {
     });
     expect(showNotification).toHaveBeenCalledTimes(1);
   });
+
+  it("activates updates without replacing the existing worker registration", async () => {
+    const { handlers, skipWaiting, claim } = worker();
+    const waitUntil = vi.fn();
+    handlers.install({ waitUntil });
+    handlers.activate({ waitUntil });
+    await Promise.all(waitUntil.mock.calls.map(([task]) => task));
+    expect(skipWaiting).toHaveBeenCalledOnce();
+    expect(claim).toHaveBeenCalledOnce();
+  });
+
+  it.each([200, 302, 401, 403, 404, 500])(
+    "passes through HTTP %s navigation responses without caching or masking them",
+    async (status) => {
+      const { handlers, fetch, openCache } = worker();
+      const response = new Response("network response", { status });
+      fetch.mockResolvedValueOnce(response);
+      const request = {
+        url: "https://studio.opus.mk/beauty/bookings?date=2026-10-19",
+        method: "GET",
+        mode: "navigate",
+      };
+      const respondWith = vi.fn();
+      handlers.fetch({ request, respondWith, waitUntil: vi.fn() });
+      expect(fetch).toHaveBeenCalledWith(request, { cache: "no-store" });
+      expect(await respondWith.mock.calls[0][0]).toBe(response);
+      expect(openCache).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ["en-US", "Can't connect to OPUS", "Try again"],
+    ["mk-MK", "Нема врска со OPUS", "Обиди се повторно"],
+    ["sq-AL", "Nuk mund të lidhemi me OPUS", "Provoni përsëri"],
+  ])(
+    "returns a self-contained offline screen in %s when navigation cannot reach the network",
+    async (language, title, retry) => {
+      const { handlers, fetch, openCache } = worker(language);
+      fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+      const respondWith = vi.fn();
+      handlers.fetch({
+        request: {
+          url: `https://studio.opus.mk/notifications/open?id=${id}`,
+          method: "GET",
+          mode: "navigate",
+        },
+        respondWith,
+        waitUntil: vi.fn(),
+      });
+      const response: Response = await respondWith.mock.calls[0][0];
+      const html = await response.text();
+      expect(response.status).toBe(503);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(response.headers.get("Content-Security-Policy")).toContain(
+        "default-src 'none'",
+      );
+      expect(html).toContain(title);
+      expect(html).toContain(`<a href="">${retry}</a>`);
+      expect(html).not.toContain(id);
+      expect(html).not.toMatch(/<script|<link|<img/);
+      expect(openCache).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["/", "/login", "/onboarding", "/settings", "/beauty/bookings"])(
+    "provides offline navigation recovery for studio route %s",
+    async (pathname) => {
+      const { handlers, fetch } = worker();
+      fetch.mockRejectedValueOnce(new TypeError("Failed to fetch"));
+      const respondWith = vi.fn();
+      handlers.fetch({
+        request: {
+          url: `https://studio.opus.mk${pathname}`,
+          method: "GET",
+          mode: "navigate",
+        },
+        respondWith,
+        waitUntil: vi.fn(),
+      });
+      expect((await respondWith.mock.calls[0][0]).status).toBe(503);
+    },
+  );
+
+  it.each([
+    ["https://studio.opus.mk/api/auth/session", "GET", "navigate"],
+    ["https://studio.opus.mk/sites/test/book", "GET", "navigate"],
+    ["https://studio.opus.mk/book/test", "GET", "navigate"],
+    ["https://studio.opus.mk/account/sign-in", "GET", "navigate"],
+    ["https://studio.opus.mk/beauty-other", "GET", "navigate"],
+    ["https://studio.opus.mk/beauty/bookings", "GET", "cors"],
+    ["https://studio.opus.mk/beauty/bookings", "POST", "navigate"],
+    ["https://studio.opus.mk/_next/static/chunk.js", "GET", "no-cors"],
+    ["https://studio-luna.opus.mk/", "GET", "navigate"],
+  ])(
+    "does not intercept public, API, data or cross-origin requests: %s (%s/%s)",
+    (url, method, mode) => {
+      const { handlers, fetch, openCache } = worker();
+      const respondWith = vi.fn();
+      handlers.fetch({
+        request: { url, method, mode },
+        respondWith,
+        waitUntil: vi.fn(),
+      });
+      expect(respondWith).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+      expect(openCache).not.toHaveBeenCalled();
+    },
+  );
 
   it("focuses a studio window or opens one using only the current origin", async () => {
     const { handlers, navigate, focus, openWindow, matchAll } = worker();

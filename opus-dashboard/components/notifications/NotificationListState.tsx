@@ -15,7 +15,7 @@ export function NotificationLoading({ rows = 4 }: { rows?: number }) {
         "Вчитување известувања…",
         "Po ngarkohen njoftimet…",
       )}
-      className="min-w-0 divide-y divide-border/40"
+      className="flex min-w-0 flex-col gap-3"
     >
       {Array.from({ length: rows }, (_, index) => (
         <div key={index} aria-hidden="true" className="flex min-w-0 gap-3 p-4">

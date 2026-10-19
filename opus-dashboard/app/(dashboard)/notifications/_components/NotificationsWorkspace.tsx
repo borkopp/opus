@@ -59,8 +59,8 @@ function NotificationsWorkspaceContent() {
       : "skip",
     { initialNumItems: 25 },
   );
-  const unreadCount = useQuery(
-    api.dashboardNotifications.getUnreadCount,
+  const unreadSummary = useQuery(
+    api.dashboardNotifications.getUnreadSummary,
     orgId ? { orgId } : "skip",
   );
   const actions = useNotificationActions(orgId);
@@ -93,6 +93,11 @@ function NotificationsWorkspaceContent() {
 
   const loading = profile === undefined || status === "LoadingFirstPage";
   const hasMore = status === "CanLoadMore" || status === "LoadingMore";
+  const unreadCount = unreadSummary?.count ?? 0;
+  const unreadLabel =
+    unreadSummary?.hasMore && unreadCount > 0
+      ? `${unreadCount}+`
+      : String(unreadCount);
   return (
     <div className="flex min-h-full min-w-0 w-full flex-1 flex-col gap-5">
       <DashboardPageHeader
@@ -100,21 +105,27 @@ function NotificationsWorkspaceContent() {
         title={t("Notifications", "Известувања", "Njoftimet")}
         description={
           <span role="status">
-            {unreadCount === undefined
+            {unreadSummary === undefined
               ? t(
                   "Your latest booking updates, in one place.",
                   "Сите новости за термините на едно место.",
                   "Përditësimet e termineve në një vend.",
                 )
-              : t(
-                  `${unreadCount} unread notifications.`,
-                  `${unreadCount} непрочитани известувања.`,
-                  `${unreadCount} njoftime të palexuara.`,
-                )}
+              : unreadSummary.hasMore && unreadCount === 0
+                ? t(
+                    "Check earlier updates in the unread view.",
+                    "Провери ги постарите известувања во непрочитани.",
+                    "Kontrolloni përditësimet e mëparshme te të palexuarat.",
+                  )
+                : t(
+                    `${unreadLabel} unread notifications.`,
+                    `${unreadLabel} непрочитани известувања.`,
+                    `${unreadLabel} njoftime të palexuara.`,
+                  )}
           </span>
         }
       >
-        {(unreadCount ?? 0) > 0 && (
+        {(unreadCount > 0 || unreadSummary?.hasMore) && (
           <MarkAllNotificationsRead
             pending={actions.markingAll}
             onClick={actions.markAllRead}
@@ -184,7 +195,7 @@ function NotificationsWorkspaceContent() {
       </div>
 
       <NotificationActionError failed={actions.failed} retry={actions.retry} />
-      <div className="dashboard-record-list min-w-0 divide-y divide-border/50">
+      <div className="dashboard-record-list flex min-w-0 flex-col gap-3">
         {loading ? (
           <NotificationLoading rows={5} />
         ) : notifications.length === 0 ? (

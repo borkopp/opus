@@ -91,7 +91,7 @@ function NotificationBellContent({
   const mobile = useMediaQuery("(max-width: 767px)");
   const [open, setOpen] = useState(false);
   const notifications = useQuery(api.dashboardNotifications.list, { orgId });
-  const unreadCount = useQuery(api.dashboardNotifications.getUnreadCount, {
+  const unreadSummary = useQuery(api.dashboardNotifications.getUnreadSummary, {
     orgId,
   });
   const settings = useQuery(api.orgSettings.getOrgSettings, { orgId });
@@ -109,8 +109,16 @@ function NotificationBellContent({
   const toastEnabled = settings?.settings?.dashboardToastEnabled ?? true;
   const showToast = enableToast ?? placement === "header";
   const showSound = enableSound ?? placement === "header";
-  const count = unreadCount ?? 0;
+  const count = unreadSummary?.count ?? 0;
+  const hasMore = unreadSummary?.hasMore ?? false;
+  const countLabel = `${count}${hasMore ? "+" : ""}`;
+  const mayHaveUnread = count > 0 || hasMore;
   const showUnreadBadge = dashEnabled && count > 0;
+  const olderUpdatesLabel = t(
+    "Check the inbox for older updates",
+    "Провери ги сите известувања за постари новости",
+    "Kontrolloni kutinë për përditësime të mëparshme",
+  );
 
   useEffect(
     () => () => {
@@ -177,17 +185,11 @@ function NotificationBellContent({
           <Button
             className="min-h-11"
             onClick={() => {
-              void actions.read(incoming).then((saved) => {
-                activeToast.current = undefined;
-                if (!saved) {
-                  setOpen(true);
-                  toast.dismiss(id);
-                  return;
-                }
-                toast.dismiss(id);
-                if (incoming.href) router.push(incoming.href);
-                else setOpen(true);
-              });
+              void actions.read(incoming, true);
+              activeToast.current = undefined;
+              toast.dismiss(id);
+              if (incoming.href) router.push(incoming.href);
+              else setOpen(true);
             }}
           >
             {t("Open", "Отвори", "Hap")}
@@ -244,11 +246,13 @@ function NotificationBellContent({
       aria-label={
         showUnreadBadge
           ? t(
-              `${title}, ${count} unread`,
-              `${title}, ${count} непрочитани`,
-              `${title}, ${count} të palexuara`,
+              `${title}, ${countLabel} unread`,
+              `${title}, ${countLabel} непрочитани`,
+              `${title}, ${countLabel} të palexuara`,
             )
-          : title
+          : dashEnabled && hasMore
+            ? `${title}, ${olderUpdatesLabel}`
+            : title
       }
     >
       {showUnreadBadge ? (
@@ -267,7 +271,7 @@ function NotificationBellContent({
             expandedTrigger ? "ml-auto" : "absolute -right-1 -top-1",
           )}
         >
-          {count > 99 ? "99+" : count}
+          {count > 99 ? "99+" : countLabel}
         </span>
       )}
     </button>
@@ -288,16 +292,18 @@ function NotificationBellContent({
             <h2 className="font-semibold">{title}</h2>
           )}
           <p className="mt-1 text-xs text-muted-foreground" role="status">
-            {unreadCount === undefined
+            {unreadSummary === undefined
               ? t("Loading…", "Се вчитува…", "Duke ngarkuar…")
-              : t(
-                  `${count} unread`,
-                  `${count} непрочитани`,
-                  `${count} të palexuara`,
-                )}
+              : count === 0 && hasMore
+                ? olderUpdatesLabel
+                : t(
+                    `${countLabel} unread`,
+                    `${countLabel} непрочитани`,
+                    `${countLabel} të palexuara`,
+                  )}
           </p>
         </div>
-        {!mobile && count > 0 && (
+        {!mobile && mayHaveUnread && (
           <div className="min-w-0 max-w-[60%]">
             <MarkAllNotificationsRead
               pending={actions.markingAll}
@@ -331,7 +337,7 @@ function NotificationBellContent({
           )}
         </SheetDescription>
       )}
-      {mobile && count > 0 && (
+      {mobile && mayHaveUnread && (
         <div className="mt-3">
           <MarkAllNotificationsRead
             pending={actions.markingAll}
@@ -348,17 +354,24 @@ function NotificationBellContent({
           <NotificationActionError failed retry={actions.retry} />
         </div>
       )}
-      {notifications === undefined ? (
+      {notifications === undefined ||
+      (notifications.length === 0 && unreadSummary === undefined) ? (
         <NotificationLoading />
       ) : notifications.length === 0 ? (
-        count > 0 ? (
+        mayHaveUnread ? (
           <div className="px-5 py-10 text-center">
             <p className="text-sm font-semibold">
-              {t(
-                "Older unread notifications",
-                "Постари непрочитани известувања",
-                "Njoftime të mëparshme të palexuara",
-              )}
+              {count > 0
+                ? t(
+                    "Older unread notifications",
+                    "Постари непрочитани известувања",
+                    "Njoftime të mëparshme të palexuara",
+                  )
+                : t(
+                    "No recent notifications",
+                    "Нема нови известувања",
+                    "Nuk ka njoftime të fundit",
+                  )}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {t(
@@ -372,7 +385,7 @@ function NotificationBellContent({
           <NotificationEmpty />
         )
       ) : (
-        <div className="divide-y divide-border/50 p-1">
+        <div className="flex flex-col gap-3 p-1">
           {notifications.map((notification) => (
             <NotificationRow
               key={notification._id}

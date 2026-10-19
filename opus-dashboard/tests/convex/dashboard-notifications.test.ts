@@ -319,6 +319,122 @@ describe("personal dashboard inbox", () => {
     ).toMatchObject({ type: "booking_changed" });
   });
 
+  it("reports 99+ only after confirming 100 unread notifications", async () => {
+    const t = createBackend();
+    const { owner, orgId } = await studio(t);
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 100; index++) {
+        await ctx.db.insert("dashboard_notifications", {
+          orgId,
+          type: "new_booking",
+          title: "New Booking",
+          body: "A booking was added.",
+          isRead: false,
+          isDismissed: false,
+          createdAt: NOW + index,
+        });
+      }
+    });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 100, hasMore: false });
+    await notification(t, orgId);
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 100, hasMore: true });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadCount, { orgId }),
+    ).toBe(100);
+  });
+
+  it("bounds personally handled history without claiming unscanned rows are unread", async () => {
+    const t = createBackend();
+    const { owner, userId, orgId } = await studio(t);
+    const { staff } = await teammate(t, orgId);
+    const oldest = await notification(t, orgId);
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 210; index++) {
+        const notificationId = await ctx.db.insert("dashboard_notifications", {
+          orgId,
+          type: "new_booking",
+          title: "New Booking",
+          body: "A booking was added.",
+          isRead: false,
+          isDismissed: false,
+          createdAt: NOW + index,
+        });
+        await ctx.db.insert("dashboard_notification_states", {
+          orgId,
+          userId,
+          notificationId,
+          isRead: true,
+          isDismissed: index % 2 === 0,
+          isDeleted: false,
+          createdAt: NOW,
+          updatedAt: NOW,
+        });
+      }
+    });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 0, hasMore: true });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadCount, { orgId }),
+    ).toBe(0);
+    await owner.mutation(api.dashboardNotifications.markRead, {
+      orgId,
+      notificationId: oldest,
+    });
+    // Every item is now personally read. The bounded scan still correctly
+    // reports uncertainty instead of inventing a positive unread badge.
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 0, hasMore: true });
+    expect(
+      await staff.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 100, hasMore: true });
+    await notification(t, orgId);
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 1, hasMore: true });
+    await owner.mutation(api.dashboardNotifications.markAllRead, { orgId });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 0, hasMore: false });
+    await notification(t, orgId);
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 1, hasMore: false });
+  });
+
+  it("bounds raw legacy-dismissed rows before filtering them", async () => {
+    const t = createBackend();
+    const { owner, orgId } = await studio(t);
+    await notification(t, orgId);
+    await t.run(async (ctx) => {
+      for (let index = 0; index < 210; index++) {
+        await ctx.db.insert("dashboard_notifications", {
+          orgId,
+          type: "new_booking",
+          title: "New Booking",
+          body: "A booking was added.",
+          isRead: false,
+          isDismissed: true,
+          createdAt: NOW + index,
+        });
+      }
+    });
+    // A query.filter(...).take(201) would incorrectly scan past all 210
+    // dismissed rows and return the older unread item as an exact total.
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 0, hasMore: true });
+    await owner.mutation(api.dashboardNotifications.markAllRead, { orgId });
+    expect(
+      await owner.query(api.dashboardNotifications.getUnreadSummary, { orgId }),
+    ).toEqual({ count: 0, hasMore: false });
+  });
+
   it("links the exact appointment on its studio wall-clock date, excluding deleted and foreign targets", async () => {
     const t = createBackend();
     const a = await studio(t),
@@ -416,6 +532,11 @@ describe("personal dashboard inbox", () => {
     ).rejects.toThrow("beauty studios only");
     await expect(
       a.owner.query(api.dashboardNotifications.getUnreadCount, {
+        orgId: a.orgId,
+      }),
+    ).rejects.toThrow("beauty studios only");
+    await expect(
+      a.owner.query(api.dashboardNotifications.getUnreadSummary, {
         orgId: a.orgId,
       }),
     ).rejects.toThrow("beauty studios only");

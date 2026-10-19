@@ -4,6 +4,8 @@ import { useCallback, useRef, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { toast } from "sonner";
+import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 
 type NotificationAction =
   | { type: "read" | "dismiss"; notificationId: Id<"dashboard_notifications"> }
@@ -17,6 +19,7 @@ function actionKey(action: NotificationAction) {
 
 /** Shared mutation feedback for the inbox, bell and incoming notification toast. */
 export function useNotificationActions(orgId: Id<"orgs"> | undefined) {
+  const { t } = useDashboardI18n();
   const markReadMutation = useMutation(api.dashboardNotifications.markRead);
   const markAllReadMutation = useMutation(
     api.dashboardNotifications.markAllRead,
@@ -30,7 +33,10 @@ export function useNotificationActions(orgId: Id<"orgs"> | undefined) {
   } | null>(null);
 
   const run = useCallback(
-    async (action: NotificationAction): Promise<boolean> => {
+    async (
+      action: NotificationAction,
+      reportFailure = false,
+    ): Promise<boolean> => {
       if (!orgId) return false;
       const key = `${orgId}:${actionKey(action)}`;
       if (inFlight.current.has(key)) return false;
@@ -49,23 +55,48 @@ export function useNotificationActions(orgId: Id<"orgs"> | undefined) {
             orgId,
             notificationId: action.notificationId,
           });
+        if (reportFailure) toast.dismiss(`notification-action:${key}`);
         return true;
       } catch {
         setFailure({ orgId, action });
+        if (reportFailure) {
+          toast.error(
+            t(
+              "Could not mark the notification as read.",
+              "Известувањето не беше означено како прочитано.",
+              "Njoftimi nuk u shënua si i lexuar.",
+            ),
+            {
+              id: `notification-action:${key}`,
+              action: {
+                label: t("Retry", "Обиди се повторно", "Provoni përsëri"),
+                onClick: () => {
+                  void run(action, true);
+                },
+              },
+            },
+          );
+        }
         return false;
       } finally {
         inFlight.current.delete(key);
         setPending([...inFlight.current]);
       }
     },
-    [orgId, markReadMutation, markAllReadMutation, dismissMutation],
+    [orgId, markReadMutation, markAllReadMutation, dismissMutation, t],
   );
 
   const read = useCallback(
-    (notification: { _id: Id<"dashboard_notifications">; isRead: boolean }) =>
+    (
+      notification: { _id: Id<"dashboard_notifications">; isRead: boolean },
+      reportFailure = false,
+    ) =>
       notification.isRead
         ? Promise.resolve(true)
-        : run({ type: "read", notificationId: notification._id }),
+        : run(
+            { type: "read", notificationId: notification._id },
+            reportFailure,
+          ),
     [run],
   );
 

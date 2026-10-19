@@ -221,25 +221,47 @@ export const listPage = query({
   },
 });
 
-/** Count the same personal unread state used by both inbox surfaces. */
+const UNREAD_COUNT_LIMIT = 100;
+const UNREAD_SCAN_LIMIT = 200;
+
+async function unreadSummary(ctx: QueryCtx, orgId: Id<"orgs">) {
+  const { user } = await requireInboxAccess(ctx, orgId);
+  const watermark = await readWatermark(ctx, orgId, user._id);
+  // Bound raw reads before considering legacy dismissals or personal states.
+  // At most 201 notification reads and 200 personal-state lookups per call;
+  // even a lifetime of individually read/dismissed alerts stays bounded.
+  const candidates = await ctx.db
+    .query("dashboard_notifications")
+    .withIndex("by_org_unread", (q) =>
+      q.eq("orgId", orgId).eq("isRead", false).gt("_creationTime", watermark),
+    )
+    .order("desc")
+    .take(UNREAD_SCAN_LIMIT + 1);
+  let count = 0;
+  const scanned = Math.min(candidates.length, UNREAD_SCAN_LIMIT);
+  for (let index = 0; index < scanned; index++) {
+    const notification = candidates[index];
+    if (notification.isDismissed) continue;
+    const state = await personalState(ctx, notification, user._id, watermark);
+    if (!state.isRead && !state.isDismissed) count += 1;
+    if (count === UNREAD_COUNT_LIMIT) {
+      return { count, hasMore: index + 1 < candidates.length };
+    }
+  }
+  // hasMore means older rows were not counted; it does not assert they are
+  // unread. Only a confirmed count of 100 may produce a "99+" unread badge.
+  return { count, hasMore: candidates.length > scanned };
+}
+
+export const getUnreadSummary = query({
+  args: { orgId: v.id("orgs") },
+  handler: (ctx, { orgId }) => unreadSummary(ctx, orgId),
+});
+
+/** Old tabs retain the numeric API, with a bounded confirmed lower bound. */
 export const getUnreadCount = query({
   args: { orgId: v.id("orgs") },
-  handler: async (ctx, { orgId }) => {
-    const { user } = await requireInboxAccess(ctx, orgId);
-    const watermark = await readWatermark(ctx, orgId, user._id);
-    const unread = ctx.db
-      .query("dashboard_notifications")
-      .withIndex("by_org_unread", (q) =>
-        q.eq("orgId", orgId).eq("isRead", false).gt("_creationTime", watermark),
-      )
-      .filter((q) => q.eq(q.field("isDismissed"), false));
-    let count = 0;
-    for await (const notification of unread) {
-      const state = await personalState(ctx, notification, user._id, watermark);
-      if (!state.isRead && !state.isDismissed) count += 1;
-    }
-    return count;
-  },
+  handler: async (ctx, { orgId }) => (await unreadSummary(ctx, orgId)).count,
 });
 
 async function updatePersonalState(

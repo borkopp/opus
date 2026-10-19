@@ -46,15 +46,22 @@ flags remain effective, so previously dismissed records do not reappear. The
 bell shows recent activity; the full inbox loads older pages and supports
 All/Unread plus event-type filters, including rescheduled appointments.
 
+Unread summaries inspect at most 200 recent candidates and stop after 100
+confirmed unread alerts. A partial positive total is shown with `+`; an uncounted
+older history never becomes an exact zero or an invented unread badge. The full
+inbox can page through the remaining history. Older open tabs keep the numeric
+count API, which now returns the confirmed lower bound until they refresh.
+
 On phones the bell opens a sheet with reachable header and footer actions.
 Appointment links select the corresponding booking and studio calendar date,
 including when the calendar is already open. Missing or deleted destinations
 remain readable notifications without a broken appointment link. These in-app
 states are separate from device push preferences and provider delivery status.
 
-This inbox update is prepared locally and requires an explicitly authorized
-backend/frontend release. Its additive schema keeps existing notification rows
-readable; it does not enable any push provider.
+Release the additive backend before promoting the matching frontend. Existing
+notification rows remain readable, and no push provider is enabled by this
+inbox update. Appointment navigation does not wait for read acknowledgements;
+failed acknowledgements offer a retry without blocking the calendar.
 
 Notification taps carry only an opaque queue ID. The server rechecks the recipient,
 active membership and current appointment/AI permissions before switching to the

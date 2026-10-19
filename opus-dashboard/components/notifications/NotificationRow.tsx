@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { FunctionReturnType } from "convex/server";
 import { formatDistanceToNow } from "date-fns";
 import { mk, sq } from "date-fns/locale";
@@ -55,11 +54,13 @@ export function NotificationRow({
   notification: DashboardNotification;
   compact?: boolean;
   pending: boolean;
-  onRead: (notification: DashboardNotification) => Promise<boolean>;
+  onRead: (
+    notification: DashboardNotification,
+    reportFailure?: boolean,
+  ) => Promise<boolean>;
   onDismiss: () => Promise<boolean>;
   onOpened?: () => void;
 }) {
-  const router = useRouter();
   const { language, locale, t } = useDashboardI18n();
   const copy = getDashboardNotificationCopy(language, notification);
   const { Icon, className: iconClassName } = getNotificationAppearance(
@@ -67,7 +68,6 @@ export function NotificationRow({
   );
   const open = async () => {
     if (pending || !(await onRead(notification))) return;
-    if (notification.href) router.push(notification.href);
     onOpened?.();
   };
   const content = (
@@ -144,10 +144,10 @@ export function NotificationRow({
           href={notification.href}
           prefetch={false}
           className={actionClassName}
-          aria-disabled={pending || undefined}
-          onNavigate={(event) => {
-            event.preventDefault();
-            void open();
+          onNavigate={() => {
+            // Read tracking must not hold up navigation while Convex reconnects.
+            void onRead(notification, true);
+            onOpened?.();
           }}
         >
           {content}

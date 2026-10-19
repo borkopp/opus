@@ -36,6 +36,11 @@ icon use the exact `public/opus-mark.svg` on an opaque white background. The
 maskable version leaves room for launcher cropping. Regenerate from
 `opus-dashboard/` with `node scripts/generate-studio-icons.mjs`.
 
+Studio Apple metadata uses a versioned icon URL. Safari's conventional
+`/apple-touch-icon.png` and `/apple-touch-icon-precomposed.png` probes resolve to
+the same PNG on `studio.opus.mk` and loopback development hosts only; tenant
+websites do not receive this automatic fallback.
+
 The dashboard viewport includes device safe areas while leaving pinch zoom
 available. Installed browser behavior and actual launcher rendering still need
 physical-device checks; icon files or a manifest test alone do not prove them.
@@ -66,6 +71,35 @@ Push remains separately opt-in and provider-dependent. Installation and worker
 registration never request notification permission. See
 [PUSH_NOTIFICATIONS.md](PUSH_NOTIFICATIONS.md) for its configuration and delivery
 boundaries.
+
+## Measuring adoption
+
+The existing PostHog SDK and analytics consent choice also cover these events;
+there is no additional consent prompt or install-specific stored identifier.
+
+| Event                                | Meaning                                                                                                         |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `studio_install_instructions_opened` | A user opens the install dialog.                                                                                |
+| `studio_app_installed`               | The browser fires `appinstalled`, where supported. Accepting a prompt alone does not count.                     |
+| `studio_app_opened`                  | The dashboard is observed in standalone/minimal-ui display mode or iOS standalone mode, once per document load. |
+
+Each event includes `platform` and `display_mode`. Provider remounts and route
+changes do not duplicate a launch. Events require the existing analytics consent;
+declined clicks and installation events are not buffered or replayed. If consent
+is accepted while the app is currently open, that current standalone launch can
+be counted. Existing `SyncUser` identification associates events with the signed-in
+user without adding another identity mechanism.
+
+For adoption, count **unique users of `studio_app_opened`**, excluding the existing
+**Internal / Test users** cohort. This measures known users observed opening the
+installed app, including iPhone users: iOS does not report `appinstalled`. It is
+not an exact installation count, an uninstall count, or a count of devices. Users
+who decline analytics, block PostHog, or never open the installed app are absent;
+anonymous users may remain separate until the existing identification runs.
+No historical installations can be backfilled from this instrumentation.
+
+The saved [OPUS Home Screen app users insight](https://eu.posthog.com/project/263508/insights/ykPYn731)
+shows distinct users over the last 30 days with the existing test-account filter.
 
 ## Manual device validation before release
 

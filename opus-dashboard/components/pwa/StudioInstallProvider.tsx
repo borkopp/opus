@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Check, Download, Share2, PlusSquare, Ellipsis, X } from "lucide-react";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,10 @@ import {
   promptStudioInstall,
   type StudioInstallState,
 } from "@/lib/studio-install";
+import {
+  captureStudioInstallInstructionsOpened,
+  subscribeStudioInstallAnalytics,
+} from "@/lib/studio-install-analytics";
 
 const InstallContext = createContext<{
   state: StudioInstallState;
@@ -37,6 +41,7 @@ export function StudioInstallProvider({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState(false);
   const opener = useRef<HTMLElement | null>(null);
+  useEffect(subscribeStudioInstallAnalytics, []);
   const openInstall = (trigger?: HTMLElement) => {
     opener.current =
       trigger ??
@@ -45,6 +50,7 @@ export function StudioInstallProvider({
         : null);
     setError(false);
     setOpen(true);
+    if (!open) captureStudioInstallInstructionsOpened();
   };
 
   const steps =

@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs";
 import type { MetadataRoute } from "next";
-import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
+import {
+  getRewrittenUrl,
+  unstable_doesMiddlewareMatch,
+  unstable_getResponseFromNextConfig,
+} from "next/experimental/testing/server";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import {
@@ -8,6 +12,7 @@ import {
   studioAppViewport,
 } from "../../lib/studio-app-metadata";
 import { config } from "../../proxy";
+import nextConfig from "../../next.config";
 
 const manifest: MetadataRoute.Manifest = JSON.parse(
   readFileSync("public/studio.webmanifest", "utf8"),
@@ -29,7 +34,7 @@ describe("studio installation metadata", () => {
     expect(studioAppMetadata.manifest).toBe("/studio.webmanifest");
     expect(studioAppMetadata.icons).toMatchObject({
       apple: {
-        url: "/studio-apple-touch-icon.png",
+        url: "/studio-apple-touch-icon.png?v=2",
         sizes: "180x180",
         type: "image/png",
       },
@@ -43,6 +48,9 @@ describe("studio installation metadata", () => {
     const assets = [
       "/studio.webmanifest",
       "/studio-apple-touch-icon.png",
+      "/studio-apple-touch-icon.png?v=2",
+      "/apple-touch-icon.png",
+      "/apple-touch-icon-precomposed.png",
       ...(manifest.icons ?? []).map((icon) => icon.src),
     ];
     for (const host of ["studio.opus.mk", "studio-luna.opus.mk"]) {
@@ -55,6 +63,32 @@ describe("studio installation metadata", () => {
             headers: { host },
           }),
         ).toBe(false);
+      }
+    }
+  });
+
+  it("provides Safari's fallback icons only on studio and local hosts", async () => {
+    for (const asset of [
+      "/apple-touch-icon.png",
+      "/apple-touch-icon-precomposed.png",
+    ]) {
+      for (const host of [
+        "studio.opus.mk",
+        "localhost",
+        "127.0.0.1",
+        "studio-luna.opus.mk",
+        "opus.mk",
+      ]) {
+        const response = await unstable_getResponseFromNextConfig({
+          url: `https://${host}${asset}`,
+          headers: { host },
+          nextConfig,
+        });
+        expect(getRewrittenUrl(response)).toBe(
+          ["studio.opus.mk", "localhost", "127.0.0.1"].includes(host)
+            ? `https://${host}/studio-apple-touch-icon.png`
+            : null,
+        );
       }
     }
   });

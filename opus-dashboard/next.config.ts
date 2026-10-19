@@ -9,6 +9,22 @@ const nextConfig: NextConfig = {
   turbopack: { root: path.resolve(__dirname, "..") },
   outputFileTracingRoot: path.resolve(__dirname, ".."),
   output: "standalone",
+  async rewrites() {
+    // Safari also probes these conventional paths. Restrict the fallback to
+    // the studio host so tenant websites do not inherit OPUS install branding.
+    return ["/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"].map(
+      (source) => ({
+        source,
+        has: [
+          {
+            type: "host" as const,
+            value: "(?:studio\\.opus\\.mk|localhost|127\\.0\\.0\\.1)",
+          },
+        ],
+        destination: "/studio-apple-touch-icon.png",
+      }),
+    );
+  },
   async headers() {
     return [
       {

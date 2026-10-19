@@ -15,7 +15,7 @@ export const studioAppMetadata: Metadata = {
       { url: "/studio-icon-192.png", type: "image/png", sizes: "192x192" },
     ],
     apple: {
-      url: "/studio-apple-touch-icon.png",
+      url: "/studio-apple-touch-icon.png?v=2",
       type: "image/png",
       sizes: "180x180",
     },

@@ -354,7 +354,7 @@ describe("operator account erasure", () => {
     await backend.finishAllScheduledFunctions(vi.runAllTimers);
   });
 
-  it("clears push credentials and preferences and cancels queued pushes during erasure", async () => {
+  it("clears push credentials and personal inbox state and cancels queued pushes during erasure", async () => {
     vi.useFakeTimers();
     const { backend, identity, userId, otherId, args } = await setup();
     const { orgId } = await identity.mutation(
@@ -377,6 +377,36 @@ describe("operator account erasure", () => {
         orgId,
         userId,
         preferences: defaultPushPreferences(),
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      const inboxNotificationId = await ctx.db.insert(
+        "dashboard_notifications",
+        {
+          orgId,
+          type: "new_booking",
+          title: "New booking",
+          body: "A booking was created.",
+          isRead: false,
+          isDismissed: false,
+          createdAt: Date.now(),
+        },
+      );
+      await ctx.db.insert("dashboard_notification_states", {
+        orgId,
+        userId,
+        notificationId: inboxNotificationId,
+        isRead: true,
+        isDismissed: true,
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+      await ctx.db.insert("dashboard_inbox_states", {
+        orgId,
+        userId,
+        readThroughCreationTime: Date.now(),
         isDeleted: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -428,6 +458,24 @@ describe("operator account erasure", () => {
         .unique(),
     );
     expect(preferences!.isDeleted).toBe(true);
+    for (const table of [
+      "dashboard_notification_states",
+      "dashboard_inbox_states",
+    ] as const) {
+      const inboxStates = await backend.run((ctx) =>
+        ctx.db
+          .query(table)
+          .withIndex("by_org_user", (q) =>
+            q.eq("orgId", orgId).eq("userId", userId),
+          )
+          .collect(),
+      );
+      expect(inboxStates).toHaveLength(1);
+      expect(inboxStates[0]).toMatchObject({
+        isDeleted: true,
+        deletedAt: expect.any(Number),
+      });
+    }
     expect(
       (await backend.run((ctx) => ctx.db.get(notificationId)))!.status,
     ).toBe("cancelled");

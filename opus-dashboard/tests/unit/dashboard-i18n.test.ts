@@ -43,9 +43,15 @@ describe("dashboard i18n locale resolution", () => {
   });
 
   it("selects the requested translation", () => {
-    expect(translate("en", "Settings", "Поставки", "Cilësimet")).toBe("Settings");
-    expect(translate("mk", "Settings", "Поставки", "Cilësimet")).toBe("Поставки");
-    expect(translate("sq", "Settings", "Поставки", "Cilësimet")).toBe("Cilësimet");
+    expect(translate("en", "Settings", "Поставки", "Cilësimet")).toBe(
+      "Settings",
+    );
+    expect(translate("mk", "Settings", "Поставки", "Cilësimet")).toBe(
+      "Поставки",
+    );
+    expect(translate("sq", "Settings", "Поставки", "Cilësimet")).toBe(
+      "Cilësimet",
+    );
     expect(translate("sq", "Settings", "Поставки")).toBe("Settings");
   });
 
@@ -55,12 +61,8 @@ describe("dashboard i18n locale resolution", () => {
     expect(getDashboardPageTitle("/beauty/bookings", "en")).toBe(
       "Appointments",
     );
-    expect(getDashboardPageTitle("/beauty/bookings", "sq")).toBe(
-      "Terminet",
-    );
-    expect(getDashboardPageTitle("/beauty/staff/member-id", "mk")).toBe(
-      "Тим",
-    );
+    expect(getDashboardPageTitle("/beauty/bookings", "sq")).toBe("Terminet");
+    expect(getDashboardPageTitle("/beauty/staff/member-id", "mk")).toBe("Тим");
     expect(getDashboardPageTitle("/beauty/staff/member-id", "sq")).toBe(
       "Ekipi",
     );
@@ -70,6 +72,26 @@ describe("dashboard i18n locale resolution", () => {
 });
 
 describe("dashboard notification localization", () => {
+  it.each(["mk", "sq"] as const)(
+    "keeps reschedule copy after event normalization in %s",
+    (language) => {
+      const body =
+        "Ana's Haircut with Elena was rescheduled to Thu 3 Sept at 15:00";
+      const legacy = getDashboardNotificationCopy(language, {
+        type: "new_booking",
+        title: "Booking Rescheduled",
+        body,
+      });
+      const normalized = getDashboardNotificationCopy(language, {
+        type: "booking_changed",
+        title: "Booking Rescheduled",
+        body,
+      });
+      expect(normalized).toEqual(legacy);
+      expect(normalized.body).not.toEqual(body);
+    },
+  );
+
   it("preserves persisted notification copy in English", () => {
     const notification = {
       type: "new_booking",
@@ -99,13 +121,11 @@ describe("dashboard notification localization", () => {
       getDashboardNotificationCopy("mk", {
         type: "booking_cancelled",
         title: "Booking Cancelled",
-        body:
-          "The Haircut booking for Ana on Thu 3 Sept at 14:00 was cancelled",
+        body: "The Haircut booking for Ana on Thu 3 Sept at 14:00 was cancelled",
       }),
     ).toEqual({
       title: "Откажан термин",
-      body:
-        "Терминот на Ana за Haircut, закажан за чет. 3 сеп. во 14:00, беше откажан.",
+      body: "Терминот на Ana за Haircut, закажан за чет. 3 сеп. во 14:00, беше откажан.",
     });
 
     expect(
@@ -127,8 +147,7 @@ describe("dashboard notification localization", () => {
       }),
     ).toEqual({
       title: "Презакажан термин",
-      body:
-        "Терминот на Ana за Haircut кај Elena е презакажан за чет. 3 сеп. во 15:00.",
+      body: "Терминот на Ana за Haircut кај Elena е презакажан за чет. 3 сеп. во 15:00.",
     });
   });
 
@@ -148,13 +167,11 @@ describe("dashboard notification localization", () => {
       getDashboardNotificationCopy("sq", {
         type: "booking_cancelled",
         title: "Booking Cancelled",
-        body:
-          "The Haircut booking for Ana on Thu 3 Sept at 14:00 was cancelled",
+        body: "The Haircut booking for Ana on Thu 3 Sept at 14:00 was cancelled",
       }),
     ).toEqual({
       title: "Termin i anuluar",
-      body:
-        "Termini i Ana për Haircut, i caktuar për enj. 3 sht. në 14:00, u anulua.",
+      body: "Termini i Ana për Haircut, i caktuar për enj. 3 sht. në 14:00, u anulua.",
     });
 
     expect(
@@ -176,8 +193,7 @@ describe("dashboard notification localization", () => {
       }),
     ).toEqual({
       title: "Termin i ricaktuar",
-      body:
-        "Termini i Ana për Haircut me Elena u ricaktua për enj. 3 sht. në 15:00.",
+      body: "Termini i Ana për Haircut me Elena u ricaktua për enj. 3 sht. në 15:00.",
     });
 
     expect(
@@ -188,8 +204,7 @@ describe("dashboard notification localization", () => {
       }),
     ).toEqual({
       title: "Biseda kërkon vëmendje",
-      body:
-        "Një klient po pret përgjigje nga ekipi juaj. Hapni bisedën në kutinë e AI.",
+      body: "Një klient po pret përgjigje nga ekipi juaj. Hapni bisedën në kutinë e AI.",
     });
   });
 
@@ -270,4 +285,3 @@ describe("separate translation files (en.ts, mk.ts, al.ts, sq.ts)", () => {
     expect(alKeys).toEqual(enKeys);
   });
 });
-

@@ -189,6 +189,23 @@ export async function eraseRequestedAccount(
         deletedAt: now,
         updatedAt: now,
       });
+    for (const table of [
+      "dashboard_notification_states",
+      "dashboard_inbox_states",
+    ] as const) {
+      const inboxStates = await ctx.db
+        .query(table)
+        .withIndex("by_org_user", (q) =>
+          q.eq("orgId", member.orgId).eq("userId", userId),
+        )
+        .collect();
+      for (const state of inboxStates)
+        await ctx.db.patch(state._id, {
+          isDeleted: true,
+          deletedAt: now,
+          updatedAt: now,
+        });
+    }
     const queued = await ctx.db
       .query("notifications")
       .withIndex("by_org_status_scheduled", (q) =>

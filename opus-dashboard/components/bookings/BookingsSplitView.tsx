@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { Suspense, useState, useCallback, useMemo, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { useNotificationDestination } from "@/hooks/use-notification-destination";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -50,14 +51,49 @@ const BookingsPeriodView = dynamic(
   { loading: BookingsLoading },
 );
 
-export function BookingsSplitView({
-  bookings,
-  staffMembers,
-  orgId,
-}: {
+type BookingsSplitViewProps = {
   bookings: BookingView[];
   staffMembers: StaffView[];
   orgId: Id<"orgs">;
+};
+
+export function BookingsSplitView(props: BookingsSplitViewProps) {
+  return (
+    <Suspense fallback={null}>
+      <BookingsDestination {...props} />
+    </Suspense>
+  );
+}
+
+function BookingsDestination(props: BookingsSplitViewProps) {
+  const destination = useNotificationDestination("booking", props.orgId);
+  const requestedBooking = props.bookings.find(
+    (booking) =>
+      booking._id === destination.id && isVisibleCalendarBooking(booking),
+  );
+
+  // Notification links can change while the calendar is already mounted.
+  // Reset the selection for that destination, then leave normal calendar
+  // interactions alone until the next link is opened.
+  return (
+    <BookingsCalendar
+      key={`${props.orgId}:${destination.revision}`}
+      {...props}
+      requestedBooking={requestedBooking}
+      requestedDate={destination.date}
+    />
+  );
+}
+
+function BookingsCalendar({
+  bookings,
+  staffMembers,
+  orgId,
+  requestedBooking,
+  requestedDate,
+}: BookingsSplitViewProps & {
+  requestedBooking?: BookingView;
+  requestedDate: string | null;
 }) {
   const { t } = useDashboardI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -89,7 +125,9 @@ export function BookingsSplitView({
     clock,
   );
   const today = dateFromKey(bookingDateKey(now))!;
-  const [mobileStaffId, setMobileStaffId] = useState<string>("");
+  const [mobileStaffId, setMobileStaffId] = useState<string>(
+    requestedBooking?.staffId ?? "",
+  );
   const activeStaffId = staffMembers.some(
     (staff) => staff._id === mobileStaffId,
   )
@@ -102,21 +140,13 @@ export function BookingsSplitView({
   const { openQuickBooking } = useQuickBooking();
 
   const [selectedBookingId, setSelectedBookingId] =
-    useState<Id<"bookings"> | null>(() => {
-      if (typeof window === "undefined") return null;
-      const requested = new URLSearchParams(window.location.search).get(
-        "booking",
-      );
-      return bookings.find((booking) => booking._id === requested)?._id ?? null;
-    });
+    useState<Id<"bookings"> | null>(requestedBooking?._id ?? null);
   const [currentDate, setCurrentDate] = useState(() => {
-    if (typeof window !== "undefined") {
-      const requested = new URLSearchParams(window.location.search).get("date");
-      if (requested) {
-        const parsed = dateFromKey(requested);
-        if (parsed) return startOfDay(parsed);
-      }
-    }
+    const targetDate = requestedBooking
+      ? bookingDateKey(requestedBooking.startAt)
+      : requestedDate;
+    const parsed = targetDate ? dateFromKey(targetDate) : undefined;
+    if (parsed) return startOfDay(parsed);
     return startOfDay(
       dateFromKey(bookingDateKey(wallClockNow("Europe/Skopje")))!,
     );

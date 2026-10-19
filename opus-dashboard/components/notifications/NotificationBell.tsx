@@ -1,727 +1,474 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import type { FunctionReturnType } from "convex/server";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useSyncExternalStore,
-} from "react";
-import { createPortal } from "react-dom";
-import { formatDistanceToNow } from "date-fns";
-import { mk, sq } from "date-fns/locale";
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Bell, BellRing, X } from "lucide-react";
+import { toast } from "sonner";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { getDashboardNotificationCopy } from "@/lib/i18n/dashboard-notifications";
-import {
-  Bell,
-  BellRing,
-  CalendarPlus,
-  CalendarX,
-  TriangleAlert,
-  X,
-  Check,
-  ArrowRight,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useNotificationActions } from "@/hooks/use-notification-actions";
+import { getDashboardNotificationCopy } from "@/lib/i18n/dashboard-notifications";
+import { cn } from "@/lib/utils";
+import { NotificationRow } from "./NotificationRow";
+import { NotificationQueryBoundary } from "./NotificationQueryBoundary";
+import {
+  MarkAllNotificationsRead,
+  NotificationActionError,
+  NotificationEmpty,
+  NotificationLoading,
+} from "./NotificationListState";
 
-type DashboardNotification = FunctionReturnType<
-  typeof api.dashboardNotifications.list
->[number];
-
-// ─────────────────────────────────────────────────────
-// Web Audio chime — no audio file required
-// ─────────────────────────────────────────────────────
 function playChime() {
   try {
     const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
+    const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
+    oscillator.connect(gain);
     gain.connect(ctx.destination);
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.12);
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+    oscillator.frequency.setValueAtTime(1100, ctx.currentTime + 0.12);
     gain.gain.setValueAtTime(0.12, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.5);
-    osc.onended = () => ctx.close();
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.5);
+    oscillator.onended = () => {
+      void ctx.close().catch(() => {});
+    };
   } catch {
-    // AudioContext not available (SSR or blocked)
+    // The browser may require a prior user interaction before playing audio.
   }
 }
 
-// ─────────────────────────────────────────────────────
-// Notification type metadata
-// ─────────────────────────────────────────────────────
-export function getNotificationTypeConfig(
-  type: string,
-  t?: (en: string, mk: string, sq?: string) => string,
-) {
-  switch (type) {
-    case "ai_handoff":
-      return {
-        icon: <BellRing size={16} strokeWidth={2} />,
-        iconBg: "bg-highlight/15 text-warning",
-        label: t
-          ? t("AI handoff", "Преземи разговор", "Dorëzimi te stafi")
-          : "AI handoff",
-      };
-    case "new_booking":
-      return {
-        icon: <CalendarPlus size={16} strokeWidth={2} />,
-        iconBg: "bg-accent text-accent-foreground",
-        label: t
-          ? t("New Booking", "Нов термин", "Termin i ri")
-          : "New Booking",
-      };
-    case "booking_cancelled":
-      return {
-        icon: <CalendarX size={16} strokeWidth={2} />,
-        iconBg: "bg-destructive/10 text-destructive",
-        label: t
-          ? t("Cancellation", "Откажан термин", "Termin i anuluar")
-          : "Cancellation",
-      };
-    case "no_show":
-      return {
-        icon: <TriangleAlert size={16} strokeWidth={2} />,
-        iconBg: "bg-highlight/15 text-warning",
-        label: t ? t("No-Show", "Непојавување", "Mosparaqitje") : "No-Show",
-      };
-    default:
-      return {
-        icon: <Bell size={16} strokeWidth={2} />,
-        iconBg: "bg-secondary text-muted-foreground",
-        label: t ? t("Notification", "Известување", "Njoftim") : "Notification",
-      };
-  }
-}
-
-// ─────────────────────────────────────────────────────
-// Single notification row
-// ─────────────────────────────────────────────────────
-function NotificationItem({
-  notification,
-  onDismiss,
-  onRead,
-}: {
-  notification: DashboardNotification;
-  onDismiss: (id: Id<"dashboard_notifications">) => void;
-  onRead: (id: Id<"dashboard_notifications">) => void;
-}) {
-  const { language, t } = useDashboardI18n();
-  const router = useRouter();
-  const { icon, iconBg } = getNotificationTypeConfig(notification.type, t);
-  const copy = getDashboardNotificationCopy(language, notification);
-
-  const handleClick = () => {
-    onRead(notification._id);
-    if (notification.conversationId) {
-      router.push(`/ai-inbox?conversation=${notification.conversationId}`);
-      return;
-    }
-    if (notification.bookingId) {
-      router.push(`/beauty/bookings`);
-    }
-  };
-
-  return (
-    <div
-      className={cn(
-        "group relative flex items-start gap-3 px-4 py-3 transition-colors cursor-pointer",
-        "hover:bg-secondary/40",
-        !notification.isRead && "bg-primary/[0.03] border-l-2 border-l-accent",
-        notification.isRead && "border-l-2 border-l-transparent",
-      )}
-      onClick={handleClick}
-    >
-      {/* Type icon */}
-      <div
-        className={cn(
-          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-          iconBg,
-        )}
-      >
-        {icon}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0 pr-6">
-        <p
-          className={cn(
-            "text-sm leading-snug",
-            !notification.isRead
-              ? "font-semibold text-foreground"
-              : "font-medium text-foreground",
-          )}
-        >
-          {copy.title}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-          {copy.body}
-        </p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1 font-display">
-          {formatDistanceToNow(new Date(notification.createdAt), {
-            addSuffix: true,
-            locale: language === "sq" ? sq : language === "mk" ? mk : undefined,
-          })}
-        </p>
-      </div>
-
-      {/* Unread dot */}
-      {!notification.isRead && (
-        <div className="absolute right-8 top-3.5 h-2 w-2 rounded-full bg-primary" />
-      )}
-
-      {/* Dismiss button */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDismiss(notification._id);
-        }}
-        className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-destructive/10 hover:text-destructive text-muted-foreground/40"
-        aria-label={t(
-          "Dismiss notification",
-          "Отфрли известување",
-          "Hiq njoftimin",
-        )}
-      >
-        <X size={13} />
-      </button>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// Inline notification toast
-// ─────────────────────────────────────────────────────
-const TOAST_DURATION_MS = 5000;
-
-const emptySubscribe = () => () => {};
-
-function NotificationToast({
-  notification,
-  onDismiss,
-  onClick,
-}: {
-  notification: DashboardNotification;
-  onDismiss: () => void;
-  onClick: () => void;
-}) {
-  const { language, t } = useDashboardI18n();
-  const { icon, iconBg } = getNotificationTypeConfig(notification.type, t);
-  const copy = getDashboardNotificationCopy(language, notification);
-  const [exiting, setExiting] = useState(false);
-  const mounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
-  );
-
-  const handleDismiss = useCallback(() => {
-    setExiting(true);
-    setTimeout(onDismiss, 250);
-  }, [onDismiss]);
-
-  // Auto-dismiss timer
-  useEffect(() => {
-    const timer = setTimeout(handleDismiss, TOAST_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [handleDismiss]);
-
-  if (!mounted || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div
-      className={cn(
-        "fixed z-[100] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl border border-border/50 bg-card shadow-2xl overflow-hidden cursor-pointer right-4 top-16",
-        "transition-all duration-250 ease-out",
-        exiting
-          ? "opacity-0 translate-y-[-8px] scale-95"
-          : "animate-[notif-toast-in_0.3s_ease-out_forwards]",
-      )}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-        handleDismiss();
-      }}
-    >
-      <div className="flex items-start gap-3 p-3.5">
-        {/* Icon */}
-        <div
-          className={cn(
-            "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
-            iconBg,
-          )}
-        >
-          {icon}
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 min-w-0 pr-5">
-          <p className="text-[13px] font-semibold text-foreground leading-snug">
-            {copy.title}
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
-            {copy.body}
-          </p>
-          <p
-            data-replay-public
-            className="text-[10px] text-muted-foreground/50 mt-1.5 font-medium"
-          >
-            {t("Just now", "Штотуку", "Sapo")}
-          </p>
-        </div>
-
-        {/* Close */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDismiss();
-          }}
-          className="absolute right-2.5 top-2.5 p-1 rounded-lg hover:bg-secondary text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-          aria-label={t(
-            "Dismiss notification",
-            "Отфрли известување",
-            "Hiq njoftimin",
-          )}
-        >
-          <X size={14} />
-        </button>
-      </div>
-
-      {/* Progress bar */}
-      <div className="h-[2px] w-full bg-border/20">
-        <div
-          className="h-full bg-accent/60 rounded-full"
-          style={{
-            animation: `notif-toast-progress ${TOAST_DURATION_MS}ms linear forwards`,
-          }}
-        />
-      </div>
-    </div>,
-    document.body,
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// Bell + popover dropdown
-// ─────────────────────────────────────────────────────
-export function NotificationBell({
-  orgId,
-  placement = "header",
-  collapsed = false,
-  enableToast,
-  enableSound,
-}: {
+type NotificationBellProps = {
   orgId: Id<"orgs">;
   placement?: "header" | "sidebar" | "sidebar-nav" | "drawer-nav";
   collapsed?: boolean;
   enableToast?: boolean;
   enableSound?: boolean;
-}) {
-  const { t } = useDashboardI18n();
-  const showToast = enableToast ?? placement === "header";
-  const showSound = enableSound ?? placement === "header";
+};
 
+export function NotificationBell(props: NotificationBellProps) {
+  return (
+    <NotificationQueryBoundary key={props.orgId} compact>
+      <NotificationBellContent {...props} />
+    </NotificationQueryBoundary>
+  );
+}
+
+function NotificationBellContent({
+  orgId,
+  placement = "header",
+  collapsed = false,
+  enableToast,
+  enableSound,
+}: NotificationBellProps) {
+  const { language, t } = useDashboardI18n();
+  const router = useRouter();
+  const mobile = useMediaQuery("(max-width: 767px)");
+  const [open, setOpen] = useState(false);
   const notifications = useQuery(api.dashboardNotifications.list, { orgId });
   const unreadCount = useQuery(api.dashboardNotifications.getUnreadCount, {
     orgId,
   });
-  const orgSettings = useQuery(api.orgSettings.getOrgSettings, { orgId });
-  const markRead = useMutation(api.dashboardNotifications.markRead);
-  const markAllRead = useMutation(api.dashboardNotifications.markAllRead);
-  const dismiss = useMutation(api.dashboardNotifications.dismiss);
-
-  // The shell renders before settings arrive. Wait for saved preferences before
-  // enabling notification effects; defaults apply only after settings resolve.
+  const settings = useQuery(api.orgSettings.getOrgSettings, { orgId });
+  const actions = useNotificationActions(orgId);
+  const seen = useRef<{ ids: Set<string>; newestCreatedAt: number } | null>(
+    null,
+  );
+  const activeToast = useRef<string | number | undefined>(undefined);
+  // The shell can mount before saved preferences arrive. Do not enable alerts
+  // until settings resolve; only then apply defaults for an unset preference.
   const dashEnabled =
-    orgSettings !== undefined &&
-    (orgSettings?.settings?.dashboardNotificationsEnabled ?? true);
-  const soundEnabled = orgSettings?.settings?.dashboardSoundEnabled ?? true;
-  const toastEnabled = orgSettings?.settings?.dashboardToastEnabled ?? true;
+    settings !== undefined &&
+    (settings?.settings?.dashboardNotificationsEnabled ?? true);
+  const soundEnabled = settings?.settings?.dashboardSoundEnabled ?? true;
+  const toastEnabled = settings?.settings?.dashboardToastEnabled ?? true;
+  const showToast = enableToast ?? placement === "header";
+  const showSound = enableSound ?? placement === "header";
+  const count = unreadCount ?? 0;
+  const showUnreadBadge = dashEnabled && count > 0;
 
-  const [open, setOpen] = useState(false);
-  const [pulse, setPulse] = useState(false);
-  const [toastNotification, setToastNotification] =
-    useState<DashboardNotification | null>(null);
-  const prevCountRef = useRef<number | null>(null);
-  const router = useRouter();
+  useEffect(
+    () => () => {
+      if (activeToast.current !== undefined) toast.dismiss(activeToast.current);
+    },
+    [],
+  );
 
-  // Sound + pulse + toast on new notification
   useEffect(() => {
-    if (unreadCount === undefined || !notifications) return;
-    if (prevCountRef.current === null) {
-      prevCountRef.current = unreadCount;
-      return;
-    }
-    if (unreadCount > prevCountRef.current && dashEnabled) {
-      if (showSound && soundEnabled && document.visibilityState === "visible") {
-        playChime();
-      }
-      const pulseStartTimer = window.setTimeout(() => setPulse(true), 0);
-      const pulseEndTimer = window.setTimeout(() => setPulse(false), 3000);
-
-      // Show toast with the newest notification (only when dropdown is closed)
-      if (showToast && toastEnabled && !open && notifications.length > 0) {
-        window.setTimeout(() => setToastNotification(notifications[0]), 0);
-      }
-      prevCountRef.current = unreadCount;
-      return () => {
-        window.clearTimeout(pulseStartTimer);
-        window.clearTimeout(pulseEndTimer);
-      };
-    }
-    prevCountRef.current = unreadCount;
+    if (!notifications || settings === undefined) return;
+    const previous = seen.current;
+    seen.current = {
+      ids: new Set(notifications.map((notification) => notification._id)),
+      newestCreatedAt: Math.max(
+        previous?.newestCreatedAt ?? 0,
+        ...notifications.map((notification) => notification.createdAt),
+      ),
+    };
+    if (!previous) return;
+    const incoming = notifications.find(
+      (notification) =>
+        !notification.isRead &&
+        !previous.ids.has(notification._id) &&
+        notification.createdAt >= previous.newestCreatedAt,
+    );
+    if (!incoming || !dashEnabled) return;
+    if (showSound && soundEnabled && document.visibilityState === "visible")
+      playChime();
+    if (!showToast || !toastEnabled || open) return;
+    const copy = getDashboardNotificationCopy(language, incoming);
+    if (activeToast.current !== undefined) toast.dismiss(activeToast.current);
+    const id = `dashboard-notification:${orgId}:${incoming._id}`;
+    activeToast.current = id;
+    toast(copy.title, {
+      id,
+      description: copy.body,
+      duration: 8000,
+      onDismiss: () => {
+        if (activeToast.current === id) activeToast.current = undefined;
+      },
+      onAutoClose: () => {
+        if (activeToast.current === id) activeToast.current = undefined;
+      },
+      style: { flexWrap: "wrap" },
+      classNames: {
+        content: "min-w-0 flex-1 [overflow-wrap:anywhere]",
+        description: "[overflow-wrap:anywhere]",
+      },
+      action: (
+        <div
+          className="flex w-full gap-2"
+          onFocusCapture={() => {
+            if (activeToast.current === id)
+              toast(copy.title, { id, duration: Infinity });
+          }}
+          onBlurCapture={(event) => {
+            if (
+              activeToast.current === id &&
+              !event.currentTarget.contains(event.relatedTarget)
+            )
+              toast(copy.title, { id, duration: 8000 });
+          }}
+        >
+          <Button
+            className="min-h-11"
+            onClick={() => {
+              void actions.read(incoming).then((saved) => {
+                activeToast.current = undefined;
+                if (!saved) {
+                  setOpen(true);
+                  toast.dismiss(id);
+                  return;
+                }
+                toast.dismiss(id);
+                if (incoming.href) router.push(incoming.href);
+                else setOpen(true);
+              });
+            }}
+          >
+            {t("Open", "Отвори", "Hap")}
+          </Button>
+          <Button
+            variant="ghost"
+            className="min-h-11"
+            onClick={() => {
+              activeToast.current = undefined;
+              toast.dismiss(id);
+            }}
+          >
+            {t("Dismiss", "Затвори", "Mbyll")}
+          </Button>
+        </div>
+      ),
+    });
   }, [
-    unreadCount,
     notifications,
-    open,
+    settings,
     dashEnabled,
     soundEnabled,
     toastEnabled,
     showSound,
     showToast,
+    open,
+    language,
+    orgId,
+    actions,
+    router,
+    t,
   ]);
 
-  const hasUnread = dashEnabled && (unreadCount ?? 0) > 0;
-
-  let triggerElement: React.ReactNode;
-
-  if (placement === "sidebar-nav") {
-    if (collapsed) {
-      triggerElement = (
-        <button
-          type="button"
-          onClick={() => {
-            setToastNotification(null);
-          }}
+  const changeOpen = (next: boolean) => {
+    if (next && activeToast.current !== undefined) {
+      toast.dismiss(activeToast.current);
+      activeToast.current = undefined;
+    }
+    setOpen(next);
+  };
+  const title = t("Notifications", "Известувања", "Njoftimet");
+  const expandedTrigger =
+    (placement === "sidebar-nav" && !collapsed) || placement === "drawer-nav";
+  const trigger = (
+    <button
+      type="button"
+      className={cn(
+        "relative flex min-h-11 shrink-0 items-center rounded-full border border-border/50 bg-card text-foreground transition-colors hover:bg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        expandedTrigger
+          ? "w-full justify-start gap-3 rounded-lg px-3"
+          : "size-11 justify-center",
+        open && "bg-secondary",
+      )}
+      aria-label={
+        showUnreadBadge
+          ? t(
+              `${title}, ${count} unread`,
+              `${title}, ${count} непрочитани`,
+              `${title}, ${count} të palexuara`,
+            )
+          : title
+      }
+    >
+      {showUnreadBadge ? (
+        <BellRing aria-hidden="true" className="size-5" />
+      ) : (
+        <Bell aria-hidden="true" className="size-5" />
+      )}
+      {expandedTrigger && (
+        <span className="min-w-0 truncate text-sm font-medium">{title}</span>
+      )}
+      {showUnreadBadge && (
+        <span
+          aria-hidden="true"
           className={cn(
-            "group relative flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-10 mx-auto outline-none",
-            open
-              ? "bg-secondary text-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
+            "flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground",
+            expandedTrigger ? "ml-auto" : "absolute -right-1 -top-1",
           )}
-          aria-label={t("Notifications", "Известувања", "Njoftimet")}
         >
-          <div className="shrink-0 flex items-center justify-center relative">
-            {hasUnread ? (
-              <BellRing className="h-5 w-5" />
-            ) : (
-              <Bell className="h-5 w-5" />
-            )}
-            {hasUnread && (
-              <span
-                className={cn(
-                  "absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
-                  pulse && "animate-pulse",
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </button>
+  );
+
+  const header = (
+    <div
+      className={cn(
+        "shrink-0 border-b border-border/60",
+        mobile ? "px-4 pb-3 pt-4" : "px-3 py-2",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          {mobile ? (
+            <SheetTitle>{title}</SheetTitle>
+          ) : (
+            <h2 className="font-semibold">{title}</h2>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground" role="status">
+            {unreadCount === undefined
+              ? t("Loading…", "Се вчитува…", "Duke ngarkuar…")
+              : t(
+                  `${count} unread`,
+                  `${count} непрочитани`,
+                  `${count} të palexuara`,
                 )}
-              >
-                {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
-              </span>
-            )}
+          </p>
+        </div>
+        {!mobile && count > 0 && (
+          <div className="min-w-0 max-w-[60%]">
+            <MarkAllNotificationsRead
+              pending={actions.markingAll}
+              onClick={actions.markAllRead}
+            />
           </div>
-        </button>
-      );
-    } else {
-      triggerElement = (
-        <button
-          type="button"
-          onClick={() => {
-            setToastNotification(null);
-          }}
-          className={cn(
-            "group relative flex items-center rounded-lg transition-all duration-200 cursor-pointer active:scale-[0.98] h-10 w-full px-3 justify-start gap-3 outline-none",
-            open
-              ? "bg-secondary text-foreground font-semibold shadow-xs"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
-          )}
-          aria-label={t("Notifications", "Известувања", "Njoftimet")}
-        >
-          <div
-            className={cn(
-              "shrink-0 flex items-center justify-center transition-colors",
-              open
-                ? "text-foreground"
-                : "text-muted-foreground group-hover:text-foreground",
-            )}
-          >
-            {hasUnread ? (
-              <BellRing className="h-5 w-5" />
-            ) : (
-              <Bell className="h-5 w-5" />
-            )}
-          </div>
-
-          <span
-            data-replay-public
-            className="text-sm font-medium whitespace-nowrap overflow-hidden truncate"
-          >
-            {t("Notifications", "Известувања", "Njoftimet")}
-          </span>
-
-          {hasUnread && (
-            <span
-              className={cn(
-                "ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[11px] font-bold px-1.5 leading-none",
-                pulse && "animate-pulse",
+        )}
+        {mobile && (
+          <SheetClose asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-11"
+              aria-label={t(
+                "Close notifications",
+                "Затвори известувања",
+                "Mbyll njoftimet",
               )}
             >
-              {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
-            </span>
+              <X aria-hidden="true" className="size-5" />
+            </Button>
+          </SheetClose>
+        )}
+      </div>
+      {mobile && (
+        <SheetDescription className="sr-only">
+          {t(
+            "Your latest booking updates.",
+            "Најновите известувања за термините.",
+            "Përditësimet më të fundit të termineve.",
           )}
-        </button>
-      );
-    }
-  } else if (placement === "drawer-nav") {
-    triggerElement = (
-      <button
-        type="button"
-        onClick={() => {
-          setToastNotification(null);
-        }}
-        className={cn(
-          "flex w-full items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all active:scale-[0.98] cursor-pointer outline-none",
-          open
-            ? "bg-secondary text-foreground font-semibold shadow-xs"
-            : "text-muted-foreground hover:text-foreground hover:bg-secondary/70",
-        )}
-        aria-label={t("Notifications", "Известувања", "Njoftimet")}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "shrink-0",
-              open ? "text-foreground" : "text-muted-foreground",
-            )}
-          >
-            {hasUnread ? (
-              <BellRing className="h-5 w-5" />
-            ) : (
-              <Bell className="h-5 w-5" />
-            )}
-          </div>
-          <span data-replay-public>
-            {t("Notifications", "Известувања", "Njoftimet")}
-          </span>
+        </SheetDescription>
+      )}
+      {mobile && count > 0 && (
+        <div className="mt-3">
+          <MarkAllNotificationsRead
+            pending={actions.markingAll}
+            onClick={actions.markAllRead}
+          />
         </div>
-
-        {hasUnread && (
-          <span
-            className={cn(
-              "flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[11px] font-bold px-1.5 leading-none",
-              pulse && "animate-pulse",
-            )}
-          >
-            {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
-    );
-  } else {
-    triggerElement = (
-      <button
-        type="button"
-        onClick={() => {
-          setToastNotification(null);
-        }}
-        className={cn(
-          "relative flex items-center justify-center h-10 w-10 rounded-full transition-colors border outline-none cursor-pointer",
-          open
-            ? "bg-primary text-primary-foreground border-primary"
-            : "bg-secondary text-primary hover:bg-secondary/80 border-border/40",
-        )}
-        aria-label={t("Notifications", "Известувања", "Njoftimet")}
-      >
-        {hasUnread ? (
-          <BellRing className="h-5 w-5" />
+      )}
+    </div>
+  );
+  const list = (
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      {actions.failed && (
+        <div className="p-3">
+          <NotificationActionError failed retry={actions.retry} />
+        </div>
+      )}
+      {notifications === undefined ? (
+        <NotificationLoading />
+      ) : notifications.length === 0 ? (
+        count > 0 ? (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm font-semibold">
+              {t(
+                "Older unread notifications",
+                "Постари непрочитани известувања",
+                "Njoftime të mëparshme të palexuara",
+              )}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t(
+                "Open the inbox to view earlier updates.",
+                "Отвори ги сите известувања за да ги видиш постарите.",
+                "Hapni kutinë për të parë përditësimet e mëparshme.",
+              )}
+            </p>
+          </div>
         ) : (
-          <Bell className="h-5 w-5" />
+          <NotificationEmpty />
+        )
+      ) : (
+        <div className="divide-y divide-border/50 p-1">
+          {notifications.map((notification) => (
+            <NotificationRow
+              key={notification._id}
+              notification={notification}
+              compact
+              pending={actions.isPending(notification._id)}
+              onRead={actions.read}
+              onDismiss={() => actions.dismiss(notification._id)}
+              onOpened={() => setOpen(false)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+  const footer = (
+    <div
+      className={cn(
+        "shrink-0 border-t border-border/60 bg-card px-3 py-2",
+        mobile
+          ? "pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+          : "flex items-center justify-between gap-2",
+      )}
+    >
+      <Link
+        href="/notifications"
+        onClick={() => setOpen(false)}
+        className={cn(
+          "flex min-h-11 items-center justify-between gap-2 rounded-lg px-2 font-medium text-primary hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring",
+          mobile ? "text-sm" : "min-w-0 text-xs",
         )}
+      >
+        {t(
+          "View all notifications",
+          "Види ги сите известувања",
+          "Shiko të gjitha njoftimet",
+        )}
+        <ArrowRight aria-hidden="true" className="size-4 shrink-0" />
+      </Link>
+      <Link
+        href="/notifications/preferences"
+        onClick={() => setOpen(false)}
+        className={cn(
+          "flex min-h-11 items-center rounded-lg px-2 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+          mobile ? "text-sm" : "shrink-0 text-xs",
+        )}
+      >
+        {t("My preferences", "Мои поставки", "Preferencat e mia")}
+      </Link>
+    </div>
+  );
 
-        {/* Count badge */}
-        {hasUnread && (
-          <span
-            className={cn(
-              "absolute -top-1 -right-1 flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-accent text-accent-foreground text-[10px] font-bold px-1 leading-none",
-              pulse && "animate-pulse",
-            )}
-          >
-            {(unreadCount ?? 0) > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
+  if (mobile)
+    return (
+      <Sheet open={open} onOpenChange={changeOpen}>
+        <SheetTrigger asChild>{trigger}</SheetTrigger>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="dashboard-notification-sheet h-[min(42rem,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] gap-0 overflow-hidden border-border/60 bg-card p-0"
+        >
+          {header}
+          {list}
+          {footer}
+        </SheetContent>
+      </Sheet>
     );
-  }
 
   return (
-    <>
-      <Popover open={open} onOpenChange={setOpen}>
-        {collapsed && placement === "sidebar-nav" ? (
-          <Tooltip open={open ? false : undefined}>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={12}>
-              {t("Notifications", "Известувања", "Njoftimet")}
-              {hasUnread ? ` (${unreadCount})` : ""}
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <PopoverTrigger asChild>{triggerElement}</PopoverTrigger>
-        )}
-
-        <PopoverContent
-          side={
-            placement === "header" || placement === "drawer-nav"
-              ? "bottom"
-              : "right"
-          }
-          align={
-            placement === "header"
-              ? "end"
-              : placement === "sidebar-nav"
-                ? "start"
-                : "end"
-          }
-          sideOffset={12}
-          className="w-[380px] max-w-[calc(100vw-2rem)] p-0 rounded-xl border border-border/40 bg-card shadow-2xl overflow-hidden z-50"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
-            <div className="flex items-center gap-2">
-              <span
-                data-replay-public
-                className="text-sm font-semibold font-display text-primary"
-              >
-                {t("Notifications", "Известувања", "Njoftimet")}
-              </span>
-              {hasUnread && (
-                <span className="text-[10px] font-bold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
-                  {unreadCount} {t("new", "нови", "të reja")}
-                </span>
-              )}
-            </div>
-            {hasUnread && (
-              <button
-                data-replay-public
-                type="button"
-                onClick={() => markAllRead({ orgId })}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                <Check size={12} />
-                {t(
-                  "Mark all read",
-                  "Означи ги сите како прочитани",
-                  "Shënoji të gjitha si të lexuara",
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* List */}
-          <div className="max-h-[420px] overflow-y-auto divide-y divide-border/30">
-            {!notifications || notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-                <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-3">
-                  <Bell size={18} className="text-muted-foreground/50" />
-                </div>
-                <p
-                  data-replay-public
-                  className="text-sm font-medium text-foreground"
-                >
-                  {t("All caught up", "Сè е прочитано", "Të gjitha u lexuan")}
-                </p>
-                <p
-                  data-replay-public
-                  className="text-xs text-muted-foreground mt-1"
-                >
-                  {t(
-                    "New bookings and updates will appear here.",
-                    "Новите термини и известувања ќе се појават тука.",
-                    "Rezervimet dhe përditësimet e reja do të shfaqen këtu.",
-                  )}
-                </p>
-              </div>
-            ) : (
-              notifications.map((n) => (
-                <NotificationItem
-                  key={n._id}
-                  notification={n}
-                  onDismiss={(id) => dismiss({ orgId, notificationId: id })}
-                  onRead={(id) => {
-                    if (!n.isRead) markRead({ orgId, notificationId: id });
-                    setOpen(false);
-                  }}
-                />
-              ))
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-border/40 p-2 bg-muted/20">
-            <Link
-              href="/notifications/preferences"
-              className="flex min-h-11 items-center px-3 text-xs font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setOpen(false)}
-            >
-              {t("My preferences", "Мои поставки", "Preferencat e mia")}
-            </Link>
-            <Link
-              href="/notifications"
-              className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/70 transition-colors"
-              onClick={() => setOpen(false)}
-            >
-              <span data-replay-public>
-                {t(
-                  "View all notifications",
-                  "Види ги сите известувања",
-                  "Shiko të gjitha njoftimet",
-                )}
-              </span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {/* Inline toast — shows when a new notification arrives while popover is closed */}
-      {toastNotification && !open && (
-        <NotificationToast
-          notification={toastNotification}
-          onDismiss={() => setToastNotification(null)}
-          onClick={() => {
-            if (toastNotification.conversationId) {
-              router.push(
-                `/ai-inbox?conversation=${toastNotification.conversationId}`,
-              );
-            } else if (toastNotification.bookingId) {
-              router.push("/beauty/bookings");
-            } else {
-              setOpen(true);
-            }
-          }}
-        />
+    <Popover open={open} onOpenChange={changeOpen}>
+      {collapsed && placement === "sidebar-nav" ? (
+        <Tooltip open={open ? false : undefined}>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">{title}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       )}
-    </>
+      <PopoverContent
+        side={
+          placement === "header" || placement === "drawer-nav"
+            ? "bottom"
+            : "right"
+        }
+        align={placement === "sidebar-nav" ? "start" : "end"}
+        sideOffset={10}
+        collisionPadding={12}
+        aria-label={title}
+        className="flex max-h-[min(42rem,var(--radix-popover-content-available-height))] w-[400px] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl border-border/60 bg-card p-0 shadow-xl"
+      >
+        {header}
+        {list}
+        {footer}
+      </PopoverContent>
+    </Popover>
   );
 }

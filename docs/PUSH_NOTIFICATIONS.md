@@ -37,6 +37,25 @@ were verified against the local backend on October 6, 2026, as recorded below.
   An authoritative check of an already-ended session allows local sign-out and
   recovery without requiring a mutation that can no longer be authenticated.
 
+### Web notification inbox
+
+The beauty dashboard's bell and `/notifications` inbox retain their existing
+role boundary. Reading, dismissing, or marking all alerts read now applies only
+to the signed-in person in the active studio. Historical shared read/dismiss
+flags remain effective, so previously dismissed records do not reappear. The
+bell shows recent activity; the full inbox loads older pages and supports
+All/Unread plus event-type filters, including rescheduled appointments.
+
+On phones the bell opens a sheet with reachable header and footer actions.
+Appointment links select the corresponding booking and studio calendar date,
+including when the calendar is already open. Missing or deleted destinations
+remain readable notifications without a broken appointment link. These in-app
+states are separate from device push preferences and provider delivery status.
+
+This inbox update is prepared locally and requires an explicitly authorized
+backend/frontend release. Its additive schema keeps existing notification rows
+readable; it does not enable any push provider.
+
 Notification taps carry only an opaque queue ID. The server rechecks the recipient,
 active membership and current appointment/AI permissions before switching to the
 correct studio and returning a destination. Web sign-in preserves the notification
@@ -138,6 +157,12 @@ preferences reconciles existing appointments in the next 48 hours; the existing
 hourly reconciliation handles later appointments. Failed provider calls use a
 lease and at most three attempts with bounded backoff. Native receipt lookup is
 bounded to four attempts.
+
+The web inbox uses `dashboard_notification_states` for personal read/dismiss
+state and `dashboard_inbox_states` for a mark-all-read watermark. Both are
+indexed by studio and user, derive identity from the authenticated membership,
+and are soft-deleted during account erasure. Mark-all-read records the latest
+notification creation boundary rather than updating every historical alert.
 
 All new notification fields are optional on existing queue rows. With provider
 flags absent/false, booking/AI push hooks return without querying device data or

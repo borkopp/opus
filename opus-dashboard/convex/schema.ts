@@ -1309,6 +1309,7 @@ export default defineSchema({
     orgId: v.id("orgs"),
     type: v.union(
       v.literal("new_booking"),
+      v.literal("booking_changed"),
       v.literal("booking_cancelled"),
       v.literal("no_show"),
       v.literal("ai_handoff"),
@@ -1322,8 +1323,37 @@ export default defineSchema({
     isDismissed: v.boolean(),
     createdAt: v.number(),
   })
+    .index("by_org", ["orgId"])
     .index("by_org_created", ["orgId", "createdAt"])
     .index("by_org_unread", ["orgId", "isRead"]),
+
+  // Legacy notification flags remain the shared baseline. New inbox actions
+  // belong to the authenticated person and never alter a teammate's inbox.
+  dashboard_notification_states: defineTable({
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    notificationId: v.id("dashboard_notifications"),
+    isRead: v.boolean(),
+    isDismissed: v.boolean(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_user", ["orgId", "userId"])
+    .index("by_org_user_notification", ["orgId", "userId", "notificationId"]),
+  dashboard_inbox_states: defineTable({
+    orgId: v.id("orgs"),
+    userId: v.id("users"),
+    readThroughCreationTime: v.number(),
+    isDeleted: v.boolean(),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_org", ["orgId"])
+    .index("by_org_user", ["orgId", "userId"]),
 
   // ─────────────────────────────────────────────────────
   // AUDIT LOG

@@ -18,6 +18,10 @@ export function useBrowserPush(settings?: PushSettings) {
   const register = useMutation(api.pushNotifications.registerBrowser);
   const unregister = useMutation(api.pushNotifications.unregisterDevice);
   const [supported, setSupported] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission | null>(
+    null,
+  );
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [subscribed, setSubscribed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,12 +31,14 @@ export function useBrowserPush(settings?: PushSettings) {
   const publicKey = settings?.browserPublicKey;
   const refresh = useCallback(async () => {
     if (!browserPushSupported()) return;
+    setPermission(Notification.permission);
     const id = browserPushDeviceId(false);
     const subscription =
       Notification.permission === "granted"
         ? await currentBrowserSubscription()
         : null;
     setSubscribed(Boolean(subscription));
+    setChecked(true);
     if (!subscription || !id) {
       if (id) await unregister({ deviceId: id });
       return;
@@ -44,13 +50,18 @@ export function useBrowserPush(settings?: PushSettings) {
       subscription: serializableSubscription(subscription),
       locale: language,
     });
+    setError(null);
   }, [available, enabled, language, register, unregister]);
   useEffect(() => {
     setSupported(browserPushSupported());
-    setDeviceId(browserPushDeviceId(false));
-    void refresh().catch(() => {});
+    const check = () => {
+      void refresh()
+        .catch(() => {})
+        .finally(() => setChecked(true));
+    };
+    check();
     const onFocus = () => {
-      void refresh().catch(() => {});
+      check();
     };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
@@ -78,6 +89,7 @@ export function useBrowserPush(settings?: PushSettings) {
         ),
       );
     } finally {
+      if (browserPushSupported()) setPermission(Notification.permission);
       setBusy(false);
     }
   }
@@ -103,6 +115,8 @@ export function useBrowserPush(settings?: PushSettings) {
   }
   return {
     supported,
+    checked,
+    permission,
     deviceId,
     connected:
       subscribed &&

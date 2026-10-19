@@ -307,7 +307,10 @@ describe("booking page loading", () => {
 });
 
 test("notification badges wait for saved preferences and respect disabled notifications", () => {
-  state.results.set("dashboardNotifications:getUnreadCount", 4);
+  state.results.set("dashboardNotifications:getUnreadSummary", {
+    count: 4,
+    hasMore: false,
+  });
   state.results.set("dashboardNotifications:list", []);
   const renderBell = () =>
     renderToStaticMarkup(
@@ -326,3 +329,37 @@ test("notification badges wait for saved preferences and respect disabled notifi
   });
   expect(renderBell()).toContain(">4</span>");
 });
+
+test.each([
+  { count: 4, hasMore: true, label: "Notifications, 4+ unread", badge: "4+" },
+  {
+    count: 100,
+    hasMore: true,
+    label: "Notifications, 100+ unread",
+    badge: "99+",
+  },
+  {
+    count: 0,
+    hasMore: true,
+    label: "Notifications, Check the inbox for older updates",
+    badge: null,
+  },
+])(
+  "notification badge accurately labels bounded counts: $count",
+  ({ count, hasMore, label, badge }) => {
+    state.results.set("dashboardNotifications:getUnreadSummary", {
+      count,
+      hasMore,
+    });
+    state.results.set("dashboardNotifications:list", []);
+    state.results.set("orgSettings:getOrgSettings", {
+      settings: { dashboardNotificationsEnabled: true },
+    });
+    const html = renderToStaticMarkup(
+      createElement(NotificationBell, { orgId: "org" as Id<"orgs"> }),
+    );
+    expect(html).toContain(`aria-label="${label}"`);
+    if (badge) expect(html).toContain(`>${badge}</span>`);
+    else expect(html).not.toContain('aria-hidden="true" class="flex h-5');
+  },
+);

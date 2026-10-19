@@ -12,6 +12,7 @@ import {
 } from "../../../shared/push-notifications";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { useBrowserPush } from "@/hooks/use-browser-push";
+import { useSettingsDraft } from "@/hooks/use-settings-draft";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,12 +49,7 @@ import { Disclosure } from "@/components/ui/disclosure";
 export function PushPreferencesCard() {
   const settings = useQuery(api.pushNotifications.getSettings);
   if (!settings) return <Skeleton className="h-64 w-full" />;
-  return (
-    <PushPreferencesForm
-      key={JSON.stringify(settings.preferences)}
-      settings={settings}
-    />
-  );
+  return <PushPreferencesForm settings={settings} />;
 }
 function PreferenceSwitch({
   id,
@@ -72,7 +68,7 @@ function PreferenceSwitch({
 }) {
   return (
     <Field orientation="horizontal" data-disabled={disabled}>
-      <FieldContent>
+      <FieldContent className="min-w-0">
         <FieldLabel htmlFor={id}>{label}</FieldLabel>
         {description && <FieldDescription>{description}</FieldDescription>}
       </FieldContent>
@@ -81,6 +77,7 @@ function PreferenceSwitch({
         checked={checked}
         disabled={disabled}
         onCheckedChange={onChange}
+        className="relative shrink-0 after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2"
       />
     </Field>
   );
@@ -90,40 +87,55 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
   const browser = useBrowserPush(settings);
   const save = useMutation(api.pushNotifications.savePreferences);
   const { isWebSocketConnected } = useConvexConnectionState();
-  const [draft, setDraft] = useState<PushPreferences>(settings.preferences);
+  const { draft, setDraft, isDirty } = useSettingsDraft(settings.preferences);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const disabled = saving || browser.busy || !isWebSocketConnected;
+  const needsBrowserSave =
+    draft.browserEnabled &&
+    !settings.preferences.browserEnabled &&
+    !browser.connected;
+  const mobileDevices = settings.devices.filter(
+    (device) => device.kind === "expo",
+  ).length;
   const set = <K extends keyof PushPreferences>(
     key: K,
     value: PushPreferences[K],
-  ) => setDraft((current) => ({ ...current, [key]: value }));
+  ) => {
+    setSaved(false);
+    setSaveError(null);
+    setDraft((current) => ({ ...current, [key]: value }));
+  };
   async function submit() {
+    setSaveError(null);
     if (
       draft.quietHours &&
       (!/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.quietStart) ||
         !/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.quietEnd) ||
         draft.quietStart === draft.quietEnd)
     ) {
-      toast.error(
-        t(
-          "Choose different, valid quiet-hour times.",
-          "Избери различни, валидни времиња за тивките часови.",
-          "Zgjidhni orare të ndryshme dhe të vlefshme për orët e qeta.",
-        ),
+      const message = t(
+        "Choose different, valid quiet-hour times.",
+        "Избери различни, валидни времиња за тивките часови.",
+        "Zgjidhni orare të ndryshme dhe të vlefshme për orët e qeta.",
       );
+      setSaveError(message);
+      toast.error(message);
       return;
     }
     setSaving(true);
     try {
-      await save({
-        preferences: draft.quietHours
-          ? draft
-          : {
-              ...draft,
-              quietStart: settings.preferences.quietStart,
-              quietEnd: settings.preferences.quietEnd,
-            },
-      });
+      const preferences = draft.quietHours
+        ? draft
+        : {
+            ...draft,
+            quietStart: settings.preferences.quietStart,
+            quietEnd: settings.preferences.quietEnd,
+          };
+      await save({ preferences });
+      setDraft(preferences);
+      setSaved(true);
       toast.success(
         t(
           "Notification preferences saved",
@@ -132,13 +144,13 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
         ),
       );
     } catch {
-      toast.error(
-        t(
-          "Could not save notification preferences. Try again.",
-          "Поставките за известувања не се зачуваа. Обиди се повторно.",
-          "Preferencat e njoftimeve nuk u ruajtën. Provoni përsëri.",
-        ),
+      const message = t(
+        "Could not save notification preferences. Try again.",
+        "Поставките за известувања не се зачуваа. Обиди се повторно.",
+        "Preferencat e njoftimeve nuk u ruajtën. Provoni përsëri.",
       );
+      setSaveError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -179,6 +191,43 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                 disabled={disabled}
                 onChange={(value) => set("mobileEnabled", value)}
               />
+              <FieldDescription role="status">
+                {!settings.mobileAvailable
+                  ? t(
+                      "Mobile push is currently unavailable. Your preferences will be kept.",
+                      "Известувањата на телефон моментално не се достапни. Твоите поставки ќе се зачуваат.",
+                      "Push në telefon është aktualisht i padisponueshëm. Preferencat tuaja do të ruhen.",
+                    )
+                  : draft.mobileEnabled !== settings.preferences.mobileEnabled
+                    ? draft.mobileEnabled
+                      ? t(
+                          "Save your preferences to enable mobile alerts.",
+                          "Зачувај ги поставките за да ги вклучиш известувањата на телефон.",
+                          "Ruani preferencat për të aktivizuar njoftimet në telefon.",
+                        )
+                      : t(
+                          "Save your preferences to pause mobile alerts.",
+                          "Зачувај ги поставките за да ги паузираш известувањата на телефон.",
+                          "Ruani preferencat për të pezulluar njoftimet në telefon.",
+                        )
+                    : !settings.preferences.mobileEnabled
+                      ? t(
+                          "Mobile alerts are paused. Enable mobile push and save to resume them.",
+                          "Известувањата на телефон се паузирани. Вклучи ги и зачувај за да продолжат.",
+                          "Njoftimet në telefon janë pezulluar. Aktivizoni push dhe ruani për t'i rifilluar.",
+                        )
+                      : mobileDevices === 0
+                        ? t(
+                            "No phone is connected. Open OPUS Studio on your phone and enable notifications there.",
+                            "Нема поврзан телефон. Отвори OPUS Studio на телефонот и вклучи ги известувањата таму.",
+                            "Nuk ka telefon të lidhur. Hapni OPUS Studio në telefon dhe aktivizoni njoftimet atje.",
+                          )
+                        : t(
+                            `Connected mobile devices: ${mobileDevices}. Phone settings can still pause alerts.`,
+                            `Поврзани мобилни уреди: ${mobileDevices}. Поставките на телефонот може да ги паузираат известувањата.`,
+                            `Pajisje celulare të lidhura: ${mobileDevices}. Cilësimet e telefonit mund t'i pezullojnë njoftimet.`,
+                          )}
+              </FieldDescription>
               <PreferenceSwitch
                 id="push-browser"
                 label={t(
@@ -195,61 +244,111 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                 disabled={disabled}
                 onChange={(value) => set("browserEnabled", value)}
               />
-              <FieldDescription>
-                {!browser.supported
+              <FieldDescription id="push-browser-status" role="status">
+                {!browser.checked
                   ? t(
-                      "Push is unavailable in this browser. On iPhone, add the web dashboard to your Home Screen first.",
-                      "Push не е достапен во овој прелистувач. На iPhone, прво додај ја веб контролната табла на почетниот екран.",
-                      "Push nuk është i disponueshëm në këtë shfletues. Në iPhone, shtoni panelin në ekranin kryesor së pari.",
+                      "Checking this browser…",
+                      "Се проверува прелистувачот…",
+                      "Duke kontrolluar shfletuesin…",
                     )
-                  : !settings.browserAvailable
+                  : !browser.supported
                     ? t(
-                        "Browser push is not available yet.",
-                        "Известувањата во прелистувачот сè уште не се достапни.",
-                        "Push në shfletues nuk është ende i disponueshëm.",
+                        "Push is unavailable in this browser. On iPhone, add the web dashboard to your Home Screen first.",
+                        "Push не е достапен во овој прелистувач. На iPhone, прво додај ја веб контролната табла на почетниот екран.",
+                        "Push nuk është i disponueshëm në këtë shfletues. Në iPhone, shtoni panelin në ekranin kryesor së pari.",
                       )
-                    : browser.connected
+                    : !settings.browserAvailable
                       ? t(
-                          "This browser is connected.",
-                          "Овој прелистувач е поврзан.",
-                          "Ky shfletues është i lidhur.",
+                          "Browser push is not available yet.",
+                          "Известувањата во прелистувачот сè уште не се достапни.",
+                          "Push në shfletues nuk është ende i disponueshëm.",
                         )
-                      : t(
-                          "Connect this browser to receive alerts.",
-                          "Поврзи го овој прелистувач за известувања.",
-                          "Lidhni këtë shfletues për të marrë njoftime.",
-                        )}
+                      : browser.permission === "denied"
+                        ? t(
+                            "Notifications are blocked in this browser. Allow them in this site's browser settings, then return here to connect.",
+                            "Известувањата се блокирани во прелистувачот. Дозволи ги во поставките на прелистувачот за оваа страница, па врати се тука за поврзување.",
+                            "Njoftimet janë bllokuar në këtë shfletues. Lejojini në cilësimet e shfletuesit për këtë faqe, pastaj kthehuni këtu për t'u lidhur.",
+                          )
+                        : needsBrowserSave
+                          ? t(
+                              "Save your preferences first. Then connect this browser and allow notifications when asked.",
+                              "Прво зачувај ги поставките. Потоа поврзи го прелистувачот и дозволи известувања кога ќе биде побарано.",
+                              "Ruani preferencat fillimisht. Pastaj lidhni shfletuesin dhe lejoni njoftimet kur të kërkohet.",
+                            )
+                          : draft.browserEnabled &&
+                              !settings.preferences.browserEnabled
+                            ? t(
+                                "This browser is connected. Save your preferences to resume browser alerts.",
+                                "Овој прелистувач е поврзан. Зачувај ги поставките за да продолжат известувањата.",
+                                "Ky shfletues është i lidhur. Ruani preferencat për të rifilluar njoftimet e shfletuesit.",
+                              )
+                            : !settings.preferences.browserEnabled
+                              ? t(
+                                  "Browser alerts are paused. Turn on browser push and save to resume them.",
+                                  "Известувањата во прелистувачот се паузирани. Вклучи ги и зачувај за да продолжат.",
+                                  "Njoftimet e shfletuesit janë pezulluar. Aktivizoni push dhe ruani për t'i rifilluar.",
+                                )
+                              : !draft.browserEnabled
+                                ? t(
+                                    "Save your preferences to pause browser alerts.",
+                                    "Зачувај ги поставките за да ги паузираш известувањата во прелистувачот.",
+                                    "Ruani preferencat për të pezulluar njoftimet e shfletuesit.",
+                                  )
+                                : browser.connected
+                                  ? t(
+                                      "This browser is connected. Device settings and quiet hours can still pause alerts.",
+                                      "Овој прелистувач е поврзан. Поставките на уредот и тивките часови може да ги паузираат известувањата.",
+                                      "Ky shfletues është i lidhur. Cilësimet e pajisjes dhe orët e qeta mund t'i pezullojnë njoftimet.",
+                                    )
+                                  : t(
+                                      "Your preference is saved. Connect this browser to allow notifications on this device.",
+                                      "Поставката е зачувана. Поврзи го прелистувачот за да дозволиш известувања на овој уред.",
+                                      "Preferenca është ruajtur. Lidhni shfletuesin për të lejuar njoftimet në këtë pajisje.",
+                                    )}
               </FieldDescription>
               <Field>
                 <Button
                   type="button"
                   variant="outline"
+                  className="h-auto min-h-11 w-full whitespace-normal text-center sm:w-fit"
+                  aria-describedby="push-browser-status"
                   disabled={
                     disabled ||
+                    !browser.checked ||
                     !browser.supported ||
-                    !settings.browserAvailable ||
                     (!browser.connected &&
-                      (!settings.preferences.browserEnabled ||
+                      (!settings.browserAvailable ||
+                        browser.permission === "denied" ||
                         !draft.browserEnabled))
                   }
                   onClick={() =>
-                    void (browser.connected
-                      ? browser.disconnect()
-                      : browser.connect())
+                    void (needsBrowserSave
+                      ? submit()
+                      : browser.connected
+                        ? browser.disconnect()
+                        : browser.connect())
                   }
                 >
-                  {browser.busy && <Spinner data-icon="inline-start" />}
-                  {browser.connected
+                  {(saving || browser.busy) && (
+                    <Spinner data-icon="inline-start" />
+                  )}
+                  {needsBrowserSave
                     ? t(
-                        "Disconnect this browser",
-                        "Исклучи го овој прелистувач",
-                        "Shkëputni këtë shfletues",
+                        "Save and continue",
+                        "Зачувај и продолжи",
+                        "Ruaj dhe vazhdo",
                       )
-                    : t(
-                        "Enable in this browser",
-                        "Вклучи во овој прелистувач",
-                        "Aktivizoni në këtë shfletues",
-                      )}
+                    : browser.connected
+                      ? t(
+                          "Disconnect this browser",
+                          "Исклучи го овој прелистувач",
+                          "Shkëputni këtë shfletues",
+                        )
+                      : t(
+                          "Connect this browser",
+                          "Поврзи го прелистувачот",
+                          "Lidhni këtë shfletues",
+                        )}
                 </Button>
               </Field>
             </FieldGroup>
@@ -274,7 +373,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                       set("scope", value as PushPreferences["scope"])
                     }
                   >
-                    <SelectTrigger id="push-scope">
+                    <SelectTrigger id="push-scope" className="min-h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -335,7 +434,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                       set("reminderMinutes", Number(value))
                     }
                   >
-                    <SelectTrigger id="push-reminder">
+                    <SelectTrigger id="push-reminder" className="min-h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -415,6 +514,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                     </FieldLabel>
                     <Input
                       id="push-quiet-start"
+                      className="min-h-11"
                       type="time"
                       value={draft.quietStart}
                       disabled={disabled}
@@ -429,6 +529,7 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
                     </FieldLabel>
                     <Input
                       id="push-quiet-end"
+                      className="min-h-11"
                       type="time"
                       value={draft.quietEnd}
                       disabled={disabled}
@@ -439,15 +540,19 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
               )}
             </FieldGroup>
           </FieldSet>
-          {browser.error && (
+          {(saveError || browser.error) && (
             <Alert variant="destructive">
-              <AlertDescription>{browser.error}</AlertDescription>
+              <AlertDescription>{saveError || browser.error}</AlertDescription>
             </Alert>
           )}
         </FieldGroup>
       </CardContent>
-      <CardFooter>
-        <Button onClick={() => void submit()} disabled={disabled}>
+      <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <Button
+          className="h-auto min-h-11 w-full whitespace-normal text-center sm:w-auto"
+          onClick={() => void submit()}
+          disabled={disabled || !isDirty}
+        >
           {saving ? (
             <Spinner data-icon="inline-start" />
           ) : (
@@ -455,12 +560,33 @@ function PushPreferencesForm({ settings }: { settings: PushSettings }) {
           )}
           {saving
             ? t("Saving…", "Се зачувува…", "Duke ruajtur…")
-            : t(
-                "Save notification preferences",
-                "Зачувај поставки за известувања",
-                "Ruaj preferencat e njoftimeve",
-              )}
+            : t("Save preferences", "Зачувај поставки", "Ruaj preferencat")}
         </Button>
+        <p className="min-w-0 text-sm text-muted-foreground" role="status">
+          {!isWebSocketConnected
+            ? t(
+                "Reconnecting… Your changes will stay here until you can save.",
+                "Се поврзува повторно… Промените остануваат тука додека да можеш да зачуваш.",
+                "Duke u rilidhur… Ndryshimet do të mbeten këtu derisa të mund t'i ruani.",
+              )
+            : isDirty
+              ? t(
+                  "Unsaved changes",
+                  "Незачувани промени",
+                  "Ndryshime të paruajtura",
+                )
+              : saved
+                ? t(
+                    "Preferences saved",
+                    "Поставките се зачувани",
+                    "Preferencat u ruajtën",
+                  )
+                : t(
+                    "No unsaved changes",
+                    "Нема незачувани промени",
+                    "Nuk ka ndryshime të paruajtura",
+                  )}
+        </p>
       </CardFooter>
     </Card>
   );

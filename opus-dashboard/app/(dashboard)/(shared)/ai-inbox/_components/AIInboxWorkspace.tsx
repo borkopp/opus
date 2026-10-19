@@ -7,7 +7,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { ConversationList } from "@/components/ai-inbox/ConversationList";
 import { ConversationDetail } from "@/components/ai-inbox/ConversationDetail";
 import { BotMessageSquare, Settings2, ArrowLeft } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useNotificationDestination } from "@/hooks/use-notification-destination";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,15 +26,28 @@ import { PaidFeatureOverlay } from "@/components/ui/paid-feature-overlay";
 type StatusFilter = "all" | "active" | "handed_off" | "resolved";
 
 export function AIInboxWorkspace() {
+  const destination = useNotificationDestination("conversation");
+  return (
+    <AIInbox
+      initialConversationId={destination.id}
+      key={destination.revision}
+    />
+  );
+}
+
+function AIInbox({
+  initialConversationId,
+}: {
+  initialConversationId: string | null;
+}) {
   const { t } = useDashboardI18n();
   const profile = useQuery(api.users.getMyProfile);
   const orgId = profile?.orgId as Id<"orgs"> | undefined;
   const isPaid = profile?.plan === "paid";
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const search = useSearchParams();
   const [selectedId, setSelectedId] = useState<Id<"ai_conversations"> | null>(
-    search.get("conversation") as Id<"ai_conversations"> | null,
+    initialConversationId as Id<"ai_conversations"> | null,
   );
 
   const conversations = useQuery(

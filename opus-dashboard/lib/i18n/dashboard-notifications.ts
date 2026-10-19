@@ -36,13 +36,15 @@ function translateNotificationTitle(
   fallback: string,
 ): string {
   const dict = getTranslations(language);
-  if (type === "new_booking" && fallback === "Booking Rescheduled") {
+  if (
+    type === "booking_changed" ||
+    (type === "new_booking" && fallback === "Booking Rescheduled")
+  ) {
     return dict.notifications.titles.booking_rescheduled;
   }
   return (
-    dict.notifications.titles[
-      type as keyof typeof dict.notifications.titles
-    ] ?? fallback
+    dict.notifications.titles[type as keyof typeof dict.notifications.titles] ??
+    fallback
   );
 }
 
@@ -58,7 +60,7 @@ function translateNotificationBody(
     return bodies.ai_handoff;
   }
 
-  if (type === "new_booking") {
+  if (type === "new_booking" || type === "booking_changed") {
     const match = body.match(/^(.+?) booked (.+?) with (.+?) for (.+)$/);
     if (match) {
       const [, customer, service, staff, appointment] = match;

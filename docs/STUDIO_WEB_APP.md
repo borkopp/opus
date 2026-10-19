@@ -36,7 +36,14 @@ icon use the exact `public/opus-mark.svg` on an opaque white background. The
 maskable version leaves room for launcher cropping. Regenerate from
 `opus-dashboard/` with `node scripts/generate-studio-icons.mjs`.
 
-Studio Apple metadata uses a versioned icon URL. Safari's conventional
+Studio Apple metadata embeds the same 180px PNG as a generated data URL (under
+3 KB). This avoids a separate download in the Add to Home Screen sheet, addressing
+reports of iOS 27.2 showing a letter tile despite valid network-loaded touch icons.
+The icon generator also updates `lib/studio-apple-touch-icon.generated.ts`; do not
+edit its encoded image manually. An unsized PNG link remains for Safari versions
+that ignore data URLs. Newer Safari ranks the explicit 180px icon above that
+fallback. The manifest continues to use ordinary PNG URLs.
+Safari's conventional
 `/apple-touch-icon.png` and `/apple-touch-icon-precomposed.png` probes resolve to
 the same PNG on `studio.opus.mk` and loopback development hosts only; tenant
 websites do not receive this automatic fallback.

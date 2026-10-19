@@ -33,15 +33,35 @@ describe("studio installation metadata", () => {
     ]);
     expect(studioAppMetadata.manifest).toBe("/studio.webmanifest");
     expect(studioAppMetadata.icons).toMatchObject({
-      apple: {
-        url: "/studio-apple-touch-icon.png?v=2",
-        sizes: "180x180",
-        type: "image/png",
-      },
+      apple: [
+        {
+          url: expect.stringMatching(/^data:image\/png;base64,/),
+          sizes: "180x180",
+          type: "image/png",
+        },
+        {
+          url: "/studio-apple-touch-icon.png?v=2",
+          type: "image/png",
+        },
+      ],
     });
     expect(studioAppViewport.viewportFit).toBe("cover");
     expect(studioAppViewport.userScalable).not.toBe(false);
     expect(studioAppViewport.maximumScale).toBeUndefined();
+  });
+
+  it("embeds the exact Apple PNG so the install sheet needs no icon request", () => {
+    const { apple } = studioAppMetadata.icons as {
+      apple: { url: string; sizes?: string }[];
+    };
+    const embeddedIcon = Buffer.from(apple[0].url.split(",")[1], "base64");
+    expect(embeddedIcon).toEqual(
+      readFileSync("public/studio-apple-touch-icon.png"),
+    );
+    expect(apple[0].url.length).toBeLessThan(3_000);
+    // Safari ranks declared sizes before order; an equally sized fallback could
+    // win selection and trigger the failing network request again.
+    expect(apple[1].sizes).toBeUndefined();
   });
 
   it("serves install assets without a session or tenant rewrite", () => {

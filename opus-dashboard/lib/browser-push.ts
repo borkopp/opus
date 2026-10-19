@@ -1,9 +1,12 @@
+import {
+  registerStudioServiceWorker,
+  studioServiceWorkerSupported,
+} from "@/lib/studio-service-worker";
+
 const DEVICE_KEY = "opus-studio-browser-push-device";
 export function browserPushSupported() {
   return (
-    typeof window !== "undefined" &&
-    window.isSecureContext &&
-    "serviceWorker" in navigator &&
+    studioServiceWorkerSupported() &&
     "PushManager" in window &&
     "Notification" in window
   );
@@ -30,7 +33,7 @@ export async function connectBrowserPush(publicKey: string) {
       ? "granted"
       : await Notification.requestPermission();
   if (permission !== "granted") throw new Error("permission");
-  await navigator.serviceWorker.register("/opus-push-sw.js", { scope: "/" });
+  await registerStudioServiceWorker();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const registration = await Promise.race([

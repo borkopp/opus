@@ -3,6 +3,7 @@ import { DashboardPageHeader } from "@/components/dashboard/DashboardPageHeader"
 import { PushPreferencesCard } from "@/components/notifications/PushPreferencesCard";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { AppearancePreferences } from "./_components/AppearancePreferences";
+import { StudioInstallCard } from "@/components/pwa/StudioInstallCard";
 export default function NotificationPreferencesPage() {
   const { t } = useDashboardI18n();
   return (
@@ -16,6 +17,7 @@ export default function NotificationPreferencesPage() {
         )}
       />
       <AppearancePreferences />
+      <StudioInstallCard />
       <PushPreferencesCard />
     </div>
   );

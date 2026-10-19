@@ -9,6 +9,28 @@ const nextConfig: NextConfig = {
   turbopack: { root: path.resolve(__dirname, "..") },
   outputFileTracingRoot: path.resolve(__dirname, ".."),
   output: "standalone",
+  async headers() {
+    return [
+      {
+        source: "/opus-push-sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self'; object-src 'none'",
+          },
+        ],
+      },
+    ];
+  },
   images: {
     qualities: [75, 90],
     remotePatterns: [

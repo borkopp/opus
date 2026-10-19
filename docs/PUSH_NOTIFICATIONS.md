@@ -112,9 +112,14 @@ key. Subscriptions refresh only after permission has already been granted.
 The studio-only web manifest and 192/512 icons support Home Screen installation.
 On iPhone/iPad use iOS 16.4+ and add the studio dashboard to the Home Screen, then
 open that app and enable notifications. See [WebKit's Home Screen push requirements](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).
-The push-only service worker does not cache authenticated pages or intercept
-requests. Notification clicks navigate to the same studio origin, then resolve
-server permissions. Tenant booking websites do not inherit studio install metadata.
+The studio service worker retains `/opus-push-sw.js` and its root scope so existing
+push subscriptions survive updates. It stores no authenticated pages or user data.
+Only failed studio document navigations receive a static offline screen; API,
+public booking and client-account requests are not intercepted. Registration never
+requests notification permission. Notification clicks navigate to the same studio
+origin, then resolve server permissions. Tenant booking websites do not inherit
+studio install metadata. See [STUDIO_WEB_APP.md](STUDIO_WEB_APP.md) for installation
+behavior and device checks.
 
 ## Backend and compatibility
 

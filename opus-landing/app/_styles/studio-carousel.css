@@ -31,6 +31,9 @@
 .studio-slide[data-offset="1"] { --slide-x: 285px; }
 .studio-slide[data-offset="-2"] { --slide-x: -399px; }
 .studio-slide[data-offset="2"] { --slide-x: 399px; }
+.studio-slide[data-offset="-3"],.studio-slide[data-offset="3"] { --slide-scale: .65; --slide-crop: 40%; opacity: 0; visibility: hidden; pointer-events: none; z-index: 0; }
+.studio-slide[data-offset="-3"] { --slide-x: -460px; }
+.studio-slide[data-offset="3"] { --slide-x: 460px; }
 .studio-slide:not([data-offset="0"])>img { filter: grayscale(1); }
 .studio-slide[data-offset="0"] { box-shadow: 0 12px 40px #27465f12; cursor: default; }
 .studio-slide:focus-visible { outline-offset: 6px; }

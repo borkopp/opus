@@ -22,6 +22,7 @@ import { CloudShader } from "@/components/landing/cloud-shader";
 import { LandingInteractions } from "@/components/landing/landing-interactions";
 import { useI18n } from "@/lib/i18n/context";
 import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import { getStudioSlideOffset } from "@/lib/studio-carousel";
 import {
   PRO_TEAM_TIERS,
   proPriceMinorUnits,
@@ -49,9 +50,35 @@ const carouselImages = [
     src: "/assets/studio-massage.jpg",
     alt: "Pearl towels, dark spa stones, and a translucent blue vessel",
   },
+  {
+    src: "/assets/studio-lashes.jpg",
+    alt: "Silver lash tweezers, delicate lash fans, and a pearl treatment pillow",
+  },
+  {
+    src: "/assets/studio-brows.jpg",
+    alt: "Silver brow tools and an oval mirror on frosted blue glass",
+  },
+  {
+    src: "/assets/studio-skincare.jpg",
+    alt: "Frosted serum bottles, a facial brush, and a pearl ceramic bowl",
+  },
+  {
+    src: "/assets/studio-waxing.jpg",
+    alt: "A pearl wax warmer and translucent sugaring paste in an ice-blue studio",
+  },
+  {
+    src: "/assets/studio-laser.jpg",
+    alt: "A pearl-white laser hair-removal device and protective goggles",
+  },
+  {
+    src: "/assets/studio-permanent-makeup.jpg",
+    alt: "A silver permanent makeup pen and small pigment bottles on blue glass",
+  },
+  {
+    src: "/assets/studio-tanning.jpg",
+    alt: "A pearl-white tanning booth with soft blue lighting in an airy studio",
+  },
 ];
-
-const offsets = [0, 1, 2, -2, -1];
 
 export function HomeContent() {
   const { t, locale } = useI18n();
@@ -258,6 +285,7 @@ export function HomeContent() {
           </div>
           <div
             className="studio-carousel reveal"
+            data-status-of={t.carousel.statusOf}
             role="region"
             aria-roledescription="carousel"
             aria-label={t.carousel.heading}
@@ -269,7 +297,16 @@ export function HomeContent() {
                   type="button"
                   className="studio-slide"
                   data-studio-index={index}
-                  data-offset={offsets[index]}
+                  data-offset={getStudioSlideOffset(
+                    index,
+                    0,
+                    carouselImages.length,
+                  )}
+                  aria-hidden={
+                    Math.abs(
+                      getStudioSlideOffset(index, 0, carouselImages.length),
+                    ) > 2
+                  }
                   aria-label={slide.title}
                   aria-pressed={index === 0}
                   tabIndex={index === 0 ? 0 : -1}
@@ -306,7 +343,7 @@ export function HomeContent() {
                 <ChevronLeft aria-hidden="true" />
               </button>
               <span className="studio-carousel-count" aria-hidden="true">
-                <b>01</b> / 05
+                <b>01</b> / {String(carouselImages.length).padStart(2, "0")}
               </span>
               <button
                 className="studio-next"
@@ -321,7 +358,7 @@ export function HomeContent() {
               aria-live="polite"
               aria-atomic="true"
             >
-              {`${t.carousel.slides[0].title}, 1 ${t.carousel.statusOf} 5`}
+              {`${t.carousel.slides[0].title}, 1 ${t.carousel.statusOf} ${carouselImages.length}`}
             </p>
           </div>
         </section>
@@ -448,7 +485,7 @@ export function HomeContent() {
           </div>
         </section>
       </main>
-      <LandingInteractions />
+      <LandingInteractions key={locale} />
     </>
   );
 }

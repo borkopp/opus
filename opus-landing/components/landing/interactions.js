@@ -1,3 +1,5 @@
+import { getStudioSlideOffset } from "@/lib/studio-carousel";
+
 export function initializeLanding() {
   const controller = new AbortController();
   const { signal } = controller;
@@ -17,13 +19,16 @@ export function initializeLanding() {
   const studioCarousel = document.querySelector(".studio-carousel");
   if (studioCarousel) {
     const slides = [...studioCarousel.querySelectorAll(".studio-slide")];
-    let activeStudio = 0;
+    let activeStudio = Math.max(
+      0,
+      slides.findIndex((slide) => slide.dataset.offset === "0"),
+    );
     function showStudio(index, moveFocus = false) {
       activeStudio = (index + slides.length) % slides.length;
       slides.forEach((slide, i) => {
-        const offset =
-          ((i - activeStudio + slides.length + 2) % slides.length) - 2;
+        const offset = getStudioSlideOffset(i, activeStudio, slides.length);
         slide.dataset.offset = String(offset);
+        slide.setAttribute("aria-hidden", String(Math.abs(offset) > 2));
         slide.setAttribute("aria-pressed", String(offset === 0));
         slide.tabIndex = offset === 0 ? 0 : -1;
         slide
@@ -39,7 +44,7 @@ export function initializeLanding() {
         "";
       const statusEl = studioCarousel.querySelector(".studio-carousel-status");
       if (statusEl) {
-        statusEl.textContent = `${slideTitle}, ${activeStudio + 1} / ${slides.length}`;
+        statusEl.textContent = `${slideTitle}, ${activeStudio + 1} ${studioCarousel.dataset.statusOf || "/"} ${slides.length}`;
       }
       if (moveFocus) slides[activeStudio].focus({ preventScroll: true });
     }
@@ -148,7 +153,7 @@ export function initializeLanding() {
       },
       { signal },
     );
-    showStudio(0);
+    showStudio(activeStudio);
   }
   if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
     document.documentElement.classList.add("js-motion");

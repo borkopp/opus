@@ -287,6 +287,34 @@ export const mkMessages = {
         title: "Студија за масажа",
         desc: "Поставете ги видовите масажа, времетраењето и паузите. Следете ги термините на секој масер.",
       },
+      {
+        title: "Студија за трепки",
+        desc: "Поставете посебни термини за надградба, дополнување и подигнување на трепки. Клиентите избираат слободно време.",
+      },
+      {
+        title: "Студија за веѓи",
+        desc: "Примајте термини за обликување, боење и ламинација на веѓи. Сите закажувања се во еден календар.",
+      },
+      {
+        title: "Нега на лице и кожа",
+        desc: "Додајте ги третманите за лице со цена и времетраење. Клиентите закажуваат преку вашиот веб-сајт.",
+      },
+      {
+        title: "Студија за депилација",
+        desc: "Поставете услуги за депилација со восок или шеќерна паста. Одредете времетраење и пауза за секој третман.",
+      },
+      {
+        title: "Ласерска епилација",
+        desc: "Организирајте ги услугите по зона и времетраење. Следете ги закажаните третмани во календарот.",
+      },
+      {
+        title: "Трајна шминка",
+        desc: "Додајте посебни услуги за прв третман и корекција. Клиентите избираат услуга и слободен термин.",
+      },
+      {
+        title: "Солариуми",
+        desc: "Поставете ги сесиите со цена и времетраење. Клиентите закажуваат онлајн, а вие го следите распоредот.",
+      },
     ],
     prev: "Претходен тип на студио",
     next: "Следен тип на студио",
@@ -791,6 +819,34 @@ export const enMessages: Messages = {
         title: "Massage studios",
         desc: "Set massage types, session lengths, and breaks. Check each therapist’s appointments.",
       },
+      {
+        title: "Lash studios",
+        desc: "List extensions, infills, and lash lifts with their durations. Clients book an available time.",
+      },
+      {
+        title: "Brow studios",
+        desc: "Offer shaping, tinting, and lamination. See every appointment in your calendar.",
+      },
+      {
+        title: "Facials & skincare",
+        desc: "Add facial treatments with prices and durations. Clients book through your website.",
+      },
+      {
+        title: "Waxing & sugaring",
+        desc: "List waxing and sugaring services with durations and breaks between appointments.",
+      },
+      {
+        title: "Laser hair removal",
+        desc: "Set services by treatment area and duration. See every session in your calendar.",
+      },
+      {
+        title: "Permanent makeup",
+        desc: "List initial treatments and touch-ups. Clients choose a service and an available time.",
+      },
+      {
+        title: "Tanning studios",
+        desc: "Set session prices and durations. Clients book online, and you keep track of the schedule.",
+      },
     ],
     prev: "Previous studio type",
     next: "Next studio type",
@@ -1291,6 +1347,34 @@ export const sqMessages: Messages = {
       {
         title: "Studio masazhi",
         desc: "Vendosni llojet e masazhit, kohëzgjatjen dhe pushimet. Ndiqni terminet e çdo masazheri.",
+      },
+      {
+        title: "Studio qerpikësh",
+        desc: "Listoni zgjatimet, mbushjet dhe ngritjen e qerpikëve. Klientët zgjedhin terminin.",
+      },
+      {
+        title: "Studio vetullash",
+        desc: "Ofroni formësim, ngjyrosje dhe laminim. Ndiqni çdo termin në kalendar.",
+      },
+      {
+        title: "Kujdes për lëkurën",
+        desc: "Listoni trajtimet me çmime dhe kohëzgjatje. Klientët rezervojnë në uebfaqen tuaj.",
+      },
+      {
+        title: "Studio depilimi",
+        desc: "Listoni depilimin me dyll ose pastë sheqeri, kohëzgjatjen dhe pushimet.",
+      },
+      {
+        title: "Epilim me lazer",
+        desc: "Caktoni zonën dhe kohëzgjatjen e trajtimeve. Ndiqni çdo seancë në kalendar.",
+      },
+      {
+        title: "Grim permanent",
+        desc: "Listoni trajtimet fillestare dhe korrigjimet. Klientët zgjedhin një termin të lirë.",
+      },
+      {
+        title: "Solariume",
+        desc: "Caktoni çmimet dhe kohëzgjatjen e seancave. Klientët rezervojnë online, ndërsa ju ndiqni orarin.",
       },
     ],
     prev: "Lloji i mëparshëm i studios",

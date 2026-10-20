@@ -17,7 +17,6 @@ export function PromotionSection() {
     >
       <div className="split-heading reveal">
         <h2 id="promotion-title">{copy.heading}</h2>
-        <p>{copy.description}</p>
       </div>
 
       <div className="promotion-grid">

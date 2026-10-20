@@ -128,10 +128,7 @@ export function HomeContent() {
 
         <section className="section features-section" id="features">
           <div className="split-heading reveal">
-            <div>
-              <h2>{t.featuresBento.heading}</h2>
-            </div>
-            <p>{t.featuresBento.subheading}</p>
+            <h2>{t.featuresBento.heading}</h2>
           </div>
           <div className="bento-grid">
             <article className="bento-panel bento-booking reveal">
@@ -257,10 +254,7 @@ export function HomeContent() {
 
         <section className="section studio-carousel-section" id="your-studio">
           <div className="split-heading reveal">
-            <div>
-              <h2>{t.carousel.heading}</h2>
-            </div>
-            <p>{t.carousel.subheading}</p>
+            <h2>{t.carousel.heading}</h2>
           </div>
           <div
             className="studio-carousel reveal"

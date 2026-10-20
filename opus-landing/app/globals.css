@@ -300,6 +300,7 @@
 
   .promotion-section .split-heading h2 {
     max-width: 580px;
+    margin-inline: auto;
     text-wrap: balance;
   }
 

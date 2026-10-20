@@ -59,12 +59,14 @@ export function ClientsView({
   onFiltersChange,
   onSelect,
   locked = false,
+  embedded = false,
 }: {
   data?: ClientDirectory;
   filters: ClientFilters;
   onFiltersChange: (filters: ClientFilters) => void;
   onSelect: (id: string) => void;
   locked?: boolean;
+  embedded?: boolean;
 }) {
   const { t } = useDashboardI18n();
   const change = (patch: Partial<ClientFilters>) =>
@@ -86,10 +88,18 @@ export function ClientsView({
       shortLabel: t("Visits", "Посети", "Vizita"),
       value: data?.summary.completedVisits,
       icon: CalendarCheck2,
-      description: t("Every completed appointment", "Секој завршен термин", "Çdo termin i përfunduar"),
+      description: t(
+        "Every completed appointment",
+        "Секој завршен термин",
+        "Çdo termin i përfunduar",
+      ),
     },
     {
-      label: t("Returning clients", "Клиенти што се враќаат", "Klientë të rikthyer"),
+      label: t(
+        "Returning clients",
+        "Клиенти што се враќаат",
+        "Klientë të rikthyer",
+      ),
       shortLabel: t("Returning", "Повторни", "Të rikthyer"),
       value: data?.summary.returningClients,
       icon: Repeat2,
@@ -103,25 +113,27 @@ export function ClientsView({
 
   return (
     <div className="flex min-w-0 flex-col gap-7">
-      <div className="relative">
-        <DashboardPageHeader
-          replayPublicDescription
-          replayPublicTitle
-          title={t("Clients", "Клиенти", "Klientët")}
-          description={t(
-            "Contact details, past visits and the next appointment.",
-            "Контакт, претходни посети и следниот закажан термин.",
-            "Detajet e kontaktit, vizitat e kaluara dhe termini i ardhshëm.",
-          )}
-        />
-        <Badge
-          data-replay-public
-          variant="pro"
-          className="absolute top-0 right-0"
-        >
-          Pro
-        </Badge>
-      </div>
+      {!embedded && (
+        <div className="relative">
+          <DashboardPageHeader
+            replayPublicDescription
+            replayPublicTitle
+            title={t("Clients", "Клиенти", "Klientët")}
+            description={t(
+              "Contact details, past visits and the next appointment.",
+              "Контакт, претходни посети и следниот закажан термин.",
+              "Detajet e kontaktit, vizitat e kaluara dhe termini i ardhshëm.",
+            )}
+          />
+          <Badge
+            data-replay-public
+            variant="pro"
+            className="absolute top-0 right-0"
+          >
+            Pro
+          </Badge>
+        </div>
+      )}
       {locked ? (
         <PaidFeatureOverlay
           locked
@@ -140,44 +152,50 @@ export function ClientsView({
         </PaidFeatureOverlay>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            {metrics.map((metric) => (
-              <Card
-                key={metric.label}
-                className="gap-3 rounded-2xl border-0 py-4 shadow-none sm:rounded-3xl sm:py-5"
-              >
-                <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 pb-0 sm:px-5">
-                  <CardDescription className="text-xs sm:text-sm">
-                    <span className="sm:hidden">{metric.shortLabel}</span>
-                    <span className="hidden sm:inline">{metric.label}</span>
-                  </CardDescription>
-                  <metric.icon
-                    className="hidden size-4 shrink-0 text-muted-foreground sm:block"
-                    aria-hidden="true"
-                  />
-                </CardHeader>
-                <CardContent className="flex flex-col gap-2 px-3 sm:px-5">
-                  <p className="text-3xl font-medium tracking-tight tabular-nums">
-                    {metric.value ?? "—"}
-                  </p>
-                  <p className="hidden text-xs text-muted-foreground sm:block">
-                    {metric.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {!embedded && (
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              {metrics.map((metric) => (
+                <Card
+                  key={metric.label}
+                  className="gap-3 rounded-2xl border-0 py-4 shadow-none sm:rounded-3xl sm:py-5"
+                >
+                  <CardHeader className="flex flex-row items-center justify-between gap-3 px-3 pb-0 sm:px-5">
+                    <CardDescription className="text-xs sm:text-sm">
+                      <span className="sm:hidden">{metric.shortLabel}</span>
+                      <span className="hidden sm:inline">{metric.label}</span>
+                    </CardDescription>
+                    <metric.icon
+                      className="hidden size-4 shrink-0 text-muted-foreground sm:block"
+                      aria-hidden="true"
+                    />
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-2 px-3 sm:px-5">
+                    <p className="text-3xl font-medium tracking-tight tabular-nums">
+                      {metric.value ?? "—"}
+                    </p>
+                    <p className="hidden text-xs text-muted-foreground sm:block">
+                      {metric.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
           <Card className="min-w-0 gap-5 rounded-3xl border-0 py-5 shadow-none">
             <CardHeader className="min-w-0 grid-cols-1 gap-4 px-5 sm:px-6">
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-4">
                 <CardTitle data-replay-public>
-                  {t("Client directory", "Именик на клиенти", "Regjistri i klientëve")}
+                  {t(
+                    "Client directory",
+                    "Именик на клиенти",
+                    "Regjistri i klientëve",
+                  )}
                 </CardTitle>
                 <p data-replay-public className="text-xs text-muted-foreground">
                   {t(
-                    "Visit totals count completed appointments only.",
-                    "Вкупните посети ги вклучуваат само завршените термини.",
-                    "Totali i vizitave numëron vetëm terminet e përfunduara.",
+                    "All-time directory · independent of chart filters",
+                    "Именик за сите периоди · независно од филтрите за графикони",
+                    "Regjistri i plotë · i pavarur nga filtrat e grafikëve",
                   )}
                 </p>
               </div>
@@ -187,7 +205,11 @@ export function ClientsView({
                     <Search />
                   </InputGroupAddon>
                   <InputGroupInput
-                    aria-label={t("Search clients", "Пребарај клиенти", "Kërko klientë")}
+                    aria-label={t(
+                      "Search clients",
+                      "Пребарај клиенти",
+                      "Kërko klientë",
+                    )}
                     placeholder={t(
                       "Search name, email or phone",
                       "Пребарај име, е-пошта или телефон",
@@ -200,7 +222,11 @@ export function ClientsView({
                   {filters.search && (
                     <InputGroupAddon align="inline-end">
                       <InputGroupButton
-                        aria-label={t("Clear search", "Исчисти пребарување", "Pastro kërkimin")}
+                        aria-label={t(
+                          "Clear search",
+                          "Исчисти пребарување",
+                          "Pastro kërkimin",
+                        )}
                         size="icon-xs"
                         onClick={() => change({ search: "" })}
                       >
@@ -219,7 +245,11 @@ export function ClientsView({
                   >
                     <TabsList
                       className="w-full"
-                      aria-label={t("Filter clients", "Филтрирај клиенти", "Filtro klientët")}
+                      aria-label={t(
+                        "Filter clients",
+                        "Филтрирај клиенти",
+                        "Filtro klientët",
+                      )}
                     >
                       <TabsTrigger
                         data-replay-public
@@ -251,7 +281,11 @@ export function ClientsView({
                     }
                   >
                     <SelectTrigger
-                      aria-label={t("Sort clients", "Подреди клиенти", "Rendit klientët")}
+                      aria-label={t(
+                        "Sort clients",
+                        "Подреди клиенти",
+                        "Rendit klientët",
+                      )}
                       className="w-full sm:w-44"
                     >
                       <SelectValue />
@@ -259,10 +293,18 @@ export function ClientsView({
                     <SelectContent>
                       <SelectGroup>
                         <SelectItem data-replay-public value="recent">
-                          {t("Recent visits", "Последни посети", "Vizitat e fundit")}
+                          {t(
+                            "Recent visits",
+                            "Последни посети",
+                            "Vizitat e fundit",
+                          )}
                         </SelectItem>
                         <SelectItem data-replay-public value="visits">
-                          {t("Most visits", "Најмногу посети", "Më së shumti vizita")}
+                          {t(
+                            "Most visits",
+                            "Најмногу посети",
+                            "Më së shumti vizita",
+                          )}
                         </SelectItem>
                         <SelectItem data-replay-public value="name">
                           {t("Name A–Z", "Име А–Ш", "Emri A–Z")}
@@ -276,7 +318,11 @@ export function ClientsView({
             <CardContent className="min-w-0 px-5 sm:px-6">
               {!data ? (
                 <div
-                  aria-label={t("Loading clients", "Се вчитуваат клиентите", "Duke ngarkuar klientët")}
+                  aria-label={t(
+                    "Loading clients",
+                    "Се вчитуваат клиентите",
+                    "Duke ngarkuar klientët",
+                  )}
                   className="flex flex-col gap-3"
                 >
                   {[0, 1, 2, 3, 4].map((row) => (

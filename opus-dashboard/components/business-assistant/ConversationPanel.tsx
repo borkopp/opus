@@ -10,7 +10,8 @@ import {
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { AnalysisReport } from "@/components/business-assistant/AnalysisReport";
+import { AssistantResponse } from "@/components/business-assistant/AssistantResponse";
+import type { DisplayReport } from "./AnalysisReport";
 import { analystError } from "@/lib/i18n/business-assistant";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -39,20 +40,26 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 
-type Turn = FunctionReturnType<
+type QueriedTurn = FunctionReturnType<
   typeof api.analyst.conversations.get
 >["turns"][number];
+
+export type AssistantTurn = Omit<QueriedTurn, "reports"> & {
+  reports: DisplayReport[];
+};
 
 export function ConversationPanel({
   turns,
   loading,
   disabled,
   onPrompt,
+  reportHref,
 }: {
-  turns: Turn[];
+  turns: AssistantTurn[];
   loading: boolean;
   disabled: boolean;
   onPrompt: (question: string) => void;
+  reportHref?: (reportKey: string) => string;
 }) {
   const { t, language } = useDashboardI18n();
   const examples = [
@@ -202,57 +209,15 @@ export function ConversationPanel({
                         </Alert>
                       ) : (
                         turn.answer && (
-                          <>
-                            <Bubble variant="ghost">
-                              <BubbleContent className="whitespace-pre-wrap">
-                                {turn.answer.text}
-                              </BubbleContent>
-                            </Bubble>
-                            {turn.reports.length > 0 && (
-                              <div className="grid min-w-0 gap-3 xl:grid-cols-2">
-                                {turn.reports.map((report) => (
-                                  <AnalysisReport
-                                    key={report.key}
-                                    report={report}
-                                    turnId={turn._id}
-                                  />
-                                ))}
-                              </div>
-                            )}
-                            {turn.answer.recommendations.map(
-                              (recommendation, index) => (
-                                <div
-                                  key={index}
-                                  className="flex flex-col gap-2 border-l-2 border-primary/30 py-1 pl-4"
-                                >
-                                  <p className="text-sm font-medium">
-                                    {recommendation.suggestion}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {recommendation.evidence}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {t("Measure", "Измерете", "Matni")}:{" "}
-                                    {recommendation.measurement}
-                                  </p>
-                                </div>
-                              ),
-                            )}
-                            <div className="flex flex-wrap gap-2">
-                              {turn.answer.followUps.map((question) => (
-                                <Button
-                                  key={question}
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-auto whitespace-normal py-2 text-left"
-                                  disabled={disabled}
-                                  onClick={() => onPrompt(question)}
-                                >
-                                  {question}
-                                </Button>
-                              ))}
-                            </div>
-                          </>
+                          <AssistantResponse
+                            answer={turn.answer}
+                            question={turn.question}
+                            reports={turn.reports}
+                            turnId={turn._id}
+                            disabled={disabled}
+                            onPrompt={onPrompt}
+                            reportHref={reportHref}
+                          />
                         )
                       )}
                     </MessageContent>

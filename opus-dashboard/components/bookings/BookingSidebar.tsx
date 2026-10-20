@@ -92,7 +92,11 @@ export function BookingSidebar({
           data-replay-public
           className="font-display text-lg font-bold text-foreground"
         >
-          {t("Booking overview", "Преглед на термин", "Pamja e përgjithshme e terminit")}
+          {t(
+            "Booking overview",
+            "Преглед на термин",
+            "Pamja e përgjithshme e terminit",
+          )}
         </h3>
         <p
           data-replay-public
@@ -109,12 +113,16 @@ export function BookingSidebar({
   }
 
   const { customer, staff, startAt, endAt, source, status } = booking;
-  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbimi"));
+  const serviceName = bookingServiceLabel(
+    booking,
+    t("Service", "Услуга", "Shërbimi"),
+  );
   const theme = getServiceTheme(booking.service?.name || serviceName);
 
   const totalVisits = customer?.totalVisits ?? 0;
   const isAiBooked = source?.startsWith("ai_") ?? false;
-  const isTerminal = ["completed", "cancelled", "no_show"].includes(status);
+  const isActive = ["confirmed", "checked_in"].includes(status);
+  const canMarkNoShow = isActive || status === "completed";
   const durationMins = Math.max(1, Math.round((endAt - startAt) / 60000));
 
   const customerAvatarUrl = getImageStorageUrl(customer?.avatarUrl);
@@ -198,7 +206,8 @@ export function BookingSidebar({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="truncate font-display text-base font-bold text-foreground">
-                {customer?.name ?? t("Unknown customer", "Непознат клиент", "Klient i panjohur")}
+                {customer?.name ??
+                  t("Unknown customer", "Непознат клиент", "Klient i panjohur")}
               </h2>
               {totalVisits >= 5 && (
                 <span
@@ -262,7 +271,11 @@ export function BookingSidebar({
           variant="ghost"
           size="icon"
           onClick={onClose}
-          aria-label={t("Close booking details", "Затвори детали за термин", "Mbyll detajet e terminit")}
+          aria-label={t(
+            "Close booking details",
+            "Затвори детали за термин",
+            "Mbyll detajet e terminit",
+          )}
           className="size-8 shrink-0 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
         >
           <IconX className="size-4" />
@@ -348,7 +361,9 @@ export function BookingSidebar({
             <div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-1">
                 <IconClock className="size-3.5 text-primary" />
-                <span data-replay-public>{t("Time slot", "Време", "Orari")}</span>
+                <span data-replay-public>
+                  {t("Time slot", "Време", "Orari")}
+                </span>
               </div>
               <p className="font-mono text-sm font-bold text-foreground tabular-nums">
                 {bookingTimeLabel(startAt)} – {bookingTimeLabel(endAt)}
@@ -379,7 +394,8 @@ export function BookingSidebar({
                 )}
               </div>
               <span className="text-sm font-bold text-foreground">
-                {staff?.displayName ?? t("Staff member", "Член на тим", "Anëtar i stafit")}
+                {staff?.displayName ??
+                  t("Staff member", "Член на тим", "Anëtar i stafit")}
               </span>
             </div>
           </div>
@@ -411,7 +427,11 @@ export function BookingSidebar({
                 data-replay-public
                 className="text-xs font-bold text-foreground flex items-center gap-1.5"
               >
-                {t("AI-assisted booking", "Закажано преку AI Рецепција", "Rezervim i asistuar nga AI")}
+                {t(
+                  "AI-assisted booking",
+                  "Закажано преку AI Рецепција",
+                  "Rezervim i asistuar nga AI",
+                )}
                 <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-primary/20 text-primary uppercase">
                   {source?.replace("ai_", "")}
                 </span>
@@ -432,7 +452,7 @@ export function BookingSidebar({
       </div>
 
       {/* 3. Reschedule Drawer */}
-      {showReschedule && (
+      {isActive && showReschedule && (
         <ReschedulePanel
           booking={booking}
           rescheduleDate={rescheduleDate}
@@ -448,20 +468,27 @@ export function BookingSidebar({
       )}
 
       {/* 4. Action Footer */}
-      <div className="flex shrink-0 flex-col gap-2.5 border-t border-border/70 p-4 bg-muted/10">
-        {!isTerminal && (
+      {canMarkNoShow && (
+        <div className="flex shrink-0 flex-col gap-2.5 border-t border-border/70 p-4 bg-muted/10">
           <div className="flex flex-col gap-2">
-            <Button
-              data-replay-public
-              className="w-full gap-2 font-semibold shadow-xs"
-              onClick={() => onComplete?.(booking._id)}
-              disabled={!onComplete || isUpdating}
-            >
-              <IconCircleCheck className="size-4" />
-              {t("Complete booking", "Заврши термин", "Përfundo terminin")}
-            </Button>
+            {isActive && (
+              <Button
+                data-replay-public
+                className="w-full gap-2 font-semibold shadow-xs"
+                onClick={() => onComplete?.(booking._id)}
+                disabled={!onComplete || isUpdating}
+              >
+                <IconCircleCheck className="size-4" />
+                {t("Complete booking", "Заврши термин", "Përfundo terminin")}
+              </Button>
+            )}
 
-            <div className="grid grid-cols-2 gap-2">
+            <div
+              className={cn(
+                "grid gap-2",
+                isActive ? "grid-cols-2" : "grid-cols-1",
+              )}
+            >
               <Button
                 data-replay-public
                 variant="outline"
@@ -473,49 +500,59 @@ export function BookingSidebar({
                 <IconUserX className="size-3.5" />
                 {t("No-show", "Не се појави", "Mosparaqitje")}
               </Button>
-              <Button
-                data-replay-public
-                variant={confirmingCancel ? "destructive" : "ghost"}
-                size="sm"
-                className={cn(
-                  "gap-1.5 text-xs",
-                  !confirmingCancel &&
-                    "text-muted-foreground hover:text-destructive",
-                )}
-                onClick={() => {
-                  if (!confirmingCancel) {
-                    setConfirmingCancel(true);
-                    return;
-                  }
-                  onCancel?.(booking._id);
-                  setConfirmingCancel(false);
-                }}
-                disabled={!onCancel || isUpdating}
-              >
-                <IconX className="size-3.5" />
-                {confirmingCancel
-                  ? t("Confirm cancel?", "Сигурно?", "Konfirmo anulimin?")
-                  : t("Cancel", "Откажи", "Anulo")}
-              </Button>
+              {isActive && (
+                <Button
+                  data-replay-public
+                  variant={confirmingCancel ? "destructive" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "gap-1.5 text-xs",
+                    !confirmingCancel &&
+                      "text-muted-foreground hover:text-destructive",
+                  )}
+                  onClick={() => {
+                    if (!confirmingCancel) {
+                      setConfirmingCancel(true);
+                      return;
+                    }
+                    onCancel?.(booking._id);
+                    setConfirmingCancel(false);
+                  }}
+                  disabled={!onCancel || isUpdating}
+                >
+                  <IconX className="size-3.5" />
+                  {confirmingCancel
+                    ? t("Confirm cancel?", "Сигурно?", "Konfirmo anulimin?")
+                    : t("Cancel", "Откажи", "Anulo")}
+                </Button>
+              )}
             </div>
           </div>
-        )}
 
-        <Button
-          data-replay-public
-          variant={
-            showReschedule ? "secondary" : isTerminal ? "outline" : "outline"
-          }
-          className="w-full gap-2 text-xs font-semibold"
-          onClick={() => setShowReschedule((visible) => !visible)}
-          disabled={!onReschedule || isUpdating}
-        >
-          <IconCalendarClock className="size-4 text-primary" />
-          {showReschedule
-            ? t("Close rescheduler", "Затвори презакажување", "Mbyll ripërcaktimin")
-            : t("Reschedule appointment", "Презакажи термин", "Ripërcakto terminin")}
-        </Button>
-      </div>
+          {isActive && (
+            <Button
+              data-replay-public
+              variant={showReschedule ? "secondary" : "outline"}
+              className="w-full gap-2 text-xs font-semibold"
+              onClick={() => setShowReschedule((visible) => !visible)}
+              disabled={!onReschedule || isUpdating}
+            >
+              <IconCalendarClock className="size-4 text-primary" />
+              {showReschedule
+                ? t(
+                    "Close rescheduler",
+                    "Затвори презакажување",
+                    "Mbyll ripërcaktimin",
+                  )
+                : t(
+                    "Reschedule appointment",
+                    "Презакажи термин",
+                    "Ripërcakto terminin",
+                  )}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -554,7 +591,11 @@ function ReschedulePanel({
         <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
           <IconClock className="size-4 text-primary" />
           <span data-replay-public>
-            {t("Choose a new time", "Изберете ново време", "Zgjidhni një kohë të re")}
+            {t(
+              "Choose a new time",
+              "Изберете ново време",
+              "Zgjidhni një kohë të re",
+            )}
           </span>
         </div>
         <span className="font-mono text-[11px] font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
@@ -624,7 +665,11 @@ function ReschedulePanel({
             data-replay-public
             className="py-3 text-center text-xs text-muted-foreground"
           >
-            {t("Loading available times…", "Вчитување слободни термини…", "Duke ngarkuar terminet e lira…")}
+            {t(
+              "Loading available times…",
+              "Вчитување слободни термини…",
+              "Duke ngarkuar terminet e lira…",
+            )}
           </p>
         )}
         {availableSlots?.length === 0 && (

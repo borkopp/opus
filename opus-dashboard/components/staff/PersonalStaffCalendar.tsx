@@ -161,7 +161,9 @@ export function PersonalStaffCalendar({
                   </p>
                 )}
               </CardContent>
-              {["confirmed", "checked_in"].includes(booking.status) && (
+              {["confirmed", "checked_in", "completed"].includes(
+                booking.status,
+              ) && (
                 <CardFooter className="flex flex-wrap gap-2">
                   {[
                     {
@@ -172,62 +174,25 @@ export function PersonalStaffCalendar({
                       status: "no_show" as const,
                       label: t("No-show", "Не се појавил", "Nuk u paraqit"),
                     },
-                  ].map((action) => (
-                    <Button
-                      key={action.status}
-                      variant="outline"
-                      disabled={busyId === booking._id}
-                      onClick={async () => {
-                        setBusyId(booking._id);
-                        try {
-                          await change({
-                            bookingId: booking._id,
-                            status: action.status,
-                          });
-                          toast.success(
-                            t(
-                              "Appointment updated",
-                              "Терминот е ажуриран",
-                              "Termini u përditësua",
-                            ),
-                          );
-                        } catch (error) {
-                          toast.error(
-                            accountErrorMessage(
-                              error,
-                              t(
-                                "Could not update appointment",
-                                "Терминот не се ажурираше",
-                                "Termini nuk u përditësua",
-                              ),
-                            ),
-                          );
-                        } finally {
-                          setBusyId(null);
-                        }
-                      }}
-                    >
-                      {action.label}
-                    </Button>
-                  ))}
-                  {cancelId === booking._id ? (
-                    <>
+                  ]
+                    .filter((action) => action.status !== booking.status)
+                    .map((action) => (
                       <Button
-                        variant="destructive"
+                        key={action.status}
+                        variant="outline"
                         disabled={busyId === booking._id}
                         onClick={async () => {
                           setBusyId(booking._id);
                           try {
                             await change({
                               bookingId: booking._id,
-                              status: "cancelled",
+                              status: action.status,
                             });
-                            setCancelId(null);
                             toast.success(
                               t(
-                                "Appointment cancelled",
-                                "Терминот е откажан",
-                                "Termini u anulua",
+                                "Appointment updated",
+                                "Терминот е ажуриран",
+                                "Termini u përditësua",
                               ),
                             );
                           } catch (error) {
@@ -235,9 +200,9 @@ export function PersonalStaffCalendar({
                               accountErrorMessage(
                                 error,
                                 t(
-                                  "Could not cancel appointment",
-                                  "Откажувањето не успеа",
-                                  "Anulimi dështoi",
+                                  "Could not update appointment",
+                                  "Терминот не се ажурираше",
+                                  "Termini nuk u përditësua",
                                 ),
                               ),
                             );
@@ -246,28 +211,71 @@ export function PersonalStaffCalendar({
                           }
                         }}
                       >
-                        {t(
-                          "Confirm cancellation",
-                          "Потврди откажување",
-                          "Konfirmo anulimin",
-                        )}
+                        {action.label}
                       </Button>
-                      <Button variant="ghost" onClick={() => setCancelId(null)}>
-                        {t(
-                          "Keep appointment",
-                          "Задржи термин",
-                          "Mbaj terminin",
-                        )}
+                    ))}
+                  {booking.status !== "completed" &&
+                    (cancelId === booking._id ? (
+                      <>
+                        <Button
+                          variant="destructive"
+                          disabled={busyId === booking._id}
+                          onClick={async () => {
+                            setBusyId(booking._id);
+                            try {
+                              await change({
+                                bookingId: booking._id,
+                                status: "cancelled",
+                              });
+                              setCancelId(null);
+                              toast.success(
+                                t(
+                                  "Appointment cancelled",
+                                  "Терминот е откажан",
+                                  "Termini u anulua",
+                                ),
+                              );
+                            } catch (error) {
+                              toast.error(
+                                accountErrorMessage(
+                                  error,
+                                  t(
+                                    "Could not cancel appointment",
+                                    "Откажувањето не успеа",
+                                    "Anulimi dështoi",
+                                  ),
+                                ),
+                              );
+                            } finally {
+                              setBusyId(null);
+                            }
+                          }}
+                        >
+                          {t(
+                            "Confirm cancellation",
+                            "Потврди откажување",
+                            "Konfirmo anulimin",
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => setCancelId(null)}
+                        >
+                          {t(
+                            "Keep appointment",
+                            "Задржи термин",
+                            "Mbaj terminin",
+                          )}
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setCancelId(booking._id)}
+                      >
+                        {t("Cancel", "Откажи", "Anulo")}
                       </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      onClick={() => setCancelId(booking._id)}
-                    >
-                      {t("Cancel", "Откажи", "Anulo")}
-                    </Button>
-                  )}
+                    ))}
                 </CardFooter>
               )}
             </Card>

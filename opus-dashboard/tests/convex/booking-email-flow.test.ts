@@ -469,6 +469,30 @@ describe("public booking email flow", () => {
       attempts: 1,
     });
     expect(finalState.bookings).toHaveLength(1);
+    const scheduledCompletion = finalState.bookings[0];
+    const completionAt = wallClockTimestampToInstant(
+      scheduledCompletion.endAt,
+      "Europe/Belgrade",
+    );
+    expect(scheduledCompletion.autoCompletionScheduledFor).toBe(completionAt);
+    expect(scheduledCompletion.autoCompletionJobId).toBeDefined();
+    expect(
+      await t.run((ctx) =>
+        ctx.db.system.get(scheduledCompletion.autoCompletionJobId!),
+      ),
+    ).toMatchObject({
+      name: "bookings:completeScheduledBooking",
+      args: [
+        {
+          orgId: fixture.orgId,
+          bookingId: scheduledCompletion._id,
+          expectedEndAt: scheduledCompletion.endAt,
+          scheduledFor: completionAt,
+        },
+      ],
+      scheduledTime: completionAt,
+      state: { kind: "pending" },
+    });
     expect(finalState.confirmation).toMatchObject({
       status: "sent",
       externalMessageId: "resend-message-id",

@@ -9,7 +9,7 @@ import {
   MessageContent,
   MessageHeader,
 } from "@/components/ui/message";
-import { ConversationPanel } from "./ConversationPanel";
+import { ConversationPanel } from "@/components/business-assistant/ConversationPanel";
 import { AssistantComposer } from "./AssistantComposer";
 import styles from "./free-assistant.module.css";
 
@@ -125,7 +125,11 @@ export function FreeAssistantPage() {
                           {turn.visible === 0 && !turn.complete ? (
                             <span
                               className={styles.typing}
-                              aria-label={t("Typing…", "Пишува…", "Duke shkruar…")}
+                              aria-label={t(
+                                "Typing…",
+                                "Пишува…",
+                                "Duke shkruar…",
+                              )}
                             >
                               <i />
                               <i />

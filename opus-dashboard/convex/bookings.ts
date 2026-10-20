@@ -25,10 +25,19 @@ import {
 import {
   formatBookingNotificationDateTime,
   wallClockNow,
+  wallClockTimestampToInstant,
 } from "./lib/bookingTime";
 import { rangeFitsFreeInterval } from "./lib/quickBooking";
 import { clientClaimUrl, createClientClaimToken } from "./lib/clientAccounts";
 import { normalizeBookingEmail } from "./lib/bookingEmailSecurity";
+import { ACTIVE_INDUSTRY, isActiveIndustry } from "./lib/productScope";
+import {
+  automaticCompletionEnabled,
+  canAutomaticallyComplete,
+  cancelBookingCompletion,
+  completeBookingRecord,
+  scheduleBookingCompletion,
+} from "./lib/bookingCompletion";
 
 function getPrimaryContact(
   customer: Doc<"customers">,
@@ -239,6 +248,7 @@ export const createBooking = mutation({
     // 7. Transactional email confirmation and reminder schedule.
     const booking = await ctx.db.get(bookingId);
     if (!booking) throw new Error("Created booking was not found.");
+    await scheduleBookingCompletion(ctx, booking, orgSettings.timezone);
     await queueBookingNotifications(ctx, {
       org,
       settings: orgSettings,
@@ -550,6 +560,7 @@ export const createManualBooking = mutation({
 
     const booking = await ctx.db.get(bookingId);
     if (!booking) throw new Error("Created booking was not found.");
+    await scheduleBookingCompletion(ctx, booking, settings.timezone);
     const combinedService: Doc<"services"> = {
       ...primaryService,
       name: services.map((service) => service.name).join(" + "),
@@ -586,6 +597,200 @@ export const createManualBooking = mutation({
   },
 });
 
+export const completeScheduledBooking = internalMutation({
+  args: {
+    orgId: v.id("orgs"),
+    bookingId: v.id("bookings"),
+    expectedEndAt: v.number(),
+    scheduledFor: v.number(),
+  },
+  handler: async (ctx, args): Promise<boolean> => {
+    const booking = await ctx.db.get(args.bookingId);
+    if (
+      !booking ||
+      booking.orgId !== args.orgId ||
+      !booking.autoCompletionJobId ||
+      booking.autoCompletionScheduledFor !== args.scheduledFor
+    ) {
+      return false;
+    }
+    const execution = { executingJobId: booking.autoCompletionJobId };
+    const org = await ctx.db.get(args.orgId);
+    if (
+      !automaticCompletionEnabled() ||
+      !org ||
+      org.isDeleted ||
+      !isActiveIndustry(org.industry) ||
+      !canAutomaticallyComplete(booking)
+    ) {
+      await cancelBookingCompletion(ctx, booking, execution);
+      return false;
+    }
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+    if (!settings) {
+      await cancelBookingCompletion(ctx, booking, execution);
+      return false;
+    }
+    const currentEnd = wallClockTimestampToInstant(
+      booking.endAt,
+      settings.timezone,
+    );
+    if (
+      booking.endAt !== args.expectedEndAt ||
+      currentEnd !== args.scheduledFor
+    ) {
+      await scheduleBookingCompletion(
+        ctx,
+        booking,
+        settings.timezone,
+        execution,
+      );
+      return false;
+    }
+    if (Date.now() < currentEnd) return false;
+    return completeBookingRecord(
+      ctx,
+      booking,
+      { type: "system", id: "automatic-completion" },
+      execution,
+    );
+  },
+});
+
+/** Setup future bookings for a studio; never enroll untouched past history. */
+export const setupAutomaticCompletionForOrg = internalMutation({
+  args: {
+    orgId: v.id("orgs"),
+    cursor: v.optional(v.union(v.string(), v.null())),
+    startedAt: v.optional(v.number()),
+    onlyArmed: v.optional(v.boolean()),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    scanned: number;
+    scheduled: number;
+    isDone: boolean;
+    nextCursor: string | null;
+  }> => {
+    if (!automaticCompletionEnabled()) {
+      throw new ConvexError("Automatic completion is temporarily disabled.");
+    }
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted || !isActiveIndustry(org.industry)) {
+      return { scanned: 0, scheduled: 0, isDone: true, nextCursor: null };
+    }
+    const settings = await ctx.db
+      .query("org_settings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .first();
+    if (!settings) {
+      return { scanned: 0, scheduled: 0, isDone: true, nextCursor: null };
+    }
+    // Keep the eligibility boundary stable if appointments finish while pages
+    // are being processed. A timezone edit may also move an armed task to now.
+    const startedAt = args.startedAt ?? Date.now();
+    const bookings = await ctx.db
+      .query("bookings")
+      .withIndex("by_org", (q) => q.eq("orgId", args.orgId))
+      .paginate({ cursor: args.cursor ?? null, numItems: 100 });
+    let scheduled = 0;
+    for (const booking of bookings.page) {
+      if (args.onlyArmed && !booking.autoCompletionJobId) continue;
+      if (!canAutomaticallyComplete(booking)) {
+        await cancelBookingCompletion(ctx, booking);
+        continue;
+      }
+      if (
+        await scheduleBookingCompletion(ctx, booking, settings.timezone, {
+          eligibleAfter: startedAt,
+        })
+      ) {
+        scheduled += 1;
+      }
+    }
+    if (!bookings.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.bookings.setupAutomaticCompletionForOrg,
+        {
+          orgId: args.orgId,
+          cursor: bookings.continueCursor,
+          startedAt,
+          ...(args.onlyArmed ? { onlyArmed: true } : {}),
+        },
+      );
+    }
+    return {
+      scanned: bookings.page.length,
+      scheduled,
+      isDone: bookings.isDone,
+      nextCursor: bookings.isDone ? null : bookings.continueCursor,
+    };
+  },
+});
+
+/** Operator-run enrollment of existing future appointments, without a cron. */
+export const setupAutomaticCompletionForAllStudios = internalMutation({
+  args: {
+    cursor: v.optional(v.union(v.string(), v.null())),
+    startedAt: v.optional(v.number()),
+  },
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{
+    scanned: number;
+    studiosScheduled: number;
+    isDone: boolean;
+    nextCursor: string | null;
+  }> => {
+    if (!automaticCompletionEnabled()) {
+      throw new ConvexError("Automatic completion is temporarily disabled.");
+    }
+    const startedAt = args.startedAt ?? Date.now();
+    // This explicitly authorized operator setup enumerates organization roots
+    // only. Every booking/settings read remains inside the tenant-scoped setup.
+    const organizations = await ctx.db
+      .query("orgs")
+      .withIndex("by_industry_created", (q) =>
+        q.eq("industry", ACTIVE_INDUSTRY).lte("createdAt", startedAt),
+      )
+      .paginate({
+        cursor: args.cursor ?? null,
+        numItems: 25,
+        maximumBytesRead: 1_000_000,
+      });
+    let studiosScheduled = 0;
+    for (const org of organizations.page) {
+      if (org.isDeleted) continue;
+      await ctx.scheduler.runAfter(
+        0,
+        internal.bookings.setupAutomaticCompletionForOrg,
+        { orgId: org._id, startedAt },
+      );
+      studiosScheduled += 1;
+    }
+    if (!organizations.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.bookings.setupAutomaticCompletionForAllStudios,
+        { cursor: organizations.continueCursor, startedAt },
+      );
+    }
+    return {
+      scanned: organizations.page.length,
+      studiosScheduled,
+      isDone: organizations.isDone,
+      nextCursor: organizations.isDone ? null : organizations.continueCursor,
+    };
+  },
+});
+
 export const completeBooking = mutation({
   args: {
     orgId: v.id("orgs"),
@@ -601,6 +806,8 @@ export const completeBooking = mutation({
       throw new ConvexError("Booking not found.");
     }
 
+    // A scheduled completion may win the race with an open appointment drawer.
+    if (booking.status === "completed") return true;
     if (booking.status !== "checked_in" && booking.status !== "confirmed") {
       // Allow jump from confirmed -> complete
       throw new ConvexError(
@@ -608,39 +815,23 @@ export const completeBooking = mutation({
       );
     }
 
-    // Update booking
-    await ctx.db.patch(args.bookingId, {
-      status: "completed",
-      updatedAt: Date.now(),
+    await completeBookingRecord(ctx, booking, {
+      type: "staff",
+      id: staffMember._id,
     });
 
-    // Update customer total spend
+    // Preserve the existing manual follow-up. Automatic completion only updates
+    // the appointment; it must not trigger emails for historical appointments.
     const customer = await ctx.db.get(booking.customerId);
-    if (customer) {
-      await ctx.db.patch(booking.customerId, {
-        totalSpendMinorUnits:
-          (customer.totalSpendMinorUnits || 0) + booking.priceMinorUnits,
-        updatedAt: Date.now(),
-      });
-    }
-
-    await ctx.db.insert("audit_log", {
-      orgId: args.orgId,
-      actorType: "staff",
-      actorId: staffMember._id,
-      action: "booking.completed",
-      resourceType: "bookings",
-      resourceId: args.bookingId,
-      before: { status: booking.status },
-      after: { status: "completed" },
-      createdAt: Date.now(),
-    });
-
-    if (customer) {
+    if (customer?.orgId === booking.orgId && !customer.isDeleted) {
       const service = await ctx.db.get(booking.serviceId);
       const staff = await ctx.db.get(booking.staffId);
       const contact = getPrimaryContact(customer);
-      if (service && staff && contact) {
+      if (
+        service?.orgId === booking.orgId &&
+        staff?.orgId === booking.orgId &&
+        contact
+      ) {
         await ctx.runMutation(internal.notifications.scheduleNotification, {
           orgId: args.orgId,
           customerId: customer._id,
@@ -702,19 +893,20 @@ export const markNoShow = mutation({
       throw new ConvexError("Booking not found.");
     }
 
-    if (!["confirmed", "checked_in"].includes(booking.status)) {
+    if (!["confirmed", "checked_in", "completed"].includes(booking.status)) {
       throw new ConvexError(
         `Cannot mark no_show from status: ${booking.status}`,
       );
     }
 
+    await cancelBookingCompletion(ctx, booking);
     await ctx.db.patch(args.bookingId, {
       status: "no_show",
       updatedAt: Date.now(),
     });
 
     const customer = await ctx.db.get(booking.customerId);
-    if (customer) {
+    if (customer?.orgId === booking.orgId && !customer.isDeleted) {
       // Recalculate basic risk score (e.g. no_show / total bindings).
       const newNoShowCount = customer.noShowCount + 1;
       const newTotalVisits = Math.max(customer.totalVisits || 1, 1);
@@ -723,8 +915,40 @@ export const markNoShow = mutation({
       await ctx.db.patch(booking.customerId, {
         noShowCount: newNoShowCount,
         noShowRiskScore: riskScore,
+        ...(booking.status === "completed"
+          ? {
+              totalSpendMinorUnits: Math.max(
+                0,
+                (customer.totalSpendMinorUnits || 0) - booking.priceMinorUnits,
+              ),
+            }
+          : {}),
         updatedAt: Date.now(),
       });
+    }
+
+    // A previously completed appointment may have a manual review request queued.
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_org_booking", (q) =>
+        q.eq("orgId", args.orgId).eq("bookingId", booking._id),
+      )
+      .collect();
+    for (const notification of notifications) {
+      if (
+        notification.status === "pending" &&
+        [
+          "review_request",
+          "booking_reminder",
+          "staff_booking_reminder",
+        ].includes(notification.type)
+      ) {
+        await ctx.db.patch(notification._id, {
+          status: "cancelled",
+          failureReason: "Appointment marked as no-show",
+          processingStartedAt: undefined,
+        });
+      }
     }
 
     await ctx.db.insert("audit_log", {
@@ -741,7 +965,12 @@ export const markNoShow = mutation({
 
     const staff = await ctx.db.get(booking.staffId);
     const service = await ctx.db.get(booking.serviceId);
-    if (staff && customer && service) {
+    if (
+      staff?.orgId === booking.orgId &&
+      customer?.orgId === booking.orgId &&
+      !customer.isDeleted &&
+      service?.orgId === booking.orgId
+    ) {
       let staffEmail: string | null = null;
       if (staff.userId) {
         const user = await ctx.db.get(staff.userId);
@@ -805,6 +1034,7 @@ export const rescheduleBooking = mutation({
     // It requires the original args context though. For simplicity right now we can cancel then create.
     // Let's cancel the current one:
 
+    await cancelBookingCompletion(ctx, oldBooking);
     await ctx.db.patch(args.bookingId, {
       status: "cancelled",
       cancellationReason: "Rescheduled",
@@ -923,6 +1153,9 @@ export const rescheduleBooking = mutation({
       ctx.db.get(oldBooking.staffId),
       ctx.db.get(newBookingId),
     ]);
+    if (newBooking) {
+      await scheduleBookingCompletion(ctx, newBooking, settings.timezone);
+    }
     if (org && customer && staff && newBooking) {
       const combinedService: Doc<"services"> = {
         ...service,
@@ -1288,8 +1521,14 @@ export const createBookingForAI = internalMutation({
     });
 
     const createdForRecovery = await ctx.db.get(bookingId);
-    if (createdForRecovery)
+    if (createdForRecovery) {
+      await scheduleBookingCompletion(
+        ctx,
+        createdForRecovery,
+        orgSettings.timezone,
+      );
       await recordRecoveryBooking(ctx, createdForRecovery);
+    }
     return bookingId;
   },
 });

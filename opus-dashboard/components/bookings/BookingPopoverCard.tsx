@@ -31,6 +31,7 @@ import { bookingServiceLabel } from "./service-label";
 import { bookingTimeLabel } from "@/lib/booking-wall-clock";
 import { formatPrice } from "@/lib/format-price";
 import { getImageStorageUrl } from "@/lib/file-validation";
+import { cn } from "@/lib/utils";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -77,7 +78,10 @@ export function BookingPopoverCard({
   const { t, locale } = useDashboardI18n();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  const serviceName = bookingServiceLabel(booking, t("Service", "Услуга", "Shërbimi"));
+  const serviceName = bookingServiceLabel(
+    booking,
+    t("Service", "Услуга", "Shërbimi"),
+  );
   const startLabel = bookingTimeLabel(booking.startAt);
   const endLabel = bookingTimeLabel(booking.endAt);
   const durationMinutes = Math.max(
@@ -103,6 +107,8 @@ export function BookingPopoverCard({
   const isCompleted = booking.status === "completed";
   const isCancelled = booking.status === "cancelled";
   const isNoShow = booking.status === "no_show";
+  const isActive = ["confirmed", "checked_in"].includes(booking.status);
+  const canMarkNoShow = isActive || isCompleted;
   const isAiBooked = Boolean(booking.source?.startsWith("ai_"));
 
   const content = (
@@ -138,7 +144,11 @@ export function BookingPopoverCard({
                   ? t("Manager", "Менаџер", "Menaxher")
                   : t("Professional", "Стилист", "Stilist")}
               {" · "}
-              {t("Availability: On duty", "Достапност: На смена", "Disponueshmëria: Në punë")}
+              {t(
+                "Availability: On duty",
+                "Достапност: На смена",
+                "Disponueshmëria: Në punë",
+              )}
             </span>
           </div>
         </div>
@@ -256,9 +266,14 @@ export function BookingPopoverCard({
       )}
 
       {/* Action Buttons Footer */}
-      {!isCancelled && (
-        <div className="sticky bottom-0 grid grid-cols-2 gap-2 bg-background pt-3 md:static md:bg-transparent border-t border-border/40">
-          {!isCompleted && onComplete && (
+      {canMarkNoShow && (
+        <div
+          className={cn(
+            "sticky bottom-0 grid gap-2 bg-background pt-3 md:static md:bg-transparent border-t border-border/40",
+            isActive ? "grid-cols-2" : "grid-cols-1",
+          )}
+        >
+          {isActive && onComplete && (
             <Button
               data-replay-public
               variant="outline"
@@ -274,7 +289,7 @@ export function BookingPopoverCard({
             </Button>
           )}
 
-          {onRescheduleClick && !isCompleted && !isNoShow && (
+          {isActive && onRescheduleClick && (
             <Button
               data-replay-public
               variant="outline"
@@ -290,7 +305,7 @@ export function BookingPopoverCard({
             </Button>
           )}
 
-          {!isCompleted && !isNoShow && onMarkNoShow && (
+          {onMarkNoShow && (
             <Button
               data-replay-public
               variant="ghost"
@@ -306,7 +321,7 @@ export function BookingPopoverCard({
             </Button>
           )}
 
-          {onCancel && (
+          {isActive && onCancel && (
             <Button
               data-replay-public
               variant="ghost"

@@ -62,46 +62,47 @@ export function AppointmentDetailScreen() {
       </AppointmentModal>
     );
   const active = ["confirmed", "checked_in"].includes(appointment.status);
+  const canMarkNoShow = active || appointment.status === "completed";
+  const pendingConfirmation =
+    active || (canMarkNoShow && confirm === "no_show") ? confirm : null;
   return (
     <AppointmentModal
       title={t("Appointment", "Термин")}
       busy={busy}
       day={dayOf(appointment.startAt)}
       footer={
-        active ? (
-          confirm ? (
-            <>
-              <Button
-                variant="danger"
-                label={
-                  busy
-                    ? t("Saving…", "Се зачувува…")
-                    : confirm === "cancelled"
-                      ? t("Confirm cancellation", "Потврди откажување")
-                      : t("Confirm no-show", "Потврди непојавување")
-                }
-                disabled={busy || !isWebSocketConnected}
-                onPress={() => void change(confirm)}
-              />
-              <Button
-                variant="secondary"
-                label={t("Keep appointment", "Задржи го терминот")}
-                disabled={busy}
-                onPress={() => setConfirm(null)}
-              />
-            </>
-          ) : (
+        pendingConfirmation ? (
+          <>
             <Button
-              icon={Check}
+              variant="danger"
               label={
                 busy
                   ? t("Saving…", "Се зачувува…")
-                  : t("Complete appointment", "Заврши термин")
+                  : pendingConfirmation === "cancelled"
+                    ? t("Confirm cancellation", "Потврди откажување")
+                    : t("Confirm no-show", "Потврди непојавување")
               }
               disabled={busy || !isWebSocketConnected}
-              onPress={() => void change("completed")}
+              onPress={() => void change(pendingConfirmation)}
             />
-          )
+            <Button
+              variant="secondary"
+              label={t("Keep appointment", "Задржи го терминот")}
+              disabled={busy}
+              onPress={() => setConfirm(null)}
+            />
+          </>
+        ) : active ? (
+          <Button
+            icon={Check}
+            label={
+              busy
+                ? t("Saving…", "Се зачувува…")
+                : t("Complete appointment", "Заврши термин")
+            }
+            disabled={busy || !isWebSocketConnected}
+            onPress={() => void change("completed")}
+          />
         ) : undefined
       }
     >
@@ -218,21 +219,23 @@ export function AppointmentDetailScreen() {
           )}
         </Card>
       )}
-      {active && (
+      {canMarkNoShow && (
         <Card style={{ borderRadius: 20, gap: 12 }}>
           <Text variant="heading">
             {t("Appointment actions", "Дејства за терминот")}
           </Text>
-          {!confirm && (
+          {!pendingConfirmation && (
             <View style={{ flexDirection: "row", gap: 10 }}>
-              <Button
-                variant="danger"
-                icon={Ban}
-                style={{ flex: 1, paddingHorizontal: 10 }}
-                label={t("Cancel", "Откажи")}
-                disabled={busy || !isWebSocketConnected}
-                onPress={() => setConfirm("cancelled")}
-              />
+              {active && (
+                <Button
+                  variant="danger"
+                  icon={Ban}
+                  style={{ flex: 1, paddingHorizontal: 10 }}
+                  label={t("Cancel", "Откажи")}
+                  disabled={busy || !isWebSocketConnected}
+                  onPress={() => setConfirm("cancelled")}
+                />
+              )}
               <Button
                 variant="secondary"
                 icon={UserRoundX}
@@ -243,9 +246,9 @@ export function AppointmentDetailScreen() {
               />
             </View>
           )}
-          {confirm && (
+          {pendingConfirmation && (
             <Text accessibilityRole="alert">
-              {confirm === "cancelled"
+              {pendingConfirmation === "cancelled"
                 ? t("Cancel this appointment?", "Да се откаже терминот?")
                 : t(
                     "Mark this client as a no-show?",

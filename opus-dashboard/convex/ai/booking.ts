@@ -10,6 +10,7 @@ import {
 import { recordRecoveryBooking } from "../lib/gapRecovery";
 import { queueBookingSmsNotifications } from "../lib/bookingNotifications";
 import { queueStaffPushEvent } from "../lib/staffPush";
+import { scheduleBookingCompletion } from "../lib/bookingCompletion";
 import { automationReady, leasedConversation, storeReply } from "./queue";
 import { isExplicitConfirmation, responseLanguage } from "./rules";
 import { logEvent } from "./state";
@@ -344,6 +345,7 @@ export const confirm = internalMutation({
     });
     const booking = await ctx.db.get(bookingId);
     if (booking) {
+      await scheduleBookingCompletion(ctx, booking, ready.settings.timezone);
       await queueStaffPushEvent(ctx, {
         orgId: args.orgId,
         bookingId,

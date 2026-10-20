@@ -329,6 +329,15 @@ function deliverySkipReason(context: DeliveryContext) {
   if (!org || org.isDeleted || !settings) return "Organization unavailable";
   if (isAppReviewOrg(org))
     return "External messages are disabled in the App Review demo studio.";
+  if (
+    notification.type === "review_request" &&
+    (!booking ||
+      booking.orgId !== notification.orgId ||
+      booking.isDeleted ||
+      booking.status !== "completed")
+  ) {
+    return "Appointment is not completed";
+  }
   if (notification.channel === "sms")
     return smsDeliverySkipReason({
       org,

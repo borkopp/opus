@@ -4,6 +4,7 @@ import { api, internal } from "../../convex/_generated/api";
 import type { Doc, Id } from "../../convex/_generated/dataModel";
 import { convexModules } from "../../convex-test.setup";
 import schema from "../../convex/schema";
+import { wallClockTimestampToInstant } from "../../convex/lib/bookingTime";
 import {
   rankRecoveryOptions,
   type RecoveryOption,
@@ -461,6 +462,27 @@ describe("manual opening recovery", () => {
     const booking = (await t.run((ctx) => ctx.db.get(candidate.bookedById!)))!;
     expect(booking.gapRecoveryCandidateId).toBe(candidate._id);
     expect(booking.customerId).toBe(offer.customer._id);
+    const completionAt = wallClockTimestampToInstant(
+      booking.endAt,
+      "Europe/Skopje",
+    );
+    expect(booking.autoCompletionScheduledFor).toBe(completionAt);
+    expect(booking.autoCompletionJobId).toBeDefined();
+    expect(
+      await t.run((ctx) => ctx.db.system.get(booking.autoCompletionJobId!)),
+    ).toMatchObject({
+      name: "bookings:completeScheduledBooking",
+      args: [
+        {
+          orgId: f.orgId,
+          bookingId: booking._id,
+          expectedEndAt: booking.endAt,
+          scheduledFor: completionAt,
+        },
+      ],
+      scheduledTime: completionAt,
+      state: { kind: "pending" },
+    });
     const dashboard = await f.owner.query(
       api.ai.gapOptimizerHelpers.getRecoveryDashboard,
       { orgId: f.orgId, serviceDate: DATE },
@@ -519,6 +541,27 @@ describe("manual opening recovery", () => {
     expect(booking.customerId).toBe(offer.customer._id);
     expect(booking.priceMinorUnits).toBe(offer.candidate.priceMinorUnits);
     expect(booking.opusUserId).toBeDefined();
+    const completionAt = wallClockTimestampToInstant(
+      booking.endAt,
+      "Europe/Skopje",
+    );
+    expect(booking.autoCompletionScheduledFor).toBe(completionAt);
+    expect(booking.autoCompletionJobId).toBeDefined();
+    expect(
+      await t.run((ctx) => ctx.db.system.get(booking.autoCompletionJobId!)),
+    ).toMatchObject({
+      name: "bookings:completeScheduledBooking",
+      args: [
+        {
+          orgId: f.orgId,
+          bookingId: booking._id,
+          expectedEndAt: booking.endAt,
+          scheduledFor: completionAt,
+        },
+      ],
+      scheduledTime: completionAt,
+      state: { kind: "pending" },
+    });
     expect(
       (await t.run((ctx) => ctx.db.get(offer.candidate._id)))?.status,
     ).toBe("booked");

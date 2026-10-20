@@ -5,6 +5,7 @@ import { internal } from "../_generated/api";
 import { scheduleRecoveryRefresh } from "./gapRecovery";
 import { queueBookingSms } from "./bookingNotifications";
 import { formatBookingNotificationDateTime } from "./bookingTime";
+import { cancelBookingCompletion } from "./bookingCompletion";
 
 /** Shared atomic cancellation after the caller's staff/client authorization. */
 export async function cancelBookingRecord(
@@ -17,6 +18,7 @@ export async function cancelBookingRecord(
     throw new ConvexError(
       `Cannot cancel booking already in terminal status: ${booking.status}`,
     );
+  await cancelBookingCompletion(ctx, booking);
   await ctx.db.patch(booking._id, {
     status: "cancelled",
     cancelledAt: Date.now(),

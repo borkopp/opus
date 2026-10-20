@@ -25,7 +25,11 @@ export function SavedReport({ turnId }: { turnId: string }) {
       <Button variant="outline" className="self-start" asChild>
         <Link data-replay-public href="/beauty/assistant">
           <ArrowLeft data-icon="inline-start" />
-          {t("Back to assistant", "Назад кон асистентот", "Kthehu te asistenti")}
+          {t(
+            "Back to assistant",
+            "Назад кон асистентот",
+            "Kthehu te asistenti",
+          )}
         </Link>
       </Button>
       {access && (!access.allowed || !access.paid) ? (
@@ -53,7 +57,12 @@ export function SavedReport({ turnId }: { turnId: string }) {
             )}
           </p>
           {report.reports.map((item) => (
-            <AnalysisReport key={item.key} report={item} expanded />
+            <AnalysisReport
+              key={item.key}
+              report={item}
+              question={report.question}
+              expanded
+            />
           ))}
         </>
       )}

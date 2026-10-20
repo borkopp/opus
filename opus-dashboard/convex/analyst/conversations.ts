@@ -23,9 +23,10 @@ import {
 } from "./limits";
 import { authorAccess, ownedConversation, requireAnalyst } from "./access";
 import { ensureScheduleBaseline } from "./schedules";
+import { previewAssistantReport } from "../../lib/assistant-report-presentation";
 
-export function previewReport(report: AnalystReport) {
-  return { ...report, rows: report.rows.slice(0, 7) };
+export function previewReport(report: AnalystReport, question?: string) {
+  return previewAssistantReport(report, question);
 }
 
 export const getAccess = query({
@@ -129,7 +130,7 @@ export const get = query({
           status: t.status,
           errorCode: t.errorCode,
           createdAt: t.createdAt,
-          reports: t.reports.map(previewReport),
+          reports: t.reports.map((report) => previewReport(report, t.question)),
         })),
     };
   },

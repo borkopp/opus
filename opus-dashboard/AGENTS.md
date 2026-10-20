@@ -81,6 +81,11 @@ const bookings = await ctx.db
 const bookings = await ctx.db.query("bookings").collect();
 ```
 
+The explicitly authorized automatic-completion setup may enumerate beauty
+organization roots through `by_industry_created` in bounded pages to enqueue
+per-studio setup. All appointment reads and writes still require the studio's
+`orgId`; this exception does not permit cross-tenant appointment scans.
+
 ### 2. Soft deletes only
 
 Never hard-delete documents. Set `isDeleted: true` and `deletedAt: Date.now()`. Always filter out soft-deleted records in queries unless explicitly building an admin/audit view.

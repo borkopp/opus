@@ -51,6 +51,31 @@ Reliability of this path takes priority over optional features:
 10. Authorized staff can reschedule, cancel, complete, or mark the appointment as a no-show.
 11. Customer-facing confirmation, unavailable, empty, loading, and error states resolve clearly.
 
+### Automatic appointment completion
+
+Beauty appointments can become completed automatically after their scheduled end
+time, using one durable scheduled mutation per appointment and the studio
+timezone. There is no recurring completion cron. Cancelled, no-show and deleted
+appointments are excluded. Completion does not wait for the cleanup buffer and
+does not require an open dashboard.
+
+Automatic completion is enabled by default for all active beauty studios on
+Free and Pro. The October 20 authorization removes studio enrollment and confirms
+that there are no live mobile-app users. Only the backend emergency setting
+`BOOKING_AUTO_COMPLETION_ENABLED=false` disables automatic completion globally.
+Existing future appointments can be scheduled through an explicit, bounded
+setup operation across all active beauty studios or for one selected studio.
+Existing past appointments are not automatically rewritten. See
+[`BOOKING_COMPLETION.md`](BOOKING_COMPLETION.md) for setup, recovery and
+verification requirements.
+
+Authorized staff can still complete an appointment manually or correct a
+completed appointment to a no-show afterward. That correction removes its value
+from the client's completion total and cancels pending review requests and
+reminders. Automatic completion records a system audit entry and does not send
+customer messages. These statuses describe recorded appointment activity, not
+collected payments or proof of attendance.
+
 ### Short studio launch
 
 Onboarding collects the studio name first, then a category chosen from icon
@@ -284,16 +309,31 @@ The server enforces the current plan's limit, and Settings uses the same limit
 for its photo counter and uploads. Downgrading preserves existing photos and
 blocks new gallery uploads until the studio is below its current limit.
 
-### Pro client directory
+### Pro analytics and client directory
 
-The staff client directory was authorized on September 24, 2026. Active staff,
-managers and owners of Pro beauty studios can search their studio's clients by
-name, email or phone and view contact details, appointment history and upcoming
+The staff client directory was authorized on September 24, 2026. Owners,
+managers and active staff with broader studio access in Pro beauty studios can
+search their studio's clients by name, email or phone and view contact details,
+appointment history and upcoming
 appointments. Visit totals and appointment value use completed, non-deleted
 appointments only; appointment value is not a payment balance. Multiple currencies
 remain separate. Read access is checked against the current studio and plan on
-the server. Free studios retain client contact details needed for booking, but
-cannot access the directory or its statistics.
+the server.
+
+The October 20, 2026 authorization combines the client directory, appointment
+charts and configurable monthly reports at `/beauty/analytics`. The previous
+`/beauty/clients` address redirects there. Pro studios can select a month range,
+staff and display currency, compare the preceding period, and export selected
+report sections. The client directory remains an all-time view alongside the
+period-based analytics. Reports describe recorded appointment activity; they do
+not establish collected revenue, payments or profit.
+
+Free studios see clearly labelled sample analytics and a limited sample client
+list with blurred names. Real analytics, the full directory, client profiles and
+report exports remain Pro-only, enforced by the server. Free studios retain the
+client contact details needed for booking. This does not enable autonomous
+analysis, campaigns, messaging, or another product vertical.
+See [ANALYTICS.md](ANALYTICS.md) for metric definitions and report behavior.
 
 ### Pro client email reminders
 

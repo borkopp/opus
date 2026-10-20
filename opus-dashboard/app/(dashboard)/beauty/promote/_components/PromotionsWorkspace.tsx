@@ -37,8 +37,9 @@ import { SavedReplies } from "./SavedReplies";
 
 export function PromotionsWorkspace() {
   const { t, language } = useDashboardI18n();
-  const [contentLanguage, setContentLanguage] =
-    useState<PromotionLanguage>(language === "mk" ? "mk" : "en");
+  const [contentLanguage, setContentLanguage] = useState<PromotionLanguage>(
+    language === "mk" ? "mk" : "en",
+  );
   const data = useQuery(api.promotions.getWorkspace, {
     language: contentLanguage,
   });
@@ -46,11 +47,15 @@ export function PromotionsWorkspace() {
   const router = useRouter();
   const tab = promotionTab(params.get("tab"));
   return (
-    <div className="flex min-w-0 flex-col gap-7">
+    <div className="flex min-w-0 flex-col gap-6">
       <DashboardPageHeader
         replayPublicDescription
         replayPublicTitle
-        title={t("Promote your studio", "Промовирајте го студиото", "Promovoni studion tuaj")}
+        title={t(
+          "Promote your studio",
+          "Промовирајте го студиото",
+          "Promovoni studion tuaj",
+        )}
         description={t(
           "Turn an opening into a Story, share your booking link, and reply in seconds.",
           "Претворете слободен термин во Story, споделете линк за закажување и одговорете за неколку секунди.",
@@ -95,7 +100,11 @@ export function PromotionsWorkspace() {
                 </p>
                 <Button asChild variant="outline">
                   <Link data-replay-public href="/onboarding?step=review">
-                    {t("Finish website setup", "Довршете ја веб-страницата", "Përfundo konfigurimin e faqes")}
+                    {t(
+                      "Finish website setup",
+                      "Довршете ја веб-страницата",
+                      "Përfundo konfigurimin e faqes",
+                    )}
                     <ExternalLink data-icon="inline-end" />
                   </Link>
                 </Button>
@@ -109,28 +118,44 @@ export function PromotionsWorkspace() {
               next.set("tab", value);
               router.replace(`/beauty/promote?${next}`, { scroll: false });
             }}
-            className="gap-7"
+            className="gap-6"
           >
             <div className="flex min-w-0 flex-col justify-between gap-4 xl:flex-row xl:items-end">
               <div className="min-w-0 overflow-x-auto pb-1">
-                <TabsList variant="line">
-                  <TabsTrigger data-replay-public value="opening">
-                    <ImagePlus />
-                    {t("Share an opening", "Сподели термин", "Shpërndaj një termin të lirë")}
-                  </TabsTrigger>
+                <TabsList className="workspace-segments">
                   <TabsTrigger data-replay-public value="kit">
                     <QrCode />
-                    {t("Booking kit", "Промотивен пакет", "Paketa e rezervimit")}
+                    {t(
+                      "Booking kit",
+                      "Промотивен пакет",
+                      "Paketa e rezervimit",
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger data-replay-public value="opening">
+                    <ImagePlus />
+                    {t(
+                      "Share an opening",
+                      "Сподели термин",
+                      "Shpërndaj një termin të lirë",
+                    )}
                   </TabsTrigger>
                   <TabsTrigger data-replay-public value="replies">
                     <MessageSquareText />
-                    {t("Saved replies", "Зачувани одговори", "Përgjigjet e ruajtura")}
+                    {t(
+                      "Saved replies",
+                      "Зачувани одговори",
+                      "Përgjigjet e ruajtura",
+                    )}
                   </TabsTrigger>
                 </TabsList>
               </div>
               <Field className="w-full sm:w-52">
                 <FieldLabel data-replay-public htmlFor="promotion-language">
-                  {t("Content language", "Јазик на содржината", "Gjuha e përmbajtjes")}
+                  {t(
+                    "Content language",
+                    "Јазик на содржината",
+                    "Gjuha e përmbajtjes",
+                  )}
                 </FieldLabel>
                 <Select
                   value={contentLanguage}

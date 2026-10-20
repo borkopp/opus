@@ -176,7 +176,11 @@ export function SettingsWorkspace() {
             <Button asChild variant="ghost" className="justify-start">
               <Link href="/website">
                 <Paintbrush data-icon="inline-start" />
-                {t("OPUS Sites", "OPUS Sites", "OPUS Sites")}
+                {t(
+                  "Edit your website",
+                  "Уредете ја веб-страницата",
+                  "Redaktoni faqen tuaj",
+                )}
               </Link>
             </Button>
             <Button asChild variant="ghost" className="justify-start">

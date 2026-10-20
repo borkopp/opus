@@ -5,6 +5,7 @@ import schema from "../../convex/schema";
 import { convexModules } from "../../convex-test.setup";
 import { encryptToken } from "../../convex/ai/instagram";
 import { buildSystemPrompt } from "../../convex/ai/context";
+import { wallClockTimestampToInstant } from "../../convex/lib/bookingTime";
 
 const { createResponse } = vi.hoisted(() => ({ createResponse: vi.fn() }));
 vi.mock("openai", () => ({
@@ -674,6 +675,29 @@ describe("Instagram receptionist", () => {
         status: "confirmed",
         startAt: slots[0].startAt,
         priceMinorUnits: 120_000,
+      });
+      const completionAt = wallClockTimestampToInstant(
+        bookings[0].endAt,
+        "Europe/Belgrade",
+      );
+      expect(bookings[0].autoCompletionScheduledFor).toBe(completionAt);
+      expect(bookings[0].autoCompletionJobId).toBeDefined();
+      expect(
+        await t.run((ctx) =>
+          ctx.db.system.get(bookings[0].autoCompletionJobId!),
+        ),
+      ).toMatchObject({
+        name: "bookings:completeScheduledBooking",
+        args: [
+          {
+            orgId: a.orgId,
+            bookingId: bookings[0]._id,
+            expectedEndAt: bookings[0].endAt,
+            scheduledFor: completionAt,
+          },
+        ],
+        scheduledTime: completionAt,
+        state: { kind: "pending" },
       });
       expect(
         await t.run((ctx) => ctx.db.get(bookings[0].customerId)),

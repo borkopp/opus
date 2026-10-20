@@ -1,7 +1,5 @@
-import { ClientsWorkspace } from "./_components/ClientsWorkspace";
-
-export const metadata = { title: "Clients" };
+import { redirect } from "next/navigation";
 
 export default function ClientsPage() {
-  return <ClientsWorkspace />;
+  redirect("/beauty/analytics");
 }

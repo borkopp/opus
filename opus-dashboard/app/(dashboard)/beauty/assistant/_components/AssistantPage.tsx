@@ -26,7 +26,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { ConversationPanel } from "./ConversationPanel";
+import { ConversationPanel } from "@/components/business-assistant/ConversationPanel";
 import { AssistantComposer } from "./AssistantComposer";
 import { FreeAssistantPage } from "./FreeAssistantPage";
 
@@ -123,7 +123,10 @@ function AssistantWorkspace({ access }: { access: Access }) {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await send({ ...attempt.current, language: analystLanguage });
+      const result = await send({
+        ...attempt.current,
+        language: analystLanguage,
+      });
       setSelection(result.conversationId);
       setQuestion("");
       attempt.current = null;
@@ -152,7 +155,11 @@ function AssistantWorkspace({ access }: { access: Access }) {
   return (
     <section
       className="flex min-h-0 w-full flex-1 flex-col"
-      aria-label={t("Business assistant", "Деловен асистент", "Asistent biznesi")}
+      aria-label={t(
+        "Business assistant",
+        "Деловен асистент",
+        "Asistent biznesi",
+      )}
     >
       <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
         <div className="flex flex-col gap-2">

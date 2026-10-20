@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Settings2, ChartNoAxesCombined } from "lucide-react";
 import { Logo } from "@/components/Logo";
@@ -18,9 +18,11 @@ import s from "./clarity.module.css";
 export function DashboardHeader({
   profile,
   activePath,
+  accountMenu,
 }: {
   profile: DashboardProfile;
   activePath?: string;
+  accountMenu?: ReactNode;
 }) {
   const currentPath = usePathname();
   const pathname = activePath ?? currentPath;
@@ -150,11 +152,12 @@ export function DashboardHeader({
           </>
         )}
         <span className={s.headerDivider} />
-        {profile.bookingAccess === "own" ? (
-          <PersonalStaffMenu />
-        ) : (
-          <DashboardAccountMenu profile={profile} />
-        )}
+        {accountMenu ??
+          (profile.bookingAccess === "own" ? (
+            <PersonalStaffMenu />
+          ) : (
+            <DashboardAccountMenu profile={profile} />
+          ))}
       </div>
     </header>
   );

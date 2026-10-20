@@ -686,6 +686,45 @@ body:has(.dashboard-shell) [data-slot="tabs-trigger"][data-state="active"] {
   color: white;
   box-shadow: none;
 }
+/* Shared Analytics, Management and Promote segmented controls. */
+.workspace-segments,
+body:has(.dashboard-shell) [data-slot="tabs-list"].workspace-segments {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
+  height: auto;
+  gap: 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--secondary);
+}
+.workspace-segments > button,
+body:has(.dashboard-shell) .workspace-segments > button {
+  height: 32px;
+  min-height: 32px;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.workspace-segments > button:is([data-state="active"], [aria-pressed="true"]),
+body:has(.dashboard-shell) .workspace-segments > button:is([data-state="active"], [aria-pressed="true"]) {
+  background: var(--card);
+  color: var(--foreground);
+  border-color: var(--border);
+  box-shadow: var(--shadow-xs);
+}
+.workspace-segments > button [data-slot="badge"] {
+  padding: 0 6px;
+  font-size: 10px;
+}
 .dashboard-page [data-slot="badge"] {
   border-radius: 99px;
   font-weight: 500;

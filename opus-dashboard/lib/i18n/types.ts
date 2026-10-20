@@ -20,7 +20,7 @@ export interface DashboardTranslations {
     industryLabel: string;
     dashboard: string;
     calendar: string;
-    clients: string;
+    analytics: string;
     management: string;
     promote: string;
     settings: string;

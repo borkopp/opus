@@ -92,6 +92,59 @@ Numeric statements must reference server-generated facts, such as `[[r1.total]]`
 
 ## Validation and rollout
 
+### Response presentation
+
+Responses now choose a visual from the question and the saved report shape:
+a single number, a period comparison, a daily trend, a ranked list, a percentage
+indicator, or an empty/unavailable explanation. Template selection is deterministic
+and supports English, Macedonian and Albanian question cues. It does not require
+an additional model call or alter saved report schemas. Plain answers remain
+plain text, and recommendations use a separate suggested-experiment block.
+
+The chat leads with the answer and its first cited report. Supporting reports
+and long answer continuations can be expanded in chat. “Data & calculation,”
+including full tables, calculation timestamps and detailed methodology, appears
+only in the full report. Open it from the small ellipsis menu in a chat report's
+header. Period/filter scope and concise data caveats stay visible in chat,
+including unique caveats from collapsed supporting reports. Percentage comparisons
+use percentage points; money across different currencies never gets a combined
+comparison or delta.
+
+`lib/assistant-report-presentation.ts` owns selection and safe preview rows.
+Conversation snapshots still contain at most seven rows per report, but ranking
+previews choose leaders from the full saved snapshot before truncation, and
+trends explicitly show the latest seven date groups. The query includes original
+row counts. Original saved row order and fact references remain intact.
+Frontend code talking to an older backend falls back to a summary for compact
+rankings/trends without that metadata. Deploy the compatible backend query before
+the frontend to enable those compact visuals; no deployment is implied by the
+local preview. New provider answers are also prompted to lead concisely rather
+than enumerate all report rows.
+
+### Local response design gallery
+
+With the dashboard development server running, open
+`http://localhost:3000/dashboard-preview/assistant`. This localhost-only route
+returns 404 outside development, as does its `/canvas` child route. It needs no
+studio sign-in or analyst provider configuration.
+
+The gallery starts with representative response templates and uses fictional,
+fixed snapshots for all ten report metrics, multiple
+reports and recommendations, long tables/labels, missing data, currency caveats,
+and conversation loading, empty, progress and error states. Switch between chat
+responses and expanded reports, Clarity/Studio appearance, English/Macedonian,
+and actual desktop/tablet/phone iframe widths. The report's ellipsis menu opens
+the full report inside the preview; suggested questions and retries only display
+the selected prompt.
+
+Edit `components/business-assistant/AnalysisReport.tsx` and `ReportVisual.tsx`
+for reports, and `components/business-assistant/AssistantResponse.tsx` for answer,
+supporting-report and recommendation layout. `ConversationPanel.tsx` composes
+these inside the conversation.
+These components are shared with the real assistant, so design edits appear in
+both. Fixtures live in `app/dashboard-preview/assistant/_lib/examples.ts`.
+The gallery does not query studio data, request model answers, or write records.
+
 Focused checks:
 
 ```sh

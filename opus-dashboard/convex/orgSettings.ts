@@ -20,6 +20,7 @@ import {
 } from "./lib/bookingEmailNotifications";
 import { smsProviderConfigured } from "./lib/sms";
 import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
+import { automaticCompletionEnabled } from "./lib/bookingCompletion";
 
 function requireClientReminderAccess(
   org: Doc<"orgs">,
@@ -144,6 +145,17 @@ export const updateOrgSettings = mutation({
     )
       await closeOrgRecoveryGaps(ctx, args.orgId);
     await ctx.db.patch(settings._id, updates);
+    if (
+      updates.timezone !== undefined &&
+      settings.timezone !== updates.timezone &&
+      automaticCompletionEnabled()
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.bookings.setupAutomaticCompletionForOrg,
+        { orgId: args.orgId, startedAt: Date.now(), onlyArmed: true },
+      );
+    }
     await ctx.db.insert("audit_log", {
       orgId: args.orgId,
       actorType: "staff",

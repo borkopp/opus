@@ -1,7 +1,6 @@
 import {
   IconBrandTabler,
   IconCalendarEvent,
-  IconAddressBook,
   IconScissors,
   IconSettings,
   IconChartBar,
@@ -83,12 +82,12 @@ export const verticalNavConfig: Record<string, VerticalNavConfig> = {
       },
       {
         label: {
-          en: en.nav.clients,
-          mk: mk.nav.clients,
-          sq: al.nav.clients,
+          en: en.nav.analytics,
+          mk: mk.nav.analytics,
+          sq: al.nav.analytics,
         },
-        href: "{base}/clients",
-        icon: <IconAddressBook className="h-5 w-5 flex-shrink-0" />,
+        href: "{base}/analytics",
+        icon: <IconChartBar className="h-5 w-5 flex-shrink-0" />,
       },
       {
         label: {

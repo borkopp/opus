@@ -827,6 +827,8 @@ export default defineSchema({
     // Slot
     startAt: v.number(),
     endAt: v.number(),
+    autoCompletionJobId: v.optional(v.id("_scheduled_functions")),
+    autoCompletionScheduledFor: v.optional(v.number()),
 
     // Pricing snapshot
     priceMinorUnits: v.number(),
@@ -1239,6 +1241,7 @@ export default defineSchema({
     .index("by_org_dedupe", ["orgId", "dedupeKey"])
     .index("by_org_status_scheduled", ["orgId", "status", "scheduledFor"])
     .index("by_status_scheduled", ["status", "scheduledFor"])
+    .index("by_org_booking", ["orgId", "bookingId"])
     .index("by_booking", ["bookingId"]),
 
   // ─────────────────────────────────────────────────────

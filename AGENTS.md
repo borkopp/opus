@@ -133,6 +133,11 @@ ctx.db.query("bookings").withIndex("by_org", (q) => q.eq("orgId", orgId));
 ctx.db.query("bookings").collect();
 ```
 
+The explicitly authorized automatic-completion setup may enumerate beauty
+organization roots through `by_industry_created` in bounded pages to enqueue
+per-studio setup. All appointment reads and writes still require the studio's
+`orgId`; this exception does not permit cross-tenant appointment scans.
+
 **2. Soft deletes only.** Set `isDeleted: true` + `deletedAt: Date.now()`. Never call `ctx.db.delete()`.
 
 **3. Money in minor units (integers).** `2500` = £25.00. Never floats, never formatted strings.

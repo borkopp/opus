@@ -16,7 +16,7 @@ import { CategoryList } from "./CategoryList";
 import { ServiceFormDialog } from "./ServiceFormDialog";
 import { ServiceList } from "./ServiceList";
 import { StaffList } from "./StaffList";
-import { StaffPlanFooter } from "./StaffPlanFooter";
+import { StaffCapacity } from "./StaffCapacity";
 import { WorkspaceSearch } from "./WorkspaceSearch";
 import { WorkspaceSkeleton } from "./WorkspaceSkeleton";
 
@@ -76,12 +76,14 @@ export function ServicesWorkspace() {
           "Управувајте со услугите, тимот и работното време на едно место.",
           "Menaxhoni se çfarë mund të rezervojnë klientët dhe ekipin pas çdo termini.",
         )}
-      />
+      >
+        <StaffCapacity status={planStatus} />
+      </DashboardPageHeader>
 
       <Tabs
         value={activeTab}
         onValueChange={selectTab}
-        className="min-w-0 flex-1 gap-6"
+        className="min-w-0 flex-1 gap-4"
       >
         <TabsList
           aria-label={t(
@@ -89,37 +91,43 @@ export function ServicesWorkspace() {
             "Услуги и тим",
             "Shërbimet dhe stafi",
           )}
-          className="grid w-full grid-cols-2 group-data-[orientation=horizontal]/tabs:h-12 sm:w-80"
+          className="workspace-segments w-full sm:w-80"
         >
-          <TabsTrigger
-            value="services"
-            className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
-          >
-            <ScissorsIcon className="hidden sm:block" />
+          <TabsTrigger value="services" className="min-w-0 flex-1">
+            <ScissorsIcon className="size-4" />
             {t("Services", "Услуги", "Shërbimet")}
             {services && <Badge variant="secondary">{services.length}</Badge>}
           </TabsTrigger>
-          <TabsTrigger
-            value="staff"
-            className="min-w-0 gap-1.5 px-2 sm:gap-2 sm:px-3"
-          >
-            <UsersIcon className="hidden sm:block" />
+          <TabsTrigger value="staff" className="min-w-0 flex-1">
+            <UsersIcon className="size-4" />
             {t("Staff", "Тим", "Stafi")}
             {staff && <Badge variant="secondary">{staff.length}</Badge>}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="services" className="min-w-0">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <p data-replay-public className="text-sm text-muted-foreground">
-                {t(
-                  "Set prices, duration and who provides each service.",
-                  "Поставете цени, времетраење и кој ја извршува секоја услуга.",
-                  "Përcaktoni çmimet, kohëzgjatjen dhe kush e ofron çdo shërbim.",
-                )}
-              </p>
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+          <div className="flex flex-col gap-3">
+            <p data-replay-public className="text-sm text-muted-foreground">
+              {t(
+                "Set prices, duration and who provides each service.",
+                "Поставете цени, времетраење и кој ја извршува секоја услуга.",
+                "Përcaktoni çmimet, kohëzgjatjen dhe kush e ofron çdo shërbim.",
+              )}
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {(!!services?.length || serviceSearch) && (
+                <WorkspaceSearch
+                  label={t(
+                    "Search services or categories",
+                    "Пребарај услуги или категории",
+                    "Kërko shërbime ose kategori",
+                  )}
+                  value={serviceSearch}
+                  onChange={setServiceSearch}
+                />
+              )}
+
+              <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex sm:shrink-0">
                 <CategoryList orgId={orgId} />
                 <Button
                   data-replay-public
@@ -131,17 +139,6 @@ export function ServicesWorkspace() {
                 </Button>
               </div>
             </div>
-            {(!!services?.length || serviceSearch) && (
-              <WorkspaceSearch
-                label={t(
-                  "Search services or categories",
-                  "Пребарај услуги или категории",
-                  "Kërko shërbime ose kategori",
-                )}
-                value={serviceSearch}
-                onChange={setServiceSearch}
-              />
-            )}
             <ServiceList
               orgId={orgId}
               searchQuery={serviceSearch}
@@ -152,40 +149,40 @@ export function ServicesWorkspace() {
         </TabsContent>
 
         <TabsContent value="staff" className="min-w-0">
-          <div className="flex min-h-full flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <p data-replay-public className="text-sm text-muted-foreground">
-                {t(
-                  "Manage your team, working hours and time off.",
-                  "Управувајте со тимот, работното време и отсуствата.",
-                  "Menaxhoni ekipin tuaj, orarin e punës dhe pushimet.",
-                )}
-              </p>
+          <div className="flex flex-col gap-3">
+            <p data-replay-public className="text-sm text-muted-foreground">
+              {t(
+                "Manage your team, working hours and time off.",
+                "Управувајте со тимот, работното време и отсуствата.",
+                "Menaxhoni ekipin tuaj, orarin e punës dhe pushimet.",
+              )}
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {(!!staff?.length || staffSearch) && (
+                <WorkspaceSearch
+                  label={t("Search staff", "Пребарај вработени", "Kërko staf")}
+                  value={staffSearch}
+                  onChange={setStaffSearch}
+                />
+              )}
+
               <Button
                 data-replay-public
                 onClick={() => setIsAddStaffOpen(true)}
                 disabled={!planStatus?.canUseStaffRole}
                 aria-describedby={planStatus ? "staff-plan-limit" : undefined}
-                className="h-11 w-full sm:w-fit sm:shrink-0"
+                className="h-11 w-full sm:ml-auto sm:w-fit sm:shrink-0"
               >
                 <PlusIcon data-icon="inline-start" />
                 {t("Add staff member", "Додај вработен", "Shto anëtar stafi")}
               </Button>
             </div>
-            {(!!staff?.length || staffSearch) && (
-              <WorkspaceSearch
-                label={t("Search staff", "Пребарај вработени", "Kërko staf")}
-                value={staffSearch}
-                onChange={setStaffSearch}
-              />
-            )}
             <StaffList
               orgId={orgId}
               searchQuery={staffSearch}
               onClearSearch={() => setStaffSearch("")}
               onAddClick={() => setIsAddStaffOpen(true)}
             />
-            <StaffPlanFooter />
           </div>
         </TabsContent>
       </Tabs>

@@ -1,0 +1,546 @@
+.workspace {
+  --assistant-sidebar-width: 238px;
+  --assistant-sidebar-duration: 220ms;
+  --assistant-sidebar-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  display: grid;
+  grid-template-columns: var(--assistant-sidebar-width) minmax(0, 1fr);
+  transition: grid-template-columns var(--assistant-sidebar-duration)
+    var(--assistant-sidebar-ease);
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  overflow: hidden;
+  background: var(--card);
+  color: var(--foreground);
+}
+.workspace[data-collapsed="true"] {
+  grid-template-columns: 0px minmax(0, 1fr);
+}
+.workspace[data-collapsed="true"] .sidebar {
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s, 0s, var(--assistant-sidebar-duration);
+}
+.sidebar {
+  grid-column: 1;
+  grid-row: 1;
+  width: var(--assistant-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--background);
+  border-right: 1px solid var(--border);
+  padding: 25px 15px 18px;
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    transform var(--assistant-sidebar-duration) var(--assistant-sidebar-ease),
+    opacity var(--assistant-sidebar-duration) var(--assistant-sidebar-ease),
+    visibility 0s;
+}
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 8px 28px;
+}
+.brandRow > button {
+  color: var(--muted-foreground);
+}
+.logo {
+  font-size: 21px;
+  line-height: 1;
+}
+.logoMark {
+  width: 29px;
+  height: 35px;
+}
+.workspace .newChat {
+  width: 100%;
+  min-height: 42px;
+  font-size: 13px;
+}
+.workspace .searchButton {
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  height: auto;
+  margin: 9px 0 25px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  white-space: normal;
+  text-align: left;
+}
+.sidebarHistory {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 23px;
+  min-width: 0;
+}
+.historyList .historyDate {
+  padding-left: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.historyList button {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  height: auto;
+  padding: 10px;
+  border-radius: 12px !important;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--secondary-foreground);
+}
+.historyList button svg {
+  color: var(--muted-foreground);
+}
+.historyList button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.historyList button[aria-current] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.historyList button[aria-current] svg {
+  color: var(--primary);
+}
+.historyLoading {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+}
+.historyList .noResults {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted-foreground);
+  padding: 10px;
+}
+.sidebarFooter {
+  margin-top: 18px;
+}
+.usage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 15px 10px 22px;
+}
+.usage p {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+.usage strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.usage strong span {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+.usageTrack {
+  height: 3px;
+  border-radius: 5px;
+  background: var(--border);
+  margin-block: 3px;
+}
+.usageTrack i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+.account {
+  padding: 18px 5px 0;
+  border-top: 1px solid var(--border);
+}
+.account :global(.dashboard-account-trigger) {
+  width: 100%;
+}
+.account :global(.dashboard-account-trigger) > span:last-child {
+  display: flex;
+  min-width: 0;
+}
+.account :global(.dashboard-account-trigger) > span:last-child > * {
+  max-width: 145px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.main {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr) auto;
+  min-height: 0;
+  min-width: 0;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 30px;
+}
+.headerIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.headerIdentity > div {
+  min-width: 0;
+}
+.headerTitle {
+  font-size: 13px;
+  font-weight: 500;
+}
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.headerActions > button {
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+.mobileHistory,
+.mobileBack,
+.mobileUsage {
+  display: none;
+}
+.body {
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.notices {
+  flex-shrink: 0;
+  max-height: 35%;
+  overflow: auto;
+  width: min(100%, 760px);
+  padding: 8px 30px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notices:empty {
+  display: none;
+}
+.welcomeScroll {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+}
+.workspace .welcome {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 685px);
+  padding: 35px 35px 55px;
+  margin: auto;
+  flex-shrink: 0;
+}
+.welcomeMark {
+  width: 37px;
+  height: 44px;
+  color: var(--brand);
+  margin-bottom: 25px;
+}
+.workspace .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 1.9px;
+  font-size: 10px;
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  margin-bottom: 14px;
+}
+.workspace .welcome h1 {
+  font-size: clamp(29px, 3vw, 37px);
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  margin-bottom: 15px;
+}
+.workspace .description {
+  max-width: 430px;
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--muted-foreground);
+  margin-bottom: 25px;
+}
+.prompts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.workspace .prompts button {
+  display: flex;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 10px;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 18px;
+  min-height: 48px;
+  height: auto;
+  padding: 14px;
+  white-space: normal;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.prompts svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+.workspace .footnote {
+  color: var(--muted-foreground);
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+.workspace .welcome > .footnote {
+  order: 1;
+  margin-top: 24px;
+}
+.conversation {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.transcript {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 740px);
+  margin: 0 auto;
+  padding-inline: 30px;
+}
+.transcript > [role="log"] {
+  max-height: none;
+  min-height: 0;
+}
+.transcript :global([data-slot="message-scroller-content"]) {
+  padding-block: 26px;
+}
+.transcript :global([data-slot="message-header"]) {
+  color: var(--foreground);
+}
+.composerDock {
+  flex-shrink: 0;
+  width: min(100%, 740px);
+  margin-inline: auto;
+  padding: 14px 30px 10px;
+  background: var(--card);
+}
+.composerDock > div > form {
+  padding-top: 0;
+}
+.back {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 16px max(7px, env(safe-area-inset-bottom, 0px));
+}
+.back a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.historyDialog {
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+.historySearch {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 13px;
+  padding-left: 12px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+}
+.historySearch input {
+  min-width: 0;
+}
+.dialogUsage {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.mobileAccount {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .workspace .prompts button:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+}
+@media (max-width: 1050px) {
+  .workspace {
+    --assistant-sidebar-width: 210px;
+  }
+  .sidebar {
+    padding-inline: 10px;
+  }
+  .logo {
+    font-size: 19px;
+  }
+  .logoMark {
+    width: 25px;
+    height: 30px;
+  }
+}
+@media (max-width: 760px) {
+  .workspace {
+    grid-template-columns: 0px minmax(0, 1fr);
+    transition: none;
+  }
+  .sidebar,
+  .expandSidebar {
+    display: none;
+  }
+  .mobileHistory,
+  .mobileBack {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  .mobileBack,
+  .headerActions > button {
+    width: 44px;
+    height: 44px;
+  }
+  .mobileUsage {
+    display: block;
+    color: var(--muted-foreground);
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  .header {
+    padding-inline: 12px;
+  }
+  .headerIdentity {
+    gap: 7px;
+  }
+  .headerTitle {
+    font-size: 12px;
+  }
+  .workspace .welcome {
+    padding: 28px 22px 40px;
+    max-width: 580px;
+  }
+  .workspace .welcome h1 {
+    font-size: 30px;
+  }
+  .workspace .description {
+    font-size: 13px;
+    max-width: 320px;
+  }
+  .workspace .prompts button {
+    font-size: 11px;
+    padding: 12px 10px;
+    gap: 8px;
+  }
+  .workspace .prompts svg {
+    width: 15px;
+  }
+  .workspace :global(.dashboard-assistant-composer) textarea {
+    font-size: 16px;
+  }
+  .transcript {
+    padding-inline: 18px;
+  }
+  .composerDock {
+    padding: 10px 16px;
+  }
+  .notices {
+    padding-inline: 16px;
+  }
+  .historyDialog {
+    padding: 24px 18px;
+  }
+  .historySearch input {
+    font-size: 16px;
+  }
+  .mobileAccount {
+    display: block;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .mobileAccount :global(.dashboard-account-trigger) > span:last-child {
+    display: flex;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workspace,
+  .sidebar {
+    transition: none;
+  }
+  .workspace[data-collapsed="true"] .sidebar {
+    transition-delay: 0s;
+  }
+}
+@media (max-width: 360px) {
+  .workspace .welcome {
+    padding-inline: 18px;
+  }
+  .workspace .welcome h1 {
+    font-size: 27px;
+  }
+  .workspace .prompts button {
+    gap: 6px;
+    font-size: 10px;
+  }
+}
+@media (max-height: 650px) {
+  .workspace .welcome {
+    padding-block: 20px;
+  }
+  .welcomeMark {
+    margin-bottom: 12px;
+  }
+  .workspace .description {
+    margin-bottom: 14px;
+  }
+  .usage {
+    padding-block: 10px;
+  }
+  .sidebarFooter {
+    margin-top: 10px;
+  }
+}

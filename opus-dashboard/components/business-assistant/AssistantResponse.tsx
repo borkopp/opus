@@ -18,6 +18,7 @@ export function AssistantResponse({
   disabled,
   onPrompt,
   reportHref,
+  onOpenReport,
 }: {
   answer: AnalystAnswer;
   question: string;
@@ -26,6 +27,7 @@ export function AssistantResponse({
   disabled: boolean;
   onPrompt: (question: string) => void;
   reportHref?: (key: string) => string;
+  onOpenReport?: (key: string) => void;
 }) {
   const { t } = useDashboardI18n();
   const [showSupporting, setShowSupporting] = useState(false);
@@ -44,6 +46,9 @@ export function AssistantResponse({
           question={question}
           turnId={turnId}
           href={reportHref?.(primary.key)}
+          onOpenReport={
+            onOpenReport ? () => onOpenReport(primary.key) : undefined
+          }
         />
       )}
       <ReportWarnings warnings={supportingWarnings} />
@@ -60,6 +65,9 @@ export function AssistantResponse({
                 question={question}
                 turnId={turnId}
                 href={reportHref?.(report.key)}
+                onOpenReport={
+                  onOpenReport ? () => onOpenReport(report.key) : undefined
+                }
               />
             ))}
         </Disclosure>

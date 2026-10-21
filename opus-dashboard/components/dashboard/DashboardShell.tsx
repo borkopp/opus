@@ -133,28 +133,34 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           >
             Skip to content
           </a>
-          <div className={s.stage}>
-            <div className={s.dashboard}>
-              <DashboardHeader profile={profile} />
-              <main
-                id="dashboard-content"
-                tabIndex={-1}
-                className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
-              >
-                {profile.bookingAccess !== "own" && (
-                  <WebsiteSetupBanner
-                    key={profile.orgId}
-                    orgId={profile.orgId}
+          {pathname === "/beauty/assistant" ? (
+            <main id="dashboard-content" tabIndex={-1}>
+              {children}
+            </main>
+          ) : (
+            <div className={s.stage}>
+              <div className={s.dashboard}>
+                <DashboardHeader profile={profile} />
+                <main
+                  id="dashboard-content"
+                  tabIndex={-1}
+                  className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
+                >
+                  {profile.bookingAccess !== "own" && (
+                    <WebsiteSetupBanner
+                      key={profile.orgId}
+                      orgId={profile.orgId}
+                    />
+                  )}
+                  <DashboardAnnouncementCarousel
+                    key={`announcements:${profile.orgId}`}
                   />
-                )}
-                <DashboardAnnouncementCarousel
-                  key={`announcements:${profile.orgId}`}
-                />
-                {pathname === "/beauty" && <StudioInstallCard banner />}
-                {children}
-              </main>
+                  {pathname === "/beauty" && <StudioInstallCard banner />}
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </QuickBookingProvider>
     </DashboardAppearanceProvider>

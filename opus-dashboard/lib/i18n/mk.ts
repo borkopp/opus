@@ -7,7 +7,7 @@ export const mk: DashboardTranslations = {
     name: "Македонски",
   },
   pageTitles: {
-    "/beauty/assistant": "Деловен асистент",
+    "/beauty/assistant": "AI асистент",
     "/beauty/bookings": "Термини",
     "/beauty/services": "Услуги и тим",
     "/beauty/promote": "Промовирајте го студиото",
@@ -29,7 +29,7 @@ export const mk: DashboardTranslations = {
     "management": "Управување",
     "promote": "Промоција",
     "settings": "Поставки",
-    "assistant": "Деловен асистент"
+    "assistant": "AI асистент"
 },
   locales: {
     "mk-MK": "Македонски",
@@ -78,7 +78,7 @@ export const mk: DashboardTranslations = {
       "capacity_exceeded": "Закажаното време го надминува евидентираниот капацитет. Проверете ги распоредите и траењето на термините."
 },
     errors: {
-      "ANALYST_NOT_CONFIGURED": "Деловниот асистент не успеа да започне нова анализа. Обидете се подоцна.",
+      "ANALYST_NOT_CONFIGURED": "AI асистентот не успеа да започне нова анализа. Обидете се подоцна.",
       "ANALYST_BUSY": "Веќе се подготвува анализа за вашето студио. Почекајте да заврши.",
       "ANALYST_RATE_LIMIT": "Почекајте една минута пред следното прашање.",
       "ANALYST_ALLOWANCE_REACHED": "Вашето студио го достигна месечниот лимит за анализи. Се обновува на датумот прикажан погоре.",
@@ -211,6 +211,8 @@ export const mk: DashboardTranslations = {
       "Choose between 1 and 50 services.": "Изберете од 1 до 50 услуги.",
       "Check every service name, price and duration.": "Проверете ги името, цената и времетраењето на секоја услуга.",
       "A service with this name already exists. Rename it or remove it from the import.": "Веќе постои услуга со ова име. Преименувајте ја или отстранете ја од увозот.",
+      "A service with this name already exists in this category. Change its name or category, or remove it from the import.": "Веќе постои услуга со ова име во оваа категорија. Променете го името или категоријата, или отстранете ја од увозот.",
+      "Category names must be 120 characters or fewer.": "Имињата на категориите мора да имаат најмногу 120 знаци.",
       "Choose an address from the suggestions.": "Изберете адреса од предлозите.",
       "Choose a result that includes both an address and city.": "Изберете предлог што содржи адреса и град.",
       "This address is too long. Choose a more specific result.": "Адресата е предолга. Изберете попрецизен предлог.",
@@ -620,7 +622,7 @@ export const mk: DashboardTranslations = {
     "More context and recommendations": "Повеќе детали и препораки",
     "Detailed": "Детална",
     "Send question": "Испрати прашање",
-    "Business assistant": "Деловен асистент",
+    "AI Assistant": "AI асистент",
     "Business analysis is available to studio owners and managers.": "Деловната анализа е достапна за сопственици и менаџери.",
     "Renews": "Се обновува",
     "Conversation history": "Историја на разговори",
@@ -633,7 +635,7 @@ export const mk: DashboardTranslations = {
     "How many of my clients returned last month?": "Колку од моите клиенти се вратија минатиот месец?",
     "Understand your studio": "Запознајте го вашето студио",
     "Turn your appointment history into clear answers and practical next steps.": "Претворете ја историјата на термините во јасни одговори и практични следни чекори.",
-    "OPUS · Business assistant": "OPUS · Деловен асистент",
+    "OPUS · AI Assistant": "OPUS · AI асистент",
     "Reviewing your appointments…": "Ги анализираме вашите термини…",
     "Ask again": "Прашајте повторно",
     "Measure": "Измерете",

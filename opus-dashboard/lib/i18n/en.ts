@@ -7,7 +7,7 @@ export const en: DashboardTranslations = {
     name: "English",
   },
   pageTitles: {
-    "/beauty/assistant": "Business assistant",
+    "/beauty/assistant": "AI Assistant",
     "/beauty/bookings": "Appointments",
     "/beauty/services": "Services & staff",
     "/beauty/promote": "Promote your studio",
@@ -29,7 +29,7 @@ export const en: DashboardTranslations = {
     "management": "Management",
     "promote": "Promote",
     "settings": "Settings",
-    "assistant": "Business assistant"
+    "assistant": "AI Assistant"
 },
   locales: {
     "mk-MK": "Macedonian",
@@ -78,7 +78,7 @@ export const en: DashboardTranslations = {
       "capacity_exceeded": "Booked time exceeds recorded capacity. Check schedules and appointment durations."
 },
     errors: {
-      "ANALYST_NOT_CONFIGURED": "The business assistant could not start a new analysis. Please try again later.",
+      "ANALYST_NOT_CONFIGURED": "The AI Assistant could not start a new analysis. Please try again later.",
       "ANALYST_BUSY": "An analysis is already running for your studio. Please wait for it to finish.",
       "ANALYST_RATE_LIMIT": "Please wait a minute before asking another question.",
       "ANALYST_ALLOWANCE_REACHED": "Your studio has reached its monthly analysis allowance. It renews on the date shown above.",
@@ -211,6 +211,8 @@ export const en: DashboardTranslations = {
       "Choose between 1 and 50 services.": "Choose between 1 and 50 services.",
       "Check every service name, price and duration.": "Check every service name, price and duration.",
       "A service with this name already exists. Rename it or remove it from the import.": "A service with this name already exists. Rename it or remove it from the import.",
+      "A service with this name already exists in this category. Change its name or category, or remove it from the import.": "A service with this name already exists in this category. Change its name or category, or remove it from the import.",
+      "Category names must be 120 characters or fewer.": "Category names must be 120 characters or fewer.",
       "Choose an address from the suggestions.": "Choose an address from the suggestions.",
       "Choose a result that includes both an address and city.": "Choose a result that includes both an address and city.",
       "This address is too long. Choose a more specific result.": "This address is too long. Choose a more specific result.",
@@ -620,7 +622,7 @@ export const en: DashboardTranslations = {
     "More context and recommendations": "More context and recommendations",
     "Detailed": "Detailed",
     "Send question": "Send question",
-    "Business assistant": "Business assistant",
+    "AI Assistant": "AI Assistant",
     "Business analysis is available to studio owners and managers.": "Business analysis is available to studio owners and managers.",
     "Renews": "Renews",
     "Conversation history": "Conversation history",
@@ -633,7 +635,7 @@ export const en: DashboardTranslations = {
     "How many of my clients returned last month?": "How many of my clients returned last month?",
     "Understand your studio": "Understand your studio",
     "Turn your appointment history into clear answers and practical next steps.": "Turn your appointment history into clear answers and practical next steps.",
-    "OPUS · Business assistant": "OPUS · Business assistant",
+    "OPUS · AI Assistant": "OPUS · AI Assistant",
     "Reviewing your appointments…": "Reviewing your appointments…",
     "Ask again": "Ask again",
     "Measure": "Measure",

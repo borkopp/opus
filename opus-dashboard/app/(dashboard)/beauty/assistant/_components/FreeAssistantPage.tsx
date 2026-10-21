@@ -1,7 +1,7 @@
 "use client";
 
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import {
@@ -9,11 +9,11 @@ import {
   MessageContent,
   MessageHeader,
 } from "@/components/ui/message";
-import { ConversationPanel } from "@/components/business-assistant/ConversationPanel";
-import { AssistantComposer } from "./AssistantComposer";
+import { AssistantChatWorkspace } from "@/components/business-assistant/AssistantChatWorkspace";
+import { AssistantComposer } from "@/components/business-assistant/AssistantComposer";
 import styles from "./free-assistant.module.css";
 
-export function FreeAssistantPage() {
+export function FreeAssistantPage({ account }: { account?: ReactNode }) {
   const { t } = useDashboardI18n();
   const [question, setQuestion] = useState("");
   const [depth, setDepth] = useState<"standard" | "deep">("standard");
@@ -77,103 +77,25 @@ export function FreeAssistantPage() {
     };
     timer.current = setTimeout(reveal, 400);
   }
+  function newConversation() {
+    if (timer.current !== null) clearTimeout(timer.current);
+    timer.current = null;
+    busy.current = false;
+    setStreaming(false);
+    setQuestions([]);
+    setQuestion("");
+  }
   return (
-    <section className="flex min-h-0 w-full flex-1 flex-col gap-5">
-      <div className="dashboard-assistant-surface flex min-h-[480px] flex-1 flex-col">
-        {questions.length === 0 ? (
-          <ConversationPanel
-            turns={[]}
-            loading={false}
-            disabled={false}
-            onPrompt={setQuestion}
-          />
-        ) : (
-          <div
-            ref={transcript}
-            role="log"
-            aria-live="polite"
-            aria-busy={streaming}
-            aria-label={t("Conversation", "Разговор", "Biseda")}
-            className="flex max-h-[55dvh] flex-1 flex-col gap-6 overflow-y-auto py-6 pr-1"
-          >
-            {questions.map((turn, index) => (
-              <div
-                key={index}
-                className={`flex flex-col gap-4 ${styles.messageEnter}`}
-              >
-                <Message align="end">
-                  <MessageContent>
-                    <Bubble variant="secondary" align="end">
-                      <BubbleContent className="whitespace-pre-wrap">
-                        {turn.prompt}
-                      </BubbleContent>
-                    </Bubble>
-                  </MessageContent>
-                </Message>
-                <Message>
-                  <MessageContent>
-                    <MessageHeader>
-                      {t(
-                        "OPUS · Business assistant",
-                        "OPUS · Деловен асистент",
-                        "OPUS · Asistent biznesi",
-                      )}
-                    </MessageHeader>
-                    <Bubble variant="muted">
-                      <BubbleContent>
-                        <p>
-                          {turn.visible === 0 && !turn.complete ? (
-                            <span
-                              className={styles.typing}
-                              aria-label={t(
-                                "Typing…",
-                                "Пишува…",
-                                "Duke shkruar…",
-                              )}
-                            >
-                              <i />
-                              <i />
-                              <i />
-                            </span>
-                          ) : (
-                            <>
-                              {turn.reply.slice(0, turn.visible)}
-                              {!turn.complete && (
-                                <span
-                                  className={styles.cursor}
-                                  aria-hidden="true"
-                                />
-                              )}
-                            </>
-                          )}
-                        </p>
-                        {turn.complete && (
-                          <a
-                            data-replay-public
-                            href="https://opus.mk/#pricing"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`mt-3 inline-flex items-center gap-1 font-medium text-primary underline underline-offset-4 ${styles.messageEnter}`}
-                          >
-                            {t(
-                              "Learn more about OPUS Pro",
-                              "Дознај повеќе за OPUS Pro",
-                              "Mësoni më shumë rreth OPUS Pro",
-                            )}
-                            <ArrowUpRight
-                              className="size-4"
-                              aria-hidden="true"
-                            />
-                          </a>
-                        )}
-                      </BubbleContent>
-                    </Bubble>
-                  </MessageContent>
-                </Message>
-              </div>
-            ))}
-          </div>
-        )}
+    <AssistantChatWorkspace
+      conversations={[]}
+      onSelect={() => {}}
+      onNew={newConversation}
+      paid={false}
+      account={account}
+      isEmpty={questions.length === 0}
+      onPrompt={setQuestion}
+      promptDisabled={streaming}
+      composer={
         <AssistantComposer
           question={question}
           setQuestion={setQuestion}
@@ -184,7 +106,86 @@ export function FreeAssistantPage() {
           deepRemaining={null}
           onSend={submit}
         />
+      }
+    >
+      <div
+        ref={transcript}
+        role="log"
+        aria-live="polite"
+        aria-busy={streaming}
+        aria-label={t("Conversation", "Разговор", "Biseda")}
+        className="flex max-h-[55dvh] flex-1 flex-col gap-6 overflow-y-auto py-6 pr-1"
+      >
+        {questions.map((turn, index) => (
+          <div
+            key={index}
+            className={`flex flex-col gap-4 ${styles.messageEnter}`}
+          >
+            <Message align="end">
+              <MessageContent>
+                <Bubble variant="secondary" align="end">
+                  <BubbleContent className="whitespace-pre-wrap">
+                    {turn.prompt}
+                  </BubbleContent>
+                </Bubble>
+              </MessageContent>
+            </Message>
+            <Message>
+              <MessageContent>
+                <MessageHeader>
+                  {t(
+                    "OPUS · AI Assistant",
+                    "OPUS · AI асистент",
+                    "OPUS · Asistenti AI",
+                  )}
+                </MessageHeader>
+                <Bubble variant="muted">
+                  <BubbleContent>
+                    <p>
+                      {turn.visible === 0 && !turn.complete ? (
+                        <span
+                          className={styles.typing}
+                          aria-label={t("Typing…", "Пишува…", "Duke shkruar…")}
+                        >
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                      ) : (
+                        <>
+                          {turn.reply.slice(0, turn.visible)}
+                          {!turn.complete && (
+                            <span
+                              className={styles.cursor}
+                              aria-hidden="true"
+                            />
+                          )}
+                        </>
+                      )}
+                    </p>
+                    {turn.complete && (
+                      <a
+                        data-replay-public
+                        href="https://opus.mk/#pricing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`mt-3 inline-flex items-center gap-1 font-medium text-primary underline underline-offset-4 ${styles.messageEnter}`}
+                      >
+                        {t(
+                          "Learn more about OPUS Pro",
+                          "Дознај повеќе за OPUS Pro",
+                          "Mësoni më shumë rreth OPUS Pro",
+                        )}
+                        <ArrowUpRight className="size-4" aria-hidden="true" />
+                      </a>
+                    )}
+                  </BubbleContent>
+                </Bubble>
+              </MessageContent>
+            </Message>
+          </div>
+        ))}
       </div>
-    </section>
+    </AssistantChatWorkspace>
   );
 }

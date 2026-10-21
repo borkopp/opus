@@ -1,15 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { History, Plus, LockKeyhole } from "lucide-react";
+import { ArrowLeft, LockKeyhole } from "lucide-react";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
 import { analystError } from "@/lib/i18n/business-assistant";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -19,38 +19,34 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import { ConversationPanel } from "@/components/business-assistant/ConversationPanel";
-import { AssistantComposer } from "./AssistantComposer";
+import { AssistantComposer } from "@/components/business-assistant/AssistantComposer";
 import { FreeAssistantPage } from "./FreeAssistantPage";
+import { AssistantChatWorkspace } from "@/components/business-assistant/AssistantChatWorkspace";
+import { DashboardAccountMenu } from "@/components/dashboard/DashboardAccountMenu";
 
 type Access = FunctionReturnType<typeof api.analyst.conversations.getAccess>;
 
 export function AssistantPage() {
   const access = useQuery(api.analyst.conversations.getAccess);
+  const profile = useQuery(api.users.getMyProfile);
   const { t } = useDashboardI18n();
   if (!access)
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex min-h-dvh flex-col gap-6 p-8">
         <Skeleton className="h-12 w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
     );
   if (!access.allowed)
     return (
-      <Empty className="m-auto max-w-xl">
+      <Empty className="m-auto min-h-dvh max-w-xl">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <LockKeyhole />
           </EmptyMedia>
           <EmptyTitle>
-            {t("Business assistant", "Деловен асистент", "Asistent biznesi")}
+            {t("AI Assistant", "AI асистент", "Asistenti AI")}
           </EmptyTitle>
           <EmptyDescription>
             {t(
@@ -60,14 +56,32 @@ export function AssistantPage() {
             )}
           </EmptyDescription>
         </EmptyHeader>
+        <Button variant="outline" asChild>
+          <Link href="/beauty">
+            <ArrowLeft />
+            {t("Back to studio", "Назад кон студиото", "Kthehu te studioja")}
+          </Link>
+        </Button>
       </Empty>
     );
-  if (!access.paid) return <FreeAssistantPage />;
-  return <AssistantWorkspace key={access.orgId} access={access} />;
+  const account = profile ? (
+    <DashboardAccountMenu profile={profile} />
+  ) : undefined;
+  if (!access.paid)
+    return <FreeAssistantPage key={access.orgId} account={account} />;
+  return (
+    <AssistantWorkspace key={access.orgId} access={access} account={account} />
+  );
 }
 
-function AssistantWorkspace({ access }: { access: Access }) {
-  const { t, language, locale } = useDashboardI18n();
+function AssistantWorkspace({
+  access,
+  account,
+}: {
+  access: Access;
+  account?: ReactNode;
+}) {
+  const { t, language } = useDashboardI18n();
   const conversations = useQuery(api.analyst.conversations.list);
   const [selection, setSelection] = useState<
     Id<"analyst_conversations"> | null | undefined
@@ -90,6 +104,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
     depth: "standard" | "deep";
     conversationId?: Id<"analyst_conversations">;
   } | null>(null);
+  const attemptInFlight = useRef(false);
   const pending = submitting || access.busy;
   const exhausted = access.remaining === 0 || !access.budgetAvailable;
   const disabled = pending || exhausted || !access.configured;
@@ -99,6 +114,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
       disabled ||
       !question.trim() ||
       submitting ||
+      attemptInFlight.current ||
       (depth === "deep" &&
         (access.deepRemaining === 0 || !access.deepBudgetAvailable))
     )
@@ -120,6 +136,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
         conversationId: conversationId ?? undefined,
       };
     }
+    attemptInFlight.current = true;
     setSubmitting(true);
     setError(null);
     try {
@@ -133,6 +150,7 @@ function AssistantWorkspace({ access }: { access: Access }) {
     } catch (cause) {
       setError(analystError(cause, language));
     } finally {
+      attemptInFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -141,134 +159,65 @@ function AssistantWorkspace({ access }: { access: Access }) {
     setError(null);
   }
   function newConversation() {
+    if (attemptInFlight.current) return;
     setSelection(null);
     setQuestion("");
     setError(null);
     attempt.current = null;
   }
-  const chooseConversation = (id: Id<"analyst_conversations">) => {
-    setSelection(id);
+  const chooseConversation = (id: string) => {
+    if (attemptInFlight.current) return;
+    setSelection(id as Id<"analyst_conversations">);
     setQuestion("");
     setError(null);
     attempt.current = null;
   };
+  const loading = Boolean(conversationId && !conversation) || !conversations;
   return (
-    <section
-      className="flex min-h-0 w-full flex-1 flex-col"
-      aria-label={t(
-        "Business assistant",
-        "Деловен асистент",
-        "Asistent biznesi",
-      )}
-    >
-      <header className="flex shrink-0 flex-wrap items-start justify-between gap-4 pb-5">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1
-              data-replay-public
-              className="text-2xl font-semibold tracking-tight"
-            >
-              {t("Business assistant", "Деловен асистент", "Asistent biznesi")}
-            </h1>
-            <Badge data-replay-public variant="secondary">
-              Pro
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              `${access.remaining} of ${access.limit} answers remaining`,
-              `Преостанати одговори: ${access.remaining} од ${access.limit}`,
-              `Përgjigje të mbetura: ${access.remaining} nga ${access.limit}`,
-            )}{" "}
-            · {t("Renews", "Се обновува", "Rinovohet")}{" "}
-            {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-              access.resetAt,
-            )}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                aria-label={t(
-                  "Conversation history",
-                  "Историја на разговори",
-                  "Historia e bisedave",
+    <AssistantChatWorkspace
+      conversations={conversations?.map((item) => ({
+        id: item._id,
+        title: item.title,
+        updatedAt: item.updatedAt,
+      }))}
+      selectedId={conversationId}
+      onSelect={chooseConversation}
+      onNew={newConversation}
+      navigationDisabled={submitting}
+      paid
+      usage={access}
+      account={account}
+      isEmpty={!loading && !conversation?.turns.length}
+      onPrompt={choosePrompt}
+      promptDisabled={disabled}
+      notices={
+        <>
+          {!access.configured && (
+            <Alert>
+              <AlertDescription data-replay-public>
+                {t(
+                  "New analyses are temporarily unavailable. Your saved conversations and reports remain available.",
+                  "Новите анализи се привремено недостапни. Зачуваните разговори и извештаи остануваат достапни.",
+                  "Analizat e reja janë përkohësisht të padisponueshme. Bisedat dhe raportet tuaja të ruajtura mbeten të disponueshme.",
                 )}
-              >
-                <History />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="max-h-80 w-72 overflow-y-auto"
-            >
-              <DropdownMenuGroup>
-                {conversations?.length ? (
-                  conversations.map((item) => (
-                    <DropdownMenuItem
-                      key={item._id}
-                      onSelect={() => chooseConversation(item._id)}
-                    >
-                      <span className="truncate">{item.title}</span>
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem data-replay-public disabled>
-                    {t(
-                      "No conversations yet",
-                      "Сè уште нема разговори",
-                      "Ende nuk ka biseda",
-                    )}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            data-replay-public
-            variant="outline"
-            onClick={newConversation}
-            disabled={submitting}
-          >
-            <Plus data-icon="inline-start" />
-            {t("New chat", "Нов разговор", "Bisedë e re")}
-          </Button>
-        </div>
-      </header>
-      <div className="dashboard-assistant-surface flex h-[calc(100dvh-19rem)] min-h-[520px] min-w-0 flex-1 flex-col">
-        {!access.configured && (
-          <Alert>
-            <AlertDescription data-replay-public>
-              {t(
-                "New analyses are temporarily unavailable. Your saved conversations and reports remain available.",
-                "Новите анализи се привремено недостапни. Зачуваните разговори и извештаи остануваат достапни.",
-                "Analizat e reja janë përkohësisht të padisponueshme. Bisedat dhe raportet tuaja të ruajtura mbeten të disponueshme.",
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        {exhausted && (
-          <Alert>
-            <AlertDescription>
-              {analystError("ANALYST_ALLOWANCE_REACHED", language)}
-            </AlertDescription>
-          </Alert>
-        )}
-        <ConversationPanel
-          key={conversationId ?? "new"}
-          turns={conversation?.turns ?? []}
-          loading={Boolean(conversationId && !conversation) || !conversations}
-          disabled={disabled}
-          onPrompt={choosePrompt}
-        />
+              </AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {exhausted && (
+            <Alert>
+              <AlertDescription>
+                {analystError("ANALYST_ALLOWANCE_REACHED", language)}
+              </AlertDescription>
+            </Alert>
+          )}
+        </>
+      }
+      composer={
         <AssistantComposer
           question={question}
           setQuestion={setQuestion}
@@ -279,7 +228,15 @@ function AssistantWorkspace({ access }: { access: Access }) {
           deepRemaining={access.deepBudgetAvailable ? access.deepRemaining : 0}
           onSend={submit}
         />
-      </div>
-    </section>
+      }
+    >
+      <ConversationPanel
+        key={conversationId ?? "new"}
+        turns={conversation?.turns ?? []}
+        loading={Boolean(conversationId && !conversation) || !conversations}
+        disabled={disabled}
+        onPrompt={choosePrompt}
+      />
+    </AssistantChatWorkspace>
   );
 }

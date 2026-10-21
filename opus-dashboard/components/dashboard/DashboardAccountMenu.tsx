@@ -185,11 +185,7 @@ export function DashboardAccountMenu({
             <DropdownMenuItem asChild>
               <Link data-replay-public href="/beauty/assistant">
                 <ChartNoAxesCombined />
-                {t(
-                  "Business assistant",
-                  "Деловен асистент",
-                  "Asistenti i biznesit",
-                )}
+                {t("AI Assistant", "AI асистент", "Asistenti AI")}
               </Link>
             </DropdownMenuItem>
           )}

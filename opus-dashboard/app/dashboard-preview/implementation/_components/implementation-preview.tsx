@@ -258,7 +258,7 @@ export function ImplementationPreview() {
                   }
                   assistant={
                     <WidgetFrame
-                      title="Business assistant"
+                      title="AI Assistant"
                       subtitle="A clearer view of your studio"
                       action={<Badge variant="secondary">Sample</Badge>}
                     >

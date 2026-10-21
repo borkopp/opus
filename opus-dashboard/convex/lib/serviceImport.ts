@@ -5,6 +5,8 @@ export const MAX_IMPORT_SERVICES = 50;
 export const MAX_IMPORT_IMAGE_LENGTH = 900_000;
 export const serviceImportRow = v.object({
   name: v.string(),
+  // Optional for drafts extracted before category support was added.
+  categoryName: v.optional(v.union(v.string(), v.null())),
   priceMinorUnits: v.union(v.number(), v.null()),
   durationMins: v.union(v.number(), v.null()),
   durationSource: v.union(
@@ -20,6 +22,7 @@ export const serviceImportSchema = z.object({
     .array(
       z.object({
         name: z.string().min(2).max(120),
+        categoryName: z.string().min(1).max(120).nullable(),
         priceMinorUnits: z.number().int().min(0).max(100_000_000).nullable(),
         durationMins: z.number().int().min(1).max(720).nullable(),
         durationSource: z.enum(["photo", "suggested", "missing"]),
@@ -37,6 +40,16 @@ export function normalizeServiceName(name: string) {
   return name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 }
 
+export function serviceImportIdentity(
+  name: string,
+  categoryName?: string | null,
+) {
+  return JSON.stringify([
+    normalizeServiceName(categoryName ?? ""),
+    normalizeServiceName(name),
+  ]);
+}
+
 export function normalizeExtractedServices(
   rows: ExtractedService[],
   slotMins: number,
@@ -48,6 +61,7 @@ export function normalizeExtractedServices(
     return {
       ...row,
       name: row.name.trim(),
+      categoryName: row.categoryName?.trim().replace(/\s+/g, " ") || null,
       durationMins: rounded,
       durationSource:
         rounded === null

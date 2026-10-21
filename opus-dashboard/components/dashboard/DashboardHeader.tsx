@@ -109,11 +109,7 @@ export function DashboardHeader({
           <Link
             href="/beauty/assistant"
             className={`${s.iconButton} dashboard-assistant-link`}
-            aria-label={t(
-              "Business assistant",
-              "Деловен асистент",
-              "Asistenti i biznesit",
-            )}
+            aria-label={t("AI Assistant", "AI асистент", "Asistenti AI")}
             aria-current={
               pathname.startsWith("/beauty/assistant") ? "page" : undefined
             }

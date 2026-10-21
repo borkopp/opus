@@ -121,11 +121,18 @@ export function AssistantGallery() {
             examples using the real assistant components and fictional data.
           </p>
         </div>
-        <Button variant="outline" size="sm" asChild>
-          <a href={source} target="_blank" rel="noreferrer">
-            Open preview <ArrowUpRight data-icon="inline-end" />
-          </a>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" asChild>
+            <a href="/dashboard-preview/assistant/designs">
+              Explore 3 page designs <ArrowUpRight data-icon="inline-end" />
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={source} target="_blank" rel="noreferrer">
+              Open preview <ArrowUpRight data-icon="inline-end" />
+            </a>
+          </Button>
+        </div>
       </header>
 
       <div className="grid lg:h-[calc(100dvh-125px)] lg:min-h-[600px] lg:grid-cols-[280px_minmax(0,1fr)]">

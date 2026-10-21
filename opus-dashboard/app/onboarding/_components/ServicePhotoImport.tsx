@@ -27,6 +27,7 @@ import { StepFrame, WizardActions } from "./OnboardingStep";
 
 type ReviewRow = ServiceDraft & {
   id: number;
+  categoryName: string;
   source: ExtractedService["durationSource"] | "edited";
   confidence: number;
 };
@@ -78,6 +79,7 @@ export function ServicePhotoImport({
         result.rows.map((row, id) => ({
           id,
           name: row.name,
+          categoryName: row.categoryName ?? "",
           price:
             row.priceMinorUnits === null
               ? ""
@@ -107,6 +109,15 @@ export function ServicePhotoImport({
     event.preventDefault();
     setAttempted(true);
     if (!importId || busy || !rows.length) return;
+    if (rows.some((row) => row.categoryName.trim().length > 120)) {
+      setError(
+        onboardingError(
+          "Category names must be 120 characters or fewer.",
+          language,
+        ),
+      );
+      return;
+    }
     if (
       rows.some(
         (row) =>
@@ -134,6 +145,7 @@ export function ServicePhotoImport({
         reviewed,
         services: rows.map((row) => ({
           name: row.name.trim(),
+          categoryName: row.categoryName.trim() || undefined,
           durationMins: row.durationMins,
           priceMinorUnits: Math.round(
             Number(row.price.replace(",", ".")) * 100,
@@ -167,14 +179,14 @@ export function ServicePhotoImport({
         description={
           rows.length
             ? t(
-                "Check the prices and how long each appointment takes before adding them.",
-                "Проверете ги цените и времетраењето на секој термин пред да ги додадете.",
-                "Kontrolloni çmimet dhe kohëzgjatjen e çdo termini para se t'i shtoni ato.",
+                "Check the categories, prices and durations. You can edit or clear any category before adding the services.",
+                "Проверете ги категориите, цените и времетраењата. Можете да ја измените или избришете категоријата пред да ги додадете услугите.",
+                "Kontrolloni kategoritë, çmimet dhe kohëzgjatjet. Mund të ndryshoni ose hiqni çdo kategori para se të shtoni shërbimet.",
               )
             : t(
-                "Photograph your price list or upload an image. AI will prepare the services for you to review.",
-                "Фотографирајте го ценовникот или прикачете слика. AI ќе ги подготви услугите за проверка.",
-                "Fotografoni listën e çmimeve ose ngarkoni një imazh. AI do të përgatisë shërbimet që t'i rishikoni.",
+                "Photograph your price list or upload an image. AI will prepare the services and categories for you to review.",
+                "Фотографирајте го ценовникот или прикачете слика. AI ќе ги подготви услугите и категориите за проверка.",
+                "Fotografoni listën e çmimeve ose ngarkoni një imazh. AI do të përgatisë shërbimet dhe kategoritë që t'i rishikoni.",
               )
         }
         replayPublicTitle
@@ -202,7 +214,11 @@ export function ServicePhotoImport({
                   onClick={() => upload.current?.click()}
                 >
                   <Upload data-icon="inline-start" />
-                  {t("Upload a photo", "Прикачи фотографија", "Ngarkoni një foto")}
+                  {t(
+                    "Upload a photo",
+                    "Прикачи фотографија",
+                    "Ngarkoni një foto",
+                  )}
                 </Button>
               </div>
               <input
@@ -251,7 +267,11 @@ export function ServicePhotoImport({
           {preview && (
             <details className="rounded-xl border p-3">
               <summary className="cursor-pointer text-sm">
-                {t("View your photo", "Види ја фотографијата", "Shikoni foton tuaj")}
+                {t(
+                  "View your photo",
+                  "Види ја фотографијата",
+                  "Shikoni foton tuaj",
+                )}
               </summary>
               {/* Transient local image; never unmask it for session replay. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -443,6 +463,30 @@ export function ServicePhotoImport({
                           }
                         />
                       </Field>
+                      <Field>
+                        <FieldLabel htmlFor={`category-${row.id}`}>
+                          {t(
+                            "Category (optional)",
+                            "Категорија (опционално)",
+                            "Kategoria (opsionale)",
+                          )}
+                        </FieldLabel>
+                        <Input
+                          id={`category-${row.id}`}
+                          className="min-h-11"
+                          value={row.categoryName}
+                          maxLength={120}
+                          placeholder={t(
+                            "No category",
+                            "Без категорија",
+                            "Pa kategori",
+                          )}
+                          disabled={!!busy}
+                          onChange={(e) =>
+                            edit(row.id, { categoryName: e.target.value })
+                          }
+                        />
+                      </Field>
                       <div className="grid grid-cols-1 gap-4 min-[380px]:grid-cols-2">
                         <Field data-invalid={invalid === "price"}>
                           <FieldLabel htmlFor={`price-${row.id}`}>
@@ -492,7 +536,11 @@ export function ServicePhotoImport({
                           />
                           <FieldDescription>
                             {row.source === "photo"
-                              ? t("From photo", "Од фотографијата", "Nga fotoja")
+                              ? t(
+                                  "From photo",
+                                  "Од фотографијата",
+                                  "Nga fotoja",
+                                )
                               : row.source === "suggested"
                                 ? t(
                                     "AI suggestion · check it",
@@ -526,9 +574,9 @@ export function ServicePhotoImport({
                 />
                 <FieldLabel htmlFor="review-import">
                   {t(
-                    "I checked all prices and durations for my studio.",
-                    "Ги проверив сите цени и времетраења за моето студио.",
-                    "I kontrollova të gjitha çmimet dhe kohëzgjatjet për studion time.",
+                    "I checked all categories, prices and durations for my studio.",
+                    "Ги проверив сите категории, цени и времетраења за моето студио.",
+                    "I kontrollova të gjitha kategoritë, çmimet dhe kohëzgjatjet për studion time.",
                   )}
                 </FieldLabel>
               </Field>

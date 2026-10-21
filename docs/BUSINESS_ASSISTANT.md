@@ -1,4 +1,4 @@
-# Business assistant
+# AI Assistant
 
 Authorized on 16 September 2026 as a read-only Pro feature for beauty studio owners and managers. The dashboard entry is `/beauty/assistant`. This is separate from the dormant customer-facing AI Receptionist.
 
@@ -91,6 +91,22 @@ Responses use `store: false` and do not use provider-hosted conversation state. 
 Numeric statements must reference server-generated facts, such as `[[r1.total]]`. The server rejects unknown report/fact references and unverified numerical literals, then resolves the values before persistence. This limits fabricated arithmetic; it does not make the model's qualitative interpretation infallible. Relevant report limitations remain visible independently of model wording.
 
 ## Validation and rollout
+
+### Assistant workspace
+
+`/beauty/assistant` uses the OPUS Chat layout: a collapsible conversation sidebar,
+search over the existing saved-history list, and a focused conversation with a
+docked composer. On phones, history and the account menu open in a dialog.
+The welcome view offers starter questions; existing conversations still reopen
+automatically. Fast/Detailed analysis, allowances, pending/error states, full
+reports, and the Free-plan upgrade response retain their existing behavior.
+The studio's selected Clarity/Studio appearance applies throughout.
+
+`components/business-assistant/AssistantChatWorkspace.tsx` is shared with the
+01 Chat design preview at `/dashboard-preview/assistant/designs?variant=chat`.
+All three design variants and their canvas route remain localhost-only,
+development-only fixtures. The actual assistant uses authenticated Convex data;
+the design previews use sample conversations and never call the provider.
 
 ### Response presentation
 

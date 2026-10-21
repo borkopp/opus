@@ -6,8 +6,10 @@ import { requireLiveStudio } from "./lib/appReview";
 import {
   MAX_IMPORT_SERVICES,
   normalizeServiceName,
+  serviceImportIdentity,
   serviceImportRow,
 } from "./lib/serviceImport";
+import type { Id } from "./_generated/dataModel";
 
 export const reserve = internalMutation({
   args: {},
@@ -110,6 +112,7 @@ export const confirm = mutation({
     services: v.array(
       v.object({
         name: v.string(),
+        categoryName: v.optional(v.string()),
         priceMinorUnits: v.number(),
         durationMins: v.number(),
       }),
@@ -142,12 +145,41 @@ export const confirm = mutation({
       .query("services")
       .withIndex("by_org", (q) => q.eq("orgId", org._id))
       .collect();
+    const categories = await ctx.db
+      .query("service_categories")
+      .withIndex("by_org", (q) => q.eq("orgId", org._id))
+      .collect();
+    const activeCategories = categories
+      .filter((category) => !category.isDeleted)
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const categoryNames = new Map(
+      activeCategories.map((category) => [category._id, category.name]),
+    );
+    const categoryIds = new Map<string, Id<"service_categories">>();
+    for (const category of activeCategories) {
+      const key = normalizeServiceName(category.name);
+      if (!categoryIds.has(key)) categoryIds.set(key, category._id);
+    }
     const names = new Set(
       existing
         .filter((s) => !s.isDeleted)
-        .map((s) => normalizeServiceName(s.name)),
+        .map((s) =>
+          serviceImportIdentity(
+            s.name,
+            s.categoryId ? categoryNames.get(s.categoryId) : undefined,
+          ),
+        ),
     );
-    for (const service of args.services) {
+    const services = args.services.map((service) => ({
+      ...service,
+      categoryName:
+        service.categoryName?.trim().replace(/\s+/g, " ") || undefined,
+    }));
+    for (const service of services) {
+      if (service.categoryName && service.categoryName.length > 120)
+        throw new ConvexError(
+          "Category names must be 120 characters or fewer.",
+        );
       if (
         service.name.trim().length < 2 ||
         service.name.trim().length > 120 ||
@@ -161,19 +193,49 @@ export const confirm = mutation({
       ) {
         throw new ConvexError("Check every service name, price and duration.");
       }
-      const name = normalizeServiceName(service.name);
+      const name = serviceImportIdentity(service.name, service.categoryName);
       if (names.has(name))
         throw new ConvexError(
-          "A service with this name already exists. Rename it or remove it from the import.",
+          "A service with this name already exists in this category. Change its name or category, or remove it from the import.",
         );
       names.add(name);
     }
     const now = Date.now();
     const serviceIds = [];
+    let categorySortOrder =
+      Math.max(-1, ...categories.map((c) => c.sortOrder)) + 1;
     const sortStart = Math.max(-1, ...existing.map((s) => s.sortOrder)) + 1;
-    for (const [index, service] of args.services.entries()) {
+    for (const [index, service] of services.entries()) {
+      const { categoryName, ...serviceFields } = service;
+      const categoryKey = normalizeServiceName(categoryName ?? "");
+      let categoryId = categoryName ? categoryIds.get(categoryKey) : undefined;
+      if (categoryName && !categoryId) {
+        const categoryFields = {
+          name: categoryName,
+          sortOrder: categorySortOrder++,
+          isDeleted: false,
+          createdAt: now,
+          updatedAt: now,
+        };
+        categoryId = await ctx.db.insert("service_categories", {
+          orgId: org._id,
+          ...categoryFields,
+        });
+        categoryIds.set(categoryKey, categoryId);
+        await ctx.db.insert("audit_log", {
+          orgId: org._id,
+          actorType: "staff",
+          actorId: staffMember._id,
+          action: "service_category.created",
+          resourceType: "service_categories",
+          resourceId: categoryId,
+          after: { ...categoryFields, importId: job._id },
+          createdAt: now,
+        });
+      }
       const fields = {
-        ...service,
+        ...serviceFields,
+        categoryId,
         name: service.name.trim(),
         currency: settings.currency,
         staffIds: [staffMember._id],

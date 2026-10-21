@@ -1,12 +1,8 @@
 "use client";
 
 import { Fragment } from "react";
-import {
-  ChartNoAxesCombined,
-  CalendarDays,
-  Users,
-  TrendingDown,
-} from "lucide-react";
+import { ChartNoAxesCombined } from "lucide-react";
+import { useAssistantPrompts } from "@/hooks/use-assistant-prompts";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "@/convex/_generated/api";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -54,48 +50,17 @@ export function ConversationPanel({
   disabled,
   onPrompt,
   reportHref,
+  onOpenReport,
 }: {
   turns: AssistantTurn[];
   loading: boolean;
   disabled: boolean;
   onPrompt: (question: string) => void;
   reportHref?: (reportKey: string) => string;
+  onOpenReport?: (turn: AssistantTurn) => void;
 }) {
   const { t, language } = useDashboardI18n();
-  const examples = [
-    {
-      icon: TrendingDown,
-      question: t(
-        "What was my weakest day last month?",
-        "Кој ми беше најслабиот ден минатиот месец?",
-        "Cila ishte dita ime më e dobët muajin e kaluar?",
-      ),
-    },
-    {
-      icon: ChartNoAxesCombined,
-      question: t(
-        "How did last month compare with the month before?",
-        "Каков беше минатиот месец во споредба со претходниот?",
-        "Si u krahasua muaji i kaluar me muajin para tij?",
-      ),
-    },
-    {
-      icon: CalendarDays,
-      question: t(
-        "Which services had the most cancellations last month?",
-        "Кои услуги имаа најмногу откажувања минатиот месец?",
-        "Cilat shërbime patën më shumë anulime muajin e kaluar?",
-      ),
-    },
-    {
-      icon: Users,
-      question: t(
-        "How many of my clients returned last month?",
-        "Колку од моите клиенти се вратија минатиот месец?",
-        "Sa nga klientët e mi u kthyen muajin e kaluar?",
-      ),
-    },
-  ];
+  const examples = useAssistantPrompts();
   if (loading)
     return (
       <div className="flex flex-1 flex-col gap-6 py-8">
@@ -169,9 +134,9 @@ export function ConversationPanel({
                     <MessageContent>
                       <MessageHeader>
                         {t(
-                          "OPUS · Business assistant",
-                          "OPUS · Деловен асистент",
-                          "OPUS · Asistent biznesi",
+                          "OPUS · AI Assistant",
+                          "OPUS · AI асистент",
+                          "OPUS · Asistenti AI",
                         )}
                       </MessageHeader>
                       {turn.status === "pending" ||
@@ -217,6 +182,11 @@ export function ConversationPanel({
                             disabled={disabled}
                             onPrompt={onPrompt}
                             reportHref={reportHref}
+                            onOpenReport={
+                              onOpenReport
+                                ? () => onOpenReport(turn)
+                                : undefined
+                            }
                           />
                         )
                       )}

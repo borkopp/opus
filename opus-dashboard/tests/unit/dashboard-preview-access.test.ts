@@ -21,6 +21,8 @@ describe("dashboard preview access", () => {
     "/dashboard-preview/implementation",
     "/dashboard-preview/assistant",
     "/dashboard-preview/assistant/canvas?example=completed_value",
+    "/dashboard-preview/assistant/designs?variant=brief",
+    "/dashboard-preview/assistant/designs/canvas?variant=desk",
     "/dashboard-preview/future/nested.page",
   ])("allows %s on localhost in development", (path) => {
     vi.stubEnv("NODE_ENV", "development");
@@ -44,6 +46,8 @@ describe("dashboard preview access", () => {
       "/dashboard-preview/implementation",
       "/dashboard-preview/assistant",
       "/dashboard-preview/assistant/canvas",
+      "/dashboard-preview/assistant/designs",
+      "/dashboard-preview/assistant/designs/canvas",
     ]) {
       expect(proxy(request(path, host, "localhost:3000")).status).toBe(404);
     }
@@ -56,6 +60,8 @@ describe("dashboard preview access", () => {
       "/dashboard-preview/implementation",
       "/dashboard-preview/assistant",
       "/dashboard-preview/assistant/canvas",
+      "/dashboard-preview/assistant/designs",
+      "/dashboard-preview/assistant/designs/canvas",
     ]) {
       expect(proxy(request(path, "localhost:3000")).status).toBe(404);
     }

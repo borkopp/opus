@@ -153,7 +153,7 @@ async function usage(
 }
 
 describe(
-  "business assistant access, usage and workers",
+  "AI Assistant access, usage and workers",
   { timeout: 20000 },
   () => {
     let t: Backend;

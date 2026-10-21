@@ -9,7 +9,6 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
-  InputGroupText,
 } from "@/components/ui/input-group";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
@@ -56,6 +55,7 @@ export function AssistantComposer({
           </FieldLabel>
           <InputGroup className="dashboard-assistant-composer">
             <InputGroupTextarea
+              className="max-h-[min(15rem,25dvh)] min-h-12 overflow-y-auto overscroll-contain py-2"
               id="business-question"
               value={question}
               maxLength={2000}
@@ -80,7 +80,7 @@ export function AssistantComposer({
             />
             <InputGroupAddon
               align="block-end"
-              className="justify-between gap-2"
+              className="justify-between gap-2 px-2.5 pt-0.5 pb-2"
             >
               <ToggleGroup
                 type="single"
@@ -88,7 +88,7 @@ export function AssistantComposer({
                 size="sm"
                 variant="default"
                 spacing={1}
-                className="shrink-0 rounded-full border border-border/70 bg-muted/60 p-1"
+                className="shrink-0 rounded-full border border-border/70 bg-muted/60 p-0.5"
                 aria-label={t(
                   "Analysis depth",
                   "Длабочина на анализа",
@@ -101,21 +101,22 @@ export function AssistantComposer({
               >
                 <ToggleGroupItem
                   value="standard"
-                  className="group/mode h-10 gap-2 rounded-full px-3 text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none sm:px-4"
+                  className="group/mode h-8 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none"
                   title={t(
                     "Fast answers and essential figures",
                     "Брзи одговори и клучни бројки",
                     "Përgjigje të shpejta dhe shifra thelbësore",
                   )}
                 >
-                  <span className="flex size-6 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors group-data-[state=on]/mode:bg-primary/15 group-data-[state=on]/mode:text-primary motion-reduce:transition-none">
-                    <Zap aria-hidden className="size-3.5" />
-                  </span>
+                  <Zap
+                    aria-hidden
+                    className="size-3.5 group-data-[state=on]/mode:text-primary"
+                  />
                   {t("Fast", "Брза", "E shpejtë")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="deep"
-                  className="group/mode h-10 gap-2 rounded-full px-3 text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none sm:px-4"
+                  className="group/mode h-8 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none"
                   disabled={deepRemaining === 0}
                   title={
                     deepRemaining === null
@@ -131,15 +132,13 @@ export function AssistantComposer({
                         )
                   }
                 >
-                  <span className="flex size-6 items-center justify-center rounded-full bg-background/60 text-muted-foreground transition-colors group-data-[state=on]/mode:bg-primary/15 group-data-[state=on]/mode:text-primary motion-reduce:transition-none">
-                    <BrainCircuit aria-hidden className="size-3.5" />
-                  </span>
+                  <BrainCircuit
+                    aria-hidden
+                    className="size-3.5 group-data-[state=on]/mode:text-primary"
+                  />
                   {t("Detailed", "Детална", "E detajuar")}
                 </ToggleGroupItem>
               </ToggleGroup>
-              <InputGroupText className="ml-auto hidden sm:inline">
-                {question.length}/2000
-              </InputGroupText>
               <InputGroupButton
                 type="submit"
                 size="icon-sm"

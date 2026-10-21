@@ -7,7 +7,7 @@ export const al: DashboardTranslations = {
     name: "Shqip",
   },
   pageTitles: {
-    "/beauty/assistant": "Asistenti i biznesit",
+    "/beauty/assistant": "Asistenti AI",
     "/beauty/bookings": "Terminet",
     "/beauty/services": "Shërbimet dhe ekipi",
     "/beauty/promote": "Promovoni studion tuaj",
@@ -29,7 +29,7 @@ export const al: DashboardTranslations = {
     "management": "Menaxhimi",
     "promote": "Promovimi",
     "settings": "Cilësimet",
-    "assistant": "Asistenti i biznesit"
+    "assistant": "Asistenti AI"
 },
   locales: {
     "mk-MK": "Maqedonisht",
@@ -78,7 +78,7 @@ export const al: DashboardTranslations = {
       "capacity_exceeded": "Koha e rezervuar tejkalon kapacitetin e regjistruar. Kontrolloni oraret dhe kohëzgjatjet e termineve."
 },
     errors: {
-      "ANALYST_NOT_CONFIGURED": "Asistenti i biznesit nuk mundi të fillonte një analizë të re. Ju lutemi provoni përsëri më vonë.",
+      "ANALYST_NOT_CONFIGURED": "Asistenti AI nuk mundi të fillonte një analizë të re. Ju lutemi provoni përsëri më vonë.",
       "ANALYST_BUSY": "Një analizë tashmë po ekzekutohet për studion tuaj. Ju lutemi prisni të përfundojë.",
       "ANALYST_RATE_LIMIT": "Ju lutemi prisni një minutë para se të bëni një pyetje tjetër.",
       "ANALYST_ALLOWANCE_REACHED": "Studioja juaj ka arritur kufirin mujor të analizave. Ai rinovohet në datën e shfaqur më sipër.",
@@ -211,6 +211,8 @@ export const al: DashboardTranslations = {
       "Choose between 1 and 50 services.": "Zgjidhni midis 1 dhe 50 shërbimeve.",
       "Check every service name, price and duration.": "Kontrolloni emrin, çmimin dhe kohëzgjatjen e çdo shërbimi.",
       "A service with this name already exists. Rename it or remove it from the import.": "Një shërbim me këtë emër tashmë ekziston. Riemërtojeni ose hiqeni nga importi.",
+      "A service with this name already exists in this category. Change its name or category, or remove it from the import.": "Një shërbim me këtë emër tashmë ekziston në këtë kategori. Ndryshoni emrin ose kategorinë, ose hiqeni nga importi.",
+      "Category names must be 120 characters or fewer.": "Emrat e kategorive duhet të kenë jo më shumë se 120 karaktere.",
       "Choose an address from the suggestions.": "Zgjidhni një adresë nga sugjerimet.",
       "Choose a result that includes both an address and city.": "Zgjidhni një rezultat që përfshin adresën dhe qytetin.",
       "This address is too long. Choose a more specific result.": "Kjo adresë është shumë e gjatë. Zgjidhni një rezultat më specifik.",
@@ -619,7 +621,7 @@ export const al: DashboardTranslations = {
     "More context and recommendations": "Më shumë kontekst dhe rekomandime",
     "Detailed": "E detajuar",
     "Send question": "Dërgo pyetjen",
-    "Business assistant": "Asistent biznesi",
+    "AI Assistant": "Asistenti AI",
     "Business analysis is available to studio owners and managers.": "Analiza e biznesit është e disponueshme për pronarët dhe menaxherët e studios.",
     "Renews": "Rinovohet",
     "Conversation history": "Historia e bisedave",
@@ -632,7 +634,7 @@ export const al: DashboardTranslations = {
     "How many of my clients returned last month?": "Sa nga klientët e mi u kthyen muajin e kaluar?",
     "Understand your studio": "Kuptoni studion tuaj",
     "Turn your appointment history into clear answers and practical next steps.": "Ktheni historinë e termineve në përgjigje të qarta dhe hapa praktikë të radhës.",
-    "OPUS · Business assistant": "OPUS · Asistent biznesi",
+    "OPUS · AI Assistant": "OPUS · Asistenti AI",
     "Reviewing your appointments…": "Duke shqyrtuar terminet tuaja…",
     "Ask again": "Pyesni përsëri",
     "Measure": "Matni",

@@ -14,7 +14,7 @@ export function AssistantWidget() {
       replayPublicTitle
       delay={0}
       className="flex flex-col"
-      title={t("Business assistant", "Деловен асистент", "Asistenti i biznesit")}
+      title={t("AI Assistant", "AI асистент", "Asistenti AI")}
       subtitle={t(
         "A clearer view of your studio",
         "Појасен поглед на вашето студио",
@@ -31,11 +31,19 @@ export function AssistantWidget() {
       <FeatureCardContent
         status={
           !access
-            ? t("Checking availability…", "Се проверува достапноста…", "Po kontrollohet disponueshmëria…")
+            ? t(
+                "Checking availability…",
+                "Се проверува достапноста…",
+                "Po kontrollohet disponueshmëria…",
+              )
             : !access.paid
               ? null
               : !access.configured
-                ? t("Temporarily unavailable", "Привремено недостапно", "Përkohësisht e padisponueshme")
+                ? t(
+                    "Temporarily unavailable",
+                    "Привремено недостапно",
+                    "Përkohësisht e padisponueshme",
+                  )
                 : t(
                     `${access.remaining} answers available`,
                     `${access.remaining} достапни одговори`,

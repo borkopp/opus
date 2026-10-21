@@ -144,7 +144,11 @@ builds the frontend and publishes the backend before Vercel promotes the fronten
 
 Onboarding service import from a camera or uploaded price-list photo was
 authorized on September 26, 2026. Free and Pro beauty studio owners may use
-the configured OpenAI provider to extract editable service names and prices.
+the configured OpenAI provider to extract editable service names, category
+headings and prices. Visible headings such as WOMEN, MEN and KIDS become
+editable service categories. Confirmation creates or reuses categories within
+the studio; identical service names are allowed in different categories, while
+duplicates within the same category (including no category) are rejected.
 Durations read from the image are distinguished from suggested estimates;
 owners may edit durations individually or apply one duration to selected rows.
 Every import requires explicit owner review of prices and durations before

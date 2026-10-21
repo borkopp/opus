@@ -30,7 +30,7 @@ New appointments and open slots invoke the existing quick-booking drawer.
 Appointment links open the selected date and booking in the calendar, where the
 existing completion, cancellation, no-show and rescheduling actions remain.
 
-The business assistant and manual opening-recovery widgets use real access and
+The AI Assistant and manual opening-recovery widgets use real access and
 configuration state. The deferred AI Receptionist is visibly marked `mock`, with a
 TODO. Deferred settings have the same label; no new channel is enabled.
 

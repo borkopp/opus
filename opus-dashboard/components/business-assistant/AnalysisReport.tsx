@@ -46,12 +46,14 @@ export function AnalysisReport({
   turnId,
   expanded = false,
   href,
+  onOpenReport,
 }: {
   report: DisplayReport;
   question?: string;
   turnId?: Id<"analyst_turns">;
   expanded?: boolean;
   href?: string;
+  onOpenReport?: () => void;
 }) {
   const { t, language, locale } = useDashboardI18n();
   const selectedTemplate = selectReportTemplate(report, question);
@@ -95,7 +97,7 @@ export function AnalysisReport({
     >
       <CardHeader className="gap-1.5 pb-5">
         <h3 className="text-sm font-medium leading-snug">{title}</h3>
-        {!expanded && (turnId || href) && (
+        {!expanded && (turnId || href || onOpenReport) && (
           <CardAction>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -110,17 +112,24 @@ export function AnalysisReport({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={
-                      href ??
-                      `/beauty/assistant/reports/${turnId}#${report.key}`
-                    }
-                  >
+                {onOpenReport ? (
+                  <DropdownMenuItem onSelect={onOpenReport}>
                     <ArrowUpRight aria-hidden />
                     {t("Full report", "Цел извештај", "Raporti i plotë")}
-                  </Link>
-                </DropdownMenuItem>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={
+                        href ??
+                        `/beauty/assistant/reports/${turnId}#${report.key}`
+                      }
+                    >
+                      <ArrowUpRight aria-hidden />
+                      {t("Full report", "Цел извештај", "Raporti i plotë")}
+                    </Link>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </CardAction>

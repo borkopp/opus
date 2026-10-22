@@ -166,6 +166,9 @@ export const scheduleNotification = internalMutation({
       recipientAddress = phone ?? recipientAddress;
     }
     const orgForIsolation = await ctx.db.get(args.orgId);
+    // A delayed worker must not recreate notification records after owner cleanup.
+    if (!orgForIsolation || orgForIsolation.isDeleted)
+      throw new Error("Organization unavailable");
     if (
       args.channel !== "push" &&
       orgForIsolation &&

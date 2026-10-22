@@ -30,9 +30,11 @@ import {
 export function BusinessTable({
   businesses,
   onInspect,
+  onManage,
 }: {
   businesses: BusinessUsage[];
   onInspect: (id: string) => void;
+  onManage: (id: string) => void;
 }) {
   const [search, setSearch] = useState("");
   const [plan, setPlan] = useState("all");
@@ -157,6 +159,15 @@ export function BusinessTable({
                   >
                     View activity
                     <ArrowDownRight data-icon="inline-end" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-2"
+                    onClick={() => onManage(business.id)}
+                    aria-label={`Manage ${business.name}`}
+                  >
+                    Manage
                   </Button>
                 </TableCell>
                 <TableCell>

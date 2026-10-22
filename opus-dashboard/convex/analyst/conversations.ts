@@ -19,6 +19,7 @@ import {
   ANALYST_MODELS,
   analystConfigured,
   analystPlanLimits,
+  allowanceSpend,
   modelCost,
   usageMonth,
 } from "./limits";
@@ -35,7 +36,7 @@ export const getAccess = query({
   handler: async (ctx) => {
     const { orgId, org, staffMember } = await requireAuth(ctx);
     const month = usageMonth(Date.now());
-    const limits = analystPlanLimits(org.plan);
+    const limits = analystPlanLimits(org.plan, org);
     const allowed =
       isActiveIndustry(org.industry) && staffMember.role !== "staff";
     const usage = allowed
@@ -57,7 +58,7 @@ export const getAccess = query({
           .order("desc")
           .take(30)
       : [];
-    const spent = (usage?.spentMicroUsd ?? 0) + (usage?.reservedMicroUsd ?? 0);
+    const spent = allowanceSpend(usage) + (usage?.reservedMicroUsd ?? 0);
     const budgetAvailable =
       spent + ANALYST_MODELS.standard.reservation <= limits.monthlyMicroUsd;
     const deepBudgetAvailable =
@@ -172,7 +173,7 @@ export const send = mutation({
   },
   handler: async (ctx, args) => {
     const { orgId, org, user, staffMember } = await requireAnalyst(ctx);
-    const limits = analystPlanLimits(org.plan);
+    const limits = analystPlanLimits(org.plan, org);
     const question = args.question.trim();
     if (
       !question ||
@@ -248,7 +249,7 @@ export const send = mutation({
       (usage?.answers ?? 0) >= limits.answers ||
       (args.depth === "deep" &&
         (usage?.deepAnswers ?? 0) >= limits.deepAnswers) ||
-      (usage?.spentMicroUsd ?? 0) + reservation > limits.monthlyMicroUsd
+      allowanceSpend(usage) + reservation > limits.monthlyMicroUsd
     )
       throw new ConvexError("ANALYST_ALLOWANCE_REACHED");
     if (!conversationId)

@@ -70,7 +70,7 @@ export async function authorAccess(ctx: QueryCtx, turn: Doc<"analyst_turns">) {
       .unique();
     // The pending answer is already reserved. A downgrade must not let a
     // previously accepted Pro request exceed the Free allowance.
-    if (!usage || usage.answers > analystPlanLimits(org.plan).answers)
+    if (!usage || usage.answers > analystPlanLimits(org.plan, org).answers)
       throw new ConvexError("ANALYST_ACCESS_CHANGED");
   }
   return { org, user, member };

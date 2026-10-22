@@ -49,6 +49,8 @@ export const create = internalMutation({
     queuePush: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) return;
     const type = normalizedType(args);
     await ctx.db.insert("dashboard_notifications", {
       orgId: args.orgId,

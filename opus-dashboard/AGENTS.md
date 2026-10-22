@@ -90,6 +90,13 @@ per-studio setup. All appointment reads and writes still require the studio's
 
 Never hard-delete documents. Set `isDeleted: true` and `deletedAt: Date.now()`. Always filter out soft-deleted records in queries unless explicitly building an admin/audit view.
 
+Exception authorized October 22, 2026: the platform-owner-only `ownerCleanup`
+workflow may permanently remove a reviewed test studio's data and exclusive
+files. It preserves shared accounts, linked appointment history and audit logs.
+Its reference-prefix image indexes are limited to protecting shared storage;
+normal tenant reads still require org-scoped indexes. See
+`../docs/OWNER_OVERVIEW.md` for confirmation, isolation and retention rules.
+
 ```typescript
 // ✅ Correct
 .filter((q) => q.eq(q.field("isDeleted"), false))

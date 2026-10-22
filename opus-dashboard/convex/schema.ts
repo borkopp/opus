@@ -50,6 +50,16 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default defineSchema({
+  // Owner-only, session-bound cleanup confirmation and idempotent completion receipt.
+  owner_cleanup_confirmations: defineTable({
+    orgId: v.id("orgs"),
+    authUserId: v.string(),
+    sessionId: v.string(),
+    fingerprint: v.string(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+    completedAt: v.optional(v.number()),
+  }).index("by_org", ["orgId"]),
   website_designs: defineTable({
     orgId: v.id("orgs"),
     draft: websiteDesignValidator,
@@ -175,6 +185,8 @@ export default defineSchema({
     answers: v.number(),
     deepAnswers: v.number(),
     spentMicroUsd: v.number(),
+    // Keep actual provider spend; an owner reset grants a fresh budget baseline.
+    resetSpentMicroUsd: v.optional(v.number()),
     reservedMicroUsd: v.number(),
     updatedAt: v.number(),
   })
@@ -316,6 +328,9 @@ export default defineSchema({
 
     // ── Product plan ──
     plan: v.union(v.literal("free"), v.literal("paid")),
+    analystPromptLimit: v.optional(v.number()),
+    analystDeepPromptLimit: v.optional(v.number()),
+    ownerCleanupAt: v.optional(v.number()),
 
     // ── Scraper / external data ──
     // Set on orgs imported by the Skopje scraper pipeline.
@@ -356,6 +371,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["logoUrl"])
     .index("by_industry_created", ["industry", "createdAt"])
     .index("by_slug", ["slug"])
     .index("by_listing_status", ["listingStatus"])
@@ -398,6 +414,7 @@ export default defineSchema({
     uploadedAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["url"])
     .index("by_org", ["orgId"])
     .index("by_org_type", ["orgId", "type"])
     .index("by_org_active", ["orgId", "isDeleted"])
@@ -545,6 +562,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_active_org", ["activeOrgId"])
+    .index("by_image_reference", ["avatarUrl"])
     .index("by_email", ["email"])
     .index("by_auth_user_id", ["authUserId"])
     .index("by_account_deletion_requested", ["accountDeletionRequestedAt"])
@@ -586,6 +605,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["avatarUrl"])
     .index("by_email", ["email"])
     .index("by_auth_user_id", ["authUserId"])
     .index("by_clerk_id", ["clerkId"]),
@@ -626,6 +646,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["avatarUrl"])
     .index("by_org", ["orgId"])
     .index("by_user", ["userId"])
     .index("by_org_user", ["orgId", "userId"])
@@ -728,6 +749,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["photoUrl"])
     .index("by_org", ["orgId"])
     .index("by_org_category", ["orgId", "categoryId"])
     .index("by_org_active", ["orgId", "isActive"])
@@ -944,6 +966,7 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_image_reference", ["avatarUrl"])
     .index("by_org", ["orgId"])
     .index("by_org_email", ["orgId", "email"])
     .index("by_org_phone", ["orgId", "phone"])

@@ -5,6 +5,12 @@ import type {
   OwnerBookingStatus,
   OwnerOverview,
 } from "../../shared/owner-overview";
+import type {
+  AllowanceCommand,
+  AssistantAllowance,
+  CleanupCommand,
+  OrganizationCleanupPreview,
+} from "../../shared/owner-controls";
 
 // Shared data contract only: this app does not import the studio application.
 export const ownerAccess = makeFunctionReference<
@@ -28,3 +34,24 @@ export const ownerActivity = makeFunctionReference<
   },
   OwnerActivityPage
 >("ownerActivity:page");
+
+export const ownerAssistant = makeFunctionReference<
+  "query",
+  { orgId: string },
+  AssistantAllowance
+>("ownerAssistant:get");
+export const updateOwnerAssistant = makeFunctionReference<
+  "mutation",
+  AllowanceCommand,
+  AssistantAllowance
+>("ownerAssistant:update");
+export const prepareOwnerCleanup = makeFunctionReference<
+  "mutation",
+  { orgId: string },
+  OrganizationCleanupPreview
+>("ownerCleanup:prepare");
+export const executeOwnerCleanup = makeFunctionReference<
+  "mutation",
+  CleanupCommand,
+  { deleted: boolean }
+>("ownerCleanup:execute");

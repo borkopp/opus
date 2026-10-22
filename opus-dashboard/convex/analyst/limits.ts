@@ -15,12 +15,36 @@ export const ANALYST_LIMITS = {
   leaseMs: 5 * 60_000,
 } as const;
 
-export function analystPlanLimits(plan: "free" | "paid") {
+export function analystPlanLimits(
+  plan: "free" | "paid",
+  override?: { analystPromptLimit?: number; analystDeepPromptLimit?: number },
+) {
+  const answers =
+    override?.analystPromptLimit ??
+    (plan === "paid" ? ANALYST_LIMITS.answers : 3);
   return {
     ...ANALYST_LIMITS,
-    answers: plan === "paid" ? ANALYST_LIMITS.answers : 3,
-    deepAnswers: plan === "paid" ? ANALYST_LIMITS.deepAnswers : 0,
+    answers,
+    deepAnswers:
+      plan === "paid"
+        ? Math.min(
+            answers,
+            override?.analystDeepPromptLimit ?? ANALYST_LIMITS.deepAnswers,
+          )
+        : 0,
   };
+}
+
+export function allowanceSpend(
+  usage: {
+    spentMicroUsd: number;
+    resetSpentMicroUsd?: number;
+  } | null,
+) {
+  return Math.max(
+    0,
+    (usage?.spentMicroUsd ?? 0) - (usage?.resetSpentMicroUsd ?? 0),
+  );
 }
 
 // Micro-USD keeps cost accounting integer-based. Rates are conservative,

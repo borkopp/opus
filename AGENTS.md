@@ -38,12 +38,12 @@ Independent Next.js applications, with the studio and owner apps sharing Convex:
 | `opus-dashboard/` | Beauty-business dashboard plus automatic tenant websites and guest booking    | 3000 (frontend), 3210 (Convex) |
 | `opus-mk/`        | Dormant beauty marketplace retained for future work; do not modify by default | 3001                           |
 | `opus-landing/`   | Beauty-focused `opus.mk` marketing site — no backend, no auth                 | 3000                           |
-| `opus-owner/`     | Private platform-owner overview at `admin.opus.mk`; read-only analytics       | 3002                           |
+| `opus-owner/`     | Private platform-owner overview and authorized cleanup/AI allowance controls at `admin.opus.mk` | 3002 |
 | `opus-mobile/`    | Authorized Expo studio dashboard using the shared Convex backend              | 8081 (Metro / web preview)      |
 
 `opus-mk/convex` is a symlink to `../opus-dashboard/convex`. Both apps share the same Convex deployment.
 
-`opus-owner/` has its own build and deployment and shares only two small contracts
+`opus-owner/` has its own build and deployment and shares small contracts
 under `shared/`. Its analytics functions live in the existing Convex backend and
 require the single verified platform-owner email on every read. See
 [`docs/OWNER_OVERVIEW.md`](docs/OWNER_OVERVIEW.md) before changing owner access,
@@ -139,6 +139,14 @@ per-studio setup. All appointment reads and writes still require the studio's
 `orgId`; this exception does not permit cross-tenant appointment scans.
 
 **2. Soft deletes only.** Set `isDeleted: true` + `deletedAt: Date.now()`. Never call `ctx.db.delete()`.
+
+The October 22, 2026 owner cleanup authorization is a narrow exception:
+`ownerCleanup.execute` may permanently remove the explicitly reviewed beauty
+studio's data and exclusively referenced storage. It must preserve shared client
+and sign-in accounts, linked appointment history, minimum relationship records,
+and the append-only audit log. Every mutation rechecks the persisted platform-owner
+identity, session-bound confirmation, exact slug and current impact fingerprint.
+See `docs/OWNER_OVERVIEW.md`. This is not permission for general hard deletion.
 
 **3. Money in minor units (integers).** `2500` = £25.00. Never floats, never formatted strings.
 

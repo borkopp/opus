@@ -88,6 +88,10 @@ export const create = mutation({
             }
         }
 
+        const org = await ctx.db.get(orgId);
+        if (!org || org.isDeleted) {
+            throw new ConvexError("This studio is no longer available.");
+        }
         const now = Date.now();
 
         const reviewId = await ctx.db.insert("reviews", {

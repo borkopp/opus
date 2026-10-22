@@ -12,6 +12,7 @@ import { Brand } from "./brand";
 import { OverviewMetrics } from "./overview-metrics";
 import { BusinessTable } from "./business-table";
 import { BusinessActivity } from "./business-activity";
+import { BusinessControls } from "./business-controls";
 
 export function OwnerDashboard({ email }: { email: string }) {
   const [data, setData] = useState<OwnerOverview | null>(null);
@@ -20,6 +21,8 @@ export function OwnerDashboard({ email }: { email: string }) {
   const [expired, setExpired] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState("");
+  const [managedId, setManagedId] = useState("");
+  const managed = data?.businesses.find((row) => row.id === managedId);
   const sessionEnded = useRef(false);
   const activityExpired = useCallback(() => {
     sessionEnded.current = true;
@@ -178,10 +181,33 @@ export function OwnerDashboard({ email }: { email: string }) {
         )}
         {data && (
           <>
+            {managed && (
+              <BusinessControls
+                key={managed.id}
+                business={managed}
+                onClose={() => setManagedId("")}
+                onExpired={activityExpired}
+                onDeleted={() => {
+                  setManagedId("");
+                  setData((previous) =>
+                    previous
+                      ? {
+                          ...previous,
+                          businesses: previous.businesses.filter(
+                            (row) => row.id !== managed.id,
+                          ),
+                        }
+                      : null,
+                  );
+                  void refresh();
+                }}
+              />
+            )}
             <OverviewMetrics data={data} />
             <BusinessTable
               businesses={data.businesses}
               onInspect={inspectBusiness}
+              onManage={setManagedId}
             />
             <BusinessActivity
               businesses={data.businesses}

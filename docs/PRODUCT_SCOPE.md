@@ -27,9 +27,12 @@ The active web surfaces are:
 - `opus-dashboard/` for business onboarding, services, staff, availability, customers, calendar, appointment management, automatic `{slug}.opus.mk` studio websites, and guest booking;
 - `opus-landing/` for the truthful beauty-focused `opus.mk` marketing site.
 
-The separate `opus-owner/` app is an internal, read-only platform overview at
-`admin.opus.mk`, accessible only to the OPUS owner's verified email. It does not
-add a customer vertical or a business-facing feature. See [`OWNER_OVERVIEW.md`](OWNER_OVERVIEW.md).
+The separate `opus-owner/` app is an internal platform overview at
+`admin.opus.mk`, accessible only to the OPUS owner's verified email. The
+October 22, 2026 authorization adds deliberate test-studio cleanup and AI
+Assistant allowance controls. Cleanup preserves shared accounts, linked client
+appointment history and audit records. This does not add a customer vertical
+or a business-facing feature. See [`OWNER_OVERVIEW.md`](OWNER_OVERVIEW.md).
 
 `opus-mk/` is retained as a dormant marketplace package, but marketplace discovery and marketplace publication are paused. Do not delete its schemas or reusable backend foundations, and do not expose or expand the marketplace unless the user explicitly resumes that work.
 

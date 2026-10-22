@@ -114,11 +114,21 @@ export function ClientAppointments({
                 </Badge>
               </CardContent>
               <CardFooter className="flex flex-wrap gap-2">
-                <Button asChild variant="outline">
-                  <Link href={`/book/${encodeURIComponent(booking.orgSlug)}`}>
-                    {t("Book again", "Закажи повторно", "Rezervo përsëri")}
-                  </Link>
-                </Button>
+                {booking.studioRemoved ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t(
+                      "This studio is no longer available.",
+                      "Ова студио повеќе не е достапно.",
+                      "Kjo studio nuk është më e disponueshme.",
+                    )}
+                  </p>
+                ) : (
+                  <Button asChild variant="outline">
+                    <Link href={`/book/${encodeURIComponent(booking.orgSlug)}`}>
+                      {t("Book again", "Закажи повторно", "Rezervo përsëri")}
+                    </Link>
+                  </Button>
+                )}
                 {booking.canCancel &&
                   (confirmId === booking._id ? (
                     <>

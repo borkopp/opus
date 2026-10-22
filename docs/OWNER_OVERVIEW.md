@@ -1,5 +1,78 @@
 # Private owner overview
 
+## Owner controls — authorized 22 October 2026
+
+The implementation adds **Manage** beside each business. These controls require
+the same persisted, verified platform-owner account and unexpired session as
+analytics, on every backend entry point. `/api/controls` accepts same-origin POST
+requests and returns private/no-store responses. A studio ID selects a target;
+it grants no authority. Implementation and local checks do not establish a
+production release; deploy the compatible backend before the owner frontend.
+
+### AI Assistant allowance
+
+- Show current monthly prompt and detailed usage, plan defaults and budget usage.
+- Set a persistent custom monthly total (0–10,000), including a detailed subset.
+  Zero pauses new prompts. Detailed access still requires Pro. The change applies
+  to the existing studio allowance, shared by its authorized assistant users.
+- Restore plan defaults without resetting usage.
+- Reset the current month's prompt counters and allowance budget. Conversation
+  history and actual provider-spend accounting remain stored; a budget baseline
+  records the reset. Existing provider configuration and the $3 allowance-budget
+  cap still apply. A new month starts with fresh usage and the selected allowance.
+- Reject updates while a response or cost reservation is in progress. Record
+  the actor and before/after limits and usage in the append-only audit log.
+
+### Test-studio deletion
+
+**Review deletion** inventories the selected studio and reports exact removal
+and retention counts. Type its exact slug, then hold the deletion button for
+five uninterrupted seconds with mouse, touch, Space or Enter. Early release,
+moving off the button, focus loss, cancellation or a hidden tab cancels the hold.
+The server also requires a session-bound confirmation at least five seconds old
+and no more than ten minutes old. It recomputes the complete reviewed fingerprint
+inside the deletion transaction; changed records, media sharing, billing or work
+in progress require a new preview. Completed confirmations are idempotent.
+
+The explicit exception to routine soft deletion removes settings, website
+designs, media references, unneeded services/staff, schedules, unlinked test
+customers/appointments, customer notes, reviews, AI histories and credentials,
+notifications, invitations, push subscriptions, recovery offers, usage, search
+embeddings, closed billing connections and webhook receipts. Exclusively
+referenced stored images are deleted; current, soft-deleted and attributable old
+audit image references are inspected. Storage IDs are matched against actual
+download URLs. Conservative reference-prefix indexes protect files shared by other studios or
+global accounts, including retained/deleted records. Those indexes are an
+owner-cleanup-only cross-tenant ownership check and return no foreign data. A
+bounded auth-profile page uses the component's named `name` index and selects
+only image references to protect accounts not yet mirrored to client profiles.
+
+The operation preserves all `users`, `opus_users` and Better Auth identities and
+sessions. It clears active-studio pointers and removes this studio's staff access.
+Appointments linked directly to a client account or through a linked customer
+are retained, with minimal customer, service, staff and deleted-studio records.
+Their existing IDs remain valid. Confirmed/checked-in appointments are cancelled
+without sending messages; completion jobs are cancelled for all appointments.
+Client history can still show the removed studio, with booking/cancellation
+actions unavailable. Existing audits remain unchanged, and cancellations and
+the deletion receive new audit entries. The old slug remains reserved.
+
+Open Polar subscriptions/checkouts, in-progress AI/delivery/import/translation
+work and any dormant hospitality records block cleanup. Provider-held records
+are not erased or cancelled by deleting OPUS data. External images and unattached
+uploads with no attributable reference remain outside the cleanup. For the
+current test-studio use case, collection fails closed above 2,000 tenant records,
+4 MB of serialized tenant data, 100 image references, 100 active-account pointers,
+1,000 sign-in profiles or 2,000 globally stored files. These bounds avoid partial background purges.
+Larger studios need a separately reviewed operator cleanup. Production operators
+should keep a recoverable Convex backup before irreversible cleanup; the UI is
+not a restore mechanism. Never run deletion as a release smoke test on real data.
+
+The table policy in `convex/lib/ownerCleanup.ts` is explicit and covered by a
+schema-coverage test. New tenant tables and image fields must receive a cleanup
+and sharing policy before enabling them here. Normal tenant mutations retain
+their existing soft-delete and membership authorization rules.
+
 ## Current release — 30 September 2026
 
 The business activity expansion is deployed at `https://admin.opus.mk` through
@@ -148,8 +221,8 @@ still consume storage. Linked images include non-deleted gallery, logo, service,
 staff and customer avatar references. Stored files are matched using their actual
 Convex download URLs, not by assuming the URL token is a database ID. The same
 stored file counts once globally and once in each business that references it.
-External files are not downloaded to estimate their sizes. No upload, cleanup,
-deletion or file ownership migration is introduced.
+External files are not downloaded to estimate their sizes. The overview itself performs no upload, cleanup, deletion or ownership migration;
+the separate controls above require explicit interaction.
 
 Storage units are decimal KB/MB/GB. Database size, bandwidth, provider billing,
 payment revenue, page views and uptime are not measured by this overview.
@@ -196,7 +269,7 @@ First release the additive Convex index and owner analytics functions from
 receive `CONVEX_DEPLOY_KEY`.
 
 Create a Vercel project rooted at `opus-owner/`, use Node 24, and enable inclusion
-of source files outside the root directory so it can import the two small
+of source files outside the root directory so it can import the small
 `shared/` contracts. Its own `vercel.json` specifies `npm ci` and `npm run build`.
 
 Set these environment variables on the **owner Vercel project**:

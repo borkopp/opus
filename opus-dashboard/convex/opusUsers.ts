@@ -103,7 +103,12 @@ async function ownAppointments(ctx: QueryCtx) {
           .order("desc")
           .collect(),
       ]);
-      if (!org || org.isDeleted || !isActiveIndustry(org.industry)) return [];
+      if (
+        !org ||
+        (org.isDeleted && !org.ownerCleanupAt) ||
+        !isActiveIndustry(org.industry)
+      )
+        return [];
       const now = wallClockNow(settings?.timezone ?? "Europe/Skopje");
       return Promise.all(
         bookings
@@ -128,6 +133,7 @@ async function ownAppointments(ctx: QueryCtx) {
               orgName: org.name,
               orgSlug: org.slug,
               orgLogoUrl: org.logoUrl,
+              studioRemoved: Boolean(org.ownerCleanupAt),
               serviceName:
                 service?.orgId === orgId ? service.name : "Appointment",
               staffName: staff?.orgId === orgId ? staff.displayName : "",
@@ -144,6 +150,7 @@ async function ownAppointments(ctx: QueryCtx) {
               priceMinorUnits: booking.priceMinorUnits,
               currency: booking.currency,
               canCancel: Boolean(
+                !org.isDeleted &&
                 settings &&
                 booking.status === "confirmed" &&
                 booking.startAt - now >=
@@ -151,6 +158,7 @@ async function ownAppointments(ctx: QueryCtx) {
               ),
               cancellationWindowHours: settings?.cancellationWindowHours ?? 24,
               isUpcoming:
+                !org.isDeleted &&
                 booking.endAt > now &&
                 ["confirmed", "checked_in"].includes(booking.status),
             };

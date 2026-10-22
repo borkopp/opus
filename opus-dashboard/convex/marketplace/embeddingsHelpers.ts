@@ -82,6 +82,9 @@ export const upsertEmbedding = internalMutation({
     isPublished: v.boolean(),
   },
   handler: async (ctx, args) => {
+    // Provider work can finish after a studio is removed. Do not resurrect its data.
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) return null;
     const existing = await ctx.db
       .query("marketplace_embeddings")
       .withIndex("by_entity", (q) =>

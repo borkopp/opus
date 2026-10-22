@@ -156,6 +156,10 @@ There is no link to it in the business dashboard, landing page or tenant sites.
 ## What it shows
 
 - Existing beauty businesses, recent creations and six months of creation counts.
+- Business-owner emails from non-deleted owner memberships and their linked,
+  non-deleted platform accounts, also included in table search. Multiple owners
+  are listed once each; missing account links show "Not available". Public
+  contact emails and staff/manager emails are not used as owner identities.
 - Saved public website state (published, unpublished, suspended), and a link to
   each published studio website. Marketplace publication is not used.
 - Free/Paid plan distribution. These are plan flags, not billing receipts or MRR.

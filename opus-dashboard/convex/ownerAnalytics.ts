@@ -32,6 +32,7 @@ type EntityPage = {
   bookings30d: number;
   cancelled30d: number;
   references: string[];
+  ownerEmails: string[];
   continueCursor: string;
   isDone: boolean;
 };
@@ -139,8 +140,16 @@ export const readEntities = internalQuery({
       bookings30d = 0,
       cancelled30d = 0;
     const references = new Set<string>();
+    const ownerEmails = new Set<string>();
     for (const row of result.page) {
       if (row.isDeleted) continue;
+      if ("role" in row && row.role === "owner" && row.userId) {
+        // Resolve only accounts linked by this studio's current owner seats.
+        // Inactive owners still own the studio; removed seats/accounts do not.
+        const user = await ctx.db.get(row.userId);
+        const email = user?.email.trim().toLowerCase();
+        if (user && !user.isDeleted && email) ownerEmails.add(email);
+      }
       // Services/staff mean usable current resources; customers/bookings are
       // all retained non-deleted records. Include current customer avatars too.
       if (!("isActive" in row) || row.isActive) count++;
@@ -162,6 +171,7 @@ export const readEntities = internalQuery({
       bookings30d,
       cancelled30d,
       references: [...references],
+      ownerEmails: [...ownerEmails],
       continueCursor: result.continueCursor,
       isDone: result.isDone,
     };
@@ -173,13 +183,11 @@ export const readStorage = internalQuery({
   handler: async (ctx, args): Promise<Page<FileSummary>> => {
     await requirePlatformOwner(ctx);
     // _storage is Convex's global system table and has no tenant index.
-    const result = await ctx.db.system
-      .query("_storage")
-      .paginate({
-        cursor: args.cursor,
-        numItems: 250,
-        maximumBytesRead: 1_000_000,
-      });
+    const result = await ctx.db.system.query("_storage").paginate({
+      cursor: args.cursor,
+      numItems: 250,
+      maximumBytesRead: 1_000_000,
+    });
     return {
       ...result,
       page: await Promise.all(
@@ -265,6 +273,7 @@ export const overview = action({
           name: org.name,
           slug: org.slug,
           city: org.city,
+          ownerEmails: [],
           createdAt: org.createdAt,
           plan: org.plan,
           websiteStatus: org.websiteStatus,
@@ -280,6 +289,7 @@ export const overview = action({
           missingImages: 0,
         };
         const references = new Set<string>(org.logoUrl ? [org.logoUrl] : []);
+        const ownerEmails = new Set<string>();
         for (const table of entityTables) {
           let cursor: Cursor = null;
           do {
@@ -300,6 +310,7 @@ export const overview = action({
               row.cancelled30d += result.cancelled30d;
             }
             result.references.forEach((reference) => references.add(reference));
+            result.ownerEmails.forEach((email) => ownerEmails.add(email));
             cursor = result.isDone ? null : result.continueCursor;
           } while (cursor !== null);
         }
@@ -333,6 +344,7 @@ export const overview = action({
           }
         }
         row.images = businessFiles.size;
+        row.ownerEmails = [...ownerEmails].sort();
         row.externalImages = businessExternal.size;
         row.missingImages = businessMissing.size;
         businesses.push(row);

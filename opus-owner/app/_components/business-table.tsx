@@ -44,7 +44,7 @@ export function BusinessTable({
   const filtered = businesses
     .filter(
       (business) =>
-        `${business.name} ${business.slug} ${business.city ?? ""}`
+        `${business.name} ${business.slug} ${business.city ?? ""} ${(business.ownerEmails ?? []).join(" ")}`
           .toLowerCase()
           .includes(search.trim().toLowerCase()) &&
         (plan === "all" || business.plan === plan) &&
@@ -83,7 +83,7 @@ export function BusinessTable({
             />
             <Input
               aria-label="Search businesses"
-              placeholder="Search business or city…"
+              placeholder="Search business, owner email or city…"
               value={search}
               onChange={(event) => reset(setSearch, event.target.value)}
               className="pl-9"
@@ -129,6 +129,7 @@ export function BusinessTable({
             <TableRow>
               {[
                 "Business",
+                "Owner email",
                 "Website",
                 "Plan",
                 "Services",
@@ -169,6 +170,20 @@ export function BusinessTable({
                   >
                     Manage
                   </Button>
+                </TableCell>
+                <TableCell className="min-w-52">
+                  {business.ownerEmails?.length ? (
+                    business.ownerEmails.map((email) => (
+                      <div
+                        key={email}
+                        className="max-w-64 break-all whitespace-normal"
+                      >
+                        {email}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground">Not available</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   {business.websiteStatus === "published" ? (
@@ -234,7 +249,7 @@ export function BusinessTable({
             ))}
             {!visible.length && (
               <TableRow>
-                <TableCell colSpan={9} className="h-32 text-center">
+                <TableCell colSpan={10} className="h-32 text-center">
                   <p className="font-medium">
                     {businesses.length
                       ? "No businesses match these filters."

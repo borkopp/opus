@@ -141,6 +141,63 @@ describe("private platform-owner analytics", () => {
     });
   });
 
+  test("lists only linked business-owner emails, including multiple owners across staff pages", async () => {
+    const t = createBackend();
+    const owner = await login(t);
+    const first = await org(t, "First");
+    const second = await org(t, "Second");
+    const unlinked = await org(t, "Unlinked");
+    await t.run(async (ctx) => {
+      const base = {
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      const account = (email: string, isDeleted = false) =>
+        ctx.db.insert("users", { ...base, name: "Account", email, isDeleted });
+      const staff = (
+        orgId: Id<"orgs">,
+        userId: Id<"users"> | undefined,
+        extra: Partial<Doc<"staff_members">> = {},
+      ) =>
+        ctx.db.insert("staff_members", {
+          ...base,
+          orgId,
+          userId,
+          displayName: "Team member",
+          specialties: [],
+          role: "owner",
+          isActive: true,
+          ...extra,
+        });
+      const alpha = await account("ALPHA@example.com");
+      const beta = await account("beta@example.com");
+      const manager = await account("manager@example.com");
+      await staff(first, alpha);
+      for (let i = 0; i < 200; i++)
+        await staff(first, manager, { role: "manager" });
+      await staff(first, alpha); // Duplicate owner on a later pagination page.
+      await staff(first, beta, { isActive: false });
+      await staff(first, await account("former@example.com"), {
+        isDeleted: true,
+      });
+      await staff(first, await account("deleted@example.com", true));
+      await staff(second, await account("other@example.com"));
+      await staff(unlinked, undefined);
+    });
+
+    const result = await owner.action(overview, {});
+    expect(
+      result.businesses.find((row) => row.id === first)?.ownerEmails,
+    ).toEqual(["alpha@example.com", "beta@example.com"]);
+    expect(
+      result.businesses.find((row) => row.id === second)?.ownerEmails,
+    ).toEqual(["other@example.com"]);
+    expect(
+      result.businesses.find((row) => row.id === unlinked)?.ownerEmails,
+    ).toEqual([]);
+  });
+
   test("reports true publication/plan state, deduplicates storage, excludes deleted and unclaimed imports", async () => {
     const t = createBackend();
     const owner = await login(t);

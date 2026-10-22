@@ -3,6 +3,7 @@ export interface BusinessUsage {
   name: string;
   slug: string;
   city: string | null;
+  ownerEmails: string[];
   createdAt: number;
   plan: "free" | "paid";
   websiteStatus: "unpublished" | "published" | "suspended";

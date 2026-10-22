@@ -73,7 +73,37 @@ schema-coverage test. New tenant tables and image fields must receive a cleanup
 and sharing policy before enabling them here. Normal tenant mutations retain
 their existing soft-delete and membership authorization rules.
 
-## Current release — 30 September 2026
+## Current release — 22 October 2026
+
+Owner cleanup, AI Assistant allowance controls and searchable business-owner
+emails are deployed at `https://admin.opus.mk`. Source commit
+`0f6c24725266c2221252e4bdf8b4f23042432012` is live through Vercel deployment
+`dpl_4A3zv7VTvvQxjSibzYrrHCo9X3tu` (READY). The compatible backend is deployed to
+`calm-dachshund-294`, preserving the existing AI Assistant streaming functions.
+
+The release uploaded only tracked `opus-owner/` and `shared/` sources to the
+independent owner project, after deploying the compatible Convex functions and
+additive indexes. The production owner build passed. The existing studio and
+landing frontend deployments were unchanged. The optional removed-studio label
+and hidden rebooking button in `ClientAppointments.tsx` are committed for the
+next dashboard frontend release; backend history retention and rejection of
+operations against removed studios are already deployed.
+
+Checks: 215 targeted backend/owner tests, TypeScript and lint checks, and local
+synthetic cleanup/allowance interactions at 1440, 768, 390 and 320 px passed.
+Production checks verified the admin URL resolves to the new READY deployment,
+anonymous controls return 401, foreign-origin controls return 403, private/no-store
+responses, the removed preview route returns 404, and the landing, studio login
+and a published tenant site return HTTP 200. Signed-in controls were exercised
+with local fixtures; production checks did not execute cleanup or allowance
+mutations. Read-only production counts remained 22 active organizations, with
+zero cleanup confirmations, completed deletions or owner allowance-change audits.
+The email follow-up passed 31 targeted backend tests and all 27 owner-app tests,
+backend/owner typechecking and lint. Read-only production checks found a linked
+owner email for all 22 active businesses. The table handles multiple owners,
+missing account links and case-insensitive email search.
+
+## Activity release — 30 September 2026
 
 The business activity expansion is deployed at `https://admin.opus.mk` through
 Vercel production deployment `dpl_HvCUP3BXd3mYgdF1ekFDGgxdPTuQ` (READY).

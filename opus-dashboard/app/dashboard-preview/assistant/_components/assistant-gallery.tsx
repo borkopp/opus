@@ -219,6 +219,7 @@ export function AssistantGallery() {
                 <SelectItem value="1440">Desktop · 1440px</SelectItem>
                 <SelectItem value="768">Tablet · 768px</SelectItem>
                 <SelectItem value="390">Phone · 390px</SelectItem>
+                <SelectItem value="320">Small phone · 320px</SelectItem>
               </PreviewSelect>
             </label>
             <label className="flex flex-col gap-1.5 text-xs text-muted-foreground">

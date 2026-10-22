@@ -78,10 +78,11 @@ export const al: DashboardTranslations = {
       "capacity_exceeded": "Koha e rezervuar tejkalon kapacitetin e regjistruar. Kontrolloni oraret dhe kohëzgjatjet e termineve."
 },
     errors: {
+      "ANALYST_DETAILED_PLAN_REQUIRED": "Analiza e detajuar kërkon OPUS Pro. Zgjidhni E shpejtë për të përdorur kufirin tuaj Free.",
       "ANALYST_NOT_CONFIGURED": "Asistenti AI nuk mundi të fillonte një analizë të re. Ju lutemi provoni përsëri më vonë.",
       "ANALYST_BUSY": "Një analizë tashmë po ekzekutohet për studion tuaj. Ju lutemi prisni të përfundojë.",
       "ANALYST_RATE_LIMIT": "Ju lutemi prisni një minutë para se të bëni një pyetje tjetër.",
-      "ANALYST_ALLOWANCE_REACHED": "Studioja juaj ka arritur kufirin mujor të analizave. Ai rinovohet në datën e shfaqur më sipër.",
+      "ANALYST_ALLOWANCE_REACHED": "Studioja juaj ka arritur kufirin mujor të analizave.",
       "ANALYST_CONVERSATION_FULL": "Filloni një bisedë të re për të vazhduar. Kjo bisedë ka arritur kufirin e saj.",
       "ANALYST_INVALID_MESSAGE": "Shkruani një pyetje me deri në 2,000 karaktere.",
       "ANALYST_ACCESS_CHANGED": "Qasja juaj ka ndryshuar. Ju lutemi rifreskoni faqen.",

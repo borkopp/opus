@@ -223,3 +223,57 @@ export function validateAnswer(
     followUps: answer.followUps.map((text) => resolve(text, answer.reportKeys)),
   };
 }
+
+/** Decode only the leading text field; never expose JSON or incomplete escapes. */
+export function previewAnswerText(
+  json: string,
+  reports: AnalystReport[],
+  language: "en" | "mk",
+): string | null {
+  const prefix = /^\s*\{\s*"text"\s*:\s*"/.exec(json);
+  if (!prefix) return null;
+  const start = prefix[0].length - 1;
+  let end = start + 1;
+  let complete = false;
+  while (end < json.length) {
+    const char = json[end];
+    if (char === '"') {
+      complete = true;
+      break;
+    }
+    if (char === "\\") {
+      const escapeLength = json[end + 1] === "u" ? 6 : 2;
+      if (end + escapeLength > json.length) break;
+      end += escapeLength;
+    } else end++;
+  }
+  try {
+    let text: string = JSON.parse(`${json.slice(start, end)}"`);
+    if (!complete) {
+      // Wait for whole words and fact references, including a split opening [[.
+      const open = text.lastIndexOf("[");
+      if (open > text.lastIndexOf("]")) {
+        const factStart = text.lastIndexOf("[[");
+        text = text.slice(
+          0,
+          factStart >= 0 && factStart + 1 === open ? factStart : open,
+        );
+      }
+      text = text.replace(/\S+$/, "");
+    }
+    // Reuse final-answer validation so streamed numbers must also come from
+    // existing tenant reports. The final answer still validates its own citations.
+    return validateAnswer(
+      {
+        text,
+        reportKeys: reports.map((report) => report.key),
+        recommendations: [],
+        followUps: [],
+      },
+      reports,
+      language,
+    ).text;
+  } catch {
+    return null;
+  }
+}

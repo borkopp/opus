@@ -333,9 +333,10 @@ period-based analytics. Reports describe recorded appointment activity; they do
 not establish collected revenue, payments or profit.
 
 Free studios see clearly labelled sample analytics and a limited sample client
-list with blurred names. Real analytics, the full directory, client profiles and
-report exports remain Pro-only, enforced by the server. Free studios retain the
-client contact details needed for booking. This does not enable autonomous
+list with blurred names. The analytics workspace's real data, full directory,
+client profiles and report exports remain Pro-only, enforced by the server.
+The assistant's limited Free allowance below is a separate, read-only exception.
+Free studios retain the client contact details needed for booking. This does not enable autonomous
 analysis, campaigns, messaging, or another product vertical.
 See [ANALYTICS.md](ANALYTICS.md) for metric definitions and report behavior.
 
@@ -352,7 +353,13 @@ appointment confirmations and changes, and team emails remain available on Free.
 
 The read-only business analyst was explicitly authorized on September 16, 2026.
 It lives in the beauty dashboard at `/beauty/assistant` and is restricted to
-paid-plan owners and managers. It answers questions using tenant-scoped booking
+studio owners and managers. The October 21, 2026 authorization gives Free studios
+3 Fast prompts per UTC calendar month, shared across their owners and managers.
+Detailed mode remains Pro-only; Pro retains 200 answers including up to 20 Detailed
+answers per month. The server reserves usage atomically, rejects excess requests
+and refunds failed answers. Saved conversations and their reports stay readable
+after the allowance is used. Plan changes retain the month's existing usage.
+It answers questions using tenant-scoped booking
 analytics, attaches inspectable reports, and proposes experiments. It cannot
 change appointments, contact customers, launch campaigns, or infer profit from
 appointment prices. This authorization does not enable the AI Receptionist or the

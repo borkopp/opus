@@ -18,6 +18,7 @@ import {
   ANALYST_LIMITS,
   ANALYST_MODELS,
   analystConfigured,
+  analystPlanLimits,
   modelCost,
   usageMonth,
 } from "./limits";
@@ -34,35 +35,34 @@ export const getAccess = query({
   handler: async (ctx) => {
     const { orgId, org, staffMember } = await requireAuth(ctx);
     const month = usageMonth(Date.now());
+    const limits = analystPlanLimits(org.plan);
     const allowed =
       isActiveIndustry(org.industry) && staffMember.role !== "staff";
-    const usage =
-      allowed && org.plan === "paid"
-        ? await ctx.db
-            .query("analyst_usage")
-            .withIndex("by_org_month", (q) =>
-              q.eq("orgId", orgId).eq("monthStartMs", month.startMs),
-            )
-            .first()
-        : null;
-    const active =
-      allowed && org.plan === "paid"
-        ? await ctx.db
-            .query("analyst_turns")
-            .withIndex("by_org_created", (q) =>
-              q
-                .eq("orgId", orgId)
-                .gte("createdAt", Date.now() - ANALYST_LIMITS.leaseMs),
-            )
-            .order("desc")
-            .take(30)
-        : [];
+    const usage = allowed
+      ? await ctx.db
+          .query("analyst_usage")
+          .withIndex("by_org_month", (q) =>
+            q.eq("orgId", orgId).eq("monthStartMs", month.startMs),
+          )
+          .first()
+      : null;
+    const active = allowed
+      ? await ctx.db
+          .query("analyst_turns")
+          .withIndex("by_org_created", (q) =>
+            q
+              .eq("orgId", orgId)
+              .gte("createdAt", Date.now() - ANALYST_LIMITS.leaseMs),
+          )
+          .order("desc")
+          .take(30)
+      : [];
     const spent = (usage?.spentMicroUsd ?? 0) + (usage?.reservedMicroUsd ?? 0);
     const budgetAvailable =
-      spent + ANALYST_MODELS.standard.reservation <=
-      ANALYST_LIMITS.monthlyMicroUsd;
+      spent + ANALYST_MODELS.standard.reservation <= limits.monthlyMicroUsd;
     const deepBudgetAvailable =
-      spent + ANALYST_MODELS.deep.reservation <= ANALYST_LIMITS.monthlyMicroUsd;
+      limits.deepAnswers > 0 &&
+      spent + ANALYST_MODELS.deep.reservation <= limits.monthlyMicroUsd;
     return {
       orgId,
       allowed,
@@ -70,18 +70,18 @@ export const getAccess = query({
       configured: analystConfigured(),
       resetAt: month.resetAt,
       remaining: budgetAvailable
-        ? Math.max(0, ANALYST_LIMITS.answers - (usage?.answers ?? 0))
+        ? Math.max(0, limits.answers - (usage?.answers ?? 0))
         : 0,
       deepRemaining: deepBudgetAvailable
-        ? Math.max(0, ANALYST_LIMITS.deepAnswers - (usage?.deepAnswers ?? 0))
+        ? Math.max(0, limits.deepAnswers - (usage?.deepAnswers ?? 0))
         : 0,
       busy:
         (usage?.reservedMicroUsd ?? 0) > 0 ||
         active.some((t) => t.status === "pending" || t.status === "running"),
       budgetAvailable,
       deepBudgetAvailable,
-      limit: ANALYST_LIMITS.answers,
-      deepLimit: ANALYST_LIMITS.deepAnswers,
+      limit: limits.answers,
+      deepLimit: limits.deepAnswers,
     };
   },
 });
@@ -128,6 +128,9 @@ export const get = query({
           answer: t.answer,
           depth: t.depth,
           status: t.status,
+          ...(t.status === "running" && t.streamedText
+            ? { streamedText: t.streamedText }
+            : {}),
           errorCode: t.errorCode,
           createdAt: t.createdAt,
           reports: t.reports.map((report) => previewReport(report, t.question)),
@@ -168,7 +171,8 @@ export const send = mutation({
     depth: depthValidator,
   },
   handler: async (ctx, args) => {
-    const { orgId, user, staffMember } = await requireAnalyst(ctx);
+    const { orgId, org, user, staffMember } = await requireAnalyst(ctx);
+    const limits = analystPlanLimits(org.plan);
     const question = args.question.trim();
     if (
       !question ||
@@ -198,6 +202,8 @@ export const send = mutation({
         throw new ConvexError("ANALYST_REQUEST_CONFLICT");
       return { conversationId: existing.conversationId, turnId: existing._id };
     }
+    if (args.depth === "deep" && limits.deepAnswers === 0)
+      throw new ConvexError("ANALYST_DETAILED_PLAN_REQUIRED");
     if (!analystConfigured()) throw new ConvexError("ANALYST_NOT_CONFIGURED");
     const now = Date.now(),
       month = usageMonth(now);
@@ -239,10 +245,10 @@ export const send = mutation({
     if ((usage?.reservedMicroUsd ?? 0) > 0)
       throw new ConvexError("ANALYST_BUSY");
     if (
-      (usage?.answers ?? 0) >= ANALYST_LIMITS.answers ||
+      (usage?.answers ?? 0) >= limits.answers ||
       (args.depth === "deep" &&
-        (usage?.deepAnswers ?? 0) >= ANALYST_LIMITS.deepAnswers) ||
-      (usage?.spentMicroUsd ?? 0) + reservation > ANALYST_LIMITS.monthlyMicroUsd
+        (usage?.deepAnswers ?? 0) >= limits.deepAnswers) ||
+      (usage?.spentMicroUsd ?? 0) + reservation > limits.monthlyMicroUsd
     )
       throw new ConvexError("ANALYST_ALLOWANCE_REACHED");
     if (!conversationId)
@@ -388,6 +394,24 @@ export const recordUsage = internalMutation({
   },
 });
 
+export const updateStream = internalMutation({
+  args: { turnId: v.id("analyst_turns"), text: v.string() },
+  handler: async (ctx, { turnId, text }) => {
+    const turn = await ctx.db.get(turnId);
+    if (
+      !turn ||
+      turn.isDeleted ||
+      turn.status !== "running" ||
+      turn.expiresAt <= Date.now()
+    )
+      throw new ConvexError("ANALYST_EXPIRED");
+    await authorAccess(ctx, turn);
+    if (!analystConfigured()) throw new ConvexError("ANALYST_NOT_CONFIGURED");
+    if (text.length > 20_000) throw new Error("ANALYST_CONTEXT_LIMIT");
+    await ctx.db.patch(turnId, { streamedText: text || undefined });
+  },
+});
+
 export const finish = internalMutation({
   args: {
     turnId: v.id("analyst_turns"),
@@ -436,6 +460,7 @@ export const finish = internalMutation({
       status: success ? "completed" : "failed",
       completedAt: Date.now(),
       answer: success ? args.answer : undefined,
+      streamedText: undefined,
       reports: success ? args.reports : [],
       errorCode: success ? undefined : (errorCode ?? "ANALYST_FAILED"),
       costMicroUsd: cost,

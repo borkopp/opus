@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, type Ref } from "react";
 import { ArrowUp, BrainCircuit, Zap } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
@@ -20,7 +21,9 @@ export function AssistantComposer({
   disabled,
   pending,
   deepRemaining,
+  detailedAllowed = true,
   onSend,
+  inputRef,
 }: {
   question: string;
   setQuestion: (value: string) => void;
@@ -29,38 +32,46 @@ export function AssistantComposer({
   disabled: boolean;
   pending: boolean;
   deepRemaining: number | null;
+  detailedAllowed?: boolean;
   onSend: () => void;
+  inputRef?: Ref<HTMLTextAreaElement>;
 }) {
   const { t } = useDashboardI18n();
+  const inputId = useId();
+  const cannotSend =
+    disabled ||
+    pending ||
+    !question.trim() ||
+    (depth === "deep" && deepRemaining === 0);
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
-        onSend();
+        if (!cannotSend) onSend();
       }}
-      className="shrink-0 pt-4"
+      className="shrink-0 pt-3"
     >
       <FieldGroup>
         <Field>
-          <FieldLabel
-            data-replay-public
-            htmlFor="business-question"
-            className="sr-only"
-          >
+          <FieldLabel data-replay-public htmlFor={inputId} className="sr-only">
             {t(
               "Ask about your studio",
               "Прашајте за вашето студио",
               "Pyesni për studion tuaj",
             )}
           </FieldLabel>
-          <InputGroup className="dashboard-assistant-composer">
+          <InputGroup
+            className="dashboard-assistant-composer"
+            data-disabled={disabled && !pending}
+          >
             <InputGroupTextarea
-              className="max-h-[min(15rem,25dvh)] min-h-12 overflow-y-auto overscroll-contain py-2"
-              id="business-question"
+              ref={inputRef}
+              className="max-h-[min(12rem,25dvh)] min-h-11 overflow-y-auto overscroll-contain px-3 py-2.5"
+              id={inputId}
               value={question}
               maxLength={2000}
-              disabled={disabled}
-              rows={2}
+              disabled={disabled && !pending}
+              rows={1}
               placeholder={t(
                 "What would you like to understand about your studio?",
                 "Што сакате да дознаете за вашето студио?",
@@ -74,13 +85,13 @@ export function AssistantComposer({
                   !event.nativeEvent.isComposing
                 ) {
                   event.preventDefault();
-                  onSend();
+                  if (!cannotSend) onSend();
                 }
               }}
             />
             <InputGroupAddon
               align="block-end"
-              className="justify-between gap-2 px-2.5 pt-0.5 pb-2"
+              className="justify-between gap-2 px-2 pt-0.5 pb-1.5"
             >
               <ToggleGroup
                 type="single"
@@ -101,7 +112,7 @@ export function AssistantComposer({
               >
                 <ToggleGroupItem
                   value="standard"
-                  className="group/mode h-8 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none"
+                  className="group/mode h-9 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none sm:h-8"
                   title={t(
                     "Fast answers and essential figures",
                     "Брзи одговори и клучни бројки",
@@ -110,45 +121,48 @@ export function AssistantComposer({
                 >
                   <Zap
                     aria-hidden
-                    className="size-3.5 group-data-[state=on]/mode:text-primary"
+                    className="hidden group-data-[state=on]/mode:text-primary sm:block"
                   />
                   {t("Fast", "Брза", "E shpejtë")}
                 </ToggleGroupItem>
                 <ToggleGroupItem
                   value="deep"
-                  className="group/mode h-8 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none"
-                  disabled={deepRemaining === 0}
+                  className="group/mode h-9 gap-1.5 rounded-full px-2.5 text-xs text-muted-foreground transition-colors data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm motion-reduce:transition-none sm:h-8"
+                  disabled={!detailedAllowed || deepRemaining === 0}
                   title={
-                    deepRemaining === null
+                    !detailedAllowed
                       ? t(
-                          "More context and recommendations",
-                          "Повеќе детали и препораки",
-                          "Më shumë kontekst dhe rekomandime",
+                          "Detailed analysis is available with OPUS Pro",
+                          "Деталната анализа е достапна со OPUS Pro",
+                          "Analiza e detajuar është e disponueshme me OPUS Pro",
                         )
-                      : t(
-                          `More context and recommendations · ${deepRemaining} remaining`,
-                          `Повеќе детали и препораки · Преостанати: ${deepRemaining}`,
-                          `Më shumë kontekst dhe rekomandime · ${deepRemaining} të mbetura`,
-                        )
+                      : deepRemaining === null
+                        ? t(
+                            "More context and recommendations",
+                            "Повеќе детали и препораки",
+                            "Më shumë kontekst dhe rekomandime",
+                          )
+                        : t(
+                            `More context and recommendations · ${deepRemaining} remaining`,
+                            `Повеќе детали и препораки · Преостанати: ${deepRemaining}`,
+                            `Më shumë kontekst dhe rekomandime · ${deepRemaining} të mbetura`,
+                          )
                   }
                 >
                   <BrainCircuit
                     aria-hidden
-                    className="size-3.5 group-data-[state=on]/mode:text-primary"
+                    className="hidden group-data-[state=on]/mode:text-primary sm:block"
                   />
                   {t("Detailed", "Детална", "E detajuar")}
+                  {!detailedAllowed && <span className="text-[10px]">Pro</span>}
                 </ToggleGroupItem>
               </ToggleGroup>
               <InputGroupButton
                 type="submit"
                 size="icon-sm"
                 variant="default"
-                disabled={
-                  disabled ||
-                  pending ||
-                  !question.trim() ||
-                  (depth === "deep" && deepRemaining === 0)
-                }
+                className="size-11 shrink-0 rounded-full sm:size-9"
+                disabled={cannotSend}
                 aria-label={t(
                   "Send question",
                   "Испрати прашање",

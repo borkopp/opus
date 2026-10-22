@@ -78,10 +78,11 @@ export const en: DashboardTranslations = {
       "capacity_exceeded": "Booked time exceeds recorded capacity. Check schedules and appointment durations."
 },
     errors: {
+      "ANALYST_DETAILED_PLAN_REQUIRED": "Detailed analysis requires OPUS Pro. Choose Fast to use your Free allowance.",
       "ANALYST_NOT_CONFIGURED": "The AI Assistant could not start a new analysis. Please try again later.",
       "ANALYST_BUSY": "An analysis is already running for your studio. Please wait for it to finish.",
       "ANALYST_RATE_LIMIT": "Please wait a minute before asking another question.",
-      "ANALYST_ALLOWANCE_REACHED": "Your studio has reached its monthly analysis allowance. It renews on the date shown above.",
+      "ANALYST_ALLOWANCE_REACHED": "Your studio has reached its monthly analysis allowance.",
       "ANALYST_CONVERSATION_FULL": "Start a new conversation to continue. This conversation has reached its limit.",
       "ANALYST_INVALID_MESSAGE": "Enter a question of up to 2,000 characters.",
       "ANALYST_ACCESS_CHANGED": "Your access has changed. Please refresh the page.",

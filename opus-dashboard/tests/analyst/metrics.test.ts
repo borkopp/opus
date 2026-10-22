@@ -8,7 +8,75 @@ import {
   parseDate,
   resolvePeriod,
 } from "../../convex/analyst/periods";
-import { compactReport, validateAnswer } from "../../convex/analyst/prompt";
+import {
+  compactReport,
+  previewAnswerText,
+  validateAnswer,
+} from "../../convex/analyst/prompt";
+
+describe("streamed answer text", () => {
+  test.each(["en", "mk"] as const)(
+    "every partial JSON boundary safely resolves facts in %s",
+    (language) => {
+      const reports = [report()];
+      const raw = {
+        text: 'Your studio’s "Cut" total was [[r1.total]].\n\nПроверете ги термините.',
+        reportKeys: ["r1"],
+        recommendations: [],
+        followUps: [],
+      };
+      const expected = validateAnswer(raw, reports, language).text;
+      const json = JSON.stringify(raw);
+      const previews: string[] = [];
+      for (let length = 1; length <= json.length; length++) {
+        const text = previewAnswerText(
+          json.slice(0, length),
+          reports,
+          language,
+        );
+        if (text) {
+          expect(expected.startsWith(text)).toBe(true);
+          expect(text).not.toMatch(/\[\[|\]\]|reportKeys|recommendations/);
+          previews.push(text);
+        }
+      }
+      expect(new Set(previews).size).toBeGreaterThan(3);
+      expect(previews.at(-1)).toBe(expected);
+    },
+  );
+  test("waits for incomplete escaped quotes, unicode and fact tokens", () => {
+    expect(previewAnswerText('{"text":"Hello \\u04', [], "en")).toBe("Hello ");
+    expect(previewAnswerText('{"text":"Hello \\', [], "en")).toBe("Hello ");
+    expect(previewAnswerText('{"text":"Hello \\u0410 world', [], "en")).toBe(
+      "Hello А ",
+    );
+    expect(previewAnswerText('{"text":"Total was [', [report()], "en")).toBe(
+      "Total was ",
+    );
+    expect(
+      previewAnswerText('{"text":"Total was [[r1.to', [report()], "en"),
+    ).toBe("Total was ");
+  });
+  test.each(["9999 MKD.", "[[r2.total]].", "[[r1.unknown]].", "[[broken."])(
+    "does not stream invalid values: %s",
+    (value) => {
+      expect(
+        previewAnswerText(
+          JSON.stringify({ text: "Total was " + value }),
+          [report()],
+          "en",
+        ),
+      ).toBeNull();
+    },
+  );
+  test("ignores tool JSON and malformed answer JSON", () => {
+    expect(previewAnswerText('{"metric":"appointments"}', [], "en")).toBeNull();
+    expect(
+      previewAnswerText('{"text":"Invalid \\q escape"}', [], "en"),
+    ).toBeNull();
+    expect(previewAnswerText('{"text":""}', [], "en")).toBeNull();
+  });
+});
 
 const request: AnalysisRequest = {
   metric: "completed_value",

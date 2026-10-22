@@ -650,6 +650,43 @@ export function getExamples(language: PreviewLanguage): PreviewExample[] {
     group: "Conversation",
     turn: plain,
   });
+  const streamingTurn =
+    examples.find((example) => example.id === "appointments")?.turn ?? plain;
+  examples.push({
+    id: "streaming",
+    label: "Streaming answer",
+    description:
+      "Live text arriving in chunks, followed by the validated report.",
+    group: "Conversation",
+    turn: {
+      ...streamingTurn,
+      answer: {
+        ...streamingTurn.answer!,
+        followUps: [
+          text("Compare with last month", "Спореди со претходниот месец"),
+          text(
+            "Which services had the most appointments?",
+            "Кои услуги имаа најмногу термини?",
+          ),
+          text(
+            "Show cancellation trends",
+            "Покажи ги трендовите на откажување",
+          ),
+        ],
+        text: text(
+          "Your studio had **180 appointments in September**. This includes all recorded appointment statuses, including cancellations and no-shows. The report below shows the total for the month.\n\nFor a closer look:\n- Compare September with the previous month to see how appointment activity changed.\n- Look at your most-booked services to understand where demand was strongest.\n- Review cancellations separately before deciding which empty slots to promote.\n\nThese figures describe the appointments recorded in your calendar. They do not tell us how much money was collected, whether every client attended, or which costs the studio paid. Keep those distinctions in mind when planning your next steps.\n\nStart with a month-to-month comparison, then explore the services behind the change. Open the full report below to check the recorded figures and the period included in this answer.",
+          "Вашето студио имаше **180 термини во септември**. Ова ги вклучува сите евидентирани статуси, вклучувајќи откажувања и непојавувања. Извештајот подолу го покажува вкупниот број за месецот.\n\nЗа подетален преглед:\n- Споредете го септември со претходниот месец за да видите како се променила активноста.\n- Погледнете кои услуги имале најмногу резервации за подобро да ја разберете побарувачката.\n- Разгледајте ги откажувањата одделно пред да одлучите кои слободни термини да ги промовирате.\n\nОвие бројки ги опишуваат термините евидентирани во вашиот календар. Тие не покажуваат колку пари се наплатени, дали секој клиент дошол или кои трошоци ги платило студиото. Имајте ги предвид овие разлики кога ги планирате следните чекори.\n\nЗапочнете со споредба по месеци, а потоа разгледајте ги услугите зад промената. Отворете го целиот извештај подолу за да ги проверите евидентираните бројки и периодот опфатен во одговорот.",
+        ),
+      },
+    },
+  });
+  examples.push({
+    ...examples.find((example) => example.id === "streaming")!,
+    id: "streaming-free",
+    label: "Streaming · Free plan",
+    description:
+      "The same streaming experience, with Detailed mode locked on Free.",
+  });
   for (const status of ["pending", "running", "failed"] as const) {
     examples.push({
       id: status,

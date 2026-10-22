@@ -1,13 +1,13 @@
 # AI Assistant
 
-Authorized on 16 September 2026 as a read-only Pro feature for beauty studio owners and managers. The dashboard entry is `/beauty/assistant`. This is separate from the dormant customer-facing AI Receptionist.
+Authorized on 16 September 2026 as a read-only feature for beauty studio owners and managers. The 21 October 2026 authorization adds 3 Fast prompts per month for Free studios; Detailed mode remains Pro-only. The dashboard entry is `/beauty/assistant`. This is separate from the customer-facing Instagram AI Receptionist.
 
 ## Runtime
 
 ```mermaid
 flowchart TD
   A[Authenticated dashboard chat] --> B[Convex send mutation]
-  B --> C[Membership, paid plan, duplicate request and budget checks]
+  B --> C[Membership, plan allowance, duplicate request and budget checks]
   C --> D[Persist turn, reserve allowance, schedule worker]
   D --> E[OpenAI Responses API]
   E --> F[Validated analyse_period tool]
@@ -41,12 +41,14 @@ Local implementation and mocked-provider checks are not evidence that a producti
 
 | Mode | Model | Input / output per million tokens | Reservation per answer |
 | --- | --- | --- | --- |
-| Quick | `gpt-5.6-luna` | USD 0.20 / 1.20 | USD 0.03 |
+| Fast | `gpt-5.6-luna` | USD 0.20 / 1.20 | USD 0.03 |
 | Detailed | `gpt-5.6-terra` | USD 2.00 / 12.00 | USD 0.20 |
 
 Prices are the implementation's accounting assumptions and must be rechecked before changing models or rates. Cached-input discounts are conservatively ignored. Output usage includes reasoning tokens. There are at most three provider calls, three analytics tool calls, 1,500 output tokens per call, and 60 KB cumulative serialized provider input per turn. Automatic SDK retries are disabled. A provider request times out after 45 seconds; a five-minute lease releases stranded reservations.
 
-Each studio has 200 answers per UTC calendar month, including at most 20 detailed answers. Owners and managers share this allowance; their conversations remain private. The monthly USD 3 internal spend ceiling can stop usage before the answer count is reached. This ceiling covers assistant model calls, not the entire cost of operating the EUR 20 subscription. Database, hosting, payment fees, tax, messaging and support are separate costs.
+Each Free studio has 3 Fast answers per UTC calendar month and cannot submit Detailed requests. Pro retains 200 answers, including at most 20 Detailed answers. Owners and managers share their studio's allowance; their conversations remain private. Starting a new chat or changing plans does not reset usage. Upgrading applies the Pro limit to existing monthly usage; downgrading applies the Free limit. Workers also recheck the plan before analysis and publication, so a pending Detailed request or a request beyond the Free limit cannot finish after a downgrade. Saved conversations and reports remain readable after reaching the allowance or downgrading.
+
+The existing monthly USD 3 internal spend ceiling applies to both plans and can stop usage before the answer count is reached. It covers assistant model calls only. Database, hosting, payment fees, tax, messaging and support are separate costs.
 
 Requests reserve funds and answer counts atomically before scheduling. Only one analysis per studio runs at a time, including across month rollover. Replaying a request ID is idempotent. Five submissions per minute, a 2,000-character question limit and 60 turns per conversation bound abuse. Provider failure restores the user's answer allowance but retains billable usage. If a provider call's cost is unknown, the whole reservation is counted conservatively. Finalization is idempotent, and audited submission/completion records permit reconciliation.
 
@@ -82,7 +84,7 @@ Queries are bounded to 366 days, 10,000 bookings per period, 200 staff, 300 serv
 
 ## Data boundaries and privacy
 
-Identity and tenant are derived server-side from Better Auth and active staff membership. Every tenant table read begins with a named organization index, or an ID lookup followed by an explicit tenant/owner check. Scheduled workers recheck the author's current role, membership, paid plan and conversation ownership before reads and provider calls, and before publishing an answer.
+Identity and tenant are derived server-side from Better Auth and active staff membership. Every tenant table read begins with a named organization index, or an ID lookup followed by an explicit tenant/owner check. Scheduled workers recheck the author's current role, membership, plan eligibility and conversation ownership before reads and provider calls, and before publishing an answer. The Free assistant allowance does not unlock the Pro analytics workspace or client directory.
 
 The provider receives the user's question, a short conversation context, studio/staff/service names and bounded aggregate reports. Customer profiles, contact details, appointment notes, raw bookings and database identifiers are not added to its context. Text that users type into a question is still sent to the provider; the application does not claim to redact arbitrary user-entered personal information.
 
@@ -98,8 +100,11 @@ Numeric statements must reference server-generated facts, such as `[[r1.total]]`
 search over the existing saved-history list, and a focused conversation with a
 docked composer. On phones, history and the account menu open in a dialog.
 The welcome view offers starter questions; existing conversations still reopen
-automatically. Fast/Detailed analysis, allowances, pending/error states, full
-reports, and the Free-plan upgrade response retain their existing behavior.
+automatically. Fast analysis, allowances, pending/error states, full
+reports, and saved history are available to both plans. Free studios see their
+remaining Fast allowance, a disabled Detailed option marked Pro, and an upgrade
+link after reaching the allowance. The overview widget opens the real assistant
+for both plans.
 The studio's selected Clarity/Studio appearance applies throughout.
 
 `components/business-assistant/AssistantChatWorkspace.tsx` is shared with the
@@ -110,6 +115,35 @@ the design previews use sample conversations and never call the provider.
 
 ### Response presentation
 
+Answers stream from the provider through the existing private Convex conversation.
+During generation, the chat shows whole-word text updates and a writing indicator.
+The server decodes only the answer text, holds unfinished fact references, and
+applies the existing numeric-fact checks before publishing each preview. JSON,
+tool arguments and unverified numeric literals are never rendered.
+Reports, recommendations and follow-ups appear only after full-answer validation.
+Partial text is cleared on retries, completion, failures and lease expiry.
+Permission and plan checks also apply to stream updates. Streams retain the same
+single prompt reservation and final usage accounting; a failed stream refunds
+the prompt and retains known or conservative provider cost.
+
+Text updates are batched at most every 200 ms, with at most 50 updates per turn,
+to bound database writes. No artificial typing delay is added to live responses.
+Streamdown renders both partial and completed prose in the same mounted component,
+with short word fades while streaming. Long answers remain fully visible on
+completion. Before the first text, a subtle shimmer shows the review status;
+the caret takes over once text arrives. Word fades, the caret and report
+transitions respect reduced motion. Partial text is not announced to screen
+readers on every update. Saved completed answers open immediately.
+Model prose supports basic Markdown formatting without loading images or creating
+links; figures and charts still use the validated structured reports.
+The existing Message Scroller anchors the question, follows new content until the
+reader scrolls away, and offers a keyboard-accessible jump-to-latest button.
+Completed answers have Copy and Full report actions, followed by a horizontally
+scrollable suggestion row. Suggestions fill and focus the composer for review;
+they do not spend a prompt until submitted. The compact composer grows with text
+and allows drafting during generation while sending and mode changes are locked.
+The response gallery includes a replayable long, formatted streaming example.
+
 Responses now choose a visual from the question and the saved report shape:
 a single number, a period comparison, a daily trend, a ranked list, a percentage
 indicator, or an empty/unavailable explanation. Template selection is deterministic
@@ -117,8 +151,8 @@ and supports English, Macedonian and Albanian question cues. It does not require
 an additional model call or alter saved report schemas. Plain answers remain
 plain text, and recommendations use a separate suggested-experiment block.
 
-The chat leads with the answer and its first cited report. Supporting reports
-and long answer continuations can be expanded in chat. “Data & calculation,”
+The chat leads with the complete answer and its first cited report. Supporting
+reports can be expanded in chat. “Data & calculation,”
 including full tables, calculation timestamps and detailed methodology, appears
 only in the full report. Open it from the small ellipsis menu in a chat report's
 header. Period/filter scope and concise data caveats stay visible in chat,
@@ -150,8 +184,8 @@ reports and recommendations, long tables/labels, missing data, currency caveats,
 and conversation loading, empty, progress and error states. Switch between chat
 responses and expanded reports, Clarity/Studio appearance, English/Macedonian,
 and actual desktop/tablet/phone iframe widths. The report's ellipsis menu opens
-the full report inside the preview; suggested questions and retries only display
-the selected prompt.
+the full report inside the preview. Suggested questions and retries fill the real
+composer; submitting it only displays the selected prompt locally.
 
 Edit `components/business-assistant/AnalysisReport.tsx` and `ReportVisual.tsx`
 for reports, and `components/business-assistant/AssistantResponse.tsx` for answer,

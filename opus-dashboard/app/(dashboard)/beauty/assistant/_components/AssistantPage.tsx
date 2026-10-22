@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/empty";
 import { ConversationPanel } from "@/components/business-assistant/ConversationPanel";
 import { AssistantComposer } from "@/components/business-assistant/AssistantComposer";
-import { FreeAssistantPage } from "./FreeAssistantPage";
 import { AssistantChatWorkspace } from "@/components/business-assistant/AssistantChatWorkspace";
 import { DashboardAccountMenu } from "@/components/dashboard/DashboardAccountMenu";
 
@@ -67,8 +66,6 @@ export function AssistantPage() {
   const account = profile ? (
     <DashboardAccountMenu profile={profile} />
   ) : undefined;
-  if (!access.paid)
-    return <FreeAssistantPage key={access.orgId} account={account} />;
   return (
     <AssistantWorkspace key={access.orgId} access={access} account={account} />
   );
@@ -81,7 +78,7 @@ function AssistantWorkspace({
   access: Access;
   account?: ReactNode;
 }) {
-  const { t, language } = useDashboardI18n();
+  const { t, language, locale } = useDashboardI18n();
   const conversations = useQuery(api.analyst.conversations.list);
   const [selection, setSelection] = useState<
     Id<"analyst_conversations"> | null | undefined
@@ -94,7 +91,9 @@ function AssistantWorkspace({
   );
   const send = useMutation(api.analyst.conversations.send);
   const [question, setQuestion] = useState("");
-  const [depth, setDepth] = useState<"standard" | "deep">("standard");
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const [selectedDepth, setDepth] = useState<"standard" | "deep">("standard");
+  const depth = access.paid ? selectedDepth : "standard";
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const attempt = useRef<{
@@ -157,6 +156,7 @@ function AssistantWorkspace({
   function choosePrompt(text: string) {
     setQuestion(text);
     setError(null);
+    composerRef.current?.focus({ preventScroll: true });
   }
   function newConversation() {
     if (attemptInFlight.current) return;
@@ -184,7 +184,7 @@ function AssistantWorkspace({
       onSelect={chooseConversation}
       onNew={newConversation}
       navigationDisabled={submitting}
-      paid
+      paid={access.paid}
       usage={access}
       account={account}
       isEmpty={!loading && !conversation?.turns.length}
@@ -208,10 +208,28 @@ function AssistantWorkspace({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          {exhausted && (
+          {exhausted && !pending && (
             <Alert>
               <AlertDescription>
                 {analystError("ANALYST_ALLOWANCE_REACHED", language)}
+                <span>
+                  {t("Renews", "Се обновува", "Rinovohet")}{" "}
+                  {new Intl.DateTimeFormat(locale, {
+                    dateStyle: "medium",
+                  }).format(access.resetAt)}
+                </span>
+                {!access.paid && (
+                  <Link
+                    href="https://opus.mk/#pricing"
+                    className="font-medium underline underline-offset-4"
+                  >
+                    {t(
+                      "Upgrade to OPUS Pro for more answers and Detailed mode.",
+                      "Надгради на OPUS Pro за повеќе одговори и детална анализа.",
+                      "Përmirëso në OPUS Pro për më shumë përgjigje dhe modalitetin e detajuar.",
+                    )}
+                  </Link>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -219,6 +237,7 @@ function AssistantWorkspace({
       }
       composer={
         <AssistantComposer
+          inputRef={composerRef}
           question={question}
           setQuestion={setQuestion}
           depth={depth}
@@ -226,6 +245,7 @@ function AssistantWorkspace({
           disabled={disabled}
           pending={pending}
           deepRemaining={access.deepBudgetAvailable ? access.deepRemaining : 0}
+          detailedAllowed={access.paid}
           onSend={submit}
         />
       }

@@ -150,9 +150,9 @@ export function AssistantChatWorkspace({
                 "Përgjigjet bazohen në terminet tuaja të regjistruara.",
               )
             : t(
-                "Studio insights are available with OPUS Pro.",
-                "Деловните анализи се достапни со OPUS Pro.",
-                "Analizat e studios janë të disponueshme me OPUS Pro.",
+                `Free includes ${usage?.limit ?? 3} Fast prompts per studio each month. Detailed mode requires OPUS Pro.`,
+                `Free вклучува ${usage?.limit ?? 3} прашања во брз режим месечно по студио. Деталниот режим е достапен со OPUS Pro.`,
+                `Free përfshin ${usage?.limit ?? 3} pyetje të shpejta për studio çdo muaj. Modaliteti i detajuar kërkon OPUS Pro.`,
               )}
       </p>
     </>

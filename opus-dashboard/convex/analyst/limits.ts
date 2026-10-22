@@ -10,8 +10,18 @@ export const ANALYST_LIMITS = {
   maxModelCalls: 3,
   maxOutputTokens: 1_500,
   maxInputBytes: 60_000,
+  streamIntervalMs: 200,
+  maxStreamUpdates: 50,
   leaseMs: 5 * 60_000,
 } as const;
+
+export function analystPlanLimits(plan: "free" | "paid") {
+  return {
+    ...ANALYST_LIMITS,
+    answers: plan === "paid" ? ANALYST_LIMITS.answers : 3,
+    deepAnswers: plan === "paid" ? ANALYST_LIMITS.deepAnswers : 0,
+  };
+}
 
 // Micro-USD keeps cost accounting integer-based. Rates are conservative,
 // uncached standard API prices; discounts never increase the allowance.

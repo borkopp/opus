@@ -150,6 +150,7 @@ export default defineSchema({
     ),
     model: v.string(),
     answer: v.optional(answerValidator),
+    streamedText: v.optional(v.string()),
     reports: v.array(reportValidator),
     errorCode: v.optional(v.string()),
     inputTokens: v.number(),

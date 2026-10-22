@@ -1,10 +1,13 @@
 @import "tailwindcss" source(none);
+@import "shadcn/tailwind.css";
+@import "streamdown/styles.css";
 
 /* Watch UI source only, not Convex's local database, tests, or sibling apps. */
 @source ".";
 @source "../components";
 @source "../hooks";
 @source "../lib";
+@source "../node_modules/streamdown/dist/*.js";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -712,10 +715,14 @@ body:has(.dashboard-shell) .workspace-segments > button {
   font-size: 12px;
   font-weight: 500;
   box-shadow: none;
-  transition: background-color 150ms ease, color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
 }
 .workspace-segments > button:is([data-state="active"], [aria-pressed="true"]),
-body:has(.dashboard-shell) .workspace-segments > button:is([data-state="active"], [aria-pressed="true"]) {
+body:has(.dashboard-shell)
+  .workspace-segments
+  > button:is([data-state="active"], [aria-pressed="true"]) {
   background: var(--card);
   color: var(--foreground);
   border-color: var(--border);
@@ -901,6 +908,31 @@ body:has(.dashboard-shell) .dashboard-assistant-composer {
   background: var(--background);
   padding: 6px;
   box-shadow: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+.assistant-answer {
+  overflow-wrap: anywhere;
+}
+.assistant-answer:empty {
+  display: none;
+}
+.assistant-answer :where(p) {
+  white-space: pre-wrap;
+}
+.assistant-answer :where(h1, h2, h3, h4) {
+  font-size: inherit;
+  line-height: inherit;
+}
+@media (prefers-reduced-motion: reduce) {
+  .assistant-answer [data-sd-animate],
+  .assistant-answer [data-sd-animate-marker]::marker {
+    animation: none;
+  }
+  body:has(.dashboard-shell) .dashboard-assistant-composer {
+    transition: none;
+  }
 }
 body:has(.dashboard-shell)
   .dashboard-assistant-composer:has(

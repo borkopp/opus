@@ -4,7 +4,8 @@ import OpenAI from "openai";
 import { zodResponsesFunction, zodTextFormat } from "openai/helpers/zod";
 import type {
   ResponseInput,
-  ResponseCreateParamsNonStreaming,
+  Response,
+  ResponseCreateParamsStreaming,
 } from "openai/resources/responses/responses";
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
@@ -16,6 +17,7 @@ import {
   analysisSchema,
   answerSchema,
   compactReport,
+  previewAnswerText,
   validateAnswer,
 } from "./prompt";
 import { dateKey } from "./periods";
@@ -70,13 +72,24 @@ export const run = internalAction({
         },
       ];
       let inputBytes = 0,
-        toolCalls = 0;
+        toolCalls = 0,
+        streamUpdates = 0;
+      let streamedText = "";
+      const clearStream = async () => {
+        if (!streamedText) return;
+        await ctx.runMutation(internal.analyst.conversations.updateStream, {
+          turnId,
+          text: "",
+        });
+        streamedText = "";
+      };
       const cache = new Map<string, AnalystReport>();
       for (let step = 0; step < ANALYST_LIMITS.maxModelCalls; step++) {
         // Recheck permission and the lease before every paid provider request.
         await ctx.runQuery(internal.analyst.conversations.runtime, { turnId });
         if (!analystConfigured()) throw new Error("ANALYST_NOT_CONFIGURED");
-        const params: ResponseCreateParamsNonStreaming = {
+        const params: ResponseCreateParamsStreaming = {
+          stream: true,
           model: turn.model,
           instructions: ANALYST_SYSTEM_PROMPT,
           input,
@@ -99,9 +112,42 @@ export const run = internalAction({
         if (inputBytes > ANALYST_LIMITS.maxInputBytes)
           throw new Error("ANALYST_CONTEXT_LIMIT");
         requestInFlight = true;
-        const response = await client.responses.create(params);
+        const stream = await client.responses.create(params);
+        let response: Response | undefined;
+        let json = "";
+        let lastUpdate = 0;
+        try {
+          for await (const event of stream) {
+            if (event.type === "response.output_text.delta") {
+              json += event.delta;
+              if (
+                streamUpdates < ANALYST_LIMITS.maxStreamUpdates &&
+                Date.now() - lastUpdate >= ANALYST_LIMITS.streamIntervalMs
+              ) {
+                const text = previewAnswerText(json, reports, turn.language);
+                if (text && text !== streamedText) {
+                  await ctx.runMutation(
+                    internal.analyst.conversations.updateStream,
+                    { turnId, text },
+                  );
+                  streamedText = text;
+                  lastUpdate = Date.now();
+                  streamUpdates++;
+                }
+              }
+            } else if (
+              event.type === "response.completed" ||
+              event.type === "response.incomplete" ||
+              event.type === "response.failed"
+            )
+              response = event.response;
+          }
+        } catch (error) {
+          stream.controller.abort();
+          throw error;
+        }
         // Save billable output including reasoning even when output is invalid.
-        if (!response.usage) throw new Error("ANALYST_USAGE_UNAVAILABLE");
+        if (!response?.usage) throw new Error("ANALYST_USAGE_UNAVAILABLE");
         await ctx.runMutation(internal.analyst.conversations.recordUsage, {
           turnId,
           input: response.usage.input_tokens,
@@ -121,8 +167,14 @@ export const run = internalAction({
         );
         if (!calls.length) {
           try {
+            const outputText = response.output
+              .flatMap((item) => (item.type === "message" ? item.content : []))
+              .flatMap((part) =>
+                part.type === "output_text" ? [part.text] : [],
+              )
+              .join("");
             const answer = validateAnswer(
-              JSON.parse(response.output_text),
+              JSON.parse(outputText),
               reports,
               turn.language,
             );
@@ -133,6 +185,7 @@ export const run = internalAction({
             });
             return;
           } catch {
+            await clearStream();
             if (step === ANALYST_LIMITS.maxModelCalls - 1)
               throw new Error("ANALYST_INVALID_RESPONSE");
             input.push(...continuation);
@@ -144,6 +197,7 @@ export const run = internalAction({
             continue;
           }
         }
+        await clearStream();
         input.push(...continuation);
         for (const call of calls) {
           let output: unknown;

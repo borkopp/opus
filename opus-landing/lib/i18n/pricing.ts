@@ -153,7 +153,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "AI Chat",
             description:
               "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување.",
-            free: false,
+            free: "3 брзи одговори месечно*",
             pro: "200 одговори месечно*",
           },
           {
@@ -316,7 +316,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "AI Chat",
             description:
               "Ask AI about your business. Get recommendations, insights, and ideas for improvement.",
-            free: false,
+            free: "3 Fast answers / month*",
             pro: "200 answers / month*",
           },
           {

@@ -34,7 +34,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 
 type QueriedTurn = FunctionReturnType<
   typeof api.analyst.conversations.get
@@ -111,7 +110,10 @@ export function ConversationPanel({
   return (
     <MessageScrollerProvider autoScroll defaultScrollPosition="last-anchor">
       <MessageScroller className="flex-1">
-        <MessageScrollerViewport>
+        <MessageScrollerViewport
+          tabIndex={0}
+          aria-label={t("Conversation", "Разговор", "Bisedë")}
+        >
           <MessageScrollerContent className="py-6 pr-1">
             {turns.map((turn) => (
               <Fragment key={turn._id}>
@@ -139,21 +141,7 @@ export function ConversationPanel({
                           "OPUS · Asistenti AI",
                         )}
                       </MessageHeader>
-                      {turn.status === "pending" ||
-                      turn.status === "running" ? (
-                        <p
-                          data-replay-public
-                          role="status"
-                          className="flex items-center gap-2 px-3 text-sm text-muted-foreground"
-                        >
-                          <Spinner aria-hidden="true" />
-                          {t(
-                            "Reviewing your appointments…",
-                            "Ги анализираме вашите термини…",
-                            "Duke shqyrtuar terminet tuaja…",
-                          )}
-                        </p>
-                      ) : turn.status === "failed" ? (
+                      {turn.status === "failed" ? (
                         <Alert>
                           <AlertDescription className="flex flex-col items-start gap-3">
                             {analystError(turn.errorCode, language)}
@@ -173,22 +161,23 @@ export function ConversationPanel({
                           </AlertDescription>
                         </Alert>
                       ) : (
-                        turn.answer && (
-                          <AssistantResponse
-                            answer={turn.answer}
-                            question={turn.question}
-                            reports={turn.reports}
-                            turnId={turn._id}
-                            disabled={disabled}
-                            onPrompt={onPrompt}
-                            reportHref={reportHref}
-                            onOpenReport={
-                              onOpenReport
-                                ? () => onOpenReport(turn)
-                                : undefined
-                            }
-                          />
-                        )
+                        <AssistantResponse
+                          answer={turn.answer}
+                          streaming={
+                            turn.status === "pending" ||
+                            turn.status === "running"
+                          }
+                          streamedText={turn.streamedText}
+                          question={turn.question}
+                          reports={turn.reports}
+                          turnId={turn._id}
+                          disabled={disabled}
+                          onPrompt={onPrompt}
+                          reportHref={reportHref}
+                          onOpenReport={
+                            onOpenReport ? () => onOpenReport(turn) : undefined
+                          }
+                        />
                       )}
                     </MessageContent>
                   </Message>
@@ -198,6 +187,7 @@ export function ConversationPanel({
           </MessageScrollerContent>
         </MessageScrollerViewport>
         <MessageScrollerButton
+          className="size-11 sm:size-9"
           aria-label={t(
             "Go to latest answer",
             "До последниот одговор",

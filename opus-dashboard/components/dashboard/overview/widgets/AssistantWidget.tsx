@@ -22,8 +22,12 @@ export function AssistantWidget() {
       )}
       action={
         access?.paid === false && (
-          <Badge data-replay-public variant="pro">
-            Pro
+          <Badge data-replay-public variant="secondary">
+            {t(
+              `${access.limit} Fast / month`,
+              `${access.limit} брзи / месечно`,
+              `${access.limit} të shpejta / muaj`,
+            )}
           </Badge>
         )
       }
@@ -36,22 +40,20 @@ export function AssistantWidget() {
                 "Се проверува достапноста…",
                 "Po kontrollohet disponueshmëria…",
               )
-            : !access.paid
-              ? null
-              : !access.configured
-                ? t(
-                    "Temporarily unavailable",
-                    "Привремено недостапно",
-                    "Përkohësisht e padisponueshme",
-                  )
-                : t(
-                    `${access.remaining} answers available`,
-                    `${access.remaining} достапни одговори`,
-                    `${access.remaining} përgjigje të disponueshme`,
-                  )
+            : !access.configured
+              ? t(
+                  "Temporarily unavailable",
+                  "Привремено недостапно",
+                  "Përkohësisht e padisponueshme",
+                )
+              : t(
+                  `${access.remaining} answers available`,
+                  `${access.remaining} достапни одговори`,
+                  `${access.remaining} përgjigje të disponueshme`,
+                )
         }
         description={
-          access?.paid && !access.configured
+          access && !access.configured
             ? t(
                 "New analyses are unavailable. Your saved reports are still here.",
                 "Новите анализи се недостапни. Зачуваните извештаи се тука.",
@@ -63,17 +65,8 @@ export function AssistantWidget() {
                 "Eksploroni prirjet e termineve, performancën e shërbimeve dhe vizitat e klientëve.",
               )
         }
-        href={
-          access && !access.paid
-            ? "https://opus.mk/#pricing"
-            : "/beauty/assistant"
-        }
-        external={!!access && !access.paid}
-        actionLabel={
-          access && !access.paid
-            ? t("Learn more", "Дознај повеќе", "Mësoni më shumë")
-            : t("Open assistant", "Отвори асистент", "Hap asistentin")
-        }
+        href="/beauty/assistant"
+        actionLabel={t("Open assistant", "Отвори асистент", "Hap asistentin")}
       />
     </WidgetFrame>
   );

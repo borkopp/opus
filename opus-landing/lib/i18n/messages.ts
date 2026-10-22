@@ -198,21 +198,21 @@ export const mkMessages = {
     subheading:
       "AI одговара на пораки, ви дава препораки и ви помага подобро да го разберете вашиот бизнис.",
     usageNote:
-      "AI Chat, AI Receptionist и останатите алатки се вклучени во Pro. Користете ги директно од вашата сметка.",
+      "Free вклучува 3 брзи AI Chat одговори месечно. Pro додава повеќе одговори, детални анализи и AI Receptionist.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
       description:
         "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување врз основа на податоците од вашиот салон.",
-      note: "200 одговори месечно, од кои до 20 детални анализи.",
+      note: "Free: 3 брзи одговори месечно. Pro: 200 одговори, од кои до 20 детални анализи.",
       artCopy: "Прашајте го AI за вашиот бизнис.",
       yourAnalyst: "AI Chat",
       subtitle: "Одговори, препораки и увид во вашиот бизнис.",
       sampleHeading: "ПРИМЕР ЗА РАЗГОВОР",
       sampleNote:
         "Илустративни податоци · Одговорите се засноваат на податоци од вашето студио.",
-      limit1: "200 одговори / месечно",
-      limit2: "До 20 детални анализи",
+      limit1: "Free: 3 брзи одговори / месечно",
+      limit2: "Pro: 200 одговори, до 20 детални",
       days: ["П", "В", "С", "Ч", "П", "С"],
       chip: "AI препораки за вашиот бизнис",
       examples: [
@@ -730,20 +730,20 @@ export const enMessages: Messages = {
     subheading:
       "AI answers messages, gives you recommendations, and helps you understand your business.",
     usageNote:
-      "AI Chat, AI Receptionist, and the other tools are included in Pro. Use them directly from your account.",
+      "Free includes 3 Fast AI Chat answers per month. Pro adds more answers, Detailed analysis, and AI Receptionist.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
       description:
         "Ask AI questions about your business. Get recommendations, explore trends, and find ways to improve using your salon’s data.",
-      note: "200 answers per month, including up to 20 detailed analyses.",
+      note: "Free: 3 Fast answers per month. Pro: 200 answers, including up to 20 detailed analyses.",
       artCopy: "Ask AI about your business.",
       yourAnalyst: "AI Chat",
       subtitle: "Answers, recommendations, and business insights.",
       sampleHeading: "EXPLORE A SAMPLE CONVERSATION",
       sampleNote: "Illustrative data · Your answers use your studio’s data.",
-      limit1: "200 answers / month",
-      limit2: "Up to 20 detailed analyses",
+      limit1: "Free: 3 Fast answers / month",
+      limit2: "Pro: 200 answers, up to 20 Detailed",
       days: ["M", "T", "W", "T", "F", "S"],
       chip: "AI recommendations for your business",
       examples: [

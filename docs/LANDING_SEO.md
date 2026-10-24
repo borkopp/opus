@@ -31,6 +31,17 @@ The check reads rendered bot HTML for every URL and verifies canonical/alternate
 
 Prepared from isolated `codex/landing-seo` checkout at base `aa81c50f`. Landing source at that base is identical to the previous live landing deployment `81b4bc6b`; the base contains separate owner changes that are not imported by this app. No pre-existing uncommitted landing animation, header, carousel, or dashboard-preview work is part of this SEO release. Deploy only the Vercel `opus-landing` project from the isolated checkout; do not deploy the dirty primary checkout or the dashboard/Convex backend.
 
-Use `[skip deploy]` for the Git commit to avoid triggering unrelated monorepo deployments, and deploy the isolated landing project explicitly. Search Console uses the verified `sc-domain:opus.mk` property. Submit `https://opus.mk/sitemap.xml`, inspect the homepage and language homepages, and request indexing where eligible. Historical failed 2019 sitemap submissions belong to the previous site; do not redirect unrelated old content to the homepage or claim it is current.
+Use `[skip deploy]` for landing/dashboard Git deployment guards, and deploy the isolated landing project explicitly. The owner project currently has no equivalent ignore command, so do not assume a repository push skips every app. Search Console uses the verified `sc-domain:opus.mk` property. Submit `https://opus.mk/sitemap.xml`, inspect the homepage and language homepages, and request indexing where eligible. Historical failed 2019 sitemap submissions belong to the previous site; do not redirect unrelated old content to the homepage or claim it is current.
 
 Submission and a successful live URL test do not guarantee Google indexing or search rankings. Initial Search Console reports may still be processing.
+
+## Production verification — 24 October 2026
+
+- Runtime source: `5714aab7550b2a71f4b02ec04a14b1ce1b222f84`.
+- Landing deployment: `dpl_34AMhbV8CHgRZ14kpMJNgVi5UsFY`, READY and aliased to `opus.mk` and `www.opus.mk`.
+- Built successfully on Vercel with the locked Next.js 16.2.4 dependency; local lint, typecheck and production build also passed.
+- All 15 production pages passed the rendered SEO checks, as did the robots file, sitemap, image/icon endpoints, locale redirects and unknown-route 404s.
+- The `www.opus.mk` domain redirect now returns HTTP 308 to the apex domain while preserving path and query. This is stored in the existing Vercel project domain settings.
+- Search Console successfully processed `https://opus.mk/sitemap.xml` and discovered 15 pages. The homepage was already indexed and a fresh indexing request was accepted.
+- Original tracked pending changes were compared byte-for-byte to the pre-release patch before source integration. They were excluded from the deployed isolated build.
+- The deployment metadata marks Git dirty because the local-only `.vercel/project.json` link was untracked; no uncommitted application code was deployed.

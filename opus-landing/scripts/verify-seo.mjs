@@ -133,6 +133,7 @@ for (const path of [
 ]) {
   const response = await fetch(base + path);
   assert.equal(response.status, 200, path);
+  await response.body?.cancel();
   assert.ok(response.headers.get("content-type").startsWith("image/"), path);
 }
 for (const path of ["/mk", "/mk/pricing"]) {
@@ -140,6 +141,7 @@ for (const path of ["/mk", "/mk/pricing"]) {
     redirect: "manual",
   });
   assert.equal(response.status, 308, path);
+  await response.body?.cancel();
   const location = new URL(response.headers.get("location"), base);
   assert.equal(location.pathname, path === "/mk" ? "/" : "/pricing");
   assert.equal(location.search, "?utm_source=check");
@@ -151,5 +153,6 @@ for (const path of [
 ]) {
   const response = await fetch(base + path);
   assert.equal(response.status, 404, path);
+  await response.body?.cancel();
 }
 console.log("PASS sitemap, robots, social/icon assets, redirects and 404s");

@@ -45,3 +45,8 @@ Submission and a successful live URL test do not guarantee Google indexing or se
 - Search Console successfully processed `https://opus.mk/sitemap.xml` and discovered 15 pages. The homepage was already indexed and a fresh indexing request was accepted.
 - Original tracked pending changes were compared byte-for-byte to the pre-release patch before source integration. They were excluded from the deployed isolated build.
 - The deployment metadata marks Git dirty because the local-only `.vercel/project.json` link was untracked; no uncommitted application code was deployed.
+
+- Google accepted indexing requests for `/`, `/en`, and `/sq` after its live eligibility checks. `/` was already indexed; the two newly introduced language URLs were pending indexing when checked. These requests are queued, not proof of new indexing.
+- The SEO commits are integrated into local `main`. All nine tracked and three untracked pre-existing pending files are preserved, with only the intended localized-link imports added to the two overlapping components. The index is clean and no conflicts remain.
+- No GitHub push was performed, avoiding an additional owner-app deployment. The live release was deployed directly from the isolated SEO checkout. Before a later release, retain these local SEO commits alongside any separately authorized visual work.
+- Search Console proof screenshots are saved under `/Users/borkopetrevski/.codex/visualizations/2026/10/24/01a16bb5-ed1a-75e1-9617-ce315ed69c5f/seo/`.

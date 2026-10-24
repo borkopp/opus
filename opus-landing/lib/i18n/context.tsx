@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { localizedPath } from "./routing";
 import { DEFAULT_LOCALE, setClientLocale, type Locale } from "./locale";
 import { getMessages, type Messages } from "./messages";
 
@@ -29,7 +29,6 @@ export function I18nProvider({
   children: ReactNode;
   initialLocale?: Locale;
 }) {
-  const router = useRouter();
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const [prevInitial, setPrevInitial] = useState<Locale>(initialLocale);
 
@@ -49,9 +48,11 @@ export function I18nProvider({
       setClientLocale(newLocale);
       setLocaleState(newLocale);
       document.documentElement.lang = newLocale;
-      router.refresh();
+      const destination = new URL(window.location.href);
+      destination.pathname = localizedPath(destination.pathname, newLocale);
+      window.location.assign(destination);
     },
-    [router],
+    [],
   );
 
   const messages = useMemo(() => getMessages(locale), [locale]);

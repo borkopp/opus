@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { useId, useState } from "react";
 import { ArrowUpRight, Check, Sparkle, Sparkles } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";

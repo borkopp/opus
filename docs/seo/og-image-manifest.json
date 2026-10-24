@@ -1,0 +1,13 @@
+{
+  "mode": "built-in image_gen, reference-based generation",
+  "source": "/Users/borkopetrevski/.codex/generated_images/01a16bb5-ed1a-75e1-9617-ce315ed69c5f/exec-7ad53177-828c-440a-b481-3a2a45f97636.png",
+  "reference": "/Users/borkopetrevski/Developer/Instagram Content/opus-why-opus-carousel-2026-10-10/02-free-website-booking.png",
+  "asset": "opus-landing/public/assets/opus-social-preview.jpg",
+  "width": 1200,
+  "height": 630,
+  "count": 1,
+  "bytes": 75656,
+  "sha256": "33f95faf91e4e9e412986a2c80c5b05992979a7bc92d69b0961637871fe4ab7c",
+  "preparation": "Downscaled to 1200x630 and JPEG-compressed; generated original retained.",
+  "verification": "Reviewed final image for brand, spelling, readability, margins, and accurate website/booking/calendar claims."
+}

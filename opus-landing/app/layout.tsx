@@ -28,41 +28,31 @@ const logoFont = Audiowide({
   display: "swap",
 });
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getRequestLocale();
-  const messages = getMessages(locale);
-  const title = messages.metadata.home.title;
-  const description = messages.metadata.home.description;
-
-  return {
-    metadataBase: new URL("https://opus.mk"),
-    title,
-    description,
-    referrer: "strict-origin",
-    alternates: { canonical: "/" },
-    icons: { icon: "/opus-mark.svg" },
-    openGraph: {
-      title,
-      description,
-      siteName: "OPUS",
-      type: "website",
-      images: [
-        {
-          url: "/assets/opus-cta-wide.jpg",
-          width: 2172,
-          height: 724,
-          alt: "OPUS studio intelligence",
-        },
-      ],
+export const metadata: Metadata = {
+  metadataBase: new URL("https://opus.mk"),
+  applicationName: "OPUS",
+  referrer: "strict-origin-when-cross-origin",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
     },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: ["/assets/opus-cta-wide.jpg"],
-    },
-  };
-}
+  },
+  icons: {
+    icon: [
+      { url: "/favicon-48.png", type: "image/png", sizes: "48x48" },
+      { url: "/opus-mark.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+};
 
 export const viewport: Viewport = { themeColor: "#f4faff" };
 

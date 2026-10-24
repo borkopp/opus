@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import type {
   LegalBlock,
   LegalDocument as LegalDocumentContent,

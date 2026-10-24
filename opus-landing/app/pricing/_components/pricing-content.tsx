@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { PricingCards } from "@/components/pricing/pricing-cards";
 import { useI18n } from "@/lib/i18n/context";

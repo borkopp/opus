@@ -1,39 +1,33 @@
 import type { Metadata } from "next";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/messages";
+import { homeStructuredData, pageMetadata } from "@/lib/seo";
 import { HomeContent } from "./_components/home-content";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
-  const messages = getMessages(locale);
-
-  return {
-    title: messages.metadata.home.title,
-    description: messages.metadata.home.description,
-    alternates: { canonical: "/" },
-    openGraph: {
-      title: messages.metadata.home.title,
-      description: messages.metadata.home.description,
-      siteName: "OPUS",
-      type: "website",
-      images: [
-        {
-          url: "/assets/opus-cta-wide.jpg",
-          width: 2172,
-          height: 724,
-          alt: "OPUS",
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: messages.metadata.home.title,
-      description: messages.metadata.home.description,
-      images: ["/assets/opus-cta-wide.jpg"],
-    },
-  };
+  return pageMetadata({
+    locale,
+    path: "/",
+    ...getMessages(locale).metadata.home,
+  });
 }
 
-export default function HomePage() {
-  return <HomeContent />;
+export default async function HomePage() {
+  const locale = await getRequestLocale();
+  const data = homeStructuredData(
+    locale,
+    getMessages(locale).metadata.home.description,
+  );
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+        }}
+      />
+      <HomeContent />
+    </>
+  );
 }

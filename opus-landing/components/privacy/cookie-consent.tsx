@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
+import { localizedPath } from "@/lib/i18n/routing";
 import { useI18n } from "@/lib/i18n/context";
 import {
   consentCopy,
@@ -110,7 +111,7 @@ export function CookieConsent() {
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <a
               className="inline-flex min-h-11 items-center text-sm underline underline-offset-4"
-              href="/privacy#cookies"
+              href={localizedPath("/privacy#cookies", locale)}
             >
               {copy.privacy}
             </a>

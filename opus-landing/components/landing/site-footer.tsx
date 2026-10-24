@@ -1,7 +1,7 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import { ArrowUpRight, ArrowUp } from "lucide-react";
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { openCookiePreferences } from "../../../shared/analytics/consent";
 import { useI18n } from "@/lib/i18n/context";
 

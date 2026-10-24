@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { ArrowUpRight, Mail, MapPin, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n/context";
 

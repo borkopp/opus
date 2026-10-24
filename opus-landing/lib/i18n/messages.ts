@@ -3,9 +3,9 @@ import type { Locale } from "./locale";
 export const mkMessages = {
   metadata: {
     home: {
-      title: "OPUS — Систем за закажување за салони",
+      title: "OPUS — Онлајн закажување за салони во Македонија",
       description:
-        "OPUS е систем за закажување за салони и студија за убавина. Добивате веб-страница каде клиентите закажуваат и календар за вашиот тим. Започнете бесплатно.",
+        "Онлајн закажување за салони и студија за убавина во Македонија. Бесплатна веб-страница, календар за тимот и управување со термини. Започнете со OPUS.",
     },
     contact: {
       title: "Контакт OPUS — Малку помош за вашето студио.",
@@ -535,9 +535,9 @@ export type Messages = typeof mkMessages;
 export const enMessages: Messages = {
   metadata: {
     home: {
-      title: "OPUS — Appointment booking system for salons",
+      title: "OPUS — Salon Booking Software in Macedonia",
       description:
-        "OPUS is an appointment booking system for salons and beauty studios. Get a website where clients book and a calendar for your team. Start for free.",
+        "Online booking for salons and beauty studios in Macedonia. Get a free booking website, a team calendar and simple appointment management. Start with OPUS.",
     },
     contact: {
       title: "Contact OPUS — A little help for your studio.",
@@ -1063,9 +1063,9 @@ export const enMessages: Messages = {
 export const sqMessages: Messages = {
   metadata: {
     home: {
-      title: "OPUS — Sistem rezervimesh për sallone",
+      title: "OPUS — Rezervime online për sallone në Maqedoni",
       description:
-        "OPUS është një sistem rezervimesh për sallone dhe studio bukurie. Përfitoni një faqe interneti ku klientët rezervojnë dhe një kalendar për ekipin tuaj. Filloni falas.",
+        "Rezervime online për sallone dhe studio bukurie në Maqedoni. Uebfaqe falas, kalendar për ekipin dhe menaxhim i termineve. Filloni me OPUS.",
     },
     contact: {
       title: "Kontaktoni OPUS — Pak ndihmë për studion tuaj.",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { ContactDetails } from "./_components/contact-details";
 import { ContactForm } from "./_components/contact-form";
 import { ContactHero } from "./_components/contact-hero";
@@ -9,17 +10,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const messages = getMessages(locale);
 
-  return {
+  return pageMetadata({
+    locale,
+    path: "/contact",
     title: messages.metadata.contact.title,
     description: messages.metadata.contact.description,
-    alternates: { canonical: "/contact" },
-    openGraph: {
-      title: messages.metadata.contact.title,
-      description: messages.metadata.contact.openGraphDescription,
-      url: "/contact",
-      images: ["/assets/opus-contact-portrait.png"],
-    },
-  };
+  });
 }
 
 export default function ContactPage() {

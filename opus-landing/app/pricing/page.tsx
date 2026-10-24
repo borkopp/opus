@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { getRequestLocale } from "@/lib/i18n/server";
 import { pricingPageMessages } from "@/lib/i18n/pricing";
 import { PricingContent } from "./_components/pricing-content";
-import { headers } from "next/headers";
-import { requestBillingCurrency } from "../../../shared/billing-currency";
+import { pageMetadata } from "@/lib/seo";
 import {
   PRO_TEAM_TIERS,
   proPriceMinorUnits,
@@ -13,7 +12,8 @@ import {
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getRequestLocale();
   const { title, description: template } = pricingPageMessages[locale].metadata;
-  const currency = requestBillingCurrency(await headers());
+  // Search snippets stay stable; the visible currency selector remains available.
+  const currency = "mkd";
   const description = template.replace(
     "{proPrice}",
     proPriceLabel(
@@ -23,13 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ),
   );
 
-  return {
-    title,
-    description,
-    alternates: { canonical: "/pricing" },
-    openGraph: { title, description, url: "/pricing" },
-    twitter: { title, description },
-  };
+  return pageMetadata({ locale, path: "/pricing", title, description });
 }
 
 export default function PricingPage() {

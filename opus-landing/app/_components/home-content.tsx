@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import Link from "next/link";
+import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import {
   ArrowUpRight,
   Check,

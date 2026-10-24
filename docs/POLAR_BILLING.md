@@ -2,16 +2,17 @@
 
 This integration sells the existing **monthly OPUS Pro subscription**. It does
 not sell AI credits, SMS credits, yearly plans, appointment payments, or payments
-on behalf of studios. The Free plan remains available without a payment method.
+on behalf of studios. Existing Free studios retain their access. New studios receive a two-calendar-month, no-card trial and must subscribe to keep accepting new appointments afterwards.
 
 ## Customer journey
 
-Landing-page Pro buttons open `https://studio.opus.mk/upgrade`. Signed-out
-visitors verify their email first, retaining the upgrade destination. New owners
-complete the core studio setup at `/onboarding?plan=pro` (business, location,
-service, and hours), then continue to `/settings?tab=billing`. The plan parameter
-survives refreshes and reauthentication. Website branding and publication are not
-required before subscribing. Ordinary Free onboarding is unchanged.
+Landing-page trial buttons open `https://studio.opus.mk/signup` with an encoded
+`callbackUrl` pointing to `/onboarding?plan=pro&team=<limit>&currency=<currency>`.
+Signed-out visitors verify their email first,
+retaining the destination. New owners complete the full setup and website
+publication journey, then enter the dashboard during their two-month trial.
+Selecting a package never activates payment or starts automatic charging.
+Existing Free owners who explicitly choose an upgrade continue to Subscription.
 
 Existing operational studio owners go directly to Subscription. Existing Pro
 owners see their current plan, and staff/managers see the owner-only billing
@@ -41,8 +42,9 @@ The October 11 currency implementation uses the fixed price contract in
 
 | Team limit | MKD/month | EUR/month | EUR API minor units |
 | --- | --- | --- | --- |
+| 1 | 790 | 12.90 | 1290 |
+| 3 | 1,190 | 19.90 | 1990 |
 | 4 | 1,490 | 24.90 | 2490 |
-| 5 | 1,790 | 29.90 | 2990 |
 | 6 | 2,090 | 34.90 | 3490 |
 | 8 | 2,490 | 39.90 | 3990 |
 | 12 | 3,290 | 54.90 | 5490 |
@@ -80,20 +82,22 @@ production activation.
    [Polar Sandbox](https://sandbox.polar.sh). Production credentials and products
    do not work there. Use a separate local/development Convex deployment; do not
    change the production deployment to sandbox mode.
-2. Create five fixed-price, monthly Pro products, each billed every **1 month**
+2. Configure six fixed-price, monthly Pro products, each billed every **1 month**
    in **MKD**, and add each package's **EUR** price from the table above, without
    trials, meters, seat billing, or one-time charges:
 
    | Active team limit | MKD/month | API minor units | Convex environment variable |
    | --- | --- | --- | --- |
+   | 1 | 790 | 79000 | `POLAR_PRO_1_PRODUCT_ID` |
+   | 3 | 1,190 | 119000 | `POLAR_PRO_3_PRODUCT_ID` |
    | 4 | 1,490 | 149000 | `POLAR_PRO_PRODUCT_ID` |
-   | 5 | 1,790 | 179000 | `POLAR_PRO_5_PRODUCT_ID` |
    | 6 | 2,090 | 209000 | `POLAR_PRO_6_PRODUCT_ID` |
    | 8 | 2,490 | 249000 | `POLAR_PRO_8_PRODUCT_ID` |
    | 12 | 3,290 | 329000 | `POLAR_PRO_12_PRODUCT_ID` |
 
    Use inclusive tax and verify the hosted total. Set each product's visibility
-   to **Public** so subscribers can choose it in the customer portal. Product
+   to **Public** only after the compatible backend and product mappings are
+   released, so subscribers can safely choose it in the customer portal. Product
    `team_limit` metadata is an administrative label; OPUS grants capacity from
    its server-side product mapping, never customer input or metadata.
 3. Turn **Allow multiple subscriptions off** and **Enable subscription plan
@@ -111,8 +115,10 @@ production activation.
    POLAR_ENABLED=true
    POLAR_SERVER=sandbox
    POLAR_ACCESS_TOKEN=<organization access token>
+   POLAR_PRO_1_PRODUCT_ID=<1-member monthly Pro product ID>
+   POLAR_PRO_3_PRODUCT_ID=<3-member monthly Pro product ID>
    POLAR_PRO_PRODUCT_ID=<4-member monthly Pro product ID>
-   POLAR_PRO_5_PRODUCT_ID=<5-member monthly Pro product ID>
+   POLAR_PRO_5_PRODUCT_ID=<existing legacy 5-member product ID, if any>
    POLAR_PRO_6_PRODUCT_ID=<6-member monthly Pro product ID>
    POLAR_PRO_8_PRODUCT_ID=<8-member monthly Pro product ID>
    POLAR_PRO_12_PRODUCT_ID=<12-member monthly Pro product ID>
@@ -147,7 +153,7 @@ with the Standard Webhooks library. The legacy verifier in SDK 0.49 is deliberat
 not used: it only supports the older signing format. Signatures cover the raw
 body, delivery ID, and a timestamp within five minutes.
 
-The browser may select only 4, 5, 6, 8, or 12 members. The server chooses the
+The browser may select only 1, 3, 4, 6, 8, or 12 members. The server chooses the
 corresponding product, studio identity, owner email, currency, and return URLs.
 It checks existing active team size and each configured product's exact monthly
 price in the selected MKD/EUR currency before opening checkout. Polar checkout offers the configured packages;
@@ -162,9 +168,11 @@ merge two studios' billing customers to work around that restriction.
 - `active` with a future period end: Pro access.
 - Scheduled cancellation: access continues while the status is active and the
   confirmed paid period has not ended.
-- `past_due`, `unpaid`, `paused`, `canceled`, `incomplete`, or `trialing`: Free
-  access. This version intentionally provides no trial or payment-failure grace
-  period. The portal remains available to update payment details.
+- `past_due`, `unpaid`, `paused`, `canceled`, `incomplete`, or provider `trialing`:
+  no purchased access. The original app trial still applies if unexpired; a
+  studio without trial metadata retains legacy Free; an expired app trial cannot
+  fall back to unlimited Free. The portal remains available to update payment
+  details. There is no additional payment-failure grace period.
 - Refunds trigger a fresh subscription lookup. A refund is not interpreted as
   cancellation: for example, a partial refund must not revoke an active plan.
   If access should end, revoke the subscription in Polar as well.
@@ -182,6 +190,28 @@ exhausted retry is visible in billing settings; owner refresh can restart it.
 All subscription state and receipts are tenant-indexed. Plan changes and checkout
 creation are recorded in the append-only audit log. No card details are stored.
 
+## App trial and existing studios
+
+`orgs.trial` is set only when a new studio is created. It records `startedAt` and
+`endsAt`, two UTC calendar months later with month-end clamping. It never changes
+`orgs.plan` to paid and is preserved by checkout, reconciliation and cancellation.
+The trial offers Pro capabilities for up to 12 active team members with existing
+provider prerequisites and AI quotas. Owners can subscribe at any time; checkout
+starts paid billing immediately, so the UI must not imply that early checkout
+waits until the app trial ends.
+
+At expiry, server guards reject new manual, public and AI appointments. Existing
+appointments remain manageable, the published website stays visible, and records
+remain stored. A durable expiry mutation refreshes subscribed views; enforcement
+uses current time even if that job is delayed. Existing studios without a trial
+marker retain their previous behavior, with no migration or countdown.
+
+Keep the 5-person product mapping for reconciliation of existing subscriptions
+(MKD 1,790 / EUR 29.90). Do not delete or reprice an existing subscription. It is
+excluded from new checkout; review its portal visibility before release. New
+1- and 3-person products must exist in both currencies before enabling the new
+catalogue. Missing or incorrect configuration blocks checkout safely.
+
 ## Production activation
 
 Use a separate production Polar organization/environment and Convex deployment.
@@ -194,10 +224,54 @@ credentials, `POLAR_SERVER=production`, and `SITE_URL=https://studio.opus.mk`.
 Keep `POLAR_ENABLED=false` until the sandbox checks below are verified. That flag
 only stops new checkout; existing reconciliation and portal access remain usable.
 
-Keep all five product IDs stable. Reconciliation reads subscription history
+Keep existing product IDs stable when adding the new 1- and 3-person products. Reconciliation reads subscription history
 across the configured products, so changing packages retains the same studio
 customer and subscription. Existing manually granted Pro studios are preserved
 with their previous 12-person capacity and are never automatically charged.
+
+### New small-studio products — October 24, 2026
+
+The following products were created in the production `opus-mk` Polar account
+using the in-app browser. Reopening each saved product confirmed both fixed
+prices, billing every **1 month**, the matching `team_limit` metadata, **Private**
+visibility and **Free trial period off**.
+
+| Team limit | MKD/month | EUR/month | Production product ID | Convex variable |
+| --- | --- | --- | --- | --- |
+| 1 | 790 | 12.90 | `ab57e864-8a02-4e77-9db0-04630d65f2ca` | `POLAR_PRO_1_PRODUCT_ID` |
+| 3 | 1,190 | 19.90 | `8fb44652-71db-4a2a-b35e-e400ac7bfa07` | `POLAR_PRO_3_PRODUCT_ID` |
+
+These IDs have **not** been configured on production Convex. Keeping the products
+private prevents selection through the live customer portal before its backend
+supports them. The existing 4-, 5-, 6-, 8- and 12-person products were not changed.
+The two-month trial belongs to OPUS; adding a Polar trial would conflict with the
+app's no-card trial and its active-subscription reconciliation rules.
+
+An internal checkout link named **Internal verification · 1 and 3 members · do
+not publish** was created with only these two products. Its hosted checkout was
+inspected without entering customer or payment details or submitting a payment:
+
+| Selected package | Billing country | Displayed monthly total | Tax display |
+| --- | --- | --- | --- |
+| 1 member | North Macedonia | MKD 790 | Included |
+| 3 members | North Macedonia | MKD 1,190 | Included |
+| 3 members | Germany | MKD 1,190 | MKD 190 included |
+
+Switching products updated the hosted total. Changing the billing country kept
+the total inclusive of tax; it did not change checkout currency. Both EUR prices
+were verified in the saved product editor, but EUR hosted checkout was not
+verified in this browser session. No payment, signed provider delivery, app
+activation, renewal or portal plan change was exercised. The internal link is
+not an OPUS signup path: it lacks the server-derived studio/customer mapping and
+must not be shared with customers.
+
+Before release, create equivalent sandbox products and verify app-generated
+checkout in both currencies, payment, webhook activation and portal switching.
+Then configure the new production product IDs alongside the compatible backend,
+publish the matching frontends and change these products to Public. Review the
+legacy 5-person product's portal visibility while preserving existing
+subscriptions and its reconciliation mapping. No production code or environment
+was changed during this provider setup.
 
 ### Pro team packages — October 11, 2026
 
@@ -391,11 +465,21 @@ owner permissions, tenant/customer separation, checkout reuse, configuration
 guards, activation, cancellation, failed payments, renewal, stale updates,
 idempotent receipt handling, provider failures, refunds, and expiry.
 
+### Trial and grandfathering release checks
+
+- An existing Free studio has no trial date, no new countdown, and unchanged booking access.
+- A new studio gets two calendar months once; resuming onboarding or failed payment does not reset it.
+- New studios can finish publishing without a card; a checkout return alone does not record payment.
+- At the exact end time, new dashboard, public and AI bookings stop even if the scheduled refresh is delayed.
+- Existing appointments can still be viewed, rescheduled, cancelled and completed; website/data remain.
+- Test early purchase, subscription expiry within the original trial, and expiry after that trial.
+- Verify legacy 5-person subscriptions still reconcile, while new checkout offers only the six active packages.
+
 ### Hosted checkout and Pro activation checklist
 
 The sandbox setup above must be completed first; production setup does not
 create a test environment. Sign in to the development OPUS app as the owner of
-a **Free** studio. A studio with manually granted Pro intentionally has no
+a trial, expired-trial or legacy Free studio. A studio with manually granted Pro intentionally has no
 subscription checkout. Use a sandbox organization member's email (or its `+test`
 alias) if you also want to receive Polar's test emails.
 
@@ -403,7 +487,7 @@ Start from **Settings → Subscription → Subscribe to Pro**
 (`/settings?tab=billing`). Do not start from a standalone Polar product link:
 OPUS creates the checkout with the studio's billing identity. Confirm that the
 hosted checkout is on `sandbox.polar.sh`, shows the selected package's monthly
-MKD price (1,490 / 1,790 / 2,090 / 2,490 / 3,290), and has no trial before entering
+MKD price (790 / 1,190 / 1,490 / 2,090 / 2,490 / 3,290), and has no trial before entering
 a test card. An existing subscription may retain its older price.
 
 For a successful sandbox payment use **4242 4242 4242 4242**, expiry **12/34**,
@@ -414,10 +498,10 @@ details. See [Polar's sandbox guide](https://polar.sh/docs/integrate/sandbox) an
 
 | Test | Expected result |
 | --- | --- |
-| Open checkout, then leave without paying | Studio stays Free. Returning to a success-looking URL alone must not activate Pro. |
-| Repeat checkout for each of the five packages | The monthly price matches the selection; only a verified active subscription grants its 4 / 5 / 6 / 8 / 12 team limit. |
+| Open checkout, then leave without paying | Stored plan remains Free; original trial or legacy access is unchanged. A success-looking URL alone must not activate paid access. |
+| Repeat checkout for each of the six packages | The monthly price matches the selection; only a verified active subscription grants its 1 / 3 / 4 / 6 / 8 / 12 purchased limit. Trial capacity remains 12 until purchase. |
 | Change package through the customer portal | OPUS follows the confirmed product. A pending change retains the current limit until Polar applies it. A downgrade preserves existing staff and blocks additions above the new limit. |
-| Pay with the declined card | Payment fails and the studio stays Free. Retry with the successful card. |
+| Pay with the declined card | Payment fails; the original trial clock is unchanged. Legacy Free stays Free; expired trials remain blocked for new bookings. Retry with the successful card. |
 | Complete a successful payment | Returning to OPUS shows **OPUS Pro / Active**, the monthly amount, and the current period end. If delivery is delayed, use **Refresh status**. Reloading preserves Pro. |
 | Open a Pro-only screen, such as the client directory | Access is available after activation; confirm an actual operation as well as the badge. |
 | Open **Manage billing** | The portal shows this studio's subscription, invoices, and payment method. Download the invoice and check its MKD total/tax breakdown. |

@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./lib/subscriptionAccess";
 import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { components } from "./_generated/api";
@@ -52,7 +53,7 @@ export const getSettings = query({
     return {
       preferences,
       ownOnly,
-      aiAvailable: org.plan === "paid" && !ownOnly,
+      aiAvailable: hasPaidAccess(org) && !ownOnly,
       timezone: settings?.timezone ?? "Europe/Skopje",
       mobileAvailable: mobilePushConfigured(),
       browserAvailable: browserPushConfigured(),
@@ -357,7 +358,7 @@ export const openNotification = mutation({
     }
     if (
       notification.pushConversationId &&
-      org.plan === "paid" &&
+      hasPaidAccess(org) &&
       !hasPersonalBookingAccess(member)
     ) {
       const conversation = await ctx.db.get(notification.pushConversationId);

@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internal } from "../_generated/api";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
@@ -303,7 +304,7 @@ export async function queueBookingEmailNotifications(
 
   if (!(args.scheduleReminders ?? true)) return;
 
-  if (args.org.plan === "paid" && args.settings.emailEnabled && customerEmail) {
+  if (hasPaidAccess(args.org) && args.settings.emailEnabled && customerEmail) {
     for (const hoursBefore of normalizeReminderHours(
       args.settings.reminderHoursBefore,
     )) {

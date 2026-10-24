@@ -16,6 +16,8 @@ async function setup() {
     name: "Management Studio",
     category: "hair_salon",
   });
+  // The capacity/invitation cases exercise existing Free studios.
+  await backend.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
   const serviceId = await owner.mutation(api.activation.saveFirstService, {
     name: "Haircut",
     durationMins: 30,

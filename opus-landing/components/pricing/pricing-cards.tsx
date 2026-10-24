@@ -2,17 +2,17 @@
 
 import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { useId, useState } from "react";
-import { ArrowUpRight, Check, Sparkle, Sparkles } from "lucide-react";
+import { ArrowUpRight, Check, Sparkles } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
 import { useI18n } from "@/lib/i18n/context";
 import {
   formatProPrice,
+  trialSignupUrl,
   proPriceMinorUnits,
   PRO_TEAM_TIERS,
 } from "@/lib/pro-pricing";
 import { cn } from "@/lib/utils";
-import { CustomSoftwarePlan } from "./custom-software-plan";
 import { CurrencySelector } from "./currency-selector";
 import { useBillingCurrency } from "./billing-currency-provider";
 
@@ -30,47 +30,15 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
   const [tierIndex, setTierIndex] = useState(0);
   const selectorId = useId();
   const tier = PRO_TEAM_TIERS[tierIndex];
-  const teamSize = t.pricing.pro.teamSizeValue.replace(
-    "{count}",
-    String(tier.teamLimit),
-  );
+  const teamSize =
+    tier.teamLimit === 1
+      ? t.pricing.pro.teamSizeSingle
+      : t.pricing.pro.teamSizeValue.replace("{count}", String(tier.teamLimit));
 
   return (
     <>
       <CurrencySelector />
       <div className="pricing-grid">
-        <article className={cn("price-card", { reveal: animated })}>
-          <div className="plan-heading">
-            <span className="plan-symbol">
-              <Sparkle aria-hidden="true" />
-            </span>
-          </div>
-          <h3>{t.pricing.free.name}</h3>
-          <div className="price">
-            {t.pricing.free.price} <span>{currencyLabel}</span>
-          </div>
-          <p>{t.pricing.free.desc}</p>
-          <a
-            className="button button-light"
-            href="https://studio.opus.mk/signup"
-          >
-            {t.pricing.free.cta}{" "}
-            <span>
-              <ArrowUpRight aria-hidden="true" />
-            </span>
-          </a>
-          <div className="plan-divider"></div>
-          <strong className="included-label">{t.pricing.free.label}</strong>
-          <ul className="plan-features">
-            {t.pricing.free.features.map((feature, i) => (
-              <li key={i}>
-                <Check aria-hidden="true" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-          <span className="plan-end">{t.pricing.free.end}</span>
-        </article>
         <article className={cn("price-card price-pro", { reveal: animated })}>
           <div className="plan-heading">
             <span className="plan-symbol">
@@ -78,6 +46,8 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
             </span>
           </div>
           <h3>{t.pricing.pro.name}</h3>
+          <p className="trial-offer">{t.pricing.trialLabel}</p>
+          <span className="price-after-trial">{t.pricing.afterTrial}</span>
           <div
             className="price pro-price"
             aria-live="polite"
@@ -136,9 +106,10 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
               </div>
             </Field>
           </FieldGroup>
+          <p className="team-count-note">{t.pricing.teamNote}</p>
           <Link
             className="button button-dark"
-            href={`https://studio.opus.mk/upgrade?team=${tier.teamLimit}&currency=${currency}`}
+            href={trialSignupUrl(currency, tier.teamLimit)}
           >
             {t.pricing.pro.cta}{" "}
             <span>
@@ -151,10 +122,12 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
             <li>
               <Check aria-hidden="true" />
               <span>
-                {t.pricing.pro.teamFeature.replace(
-                  "{count}",
-                  String(tier.teamLimit),
-                )}
+                {tier.teamLimit === 1
+                  ? t.pricing.pro.teamFeatureSingle
+                  : t.pricing.pro.teamFeature.replace(
+                      "{count}",
+                      String(tier.teamLimit),
+                    )}
               </span>
             </li>
             {t.pricing.pro.features.map((feature, i) => (
@@ -184,9 +157,14 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
           </ul>
           <span className="plan-end">{t.pricing.pro.end}</span>
         </article>
-        <CustomSoftwarePlan animated={animated} />
       </div>
       <p className="pricing-note">{t.pricing.note}</p>
+      <p className="pricing-note">
+        {t.pricing.largeTeamTitle}{" "}
+        <Link className="text-link" href="/contact">
+          {t.pricing.largeTeamCta}
+        </Link>
+      </p>
     </>
   );
 }

@@ -1,6 +1,11 @@
 import { ConvexError } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import {
+  getSubscriptionAccess,
+  hasPaidAccess,
+  requireBookingSubscription,
+} from "./subscriptionAccess";
 
 const FREE_STAFF_LIMIT = 3;
 const FREE_OWNER_LIMIT = 1;
@@ -22,10 +27,13 @@ export async function getStaffPlanStatusForOrg(
   org: Doc<"orgs">,
   existingStaff?: Doc<"staff_members">,
 ) {
+  const access = getSubscriptionAccess(org);
   const totalLimit =
-    org.plan === "paid"
-      ? await getProTeamLimitForOrg(ctx, org)
-      : FREE_STAFF_LIMIT + FREE_OWNER_LIMIT;
+    access.accessState === "trial" || access.accessState === "expired"
+      ? PRO_TEAM_LIMIT
+      : org.plan === "paid"
+        ? await getProTeamLimitForOrg(ctx, org)
+        : FREE_STAFF_LIMIT + FREE_OWNER_LIMIT;
   const activeStaff = await ctx.db
     .query("staff_members")
     .withIndex("by_org_active", (q) =>
@@ -51,7 +59,10 @@ export async function getStaffPlanStatusForOrg(
       (role !== "owner" ? 1 : 0);
     const nextTotal = nextOwners + nextStaff;
 
-    if (org.plan === "paid") {
+    if (access.accessState === "expired")
+      return nextTotal <= activeStaff.length;
+
+    if (hasPaidAccess(org)) {
       return !(nextTotal > totalLimit && nextTotal > activeStaff.length);
     }
 
@@ -68,7 +79,8 @@ export async function getStaffPlanStatusForOrg(
   }
 
   return {
-    isFree: org.plan !== "paid",
+    isFree: access.accessState === "legacy_free",
+    accessState: access.accessState,
     staffCount,
     ownerCount,
     totalCount: activeStaff.length,
@@ -90,7 +102,8 @@ export async function requireStaffPlanCapacity(
   const allowed =
     role === "owner" ? status.canUseOwnerRole : status.canUseStaffRole;
   if (!allowed) {
-    if (org.plan === "paid") {
+    requireBookingSubscription(org);
+    if (hasPaidAccess(org)) {
       throw new ConvexError({
         code: "PRO_STAFF_LIMIT",
         limit: status.totalLimit,

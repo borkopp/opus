@@ -101,7 +101,7 @@ export function OpeningStory({
       ? staffId
       : "any";
   const queryArgs =
-    service && data.published
+    service && data.acceptingBookings
       ? { serviceId: service.id, staffId: selectedStaff, date, refreshMinute }
       : null;
   const slots = useQuery(api.promotions.getOpenings, queryArgs || "skip");
@@ -225,11 +225,15 @@ export function OpeningStoryEditor({
                 <Select
                   value={serviceId || ""}
                   onValueChange={onServiceChange}
-                  disabled={!data.published || !data.services.length}
+                  disabled={!data.acceptingBookings || !data.services.length}
                 >
                   <SelectTrigger id="story-service" className="w-full">
                     <SelectValue
-                      placeholder={t("Choose a service", "Изберете услуга", "Zgjidhni një shërbim")}
+                      placeholder={t(
+                        "Choose a service",
+                        "Изберете услуга",
+                        "Zgjidhni një shërbim",
+                      )}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,7 +254,7 @@ export function OpeningStoryEditor({
                 <Select
                   value={staffId}
                   onValueChange={onStaffChange}
-                  disabled={!data.published || !service}
+                  disabled={!data.acceptingBookings || !service}
                 >
                   <SelectTrigger id="story-staff" className="w-full">
                     <SelectValue />
@@ -283,7 +287,7 @@ export function OpeningStoryEditor({
                   value={date}
                   min={data.today}
                   max={data.maxDate}
-                  disabled={!data.published}
+                  disabled={!data.acceptingBookings}
                   onChange={(event) => onDateChange(event.target.value)}
                 />
               </Field>
@@ -291,16 +295,22 @@ export function OpeningStoryEditor({
                 <FieldLabel data-replay-public>
                   {t("Available times", "Слободни термини", "Orari i lirë")}
                 </FieldLabel>
-                {!data.published ? (
+                {!data.acceptingBookings ? (
                   <p
                     data-replay-public
                     className="text-sm text-muted-foreground"
                   >
-                    {t(
-                      "Available after your website is published.",
-                      "Достапно откако ќе ја објавите веб-страницата.",
-                      "E disponueshme pasi faqja juaj të publikohet.",
-                    )}
+                    {data.accessState === "expired"
+                      ? t(
+                          "Choose a paid plan to share available appointments again.",
+                          "Изберете платен план за повторно да споделувате слободни термини.",
+                          "Zgjidhni një plan me pagesë për të shpërndarë sërish terminet e lira.",
+                        )
+                      : t(
+                          "Available after your website is published.",
+                          "Достапно откако ќе ја објавите веб-страницата.",
+                          "E disponueshme pasi faqja juaj të publikohet.",
+                        )}
                   </p>
                 ) : !service ? (
                   <p
@@ -345,7 +355,11 @@ export function OpeningStoryEditor({
                   <div
                     className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto p-1 sm:grid-cols-4"
                     role="group"
-                    aria-label={t("Available times", "Слободни термини", "Orari i lirë")}
+                    aria-label={t(
+                      "Available times",
+                      "Слободни термини",
+                      "Orari i lirë",
+                    )}
                   >
                     {slots.map((slot) => (
                       <button
@@ -385,7 +399,7 @@ export function OpeningStoryEditor({
           onChange={setPalette}
         />
       </div>
-      {selected && service ? (
+      {data.acceptingBookings && selected && service ? (
         <ArtworkPreview
           palette={palette}
           artwork={{
@@ -432,18 +446,36 @@ export function OpeningStoryEditor({
               <ImagePlus />
             </EmptyMedia>
             <EmptyTitle>
-              {t(
-                "Your Story starts with an opening",
-                "Вашето Story почнува со слободен термин",
-                "Story juaj fillon me një termin të lirë",
-              )}
+              {data.accessState === "expired"
+                ? t(
+                    "A paid plan is needed",
+                    "Потребен е платен план",
+                    "Nevojitet një plan me pagesë",
+                  )
+                : t(
+                    "Your Story starts with an opening",
+                    "Вашето Story почнува со слободен термин",
+                    "Story juaj fillon me një termin të lirë",
+                  )}
             </EmptyTitle>
             <EmptyDescription>
-              {t(
-                "Select a time to preview the image your clients will see.",
-                "Изберете време за да ја видите сликата што ќе ја споделите со клиентите.",
-                "Zgjidhni një orar për të parë paraprakisht imazhin që do të shohin klientët tuaj.",
-              )}
+              {data.accessState === "expired"
+                ? t(
+                    "Choose a paid plan to share available appointments again.",
+                    "Изберете платен план за повторно да споделувате слободни термини.",
+                    "Zgjidhni një plan me pagesë për të shpërndarë sërish terminet e lira.",
+                  )
+                : !data.published
+                  ? t(
+                      "Publish your website to share available appointments.",
+                      "Објавете ја веб-страницата за да споделувате слободни термини.",
+                      "Publikoni faqen tuaj për të shpërndarë terminet e lira.",
+                    )
+                  : t(
+                      "Select a time to preview the image your clients will see.",
+                      "Изберете време за да ја видите сликата што ќе ја споделите со клиентите.",
+                      "Zgjidhni një orar për të parë paraprakisht imazhin që do të shohin klientët tuaj.",
+                    )}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

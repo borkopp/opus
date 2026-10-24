@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { convexTest } from "convex-test";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -16,6 +16,8 @@ async function setup() {
     name: "Mobile Studio",
     category: "hair_salon",
   });
+  // Keep this compatibility fixture on its existing Free entitlement model.
+  await backend.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
   const serviceId = await owner.mutation(api.activation.saveFirstService, {
     name: "Haircut",
     durationMins: 30,
@@ -43,6 +45,11 @@ async function setup() {
 }
 
 describe("mobile studio backend", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
   it("keeps the available-slot quote and saved price aligned when surge rules are disabled", async () => {
     const { backend, owner, orgId, serviceId, staffId, day } = await setup();
     await backend.run(async (ctx) => {
@@ -218,10 +225,11 @@ describe("mobile studio backend", () => {
       email: "other-owner@example.com",
     });
     await other.mutation(api.users.ensureUser);
-    await other.mutation(api.activation.startBeautyBusiness, {
-      name: "Other Studio",
-      category: "nail_salon",
-    });
+    const { orgId: otherOrgId } = await other.mutation(
+      api.activation.startBeautyBusiness,
+      { name: "Other Studio", category: "nail_salon" },
+    );
+    await backend.run((ctx) => ctx.db.patch(otherOrgId, { trial: undefined }));
     expect(await other.query(api.mobile.calendar, { day })).toEqual([]);
     expect(
       await other.query(api.mobile.getAppointment, {

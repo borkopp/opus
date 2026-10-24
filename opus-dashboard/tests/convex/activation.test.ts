@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { convexTest } from "convex-test";
 import { api, internal } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -167,8 +167,13 @@ describe("beauty activation engine", () => {
   let t: TestBackend;
 
   beforeEach(() => {
-    vi.useRealTimers();
+    vi.useFakeTimers();
     t = createBackend();
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   test("requires authentication and never trusts a supplied tenant", async () => {

@@ -1,3 +1,7 @@
+import {
+  hasPaidAccess,
+  isBookingAccessAllowed,
+} from "../lib/subscriptionAccess";
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
@@ -46,7 +50,8 @@ export async function authorAccess(ctx: QueryCtx, turn: Doc<"analyst_turns">) {
   if (
     !org ||
     org.isDeleted ||
-    (org.plan !== "paid" && turn.depth === "deep") ||
+    !isBookingAccessAllowed(org) ||
+    (!hasPaidAccess(org) && turn.depth === "deep") ||
     !isActiveIndustry(org.industry) ||
     !user ||
     user.isDeleted ||
@@ -61,7 +66,7 @@ export async function authorAccess(ctx: QueryCtx, turn: Doc<"analyst_turns">) {
   ) {
     throw new ConvexError("ANALYST_ACCESS_CHANGED");
   }
-  if (org.plan !== "paid") {
+  if (!hasPaidAccess(org)) {
     const usage = await ctx.db
       .query("analyst_usage")
       .withIndex("by_org_month", (q) =>
@@ -70,7 +75,11 @@ export async function authorAccess(ctx: QueryCtx, turn: Doc<"analyst_turns">) {
       .unique();
     // The pending answer is already reserved. A downgrade must not let a
     // previously accepted Pro request exceed the Free allowance.
-    if (!usage || usage.answers > analystPlanLimits(org.plan, org).answers)
+    if (
+      !usage ||
+      usage.answers >
+        analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org).answers
+    )
       throw new ConvexError("ANALYST_ACCESS_CHANGED");
   }
   return { org, user, member };

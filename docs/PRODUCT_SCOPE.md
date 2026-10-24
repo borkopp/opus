@@ -92,7 +92,7 @@ current readiness. The owner is the initial provider and valid booking defaults
 are created automatically. Logo, cover photo, tagline, contact phone, and theme selection
 are optional; they must not block publication or suspend an otherwise bookable
 website. Branding and more services/team members can be added after launch.
-The Pro signup path still continues from operational setup to subscription review.
+New studios complete setup and publication during their two-month trial, then enter the dashboard. Billing remains available during and after the trial.
 
 ### Authorized website customization
 
@@ -220,7 +220,7 @@ See [GAP_RECOVERY.md](GAP_RECOVERY.md) for configuration, limits, and validation
 
 Monthly Pro subscription billing through Polar was authorized on September 25, 2026. Studio owners can open hosted checkout and manage their subscription,
 payment method, invoices, and cancellation through Polar's customer portal.
-Verified provider state controls the existing Free/Pro permission boundary.
+Verified provider state controls purchased access; the server also grants time-limited trial access as described below.
 Activation requires configured credentials, a recurring product, and signed
 webhook delivery; local implementation is not a claim of live billing.
 AI/SMS credit top-ups, yearly plans, and collecting appointment payments for
@@ -235,6 +235,31 @@ website and backend, and checkout validates Polar's exact currency, catalogue pr
 and inclusive-tax configuration. Both MKD and EUR provider-confirmed subscriptions
 grant the configured Pro team capacity. This does not change studio service prices
 or authorize other international product expansion.
+
+### Paid acquisition and two-month trial
+
+The October 24, 2026 authorization removes Free from new acquisition and grants
+newly created studios a no-card trial for two calendar months from creation.
+The UTC end date clamps to the target month's last day where necessary. Trial
+metadata is written only on creation and cannot be reset through onboarding or
+billing. Trials grant the existing Pro capabilities for up to 12 active team
+members, subject to existing AI allowances and provider configuration.
+
+Existing studios without trial metadata retain their previous Free or paid
+access. Do not migrate them into trials, show them an expiry notice, or promise
+lifetime Free access. Their existing Free limits and entitlements remain intact.
+
+The stored plan records paid/admin state; a trial must never be presented as a
+confirmed payment. At expiry, unpaid new studios cannot create appointments
+through dashboard, public booking, or AI. Their website remains visible, and
+existing appointments can still be managed; records and history are preserved.
+Premium access expires. Server guards check time on each operation, and a durable
+expiry job invalidates subscribed views. Payment restores access; billing events
+must preserve the original trial dates. A failed or ended subscription falls back
+to an unexpired original trial, legacy Free, or expired access as appropriate.
+
+This is a branch implementation until the compatible backend, verified provider
+catalogue and both web apps are released together. It is not proof of live pricing.
 
 ### Authorized Pro appointment SMS
 
@@ -296,10 +321,12 @@ availability.
 
 ### Studio team limits
 
-Free retains 1 active owner plus up to 3 active staff members. The monthly Pro
-packages authorized on October 11, 2026 are up to 4 active team members for
-1,490 MKD, 5 for 1,790 MKD, 6 for 2,090 MKD, 8 for 2,490 MKD, and 12 for
-3,290 MKD. Every package includes the same Pro features. Owners and managers
+Legacy Free retains 1 active owner plus up to 3 active staff members. New monthly
+packages are up to 1 active team member for 790 MKD (EUR 12.90), 3 for 1,190 MKD
+(EUR 19.90), 4 for 1,490 MKD (EUR 24.90), 6 for 2,090 MKD (EUR 34.90), 8 for
+2,490 MKD (EUR 39.90), and 12 for 3,290 MKD (EUR 54.90). The previous 5-person
+package remains supported for existing provider subscriptions, but is not
+selectable for new checkout. Teams above 12 contact OPUS. Every package includes the same Pro features. Owners and managers
 count toward the chosen package; inactive and soft-deleted members do not.
 
 Only a verified Polar subscription determines a purchased package's capacity.

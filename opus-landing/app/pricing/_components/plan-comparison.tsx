@@ -51,7 +51,6 @@ export function PlanComparison() {
           <colgroup>
             <col className="plan-comparison-feature-col" />
             <col />
-            <col />
           </colgroup>
           <TableHeader>
             <TableRow>
@@ -65,13 +64,7 @@ export function PlanComparison() {
                 scope="col"
                 className="px-2 py-5 text-center whitespace-normal sm:px-6"
               >
-                {copy.free}
-              </TableHead>
-              <TableHead
-                scope="col"
-                className="px-2 py-5 text-center whitespace-normal sm:px-6"
-              >
-                Pro
+                OPUS
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -79,7 +72,7 @@ export function PlanComparison() {
             <TableBody key={group.title}>
               <TableRow className="plan-comparison-group">
                 <TableHead
-                  colSpan={3}
+                  colSpan={2}
                   scope="rowgroup"
                   className="px-3 py-4 whitespace-normal sm:px-6"
                 >
@@ -95,7 +88,7 @@ export function PlanComparison() {
                     {row.feature}
                     {row.description && <small>{row.description}</small>}
                   </TableHead>
-                  {[row.free, row.pro].map((value, index) => (
+                  {[row.pro].map((value, index) => (
                     <TableCell
                       key={index}
                       className="px-2 py-4 text-center whitespace-normal sm:px-6"
@@ -104,7 +97,7 @@ export function PlanComparison() {
                         className="comparison-mobile-plan"
                         aria-hidden="true"
                       >
-                        {index === 0 ? copy.free : "Pro"}
+                        OPUS
                       </span>
                       <PlanValue
                         value={value}

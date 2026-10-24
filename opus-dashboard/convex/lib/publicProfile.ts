@@ -1,3 +1,4 @@
+import { hasPaidAccess, isBookingAccessAllowed } from "./subscriptionAccess";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { resolveStoredImageUrl } from "./imageUrl";
@@ -117,12 +118,13 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
     services: publicServices,
     bookingSettings: {
       clientAccountsEnabled: true,
+      acceptingBookings: isBookingAccessAllowed(org),
       timezone: orgSettings?.timezone ?? "Europe/Belgrade",
       locale: orgSettings?.locale ?? "mk-MK",
       bookingWindowDays: orgSettings?.bookingWindowDays ?? 60,
     },
     aiWebchatEnabled: Boolean(
-      org.plan === "paid" &&
+      hasPaidAccess(org) &&
       orgSettings?.aiEnabled &&
       orgSettings.aiWebchatEnabled,
     ),
@@ -150,7 +152,7 @@ export async function buildPublicProfile(ctx: ReadCtx, org: Doc<"orgs">) {
     const visibleMediaIds = new Set(media.map((item) => item._id as string));
     design = {
       ...published,
-      ...(org.plan !== "paid" && {
+      ...(!hasPaidAccess(org) && {
         languages: [published.primaryLanguage],
         autoTranslate: false,
         translations: [],

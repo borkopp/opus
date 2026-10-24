@@ -40,7 +40,11 @@ async function studio(paid = true, enabled = true, name = "sms-owner") {
     })),
   });
   const { settingsId, staffId } = await t.run(async (ctx) => {
-    await ctx.db.patch(orgId, { plan: paid ? "paid" : "free" });
+    // Legacy paid/Free transitions retain their existing SMS contract.
+    await ctx.db.patch(orgId, {
+      plan: paid ? "paid" : "free",
+      trial: undefined,
+    });
     const settings = await ctx.db
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", orgId))

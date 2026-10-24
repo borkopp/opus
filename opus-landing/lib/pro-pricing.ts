@@ -21,3 +21,15 @@ export function proPriceLabel(
 ) {
   return `${formatProPrice(amount, locale, currency)} ${currency === "eur" ? "EUR" : locale === "mk" ? "ден." : locale === "sq" ? "den." : "MKD"}`;
 }
+
+export function trialSignupUrl(currency: BillingCurrency, teamLimit = 1) {
+  const params = new URLSearchParams({
+    plan: "pro",
+    team: String(teamLimit),
+    currency,
+  });
+  const signup = new URLSearchParams({
+    callbackUrl: `/onboarding?${params.toString()}`,
+  });
+  return `https://studio.opus.mk/signup?${signup.toString()}`;
+}

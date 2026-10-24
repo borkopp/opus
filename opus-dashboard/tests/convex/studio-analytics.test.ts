@@ -45,7 +45,8 @@ async function studio(t: Backend, subject = "analytics-owner") {
     priceMinorUnits: 150000,
   });
   const staffId = await t.run(async (ctx) => {
-    await ctx.db.patch(orgId, { plan: "paid" });
+    // Existing paid studios have no remaining trial after a downgrade.
+    await ctx.db.patch(orgId, { plan: "paid", trial: undefined });
     return (await ctx.db
       .query("staff_members")
       .withIndex("by_org", (q) => q.eq("orgId", orgId))

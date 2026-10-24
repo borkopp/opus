@@ -3,10 +3,13 @@
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { useEffect, useState } from "react";
+import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import { trialSignupUrl } from "@/lib/pro-pricing";
 import { useI18n } from "@/lib/i18n/context";
 import { LanguageToggle } from "./language-toggle";
 
 export function SiteHeader() {
+  const { currency } = useBillingCurrency();
   const { messages, t } = useI18n();
   const [open, setOpen] = useState(false);
 
@@ -58,7 +61,7 @@ export function SiteHeader() {
         </a>
         <a
           className="button button-dark button-small"
-          href="https://studio.opus.mk/signup"
+          href={trialSignupUrl(currency)}
         >
           {t.nav.startFree}{" "}
           <span>

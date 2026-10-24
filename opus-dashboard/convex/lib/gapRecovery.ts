@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import { ConvexError } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -72,7 +73,7 @@ export async function recoveryResources(ctx: ReadCtx, orgId: Id<"orgs">) {
     org,
     settings,
     enabled:
-      org.plan === "paid" &&
+      hasPaidAccess(org) &&
       !!settings.gapOptimizerEnabled &&
       isWebsitePublished(org),
   };

@@ -36,19 +36,28 @@ export function upgradeDestination({
   hasStudio,
   role,
   plan,
+  accessState,
   operationalSetupComplete,
+  onboardingComplete,
   teamLimit,
   currency,
 }: {
   hasStudio: boolean;
   role?: "owner" | "manager" | "staff";
   plan?: "free" | "paid";
+  accessState?: "legacy_free" | "trial" | "paid" | "expired";
   operationalSetupComplete: boolean;
+  onboardingComplete?: boolean;
   teamLimit?: ProTeamLimit;
   currency?: BillingCurrency;
 }): string {
   if (!hasStudio)
     return withProTeamLimit(PRO_ONBOARDING_PATH, teamLimit, currency);
+  // New studios can finish setup and use their trial before subscribing.
+  // Keep explicit upgrade requests from established studios on the billing path.
+  if (role === "owner" && accessState === "trial" && !onboardingComplete) {
+    return withProTeamLimit(PRO_ONBOARDING_PATH, teamLimit, currency);
+  }
   // Staff see the owner-only notice; existing Pro studios manage their plan.
   if (role !== "owner" || plan === "paid" || operationalSetupComplete) {
     return withProTeamLimit(BILLING_PATH, teamLimit, currency);

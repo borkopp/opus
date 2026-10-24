@@ -1,3 +1,8 @@
+import {
+  hasPaidAccess,
+  isBookingAccessAllowed,
+  requireBookingSubscription,
+} from "../lib/subscriptionAccess";
 import { v, ConvexError } from "convex/values";
 import {
   query,
@@ -36,7 +41,7 @@ export const getAccess = query({
   handler: async (ctx) => {
     const { orgId, org, staffMember } = await requireAuth(ctx);
     const month = usageMonth(Date.now());
-    const limits = analystPlanLimits(org.plan, org);
+    const limits = analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org);
     const allowed =
       isActiveIndustry(org.industry) && staffMember.role !== "staff";
     const usage = allowed
@@ -67,12 +72,13 @@ export const getAccess = query({
     return {
       orgId,
       allowed,
-      paid: org.plan === "paid",
+      paid: hasPaidAccess(org),
       configured: analystConfigured(),
       resetAt: month.resetAt,
-      remaining: budgetAvailable
-        ? Math.max(0, limits.answers - (usage?.answers ?? 0))
-        : 0,
+      remaining:
+        budgetAvailable && isBookingAccessAllowed(org)
+          ? Math.max(0, limits.answers - (usage?.answers ?? 0))
+          : 0,
       deepRemaining: deepBudgetAvailable
         ? Math.max(0, limits.deepAnswers - (usage?.deepAnswers ?? 0))
         : 0,
@@ -173,7 +179,8 @@ export const send = mutation({
   },
   handler: async (ctx, args) => {
     const { orgId, org, user, staffMember } = await requireAnalyst(ctx);
-    const limits = analystPlanLimits(org.plan, org);
+    requireBookingSubscription(org);
+    const limits = analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org);
     const question = args.question.trim();
     if (
       !question ||

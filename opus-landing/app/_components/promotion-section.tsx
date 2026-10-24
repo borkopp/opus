@@ -3,9 +3,12 @@
 import Image from "next/image";
 import { ArrowUpRight, Check, ImagePlus, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import { trialSignupUrl } from "@/lib/pro-pricing";
 import { useI18n } from "@/lib/i18n/context";
 
 export function PromotionSection() {
+  const { currency } = useBillingCurrency();
   const { t, locale } = useI18n();
   const copy = t.promotion;
 
@@ -71,7 +74,7 @@ export function PromotionSection() {
           <p>{copy.customization}</p>
         </div>
         <Button asChild size="hero">
-          <a href="https://studio.opus.mk/signup">
+          <a href={trialSignupUrl(currency)}>
             {copy.cta}
             <ArrowUpRight aria-hidden="true" data-icon="inline-end" />
           </a>

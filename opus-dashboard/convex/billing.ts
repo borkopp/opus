@@ -16,13 +16,14 @@ import {
   orgIdFromExternalCustomerId,
   polarConfig,
   polarSubscription,
-  proTeamLimit,
+  checkoutTeamLimit,
   proTierForProduct,
   requireProTier,
   requirePolarConfig,
 } from "./lib/polar";
 import { getStaffPlanStatusForOrg } from "./lib/staffPlanLimits";
 import { proTierForTeamSize } from "../../shared/pro-pricing";
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 
 async function accountForOrg(ctx: QueryCtx, orgId: Id<"orgs">) {
   const account = await ctx.db
@@ -61,6 +62,7 @@ export const getStatus = query({
       !isAppReviewOrg(org);
     return {
       plan: org.plan,
+      ...getSubscriptionAccess(org),
       canManage: staffMember.role === "owner" && !isAppReviewOrg(org),
       checkoutAvailable,
       teamCount: staff.totalCount,
@@ -114,7 +116,7 @@ export const getAccount = internalQuery({
 });
 
 export const reserveCheckout = internalMutation({
-  args: { attemptId: v.string(), teamLimit: v.optional(proTeamLimit) },
+  args: { attemptId: v.string(), teamLimit: v.optional(checkoutTeamLimit) },
   handler: async (ctx, { attemptId, teamLimit = 4 }) => {
     const { org, user } = await requireRole(ctx, undefined, "owner");
     requireLiveStudio(org);
@@ -332,6 +334,8 @@ export const applySnapshot = internalMutation({
       subscription?.status === "active" && subscription.currentPeriodEnd > now;
     const managed = account.managed || Boolean(subscription);
     const plan = managed ? (paid ? "paid" : "free") : org.plan;
+    // Preserve org.trial unchanged. A failed or ended subscription returns to
+    // the remaining original trial, or expired access, never a new Free plan.
     await ctx.db.patch(account._id, {
       customerId: args.customerId ?? account.customerId,
       subscription,
@@ -430,5 +434,39 @@ export const expireAccess = internalMutation({
       });
     }
     await queueSync(ctx, account);
+  },
+});
+
+/** Invalidate subscribed views at the boundary; timestamp checks enforce access. */
+export const expireTrial = internalMutation({
+  args: { orgId: v.id("orgs"), endsAt: v.number() },
+  handler: async (ctx, { orgId, endsAt }) => {
+    const org = await ctx.db.get(orgId);
+    const now = Date.now();
+    if (
+      !org ||
+      org.isDeleted ||
+      org.trial?.endsAt !== endsAt ||
+      now < endsAt ||
+      org.updatedAt >= endsAt
+    ) {
+      return;
+    }
+    // A prior expiry run or any edit after the boundary already invalidated
+    // readers. Never change the trial snapshot or a verified paid plan.
+    await ctx.db.patch(orgId, { updatedAt: now });
+    if (org.plan !== "paid") {
+      await ctx.db.insert("audit_log", {
+        orgId,
+        actorType: "system",
+        actorId: "subscription-trial",
+        action: "trial.expired",
+        resourceType: "orgs",
+        resourceId: orgId,
+        before: { accessState: "trial" },
+        after: { accessState: "expired", trialEndsAt: endsAt },
+        createdAt: now,
+      });
+    }
   },
 });

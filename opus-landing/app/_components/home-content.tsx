@@ -25,6 +25,7 @@ import { useBillingCurrency } from "@/components/pricing/billing-currency-provid
 import { getStudioSlideOffset } from "@/lib/studio-carousel";
 import {
   PRO_TEAM_TIERS,
+  trialSignupUrl,
   proPriceMinorUnits,
   proPriceLabel,
 } from "@/lib/pro-pricing";
@@ -90,7 +91,7 @@ export function HomeContent() {
   );
   const proPrices = PRO_TEAM_TIERS.map(
     (tier) =>
-      `${proPriceLabel(proPriceMinorUnits(tier, currency), locale, currency)} ${locale === "mk" ? "за до" : locale === "sq" ? "për deri në" : "for up to"} ${tier.teamLimit} ${locale === "mk" ? "членови" : locale === "sq" ? "anëtarë" : "members"}`,
+      `${proPriceLabel(proPriceMinorUnits(tier, currency), locale, currency)} ${locale === "mk" ? "за до" : locale === "sq" ? "për deri në" : "for up to"} ${tier.teamLimit} ${locale === "mk" ? (tier.teamLimit === 1 ? "член" : "членови") : locale === "sq" ? (tier.teamLimit === 1 ? "anëtar" : "anëtarë") : tier.teamLimit === 1 ? "member" : "members"}`,
   ).join(", ");
 
   return (
@@ -104,7 +105,7 @@ export function HomeContent() {
             <h1 id="hero-title">{t.hero.title}</h1>
             <p>{t.hero.description}</p>
             <div className="hero-actions">
-              <a className="button button-dark" href="https://studio.opus.mk/">
+              <a className="button button-dark" href={trialSignupUrl(currency)}>
                 {t.hero.createWebsite}{" "}
                 <span>
                   <ArrowUpRight aria-hidden="true" />
@@ -409,10 +410,7 @@ export function HomeContent() {
               <p>{t.howItWorks.step3Desc}</p>
             </article>
           </div>
-          <a
-            className="button button-dark"
-            href="https://studio.opus.mk/signup"
-          >
+          <a className="button button-dark" href={trialSignupUrl(currency)}>
             {t.howItWorks.cta}{" "}
             <span>
               <ArrowUpRight aria-hidden="true" />
@@ -472,10 +470,7 @@ export function HomeContent() {
           <div className="cta-content">
             <h2>{t.finalCta.heading}</h2>
             <p>{t.finalCta.subheading}</p>
-            <a
-              className="button button-dark"
-              href="https://studio.opus.mk/signup"
-            >
+            <a className="button button-dark" href={trialSignupUrl(currency)}>
               {t.finalCta.cta}{" "}
               <span>
                 <ArrowUpRight aria-hidden="true" />

@@ -4,6 +4,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAutoRotation } from "@/hooks/use-auto-rotation";
+import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import { trialSignupUrl } from "@/lib/pro-pricing";
 import { useI18n } from "@/lib/i18n/context";
 import {
   BookingPreview,
@@ -12,6 +14,7 @@ import {
 } from "./product-previews";
 
 export function ProductTour() {
+  const { currency } = useBillingCurrency();
   const { t } = useI18n();
   const [instant, setInstant] = useState(false);
 
@@ -135,7 +138,7 @@ export function ProductTour() {
         </div>
         <div className="product-tour-action">
           <Button asChild variant="default">
-            <a href="https://studio.opus.mk/signup">
+            <a href={trialSignupUrl(currency)}>
               {t.productTour.cta}{" "}
               <ArrowUpRight data-icon="inline-end" aria-hidden="true" />
             </a>

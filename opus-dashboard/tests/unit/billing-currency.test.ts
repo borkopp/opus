@@ -116,9 +116,9 @@ describe("billing currency selection", () => {
   it("uses fixed EUR cents alongside unchanged MKD prices", () => {
     expect(
       PRO_TEAM_TIERS.map((tier) => proPriceMinorUnits(tier, "eur")),
-    ).toEqual([2490, 2990, 3490, 3990, 5490]);
+    ).toEqual([1290, 1990, 2490, 3490, 3990, 5490]);
     expect(
       PRO_TEAM_TIERS.map((tier) => proPriceMinorUnits(tier, "mkd")),
-    ).toEqual([149000, 179000, 209000, 249000, 329000]);
+    ).toEqual([79000, 119000, 149000, 209000, 249000, 329000]);
   });
 });

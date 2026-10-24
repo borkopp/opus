@@ -90,17 +90,32 @@ export function StaffDetailsForm({
       ? planStatus.canUseOwnerRole
       : planStatus.canUseStaffRole),
   );
-  const planLimitMessage = planStatus?.isFree
+  const trialExpired = planStatus?.accessState === "expired";
+  const hasPersonalStaffAccounts =
+    planStatus?.accessState === "paid" || planStatus?.accessState === "trial";
+  const planLimitMessage = trialExpired
     ? t(
-        "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
-        "Бесплатниот план дозволува 1 активен сопственик и до 3 активни вработени (вкупно 4 лица). Деактивирајте член на тимот или преминете на OPUS Pro за да додадете повеќе.",
-        "Plani falas lejon 1 pronar aktiv dhe deri në 3 anëtarë stafi aktivë (gjithsej 4 persona). Çaktivizoni një anëtar të ekipit ose përmirësoni në OPUS Pro për të shtuar më shumë.",
+        "Subscribe before adding or reactivating team members. Existing profiles can still be edited or deactivated.",
+        "Претплатете се пред да додавате или повторно активирате членови. Постојните профили и понатаму може да се уредуваат или деактивираат.",
+        "Abonohuni para se të shtoni ose riaktivizoni anëtarë. Profilet ekzistuese mund të redaktohen ose çaktivizohen.",
       )
-    : t(
-        `Your Pro package allows up to ${planStatus?.totalLimit ?? 4} active team members. Choose a larger package or deactivate a team member to add more.`,
-        `Вашиот Pro пакет дозволува најмногу ${planStatus?.totalLimit ?? 4} активни членови на тимот. Изберете поголем пакет или деактивирајте член на тимот за да додадете повеќе.`,
-        `Paketa juaj Pro lejon deri në ${planStatus?.totalLimit ?? 4} anëtarë aktivë të ekipit. Zgjidhni një paketë më të madhe ose çaktivizoni një anëtar të ekipit për të shtuar më shumë.`,
-      );
+    : planStatus?.accessState === "trial"
+      ? t(
+          `Your trial allows up to ${planStatus.totalLimit} active team members. Deactivate a member before adding another.`,
+          `Пробниот период дозволува до ${planStatus.totalLimit} активни членови. Деактивирајте член пред да додадете друг.`,
+          `Prova lejon deri në ${planStatus.totalLimit} anëtarë aktivë. Çaktivizoni një anëtar para se të shtoni një tjetër.`,
+        )
+      : planStatus?.isFree
+        ? t(
+            "The Free plan allows 1 active owner and up to 3 active staff members (4 people total). Deactivate a team member or upgrade to OPUS Pro to add more.",
+            "Бесплатниот план дозволува 1 активен сопственик и до 3 активни вработени (вкупно 4 лица). Деактивирајте член на тимот или преминете на OPUS Pro за да додадете повеќе.",
+            "Plani falas lejon 1 pronar aktiv dhe deri në 3 anëtarë stafi aktivë (gjithsej 4 persona). Çaktivizoni një anëtar të ekipit ose përmirësoni në OPUS Pro për të shtuar më shumë.",
+          )
+        : t(
+            `Your Pro package allows up to ${planStatus?.totalLimit ?? 4} active team members. Choose a larger package or deactivate a team member to add more.`,
+            `Вашиот Pro пакет дозволува најмногу ${planStatus?.totalLimit ?? 4} активни членови на тимот. Изберете поголем пакет или деактивирајте член на тимот за да додадете повеќе.`,
+            `Paketa juaj Pro lejon deri në ${planStatus?.totalLimit ?? 4} anëtarë aktivë të ekipit. Zgjidhni një paketë më të madhe ose çaktivizoni një anëtar të ekipit për të shtuar më shumë.`,
+          );
 
   useEffect(() => {
     if (initialized.current === (staffId ?? "new")) return;
@@ -210,6 +225,9 @@ export function StaffDetailsForm({
         );
         onSaved?.(staffId);
       } else {
+        const invitationEmail = hasPersonalStaffAccounts
+          ? signInEmail.trim()
+          : "";
         const newStaffId = await createStaffMember({
           orgId,
           displayName: name,
@@ -217,7 +235,7 @@ export function StaffDetailsForm({
           bio: bio.trim() || undefined,
           specialties: specialtyList,
           avatarUrl: avatarUrl || undefined,
-          signInEmail: signInEmail.trim() || undefined,
+          signInEmail: invitationEmail || undefined,
         });
         posthog.capture("staff_member_created", {
           role,
@@ -225,13 +243,13 @@ export function StaffDetailsForm({
         });
         toast.success(
           t(
-            signInEmail.trim()
+            invitationEmail
               ? "Staff member added and invitation queued."
               : "Staff member added. Set their working hours next.",
-            signInEmail.trim()
+            invitationEmail
               ? "Вработениот е додаден и поканата е ставена во ред за испраќање."
               : "Вработениот е додаден. Следно, поставете го работното време.",
-            signInEmail.trim()
+            invitationEmail
               ? "Anëtari i stafit u shtua dhe ftesa u vendos në radhë."
               : "Anëtari i stafit u shtua. Vendosni orarin e punës më pas.",
           ),
@@ -393,24 +411,36 @@ export function StaffDetailsForm({
             </Select>
             {planStatus && (
               <FieldDescription data-replay-public>
-                {planStatus.isFree
+                {trialExpired
                   ? t(
-                      "Free: 1 owner and 3 staff. Managers use a staff slot.",
-                      "Бесплатно: 1 сопственик и 3 вработени. Менаџерите зафаќаат место за вработен.",
-                      "Falas: 1 pronar dhe 3 staf. Menaxherët përdorin një vend stafi.",
+                      "Trial ended. Subscribe before adding or reactivating members; existing profiles are kept.",
+                      "Пробниот период заврши. Претплатете се пред додавање или повторно активирање членови; постојните профили се зачувани.",
+                      "Prova përfundoi. Abonohuni para shtimit ose riaktivizimit të anëtarëve; profilet ekzistuese ruhen.",
                     )
-                  : t(
-                      `Pro: up to ${planStatus.totalLimit} active team members, including owners and managers.`,
-                      `Pro: до ${planStatus.totalLimit} активни членови на тимот, вклучувајќи сопственици и менаџери.`,
-                      `Pro: deri në ${planStatus.totalLimit} anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët.`,
-                    )}
+                  : planStatus.accessState === "trial"
+                    ? t(
+                        `Trial: up to ${planStatus.totalLimit} active team members, including owners and managers.`,
+                        `Пробен период: до ${planStatus.totalLimit} активни членови, вклучувајќи сопственици и менаџери.`,
+                        `Provë: deri në ${planStatus.totalLimit} anëtarë aktivë, përfshirë pronarët dhe menaxherët.`,
+                      )
+                    : planStatus.isFree
+                      ? t(
+                          "Free: 1 owner and 3 staff. Managers use a staff slot.",
+                          "Бесплатно: 1 сопственик и 3 вработени. Менаџерите зафаќаат место за вработен.",
+                          "Falas: 1 pronar dhe 3 staf. Menaxherët përdorin një vend stafi.",
+                        )
+                      : t(
+                          `Pro: up to ${planStatus.totalLimit} active team members, including owners and managers.`,
+                          `Pro: до ${planStatus.totalLimit} активни членови на тимот, вклучувајќи сопственици и менаџери.`,
+                          `Pro: deri në ${planStatus.totalLimit} anëtarë aktivë të ekipit, përfshirë pronarët dhe menaxherët.`,
+                        )}
               </FieldDescription>
             )}
           </Field>
         </FieldGroup>
 
         {!isEdit && (
-          <Field data-disabled={planStatus?.isFree}>
+          <Field data-disabled={!hasPersonalStaffAccounts}>
             <FieldLabel htmlFor="staff-sign-in-email">
               {t("Sign-in email", "Е-пошта за најава", "Emaili i hyrjes")}{" "}
               <span className="text-muted-foreground">
@@ -424,20 +454,26 @@ export function StaffDetailsForm({
               value={signInEmail}
               onChange={(event) => setSignInEmail(event.target.value)}
               placeholder="ana@studio.mk"
-              disabled={!planStatus || planStatus.isFree}
+              disabled={!hasPersonalStaffAccounts}
             />
             <FieldDescription>
-              {planStatus?.isFree
+              {trialExpired
                 ? t(
-                    "Pro includes personal staff accounts. You can add this person without a login.",
-                    "Pro вклучува лични сметки за вработените. Може да го додадете ова лице без најава.",
-                    "Pro përfshin llogari personale për stafin. Mund ta shtoni këtë person pa hyrje.",
+                    "Subscribe to invite new personal staff accounts. Existing linked accounts are kept.",
+                    "Претплатете се за покани за нови лични сметки. Постојните поврзани сметки се зачувани.",
+                    "Abonohuni për të ftuar llogari të reja personale. Llogaritë ekzistuese të lidhura ruhen.",
                   )
-                : t(
-                    "An invitation is sent when you add this person. Leave blank to add them without dashboard access.",
-                    "При додавање ќе се испрати покана. Оставете празно за да го додадете без пристап до контролната табла.",
-                    "Ftesa dërgohet kur e shtoni këtë person. Lëreni bosh për ta shtuar pa qasje në panel.",
-                  )}
+                : planStatus?.isFree
+                  ? t(
+                      "Pro includes personal staff accounts. You can add this person without a login.",
+                      "Pro вклучува лични сметки за вработените. Може да го додадете ова лице без најава.",
+                      "Pro përfshin llogari personale për stafin. Mund ta shtoni këtë person pa hyrje.",
+                    )
+                  : t(
+                      "An invitation is sent when you add this person. Leave blank to add them without dashboard access.",
+                      "При додавање ќе се испрати покана. Оставете празно за да го додадете без пристап до контролната табла.",
+                      "Ftesa dërgohet kur e shtoni këtë person. Lëreni bosh për ta shtuar pa qasje në panel.",
+                    )}
             </FieldDescription>
           </Field>
         )}

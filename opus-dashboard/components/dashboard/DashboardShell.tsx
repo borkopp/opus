@@ -19,6 +19,7 @@ import { resolveDashboardTheme } from "@/lib/dashboard-theme";
 import { BrowserPushSync } from "@/components/notifications/BrowserPushSync";
 import { Spinner } from "@/components/ui/spinner";
 import { StudioInstallCard } from "@/components/pwa/StudioInstallCard";
+import { TrialAccessNotice } from "@/components/billing/TrialAccessNotice";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isSignedOut, isRecovering, retry } =
@@ -121,7 +122,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       theme={resolveDashboardTheme(profile.dashboardTheme)}
     >
       <BrowserPushSync key={`${profile.orgId}:${profile.user._id}`} />
-      <QuickBookingProvider key={profile.orgId} orgId={profile.orgId}>
+      <QuickBookingProvider
+        key={profile.orgId}
+        orgId={profile.orgId}
+        trialExpired={profile.accessState === "expired"}
+        canManageSubscription={profile.role === "owner"}
+      >
         <div
           data-dashboard-theme={resolveDashboardTheme(profile.dashboardTheme)}
           className={`dashboard-shell ${s.scope} ${pathname === "/beauty/bookings" ? s.viewportShell : ""}`}
@@ -135,6 +141,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </a>
           {pathname === "/beauty/assistant" ? (
             <main id="dashboard-content" tabIndex={-1}>
+              <TrialAccessNotice
+                accessState={profile.accessState}
+                trialEndsAt={profile.trialEndsAt}
+                canManage={profile.role === "owner"}
+              />
               {children}
             </main>
           ) : (
@@ -146,6 +157,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   tabIndex={-1}
                   className={`dashboard-workspace ${pathname === "/beauty" ? "dashboard-overview" : "dashboard-page"}`}
                 >
+                  <TrialAccessNotice
+                    accessState={profile.accessState}
+                    trialEndsAt={profile.trialEndsAt}
+                    canManage={profile.role === "owner"}
+                  />
                   {profile.bookingAccess !== "own" && (
                     <WebsiteSetupBanner
                       key={profile.orgId}

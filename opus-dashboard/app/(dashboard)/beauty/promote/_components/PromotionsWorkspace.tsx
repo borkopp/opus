@@ -30,6 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { promotionTab } from "@/lib/promotions";
+import { BILLING_PATH } from "@/lib/upgrade";
 import type { PromotionLanguage } from "@/convex/lib/promotionTemplates";
 import { OpeningStory } from "./OpeningStory";
 import { PromotionKit } from "./PromotionKit";
@@ -46,6 +47,7 @@ export function PromotionsWorkspace() {
   const params = useSearchParams();
   const router = useRouter();
   const tab = promotionTab(params.get("tab"));
+  const expired = data?.accessState === "expired";
   return (
     <div className="flex min-w-0 flex-col gap-6">
       <DashboardPageHeader
@@ -62,9 +64,23 @@ export function PromotionsWorkspace() {
           "Ktheni një termin të lirë në Story, ndani linkun e rezervimit dhe përgjigjuni në sekonda.",
         )}
       >
-        <Badge data-replay-public variant="secondary">
-          {t("Included in Free", "Вклучено во Free", "Përfshirë në Free")}
-        </Badge>
+        {data && !expired && (
+          <Badge data-replay-public variant="secondary">
+            {t(
+              "Included in your plan",
+              "Вклучено во вашиот план",
+              "Përfshirë në planin tuaj",
+            )}
+          </Badge>
+        )}
+        {data?.published && (
+          <Button asChild variant="outline">
+            <a href={data.websiteUrl} target="_blank" rel="noreferrer">
+              {t("View website", "Види веб-страница", "Shiko faqen")}
+              <ExternalLink data-icon="inline-end" />
+            </a>
+          </Button>
+        )}
       </DashboardPageHeader>
       {data === undefined ? (
         <div
@@ -80,34 +96,65 @@ export function PromotionsWorkspace() {
         </div>
       ) : (
         <>
-          {!data.published && (
+          {!data.acceptingBookings && (
             <Alert>
               <Globe />
               <AlertTitle data-replay-public>
-                {t(
-                  "Publish your booking website first",
-                  "Прво објавете ја веб-страницата за закажување",
-                  "Publikoni fillimisht faqen tuaj të rezervimit",
-                )}
+                {expired
+                  ? t(
+                      "A paid plan is needed",
+                      "Потребен е платен план",
+                      "Nevojitet një plan me pagesë",
+                    )
+                  : t(
+                      "Publish your booking website first",
+                      "Прво објавете ја веб-страницата за закажување",
+                      "Publikoni fillimisht faqen tuaj të rezervimit",
+                    )}
               </AlertTitle>
               <AlertDescription>
                 <p data-replay-public>
-                  {t(
-                    "Your graphics and QR code will be ready when clients can book. You can prepare saved replies now.",
-                    "Сликите и QR-кодот ќе бидат достапни кога клиентите ќе можат да закажуваат. Зачуваните одговори можете да ги подготвите сега.",
-                    "Grafikat dhe QR-kodi juaj do të jenë gati kur klientët të mund të rezervojnë. Mund të përgatitni përgjigjet e ruajtura tani.",
-                  )}
+                  {expired
+                    ? t(
+                        "Choose a paid plan to accept new bookings and share booking graphics again. Your saved replies are kept.",
+                        "Изберете платен план за повторно да примате нови закажувања и да споделувате слики за закажување. Зачуваните одговори остануваат.",
+                        "Zgjidhni një plan me pagesë për të pranuar rezervime të reja dhe për të shpërndarë sërish grafika rezervimi. Përgjigjet tuaja të ruajtura mbeten.",
+                      )
+                    : t(
+                        "Your graphics and QR code will be ready when clients can book. You can prepare saved replies now.",
+                        "Сликите и QR-кодот ќе бидат достапни кога клиентите ќе можат да закажуваат. Зачуваните одговори можете да ги подготвите сега.",
+                        "Grafikat dhe QR-kodi juaj do të jenë gati kur klientët të mund të rezervojnë. Mund të përgatitni përgjigjet e ruajtura tani.",
+                      )}
                 </p>
-                <Button asChild variant="outline">
-                  <Link data-replay-public href="/onboarding?step=review">
+                {!expired || data.canManageBilling ? (
+                  <Button asChild variant="outline">
+                    <Link
+                      data-replay-public
+                      href={expired ? BILLING_PATH : "/onboarding?step=review"}
+                    >
+                      {expired
+                        ? t(
+                            "Choose a plan",
+                            "Изберете план",
+                            "Zgjidhni një plan",
+                          )
+                        : t(
+                            "Finish website setup",
+                            "Довршете ја веб-страницата",
+                            "Përfundo konfigurimin e faqes",
+                          )}
+                      <ExternalLink data-icon="inline-end" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <p data-replay-public>
                     {t(
-                      "Finish website setup",
-                      "Довршете ја веб-страницата",
-                      "Përfundo konfigurimin e faqes",
+                      "Contact your studio owner.",
+                      "Контактирајте го сопственикот на студиото.",
+                      "Kontaktoni pronarin e studios.",
                     )}
-                    <ExternalLink data-icon="inline-end" />
-                  </Link>
-                </Button>
+                  </p>
+                )}
               </AlertDescription>
             </Alert>
           )}

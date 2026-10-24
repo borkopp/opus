@@ -1,3 +1,4 @@
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import { ConvexError, v } from "convex/values";
 import { CALENDAR_DAY, isVisibleCalendarBooking } from "../../shared/calendar";
 import { mutation, query, type QueryCtx } from "./_generated/server";
@@ -69,7 +70,7 @@ export const bootstrap = query({
       timezone,
       now,
       today: Math.floor(now / 86_400_000) * 86_400_000,
-      plan: auth.org.plan,
+      plan: getSubscriptionAccess(auth.org).effectivePlan,
       profile: {
         name: auth.staffMember.displayName,
         email: auth.user.email,

@@ -122,6 +122,8 @@ function OnboardingFlow({
     isAuthenticated ? {} : "skip",
   );
   const state = useQuery(api.activation.getState, profile?.orgId ? {} : "skip");
+  const trialSetup = !profile?.orgId || profile.accessState === "trial";
+  const billingAfterSetup = upgrading && !trialSetup;
   const [draft, setDraft] = useState<ReturnType<typeof createDraft> | null>(
     null,
   );
@@ -138,23 +140,25 @@ function OnboardingFlow({
         upgrading ? upgradeLoginPath(teamLimit, currency) : "/login",
       );
   }, [isSignedOut, router, upgrading, teamLimit, currency]);
-  const shouldLeave = upgrading
+  const shouldLeave = billingAfterSetup
     ? profile &&
       upgradeDestination({
         hasStudio: Boolean(profile.orgId),
         role: profile.role,
         plan: profile.plan,
+        accessState: profile.accessState,
         operationalSetupComplete: state?.operationalSetupComplete ?? false,
+        onboardingComplete: state?.onboardingComplete ?? false,
       }) === BILLING_PATH
     : state?.onboardingComplete && !requestedStep;
   useEffect(() => {
     if (shouldLeave)
       router.replace(
-        upgrading
+        billingAfterSetup
           ? withProTeamLimit(BILLING_PATH, teamLimit, currency)
           : "/beauty",
       );
-  }, [shouldLeave, upgrading, router, teamLimit, currency]);
+  }, [shouldLeave, billingAfterSetup, router, teamLimit, currency]);
 
   if (isLoading)
     return (
@@ -171,7 +175,7 @@ function OnboardingFlow({
     );
 
   const current = draft ?? createDraft(state);
-  const steps = upgrading ? PRO_ONBOARDING_STEPS : ONBOARDING_STEPS;
+  const steps = billingAfterSetup ? PRO_ONBOARDING_STEPS : ONBOARDING_STEPS;
   const derived = state?.nextStep ?? "business";
   const selected = !profile.orgId
     ? "business"
@@ -183,7 +187,7 @@ function OnboardingFlow({
         ? "owner"
         : (manualStep ?? derived);
   const step =
-    upgrading && selected === "review"
+    billingAfterSetup && selected === "review"
       ? derived === "review"
         ? "hours"
         : derived
@@ -303,15 +307,29 @@ function OnboardingFlow({
         </div>
       </header>
       <div className="mx-auto flex max-w-6xl flex-col items-center px-4 pb-8 pt-4 sm:px-8 sm:pb-16 sm:pt-8">
-        {upgrading && (
+        {(trialSetup || billingAfterSetup) && (
           <Alert className="mb-6 max-w-xl">
-            <AlertTitle data-replay-public>OPUS Pro</AlertTitle>
+            <AlertTitle data-replay-public>
+              {trialSetup
+                ? t(
+                    "Your two-month trial",
+                    "Вашиот двомесечен пробен период",
+                    "Prova juaj dymujore",
+                  )
+                : "OPUS Pro"}
+            </AlertTitle>
             <AlertDescription data-replay-public>
-              {t(
-                "Set up your studio, then review your subscription and confirm payment.",
-                "Поставете го студиото, па прегледајте ја претплатата и потврдете го плаќањето.",
-                "Konfiguroni studion tuaj, më pas rishikoni abonimin dhe konfirmoni pagesën.",
-              )}
+              {trialSetup
+                ? t(
+                    "Set up your studio and start using OPUS for two months. No card is needed. Choose a paid plan when you are ready to subscribe.",
+                    "Поставете го студиото и користете го OPUS два месеца. Не е потребна картичка. Изберете платен план кога ќе сакате да се претплатите.",
+                    "Konfiguroni studion dhe përdorni OPUS për dy muaj. Nuk nevojitet kartë. Zgjidhni një plan me pagesë kur të jeni gati të abonoheni.",
+                  )
+                : t(
+                    "Set up your studio, then review your subscription and confirm payment.",
+                    "Поставете го студиото, па прегледајте ја претплатата и потврдете го плаќањето.",
+                    "Konfiguroni studion tuaj, më pas rishikoni abonimin dhe konfirmoni pagesën.",
+                  )}
             </AlertDescription>
           </Alert>
         )}

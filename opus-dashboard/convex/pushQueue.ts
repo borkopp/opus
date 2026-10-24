@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./lib/subscriptionAccess";
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { components, internal } from "./_generated/api";
@@ -194,7 +195,7 @@ export const prepare = internalMutation({
         return skip("Reminder is obsolete.");
     }
     if (n.pushEvent === "ai_handoff") {
-      if (ownOnly || org.plan !== "paid" || !n.pushConversationId)
+      if (ownOnly || !hasPaidAccess(org) || !n.pushConversationId)
         return skip("Front-desk access is unavailable.");
       const conversation = await ctx.db.get(n.pushConversationId);
       if (

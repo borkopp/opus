@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { convexTest } from "convex-test";
 import { api } from "../../convex/_generated/api";
 import schema from "../../convex/schema";
@@ -27,12 +27,18 @@ describe("paid-plan feature access", () => {
   let t: TestBackend;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     t = createBackend();
   });
+  afterEach(() => {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  });
 
-  test("new studios default to free and premium entry points reject access", async () => {
+  test("legacy Free studios retain their existing premium gates", async () => {
     const { owner, orgId } = await createStudio(t);
 
+    await t.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
     const storedOrg = await t.run(async (ctx) => ctx.db.get(orgId));
     expect(storedOrg?.plan).toBe("free");
     await expect(owner.query(api.users.getMyProfile)).resolves.toMatchObject({
@@ -82,6 +88,30 @@ describe("paid-plan feature access", () => {
     await expect(
       owner.action(api.ai.agent.preview, { question: "Hello" }),
     ).rejects.toThrow("AI Receptionist requires the paid plan");
+  });
+
+  test("new trials grant premium access without recording a paid subscription", async () => {
+    const { owner, orgId } = await createStudio(t);
+    const org = await t.run((ctx) => ctx.db.get(orgId));
+    expect(org?.plan).toBe("free");
+    expect(org?.trial).toBeDefined();
+    await expect(owner.query(api.users.getMyProfile)).resolves.toMatchObject({
+      plan: "paid",
+      accessState: "trial",
+      trialEndsAt: org!.trial!.endsAt,
+    });
+    await expect(
+      owner.query(api.ai.conversations.listConversations, { orgId }),
+    ).resolves.toEqual([]);
+    vi.setSystemTime(org!.trial!.endsAt);
+    await expect(owner.query(api.users.getMyProfile)).resolves.toMatchObject({
+      plan: "free",
+      accessState: "expired",
+      trialEndsAt: org!.trial!.endsAt,
+    });
+    await expect(
+      owner.query(api.ai.conversations.listConversations, { orgId }),
+    ).rejects.toThrow("requires the paid plan");
   });
 
   test("manually setting paid unlocks authenticated settings and inbox queries", async () => {

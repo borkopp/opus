@@ -34,6 +34,8 @@ async function setupPublishedStudio(t: TestBackend) {
     name: "Atelier Email",
     category: "beauty_salon",
   });
+  // Preserve the pre-trial Free/reminder behavior covered by this suite.
+  await t.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
   await owner.mutation(api.activation.saveOwnerName, { name: "Ada Owner" });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",

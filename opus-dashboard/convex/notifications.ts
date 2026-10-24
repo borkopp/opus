@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./lib/subscriptionAccess";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -392,7 +393,7 @@ function deliverySkipReason(context: DeliveryContext) {
   }
 
   if (notification.type === "booking_reminder") {
-    if (org.plan !== "paid") return "Client email reminders require Pro";
+    if (!hasPaidAccess(org)) return "Client email reminders require Pro";
     if (!settings.emailEnabled) return "Client reminders are disabled";
   }
 
@@ -982,7 +983,7 @@ export const reconcileBookingRemindersForOrg = internalMutation({
     if (!settings) return 0;
 
     const customerHours =
-      org.plan === "paid" && settings.emailEnabled
+      hasPaidAccess(org) && settings.emailEnabled
         ? normalizeReminderHours(settings.reminderHoursBefore)
         : [];
     const staffHours =
@@ -992,7 +993,7 @@ export const reconcileBookingRemindersForOrg = internalMutation({
           )
         : [];
     const smsHours =
-      org.plan === "paid" && settings.smsEnabled
+      hasPaidAccess(org) && settings.smsEnabled
         ? normalizeReminderHours(settings.smsReminderHoursBefore ?? [24])
         : [];
     const allHours = [

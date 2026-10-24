@@ -32,6 +32,7 @@ async function studio(t: Backend, name = "Luna") {
   const staffId = await t.run(async (ctx) => {
     await ctx.db.patch(orgId, {
       plan: "free",
+      trial: undefined,
       address: "Test Street 10",
       city: "Skopje",
       country: "MK",
@@ -88,6 +89,8 @@ describe("Free studio promotion tools", () => {
       orgId: a.orgId,
       name: "Luna",
       published: true,
+      acceptingBookings: true,
+      accessState: "legacy_free",
       bookingUrl: "https://luna.opus.mk/book",
       today: "2026-09-25",
       maxDate: "2026-10-01",
@@ -312,6 +315,71 @@ describe("Free studio promotion tools", () => {
     ).toEqual([]);
     await t.run((ctx) => ctx.db.patch(a.serviceId, { isOpusVisible: false }));
     expect(await a.owner.query(api.promotions.getOpenings, args)).toEqual([]);
+  });
+
+  test("expired trials stop promoting new bookings while preserving the website and saved replies", async () => {
+    const t = backend(),
+      a = await studio(t);
+    const trial = { startedAt: Date.now(), endsAt: Date.now() + 1_000 };
+    await t.run((ctx) => ctx.db.patch(a.orgId, { trial }));
+    const id = await a.owner.mutation(api.promotions.saveReply, {
+      title: "Booking",
+      body: "Book at {{booking_link}}",
+      language: "en",
+    });
+    const args = {
+      serviceId: a.serviceId,
+      staffId: a.staffId,
+      date: DATE,
+      refreshMinute: 0,
+    };
+    expect(
+      (await a.owner.query(api.promotions.getOpenings, args)).length,
+    ).toBeGreaterThan(0);
+    expect(
+      await a.owner.query(api.promotions.getWorkspace, { language: "en" }),
+    ).toMatchObject({
+      published: true,
+      acceptingBookings: true,
+      accessState: "trial",
+    });
+
+    vi.setSystemTime(trial.endsAt);
+    expect(await a.owner.query(api.promotions.getOpenings, args)).toEqual([]);
+    const expired = await a.owner.query(api.promotions.getWorkspace, {
+      language: "en",
+    });
+    expect(expired).toMatchObject({
+      published: true,
+      acceptingBookings: false,
+      accessState: "expired",
+      values: { booking_link: "" },
+      replies: [expect.objectContaining({ id, missing: ["booking_link"] })],
+    });
+    expect(await t.run((ctx) => ctx.db.get(a.orgId))).toMatchObject({
+      websiteStatus: "published",
+      plan: "free",
+      trial,
+    });
+    expect(
+      await t.query(api.publicSite.getBySlug, { slug: "luna" }),
+    ).toMatchObject({ name: "Luna", slug: "luna" });
+    expect(await t.run((ctx) => ctx.db.get(id))).toMatchObject({
+      isDeleted: false,
+      body: "Book at {{booking_link}}",
+    });
+
+    await t.run((ctx) => ctx.db.patch(a.orgId, { plan: "paid" }));
+    expect(
+      (await a.owner.query(api.promotions.getOpenings, args)).length,
+    ).toBeGreaterThan(0);
+    expect(
+      await a.owner.query(api.promotions.getWorkspace, { language: "en" }),
+    ).toMatchObject({
+      published: true,
+      acceptingBookings: true,
+      accessState: "paid",
+    });
   });
 
   test("does not promote another studio, unpublished sites, hospitality, or elapsed slots", async () => {

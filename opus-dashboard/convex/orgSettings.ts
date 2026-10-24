@@ -1,3 +1,4 @@
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import {
   closeOrgRecoveryGaps,
   scheduleRecoveryRefresh,
@@ -60,7 +61,7 @@ export const getOrgSettings = query({
       : [];
 
     return {
-      org,
+      org: { ...org, plan: getSubscriptionAccess(org).effectivePlan },
       settings,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
       galleryPhotoLimit: galleryPhotoLimit(org),

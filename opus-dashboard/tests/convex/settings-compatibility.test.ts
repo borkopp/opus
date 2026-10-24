@@ -35,6 +35,7 @@ async function studio(t: Backend, key = "one", paid = true) {
   const settingsId = await t.run(async (ctx) => {
     await ctx.db.patch(orgId, {
       plan: paid ? "paid" : "free",
+      trial: undefined,
       phone: "+38970111222",
       logoUrl: "https://images.example.com/logo.png",
       websiteUrl: "https://legacy.example.com",

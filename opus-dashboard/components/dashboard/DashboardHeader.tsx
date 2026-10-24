@@ -65,7 +65,9 @@ export function DashboardHeader({
           <Logo className={s.brand} markClassName={s.brandMark} />
           {profile.plan === "paid" && (
             <Badge data-replay-public variant="pro">
-              Pro
+              {profile.accessState === "trial"
+                ? t("Trial", "Пробен период", "Provë")
+                : "Pro"}
             </Badge>
           )}
         </span>

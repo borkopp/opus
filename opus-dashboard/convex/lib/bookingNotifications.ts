@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
@@ -32,7 +33,7 @@ export async function queueBookingSms(
   hoursBefore?: number,
 ) {
   if (
-    args.org.plan !== "paid" ||
+    !hasPaidAccess(args.org) ||
     !args.settings.smsEnabled ||
     !smsProviderConfigured()
   )

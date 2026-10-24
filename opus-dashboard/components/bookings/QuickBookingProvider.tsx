@@ -31,6 +31,7 @@ import {
   monthKey,
 } from "@/lib/booking-wall-clock";
 import { useDashboardI18n } from "@/components/dashboard-i18n-provider";
+import { TrialAccessNotice } from "@/components/billing/TrialAccessNotice";
 
 // Keep the drawer controls ready; load the form and its calendar on opening.
 // Data queries below start immediately, in parallel with this chunk.
@@ -90,9 +91,13 @@ export function useQuickBooking() {
 export function QuickBookingProvider({
   orgId,
   children,
+  trialExpired = false,
+  canManageSubscription = false,
 }: {
   orgId: Id<"orgs">;
   children: ReactNode;
+  trialExpired?: boolean;
+  canManageSubscription?: boolean;
 }) {
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { t } = useDashboardI18n();
@@ -109,21 +114,21 @@ export function QuickBookingProvider({
 
   const services = useQuery(
     api.services.listServices,
-    isOpen ? { orgId, isActive: true } : "skip",
+    isOpen && !trialExpired ? { orgId, isActive: true } : "skip",
   );
   const staffMembers = useQuery(
     api.staff.listStaffMembers,
-    isOpen ? { orgId } : "skip",
+    isOpen && !trialExpired ? { orgId } : "skip",
   );
   const automaticSlots = useQuery(
     api.slots.getQuickBookingSlots,
-    isOpen
+    isOpen && !trialExpired
       ? { orgId, date: requestDate, serviceIds: selectedServiceIds }
       : "skip",
   );
   const availableDates = useQuery(
     api.slots.getQuickBookingAvailableDates,
-    isOpen
+    isOpen && !trialExpired
       ? { orgId, month: pickerMonth, serviceIds: selectedServiceIds }
       : "skip",
   );
@@ -210,25 +215,34 @@ export function QuickBookingProvider({
             </div>
           </DrawerHeader>
 
-          <QuickBookingForm
-            key={openSequence}
-            orgId={orgId}
-            requestDate={requestDate}
-            selection={resolvedSelection}
-            pickerMonth={pickerMonth}
-            availableDates={availableDates?.availableDates}
-            availableSlots={automaticSlots?.slots}
-            services={services}
-            selectedServiceIds={selectedServiceIds}
-            onServiceIdsChange={setSelectedServiceIds}
-            staffMembers={staffMembers}
-            isLoadingAutomaticSlot={automaticSlots === undefined}
-            isLoadingAvailableDates={availableDates === undefined}
-            onPickerMonthChange={(date) => setPickerMonth(monthKey(date))}
-            onDateSelect={handleDateSelect}
-            onSlotSelect={handleSlotSelect}
-            onBooked={() => handleOpenChange(false)}
-          />
+          {trialExpired ? (
+            <div className="px-5 pb-5">
+              <TrialAccessNotice
+                accessState="expired"
+                canManage={canManageSubscription}
+              />
+            </div>
+          ) : (
+            <QuickBookingForm
+              key={openSequence}
+              orgId={orgId}
+              requestDate={requestDate}
+              selection={resolvedSelection}
+              pickerMonth={pickerMonth}
+              availableDates={availableDates?.availableDates}
+              availableSlots={automaticSlots?.slots}
+              services={services}
+              selectedServiceIds={selectedServiceIds}
+              onServiceIdsChange={setSelectedServiceIds}
+              staffMembers={staffMembers}
+              isLoadingAutomaticSlot={automaticSlots === undefined}
+              isLoadingAvailableDates={availableDates === undefined}
+              onPickerMonthChange={(date) => setPickerMonth(monthKey(date))}
+              onDateSelect={handleDateSelect}
+              onSlotSelect={handleSlotSelect}
+              onBooked={() => handleOpenChange(false)}
+            />
+          )}
         </DrawerContent>
       </Drawer>
     </QuickBookingContext.Provider>

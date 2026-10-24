@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { QueryCtx } from "../_generated/server";
@@ -18,18 +19,21 @@ export type PaidFeature =
   | "Website languages";
 
 export function requirePaidPlan(
-  org: Pick<Doc<"orgs">, "plan"> & Partial<Pick<Doc<"orgs">, "_id" | "slug">>,
+  org: Pick<Doc<"orgs">, "plan"> &
+    Partial<Pick<Doc<"orgs">, "_id" | "slug" | "trial">>,
   feature: PaidFeature,
 ): void {
   if ((org._id && isAppReviewOrg(org._id)) || org.slug === "opus-app-review") {
     if (
-      ["Gap optimizer", "AI Receptionist", "SMS notifications"].includes(feature)
+      ["Gap optimizer", "AI Receptionist", "SMS notifications"].includes(
+        feature,
+      )
     )
       throw new ConvexError(
         "This action is unavailable in the App Review demo studio.",
       );
   }
-  if (org.plan !== "paid") {
+  if (!hasPaidAccess(org)) {
     throw new ConvexError(`${feature} requires the paid plan.`);
   }
 }

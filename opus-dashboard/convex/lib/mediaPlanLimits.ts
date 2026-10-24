@@ -1,5 +1,8 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import type { Doc } from "../_generated/dataModel";
 
-export function galleryPhotoLimit(org: Pick<Doc<"orgs">, "plan">): number {
-  return org.plan === "paid" ? 15 : 3;
+export function galleryPhotoLimit(
+  org: Pick<Doc<"orgs">, "plan"> & Partial<Pick<Doc<"orgs">, "trial">>,
+): number {
+  return hasPaidAccess(org) ? 15 : 3;
 }

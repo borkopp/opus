@@ -25,7 +25,9 @@ export function UpgradeRedirect() {
     isAuthenticated ? {} : "skip",
   );
   const needsSetupCheck = Boolean(
-    profile?.orgId && profile.role === "owner" && profile.plan !== "paid",
+    profile?.orgId &&
+    profile.role === "owner" &&
+    (profile.plan !== "paid" || profile.accessState === "trial"),
   );
   const activation = useQuery(
     api.activation.getState,
@@ -44,7 +46,9 @@ export function UpgradeRedirect() {
         hasStudio: Boolean(profile.orgId),
         role: profile.role,
         plan: profile.plan,
+        accessState: profile.accessState,
         operationalSetupComplete: activation?.operationalSetupComplete ?? false,
+        onboardingComplete: activation?.onboardingComplete ?? false,
         teamLimit,
         currency,
       }),
@@ -76,11 +80,7 @@ export function UpgradeRedirect() {
     >
       <Spinner />
       <p className="text-sm text-muted-foreground">
-        {t(
-          "Opening OPUS Pro…",
-          "Го отвораме OPUS Pro…",
-          "Duke hapur OPUS Pro…",
-        )}
+        {t("Opening OPUS…", "Го отвораме OPUS…", "Duke hapur OPUS…")}
       </p>
     </main>
   );

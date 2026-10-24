@@ -328,6 +328,9 @@ export default defineSchema({
 
     // ── Product plan ──
     plan: v.union(v.literal("free"), v.literal("paid")),
+    // Absent on pre-existing studios. A trial is assigned once at creation and
+    // retained through subscription changes, so expiry cannot restart it.
+    trial: v.optional(v.object({ startedAt: v.number(), endsAt: v.number() })),
     analystPromptLimit: v.optional(v.number()),
     analystDeepPromptLimit: v.optional(v.number()),
     ownerCleanupAt: v.optional(v.number()),

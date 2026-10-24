@@ -22,7 +22,7 @@ async function studio(
     category: "nail_salon",
   });
   await t.run(async (ctx) => {
-    await ctx.db.patch(orgId, { plan });
+    await ctx.db.patch(orgId, { plan, trial: undefined });
     if (teamLimit)
       await ctx.db.insert("billing_accounts", {
         orgId,
@@ -197,10 +197,15 @@ describe("studio plan limits", () => {
     async ({ teamLimit }) => {
       const t = backend();
       const s = await studio(t, "paid", "Luna", teamLimit);
-      await s.addStaff(1, "owner");
-      await s.addStaff(2, "manager");
       const ids = [];
-      for (let i = 3; i < teamLimit; i++) ids.push(await s.addStaff(i));
+      for (let i = 1; i < teamLimit; i++) {
+        ids.push(
+          await s.addStaff(
+            i,
+            i === 1 ? "owner" : i === 2 ? "manager" : "staff",
+          ),
+        );
+      }
       expect(
         await s.owner.query(api.staff.getStaffPlanStatus, {}),
       ).toMatchObject({
@@ -214,6 +219,8 @@ describe("studio plan limits", () => {
           "PRO_STAFF_LIMIT",
         );
       }
+      // The solo package has only its required owner; there is no removable colleague.
+      if (teamLimit === 1) return;
       await s.owner.mutation(api.staff.updateStaffMember, {
         orgId: s.orgId,
         staffId: ids[0],

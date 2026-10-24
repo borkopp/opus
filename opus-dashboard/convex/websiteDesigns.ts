@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./lib/subscriptionAccess";
 import { ConvexError, v } from "convex/values";
 import {
   mutation,
@@ -135,7 +136,7 @@ export const getEditor = query({
       publishedRevision: document?.publishedRevision ?? null,
       publishedAt: document?.publishedAt ?? null,
       translationStatus: document?.translationStatus ?? "idle",
-      canManageLanguages: org.plan === "paid",
+      canManageLanguages: hasPaidAccess(org),
       translationAvailable: Boolean(
         process.env.WEBSITE_TRANSLATION_OPENAI_API_KEY ||
         process.env.OPENAI_API_KEY,
@@ -156,7 +157,7 @@ export const saveDraft = mutation({
       throw new ConvexError(
         "The website changed in another window. Reload before saving.",
       );
-    if (org.plan !== "paid") {
+    if (!hasPaidAccess(org)) {
       const settings = document
         ? null
         : await ctx.db
@@ -247,7 +248,7 @@ export const publish = mutation({
       document.revision,
     );
     if (
-      org.plan === "paid" &&
+      hasPaidAccess(org) &&
       document.draft.autoTranslate &&
       document.draft.languages.length > 1
     ) {
@@ -315,7 +316,7 @@ export const canRunTranslations = internalQuery({
     if (
       !org ||
       org.isDeleted ||
-      org.plan !== "paid" ||
+      !hasPaidAccess(org) ||
       org.industry !== "beauty_wellness" ||
       isAppReviewOrg(org) ||
       !document ||
@@ -364,7 +365,7 @@ export const finishTranslations = internalMutation({
     const org = await ctx.db.get(args.orgId);
     if (!org || org.isDeleted || org.industry !== "beauty_wellness")
       return null;
-    const failed = args.failed || org.plan !== "paid";
+    const failed = args.failed || !hasPaidAccess(org);
     const membership = await ctx.db
       .query("staff_members")
       .withIndex("by_org", (q) => q.eq("orgId", args.orgId))

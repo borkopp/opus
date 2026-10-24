@@ -1,3 +1,4 @@
+import { requireBookingSubscription } from "./lib/subscriptionAccess";
 import {
   recordRecoveryBooking,
   scheduleRecoveryRefresh,
@@ -89,6 +90,7 @@ export const createBooking = mutation({
 
     const org = await ctx.db.get(args.orgId);
     if (!org || org.isDeleted) throw new ConvexError("Organization not found.");
+    requireBookingSubscription(org);
 
     const staff = await ctx.db.get(args.staffId);
     if (
@@ -327,6 +329,7 @@ export const createManualBooking = mutation({
       ctx.db.get(args.staffId),
     ]);
     if (!org || org.isDeleted) throw new ConvexError("Organization not found.");
+    requireBookingSubscription(org);
     if (!settings) throw new ConvexError("Organization settings not found.");
     if (
       !staff ||
@@ -1406,6 +1409,9 @@ export const createBookingForAI = internalMutation({
   },
   handler: async (ctx, args) => {
     const source = args.channel === "instagram" ? "ai_instagram" : "ai_webchat";
+    const org = await ctx.db.get(args.orgId);
+    if (!org || org.isDeleted) throw new ConvexError("Organization not found.");
+    requireBookingSubscription(org);
 
     if (args.startAt <= Date.now()) {
       throw new ConvexError("Booking start time must be in the future.");

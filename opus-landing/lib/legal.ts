@@ -59,7 +59,7 @@ const mkTerms: LegalDocument = {
   effectiveLabel: "Стапува во сила",
   effectiveDate: "1 септември 2026",
   lastUpdatedLabel: "Последно ажурирање",
-  lastUpdatedDate: "7 октомври 2026",
+  lastUpdatedDate: "24 октомври 2026",
   tocLabel: "Во овој документ",
   highlights: [
     "OPUS е платформа за закажување, а не салон или давател на третмани.",
@@ -73,7 +73,7 @@ const mkTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Овие Услови го уредуваат користењето на opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio во App Store) и поврзаните функции, содржини и пораки (заедно, „Услугата“).",
+          text: "Овие Услови го уредуваат користењето на opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio) и поврзаните функции, содржини и пораки (заедно, „Услугата“).",
         },
         {
           type: "paragraph",
@@ -237,11 +237,11 @@ const mkTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Бесплатни услуги и студиски претплати",
+      title: "10. Пробен период и студиски претплати",
       blocks: [
         {
           type: "paragraph",
-          text: "Функциите означени како Free може да се користат без платежна картичка. Кога се нуди платен студиски план, цената, валутата, применливите даноци, периодот на наплата и обновувањето се прикажуваат во веб наплатата пред изречно да го прифатите плаќањето. OPUS Pro е месечна студиска претплата што се обновува до откажување според условите при наплатата. Само овластен сопственик може да ја започне или да управува со неа. Наплатата, фактурите, платежните методи и откажувањето се управуваат преку веб контролната табла и конфигурираниот платежен давател. Откажувањето обично важи од крајот на платениот период; пристапот може да заврши порано при неплаќање или повлечена претплата. Повратот на средства и задолжителните права за откажување се уредуваат според применливото право и условите при наплатата. Преземањето или користењето на мобилната апликација само по себе не започнува платена претплата и не ве задолжува. Плаќањето за третманите останува меѓу клиентот и студиото.",
+          text: "Новите студија добиваат пробен период од два месеци без платежна картичка. Точниот датум на истекување е прикажан во сметката. По истекувањето, потребна е платена претплата за да продолжите да примате нови термини; постојните записи и управувањето со веќе закажани термини остануваат достапни. Пробниот период не започнува автоматска наплата. За платена претплата, цената, валутата, применливите даноци, периодот на наплата и обновувањето се прикажуваат во веб наплатата пред изречно да го прифатите плаќањето. OPUS е месечна студиска претплата што се обновува до откажување според условите при наплатата. Само овластен сопственик може да ја започне или да управува со неа. Наплатата, фактурите, платежните методи и откажувањето се управуваат преку веб контролната табла и конфигурираниот платежен давател. Откажувањето обично важи од крајот на платениот период; пристапот може да заврши порано при неплаќање или повлечена претплата. Повратот на средства и задолжителните права за откажување се уредуваат според применливото право и условите при наплатата. Преземањето или користењето на мобилната апликација само по себе не започнува платена претплата и не ве задолжува. Плаќањето за третманите останува меѓу клиентот и студиото.",
         },
       ],
     },
@@ -360,7 +360,7 @@ const mkPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Оваа Политика важи за opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio во App Store) и поврзаните функции, пораки и поддршка (заедно, „Услугата“). Таа објаснува како OPUS обработува лични податоци според Законот за заштита на личните податоци на Република Северна Македонија.",
+          text: "Оваа Политика важи за opus.mk, studio.opus.mk, веб-сајтовите на студијата на поддомени од opus.mk, мобилната апликација OPUS Studio (OPUS Beauty Studio) и поврзаните функции, пораки и поддршка (заедно, „Услугата“). Таа објаснува како OPUS обработува лични податоци според Законот за заштита на личните податоци на Република Северна Македонија.",
         },
         {
           type: "paragraph",
@@ -703,7 +703,7 @@ const enTerms: LegalDocument = {
   effectiveLabel: "Effective",
   effectiveDate: "1 September 2026",
   lastUpdatedLabel: "Last updated",
-  lastUpdatedDate: "7 October 2026",
+  lastUpdatedDate: "24 October 2026",
   tocLabel: "In this document",
   highlights: [
     "OPUS is booking software, not a salon or treatment provider.",
@@ -717,7 +717,7 @@ const enTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "These Terms govern your use of opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (listed as OPUS Beauty Studio in the App Store), and the related features, content, and communications (together, the “Service”).",
+          text: "These Terms govern your use of opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (OPUS Beauty Studio), and the related features, content, and communications (together, the “Service”).",
         },
         {
           type: "paragraph",
@@ -881,11 +881,11 @@ const enTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Free services and studio subscriptions",
+      title: "10. Trial and studio subscriptions",
       blocks: [
         {
           type: "paragraph",
-          text: "Features labelled Free can be used without a payment card. Where a paid studio plan is offered, the price, currency, applicable taxes, billing period and renewal terms are shown in the web checkout before you expressly accept payment. OPUS Pro is a monthly studio subscription that renews until cancelled under the checkout terms. Only an authorised studio owner may start or manage it. Billing, invoices, payment methods and cancellation are managed through the web dashboard and the configured payment provider. Cancellation normally takes effect at the end of the paid period; plan access may end sooner for non-payment or a revoked subscription. Refunds and mandatory cancellation rights follow applicable law and the terms displayed at checkout. Downloading or using the mobile app does not itself start a paid subscription or charge you. Payments for beauty treatments remain between the client and studio.",
+          text: "New studios receive a two-month trial without a payment card. The exact expiry date is shown in the account. After expiry, a paid subscription is required to keep accepting new appointments; existing records and management of already-booked appointments remain available. The trial does not start automatic billing. For a paid subscription, the price, currency, applicable taxes, billing period and renewal terms are shown in the web checkout before you expressly accept payment. OPUS is a monthly studio subscription that renews until cancelled under the checkout terms. Only an authorised studio owner may start or manage it. Billing, invoices, payment methods and cancellation are managed through the web dashboard and the configured payment provider. Cancellation normally takes effect at the end of the paid period; plan access may end sooner for non-payment or a revoked subscription. Refunds and mandatory cancellation rights follow applicable law and the terms displayed at checkout. Downloading or using the mobile app does not itself start a paid subscription or charge you. Payments for beauty treatments remain between the client and studio.",
         },
       ],
     },
@@ -1004,7 +1004,7 @@ const enPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "This Policy applies to opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (OPUS Beauty Studio in the App Store), and related features, communications, and support (together, the “Service”). It explains how OPUS processes personal data under the Law on Personal Data Protection of the Republic of North Macedonia.",
+          text: "This Policy applies to opus.mk, studio.opus.mk, studio websites on opus.mk subdomains, the OPUS Studio mobile app (OPUS Beauty Studio), and related features, communications, and support (together, the “Service”). It explains how OPUS processes personal data under the Law on Personal Data Protection of the Republic of North Macedonia.",
         },
         {
           type: "paragraph",
@@ -1347,7 +1347,7 @@ const sqTerms: LegalDocument = {
   effectiveLabel: "Hyn në fuqi",
   effectiveDate: "1 shtator 2026",
   lastUpdatedLabel: "Përditësimi i fundit",
-  lastUpdatedDate: "7 tetor 2026",
+  lastUpdatedDate: "24 tetor 2026",
   tocLabel: "Në këtë dokument",
   highlights: [
     "OPUS është softuer rezervimesh, jo sallon apo ofrues trajtimesh.",
@@ -1361,7 +1361,7 @@ const sqTerms: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Këto Kushte rregullojnë përdorimin tuaj të opus.mk, studio.opus.mk, uebfaqeve të studiove në nëndomenet e opus.mk, aplikacionit celular OPUS Studio (OPUS Beauty Studio në App Store) dhe funksioneve, përmbajtjeve dhe komunikimeve përkatëse (së bashku, “Shërbimi”).",
+          text: "Këto Kushte rregullojnë përdorimin tuaj të opus.mk, studio.opus.mk, uebfaqeve të studiove në nëndomenet e opus.mk, aplikacionit celular OPUS Studio (OPUS Beauty Studio) dhe funksioneve, përmbajtjeve dhe komunikimeve përkatëse (së bashku, “Shërbimi”).",
         },
         {
           type: "paragraph",
@@ -1525,11 +1525,11 @@ const sqTerms: LegalDocument = {
     },
     {
       id: "fees",
-      title: "10. Shërbimet falas dhe abonimet e studios",
+      title: "10. Periudha e provës dhe abonimet e studios",
       blocks: [
         {
           type: "paragraph",
-          text: "Funksionet e shënuara Free mund të përdoren pa kartelë pagese. Kur ofrohet një plan me pagesë për studion, çmimi, valuta, taksat e zbatueshme, periudha e faturimit dhe rinovimi shfaqen në pagesën në ueb përpara pranimit tuaj të shprehur. OPUS Pro është abonim mujor i studios që rinovohet deri në anulim sipas kushteve të pagesës. Vetëm pronari i autorizuar mund ta nisë ose menaxhojë. Faturimi, faturat, mënyrat e pagesës dhe anulimi menaxhohen përmes panelit të uebit dhe ofruesit të konfiguruar të pagesave. Anulimi zakonisht hyn në fuqi në fund të periudhës së paguar; qasja mund të përfundojë më herët për mospagesë ose abonim të revokuar. Rimbursimet dhe të drejtat e detyrueshme të anulimit ndjekin ligjin e zbatueshëm dhe kushtet e pagesës. Shkarkimi ose përdorimi i aplikacionit celular nuk nis vetvetiu abonim me pagesë dhe nuk ju tarifon. Pagesat për trajtimet mbeten ndërmjet klientit dhe studios.",
+          text: "Studiot e reja marrin provë dymujore pa kartelë pagese. Data e saktë e skadimit shfaqet në llogari. Pas skadimit, nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja; të dhënat ekzistuese dhe menaxhimi i termineve tashmë të rezervuara mbeten të disponueshme. Prova nuk nis faturim automatik. Për një abonim me pagesë, çmimi, valuta, taksat e zbatueshme, periudha e faturimit dhe rinovimi shfaqen në pagesën në ueb përpara pranimit tuaj të shprehur. OPUS është abonim mujor i studios që rinovohet deri në anulim sipas kushteve të pagesës. Vetëm pronari i autorizuar mund ta nisë ose menaxhojë. Faturimi, faturat, mënyrat e pagesës dhe anulimi menaxhohen përmes panelit të uebit dhe ofruesit të konfiguruar të pagesave. Anulimi zakonisht hyn në fuqi në fund të periudhës së paguar; qasja mund të përfundojë më herët për mospagesë ose abonim të revokuar. Rimbursimet dhe të drejtat e detyrueshme të anulimit ndjekin ligjin e zbatueshëm dhe kushtet e pagesës. Shkarkimi ose përdorimi i aplikacionit celular nuk nis vetvetiu abonim me pagesë dhe nuk ju tarifon. Pagesat për trajtimet mbeten ndërmjet klientit dhe studios.",
         },
       ],
     },
@@ -1648,7 +1648,7 @@ const sqPrivacy: LegalDocument = {
       blocks: [
         {
           type: "paragraph",
-          text: "Kjo Politikë zbatohet për opus.mk, studio.opus.mk, uebfaqet e studiove në nëndomenet e opus.mk, aplikacionin celular OPUS Studio (OPUS Beauty Studio në App Store) dhe funksionet, komunikimet dhe mbështetjen përkatëse (së bashku, “Shërbimi”). Ajo shpjegon se si OPUS përpunon të dhënat personale sipas Ligjit për Mbrojtjen e të Dhënave Personale të Republikës së Maqedonisë së Veriut.",
+          text: "Kjo Politikë zbatohet për opus.mk, studio.opus.mk, uebfaqet e studiove në nëndomenet e opus.mk, aplikacionin celular OPUS Studio (OPUS Beauty Studio) dhe funksionet, komunikimet dhe mbështetjen përkatëse (së bashku, “Shërbimi”). Ajo shpjegon se si OPUS përpunon të dhënat personale sipas Ligjit për Mbrojtjen e të Dhënave Personale të Republikës së Maqedonisë së Veriut.",
         },
         {
           type: "paragraph",

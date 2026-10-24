@@ -115,7 +115,8 @@ async function studio(
     category: "hair_salon",
   });
   const staff = await t.run(async (ctx) => {
-    await ctx.db.patch(orgId, { plan });
+    // Existing studio allowance and downgrade behavior, without a trial.
+    await ctx.db.patch(orgId, { plan, trial: undefined });
     return (
       await ctx.db
         .query("staff_members")

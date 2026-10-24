@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query, type QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { ownerBusiness } from "./lib/ownerControls";
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import {
   allowanceSpend,
   analystPlanLimits,
@@ -32,11 +33,12 @@ async function allowance(
         .gte("createdAt", Date.now() - ANALYST_LIMITS.leaseMs),
     )
     .take(100);
-  const limits = analystPlanLimits(org.plan, org);
-  const defaults = analystPlanLimits(org.plan);
+  const { effectivePlan } = getSubscriptionAccess(org);
+  const limits = analystPlanLimits(effectivePlan, org);
+  const defaults = analystPlanLimits(effectivePlan);
   return {
     orgId: org._id,
-    plan: org.plan,
+    plan: effectivePlan,
     limit: limits.answers,
     deepLimit: limits.deepAnswers,
     defaultLimit: defaults.answers,
@@ -89,7 +91,7 @@ export const update = mutation({
             n <= OWNER_MAX_PROMPTS,
         ) ||
         args.deepLimit! > args.limit! ||
-        (org.plan === "free" && args.deepLimit !== 0)
+        (before.plan === "free" && args.deepLimit !== 0)
       ) {
         throw new ConvexError(
           "Enter whole-number allowances from 0 to 10,000. Detailed prompts must fit within the total and require Pro.",

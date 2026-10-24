@@ -1,5 +1,6 @@
 import type { Doc } from "../_generated/dataModel";
 import { isAppReviewOrg } from "./appReview";
+import { isBookingAccessAllowed } from "./subscriptionAccess";
 
 export type PublicationStatus = "unpublished" | "published" | "suspended";
 
@@ -13,6 +14,6 @@ export function isWebsitePublished(org: Doc<"orgs">): boolean {
 }
 
 export function acceptsPublicBookings(org: Doc<"orgs">): boolean {
-  if (isAppReviewOrg(org)) return false;
+  if (isAppReviewOrg(org) || !isBookingAccessAllowed(org)) return false;
   return org.listingStatus === "published" || isWebsitePublished(org);
 }

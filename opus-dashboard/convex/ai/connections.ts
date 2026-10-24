@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "../lib/subscriptionAccess";
 import { ConvexError, v } from "convex/values";
 import {
   internalMutation,
@@ -74,7 +75,7 @@ export const getStatus = query({
       lastInboundAt: connection?.lastInboundAt,
       lastSentAt: connection?.lastSentAt,
       ready:
-        org.plan === "paid" &&
+        hasPaidAccess(org) &&
         org.industry === "beauty_wellness" &&
         provider.ai &&
         provider.instagram &&
@@ -134,7 +135,7 @@ export const consumeOAuth = internalMutation({
     if (
       !org ||
       org.isDeleted ||
-      org.plan !== "paid" ||
+      !hasPaidAccess(org) ||
       org.industry !== "beauty_wellness" ||
       !staff ||
       staff.isDeleted ||
@@ -179,7 +180,7 @@ export const completeOAuth = internalMutation({
       connection.updatedAt !== args.version ||
       !org ||
       org.isDeleted ||
-      org.plan !== "paid" ||
+      !hasPaidAccess(org) ||
       org.industry !== "beauty_wellness" ||
       !staff ||
       staff.role !== "owner" ||

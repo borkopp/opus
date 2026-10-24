@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
@@ -113,7 +114,7 @@ export async function queueStaffPushEvent(ctx: PushContext, args: EventArgs) {
     : null;
   if (
     args.event === "ai_handoff" &&
-    (!conversation || conversation.orgId !== org._id || org.plan !== "paid")
+    (!conversation || conversation.orgId !== org._id || !hasPaidAccess(org))
   )
     return;
   const settings = await ctx.db

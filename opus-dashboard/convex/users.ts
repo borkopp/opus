@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import {
   requireActiveOrg,
   requireUser,
@@ -120,6 +121,15 @@ export const getMyProfile = query({
         v.union(v.literal("beauty_wellness"), v.literal("hospitality")),
       ),
       plan: v.optional(v.union(v.literal("free"), v.literal("paid"))),
+      accessState: v.optional(
+        v.union(
+          v.literal("legacy_free"),
+          v.literal("trial"),
+          v.literal("paid"),
+          v.literal("expired"),
+        ),
+      ),
+      trialEndsAt: v.optional(v.union(v.number(), v.null())),
       dashboardTheme: v.optional(dashboardThemeValidator),
       staffId: v.optional(v.id("staff_members")),
       bookingAccess: v.optional(v.union(v.literal("own"), v.literal("team"))),
@@ -148,6 +158,9 @@ export const getMyProfile = query({
     const membership = await resolveActiveMembership(ctx, user);
     const activeStaff = membership?.staffMember;
     const activeOrg = membership?.org;
+    const subscriptionAccess = activeOrg
+      ? getSubscriptionAccess(activeOrg)
+      : undefined;
 
     const [orgLogoUrl, staffAvatarUrl, userAvatarUrl] = await Promise.all([
       activeOrg ? resolveStoredImageUrl(ctx, activeOrg.logoUrl) : undefined,
@@ -171,7 +184,9 @@ export const getMyProfile = query({
           ? ("own" as const)
           : ("team" as const),
       industry: activeOrg?.industry,
-      plan: activeOrg?.plan,
+      plan: subscriptionAccess?.effectivePlan,
+      accessState: subscriptionAccess?.accessState,
+      trialEndsAt: subscriptionAccess?.trialEndsAt,
       dashboardTheme: activeStaff?.dashboardTheme,
       orgName: activeOrg?.name,
       orgLogoUrl,

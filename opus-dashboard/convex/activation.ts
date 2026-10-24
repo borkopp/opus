@@ -12,6 +12,7 @@ import { buildPublicProfile } from "./lib/publicProfile";
 import { allocateUniqueTenantSlug } from "./lib/tenantSlug";
 import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
 import { rejectAppReviewIdentity } from "./lib/appReview";
+import { createSubscriptionTrial } from "../../shared/subscription-trial";
 
 const beautyCategory = v.union(
   v.literal("barbershop"),
@@ -152,6 +153,7 @@ export const startBeautyBusiness = mutation({
 
     const now = Date.now();
     const slug = await allocateUniqueTenantSlug(ctx, name);
+    const trial = createSubscriptionTrial(now);
     const orgId = await ctx.db.insert("orgs", {
       name,
       slug,
@@ -159,6 +161,7 @@ export const startBeautyBusiness = mutation({
       industry: "beauty_wellness",
       beautyCategory: args.category,
       plan: "free",
+      trial,
       listingStatus: "unpublished",
       websiteStatus: "unpublished",
       reviewCount: 0,
@@ -167,6 +170,10 @@ export const startBeautyBusiness = mutation({
       isDeleted: false,
       createdAt: now,
       updatedAt: now,
+    });
+    await ctx.scheduler.runAt(trial.endsAt, internal.billing.expireTrial, {
+      orgId,
+      endsAt: trial.endsAt,
     });
 
     await ctx.db.insert("org_settings", {
@@ -223,6 +230,7 @@ export const startBeautyBusiness = mutation({
         industry: "beauty_wellness",
         beautyCategory: args.category,
         ownerStaffId: staffId,
+        trial,
       },
       createdAt: now,
     });

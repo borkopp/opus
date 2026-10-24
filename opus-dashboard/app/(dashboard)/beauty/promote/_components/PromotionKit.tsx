@@ -80,6 +80,7 @@ export function PromotionKit({
                 <Select
                   value={kind}
                   onValueChange={(value) => setKind(value as typeof kind)}
+                  disabled={!data.acceptingBookings}
                 >
                   <SelectTrigger id="promotion-format" className="w-full">
                     <SelectValue />
@@ -87,7 +88,11 @@ export function PromotionKit({
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem data-replay-public value="poster">
-                        {t("Counter sign · A5", "Постер за пулт · A5", "Shenjë për banak · A5")}
+                        {t(
+                          "Counter sign · A5",
+                          "Постер за пулт · A5",
+                          "Shenjë për banak · A5",
+                        )}
                       </SelectItem>
                       <SelectItem data-replay-public value="story">
                         {t(
@@ -97,7 +102,11 @@ export function PromotionKit({
                         )}
                       </SelectItem>
                       <SelectItem data-replay-public value="qr">
-                        {t("Booking QR code", "QR-код за закажување", "QR-kod për rezervim")}
+                        {t(
+                          "Booking QR code",
+                          "QR-код за закажување",
+                          "QR-kod për rezervim",
+                        )}
                       </SelectItem>
                     </SelectGroup>
                   </SelectContent>
@@ -112,18 +121,22 @@ export function PromotionKit({
               </Field>
               <Field>
                 <FieldLabel data-replay-public htmlFor="promotion-link">
-                  {t("Booking link", "Линк за закажување", "Linku i rezervimit")}
+                  {t(
+                    "Booking link",
+                    "Линк за закажување",
+                    "Linku i rezervimit",
+                  )}
                 </FieldLabel>
                 <Input
                   id="promotion-link"
                   readOnly
-                  value={data.bookingUrl}
+                  value={data.acceptingBookings ? data.bookingUrl : ""}
                   onFocus={(event) => event.target.select()}
                 />
                 <div>
                   <CopyButton
                     text={data.bookingUrl}
-                    disabled={!data.published}
+                    disabled={!data.acceptingBookings}
                     label={t("Copy link", "Копирај линк", "Kopjo linkun")}
                   />
                 </div>
@@ -137,7 +150,7 @@ export function PromotionKit({
           onChange={setPalette}
         />
       </div>
-      {data.published ? (
+      {data.acceptingBookings ? (
         <ArtworkPreview
           palette={palette}
           artwork={{
@@ -156,14 +169,30 @@ export function PromotionKit({
               <QrCode />
             </EmptyMedia>
             <EmptyTitle>
-              {t("Your kit is almost ready", "Вашиот пакет е речиси подготвен", "Paketa juaj është pothuajse gati")}
+              {data.accessState === "expired"
+                ? t(
+                    "A paid plan is needed",
+                    "Потребен е платен план",
+                    "Nevojitet një plan me pagesë",
+                  )
+                : t(
+                    "Your kit is almost ready",
+                    "Вашиот пакет е речиси подготвен",
+                    "Paketa juaj është pothuajse gati",
+                  )}
             </EmptyTitle>
             <EmptyDescription>
-              {t(
-                "Publish your website to download graphics with a working booking link.",
-                "Објавете ја веб-страницата за да преземете слики со активен линк за закажување.",
-                "Publikoni faqen tuaj të internetit për të shkarkuar grafika me një link funksional rezervimi.",
-              )}
+              {data.accessState === "expired"
+                ? t(
+                    "Choose a paid plan to download booking graphics and QR codes again.",
+                    "Изберете платен план за повторно да преземате слики и QR-кодови за закажување.",
+                    "Zgjidhni një plan me pagesë për të shkarkuar sërish grafika rezervimi dhe kode QR.",
+                  )
+                : t(
+                    "Publish your website to download graphics with a working booking link.",
+                    "Објавете ја веб-страницата за да преземете слики со активен линк за закажување.",
+                    "Publikoni faqen tuaj të internetit për të shkarkuar grafika me një link funksional rezervimi.",
+                  )}
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

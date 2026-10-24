@@ -20,6 +20,8 @@ async function studio(backend: Backend, key = "first") {
     name: `${key} beauty studio`,
     category: "beauty_salon",
   });
+  // This fixture models an existing studio, including its legacy Free access.
+  await backend.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
   await owner.mutation(api.activation.saveOwnerName, { name: "Studio Owner" });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",

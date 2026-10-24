@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "./subscriptionAccess";
 import type { Doc } from "../_generated/dataModel";
 import { wallClockTimestampToInstant } from "./bookingTime";
 
@@ -72,7 +73,7 @@ export function smsDeliverySkipReason(args: {
     !org ||
     org.isDeleted ||
     org.industry !== "beauty_wellness" ||
-    org.plan !== "paid"
+    !hasPaidAccess(org)
   )
     return "SMS notifications require Pro.";
   if (!settings || settings.orgId !== org._id || !settings.smsEnabled)

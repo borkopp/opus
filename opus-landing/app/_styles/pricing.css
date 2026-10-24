@@ -1,11 +1,12 @@
-/* Three studio options, with custom development following Pro. */
+/* One studio plan, sized for the active team. */
 .pricing-section {
   max-width: 1240px;
   padding-inline: 32px;
 }
 
 .pricing-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 660px;
 }
 
 .price-card {
@@ -132,7 +133,7 @@
 
 @media (min-width: 761px) and (max-width: 1099px) {
   .pricing-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .price-custom {
@@ -159,4 +160,24 @@
     min-height: 54px;
     font-size: 28px;
   }
+}
+
+.price-card > .trial-offer {
+  min-height: 0;
+  margin-top: 16px;
+  color: var(--color-accent-foreground);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.price-after-trial {
+  margin-top: 18px;
+  color: var(--color-muted-foreground);
+  font-size: 12px;
+}
+
+.price-card > .team-count-note {
+  min-height: 0;
+  margin-top: 12px;
+  line-height: 1.6;
 }

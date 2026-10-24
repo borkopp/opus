@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "../lib/subscriptionAccess";
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "../_generated/server";
 import { internal } from "../_generated/api";
@@ -21,7 +22,7 @@ export async function automationReady(
   if (
     !org ||
     org.isDeleted ||
-    org.plan !== "paid" ||
+    !hasPaidAccess(org) ||
     org.industry !== "beauty_wellness"
   )
     return null;
@@ -93,7 +94,7 @@ export const ingest = internalMutation({
       !org ||
       org.isDeleted ||
       org.industry !== "beauty_wellness" ||
-      org.plan !== "paid"
+      !hasPaidAccess(org)
     )
       return;
     const orgId = org._id;

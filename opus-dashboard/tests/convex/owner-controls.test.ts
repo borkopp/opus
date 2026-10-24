@@ -721,6 +721,49 @@ describe("owner organization cleanup", () => {
 });
 
 describe("owner AI allowance controls", () => {
+  test("trial allowances and detailed controls match studio access without changing the stored plan", async () => {
+    const t = backend(),
+      f = await fixture(t),
+      { client } = await login(t);
+    const studio = t.withIdentity({ subject: "studio-client" });
+    const trial = { startedAt: Date.now(), endsAt: Date.now() + 60_000 };
+    await t.run((ctx) => ctx.db.patch(f.orgId, { plan: "free", trial }));
+    expect(await client.query(allowance, { orgId: f.orgId })).toMatchObject({
+      plan: "paid",
+      limit: 200,
+      deepLimit: 20,
+      defaultLimit: 200,
+      defaultDeepLimit: 20,
+    });
+    expect(
+      await client.mutation(update, {
+        orgId: f.orgId,
+        operation: "custom",
+        limit: 50,
+        deepLimit: 5,
+      }),
+    ).toMatchObject({ plan: "paid", limit: 50, deepLimit: 5 });
+    expect(
+      await studio.query(api.analyst.conversations.getAccess, {}),
+    ).toMatchObject({ remaining: 50, deepRemaining: 5 });
+    expect(
+      await client.mutation(update, { orgId: f.orgId, operation: "defaults" }),
+    ).toMatchObject({ limit: 200, deepLimit: 20, custom: false });
+    expect(await t.run((ctx) => ctx.db.get(f.orgId))).toMatchObject({
+      plan: "free",
+      trial,
+    });
+    vi.setSystemTime(trial.endsAt);
+    await expect(
+      client.mutation(update, {
+        orgId: f.orgId,
+        operation: "custom",
+        limit: 50,
+        deepLimit: 5,
+      }),
+    ).rejects.toThrow("require Pro");
+  });
+
   test("custom limits feed assistant admission; reset preserves spend and history; defaults restore plan policy", async () => {
     const t = backend(),
       f = await fixture(t),

@@ -39,11 +39,13 @@ export function BillingTab() {
   } = useBillingCurrency(parseBillingCurrency(params.get("currency")));
   const returned = params.get("checkout") === "returned";
   const [chosenLimit, setChosenLimit] = useState<ProTeamLimit>();
+  const requestedLimit = chosenLimit ?? parseProTeamLimit(params.get("team"));
   const selectedLimit =
-    chosenLimit ??
-    parseProTeamLimit(params.get("team")) ??
+    (requestedLimit
+      ? data?.tiers.find((tier) => tier.teamLimit >= requestedLimit)?.teamLimit
+      : undefined) ??
     data?.recommendedTeamLimit ??
-    4;
+    1;
   const selectedTier = data?.tiers.find(
     (tier) => tier.teamLimit === selectedLimit,
   );
@@ -155,11 +157,7 @@ export function BillingTab() {
                     ) : (
                       <ArrowUpRight data-icon="inline-start" />
                     )}
-                    {t(
-                      "Subscribe to Pro",
-                      "Претплатете се на Pro",
-                      "Abonohuni në Pro",
-                    )}
+                    {t("Subscribe", "Претплатете се", "Abonohuni")}
                   </Button>
                 )}
                 {data.portalAvailable && (
@@ -238,17 +236,29 @@ export function BillingTab() {
                       "Pro е веќе активиран за вашето студио. Контактирајте нè за помош со планот.",
                       "Pro është tashmë i aktivizuar për studion tuaj. Na kontaktoni nëse keni nevojë për ndihmë me planin tuaj.",
                     )
-                  : data.portalAvailable
+                  : data.accessState === "trial" && data.hasOpenSubscription
                     ? t(
-                        "Open Manage billing to change your team package, update your card, download invoices, or cancel your subscription.",
-                        "Отворете Управување со наплата за промена на пакетот за тимот или картичката, преземање фактури или откажување на претплатата.",
-                        "Hapni Menaxho faturimin për të ndryshuar paketën e ekipit, përditësuar kartën tuaj, shkarkuar faturat ose anuluar abonimin tuaj.",
+                        "An online subscription is already open. Use Manage billing to review payment and subscription status. Your trial access remains available until its end date.",
+                        "Веќе постои онлајн претплата. Во Управување со наплата проверете ги плаќањето и статусот на претплатата. Пробниот пристап останува достапен до датумот на истекување.",
+                        "Një abonim online është tashmë i hapur. Përdorni Menaxho faturimin për të kontrolluar pagesën dhe statusin e abonimit. Qasja provuese mbetet deri në datën e përfundimit.",
                       )
-                    : t(
-                        "Subscribe monthly to Pro. Review the price and any taxes before confirming your payment at checkout.",
-                        "Претплатете се месечно на Pro. Проверете ги цената и евентуалните даноци пред да го потврдите плаќањето.",
-                        "Abonohuni çdo muaj në Pro. Rishikoni çmimin dhe taksat para se të konfirmoni pagesën tuaj.",
-                      )}
+                    : data.accessState === "trial"
+                      ? t(
+                          "Use your trial without a card. You will not be charged automatically. If you subscribe now, your monthly paid subscription starts immediately.",
+                          "Користете го пробниот период без картичка. Нема автоматска наплата. Ако се претплатите сега, платената месечна претплата започнува веднаш.",
+                          "Përdorni provën pa kartë. Nuk do të tarifoheni automatikisht. Nëse abonoheni tani, abonimi mujor me pagesë fillon menjëherë.",
+                        )
+                      : data.portalAvailable
+                        ? t(
+                            "Open Manage billing to change your team package, update your card, download invoices, or cancel your subscription.",
+                            "Отворете Управување со наплата за промена на пакетот за тимот или картичката, преземање фактури или откажување на претплатата.",
+                            "Hapni Menaxho faturimin për të ndryshuar paketën e ekipit, përditësuar kartën tuaj, shkarkuar faturat ose anuluar abonimin tuaj.",
+                          )
+                        : t(
+                            "Subscribe monthly to Pro. Review the price and any taxes before confirming your payment at checkout.",
+                            "Претплатете се месечно на Pro. Проверете ги цената и евентуалните даноци пред да го потврдите плаќањето.",
+                            "Abonohuni çdo muaj në Pro. Rishikoni çmimin dhe taksat para se të konfirmoni pagesën tuaj.",
+                          )}
             </p>
             {data.subscription?.pendingChange && data.plan === "paid" && (
               <Alert>
@@ -283,7 +293,7 @@ export function BillingTab() {
                 </AlertDescription>
               </Alert>
             )}
-            {data.managed && data.plan === "free" && (
+            {data.managed && data.effectivePlan === "free" && (
               <Alert>
                 <AlertDescription data-replay-public>
                   {t(
@@ -301,9 +311,9 @@ export function BillingTab() {
                 <Alert>
                   <AlertDescription data-replay-public>
                     {t(
-                      "Online subscriptions are not available yet. Your Free plan remains available.",
-                      "Онлајн претплатите сè уште не се достапни. Бесплатниот план останува достапен.",
-                      "Abonimet online nuk janë ende të disponueshme. Plani juaj Falas mbetet i disponueshëm.",
+                      "Online subscriptions are temporarily unavailable. Contact support for help choosing a plan.",
+                      "Онлајн претплатите моментално не се достапни. Контактирајте со поддршката за избор на план.",
+                      "Abonimet online janë përkohësisht të padisponueshme. Kontaktoni mbështetjen për ndihmë në zgjedhjen e një plani.",
                     )}
                   </AlertDescription>
                 </Alert>
@@ -332,9 +342,9 @@ export function BillingTab() {
                       "Pro është aktiv për studion tuaj.",
                     )
                   : t(
-                      "Pro will activate after your payment is confirmed. If you have just paid, wait a moment and refresh the status.",
-                      "Pro ќе се активира по потврдата на плаќањето. Ако штотуку плативте, почекајте малку и освежете го статусот.",
-                      "Pro do të aktivizohet pasi të konfirmohet pagesa juaj. Nëse sapo keni paguar, prisni një moment dhe rifreskoni statusin.",
+                      "Your paid subscription will activate after payment is confirmed. If you have just paid, wait a moment and refresh the status.",
+                      "Платената претплата ќе се активира по потврдата на плаќањето. Ако штотуку плативте, почекајте малку и освежете го статусот.",
+                      "Abonimi me pagesë do të aktivizohet pasi të konfirmohet pagesa. Nëse sapo keni paguar, prisni një moment dhe rifreskoni statusin.",
                     )}
               </p>
             )}

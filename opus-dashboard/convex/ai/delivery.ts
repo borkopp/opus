@@ -1,3 +1,4 @@
+import { hasPaidAccess } from "../lib/subscriptionAccess";
 import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
@@ -24,7 +25,7 @@ export const claim = internalMutation({
       conv.orgId !== args.orgId ||
       !org ||
       org.isDeleted ||
-      org.plan !== "paid" ||
+      !hasPaidAccess(org) ||
       org.industry !== "beauty_wellness"
     )
       return null;

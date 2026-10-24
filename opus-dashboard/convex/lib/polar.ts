@@ -1,9 +1,24 @@
 import { ConvexError, v } from "convex/values";
-import { PRO_TEAM_TIERS, type ProTeamLimit } from "../../../shared/pro-pricing";
+import {
+  LEGACY_PRO_TEAM_TIERS,
+  PRO_TEAM_TIERS,
+  type ProTeamLimit,
+} from "../../../shared/pro-pricing";
 
 export const proTeamLimit = v.union(
+  v.literal(1),
+  v.literal(3),
   v.literal(4),
   v.literal(5),
+  v.literal(6),
+  v.literal(8),
+  v.literal(12),
+);
+
+export const checkoutTeamLimit = v.union(
+  v.literal(1),
+  v.literal(3),
+  v.literal(4),
   v.literal(6),
   v.literal(8),
   v.literal(12),
@@ -12,6 +27,8 @@ export const proTeamLimit = v.union(
 export const billingCurrency = v.union(v.literal("mkd"), v.literal("eur"));
 
 const productEnvironmentKeys = {
+  1: "POLAR_PRO_1_PRODUCT_ID",
+  3: "POLAR_PRO_3_PRODUCT_ID",
   4: "POLAR_PRO_PRODUCT_ID",
   5: "POLAR_PRO_5_PRODUCT_ID",
   6: "POLAR_PRO_6_PRODUCT_ID",
@@ -49,7 +66,14 @@ export function polarConfig() {
     ...tier,
     productId: process.env[productEnvironmentKeys[tier.teamLimit]]?.trim(),
   }));
-  const productIds = tiers.flatMap((tier) =>
+  const allTiers = [
+    ...tiers,
+    ...LEGACY_PRO_TEAM_TIERS.map((tier) => ({
+      ...tier,
+      productId: process.env[productEnvironmentKeys[tier.teamLimit]]?.trim(),
+    })),
+  ];
+  const productIds = allTiers.flatMap((tier) =>
     tier.productId ? [tier.productId] : [],
   );
   const distinctProducts = new Set(productIds).size === productIds.length;
@@ -60,6 +84,7 @@ export function polarConfig() {
     productId,
     webhookSecret,
     tiers,
+    allTiers,
     configured: Boolean(
       validServer &&
       distinctProducts &&
@@ -73,7 +98,7 @@ export function polarConfig() {
 
 /** Only server-configured provider products grant a team capacity. */
 export function proTierForProduct(productId: string) {
-  return polarConfig().tiers.find((tier) => tier.productId === productId);
+  return polarConfig().allTiers.find((tier) => tier.productId === productId);
 }
 
 export function requireProTier(teamLimit: ProTeamLimit) {

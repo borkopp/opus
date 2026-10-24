@@ -681,6 +681,29 @@ export function BookingForm({
     );
   }
 
+  if (site.bookingSettings.acceptingBookings === false) {
+    return (
+      <main className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-12">
+        <Alert>
+          <AlertTitle>
+            {t(
+              "Online booking is currently unavailable",
+              "Онлајн закажувањето моментално не е достапно",
+              "Rezervimi online aktualisht nuk është i disponueshëm",
+            )}
+          </AlertTitle>
+          <AlertDescription>
+            {t(
+              "Please contact the studio to arrange an appointment. Existing appointments are unchanged.",
+              "Контактирајте го студиото за да договорите термин. Постојните термини остануваат непроменети.",
+              "Ju lutemi kontaktoni studion për të caktuar një takim. Takimet ekzistuese mbeten të pandryshuara.",
+            )}
+          </AlertDescription>
+        </Alert>
+      </main>
+    );
+  }
+
   if (recoveryOffer && !recoveryOffer.available)
     return (
       <main className="mx-auto flex max-w-xl flex-col gap-4 px-5 py-12">

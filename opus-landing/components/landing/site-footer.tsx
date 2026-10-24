@@ -3,9 +3,12 @@
 import { ArrowUpRight, ArrowUp } from "lucide-react";
 import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import { openCookiePreferences } from "../../../shared/analytics/consent";
+import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
+import { trialSignupUrl } from "@/lib/pro-pricing";
 import { useI18n } from "@/lib/i18n/context";
 
 export function SiteFooter() {
+  const { currency } = useBillingCurrency();
   const { t } = useI18n();
 
   return (
@@ -38,7 +41,7 @@ export function SiteFooter() {
           <b>{t.footer.nextChapter}</b>
           <Link href="/#how-it-works">{t.footer.howItWorks}</Link>
           <Link href="/#faq">{t.footer.faq}</Link>
-          <a href="https://studio.opus.mk/signup">
+          <a href={trialSignupUrl(currency)}>
             {t.footer.createWebsite} <ArrowUpRight aria-hidden="true" />
           </a>
         </div>

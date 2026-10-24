@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { convexTest } from "convex-test";
 import schema from "../../convex/schema";
 import { api, internal } from "../../convex/_generated/api";
@@ -29,7 +29,8 @@ async function studio(
     name: subject,
     category: "hair_salon",
   });
-  if (plan === "paid") await t.run((ctx) => ctx.db.patch(orgId, { plan }));
+  // These fixtures cover existing Free/paid sites and downgrade restoration.
+  await t.run((ctx) => ctx.db.patch(orgId, { plan, trial: undefined }));
   await owner.mutation(api.activation.saveOwnerName, { name: "Sites Owner" });
   await owner.mutation(api.activation.saveLocation, {
     address: "Macedonia Street 12",
@@ -55,7 +56,9 @@ async function studio(
   return { owner, orgId, serviceId };
 }
 
+beforeEach(() => vi.useFakeTimers());
 afterEach(() => {
+  vi.clearAllTimers();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
   vi.useRealTimers();

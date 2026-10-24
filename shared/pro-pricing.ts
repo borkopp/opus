@@ -3,14 +3,19 @@ import type { BillingCurrency } from "./billing-currency";
 /** Fixed monthly prices in minor units: 100 = 1 denar or 1 euro. */
 export const PRO_TEAM_TIERS = [
   {
+    teamLimit: 1,
+    monthlyPriceMinorUnits: 79000,
+    monthlyPriceEurMinorUnits: 1290,
+  },
+  {
+    teamLimit: 3,
+    monthlyPriceMinorUnits: 119000,
+    monthlyPriceEurMinorUnits: 1990,
+  },
+  {
     teamLimit: 4,
     monthlyPriceMinorUnits: 149000,
     monthlyPriceEurMinorUnits: 2490,
-  },
-  {
-    teamLimit: 5,
-    monthlyPriceMinorUnits: 179000,
-    monthlyPriceEurMinorUnits: 2990,
   },
   {
     teamLimit: 6,
@@ -29,6 +34,15 @@ export const PRO_TEAM_TIERS = [
   },
 ] as const;
 
+/** Retained for existing provider subscriptions; not offered for new checkout. */
+export const LEGACY_PRO_TEAM_TIERS = [
+  {
+    teamLimit: 5,
+    monthlyPriceMinorUnits: 179000,
+    monthlyPriceEurMinorUnits: 2990,
+  },
+] as const;
+
 export function proPriceMinorUnits(
   tier: { monthlyPriceMinorUnits: number; monthlyPriceEurMinorUnits: number },
   currency: BillingCurrency,
@@ -39,9 +53,14 @@ export function proPriceMinorUnits(
 }
 
 export type ProTeamLimit = (typeof PRO_TEAM_TIERS)[number]["teamLimit"];
+export type StoredProTeamLimit =
+  | ProTeamLimit
+  | (typeof LEGACY_PRO_TEAM_TIERS)[number]["teamLimit"];
 
-export function isProTeamLimit(value: unknown): value is ProTeamLimit {
-  return PRO_TEAM_TIERS.some((tier) => tier.teamLimit === value);
+export function isProTeamLimit(value: unknown): value is StoredProTeamLimit {
+  return [...PRO_TEAM_TIERS, ...LEGACY_PRO_TEAM_TIERS].some(
+    (tier) => tier.teamLimit === value,
+  );
 }
 
 export function proTierForTeamSize(teamSize: number) {
@@ -51,5 +70,7 @@ export function proTierForTeamSize(teamSize: number) {
 /** Invalid URL input cannot pick a price, product, or arbitrary capacity. */
 export function parseProTeamLimit(value: string | null | undefined) {
   const limit = value ? Number(value) : undefined;
-  return isProTeamLimit(limit) ? limit : undefined;
+  return PRO_TEAM_TIERS.some((tier) => tier.teamLimit === limit)
+    ? (limit as ProTeamLimit)
+    : undefined;
 }

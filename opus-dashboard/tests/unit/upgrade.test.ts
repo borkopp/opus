@@ -4,8 +4,23 @@ import proxy from "../../proxy";
 import { authDestination } from "../../lib/auth-destination";
 import { upgradeDestination, upgradeLoginPath } from "../../lib/upgrade";
 import { PRO_TEAM_TIERS, parseProTeamLimit } from "../../../shared/pro-pricing";
+import { trialSignupUrl } from "../../../opus-landing/lib/pro-pricing";
 
 describe("Pro entry journey", () => {
+  it.each(PRO_TEAM_TIERS)(
+    "preserves the landing $teamLimit-member price and EUR through signup",
+    ({ teamLimit }) => {
+      const signup = new URL(trialSignupUrl("eur", teamLimit));
+      expect(signup.pathname).toBe("/signup");
+      const callback = signup.searchParams.get("callbackUrl")!;
+      expect(authDestination(callback, false)).toBe(
+        `/onboarding?plan=pro&team=${teamLimit}&currency=eur`,
+      );
+      expect(authDestination(callback, true)).toBe(
+        `/upgrade?team=${teamLimit}&currency=eur`,
+      );
+    },
+  );
   it.each(PRO_TEAM_TIERS)(
     "retains the $teamLimit-member selection through login, onboarding, and billing",
     ({ teamLimit }) => {
@@ -96,6 +111,37 @@ describe("Pro entry journey", () => {
       }),
     ).toBe("/settings?tab=billing");
   });
+
+  it("lets trial owners finish onboarding even with paid feature access", () => {
+    expect(
+      upgradeDestination({
+        hasStudio: true,
+        role: "owner",
+        plan: "paid",
+        accessState: "trial",
+        operationalSetupComplete: true,
+        onboardingComplete: false,
+        teamLimit: 1,
+        currency: "eur",
+      }),
+    ).toBe("/onboarding?plan=pro&team=1&currency=eur");
+  });
+
+  it.each(["trial", "expired"] as const)(
+    "opens billing for an explicit upgrade after %s studio setup is complete",
+    (accessState) => {
+      expect(
+        upgradeDestination({
+          hasStudio: true,
+          role: "owner",
+          plan: accessState === "trial" ? "paid" : "free",
+          accessState,
+          operationalSetupComplete: true,
+          onboardingComplete: true,
+        }),
+      ).toBe("/settings?tab=billing");
+    },
+  );
 
   it.each(["staff", "manager"] as const)(
     "shows %s the owner-only billing notice instead of owner onboarding",

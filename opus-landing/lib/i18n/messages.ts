@@ -5,7 +5,7 @@ export const mkMessages = {
     home: {
       title: "OPUS — Онлајн закажување за салони во Македонија",
       description:
-        "Онлајн закажување за салони и студија за убавина во Македонија. Бесплатна веб-страница, календар за тимот и управување со термини. Започнете со OPUS.",
+        "Ваша веб-страница за закажување, календар и историја на клиенти. Пробајте OPUS 2 месеци без картичка, потоа изберете месечна претплата според тимот.",
     },
     contact: {
       title: "Контакт OPUS — Малку помош за вашето студио.",
@@ -32,7 +32,7 @@ export const mkMessages = {
     contact: "Контакт",
     newBadge: "НОВО",
     login: "Најава",
-    startFree: "Започнете бесплатно",
+    startFree: "Пробајте 2 месеци",
     language: "Јазик",
   },
   hero: {
@@ -40,10 +40,10 @@ export const mkMessages = {
       "Илустративен приказ на календарот и веб-сајтот за закажување на OPUS.",
     title: "Систем за закажување за вашиот салон.",
     description:
-      "Со OPUS добивате веб-страница каде клиентите избираат услуга и слободен термин. Веб-страницата и календарот се бесплатни.",
-    createWebsite: "Започнете бесплатно",
+      "Со OPUS добивате веб-страница каде клиентите избираат услуга и слободен термин, а вие ги следите сите закажувања во еден календар.",
+    createWebsite: "Пробајте 2 месеци",
     learnMore: "Како работи OPUS",
-    badgeFree: "Бесплатен план",
+    badgeFree: "2 месеци пробно за нови студија",
     badgeNoCard: "Без картичка",
     badgeForStudio: "За вас и вашиот тим",
     noteBookingTitle: "Нов онлајн термин",
@@ -100,10 +100,10 @@ export const mkMessages = {
   productTour: {
     heading: "Што добивате со OPUS?",
     subheading:
-      "Веб-страница за вашите клиенти и календар за вас. Со Pro добивате и историја на посетите на секој клиент.",
-    includedInFree: "Вклучено во бесплатниот план",
-    includedInPro: "Вклучено во Pro",
-    cta: "Започнете бесплатно",
+      "Веб-страница за вашите клиенти, календар за вашиот тим и историја на посетите на едно место.",
+    includedInFree: "Вклучено во OPUS",
+    includedInPro: "Вклучено во OPUS",
+    cta: "Пробајте 2 месеци",
     tabs: {
       website: {
         label: "Веб-сајт за закажување",
@@ -130,7 +130,7 @@ export const mkMessages = {
         label: "Историја на клиенти",
         title: "Проверете ги претходните посети.",
         description:
-          "Со Pro, најдете клиент по име, е-пошта или телефон. Видете кои услуги ги користел и кога има следен термин.",
+          "Најдете клиент по име, е-пошта или телефон. Видете кои услуги ги користел и кога има следен термин.",
         clientName: "Елена Петрова",
         clientRemembered: "Податоци за клиентот",
         recentVisits: "Неодамнешни посети",
@@ -158,11 +158,11 @@ export const mkMessages = {
     clientsTitle1: "Вашите",
     clientsTitle2: "клиенти.",
     clientsDesc1: "Контакти во секој термин.",
-    clientsDesc2: "Историја на посети со Pro.",
+    clientsDesc2: "Историја на посети на едно место.",
     remindersTitle1: "Известувања",
     remindersTitle2: "по е-пошта.",
     remindersDesc1: "Потврди за секој термин.",
-    remindersDesc2: "Потсетници со Pro.",
+    remindersDesc2: "Потсетници пред терминот.",
     summaryUnlimited: "Неограничени термини",
     summaryServices: "Неограничени услуги и клиенти",
     summaryDevices: "На телефон и компјутер",
@@ -188,31 +188,31 @@ export const mkMessages = {
         "Пример за Instagram Story од OPUS со услуга, датум, час и цена на слободен термин.",
       caption: "Пример за Story · 1080 × 1920",
     },
-    included: "Вклучено во бесплатниот план",
+    included: "Вклучено во OPUS",
     customization:
       "Ваши бои, име на студиото и линк. Достапно откако ќе ја објавите веб-страницата.",
-    cta: "Започнете бесплатно",
+    cta: "Пробајте 2 месеци",
   },
   intelligence: {
     heading: "AI за вашиот бизнис.",
     subheading:
       "AI одговара на пораки, ви дава препораки и ви помага подобро да го разберете вашиот бизнис.",
     usageNote:
-      "Free вклучува 3 брзи AI Chat одговори месечно. Pro додава повеќе одговори, детални анализи и AI Receptionist.",
+      "AI Chat вклучува 200 одговори месечно, од кои до 20 детални анализи. AI Receptionist бара поврзан професионален Instagram профил и овозможена интеграција.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
       description:
         "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување врз основа на податоците од вашиот салон.",
-      note: "Free: 3 брзи одговори месечно. Pro: 200 одговори, од кои до 20 детални анализи.",
+      note: "200 одговори месечно, од кои до 20 детални анализи.",
       artCopy: "Прашајте го AI за вашиот бизнис.",
       yourAnalyst: "AI Chat",
       subtitle: "Одговори, препораки и увид во вашиот бизнис.",
       sampleHeading: "ПРИМЕР ЗА РАЗГОВОР",
       sampleNote:
         "Илустративни податоци · Одговорите се засноваат на податоци од вашето студио.",
-      limit1: "Free: 3 брзи одговори / месечно",
-      limit2: "Pro: 200 одговори, до 20 детални",
+      limit1: "200 одговори / месечно",
+      limit2: "До 20 детални анализи",
       days: ["П", "В", "С", "Ч", "П", "С"],
       chip: "AI препораки за вашиот бизнис",
       examples: [
@@ -249,7 +249,7 @@ export const mkMessages = {
       title: ["Видете кој клиент кога бил."],
       description:
         "Најдете ги контактите, претходните посети и следните термини на клиентот во именикот на вашиот салон.",
-      note: "Вклучено во Pro.",
+      note: "Вклучено во OPUS",
       chip: "Контакти и претходни посети",
     },
     recovery: {
@@ -333,84 +333,57 @@ export const mkMessages = {
     step3Title: "3. Следете ги термините.",
     step3Desc:
       "Клиентите закажуваат преку линкот. Вие ги гледате термините во календарот и можете да ги преместите или откажете.",
-    cta: "Започнете бесплатно",
+    cta: "Пробајте 2 месеци",
   },
   pricing: {
-    heading: "Колку чини OPUS?",
-    comparePlans: "Споредете ги сите функции",
+    heading: "Еден план. Цена според вашиот тим.",
+    comparePlans: "Погледнете што е вклучено",
     subheading:
-      "Започнете бесплатно. Pro започнува од {proPrice} месечно за тим до 4 членови. Изберете ја големината на вашиот тим.",
-    note: "Онлајн закажувањето, веб-страницата и календарот се бесплатни. Pro е по избор.",
-    free: {
-      name: "Бесплатен план",
-      price: "0",
-      currency: "ден.",
-      desc: "Онлајн закажување и календар за вас и до 3 вработени.",
-      cta: "Започнете бесплатно",
-      label: "Вклучено во бесплатниот план:",
-      features: [
-        "Неограничени термини, услуги и клиенти",
-        "Ваша веб-страница за закажување",
-        "Клиентите закажуваат без профил или апликација",
-        "Сопственик и до 3 вработени",
-        "Тимски календар без преклопување на термините",
-        "Поставување работно време, паузи и слободни денови",
-        "Контакт на клиентот во секој термин",
-        "Потврди за термини по е-пошта",
-        "Галерија со најмногу 3 фотографии",
-        "QR-код и Instagram Story за промоција",
-        "Пристап од телефон, таблет и компјутер",
-      ],
-      end: "Без кредитна картичка. Без пробен рок.",
-    },
+      "Новите студија добиваат 2 месеци пробно без картичка. Потоа од {proPrice} месечно за еден член на тимот.",
+    note: "По пробниот период е потребна платена претплата за да продолжите да примате нови термини. Нема автоматска наплата.",
+    trialLabel: "Првите 2 месеци без наплата",
+    afterTrial: "Потоа",
+    teamNote:
+      "Сопственикот и менаџерите се бројат; неактивните членови не се бројат. Пробниот период поддржува до 12 членови. Изборот ја прикажува цената при претплата.",
+    largeTeamTitle: "Тим од 13 или повеќе?",
+    largeTeamCta: "Контактирајте нè",
     pro: {
-      name: "Pro",
+      name: "OPUS",
       currency: "ден. / месечно",
-      desc: "AI алатки, поголем тим, историја на клиенти и потсетници.",
+      desc: "Веб-страница, онлајн закажување и алатки за секојдневната работа во вашиот салон.",
       teamSizeLabel: "Големина на тимот",
       teamSizeValue: "До {count} членови",
-      teamFeature: "До {count} членови на тимот",
-      cta: "Изберете Pro",
-      label: "Сè од бесплатниот план, плус:",
+      teamSizeSingle: "1 член",
+      teamFeatureSingle: "1 активен член на тимот",
+      teamFeature: "До {count} активни членови на тимот",
+      cta: "Пробајте 2 месеци",
+      label: "Вклучено во избраниот пакет:",
       features: [
+        "Веб-страница со ваши услуги, цени, бои и фотографии",
+        "Неограничени термини, услуги и клиенти",
+        "Закажување без профил или апликација за клиентот",
+        "Тимски календар, работно време и заштита од преклопување",
         "Галерија со најмногу 15 фотографии",
-        "Именик на клиенти со историја и статистика на посети",
-        "Потсетници за клиенти по е-пошта пред терминот",
-        "SMS потврди и потсетници, со вклучување од поставките",
+        "Именик на клиенти со историја на посети",
+        "Потврди и потсетници за термини по е-пошта",
+        "SMS потврди и потсетници по активирање; важат ограничувања",
         "Понуди по е-пошта за слободни термини, со ваше одобрение",
-        "Детални извештаи за термините во студиото",
-        "Поголема контрола врз е-поштата, маркетингот и известувањата",
-        "Приоритетна поддршка",
+        "Извештаи за термините во студиото",
+        "QR-код, Instagram Story слики и зачувани одговори",
+        "Пристап од телефон, таблет и компјутер",
       ],
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
-        "Прашајте го AI за вашиот бизнис и добијте препораки и анализи. 200 одговори месечно, од кои до 20 детални анализи.",
+        "200 одговори месечно, од кои до 20 детални анализи. Одговорите се засноваат на податоците од вашето студио.",
       aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
-        "AI одговара на Instagram пораките додека вие се посветувате на клиентите.",
-      end: "Користете ги Pro алатките директно од вашата сметка.",
-    },
-    custom: {
-      name: "Софтвер по мерка",
-      price: "Цена по договор",
-      desc: "Од една посебна функција до целосен систем за вашето студио.",
-      monthly: "Достапен е и месечен план",
-      cta: "Кажете ни ја вашата идеја",
-      label: "Градиме според вашите потреби:",
-      features: [
-        "Функционалности по ваша замисла",
-        "Веб-апликации и алатки за вашиот тим",
-        "Поврзување со системите што веќе ги користите",
-        "Автоматизација на секојдневните задачи",
-        "Ваш дизајн, бренд и начин на работа",
-        "Развој во фази, според вашите приоритети",
-      ],
-      end: "Заедно ги договараме обемот, рокот и месечниот план што ви одговара.",
+        "Одговори на Instagram пораки и закажување со потврда од клиентот, по поврзување и активирање на интеграцијата.",
+      end: "Пробниот период е за нови студија, без картичка. Нема наплата без ваша претплата. Ако се претплатите порано, месечната наплата започнува веднаш. AI и SMS зависат од конфигурацијата; SMS не е неограничен.",
     },
   },
   faq: {
     heading: "Чести прашања.",
-    subheading: "Што е OPUS, како се користи и што е бесплатно.",
+    subheading: "За пробниот период, цената и секојдневното закажување.",
     items: [
       {
         question: "Што е OPUS?",
@@ -418,9 +391,9 @@ export const mkMessages = {
           "OPUS е систем за закажување за салони и студија за убавина. Добивате своја веб-страница каде клиентите закажуваат и календар каде ги следите термините на вашиот тим. Го користите преку интернет, на телефон или компјутер.",
       },
       {
-        question: "Што добивам бесплатно?",
+        question: "Како функционира пробниот период?",
         answer:
-          "Веб-страница за закажување, календар, неограничени термини и услуги, QR-код и слики за Instagram Story. Бесплатниот план е за сопственик и до 3 вработени. Не ви треба картичка и нема пробен рок.",
+          "Новите студија можат да го пробаат OPUS 2 месеци без платежна картичка. Пробниот период поддржува до 12 активни членови. При претплата избирате платен план според големината на тимот. Потоа е потребна платена претплата за да продолжите да примате нови термини. Нема автоматска наплата. Постојните термини и податоци се зачувани. И понатаму можете да управувате со веќе закажаните термини.",
       },
       {
         question: "Како клиентите закажуваат?",
@@ -443,23 +416,23 @@ export const mkMessages = {
           "За фризерски салони, берберници, студија за нокти, трепки и веѓи, шминкери и студија за масажа. Можете да го користите сами или со тим.",
       },
       {
-        question: "Кога ми треба Pro?",
+        question: "Колку ќе плаќам по пробниот период?",
         answer:
-          "За AI Chat, AI Receptionist, поголем тим, историја на клиенти и потсетници. Месечните цени на Pro се: {proPrices}. Сите Pro функции се вклучени во секоја опција. AI и SMS ги поставувате сами од вашата сметка. За основното закажување доволен е бесплатниот план.",
+          "Месечната цена зависи од активните членови на тимот: {proPrices}. Сопственикот и менаџерите се бројат; неактивните членови не се бројат. Секоја опција ги вклучува истите функции. За 13 или повеќе членови, контактирајте нè. AI и SMS бараат конфигурација; SMS не е неограничен.",
       },
       {
         question: "Дали OPUS сам испраќа понуди за слободни термини?",
         answer:
-          "Не. Со Pro, OPUS предлага клиенти за слободен термин. Вие ја прегледувате и одобрувате секоја понуда пред да се испрати по е-пошта. Понуди добиваат само клиенти што дале согласност.",
+          "Не. OPUS предлага клиенти за слободен термин. Вие ја прегледувате и одобрувате секоја понуда пред да се испрати по е-пошта. Понуди добиваат само клиенти што дале согласност.",
       },
     ],
   },
   finalCta: {
     heading: "Примајте термини преку вашиот линк.",
     subheading:
-      "Додајте ги услугите и работното време. Објавете ја бесплатната веб-страница и споделете ја со клиентите.",
-    cta: "Започнете бесплатно",
-    small: "Бесплатно. Не е потребна кредитна картичка.",
+      "Додајте ги услугите и работното време, објавете ја веб-страницата и споделете го линкот. Новите студија добиваат 2 месеци пробно.",
+    cta: "Пробајте 2 месеци",
+    small: "2 месеци пробно за нови студија. Без картичка.",
   },
   footer: {
     sloganLine1: "Онлајн закажување",
@@ -471,7 +444,7 @@ export const mkMessages = {
     nextChapter: "Започнете со OPUS",
     howItWorks: "Како функционира",
     faq: "Чести прашања",
-    createWebsite: "Започнете бесплатно",
+    createWebsite: "Пробајте 2 месеци",
     madeForYou: "За салони и студија.",
     madeForYouSub1: "Систем за закажување за салони",
     madeForYouSub2: " и студија за убавина.",
@@ -489,9 +462,9 @@ export const mkMessages = {
     heroSubLine1:
       "Започнувате, го развивате или го планирате следното поглавје?",
     heroSubLine2: "Тука сме за вашето студио.",
-    proTitle: "Заинтересирани за Pro?",
+    proTitle: "Ви треба помош да започнете?",
     proDescription:
-      "Пишете ни за вашето студио и прашајте за функциите, цената и активирањето на Pro планот.",
+      "Пишете ни за вашето студио, големината на тимот или пробниот период. За тимови со 13 или повеќе членови, ќе разговараме за соодветна понуда.",
     detailsTitle: "Ајде да разговараме.",
     emailLabel: "Претпочитате е-пошта?",
     phoneLabel: "Јавете ни се",
@@ -537,7 +510,7 @@ export const enMessages: Messages = {
     home: {
       title: "OPUS — Salon Booking Software in Macedonia",
       description:
-        "Online booking for salons and beauty studios in Macedonia. Get a free booking website, a team calendar and simple appointment management. Start with OPUS.",
+        "Your booking website, team calendar and client history. Try OPUS for 2 months without a card, then choose a monthly subscription for your team size.",
     },
     contact: {
       title: "Contact OPUS — A little help for your studio.",
@@ -564,7 +537,7 @@ export const enMessages: Messages = {
     contact: "Contact",
     newBadge: "NEW",
     login: "Log in",
-    startFree: "Start for free",
+    startFree: "Try 2 months",
     language: "Language",
   },
   hero: {
@@ -572,10 +545,10 @@ export const enMessages: Messages = {
       "Illustrative preview of the OPUS calendar and booking website.",
     title: "A booking system for your salon.",
     description:
-      "OPUS gives you a website where clients choose a service and an available time. The website and calendar are free.",
-    createWebsite: "Start for free",
+      "OPUS gives you a website where clients choose a service and an available time, while you manage every appointment in one calendar.",
+    createWebsite: "Try 2 months",
     learnMore: "How OPUS works",
-    badgeFree: "Free plan",
+    badgeFree: "2-month trial for new studios",
     badgeNoCard: "No credit card",
     badgeForStudio: "For you and your team",
     noteBookingTitle: "New online booking",
@@ -632,10 +605,10 @@ export const enMessages: Messages = {
   productTour: {
     heading: "What do you get with OPUS?",
     subheading:
-      "A website for your clients and a calendar for you. Pro also includes each client’s visit history.",
-    includedInFree: "Included in Free",
-    includedInPro: "Included in Pro",
-    cta: "Start for free",
+      "A website for your clients, a calendar for your team, and visit history in one place.",
+    includedInFree: "Included in OPUS",
+    includedInPro: "Included in OPUS",
+    cta: "Try 2 months",
     tabs: {
       website: {
         label: "Booking website",
@@ -662,7 +635,7 @@ export const enMessages: Messages = {
         label: "Client history",
         title: "Check a client’s past visits.",
         description:
-          "With Pro, find a client by name, email, or phone. See which services they booked and when their next appointment is.",
+          "Find a client by name, email, or phone. See their past services and upcoming appointments.",
         clientName: "Elena Petrova",
         clientRemembered: "Client details",
         recentVisits: "Recent visits",
@@ -689,11 +662,11 @@ export const enMessages: Messages = {
     clientsTitle1: "Your",
     clientsTitle2: "clients.",
     clientsDesc1: "Contact details on each booking.",
-    clientsDesc2: "Visit history with Pro.",
+    clientsDesc2: "Visit history in one place.",
     remindersTitle1: "Confirmations and reminders by email.",
     remindersTitle2: "",
     remindersDesc1: "Confirmations for each booking.",
-    remindersDesc2: "Reminders with Pro.",
+    remindersDesc2: "Reminders before appointments.",
     summaryUnlimited: "Unlimited appointments",
     summaryServices: "Unlimited services & clients",
     summaryDevices: "On your phone and computer",
@@ -720,30 +693,30 @@ export const enMessages: Messages = {
         "Example OPUS Instagram Story showing an available appointment with a service, date, time, and price.",
       caption: "Example Story · 1080 × 1920",
     },
-    included: "Included in the Free plan",
+    included: "Included in OPUS",
     customization:
       "Your colors, studio name, and link. Available once your booking website is published.",
-    cta: "Start for free",
+    cta: "Try 2 months",
   },
   intelligence: {
     heading: "AI for your business.",
     subheading:
       "AI answers messages, gives you recommendations, and helps you understand your business.",
     usageNote:
-      "Free includes 3 Fast AI Chat answers per month. Pro adds more answers, Detailed analysis, and AI Receptionist.",
+      "AI Chat includes 200 answers per month, including up to 20 detailed analyses. AI Receptionist requires a connected professional Instagram account and an enabled integration.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
       description:
         "Ask AI questions about your business. Get recommendations, explore trends, and find ways to improve using your salon’s data.",
-      note: "Free: 3 Fast answers per month. Pro: 200 answers, including up to 20 detailed analyses.",
+      note: "200 answers per month, including up to 20 detailed analyses.",
       artCopy: "Ask AI about your business.",
       yourAnalyst: "AI Chat",
       subtitle: "Answers, recommendations, and business insights.",
       sampleHeading: "EXPLORE A SAMPLE CONVERSATION",
       sampleNote: "Illustrative data · Your answers use your studio’s data.",
-      limit1: "Free: 3 Fast answers / month",
-      limit2: "Pro: 200 answers, up to 20 Detailed",
+      limit1: "200 answers / month",
+      limit2: "Up to 20 detailed analyses",
       days: ["M", "T", "W", "T", "F", "S"],
       chip: "AI recommendations for your business",
       examples: [
@@ -781,7 +754,7 @@ export const enMessages: Messages = {
       title: ["See each client’s past visits."],
       description:
         "Find a client’s contact details, past visits, and upcoming appointments in your salon’s client directory.",
-      note: "Included in Pro.",
+      note: "Included in OPUS",
       chip: "Contact details and past visits",
     },
     recovery: {
@@ -864,84 +837,57 @@ export const enMessages: Messages = {
     step3Title: "3. Manage your appointments.",
     step3Desc:
       "Clients book through your link. You see their appointments in your calendar and can move or cancel them.",
-    cta: "Start for free",
+    cta: "Try 2 months",
   },
   pricing: {
-    heading: "How much does OPUS cost?",
-    comparePlans: "Compare all features",
+    heading: "One plan. Priced for your team.",
+    comparePlans: "See everything included",
     subheading:
-      "Start for free. Pro starts at {proPrice} per month for up to 4 team members. Choose your team size.",
-    note: "Online booking, your website, and your calendar are free. Pro is optional.",
-    free: {
-      name: "Free",
-      price: "0",
-      currency: "MKD",
-      desc: "Online booking and a calendar for you and up to 3 staff.",
-      cta: "Start for free",
-      label: "Included in the Free plan:",
-      features: [
-        "Unlimited appointments, services, and clients",
-        "Your own booking website",
-        "Clients book without an account or app",
-        "One owner and up to 3 staff",
-        "Team calendar with overlap protection",
-        "Set working hours, breaks, and days off",
-        "Client contact details on every appointment",
-        "Appointment confirmations by email",
-        "Gallery with up to 3 photos",
-        "Booking QR code and Instagram Story creation",
-        "Phone, tablet, and desktop access",
-      ],
-      end: "No credit card. No trial expiry.",
-    },
+      "New studios get a 2-month trial without a card. Then from {proPrice} per month for one team member.",
+    note: "After the trial, a paid subscription is required to keep accepting new appointments. No automatic charge.",
+    trialLabel: "Your first 2 months at no charge",
+    afterTrial: "Then",
+    teamNote:
+      "The owner and managers count; inactive members do not. The trial supports up to 12 members. This selector shows your price when subscribing.",
+    largeTeamTitle: "A team of 13 or more?",
+    largeTeamCta: "Contact us",
     pro: {
-      name: "Pro",
+      name: "OPUS",
       currency: "MKD / month",
-      desc: "AI tools, a larger team, client history, and reminders.",
+      desc: "Your website, online booking, and tools for the daily work in your salon.",
       teamSizeLabel: "Team size",
       teamSizeValue: "Up to {count} members",
-      teamFeature: "Up to {count} team members",
-      cta: "Choose Pro",
-      label: "Everything in Free, plus:",
+      teamSizeSingle: "1 member",
+      teamFeatureSingle: "1 active team member",
+      teamFeature: "Up to {count} active team members",
+      cta: "Try 2 months",
+      label: "Included with your selected plan:",
       features: [
+        "Booking website with your services, prices, colors, and photos",
+        "Unlimited appointments, services, and clients",
+        "Clients book without an account or app",
+        "Team calendar, working hours, and overlap protection",
         "Gallery with up to 15 photos",
-        "Client directory with visit history and statistics",
-        "Client email reminders before appointments",
-        "SMS confirmations and reminders, enabled in settings",
+        "Client directory with visit history",
+        "Appointment confirmations and reminders by email",
+        "SMS confirmations and reminders after activation; limits apply",
         "Email offers for empty slots, approved by you",
-        "Detailed reports on your studio’s appointments",
-        "More email, marketing, and notification controls",
-        "Priority support",
+        "Reports on your studio’s appointments",
+        "Booking QR code, Instagram Story images, and saved replies",
+        "Phone, tablet, and desktop access",
       ],
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
-        "Ask AI about your business and get recommendations and insights. 200 answers per month, including up to 20 detailed analyses.",
+        "200 answers per month, including up to 20 detailed analyses. Answers use your studio’s data.",
       aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
-        "AI answers your Instagram DMs while you focus on clients.",
-      end: "Use your Pro tools directly from your account.",
-    },
-    custom: {
-      name: "Custom software",
-      price: "Custom pricing",
-      desc: "From one specific feature to a complete system for your studio.",
-      monthly: "Monthly plans available",
-      cta: "Tell us your idea",
-      label: "Built around your needs:",
-      features: [
-        "Custom features based on your ideas",
-        "Web apps and tools for your team",
-        "Connections to systems you already use",
-        "Automation for everyday tasks",
-        "Your design, brand, and way of working",
-        "Development in phases around your priorities",
-      ],
-      end: "We agree on the scope, timeline, and monthly plan that works for you.",
+        "Instagram replies and bookings after client confirmation, once the integration is connected and enabled.",
+      end: "Trial for new studios, without a card. No charge unless you subscribe. Subscribing before the trial ends starts monthly billing immediately. AI and SMS depend on configuration; SMS is not unlimited.",
     },
   },
   faq: {
     heading: "Common questions.",
-    subheading: "What OPUS is, how to use it, and what’s free.",
+    subheading: "About the trial, pricing, and everyday booking.",
     items: [
       {
         question: "What is OPUS?",
@@ -949,9 +895,9 @@ export const enMessages: Messages = {
           "OPUS is an appointment booking system for salons and beauty studios. You get your own website where clients book and a calendar to manage your team’s appointments. Use it online, on your phone or computer.",
       },
       {
-        question: "What do I get for free?",
+        question: "How does the trial work?",
         answer:
-          "A booking website, a calendar, unlimited appointments and services, a QR code, and images for Instagram Stories. The Free plan supports one owner and up to 3 staff. No credit card or trial expiry.",
+          "New studios can try OPUS for 2 months without a payment card. The trial supports up to 12 active team members. Choose your paid team size when subscribing. Afterward, a paid subscription is required to keep accepting new appointments. There is no automatic charge. Your existing appointments and data are kept. You can still manage appointments already booked.",
       },
       {
         question: "How do clients book?",
@@ -974,23 +920,23 @@ export const enMessages: Messages = {
           "Hair salons, barbershops, nail studios, lash and brow studios, makeup artists, and massage studios. You can use it on your own or with a team.",
       },
       {
-        question: "When do I need Pro?",
+        question: "What will I pay after the trial?",
         answer:
-          "For AI Chat, AI Receptionist, a larger team, client history, and reminders. Pro monthly prices are: {proPrices}. Every option includes all Pro features. Set up AI and SMS yourself from your account. The Free plan covers everyday booking.",
+          "Monthly pricing depends on your active team members: {proPrices}. The owner and managers count; inactive members do not. Every option includes the same features. Contact us for 13 or more members. AI and SMS require configuration; SMS is not unlimited.",
       },
       {
         question: "Does OPUS send offers for empty slots by itself?",
         answer:
-          "No. With Pro, OPUS suggests clients for an available appointment. You review and approve each offer before it is emailed. Only clients who agreed to receive offers can be contacted.",
+          "No. OPUS suggests clients for an available appointment. You review and approve each offer before it is emailed. Only clients who agreed to receive offers can be contacted.",
       },
     ],
   },
   finalCta: {
     heading: "Let clients book through your link.",
     subheading:
-      "Add your services and working hours. Publish your free website and share it with clients.",
-    cta: "Start for free",
-    small: "Free. No credit card needed.",
+      "Add your services and working hours, publish your website, and share your link. New studios get a 2-month trial.",
+    cta: "Try 2 months",
+    small: "2-month trial for new studios. No card needed.",
   },
   footer: {
     sloganLine1: "Online booking",
@@ -1002,7 +948,7 @@ export const enMessages: Messages = {
     nextChapter: "Get started",
     howItWorks: "How it works",
     faq: "Common questions",
-    createWebsite: "Start for free",
+    createWebsite: "Try 2 months",
     madeForYou: "For salons and studios.",
     madeForYouSub1: "A booking system for salons",
     madeForYouSub2: " and beauty studios.",
@@ -1020,9 +966,9 @@ export const enMessages: Messages = {
     heroSubLine1:
       "Getting started, finding your feet, or planning your next chapter?",
     heroSubLine2: "We’re here for your studio.",
-    proTitle: "Interested in Pro?",
+    proTitle: "Need help getting started?",
     proDescription:
-      "Tell us about your studio and ask about Pro features, pricing, and getting started.",
+      "Tell us about your studio, team size, or trial questions. For teams of 13 or more, we can discuss a suitable offer.",
     detailsTitle: "Let’s talk.",
     emailLabel: "Prefer email?",
     phoneLabel: "Give us a call",
@@ -1065,7 +1011,7 @@ export const sqMessages: Messages = {
     home: {
       title: "OPUS — Rezervime online për sallone në Maqedoni",
       description:
-        "Rezervime online për sallone dhe studio bukurie në Maqedoni. Uebfaqe falas, kalendar për ekipin dhe menaxhim i termineve. Filloni me OPUS.",
+        "Faqja juaj për rezervime, kalendari i ekipit dhe historia e klientëve. Provojeni OPUS 2 muaj pa kartelë, pastaj zgjidhni abonimin mujor sipas ekipit.",
     },
     contact: {
       title: "Kontaktoni OPUS — Pak ndihmë për studion tuaj.",
@@ -1092,7 +1038,7 @@ export const sqMessages: Messages = {
     contact: "Kontakt",
     newBadge: "E RE",
     login: "Hyrje",
-    startFree: "Filloni falas",
+    startFree: "Provojeni 2 muaj",
     language: "Gjuha",
   },
   hero: {
@@ -1100,10 +1046,10 @@ export const sqMessages: Messages = {
       "Pamje ilustruese e kalendarit dhe uebfaqes së rezervimeve të OPUS.",
     title: "Sistem rezervimesh për sallonin tuaj.",
     description:
-      "Me OPUS përfitoni një faqe interneti ku klientët zgjedhin shërbimin dhe terminin e lirë. Uebfaqja dhe kalendari janë falas.",
-    createWebsite: "Filloni falas",
+      "OPUS ju jep një faqe interneti ku klientët zgjedhin shërbimin dhe një termin të lirë, ndërsa ju i menaxhoni të gjitha rezervimet në një kalendar.",
+    createWebsite: "Provojeni 2 muaj",
     learnMore: "Si punon OPUS",
-    badgeFree: "Plani falas",
+    badgeFree: "Provë 2-mujore për studiot e reja",
     badgeNoCard: "Pa kartelë krediti",
     badgeForStudio: "Për ju dhe ekipin tuaj",
     noteBookingTitle: "Termin i ri online",
@@ -1160,10 +1106,10 @@ export const sqMessages: Messages = {
   productTour: {
     heading: "Çfarë përfitoni me OPUS?",
     subheading:
-      "Një faqe interneti për klientët tuaj dhe një kalendar për ju. Me Pro përfitoni edhe historinë e vizitave të çdo klienti.",
-    includedInFree: "Përfshirë në planin falas",
-    includedInPro: "Përfshirë në Pro",
-    cta: "Filloni falas",
+      "Një faqe për klientët, një kalendar për ekipin dhe historia e vizitave në një vend.",
+    includedInFree: "Përfshirë në OPUS",
+    includedInPro: "Përfshirë në OPUS",
+    cta: "Provojeni 2 muaj",
     tabs: {
       website: {
         label: "Uebfaqe për rezervime",
@@ -1190,7 +1136,7 @@ export const sqMessages: Messages = {
         label: "Historia e klientëve",
         title: "Kontrolloni vizitat e mëparshme.",
         description:
-          "Me Pro, gjeni klientin sipas emrit, email-it ose telefonit. Shihni cilat shërbime ka marrë dhe kur e ka terminin e ardhshëm.",
+          "Gjeni klientin sipas emrit, email-it ose telefonit. Shihni shërbimet e mëparshme dhe terminet e ardhshme.",
         clientName: "Elena Petrova",
         clientRemembered: "Të dhënat e klientit",
         recentVisits: "Vizitat e fundit",
@@ -1218,11 +1164,11 @@ export const sqMessages: Messages = {
     clientsTitle1: "Klientët",
     clientsTitle2: "tuaj.",
     clientsDesc1: "Kontaktet në çdo termin.",
-    clientsDesc2: "Historia e vizitave me Pro.",
+    clientsDesc2: "Historia e vizitave në një vend.",
     remindersTitle1: "Njoftime",
     remindersTitle2: "me email.",
     remindersDesc1: "Konfirmime për çdo termin.",
-    remindersDesc2: "Kujtesa me Pro.",
+    remindersDesc2: "Rikujtues para terminit.",
     summaryUnlimited: "Termine të pakufizuara",
     summaryServices: "Shërbime dhe klientë të pakufizuar",
     summaryDevices: "Në telefon dhe kompjuter",
@@ -1249,23 +1195,23 @@ export const sqMessages: Messages = {
         "Shembull i një Instagram Story nga OPUS me shërbimin, datën, orën dhe çmimin e një termini të lirë.",
       caption: "Shembull Story · 1080 × 1920",
     },
-    included: "Përfshirë në planin falas",
+    included: "Përfshirë në OPUS",
     customization:
       "Ngjyrat tuaja, emri i studios dhe linku. E disponueshme sapo të publikoni uebfaqen tuaj.",
-    cta: "Filloni falas",
+    cta: "Provojeni 2 muaj",
   },
   intelligence: {
     heading: "AI për biznesin tuaj.",
     subheading:
       "AI u përgjigjet mesazheve, ju jep rekomandime dhe ju ndihmon ta kuptoni më mirë biznesin tuaj.",
     usageNote:
-      "AI Chat, AI Receptionist dhe veglat e tjera janë të përfshira në Pro. Përdorini direkt nga llogaria juaj.",
+      "AI Chat përfshin 200 përgjigje në muaj, deri në 20 prej tyre analiza të hollësishme. AI Receptionist kërkon një llogari profesionale Instagram të lidhur dhe integrim të aktivizuar.",
     analyst: {
       name: "AI Chat",
       title: ["AI Chat"],
       description:
         "Pyesni inteligjencën artificiale për biznesin tuaj. Merrni rekomandime, analiza dhe ide përmirësimi bazuar në të dhënat e sallonit tuaj.",
-      note: "200 përgjigje në muaj, nga të cilat deri në 20 analiza të hollësishme.",
+      note: "200 përgjigje në muaj, deri në 20 prej tyre analiza të hollësishme.",
       artCopy: "Pyesni AI për biznesin tuaj.",
       yourAnalyst: "AI Chat",
       subtitle: "Përgjigje, rekomandime dhe njohuri për biznesin tuaj.",
@@ -1310,7 +1256,7 @@ export const sqMessages: Messages = {
       title: ["Shihni cilët klientë kur kanë qenë."],
       description:
         "Gjeni kontaktet, vizitat e kaluara dhe terminet e ardhshme të klientit në regjistrin e sallonit tuaj.",
-      note: "Përfshirë në Pro.",
+      note: "Përfshirë në OPUS",
       chip: "Kontakte dhe vizita të mëparshme",
     },
     recovery: {
@@ -1394,84 +1340,57 @@ export const sqMessages: Messages = {
     step3Title: "3. Ndiqni terminet.",
     step3Desc:
       "Klientët rezervojnë përmes linkut. Ju i shihni terminet në kalendar dhe mund t'i zhvendosni ose anuloni ato.",
-    cta: "Filloni falas",
+    cta: "Provojeni 2 muaj",
   },
   pricing: {
-    heading: "Sa kushton OPUS?",
-    comparePlans: "Krahasoni të gjitha funksionet",
+    heading: "Një plan. Çmim sipas ekipit.",
+    comparePlans: "Shihni gjithçka që përfshihet",
     subheading:
-      "Filloni falas. Pro fillon nga {proPrice} në muaj për deri në 4 anëtarë të ekipit. Zgjidhni madhësinë e ekipit tuaj.",
-    note: "Rezervimi online, uebfaqja dhe kalendari janë falas. Pro është me zgjedhje.",
-    free: {
-      name: "Plani falas",
-      price: "0",
-      currency: "den.",
-      desc: "Rezervim online dhe kalendar për ju dhe deri në 3 punonjës.",
-      cta: "Filloni falas",
-      label: "Përfshirë në planin falas:",
-      features: [
-        "Termine, shërbime dhe klientë të pakufizuar",
-        "Uebfaqja juaj për rezervime",
-        "Klientët rezervojnë pa llogari apo aplikacion",
-        "Pronari dhe deri në 3 punonjës",
-        "Kalendar ekipi pa mbivendosje të termineve",
-        "Përcaktimi i orarit të punës, pushimeve dhe ditëve të lira",
-        "Kontakti i klientit në çdo termin",
-        "Konfirmime për terminet me email",
-        "Galeri me deri në 3 fotografi",
-        "QR kod dhe Instagram Story për promovim",
-        "Qasje nga telefoni, tableti dhe kompjuteri",
-      ],
-      end: "Pa kartelë krediti. Pa periudhë prove.",
-    },
+      "Studiot e reja marrin provë 2-mujore pa kartelë. Pastaj nga {proPrice} në muaj për një anëtar ekipi.",
+    note: "Pas provës, nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja. Nuk ka tarifim automatik.",
+    trialLabel: "2 muajt e parë pa pagesë",
+    afterTrial: "Pastaj",
+    teamNote:
+      "Pronari dhe menaxherët llogariten; anëtarët joaktivë jo. Prova mbështet deri në 12 anëtarë. Zgjedhësi tregon çmimin kur abonoheni.",
+    largeTeamTitle: "Ekip me 13 ose më shumë?",
+    largeTeamCta: "Na kontaktoni",
     pro: {
-      name: "Pro",
+      name: "OPUS",
       currency: "den. / muaj",
-      desc: "Vegla AI, ekip më i madh, historia e klientëve dhe rikujtues.",
+      desc: "Faqja juaj, rezervimet online dhe veglat për punën e përditshme në sallon.",
       teamSizeLabel: "Madhësia e ekipit",
       teamSizeValue: "Deri në {count} anëtarë",
-      teamFeature: "Deri në {count} anëtarë të ekipit",
-      cta: "Zgjidhni Pro",
-      label: "Gjithçka nga plani falas, plus:",
+      teamSizeSingle: "1 anëtar",
+      teamFeatureSingle: "1 anëtar aktiv i ekipit",
+      teamFeature: "Deri në {count} anëtarë aktivë të ekipit",
+      cta: "Provojeni 2 muaj",
+      label: "Përfshirë në planin e zgjedhur:",
       features: [
-        "Galeri me deri në 15 fotografi",
-        "Regjistër klientësh me histori dhe statistika të vizitave",
-        "Kujtesa për klientët me email para terminit",
-        "Konfirmime dhe kujtesa me SMS, me aktivizim nga cilësimet",
+        "Faqe rezervimesh me shërbimet, çmimet, ngjyrat dhe fotot tuaja",
+        "Termine, shërbime dhe klientë të pakufizuar",
+        "Klientët rezervojnë pa llogari ose aplikacion",
+        "Kalendari i ekipit, oraret dhe mbrojtja nga mbivendosjet",
+        "Galeri me deri në 15 foto",
+        "Lista e klientëve me historinë e vizitave",
+        "Konfirmime dhe rikujtues të termineve me email",
+        "Konfirmime dhe rikujtues SMS pas aktivizimit; zbatohen kufij",
         "Oferta me email për termine të lira, me miratimin tuaj",
-        "Raporte të hollësishme për terminet në studio",
-        "Më shumë kontroll mbi email-in, marketingun dhe njoftimet",
-        "Mbështetje prioritare",
+        "Raporte për terminet e studios",
+        "Kod QR, imazhe për Instagram Story dhe përgjigje të ruajtura",
+        "Qasje nga telefoni, tableti dhe kompjuteri",
       ],
       aiAnalystTitle: "AI Chat",
       aiAnalystSub:
-        "Pyesni AI për biznesin tuaj dhe merrni rekomandime dhe analiza. 200 përgjigje në muaj, nga të cilat deri në 20 analiza të hollësishme.",
+        "200 përgjigje në muaj, deri në 20 analiza të hollësishme. Përgjigjet përdorin të dhënat e studios suaj.",
       aiReceptionistTitle: "AI Receptionist",
       aiReceptionistSub:
-        "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
-      end: "Përdorni veglat Pro direkt nga llogaria juaj.",
-    },
-    custom: {
-      name: "Softuer sipas porosisë",
-      price: "Çmimi me marrëveshje",
-      desc: "Nga një funksion i veçantë deri te një sistem i plotë për studion tuaj.",
-      monthly: "I disponueshëm edhe plan mujor",
-      cta: "Na tregoni idenë tuaj",
-      label: "Ndërtojmë sipas nevojave tuaja:",
-      features: [
-        "Funksionalitete sipas dëshirës tuaj",
-        "Ueb-aplikacione dhe vegla për ekipin tuaj",
-        "Lidhje me sistemet që tashmë përdorni",
-        "Automatizim i detyrave të përditshme",
-        "Dizajni, marka dhe mënyra juaj e punës",
-        "Zhvillim me faza, sipas prioriteteve tuaja",
-      ],
-      end: "Bashkërisht dakordohemi për vëllimin, afatin dhe planin mujor që ju përshtatet.",
+        "Përgjigje në Instagram dhe rezervime pas konfirmimit të klientit, kur integrimi është lidhur dhe aktivizuar.",
+      end: "Provë për studiot e reja, pa kartelë. Nuk ka tarifim pa abonimin tuaj. Abonimi para përfundimit të provës fillon faturimin mujor menjëherë. AI dhe SMS varen nga konfigurimi; SMS nuk është i pakufizuar.",
     },
   },
   faq: {
     heading: "Pyetje të shpeshta.",
-    subheading: "Çfarë është OPUS, si përdoret dhe çfarë është falas.",
+    subheading: "Rreth provës, çmimeve dhe rezervimeve të përditshme.",
     items: [
       {
         question: "Çfarë është OPUS?",
@@ -1479,9 +1398,9 @@ export const sqMessages: Messages = {
           "OPUS është një sistem rezervimesh për sallone dhe studio bukurie. Përfitoni faqen tuaj të internetit ku klientët rezervojnë dhe një kalendar ku ndiqni terminet e ekipit tuaj. E përdorni përmes internetit, në telefon ose kompjuter.",
       },
       {
-        question: "Çfarë përfitoj falas?",
+        question: "Si funksionon periudha e provës?",
         answer:
-          "Faqe interneti për rezervime, kalendar, termine dhe shërbime të pakufizuara, QR kod dhe imazhe për Instagram Story. Plani falas është për pronarin dhe deri në 3 punonjës. Nuk keni nevojë për kartelë dhe nuk ka periudhë prove.",
+          "Studiot e reja mund ta provojnë OPUS 2 muaj pa kartelë pagese. Prova mbështet deri në 12 anëtarë aktivë. Zgjidhni madhësinë e ekipit për planin me pagesë kur abonoheni. Më pas nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja. Nuk ka tarifim automatik. Rezervimet dhe të dhënat ekzistuese ruhen. Mund të vazhdoni të menaxhoni terminet tashmë të rezervuara.",
       },
       {
         question: "Si rezervojnë klientët?",
@@ -1505,23 +1424,23 @@ export const sqMessages: Messages = {
           "Për sallone flokësh, berberë, studio thonjsh, qerpikë dhe vetulla, grimierë dhe studio masazhi. Mund ta përdorni vetëm ose me një ekip.",
       },
       {
-        question: "Kur më nevojitet Pro?",
+        question: "Sa do të paguaj pas provës?",
         answer:
-          "Për AI Chat, AI Receptionist, ekip më të madh, historinë e klientëve dhe rikujtues. Çmimet mujore të Pro janë: {proPrices}. Çdo opsion përfshin të gjitha funksionet Pro. AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për rezervimet bazë mjafton plani falas.",
+          "Çmimi mujor varet nga anëtarët aktivë të ekipit: {proPrices}. Pronari dhe menaxherët llogariten; anëtarët joaktivë nuk llogariten. Çdo opsion përfshin të njëjtat funksione. Na kontaktoni për 13 ose më shumë anëtarë. AI dhe SMS kërkojnë konfigurim; SMS nuk është i pakufizuar.",
       },
       {
         question: "A dërgon OPUS vetë oferta për termine të lira?",
         answer:
-          "Jo. Me Pro, OPUS sugjeron klientë për një termin të lirë. Ju rishikoni dhe miratoni çdo ofertë para se të dërgohet me email. Oferta marrin vetëm klientët që kanë dhënë pëlqim.",
+          "Jo. OPUS sugjeron klientë për një termin të lirë. Ju shqyrtoni dhe miratoni çdo ofertë përpara se të dërgohet me email. Kontaktohen vetëm klientët që kanë pranuar oferta.",
       },
     ],
   },
   finalCta: {
     heading: "Pranoni termine përmes linkut tuaj.",
     subheading:
-      "Shtoni shërbimet dhe orarin e punës. Publikoni faqen falas dhe shpërndajeni me klientët.",
-    cta: "Filloni falas",
-    small: "Falas. Nuk kërkohet kartelë krediti.",
+      "Shtoni shërbimet dhe orarin, publikoni faqen dhe shpërndani linkun. Studiot e reja marrin provë 2-mujore.",
+    cta: "Provojeni 2 muaj",
+    small: "Provë 2-mujore për studiot e reja. Pa kartelë.",
   },
   footer: {
     sloganLine1: "Rezervime online",
@@ -1533,7 +1452,7 @@ export const sqMessages: Messages = {
     nextChapter: "Filloni me OPUS",
     howItWorks: "Si funksionon",
     faq: "Pyetje të shpeshta",
-    createWebsite: "Filloni falas",
+    createWebsite: "Provojeni 2 muaj",
     madeForYou: "Për sallone dhe studio.",
     madeForYouSub1: "Sistem rezervimesh për sallone",
     madeForYouSub2: " dhe studio bukurie.",
@@ -1551,9 +1470,9 @@ export const sqMessages: Messages = {
     heroSubLine1:
       "Po filloni, po zhvilloheni apo po planifikoni hapin e radhës?",
     heroSubLine2: "Jemi këtu për studion tuaj.",
-    proTitle: "Të interesuar për Pro?",
+    proTitle: "Ju duhet ndihmë për të filluar?",
     proDescription:
-      "Na shkruani për studion tuaj dhe pyesni rreth funksioneve, çmimit dhe aktivizimit të planit Pro.",
+      "Na tregoni për studion, madhësinë e ekipit ose pyetjet për provën. Për ekipe me 13 ose më shumë anëtarë, mund të diskutojmë një ofertë të përshtatshme.",
     detailsTitle: "Le të bisedojmë.",
     emailLabel: "Preferoni email?",
     phoneLabel: "Na telefononi",

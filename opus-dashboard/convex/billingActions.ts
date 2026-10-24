@@ -8,7 +8,7 @@ import { action, internalAction } from "./_generated/server";
 import {
   billingReturnUrl,
   billingCurrency,
-  proTeamLimit,
+  checkoutTeamLimit,
   proTierForProduct,
   requirePolarConfig,
 } from "./lib/polar";
@@ -142,7 +142,7 @@ async function readSubscriptions(
 
 export const createCheckout = action({
   args: {
-    teamLimit: v.optional(proTeamLimit),
+    teamLimit: v.optional(checkoutTeamLimit),
     currency: v.optional(billingCurrency),
   },
   handler: async (

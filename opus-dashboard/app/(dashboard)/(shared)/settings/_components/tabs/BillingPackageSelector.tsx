@@ -26,22 +26,28 @@ export function BillingPackageSelector({
   currency: BillingCurrency;
 }) {
   const { t, locale } = useDashboardI18n();
-  const index = tiers.findIndex((tier) => tier.teamLimit === value);
-  const selected = tiers[index];
-  const teamLabel = t(
-    `Up to ${value} team members`,
-    `До ${value} членови на тимот`,
-    `Deri në ${value} anëtarë të ekipit`,
+  const index = Math.max(
+    0,
+    tiers.findIndex((tier) => tier.teamLimit === value),
   );
+  const selected = tiers[index];
+  const teamLabel =
+    value === 1
+      ? t("1 team member", "1 член на тимот", "1 anëtar i ekipit")
+      : t(
+          `Up to ${value} team members`,
+          `До ${value} членови на тимот`,
+          `Deri në ${value} anëtarë të ekipit`,
+        );
 
   return (
     <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <h3 className="text-base font-medium">
           {t(
-            "Choose your Pro package",
-            "Изберете го вашиот Pro пакет",
-            "Zgjidhni paketën tuaj Pro",
+            "Choose your paid plan",
+            "Изберете го вашиот платен план",
+            "Zgjidhni planin tuaj me pagesë",
           )}
         </h3>
         <p
@@ -105,9 +111,9 @@ export function BillingPackageSelector({
         </div>
         <FieldDescription id="pro-package-description">
           {t(
-            "Every package includes the same Pro features.",
-            "Секој пакет ги вклучува истите Pro функции.",
-            "Çdo paketë përfshin të njëjtat funksione Pro.",
+            "Every plan includes the same paid features. All active team members, including the owner, count toward the limit.",
+            "Секој план ги вклучува истите платени функции. Сите активни членови, вклучувајќи го сопственикот, се бројат во лимитот.",
+            "Çdo plan përfshin të njëjtat funksione me pagesë. Të gjithë anëtarët aktivë, përfshirë pronarin, numërohen në kufi.",
           )}
         </FieldDescription>
         {teamCount > value && (

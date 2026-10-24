@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import schema from "../../convex/schema";
 import { convexModules } from "../../convex-test.setup";
 import { formatBillingDate } from "../../lib/billing";
+import { createSubscriptionTrial } from "../../../shared/subscription-trial";
 import {
   PRO_TEAM_TIERS,
   proPriceMinorUnits,
@@ -46,7 +47,7 @@ const productIdForLimit = (limit: number) =>
 const createBackend = () => convexTest(schema, convexModules);
 let t: ReturnType<typeof createBackend>;
 
-async function studio(name = "owner") {
+async function studio(name = "owner", options: { trial?: boolean } = {}) {
   const owner = t.withIdentity({
     subject: name,
     name: "Owner",
@@ -57,6 +58,11 @@ async function studio(name = "owner") {
     name: `Studio ${name}`,
     category: "hair_salon",
   });
+  // Existing billing cases model legacy studios; trial cases opt into the new
+  // activation behavior explicitly so old customer behavior stays covered.
+  if (!options.trial) {
+    await t.run((ctx) => ctx.db.patch(orgId, { trial: undefined }));
+  }
   return { owner, orgId };
 }
 
@@ -150,6 +156,8 @@ beforeEach(() => {
     POLAR_SERVER: "sandbox",
     POLAR_ACCESS_TOKEN: "test-token",
     POLAR_PRO_PRODUCT_ID: "pro-monthly",
+    POLAR_PRO_1_PRODUCT_ID: "pro-monthly-1",
+    POLAR_PRO_3_PRODUCT_ID: "pro-monthly-3",
     POLAR_PRO_5_PRODUCT_ID: "pro-monthly-5",
     POLAR_PRO_6_PRODUCT_ID: "pro-monthly-6",
     POLAR_PRO_8_PRODUCT_ID: "pro-monthly-8",
@@ -255,6 +263,20 @@ afterEach(() => {
 });
 
 describe("Polar subscription checkout", () => {
+  test("legacy five-person packages remain reconcilable but cannot be newly purchased", async () => {
+    const { owner } = await studio();
+    expect(
+      (await owner.query(api.billing.getStatus)).tiers.map(
+        (tier) => tier.teamLimit,
+      ),
+    ).toEqual([1, 3, 4, 6, 8, 12]);
+    await expect(
+      owner.action(api.billingActions.createCheckout, {
+        teamLimit: 5,
+      } as never),
+    ).rejects.toThrow();
+    expect(provider.checkout).not.toHaveBeenCalled();
+  });
   test.each(
     PRO_TEAM_TIERS.flatMap((tier) =>
       BILLING_CURRENCIES.map((currency) => ({ ...tier, currency })),
@@ -515,7 +537,7 @@ describe("Polar subscription checkout", () => {
         });
     });
     await expect(
-      owner.action(api.billingActions.createCheckout, { teamLimit: 5 }),
+      owner.action(api.billingActions.createCheckout, { teamLimit: 4 }),
     ).rejects.toThrow("TEAM_EXCEEDS_PACKAGE");
     expect(await owner.query(api.billing.getStatus)).toMatchObject({
       teamCount: 6,
@@ -531,9 +553,12 @@ describe("Polar subscription checkout", () => {
     ).resolves.toEqual({ url: "https://sandbox.polar.sh/checkout/test" });
     expect(provider.checkout).toHaveBeenCalledWith(
       expect.objectContaining({
-        products: PRO_TEAM_TIERS.map((tier) =>
-          productIdForLimit(tier.teamLimit),
-        ),
+        products: [
+          "pro-monthly",
+          ...PRO_TEAM_TIERS.filter((tier) => tier.teamLimit !== 4).map((tier) =>
+            productIdForLimit(tier.teamLimit),
+          ),
+        ],
         externalCustomerId: `opus:${orgId}`,
         customerEmail: "owner@example.com",
         allowTrial: false,
@@ -706,6 +731,204 @@ describe("Polar subscription checkout", () => {
 });
 
 describe("subscription access reconciliation", () => {
+  test("trial expiry invalidates views once, ignores stale jobs, and preserves paid plans", async () => {
+    const { owner, orgId } = await studio("trial-expiry-job", { trial: true });
+    const trial = createSubscriptionTrial(NOW);
+    const initial = (await t.run((ctx) => ctx.db.get(orgId)))!;
+    await t.mutation(internal.billing.expireTrial, {
+      orgId,
+      endsAt: trial.endsAt,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.updatedAt).toBe(
+      initial.updatedAt,
+    );
+    vi.setSystemTime(trial.endsAt);
+    await t.mutation(internal.billing.expireTrial, {
+      orgId,
+      endsAt: trial.endsAt - 1,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.updatedAt).toBe(
+      initial.updatedAt,
+    );
+    await t.mutation(internal.billing.expireTrial, {
+      orgId,
+      endsAt: trial.endsAt,
+    });
+    await t.mutation(internal.billing.expireTrial, {
+      orgId,
+      endsAt: trial.endsAt,
+    });
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "expired",
+    });
+    expect(await t.run((ctx) => ctx.db.get(orgId))).toMatchObject({
+      trial,
+      updatedAt: trial.endsAt,
+    });
+    const audit = await t.run((ctx) =>
+      ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(
+      audit.filter((entry) => entry.action === "trial.expired"),
+    ).toHaveLength(1);
+
+    vi.setSystemTime(NOW);
+    const paid = await studio("paid-trial-expiry-job", { trial: true });
+    await t.run((ctx) => ctx.db.patch(paid.orgId, { plan: "paid" }));
+    vi.setSystemTime(trial.endsAt);
+    await t.mutation(internal.billing.expireTrial, {
+      orgId: paid.orgId,
+      endsAt: trial.endsAt,
+    });
+    expect(await paid.owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "paid",
+      accessState: "paid",
+    });
+    expect(await t.run((ctx) => ctx.db.get(paid.orgId))).toMatchObject({
+      trial,
+      updatedAt: trial.endsAt,
+    });
+  });
+
+  test("new studios snapshot a two-month trial once and never reset it on onboarding retries", async () => {
+    const { owner, orgId } = await studio("trial-owner", { trial: true });
+    const trial = createSubscriptionTrial(NOW);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      effectivePlan: "paid",
+      accessState: "trial",
+      trialEndsAt: trial.endsAt,
+      teamLimit: 12,
+      managed: false,
+      subscription: null,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+    const jobs = await t.run((ctx) =>
+      ctx.db.system.query("_scheduled_functions").collect(),
+    );
+    expect(
+      jobs.filter((job) => job.name === "billing:expireTrial"),
+    ).toMatchObject([
+      { args: [{ orgId, endsAt: trial.endsAt }], scheduledTime: trial.endsAt },
+    ]);
+    vi.setSystemTime(trial.endsAt);
+    expect(
+      await owner.mutation(api.activation.startBeautyBusiness, {
+        name: "Renamed trial studio",
+      }),
+    ).toEqual({ orgId, created: false });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      accessState: "expired",
+      effectivePlan: "free",
+      trialEndsAt: trial.endsAt,
+    });
+    const audit = await t.run((ctx) =>
+      ctx.db
+        .query("audit_log")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+    );
+    expect(
+      audit.filter((entry) => entry.action === "org.created"),
+    ).toHaveLength(1);
+    expect(
+      audit.find((entry) => entry.action === "org.created")?.after?.trial,
+    ).toEqual(trial);
+  });
+
+  test("editing an existing Free studio never enrolls it in a trial or expires access", async () => {
+    const { owner, orgId } = await studio();
+    vi.setSystemTime(createSubscriptionTrial(NOW).endsAt + 365 * 86400_000);
+    await owner.mutation(api.activation.startBeautyBusiness, {
+      name: "Existing studio",
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toBeUndefined();
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "legacy_free",
+      trialEndsAt: null,
+    });
+  });
+
+  test("an active trial can purchase a subscription without being mistaken for verified payment", async () => {
+    const { owner, orgId } = await studio("trial-purchase", { trial: true });
+    const trial = createSubscriptionTrial(NOW);
+    await owner.action(api.billingActions.createCheckout, { teamLimit: 1 });
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "trial",
+    });
+    subscriptions([
+      subscription(orgId, { productId: "pro-monthly-1", amount: 79000 }),
+    ]);
+    await sync(orgId);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "paid",
+      accessState: "paid",
+      trialEndsAt: trial.endsAt,
+      teamLimit: 1,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+    await expect(
+      owner.action(api.billingActions.createCheckout, { teamLimit: 1 }),
+    ).rejects.toThrow("ALREADY_PRO");
+  });
+
+  test("payment failure uses only the original remaining trial and cannot create permanent Free access", async () => {
+    const { owner, orgId } = await studio("trial-payment-failure", {
+      trial: true,
+    });
+    const trial = createSubscriptionTrial(NOW);
+    await owner.action(api.billingActions.createCheckout, {});
+    subscriptions([subscription(orgId)]);
+    await sync(orgId);
+    subscriptions([subscription(orgId, { status: "past_due" })]);
+    await sync(orgId);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "trial",
+      trialEndsAt: trial.endsAt,
+    });
+    vi.setSystemTime(trial.endsAt);
+    await sync(orgId);
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "expired",
+      trialEndsAt: trial.endsAt,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+  });
+
+  test("purchase after trial expiry restores paid access, and subscription expiry restores expired state", async () => {
+    const { owner, orgId } = await studio("trial-expired-purchase", {
+      trial: true,
+    });
+    const trial = createSubscriptionTrial(NOW);
+    vi.setSystemTime(trial.endsAt);
+    await owner.action(api.billingActions.createCheckout, {});
+    const paidUntil = trial.endsAt + 30 * 86400_000;
+    subscriptions([
+      subscription(orgId, { currentPeriodEnd: new Date(paidUntil) }),
+    ]);
+    await sync(orgId);
+    expect((await owner.query(api.billing.getStatus)).accessState).toBe("paid");
+    vi.setSystemTime(paidUntil);
+    await t.mutation(internal.billing.expireAccess, {
+      orgId,
+      periodEnd: paidUntil,
+    });
+    expect(await owner.query(api.billing.getStatus)).toMatchObject({
+      plan: "free",
+      accessState: "expired",
+      trialEndsAt: trial.endsAt,
+    });
+    expect((await t.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+  });
   test("portal package changes update capacity only when applied, including scheduled downgrades", async () => {
     const { owner, orgId } = await studio();
     await owner.action(api.billingActions.createCheckout, { teamLimit: 12 });

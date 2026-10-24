@@ -43,6 +43,7 @@ export type DashboardProfile = Partial<
     | "orgId"
     | "role"
     | "plan"
+    | "accessState"
     | "bookingAccess"
     | "orgLogoUrl"
     | "orgName"
@@ -154,7 +155,17 @@ export function DashboardAccountMenu({
               data-replay-public
               variant={profile.plan === "paid" ? "default" : "secondary"}
             >
-              {profile.plan === "paid" ? "Pro" : "Free"}
+              {profile.accessState === "trial"
+                ? t("Trial", "Пробен период", "Provë")
+                : profile.accessState === "expired"
+                  ? t(
+                      "Trial ended",
+                      "Пробниот период заврши",
+                      "Prova përfundoi",
+                    )
+                  : profile.plan === "paid"
+                    ? "Pro"
+                    : "Free"}
             </Badge>
           </div>
           <div className="truncate text-xs font-normal text-muted-foreground">

@@ -3,7 +3,6 @@ import type { Locale } from "./locale";
 type ComparisonRow = {
   feature: string;
   description?: string;
-  free: boolean | string;
   pro: boolean | string;
 };
 
@@ -15,7 +14,6 @@ type PricingPageMessages = {
   comparisonHeading: string;
   comparisonDescription: string;
   feature: string;
-  free: string;
   included: string;
   notIncluded: string;
   groups: { title: string; rows: ComparisonRow[] }[];
@@ -31,17 +29,16 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     metadata: {
       title: "Цени и планови — OPUS",
       description:
-        "Споредете ги бесплатниот план и Pro од {proPrice} месечно. Изберете тим до 4, 5, 6, 8 или 12 членови, со историја на клиенти, потсетници и AI алатки.",
+        "OPUS од {proPrice} месечно. Пробајте 2 месеци без картичка. Една понуда со тим до 1, 3, 4, 6, 8 или 12 членови.",
     },
-    heading: "Изберете што му треба на вашето студио.",
+    heading: "Еден план, според вашиот тим.",
     description:
-      "Започнете со бесплатен веб-сајт и календар. Додајте Pro кога ќе ви требаат поголем тим, историја на клиенти и повеќе алатки.",
-    compare: "Споредете ги сите функции",
-    comparisonHeading: "Што е вклучено во секој план?",
+      "Новите студија добиваат 2 месеци пробно без картичка. Потоа изберете месечна претплата за да продолжите да примате нови термини.",
+    compare: "Погледнете што е вклучено",
+    comparisonHeading: "Што добивате со OPUS?",
     comparisonDescription:
-      "Споредете ги бесплатниот план и Pro, функција по функција.",
+      "Истите функции за секоја големина на тим. Цената зависи од бројот на активни членови.",
     feature: "Функција",
-    free: "Бесплатен",
     included: "Вклучено",
     notIncluded: "Не е вклучено",
     groups: [
@@ -50,42 +47,36 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Ваш веб-сајт на yourstudio.opus.mk",
-            free: true,
             pro: true,
           },
           {
             feature: "Термини, услуги и клиенти",
-            free: "Неограничени",
             pro: "Неограничени",
           },
           {
             feature: "Закажување без профил или апликација",
-            free: true,
             pro: true,
           },
           {
             feature: "Тимски календар без преклопување",
-            free: true,
             pro: true,
           },
           {
             feature: "Работно време, паузи и слободни денови",
-            free: true,
             pro: true,
           },
           {
             feature: "Тим",
-            free: "4",
-            pro: "4, 5, 6, 8 или 12, според избраната опција",
+            pro: "До 1, 3, 4, 6, 8 или 12 активни членови",
+            description:
+              "Сопственикот и менаџерите се бројат; неактивните членови не се бројат.",
           },
           {
             feature: "Галерија на веб-сајтот",
-            free: "До 3 фотографии",
             pro: "До 15 фотографии",
           },
           {
             feature: "Пристап од телефон, таблет и компјутер",
-            free: true,
             pro: true,
           },
         ],
@@ -95,25 +86,24 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "QR-код за закажување и A5 постер",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story за онлајн закажување",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story за слободен термин",
-            free: true,
             pro: true,
           },
           {
             feature: "Избор на бои за промотивните слики",
-            free: true,
             pro: true,
           },
-          { feature: "Зачувани одговори за клиенти", free: true, pro: true },
+          {
+            feature: "Зачувани одговори за клиенти",
+            pro: true,
+          },
         ],
       },
       {
@@ -121,27 +111,22 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Контакт на клиентот во секој термин",
-            free: true,
             pro: true,
           },
           {
             feature: "Именик со историја и статистика на посети",
-            free: false,
             pro: true,
           },
           {
             feature: "Потврди и промени на термин по е-пошта",
-            free: true,
             pro: true,
           },
           {
             feature: "Потсетници за клиенти по е-пошта",
-            free: false,
             pro: "1, 2, 3 или 24 ч. пред терминот",
           },
           {
             feature: "SMS потврди и потсетници",
-            free: false,
             pro: "Да*",
           },
         ],
@@ -153,58 +138,59 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "AI Chat",
             description:
               "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување.",
-            free: "3 брзи одговори месечно*",
             pro: "200 одговори месечно*",
           },
           {
             feature: "Детални AI-анализи",
             description: "Се вбројуваат во месечните 200 одговори.",
-            free: false,
             pro: "До 20 месечно*",
           },
           {
             feature: "Понуди по е-пошта за слободни термини",
             description:
               "Ја одобрувате секоја понуда. Само за клиенти со согласност.",
-            free: false,
             pro: true,
           },
           {
             feature: "AI Receptionist",
             description:
               "AI одговара на Instagram пораките додека вие се посветувате на клиентите.",
-            free: false,
             pro: true,
           },
         ],
       },
       {
         title: "Поддршка",
-        rows: [{ feature: "Приоритетна поддршка", free: false, pro: true }],
+        rows: [
+          {
+            feature: "Приоритетна поддршка",
+            pro: true,
+          },
+        ],
       },
     ],
-    activationTitle: "За SMS и AI алатките",
+    activationTitle: "За пробниот период, AI и SMS",
     activationNote:
-      "* AI и SMS ги поставувате сами од вашата сметка. За AI Receptionist, поврзете го вашиот професионален Instagram профил во поставките. Планот не вклучува неограничени SMS пораки.",
-    customTitle: "Ви треба нешто по мерка?",
+      "Пробниот период трае 2 месеци и е за нови студија. Нема автоматска наплата. За да продолжите да примате нови термини потоа, потребна е платена претплата. AI и SMS бараат конфигурација и активирање. AI Receptionist бара професионален Instagram профил. SMS пораките не се неограничени.",
+    customTitle: "Имате 13 или повеќе членови?",
     customDescription:
-      "Софтверот по мерка има посебна понуда. Заедно ги договараме функциите, интеграциите, рокот и месечниот план за вашиот проект.",
-    customCta: "Разговарајте со нас",
+      "Пишете ни за големината и потребите на вашиот тим за да разговараме за соодветна понуда.",
+    customCta: "Контактирајте нè",
   },
   en: {
     metadata: {
       title: "Pricing and plans — OPUS",
       description:
-        "Compare Free and Pro from {proPrice}/month. Choose a team of up to 4, 5, 6, 8, or 12, with client history, reminders, and AI tools.",
+        "OPUS from {proPrice}/month. Try 2 months without a card. One plan for teams of up to 1, 3, 4, 6, 8, or 12.",
     },
-    heading: "Choose what works for your studio.",
+    heading: "One plan, sized for your team.",
     description:
-      "Start with a free booking website and calendar. Add Pro when you need a larger team, client history, and more tools.",
-    compare: "Compare all features",
-    comparisonHeading: "What’s included in each plan?",
-    comparisonDescription: "Compare Free and Pro, feature by feature.",
+      "New studios get a 2-month trial without a card. Then choose a monthly subscription to keep accepting new appointments.",
+    compare: "See everything included",
+    comparisonHeading: "What do you get with OPUS?",
+    comparisonDescription:
+      "The same features with every team size. Your price depends on the number of active team members.",
     feature: "Feature",
-    free: "Free",
     included: "Included",
     notIncluded: "Not included",
     groups: [
@@ -213,42 +199,36 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Your own yourstudio.opus.mk website",
-            free: true,
             pro: true,
           },
           {
             feature: "Appointments, services, and clients",
-            free: "Unlimited",
             pro: "Unlimited",
           },
           {
             feature: "Client booking without an account or app",
-            free: true,
             pro: true,
           },
           {
             feature: "Team calendar with overlap protection",
-            free: true,
             pro: true,
           },
           {
             feature: "Working hours, breaks, and days off",
-            free: true,
             pro: true,
           },
           {
             feature: "Team members",
-            free: "4",
-            pro: "4, 5, 6, 8, or 12, depending on your option",
+            pro: "Up to 1, 3, 4, 6, 8, or 12 active members",
+            description:
+              "The owner and managers count; inactive members do not.",
           },
           {
             feature: "Website gallery",
-            free: "Up to 3 photos",
             pro: "Up to 15 photos",
           },
           {
             feature: "Phone, tablet, and desktop access",
-            free: true,
             pro: true,
           },
         ],
@@ -258,25 +238,24 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Booking QR code and A5 counter sign",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story for online booking",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story for an available appointment",
-            free: true,
             pro: true,
           },
           {
             feature: "Custom colors for promotion artwork",
-            free: true,
             pro: true,
           },
-          { feature: "Saved replies for clients", free: true, pro: true },
+          {
+            feature: "Saved replies for clients",
+            pro: true,
+          },
         ],
       },
       {
@@ -284,27 +263,22 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Client contact details on every appointment",
-            free: true,
             pro: true,
           },
           {
             feature: "Client directory with visit history and statistics",
-            free: false,
             pro: true,
           },
           {
             feature: "Appointment confirmations and changes by email",
-            free: true,
             pro: true,
           },
           {
             feature: "Client email reminders",
-            free: false,
             pro: "1, 2, 3, or 24 hours before",
           },
           {
             feature: "SMS confirmations and reminders",
-            free: false,
             pro: "Yes*",
           },
         ],
@@ -316,59 +290,59 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "AI Chat",
             description:
               "Ask AI about your business. Get recommendations, insights, and ideas for improvement.",
-            free: "3 Fast answers / month*",
             pro: "200 answers / month*",
           },
           {
             feature: "Detailed AI reports",
             description: "Count toward the 200 monthly answers.",
-            free: false,
             pro: "Up to 20 / month*",
           },
           {
             feature: "Email offers for empty slots",
             description:
               "You approve every offer. Only for clients who have opted in.",
-            free: false,
             pro: true,
           },
           {
             feature: "AI Receptionist",
             description:
               "AI answers your Instagram DMs while you focus on clients.",
-            free: false,
             pro: true,
           },
         ],
       },
       {
         title: "Support",
-        rows: [{ feature: "Priority support", free: false, pro: true }],
+        rows: [
+          {
+            feature: "Priority support",
+            pro: true,
+          },
+        ],
       },
     ],
-    activationTitle: "About SMS and AI tools",
+    activationTitle: "About the trial, AI, and SMS",
     activationNote:
-      "* Set up AI and SMS yourself from your account. For AI Receptionist, connect your professional Instagram account in settings. The plan does not include unlimited SMS messages.",
-    customTitle: "Need something built for you?",
+      "The 2-month trial is for new studios. There is no automatic charge. A paid subscription is required afterward to keep accepting new appointments. AI and SMS require configuration and activation. AI Receptionist requires a professional Instagram account. SMS messages are not unlimited.",
+    customTitle: "Have 13 or more team members?",
     customDescription:
-      "Custom software is quoted separately. We agree on the features, integrations, timeline, and monthly plan for your project together.",
-    customCta: "Talk to us",
+      "Tell us about your team size and needs so we can discuss a suitable offer.",
+    customCta: "Contact us",
   },
   sq: {
     metadata: {
       title: "Çmimet dhe planet — OPUS",
       description:
-        "Krahasoni planin falas dhe Pro nga {proPrice} në muaj. Zgjidhni ekip me deri në 4, 5, 6, 8 ose 12 anëtarë, me histori klientësh, rikujtues dhe vegla AI.",
+        "OPUS nga {proPrice}/muaj. Provojeni 2 muaj pa kartelë. Një plan për ekipe me deri në 1, 3, 4, 6, 8 ose 12 anëtarë.",
     },
-    heading: "Zgjidhni atë që i nevojitet studios tuaj.",
+    heading: "Një plan sipas ekipit tuaj.",
     description:
-      "Filloni me një faqe interneti dhe kalendar falas. Shtoni Pro kur t'ju nevojitet ekip më i madh, historia e klientëve dhe më shumë vegla.",
-    compare: "Krahasoni të gjitha funksionet",
-    comparisonHeading: "Çfarë përfshihet në secilin plan?",
+      "Studiot e reja marrin provë 2-mujore pa kartelë. Më pas zgjidhni abonim mujor për të vazhduar pranimin e termineve të reja.",
+    compare: "Shihni gjithçka që përfshihet",
+    comparisonHeading: "Çfarë merrni me OPUS?",
     comparisonDescription:
-      "Krahasoni planin falas dhe Pro, funksion për funksion.",
+      "Të njëjtat funksione për çdo madhësi ekipi. Çmimi varet nga numri i anëtarëve aktivë.",
     feature: "Funksioni",
-    free: "Falas",
     included: "E përfshirë",
     notIncluded: "Nuk përfshihet",
     groups: [
@@ -377,42 +351,36 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Faqja juaj në yourstudio.opus.mk",
-            free: true,
             pro: true,
           },
           {
             feature: "Termine, shërbime dhe klientë",
-            free: "Të pakufizuara",
             pro: "Të pakufizuara",
           },
           {
             feature: "Rezervim nga klienti pa llogari apo aplikacion",
-            free: true,
             pro: true,
           },
           {
             feature: "Kalendar ekipi pa mbivendosje",
-            free: true,
             pro: true,
           },
           {
             feature: "Orari i punës, pushimet dhe ditët e lira",
-            free: true,
             pro: true,
           },
           {
             feature: "Anëtarët e ekipit",
-            free: "4",
-            pro: "4, 5, 6, 8 ose 12, sipas opsionit të zgjedhur",
+            pro: "Deri në 1, 3, 4, 6, 8 ose 12 anëtarë aktivë",
+            description:
+              "Pronari dhe menaxherët llogariten; anëtarët joaktivë nuk llogariten.",
           },
           {
             feature: "Galeria në uebfaqe",
-            free: "Deri në 3 foto",
             pro: "Deri në 15 foto",
           },
           {
             feature: "Qasje nga telefoni, tableti dhe kompjuteri",
-            free: true,
             pro: true,
           },
         ],
@@ -422,27 +390,22 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "QR kod për rezervim dhe poster A5 për tavolinë",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story për rezervime online",
-            free: true,
             pro: true,
           },
           {
             feature: "Instagram Story për termin të lirë",
-            free: true,
             pro: true,
           },
           {
             feature: "Zgjedhje ngjyrash për imazhet promovuese",
-            free: true,
             pro: true,
           },
           {
             feature: "Përgjigje të ruajtura për klientët",
-            free: true,
             pro: true,
           },
         ],
@@ -452,27 +415,22 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         rows: [
           {
             feature: "Kontaktet e klientit në çdo termin",
-            free: true,
             pro: true,
           },
           {
             feature: "Regjistër klientësh me histori dhe statistika vizitash",
-            free: false,
             pro: true,
           },
           {
             feature: "Konfirmime dhe ndryshime të terminit me email",
-            free: true,
             pro: true,
           },
           {
             feature: "Kujtesa me email për klientët",
-            free: false,
             pro: "1, 2, 3 ose 24 orë para",
           },
           {
             feature: "Konfirmime dhe kujtesa me SMS",
-            free: false,
             pro: "Po*",
           },
         ],
@@ -484,42 +442,43 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "AI Chat",
             description:
               "Pyesni AI për biznesin tuaj. Merrni rekomandime, analiza dhe ide përmirësimi.",
-            free: false,
             pro: "200 përgjigje në muaj*",
           },
           {
             feature: "Raporte të hollësishme me AI",
             description: "Numërohen brenda 200 përgjigjeve mujore.",
-            free: false,
             pro: "Deri në 20 në muaj*",
           },
           {
             feature: "Oferta me email për termine të lira",
             description:
               "Ju miratoni çdo ofertë. Vetëm për klientët me pëlqim.",
-            free: false,
             pro: true,
           },
           {
             feature: "AI Receptionist",
             description:
               "AI u përgjigjet mesazheve në Instagram ndërsa ju u përkushtoheni klientëve.",
-            free: false,
             pro: true,
           },
         ],
       },
       {
         title: "Mbështetje",
-        rows: [{ feature: "Mbështetje prioritare", free: false, pro: true }],
+        rows: [
+          {
+            feature: "Mbështetje prioritare",
+            pro: true,
+          },
+        ],
       },
     ],
-    activationTitle: "Rreth veglave SMS dhe AI",
+    activationTitle: "Rreth provës, AI dhe SMS",
     activationNote:
-      "* AI dhe SMS i konfiguroni vetë nga llogaria juaj. Për AI Receptionist, lidhni profilin tuaj profesional të Instagram-it në cilësime. Plani nuk përfshin SMS të pakufizuara.",
-    customTitle: "Ju nevojitet diçka e përshtatur posaçërisht?",
+      "Prova 2-mujore është për studiot e reja. Nuk ka tarifim automatik. Më pas nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja. AI dhe SMS kërkojnë konfigurim dhe aktivizim. AI Receptionist kërkon llogari profesionale Instagram. Mesazhet SMS nuk janë të pakufizuara.",
+    customTitle: "Keni 13 ose më shumë anëtarë?",
     customDescription:
-      "Softueri sipas porosisë ka ofertë të veçantë. Bashkërisht dakordohemi për funksionet, integrimet, afatin dhe planin mujor për projektin tuaj.",
-    customCta: "Bisedoni me ne",
+      "Na tregoni për madhësinë dhe nevojat e ekipit, që të diskutojmë një ofertë të përshtatshme.",
+    customCta: "Na kontaktoni",
   },
 };

@@ -4,7 +4,8 @@ import { requireAuth, requireRole } from "./lib/auth";
 import { getBeautyActivationState } from "./lib/activation";
 import { buildPublicProfile } from "./lib/publicProfile";
 import { isActiveIndustry } from "./lib/productScope";
-import { isWebsitePublished } from "./lib/publication";
+import { acceptsPublicBookings, isWebsitePublished } from "./lib/publication";
+import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import { isWithinPublicBookingWindow } from "./lib/publicBookingRules";
 import { wallClockNow } from "./lib/bookingTime";
 import { tenantSiteUrl } from "./lib/tenantSites";
@@ -42,6 +43,8 @@ export const getWorkspace = query({
     ]);
     const published =
       isWebsitePublished(org) && Boolean(readiness?.allRequiredComplete);
+    const acceptingBookings = published && acceptsPublicBookings(org);
+    const { accessState } = getSubscriptionAccess(org);
     const websiteUrl = tenantSiteUrl(
       org.slug,
       process.env.ROOT_DOMAIN || "opus.mk",
@@ -69,7 +72,7 @@ export const getWorkspace = query({
         ];
     const values: ReplyValues = {
       studio_name: org.name,
-      booking_link: published ? bookingUrl : "",
+      booking_link: acceptingBookings ? bookingUrl : "",
       address: [org.address, org.city].filter(Boolean).join(", "),
       phone: org.phone || "",
       hours: [...(org.openingHours || [])]
@@ -101,12 +104,15 @@ export const getWorkspace = query({
       name: org.name,
       slug: org.slug,
       published,
+      acceptingBookings,
+      accessState,
       websiteUrl,
       bookingUrl,
       address: values.address,
       today,
       maxDate,
       canManageReplies: staffMember.role !== "staff",
+      canManageBilling: staffMember.role === "owner",
       services: profile.services.map((service) => ({
         id: service._id,
         name: service.name,
@@ -153,6 +159,7 @@ export const getOpenings = query({
     const state = await getBeautyActivationState(ctx, orgId);
     if (
       !isWebsitePublished(org) ||
+      !acceptsPublicBookings(org) ||
       !state?.allRequiredComplete ||
       !state.settings
     )

@@ -1,0 +1,622 @@
+{
+  "releaseDate": "2026-11-02",
+  "initialReleaseCommit": "598ca4a9712f8515c47d94e24dd4f59472fe5274",
+  "vercel": {
+    "verifiedAt": "2026-11-02T20:11:12.764343+00:00",
+    "expectedCommitPerProject": {
+      "dashboard": "92822d69184ccda40efa93db245c1c2ff967ec7e",
+      "landing": "598ca4a9712f8515c47d94e24dd4f59472fe5274"
+    },
+    "readOnlyProviderAudit": true,
+    "aliases": [
+      {
+        "host": "studio.opus.mk",
+        "project": "dashboard",
+        "deploymentId": "dpl_BGdCx9Zu6Z2ABCenZyoFa4mq4i6V",
+        "url": "opus-dashboard-j6gs7dwvj-borko-projects.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "commit": "92822d69184ccda40efa93db245c1c2ff967ec7e",
+        "ref": "main",
+        "aliasAssigned": true,
+        "aliasError": null,
+        "errorCode": null
+      },
+      {
+        "host": "*.opus.mk",
+        "project": "dashboard",
+        "deploymentId": "dpl_BGdCx9Zu6Z2ABCenZyoFa4mq4i6V",
+        "url": "opus-dashboard-j6gs7dwvj-borko-projects.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "commit": "92822d69184ccda40efa93db245c1c2ff967ec7e",
+        "ref": "main",
+        "aliasAssigned": true,
+        "aliasError": null,
+        "errorCode": null
+      },
+      {
+        "host": "opus.mk",
+        "project": "landing",
+        "deploymentId": "dpl_3NC7zdpstTUsBK51TAbHKzj2JkmR",
+        "url": "opus-landing-a54vv1yl2-borko-projects.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "commit": "598ca4a9712f8515c47d94e24dd4f59472fe5274",
+        "ref": "main",
+        "aliasAssigned": true,
+        "aliasError": null,
+        "errorCode": null
+      },
+      {
+        "host": "www.opus.mk",
+        "project": "landing",
+        "deploymentId": "dpl_3NC7zdpstTUsBK51TAbHKzj2JkmR",
+        "url": "opus-landing-a54vv1yl2-borko-projects.vercel.app",
+        "readyState": "READY",
+        "target": "production",
+        "commit": "598ca4a9712f8515c47d94e24dd4f59472fe5274",
+        "ref": "main",
+        "aliasAssigned": true,
+        "aliasError": null,
+        "errorCode": null
+      }
+    ],
+    "dashboardProductionEnvironment": {
+      "absent": {
+        "AUTH_TEST_OTP": true,
+        "ALLOW_DEV_DATA": true
+      },
+      "convexDeployKeyProductionOnly": true
+    },
+    "allAliasesReadyAtExpectedCommit": true
+  },
+  "existingFreeStudios": {
+    "capturedAt": 1793650279158,
+    "baselineStudioCount": 14,
+    "unchangedCount": 14,
+    "changes": [],
+    "comparedFields": [
+      "id",
+      "slug",
+      "plan",
+      "hasTrial"
+    ],
+    "scope": "Original studio identities remain present; plan is free and trial metadata absent. This is not a comparison of every studio field."
+  },
+  "existingFreePublicSites": {
+    "capturedAt": 1793650280934,
+    "studiosChecked": 14,
+    "published": 10,
+    "acceptingBookings": 10,
+    "publicationChanges": [],
+    "blockedPreviouslyPublished": [],
+    "source": "Anonymous live publicSite:getBySlug query per baseline studio."
+  },
+  "polar": {
+    "capturedAt": 1793649959672,
+    "config": {
+      "environment": "production",
+      "checkoutEnabled": true,
+      "accessTokenConfigured": true,
+      "webhookSecretConfigured": true,
+      "allSevenProductsConfigured": true,
+      "distinctProductIds": true,
+      "siteOrigin": "https://studio.opus.mk"
+    },
+    "organization": {
+      "id": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+      "slug": "opus-mk",
+      "name": "OPUS MK",
+      "defaultPresentmentCurrency": "mkd",
+      "defaultTaxBehavior": "inclusive",
+      "subscriptionSettings": {
+        "allow_multiple_subscriptions": false,
+        "proration_behavior": "prorate",
+        "benefit_revocation_grace_period": 0,
+        "prevent_trial_abuse": false,
+        "allow_customer_updates": true
+      }
+    },
+    "products": [
+      {
+        "teamLimit": 1,
+        "productId": "ab57e864-8a02-4e77-9db0-04630d65f2ca",
+        "name": "OPUS Pro \u00b7 1 team member",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "2352235c-12fe-48d4-aa65-c5ebfa7fdd5c",
+            "currency": "mkd",
+            "amountMinorUnits": 79000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "358c3e81-f4a0-4db8-b939-9adaeb4de626",
+            "currency": "eur",
+            "amountMinorUnits": 1290,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 3,
+        "productId": "8fb44652-71db-4a2a-b35e-e400ac7bfa07",
+        "name": "OPUS Pro \u00b7 3 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "c855933c-ec73-4ad4-9f0f-cd97ed08196e",
+            "currency": "mkd",
+            "amountMinorUnits": 119000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "ea5339b0-9e7a-4925-a920-311fea8aac40",
+            "currency": "eur",
+            "amountMinorUnits": 1990,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 4,
+        "productId": "76a4e725-6d5d-43ae-b84b-8e76ac403b6f",
+        "name": "OPUS Pro \u00b7 4 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "e2c15230-cf73-498e-8f92-63e13b801d76",
+            "currency": "mkd",
+            "amountMinorUnits": 149000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "d238981e-cc1f-4c95-a98e-653a37390fb5",
+            "currency": "eur",
+            "amountMinorUnits": 2490,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 5,
+        "productId": "2166a073-984e-4d5e-aceb-c61d440b260e",
+        "name": "OPUS Pro \u00b7 5 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "private",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "23424752-d65a-4764-9ab3-9ef1db7158c7",
+            "currency": "mkd",
+            "amountMinorUnits": 179000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "8858b81b-3660-47d9-b64d-0181ba033054",
+            "currency": "eur",
+            "amountMinorUnits": 2990,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 6,
+        "productId": "fd244a57-34fd-4536-9ce8-244e191e0e73",
+        "name": "OPUS Pro \u00b7 6 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "42ea3982-4e60-4e8b-bb85-3a23d4caee82",
+            "currency": "mkd",
+            "amountMinorUnits": 209000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "0439d7b9-7a01-47b5-a9a8-06a219aa21e9",
+            "currency": "eur",
+            "amountMinorUnits": 3490,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 8,
+        "productId": "78ffea5a-f85f-49f3-8055-6ec072607db2",
+        "name": "OPUS Pro \u00b7 8 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "0d4bcf39-9997-497c-9f3b-6a281a661eb6",
+            "currency": "mkd",
+            "amountMinorUnits": 249000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "41f58f40-edc8-48de-8423-da306767b5fa",
+            "currency": "eur",
+            "amountMinorUnits": 3990,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      },
+      {
+        "teamLimit": 12,
+        "productId": "d5c7f8f6-8868-41a4-8a1d-b7dbecc68f85",
+        "name": "OPUS Pro \u00b7 12 team members",
+        "organizationId": "0a40b0cb-ab15-4f94-a425-8a5834faea8f",
+        "visibility": "public",
+        "isArchived": false,
+        "isRecurring": true,
+        "recurringInterval": "month",
+        "recurringIntervalCount": 1,
+        "trialInterval": null,
+        "trialIntervalCount": null,
+        "prices": [
+          {
+            "id": "18af65e8-d8a4-48d5-a312-6e3f46b06878",
+            "currency": "mkd",
+            "amountMinorUnits": 329000,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          },
+          {
+            "id": "61f4d78e-ece2-48bf-bfd6-248000aec479",
+            "currency": "eur",
+            "amountMinorUnits": 5490,
+            "isArchived": false,
+            "amountType": "fixed",
+            "source": "catalog",
+            "taxBehavior": null,
+            "recurringInterval": "month"
+          }
+        ]
+      }
+    ],
+    "verification": {
+      "allSevenProductsMatchExpected": true,
+      "issues": [],
+      "publicTeamLimits": [
+        1,
+        3,
+        4,
+        6,
+        8,
+        12
+      ],
+      "privateTeamLimits": [
+        5
+      ],
+      "twoCalendarMonthTrialManagedBy": "OPUS backend on new studio creation, not Polar checkout"
+    }
+  },
+  "hostedCheckout": {
+    "verifiedAt": "2026-11-02T20:07:04.014Z",
+    "source": "Production Studio Subscribe flow and Polar hosted checkout WebMCP",
+    "paymentSubmitted": false,
+    "checkouts": [
+      {
+        "status": "open",
+        "product": {
+          "id": "ab57e864-8a02-4e77-9db0-04630d65f2ca",
+          "name": "OPUS Pro \u00b7 1 team member",
+          "recurring_interval": "month",
+          "price": {
+            "type": "fixed",
+            "amount": 79000
+          }
+        },
+        "offered": [
+          {
+            "id": "8fb44652-71db-4a2a-b35e-e400ac7bfa07",
+            "name": "OPUS Pro \u00b7 3 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 119000
+            }
+          },
+          {
+            "id": "76a4e725-6d5d-43ae-b84b-8e76ac403b6f",
+            "name": "OPUS Pro \u00b7 4 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 149000
+            }
+          },
+          {
+            "id": "fd244a57-34fd-4536-9ce8-244e191e0e73",
+            "name": "OPUS Pro \u00b7 6 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 209000
+            }
+          },
+          {
+            "id": "78ffea5a-f85f-49f3-8055-6ec072607db2",
+            "name": "OPUS Pro \u00b7 8 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 249000
+            }
+          },
+          {
+            "id": "d5c7f8f6-8868-41a4-8a1d-b7dbecc68f85",
+            "name": "OPUS Pro \u00b7 12 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 329000
+            }
+          }
+        ],
+        "amounts": {
+          "subtotal": 79000,
+          "discount": 0,
+          "tax": 0,
+          "total": 79000,
+          "currency": "mkd"
+        },
+        "billingCountry": "MK",
+        "errors": {},
+        "paymentFormReady": true,
+        "paymentSubmitted": false
+      },
+      {
+        "status": "open",
+        "product": {
+          "id": "8fb44652-71db-4a2a-b35e-e400ac7bfa07",
+          "name": "OPUS Pro \u00b7 3 team members",
+          "recurring_interval": "month",
+          "price": {
+            "type": "fixed",
+            "amount": 119000
+          }
+        },
+        "amounts": {
+          "subtotal": 119000,
+          "discount": 0,
+          "tax": 0,
+          "total": 119000,
+          "currency": "mkd"
+        },
+        "billingCountry": "MK",
+        "errors": {},
+        "paymentFormReady": true,
+        "paymentSubmitted": false
+      },
+      {
+        "status": "open",
+        "product": {
+          "id": "ab57e864-8a02-4e77-9db0-04630d65f2ca",
+          "name": "OPUS Pro \u00b7 1 team member",
+          "recurring_interval": "month",
+          "price": {
+            "type": "fixed",
+            "amount": 1290
+          }
+        },
+        "offered": [
+          {
+            "id": "8fb44652-71db-4a2a-b35e-e400ac7bfa07",
+            "name": "OPUS Pro \u00b7 3 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 1990
+            }
+          },
+          {
+            "id": "76a4e725-6d5d-43ae-b84b-8e76ac403b6f",
+            "name": "OPUS Pro \u00b7 4 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 2490
+            }
+          },
+          {
+            "id": "fd244a57-34fd-4536-9ce8-244e191e0e73",
+            "name": "OPUS Pro \u00b7 6 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 3490
+            }
+          },
+          {
+            "id": "78ffea5a-f85f-49f3-8055-6ec072607db2",
+            "name": "OPUS Pro \u00b7 8 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 3990
+            }
+          },
+          {
+            "id": "d5c7f8f6-8868-41a4-8a1d-b7dbecc68f85",
+            "name": "OPUS Pro \u00b7 12 team members",
+            "recurring_interval": "month",
+            "price": {
+              "type": "fixed",
+              "amount": 5490
+            }
+          }
+        ],
+        "amounts": {
+          "subtotal": 1290,
+          "discount": 0,
+          "tax": 0,
+          "total": 1290,
+          "currency": "eur"
+        },
+        "billingCountry": "MK",
+        "errors": {},
+        "paymentFormReady": true,
+        "paymentSubmitted": false
+      },
+      {
+        "status": "open",
+        "product": {
+          "id": "8fb44652-71db-4a2a-b35e-e400ac7bfa07",
+          "name": "OPUS Pro \u00b7 3 team members",
+          "recurring_interval": "month",
+          "price": {
+            "type": "fixed",
+            "amount": 1990
+          }
+        },
+        "amounts": {
+          "subtotal": 1990,
+          "discount": 0,
+          "tax": 0,
+          "total": 1990,
+          "currency": "eur"
+        },
+        "billingCountry": "MK",
+        "errors": {},
+        "paymentFormReady": true,
+        "paymentSubmitted": false
+      }
+    ]
+  },
+  "liveChecks": {
+    "seoLocalizedPages": 15,
+    "seoAssetsRobotsSitemapRedirectsAnd404s": "passed",
+    "studioAndLandingConsoleErrors": 0,
+    "demoBookingFlow": "available dates and times; final details step reached without submission",
+    "returnTokenSanitization": {
+      "status": 307,
+      "location": "/settings?tab=billing",
+      "cacheControl": "no-store",
+      "referrerPolicy": "no-referrer"
+    },
+    "backend": {
+      "deployment": "calm-dachshund-294",
+      "checkoutMemberLimits": [
+        1,
+        3,
+        4,
+        6,
+        8,
+        12
+      ],
+      "trialExpiryFunctionPresent": true,
+      "developmentOnlyFlagsAbsent": true
+    },
+    "footerFollowup": {
+      "commit": "92822d69184ccda40efa93db245c1c2ff967ec7e",
+      "sourceLocales": [
+        "en",
+        "mk",
+        "sq"
+      ],
+      "liveVerifiedLocale": "mk",
+      "oldFreeClaimAbsent": true,
+      "focusedLint": "passed",
+      "productionBuild": "passed"
+    },
+    "bookingConsoleErrors": 0
+  },
+  "limits": [
+    "No real production charge, renewal or subscription activation was performed.",
+    "Payment activation, decline and portal plan-change verification used Polar Sandbox; see the separate sandbox evidence.",
+    "No native app build or App Store release."
+  ],
+  "finalStudioCommit": "92822d69184ccda40efa93db245c1c2ff967ec7e"
+}

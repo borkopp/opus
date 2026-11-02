@@ -65,3 +65,17 @@ price, two-month/no-card descriptions, matching social descriptions, and absence
 of a permanent-Free website claim. An EUR preference cookie must not change the
 canonical MKD pricing metadata. These are local checks, not a new production or
 Search Console verification.
+
+## Paid-plan production release — 2 November 2026
+
+The integrated release was merged and pushed to `main` at `598ca4a`. Vercel
+deployment `dpl_3NC7zdpstTUsBK51TAbHKzj2JkmR` is READY and serves `opus.mk` and
+`www.opus.mk` from that source commit. The production SEO checker passed all
+15 localized URLs, the 790 MKD starting price, two-month/no-card metadata,
+canonical/hreflang data, sitemap, robots, social assets, redirects and 404s.
+The live English page also rendered the new static sections and signup links
+carrying the selected package and currency, with no browser console errors.
+
+This is a new production verification. It does not imply new Search Console
+indexing or a change to Google's previously recorded indexing status. Unrelated
+pending source changes remain preserved in the primary checkout.

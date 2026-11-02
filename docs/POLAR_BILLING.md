@@ -8,20 +8,37 @@ on behalf of studios. Existing Free studios retain their access. New studios rec
 
 The paid-plan branch includes the existing SEO commits from local `main`, the
 mobile plan/trial copy corrections, increased AI allowances and SMS removal.
-It has not been merged, pushed or deployed. Historical setup notes below are
-superseded by this section where their configuration or verification status differs.
+It was fast-forward merged and pushed to `main` at `598ca4a`, then deployed to
+production. Historical setup notes below are superseded by this section where
+their configuration or verification status differs.
 
-Production preparation is complete:
+Production release verification:
 
 - Production Convex now has `POLAR_PRO_1_PRODUCT_ID` and
   `POLAR_PRO_3_PRODUCT_ID`, using the production IDs recorded below. Existing
   product mappings, credentials and `POLAR_SERVER=production` are retained.
-- The new 1- and 3-member products remain **Private** until the compatible backend
-  is released. This prevents the current live portal from selling unsupported plans.
+- The new 1- and 3-member products are **Public**. Publication occurred only
+  after the live backend accepted the new package limits and exposed trial expiry.
 - The retired 5-member product is now **Private** in production and sandbox.
   Its product mapping remains available for existing-subscription reconciliation.
-- A read-only production check found 14 non-deleted beauty studio records on
-  Free, all without trial metadata. None were migrated or modified.
+- Before/after production comparisons found that all 14 existing Free beauty
+  studios retained their Free plan and still had no trial metadata. Live backend
+  checks confirmed all 10 previously published Free websites remained published
+  and booking-enabled; the other four remain unpublished. No existing studio
+  was migrated, subscribed, charged or assigned a trial.
+- The real production owner session opened checkout for both new packages in
+  both currencies: 790 MKD / EUR 12.90 and 1,190 MKD / EUR 19.90. All four hosted
+  totals matched, with inclusive tax, no provider errors and the payment form
+  ready. The checkout offered exactly 1/3/4/6/8/12 members. No card was entered
+  and no production payment was submitted.
+- Returning from checkout preserved the demo studio's Free plan, four-member
+  capacity and no-payment status. Its public booking flow reached the final
+  details step with available times; no appointment was submitted.
+- Production removes the Polar return credential with a 307 redirect that
+  retains billing parameters and sends `no-store` and `no-referrer`.
+- Production Convex and Vercel have neither `AUTH_TEST_OTP` nor `ALLOW_DEV_DATA`.
+- The landing deployment passed all 15 localized SEO checks, including the new
+  trial/price copy, sitemap, robots, assets, redirects and 404s.
 
 Sandbox products `3b4bc66e-4793-4a14-b4d2-166e5172fad2` (1 member) and
 `49609384-0bef-4c73-b952-8233e23859dd` (3 members) now match the production
@@ -49,7 +66,9 @@ Convex webhook handler; paid access was never set manually.
 Sanitized provider and local-state evidence is recorded in
 [`billing/2026-11-02-sandbox-verification.json`](billing/2026-11-02-sandbox-verification.json).
 It contains no credentials, checkout/portal session URLs or customer emails.
-Actual future renewal and production charging were not exercised.
+Actual future renewal and production charging were not exercised. Production
+deployment, catalogue and hosted-checkout evidence is recorded separately in
+[`billing/2026-11-02-production-verification.json`](billing/2026-11-02-production-verification.json).
 
 The browser test also found an unused Polar `customer_session_token` in return
 URLs. The proxy now removes it before rendering or creating a login callback,
@@ -62,13 +81,23 @@ Final local checks passed: 1,112 dashboard tests (3 skipped), 27 owner tests,
 builds, and all 15 localized SEO checks. Mobile labels use the server's actual
 access state and purchased capacity; no native build was submitted or released.
 
-When deployment is authorized, release the compatible Convex/Studio code first
-and verify the configured package mappings and existing Free access. Then make
-the 1- and 3-member products Public and release the landing changes with their
-SEO work. Keep the 5-member product Private. Recheck hosted checkout, portal
-options and the 15 localized landing URLs after release. Production product
-visibility is deliberately staged; no code deployment was performed during
-this preparation.
+The release used the existing Convex production deployment and the existing
+Studio/wildcard and landing Vercel projects. The initial Studio deployment is
+`dpl_BgjgqXQeC7MEWbiumsSMoxSzGeht`; the landing is
+`dpl_3NC7zdpstTUsBK51TAbHKzj2JkmR`. Both were verified READY with the expected
+source commit and custom-domain aliases. The legacy 5-member product remains
+Private for reconciliation. Unrelated pending work in the primary checkout was
+preserved byte-for-byte on `codex/preserved-main-before-paid-plans-20261102`.
+No native app build or App Store release was performed.
+
+The production booking smoke check found an old Free-website claim in the
+shared studio footer. Commit `92822d6` removes that claim in English, Macedonian
+and Albanian without changing customer content or plan access. The final Studio
+deployment `dpl_BGdCx9Zu6Z2ABCenZyoFa4mq4i6V` is READY at that commit; its Studio
+and wildcard aliases and live Macedonian footer were verified. The landing
+source is unchanged from `598ca4a`. A final comparison after this deployment
+and all checkout checks again confirmed all 14 Free plans had no trial metadata
+and all 10 published Free sites remained booking-enabled.
 
 ## Customer journey
 

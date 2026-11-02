@@ -21,8 +21,12 @@ export function subscriptionLabel(
   return labels[state];
 }
 
-export function teamCapacityMessage(capacity: TeamCapacity, language: Language) {
-  const state = capacity.accessState ?? (capacity.isFree ? "legacy_free" : "paid");
+export function teamCapacityMessage(
+  capacity: TeamCapacity,
+  language: Language,
+) {
+  const state =
+    capacity.accessState ?? (capacity.isFree ? "legacy_free" : "paid");
   if (state === "expired")
     return language === "mk"
       ? "Пробниот период заврши. Можеш да ги уредуваш постоечките членови, но не можеш да додаваш активни членови."

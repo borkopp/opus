@@ -82,7 +82,9 @@ describe("mobile studio backend", () => {
       studio: { plan: "paid", accessState: "paid" },
       capacity: { isFree: false, totalLimit: 12 },
     });
-    expect((await backend.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+    expect((await backend.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(
+      trial,
+    );
   });
 
   it("keeps the available-slot quote and saved price aligned when surge rules are disabled", async () => {

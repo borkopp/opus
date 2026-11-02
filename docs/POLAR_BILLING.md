@@ -4,6 +4,72 @@ This integration sells the existing **monthly OPUS Pro subscription**. It does
 not sell AI credits, yearly plans, appointment payments, or payments
 on behalf of studios. Existing Free studios retain their access. New studios receive a two-calendar-month, no-card trial and must subscribe to keep accepting new appointments afterwards.
 
+## Release verification — November 2, 2026
+
+The paid-plan branch includes the existing SEO commits from local `main`, the
+mobile plan/trial copy corrections, increased AI allowances and SMS removal.
+It has not been merged, pushed or deployed. Historical setup notes below are
+superseded by this section where their configuration or verification status differs.
+
+Production preparation is complete:
+
+- Production Convex now has `POLAR_PRO_1_PRODUCT_ID` and
+  `POLAR_PRO_3_PRODUCT_ID`, using the production IDs recorded below. Existing
+  product mappings, credentials and `POLAR_SERVER=production` are retained.
+- The new 1- and 3-member products remain **Private** until the compatible backend
+  is released. This prevents the current live portal from selling unsupported plans.
+- The retired 5-member product is now **Private** in production and sandbox.
+  Its product mapping remains available for existing-subscription reconciliation.
+- A read-only production check found 14 non-deleted beauty studio records on
+  Free, all without trial metadata. None were migrated or modified.
+
+Sandbox products `3b4bc66e-4793-4a14-b4d2-166e5172fad2` (1 member) and
+`49609384-0bef-4c73-b952-8233e23859dd` (3 members) now match the production
+monthly prices in both currencies, with no Polar trial. The expired sandbox
+credential was replaced with the same six scopes and a 30-day lifetime
+(expires December 2, 2026). Credentials remain outside the repository.
+
+Verification used fresh local-only studios, the real app authentication,
+onboarding and billing functions, Polar Sandbox test cards, and the existing
+restricted webhook tunnel. The signed provider deliveries reached the actual
+Convex webhook handler; paid access was never set manually.
+
+| Check | Verified result |
+| --- | --- |
+| All six packages in MKD and EUR | All 12 checkout totals matched; package/currency changes reused the open checkout. |
+| Declined card | No paid access; original trial dates and trial capacity retained. |
+| 1-member payment | 790 MKD activated 1 member and 400 monthly AI answers, including 40 Detailed. |
+| 3-member payment | EUR 19.90, including EUR 3.18 German tax, activated 3 members and 600/60 AI answers. |
+| Signed payment events | `subscription.created`, `subscription.updated` and `order.paid` reconciled the correct separate studios without sync failures. |
+| Duplicate Subscribe | Both paid studios rejected another checkout with `ALREADY_PRO`. |
+| Portal change from 1 to 3 members | Same MKD subscription updated to 1,190 MKD, 3 members and 600/60 AI answers; proration applies on the next invoice. The EUR studio was unchanged. |
+| Trial preservation | Both original two-month trial timestamps remained unchanged through failure, payment and plan change. |
+| Webhook boundary | Valid signatures returned 200; unsigned requests returned 401; unrelated tunnel paths/methods returned 404. |
+
+Sanitized provider and local-state evidence is recorded in
+[`billing/2026-11-02-sandbox-verification.json`](billing/2026-11-02-sandbox-verification.json).
+It contains no credentials, checkout/portal session URLs or customer emails.
+Actual future renewal and production charging were not exercised.
+
+The browser test also found an unused Polar `customer_session_token` in return
+URLs. The proxy now removes it before rendering or creating a login callback,
+including already-nested callbacks. Billing parameters remain intact, and the
+redirect is non-cacheable with no referrer. This prevents the credential from
+reaching page analytics. Regression tests and a browser return check passed.
+
+Final local checks passed: 1,112 dashboard tests (3 skipped), 27 owner tests,
+30 mobile tests, the relevant lint/type checks, dashboard and landing production
+builds, and all 15 localized SEO checks. Mobile labels use the server's actual
+access state and purchased capacity; no native build was submitted or released.
+
+When deployment is authorized, release the compatible Convex/Studio code first
+and verify the configured package mappings and existing Free access. Then make
+the 1- and 3-member products Public and release the landing changes with their
+SEO work. Keep the 5-member product Private. Recheck hosted checkout, portal
+options and the 15 localized landing URLs after release. Production product
+visibility is deliberately staged; no code deployment was performed during
+this preparation.
+
 ## Customer journey
 
 Landing-page trial buttons open `https://studio.opus.mk/signup` with an encoded
@@ -508,7 +574,7 @@ details. See [Polar's sandbox guide](https://polar.sh/docs/integrate/sandbox) an
 | Repeat Subscribe in two tabs or double-click | No second active subscription or duplicate charge is created. Existing checkout/subscription is reused or rejected. |
 | Cancel through the customer portal at period end | OPUS shows **Access until** and keeps Pro until that date. It must not downgrade immediately. |
 | Undo the scheduled cancellation in Polar before expiry | After reconciliation, Pro stays active and the cancellation notice disappears. |
-| Revoke the subscription immediately in Polar Sandbox | OPUS returns to Free. Pro-only operations reject access; existing data and ordinary free bookings still work. |
+| Revoke the subscription immediately in Polar Sandbox | OPUS restores the studio's original access: legacy Free, an unexpired original trial, or expired-trial access. Existing data remains intact. Legacy Free keeps ordinary bookings; an expired trial cannot create new appointments. Trial dates must not reset. |
 | Partially refund an active subscription's order in Polar Sandbox | The refund alone does not remove Pro. Revoke the subscription separately when access should end. |
 | Redeliver an existing webhook in Polar Sandbox | Delivery succeeds without duplicate plan changes or receipts. |
 | Repeat using another studio/account | Each studio sees only its own billing portal and subscription. Non-owner staff cannot manage billing. |

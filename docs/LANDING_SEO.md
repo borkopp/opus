@@ -50,3 +50,18 @@ Submission and a successful live URL test do not guarantee Google indexing or se
 - The SEO commits are integrated into local `main`. All nine tracked and three untracked pre-existing pending files are preserved, with only the intended localized-link imports added to the two overlapping components. The index is clean and no conflicts remain.
 - No GitHub push was performed, avoiding an additional owner-app deployment. The live release was deployed directly from the isolated SEO checkout. Before a later release, retain these local SEO commits alongside any separately authorized visual work.
 - Search Console proof screenshots are saved under `/Users/borkopetrevski/.codex/visualizations/2026/10/24/01a16bb5-ed1a-75e1-9617-ce315ed69c5f/seo/`.
+
+## Paid-plan branch integration — 2 November 2026
+
+The paid-plan feature branch was rebased onto local `main` at `40b99c2`, retaining
+the three SEO commits without changing `main` or deploying. Conflict resolution
+preserves localized links, Macedonia-focused titles, canonical/hreflang metadata,
+the sitemap, social assets and URL locale routing alongside the new static landing
+sections and two-month trial copy.
+
+Lint, typecheck and the locked Next.js 16.2.4 production build passed. The rendered
+SEO checker passed all 15 localized pages and now also checks the 790 MKD starting
+price, two-month/no-card descriptions, matching social descriptions, and absence
+of a permanent-Free website claim. An EUR preference cookie must not change the
+canonical MKD pricing metadata. These are local checks, not a new production or
+Search Console verification.

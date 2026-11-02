@@ -45,7 +45,9 @@ export function ProfileCard({
       </Text>
       <View style={[styles.studio, { borderTopColor: colors.border }]}>
         <View style={styles.studioIdentity}>
-          <View style={[styles.studioIcon, { backgroundColor: colors.secondary }]}>
+          <View
+            style={[styles.studioIcon, { backgroundColor: colors.secondary }]}
+          >
             <Store size={18} color={colors.accentText} strokeWidth={1.8} />
           </View>
           <View style={styles.studioName}>
@@ -62,12 +64,17 @@ export function ProfileCard({
           <View
             style={[
               styles.badge,
-              { backgroundColor: plan === "paid" ? colors.accent : colors.secondary },
+              {
+                backgroundColor:
+                  plan === "paid" ? colors.accent : colors.secondary,
+              },
             ]}
           >
             <Text
               variant="label"
-              style={{ color: plan === "paid" ? colors.accentText : colors.foreground }}
+              style={{
+                color: plan === "paid" ? colors.accentText : colors.foreground,
+              }}
             >
               {subscriptionLabel(accessState, plan, language)}
             </Text>
@@ -87,8 +94,19 @@ const styles = StyleSheet.create({
   email: { flexShrink: 1 },
   studio: { borderTopWidth: 1, marginTop: 6, paddingTop: 18, gap: 14 },
   studioIdentity: { flexDirection: "row", alignItems: "center", gap: 12 },
-  studioIcon: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  studioIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   studioName: { flex: 1, minWidth: 0, gap: 2 },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  badge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, justifyContent: "center" },
+  badge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    justifyContent: "center",
+  },
 });

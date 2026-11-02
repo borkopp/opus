@@ -4,6 +4,12 @@ const base = (process.argv[2] || "http://localhost:3101").replace(/\/$/, "");
 const canonicalBase = "https://opus.mk";
 const pages = ["/", "/pricing", "/contact", "/privacy", "/terms"];
 const locales = ["mk", "en", "sq"];
+const trialCopy = {
+  mk: "2 месеци без картичка",
+  en: "2 months without a card",
+  sq: "2 muaj pa kartelë",
+};
+const startingPrice = { mk: "790 ден.", en: "790 MKD", sq: "790 den." };
 const pathFor = (page, locale) =>
   locale === "mk" ? page : `/${locale}${page === "/" ? "" : page}`;
 const attributes = (tag) =>
@@ -20,7 +26,7 @@ const tags = (html, name) =>
 const bot = {
   "user-agent": "Twitterbot/1.0",
   "accept-language": "en-US",
-  cookie: "opus_locale=sq",
+  cookie: "opus_locale=sq; opus-billing-currency=eur",
   "x-opus-locale": "sq",
 };
 
@@ -52,6 +58,24 @@ for (const locale of locales) {
     );
     assert.ok(title && title.includes("OPUS"), `${path}: title`);
     assert.ok(value("description")?.length > 40, `${path}: description`);
+    if (page === "/" || page === "/pricing") {
+      assert.ok(
+        value("description").includes(trialCopy[locale]),
+        `${path}: advertise the two-month no-card trial`,
+      );
+      assert.ok(
+        !/free booking website|Бесплатна веб-страница|Uebfaqe falas/i.test(
+          value("description"),
+        ),
+        `${path}: do not advertise a permanent Free website`,
+      );
+    }
+    if (page === "/pricing") {
+      assert.ok(
+        value("description").includes(startingPrice[locale]),
+        `${path}: stable 790 MKD starting price despite the EUR cookie`,
+      );
+    }
     assert.equal(
       links.filter((tag) => tag.rel === "canonical").length,
       1,
@@ -77,6 +101,8 @@ for (const locale of locales) {
     assert.equal(new URL(value("og:url")).href, canonicalBase + path, path);
     assert.equal(value("og:title"), title, path);
     assert.equal(value("twitter:title"), title, path);
+    assert.equal(value("og:description"), value("description"), path);
+    assert.equal(value("twitter:description"), value("description"), path);
     assert.equal(
       value("og:image"),
       canonicalBase + "/assets/opus-social-preview.jpg",

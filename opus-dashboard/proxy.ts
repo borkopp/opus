@@ -2,6 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { tenantSlugFromHost } from "./lib/tenant-sites";
+import { stripCheckoutSessionToken } from "./lib/auth-destination";
 
 const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "opus.mk";
 const protectedPrefixes = [
@@ -50,6 +51,17 @@ export default function proxy(request: NextRequest) {
         ? `/sites/${tenantSlug}`
         : `/sites/${tenantSlug}${request.nextUrl.pathname}`;
     return NextResponse.rewrite(tenantUrl);
+  }
+
+  // Strip the unused Polar credential before rendering or nesting a login URL.
+  // Doing this in a component would run after analytics initializes.
+  const requestPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+  const cleanPath = stripCheckoutSessionToken(requestPath);
+  if (cleanPath !== requestPath) {
+    const response = NextResponse.redirect(new URL(cleanPath, request.url));
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    return response;
   }
 
   if (!requiresSession(request.nextUrl.pathname)) {

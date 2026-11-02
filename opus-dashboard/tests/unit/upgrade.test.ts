@@ -91,6 +91,59 @@ describe("Pro entry journey", () => {
     expect(authDestination(callback, true)).toBe("/upgrade");
   });
 
+  it.each([undefined, "better-auth.session_token=existing-session"])(
+    "cleans checkout returns before rendering or creating an auth callback (cookie: %s)",
+    (cookie) => {
+      const response = proxy(
+        new NextRequest(
+          "https://studio.opus.mk/settings?tab=billing&checkout=returned&currency=mkd&team=1&customer_session_token=synthetic-polar-session",
+          {
+            headers: { host: "studio.opus.mk", ...(cookie ? { cookie } : {}) },
+          },
+        ),
+      );
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        "https://studio.opus.mk/settings?tab=billing&checkout=returned&currency=mkd&team=1",
+      );
+      expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+      if (!cookie) {
+        const login = proxy(
+          new NextRequest(response.headers.get("location")!, {
+            headers: { host: "studio.opus.mk" },
+          }),
+        );
+        expect(
+          new URL(login.headers.get("location")!).searchParams.get(
+            "callbackUrl",
+          ),
+        ).toBe("/settings?tab=billing&checkout=returned&currency=mkd&team=1");
+      }
+    },
+  );
+
+  it("cleans a previously issued login callback before the page can load analytics", () => {
+    const callback =
+      "/settings?tab=billing&checkout=returned&currency=eur&team=3&customer_session_token=synthetic-polar-session";
+    const response = proxy(
+      new NextRequest(
+        `https://studio.opus.mk/login?callbackUrl=${encodeURIComponent(callback)}`,
+        { headers: { host: "studio.opus.mk" } },
+      ),
+    );
+    expect(response.status).toBe(307);
+    const redirect = new URL(response.headers.get("location")!);
+    expect(redirect.pathname).toBe("/login");
+    expect(redirect.searchParams.get("callbackUrl")).toBe(
+      "/settings?tab=billing&checkout=returned&currency=eur&team=3",
+    );
+    expect(
+      proxy(new NextRequest(redirect, { headers: { host: "studio.opus.mk" } }))
+        .status,
+    ).toBe(200);
+  });
+
   it("resumes unfinished studio setup and opens billing once the studio is operational", () => {
     const profile = { hasStudio: true, role: "owner", plan: "free" } as const;
     expect(

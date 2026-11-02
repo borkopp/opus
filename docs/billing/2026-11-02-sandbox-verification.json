@@ -1,0 +1,450 @@
+{
+  "sandboxProductIds": {
+    "POLAR_PRO_1_PRODUCT_ID": "3b4bc66e-4793-4a14-b4d2-166e5172fad2",
+    "POLAR_PRO_3_PRODUCT_ID": "49609384-0bef-4c73-b952-8233e23859dd"
+  },
+  "organization": {
+    "slug": "opus-mk",
+    "default_tax_behavior": "inclusive",
+    "subscription_settings": {
+      "allow_multiple_subscriptions": false,
+      "proration_behavior": "prorate",
+      "benefit_revocation_grace_period": 0,
+      "prevent_trial_abuse": false,
+      "allow_customer_updates": true
+    }
+  },
+  "checkoutChecks": [
+    {
+      "fixture": "mkd",
+      "teamLimit": 1,
+      "currency": "mkd",
+      "totalMinor": 79000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 3,
+      "currency": "mkd",
+      "totalMinor": 119000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 4,
+      "currency": "mkd",
+      "totalMinor": 149000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 6,
+      "currency": "mkd",
+      "totalMinor": 209000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 8,
+      "currency": "mkd",
+      "totalMinor": 249000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 12,
+      "currency": "mkd",
+      "totalMinor": 329000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 1,
+      "currency": "eur",
+      "totalMinor": 1290,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "mkd",
+      "teamLimit": 1,
+      "currency": "mkd",
+      "totalMinor": 79000,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "392a2124-f925-4340-b89e-8c2c20d03212",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 1,
+      "currency": "eur",
+      "totalMinor": 1290,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 3,
+      "currency": "eur",
+      "totalMinor": 1990,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 4,
+      "currency": "eur",
+      "totalMinor": 2490,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 6,
+      "currency": "eur",
+      "totalMinor": 3490,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 8,
+      "currency": "eur",
+      "totalMinor": 3990,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 12,
+      "currency": "eur",
+      "totalMinor": 5490,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    },
+    {
+      "fixture": "eur",
+      "teamLimit": 3,
+      "currency": "eur",
+      "totalMinor": 1990,
+      "taxBehavior": null,
+      "organizationTaxBehavior": "inclusive",
+      "checkoutId": "1b5fa909-2953-4709-8c4b-5c548c63f953",
+      "status": "open"
+    }
+  ],
+  "decline": {
+    "orgId": "nx7c34qz43njj5pvpy06m09j398hfjma",
+    "plan": "free",
+    "accessState": "trial",
+    "teamLimit": 12,
+    "trialEndsAt": 1798918138573,
+    "trialPreserved": true,
+    "subscription": null,
+    "syncing": false,
+    "syncFailed": false,
+    "lastSyncedAt": 1793648009053,
+    "portalAvailable": true,
+    "webhookEvents": [
+      {
+        "eventId": "08bd12b1-20d0-426e-bdc7-f9484dd2e49c",
+        "eventType": "customer.state_changed"
+      }
+    ]
+  },
+  "paidActivation": {
+    "mkd": {
+      "orgId": "nx7c34qz43njj5pvpy06m09j398hfjma",
+      "plan": "paid",
+      "accessState": "paid",
+      "teamLimit": 1,
+      "trialEndsAt": 1798918138573,
+      "trialPreserved": true,
+      "subscription": {
+        "amount": 79000,
+        "cancelAtPeriodEnd": false,
+        "currency": "mkd",
+        "currentPeriodEnd": 1796240088639,
+        "id": "fde1c292-b162-4692-b787-402f847478bc",
+        "interval": "month",
+        "intervalCount": 1,
+        "productId": "3b4bc66e-4793-4a14-b4d2-166e5172fad2",
+        "status": "active",
+        "teamLimit": 1
+      },
+      "syncing": false,
+      "syncFailed": false,
+      "lastSyncedAt": 1793648167956,
+      "portalAvailable": true,
+      "webhookEvents": [
+        {
+          "eventId": "08bd12b1-20d0-426e-bdc7-f9484dd2e49c",
+          "eventType": "customer.state_changed"
+        },
+        {
+          "eventId": "10223807-2c40-490f-86d2-a5d2cb93501f",
+          "eventType": "customer.state_changed"
+        },
+        {
+          "eventId": "d4b75f05-570e-4c06-bc2c-1bfb48245fa8",
+          "eventType": "subscription.created"
+        },
+        {
+          "eventId": "16e3cba8-9371-4a25-8e3d-4ca6142cee34",
+          "eventType": "subscription.updated"
+        },
+        {
+          "eventId": "311fbb28-3bc5-4972-a15d-804752c1097c",
+          "eventType": "order.paid"
+        },
+        {
+          "eventId": "07d9595c-70bf-486e-bd71-90f19fd3c554",
+          "eventType": "customer.state_changed"
+        }
+      ]
+    },
+    "eur": {
+      "orgId": "nx73xgz2askfba951fcz99bqes8hecf8",
+      "plan": "paid",
+      "accessState": "paid",
+      "teamLimit": 3,
+      "trialEndsAt": 1798918148055,
+      "trialPreserved": true,
+      "subscription": {
+        "amount": 1990,
+        "cancelAtPeriodEnd": false,
+        "currency": "eur",
+        "currentPeriodEnd": 1796240169684,
+        "id": "4d1171fb-c707-4bb4-9e1f-4708d1a5c79e",
+        "interval": "month",
+        "intervalCount": 1,
+        "productId": "49609384-0bef-4c73-b952-8233e23859dd",
+        "status": "active",
+        "teamLimit": 3
+      },
+      "syncing": false,
+      "syncFailed": false,
+      "lastSyncedAt": 1793648174813,
+      "portalAvailable": true,
+      "webhookEvents": [
+        {
+          "eventId": "efb1df92-0163-478f-b7e6-35001d4cefee",
+          "eventType": "customer.state_changed"
+        },
+        {
+          "eventId": "dc95a364-38cd-4b01-ade5-8c77eaddc698",
+          "eventType": "subscription.created"
+        },
+        {
+          "eventId": "338a832a-56c5-4d14-b56b-5e2c5ae31c94",
+          "eventType": "subscription.updated"
+        },
+        {
+          "eventId": "fae41455-bb14-4deb-b24f-b14406655b91",
+          "eventType": "order.paid"
+        },
+        {
+          "eventId": "5f0f4363-f010-4fb6-8f49-85e9e708e901",
+          "eventType": "customer.state_changed"
+        }
+      ]
+    }
+  },
+  "paidAccess": {
+    "mkd": {
+      "assistant": {
+        "allowed": true,
+        "budgetAvailable": true,
+        "busy": false,
+        "configured": false,
+        "deepBudgetAvailable": true,
+        "deepLimit": 40,
+        "deepRemaining": 40,
+        "limit": 400,
+        "orgId": "nx7c34qz43njj5pvpy06m09j398hfjma",
+        "paid": true,
+        "remaining": 400,
+        "resetAt": 1796083200000
+      },
+      "duplicate": {
+        "rejected": true,
+        "alreadyPro": true
+      }
+    },
+    "eur": {
+      "assistant": {
+        "allowed": true,
+        "budgetAvailable": true,
+        "busy": false,
+        "configured": false,
+        "deepBudgetAvailable": true,
+        "deepLimit": 60,
+        "deepRemaining": 60,
+        "limit": 600,
+        "orgId": "nx73xgz2askfba951fcz99bqes8hecf8",
+        "paid": true,
+        "remaining": 600,
+        "resetAt": 1796083200000
+      },
+      "duplicate": {
+        "rejected": true,
+        "alreadyPro": true
+      }
+    }
+  },
+  "portalChange": {
+    "status": {
+      "mkd": {
+        "orgId": "nx7c34qz43njj5pvpy06m09j398hfjma",
+        "plan": "paid",
+        "accessState": "paid",
+        "teamLimit": 3,
+        "trialEndsAt": 1798918138573,
+        "trialPreserved": true,
+        "subscription": {
+          "amount": 119000,
+          "cancelAtPeriodEnd": false,
+          "currency": "mkd",
+          "currentPeriodEnd": 1796240088639,
+          "id": "fde1c292-b162-4692-b787-402f847478bc",
+          "interval": "month",
+          "intervalCount": 1,
+          "productId": "49609384-0bef-4c73-b952-8233e23859dd",
+          "status": "active",
+          "teamLimit": 3
+        },
+        "syncing": false,
+        "syncFailed": false,
+        "lastSyncedAt": 1793648286894,
+        "portalAvailable": true,
+        "webhookEvents": [
+          {
+            "eventId": "08bd12b1-20d0-426e-bdc7-f9484dd2e49c",
+            "eventType": "customer.state_changed"
+          },
+          {
+            "eventId": "10223807-2c40-490f-86d2-a5d2cb93501f",
+            "eventType": "customer.state_changed"
+          },
+          {
+            "eventId": "d4b75f05-570e-4c06-bc2c-1bfb48245fa8",
+            "eventType": "subscription.created"
+          },
+          {
+            "eventId": "16e3cba8-9371-4a25-8e3d-4ca6142cee34",
+            "eventType": "subscription.updated"
+          },
+          {
+            "eventId": "311fbb28-3bc5-4972-a15d-804752c1097c",
+            "eventType": "order.paid"
+          },
+          {
+            "eventId": "07d9595c-70bf-486e-bd71-90f19fd3c554",
+            "eventType": "customer.state_changed"
+          },
+          {
+            "eventId": "f5136678-f49e-40ce-8530-feb05698cc7f",
+            "eventType": "subscription.updated"
+          },
+          {
+            "eventId": "e87ae353-a0e4-49d9-b074-2c8584e6dd38",
+            "eventType": "customer.state_changed"
+          }
+        ]
+      },
+      "eur": {
+        "orgId": "nx73xgz2askfba951fcz99bqes8hecf8",
+        "plan": "paid",
+        "accessState": "paid",
+        "teamLimit": 3,
+        "trialEndsAt": 1798918148055,
+        "trialPreserved": true,
+        "subscription": {
+          "amount": 1990,
+          "cancelAtPeriodEnd": false,
+          "currency": "eur",
+          "currentPeriodEnd": 1796240169684,
+          "id": "4d1171fb-c707-4bb4-9e1f-4708d1a5c79e",
+          "interval": "month",
+          "intervalCount": 1,
+          "productId": "49609384-0bef-4c73-b952-8233e23859dd",
+          "status": "active",
+          "teamLimit": 3
+        },
+        "syncing": false,
+        "syncFailed": false,
+        "lastSyncedAt": 1793648174813,
+        "portalAvailable": true,
+        "webhookEvents": [
+          {
+            "eventId": "efb1df92-0163-478f-b7e6-35001d4cefee",
+            "eventType": "customer.state_changed"
+          },
+          {
+            "eventId": "dc95a364-38cd-4b01-ade5-8c77eaddc698",
+            "eventType": "subscription.created"
+          },
+          {
+            "eventId": "338a832a-56c5-4d14-b56b-5e2c5ae31c94",
+            "eventType": "subscription.updated"
+          },
+          {
+            "eventId": "fae41455-bb14-4deb-b24f-b14406655b91",
+            "eventType": "order.paid"
+          },
+          {
+            "eventId": "5f0f4363-f010-4fb6-8f49-85e9e708e901",
+            "eventType": "customer.state_changed"
+          }
+        ]
+      }
+    },
+    "mkdAssistant": {
+      "allowed": true,
+      "budgetAvailable": true,
+      "busy": false,
+      "configured": false,
+      "deepBudgetAvailable": true,
+      "deepLimit": 60,
+      "deepRemaining": 60,
+      "limit": 600,
+      "orgId": "nx7c34qz43njj5pvpy06m09j398hfjma",
+      "paid": true,
+      "remaining": 600,
+      "resetAt": 1796083200000
+    }
+  }
+}

@@ -121,7 +121,9 @@ function TeamEditor({
       else
         await save({
           ...(staffId ? { staffId } : {}),
-          ...(!staffId && inviteEmail.trim() ? { signInEmail: inviteEmail.trim() } : {}),
+          ...(!staffId && inviteEmail.trim()
+            ? { signInEmail: inviteEmail.trim() }
+            : {}),
           displayName: name,
           role,
           bio,
@@ -249,7 +251,9 @@ function TeamEditor({
         options={[
           { value: "profile", label: t("Profile", "Профил") },
           { value: "hours", label: t("Hours", "Часови") },
-          ...(staffId ? [{ value: "access" as const, label: t("Access", "Пристап") }] : []),
+          ...(staffId
+            ? [{ value: "access" as const, label: t("Access", "Пристап") }]
+            : []),
         ]}
       />
       {section === "profile" && (
@@ -280,20 +284,30 @@ function TeamEditor({
                   )
                 : limitMessage}
             </Text>
-            {!staffId && studio.plan === "paid" && <>
-              <Input
-                label={t("Sign-in email (optional)", "Е-пошта за најава (незадолжително)")}
-                value={inviteEmail}
-                onChangeText={setInviteEmail}
-                keyboardType="email-address"
-                autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect={false}
-                maxLength={254}
-                editable={!locked}
-              />
-              <Text variant="caption" tone="muted">{t("We will send an account invitation when you save this team member. Leave empty to add them without dashboard access.", "Ќе испратиме покана за сметка кога ќе го зачуваш членот. Остави празно за да го додадеш без пристап до контролната табла.")}</Text>
-            </>}
+            {!staffId && studio.plan === "paid" && (
+              <>
+                <Input
+                  label={t(
+                    "Sign-in email (optional)",
+                    "Е-пошта за најава (незадолжително)",
+                  )}
+                  value={inviteEmail}
+                  onChangeText={setInviteEmail}
+                  keyboardType="email-address"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  maxLength={254}
+                  editable={!locked}
+                />
+                <Text variant="caption" tone="muted">
+                  {t(
+                    "We will send an account invitation when you save this team member. Leave empty to add them without dashboard access.",
+                    "Ќе испратиме покана за сметка кога ќе го зачуваш членот. Остави празно за да го додадеш без пристап до контролната табла.",
+                  )}
+                </Text>
+              </>
+            )}
             <Input
               label={t(
                 "Specialties (optional)",

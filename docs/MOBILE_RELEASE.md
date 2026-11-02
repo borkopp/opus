@@ -238,7 +238,7 @@ iOS 27.0 beta. The operator confirmed successful sign-in and device connection;
 the local backend independently confirmed an active Expo registration.
 
 A generic alert was sent through the existing notification queue without creating
-an appointment or sending email/SMS. Expo accepted it on the first attempt, the
+an appointment or sending client messages. Expo accepted it on the first attempt, the
 receipt confirmed APNs handoff (`provider_accepted`), and the operator confirmed
 that “New appointment · OPUS Studio” appeared on the iPhone. This establishes
 remote iOS push delivery for this signed build and local configuration.

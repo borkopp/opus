@@ -1,9 +1,10 @@
 import { getStudioSlideOffset } from "@/lib/studio-carousel";
+import { initializeLandingMotion } from "@/lib/landing-motion";
 
 export function initializeLanding() {
   const controller = new AbortController();
   const { signal } = controller;
-  let observer;
+  const disposeMotion = initializeLandingMotion();
   document.querySelectorAll(".faq-list details").forEach((details) =>
     details.addEventListener(
       "toggle",
@@ -155,25 +156,8 @@ export function initializeLanding() {
     );
     showStudio(activeStudio);
   }
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.documentElement.classList.add("js-motion");
-    observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        }),
-      { threshold: 0.06, rootMargin: "0px 0px -25px 0px" },
-    );
-    document
-      .querySelectorAll(".reveal")
-      .forEach((element) => observer.observe(element));
-  }
   return () => {
     controller.abort();
-    observer?.disconnect();
-    document.documentElement.classList.remove("js-motion");
+    disposeMotion();
   };
 }

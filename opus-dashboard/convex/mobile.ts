@@ -63,6 +63,7 @@ export const bootstrap = query({
     ]);
     const timezone = settings?.timezone ?? "Europe/Skopje";
     const now = wallClockNow(timezone);
+    const subscription = getSubscriptionAccess(auth.org);
     return {
       available: true,
       orgId: auth.orgId,
@@ -70,7 +71,8 @@ export const bootstrap = query({
       timezone,
       now,
       today: Math.floor(now / 86_400_000) * 86_400_000,
-      plan: getSubscriptionAccess(auth.org).effectivePlan,
+      plan: subscription.effectivePlan,
+      accessState: subscription.accessState,
       profile: {
         name: auth.staffMember.displayName,
         email: auth.user.email,

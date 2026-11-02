@@ -103,7 +103,6 @@ async function setup() {
       staffNewBookingEmailEnabled: false,
       staffReminderEmailEnabled: false,
       emailEnabled: false,
-      smsEnabled: false,
     });
     return service!.staffIds[0];
   });

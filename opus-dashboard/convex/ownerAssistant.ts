@@ -5,7 +5,7 @@ import { ownerBusiness } from "./lib/ownerControls";
 import { getSubscriptionAccess } from "./lib/subscriptionAccess";
 import {
   allowanceSpend,
-  analystPlanLimits,
+  analystOrgLimits,
   usageMonth,
   ANALYST_LIMITS,
 } from "./analyst/limits";
@@ -34,8 +34,7 @@ async function allowance(
     )
     .take(100);
   const { effectivePlan } = getSubscriptionAccess(org);
-  const limits = analystPlanLimits(effectivePlan, org);
-  const defaults = analystPlanLimits(effectivePlan);
+  const { limits, defaults } = await analystOrgLimits(ctx, org);
   return {
     orgId: org._id,
     plan: effectivePlan,

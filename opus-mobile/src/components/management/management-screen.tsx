@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { backend } from "@/lib/backend";
 import { moneyLabel } from "@/lib/format";
 import { roleLabel } from "@/lib/management";
+import { subscriptionLabel } from "@/lib/subscription";
 import { useStudio } from "@/providers/studio-provider";
 
 export function ManagementScreen() {
@@ -68,9 +69,11 @@ export function ManagementScreen() {
                 : `${data.capacity.totalCount}/${data.capacity.totalLimit} ${t("active members", "активни членови")}`}
             </Text>
             <Text variant="caption" tone="muted">
-              {data.capacity.isFree
-                ? t("Free plan", "Бесплатен план")
-                : "OPUS Pro"}
+              {subscriptionLabel(
+                data.capacity.accessState,
+                data.capacity.isFree ? "free" : "paid",
+                language,
+              )}
             </Text>
           </View>
           {section === "services" ? (

@@ -18,8 +18,11 @@ production release; deploy the compatible backend before the owner frontend.
 - Restore plan defaults without resetting usage.
 - Reset the current month's prompt counters and allowance budget. Conversation
   history and actual provider-spend accounting remain stored; a budget baseline
-  records the reset. Existing provider configuration and the $3 allowance-budget
-  cap still apply. A new month starts with fresh usage and the selected allowance.
+  records the reset. Existing provider configuration and the current package's
+  allowance-budget cap still apply. Custom prompt counts do not raise that budget.
+  A new month starts with fresh usage and the selected allowance. Defaults and
+  budgets come from `shared/assistant-allowances.ts`, resolved from the verified
+  subscription; trials have their own 400-answer/40-Detailed allowance.
 - Reject updates while a response or cost reservation is in progress. Record
   the actor and before/after limits and usage in the append-only audit log.
 

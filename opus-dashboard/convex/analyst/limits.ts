@@ -1,7 +1,15 @@
+import type { Doc } from "../_generated/dataModel";
+import type { QueryCtx } from "../_generated/server";
+import { getSubscriptionAccess } from "../lib/subscriptionAccess";
+import { getProTeamLimitForOrg } from "../lib/staffPlanLimits";
+import {
+  ASSISTANT_FREE_ALLOWANCE,
+  ASSISTANT_TRIAL_ALLOWANCE,
+  getAssistantTeamAllowance,
+} from "../../../shared/assistant-allowances";
+
 export const ANALYST_LIMITS = {
-  answers: 200,
-  deepAnswers: 20,
-  monthlyMicroUsd: 3_000_000,
+  ...getAssistantTeamAllowance(12),
   maxQuestionChars: 2_000,
   maxTurns: 60,
   maxBookings: 10_000,
@@ -18,20 +26,38 @@ export const ANALYST_LIMITS = {
 export function analystPlanLimits(
   plan: "free" | "paid",
   override?: { analystPromptLimit?: number; analystDeepPromptLimit?: number },
+  allowance = plan === "paid"
+    ? getAssistantTeamAllowance(12)
+    : ASSISTANT_FREE_ALLOWANCE,
 ) {
-  const answers =
-    override?.analystPromptLimit ??
-    (plan === "paid" ? ANALYST_LIMITS.answers : 3);
+  const answers = override?.analystPromptLimit ?? allowance.answers;
   return {
     ...ANALYST_LIMITS,
+    ...allowance,
     answers,
     deepAnswers:
       plan === "paid"
         ? Math.min(
             answers,
-            override?.analystDeepPromptLimit ?? ANALYST_LIMITS.deepAnswers,
+            override?.analystDeepPromptLimit ?? allowance.deepAnswers,
           )
         : 0,
+  };
+}
+
+/** Resolve entitlement from server-owned billing state, never current headcount. */
+export async function analystOrgLimits(ctx: QueryCtx, org: Doc<"orgs">) {
+  const access = getSubscriptionAccess(org);
+  const allowance =
+    access.accessState === "trial"
+      ? ASSISTANT_TRIAL_ALLOWANCE
+      : access.accessState === "paid"
+        ? getAssistantTeamAllowance(await getProTeamLimitForOrg(ctx, org))
+        : ASSISTANT_FREE_ALLOWANCE;
+  return {
+    // Explicit owner overrides change answer counts, not the package cost guard.
+    limits: analystPlanLimits(access.effectivePlan, org, allowance),
+    defaults: analystPlanLimits(access.effectivePlan, undefined, allowance),
   };
 }
 

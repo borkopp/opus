@@ -56,7 +56,7 @@ the existing store candidate and local iPhone build have not been replaced.
   client records and unlinked staff profiles. It is always private; public website
   publication and public bookings, subscription payments, provider-backed AI,
   price-list photo extraction, staff invitation emails and external client/team
-  email/SMS/WhatsApp delivery are blocked on the server. Personal push on the
+  email delivery is blocked on the server. Personal push on the
   reviewer's opted-in device remains available.
 - Isolation is independent of `APP_REVIEW_ENABLED`. Keep the three identity
   bindings permanently while the fixture exists. The reserved demo slug is also

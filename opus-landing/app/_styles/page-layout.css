@@ -1,12 +1,18 @@
 :root {
   --site-header-height: 94px;
-  background: #ffffff;
+  background: var(--background);
 }
 
 .site-shell {
   width: 100%;
   max-width: none;
   margin: 0;
+  background: var(--background);
+}
+
+.intelligence-section,
+.pricing-section {
+  background: var(--background);
 }
 
 .header {
@@ -14,45 +20,60 @@
   background: transparent;
 }
 
-.site-shell:has(.hero) .header,
-.site-shell:has(.hero) .header .brand,
-.site-shell:has(.hero) .header nav a,
-.site-shell:has(.hero) .header .login,
-.site-shell:has(.hero) .header .menu-toggle {
-  color: #ffffff;
-}
+/* Keep the home navigation from crowding the hero at tablet widths. */
+@media (min-width: 761px) and (max-width: 1199px) {
+  .site-shell:has(.hero) .desktop-nav,
+  .site-shell:has(.hero) .nav-actions .login {
+    display: none;
+  }
 
-.site-shell:has(.hero) .header .opus-mark {
-  filter: brightness(0) invert(1);
-}
+  .site-shell:has(.hero) .menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: var(--ink);
+    background: transparent;
+  }
 
-.site-shell:has(.hero) .header .tiny-pill {
-  color: #ffffff;
-  background: #ffffff1f;
-  border-color: #ffffff4d;
-}
+  .site-shell:has(.hero) .mobile-nav:not([hidden]) {
+    display: flex;
+    position: absolute;
+    top: 80px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    gap: 5px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 15px 30px #1d39481a;
+  }
 
-.site-shell:has(.hero) .header .nav-actions > .button,
-.site-shell:has(.hero) .header .nav-actions > .button:hover {
-  background: #ffffff;
-  color: #000000;
-}
-
-.site-shell:has(.hero) .header .mobile-nav:not([hidden]) {
-  background: #286698f0;
-  border-color: #ffffff33;
-}
-
-.site-shell:has(.hero) .header .mobile-locale-toggle {
-  border-top-color: #ffffff33;
-}
-
-.site-shell:has(.hero) .header .mobile-locale-toggle span {
-  color: #ffffff;
+  .site-shell:has(.hero) .mobile-nav a {
+    padding: 10px;
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 760px) {
   :root {
     --site-header-height: 78px;
+  }
+
+  .site-shell:has(.hero) .menu-toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    color: var(--ink);
+  }
+}
+
+@media (max-width: 480px) {
+  .site-shell:has(.hero) .header .nav-actions > .button {
+    display: none;
   }
 }

@@ -1,9 +1,14 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAutoRotation } from "@/hooks/use-auto-rotation";
+import {
+  ArrowUpRight,
+  BarChart3,
+  CalendarDays,
+  Globe2,
+  Mail,
+  QrCode,
+  UsersRound,
+} from "lucide-react";
 import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
 import { trialSignupUrl } from "@/lib/pro-pricing";
 import { useI18n } from "@/lib/i18n/context";
@@ -16,139 +21,74 @@ import {
 export function ProductTour() {
   const { currency } = useBillingCurrency();
   const { t } = useI18n();
-  const [instant, setInstant] = useState(false);
-
-  const slides = useMemo(
-    () => [
-      {
-        id: "website",
-        label: t.productTour.tabs.website.label,
-        title: t.productTour.tabs.website.title,
-        description: t.productTour.tabs.website.description,
-        preview: BookingPreview,
-      },
-      {
-        id: "calendar",
-        label: t.productTour.tabs.calendar.label,
-        title: t.productTour.tabs.calendar.title,
-        description: t.productTour.tabs.calendar.description,
-        preview: CalendarPreview,
-      },
-      {
-        id: "clients",
-        label: t.productTour.tabs.clients.label,
-        title: t.productTour.tabs.clients.title,
-        description: t.productTour.tabs.clients.description,
-        preview: ClientPreview,
-      },
-    ],
-    [t],
-  );
-
-  const beforeChange = useCallback(
-    (_index: number, keyboard: boolean) => setInstant(keyboard),
-    [],
-  );
-  const {
-    rootRef,
-    progressRef,
-    active,
-    reducedMotion,
-    showItem,
-    setHovered,
-    setFocused,
-  } = useAutoRotation(slides.length, beforeChange);
-  const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
-  const slide = slides[active];
-  const Preview = slide.preview;
+  const features = [
+    {
+      id: "website",
+      copy: t.productTour.features.website,
+      icon: Globe2,
+      preview: BookingPreview,
+    },
+    {
+      id: "calendar",
+      copy: t.productTour.features.calendar,
+      icon: CalendarDays,
+      preview: CalendarPreview,
+    },
+    {
+      id: "clients",
+      copy: t.productTour.features.clients,
+      icon: UsersRound,
+      preview: ClientPreview,
+    },
+  ];
+  const extras = [
+    { id: "reminders", copy: t.productTour.extras.reminders, icon: Mail },
+    { id: "sharing", copy: t.productTour.extras.sharing, icon: QrCode },
+    { id: "reports", copy: t.productTour.extras.reports, icon: BarChart3 },
+  ];
 
   return (
-    <div
-      ref={rootRef}
-      className="product-tour"
-      onPointerEnter={(event) => {
-        if (event.pointerType === "mouse") setHovered(true);
-      }}
-      onPointerLeave={() => setHovered(false)}
-      onFocusCapture={() => setFocused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget))
-          setFocused(false);
-      }}
-    >
-      <div
-        className="product-tour-tabs"
-        role="tablist"
-        aria-label={t.productTour.subheading}
-      >
-        {slides.map((item, index) => (
-          <button
-            key={item.id}
-            ref={(element) => {
-              tabsRef.current[index] = element;
-            }}
-            type="button"
-            role="tab"
-            id={`product-tab-${item.id}`}
-            aria-controls="product-tour-panel"
-            aria-selected={active === index}
-            tabIndex={active === index ? 0 : -1}
-            onClick={(event) => showItem(index, event.detail === 0)}
-            onKeyDown={(event) => {
-              let next: number | undefined;
-              if (event.key === "ArrowRight")
-                next = (index + 1) % slides.length;
-              if (event.key === "ArrowLeft")
-                next = (index + slides.length - 1) % slides.length;
-              if (event.key === "Home") next = 0;
-              if (event.key === "End") next = slides.length - 1;
-              if (next === undefined) return;
-              event.preventDefault();
-              showItem(next, true);
-              tabsRef.current[next]?.focus();
-            }}
+    <div className="product-tour">
+      <div className="product-benefits-grid">
+        {features.map(({ id, copy, icon: Icon, preview: Preview }) => (
+          <article
+            className={`product-benefit product-benefit-${id} reveal`}
+            key={id}
+            aria-labelledby={`product-benefit-${id}`}
           >
-            {item.label}
-          </button>
+            <div className="product-benefit-copy">
+              <span className="product-benefit-label">
+                <Icon size={16} aria-hidden="true" />
+                {copy.label}
+              </span>
+              <h3 id={`product-benefit-${id}`}>{copy.title}</h3>
+              <p>{copy.description}</p>
+            </div>
+            <div className="product-benefit-visual">
+              <Preview />
+            </div>
+          </article>
         ))}
       </div>
-      <div
-        className="product-tour-card"
-        id="product-tour-panel"
-        role="tabpanel"
-        aria-labelledby={`product-tab-${slide.id}`}
-      >
-        <div
-          key={slide.id}
-          className="product-tour-scene"
-          data-instant={instant}
-        >
-          <div className="product-tour-copy">
-            <h3>{slide.title}</h3>
-            <p>{slide.description}</p>
-            <span className="product-tour-included">
-              {slide.id === "clients"
-                ? t.productTour.includedInPro
-                : t.productTour.includedInFree}
-            </span>
-          </div>
-          <div className="product-tour-visual">
-            <Preview />
-          </div>
-        </div>
-        <div className="product-tour-action">
-          <Button asChild variant="default">
-            <a href={trialSignupUrl(currency)}>
-              {t.productTour.cta}{" "}
-              <ArrowUpRight data-icon="inline-end" aria-hidden="true" />
-            </a>
-          </Button>
-        </div>
-        {!reducedMotion && (
-          <div className="product-tour-progress" aria-hidden="true">
-            <span ref={progressRef} />
-          </div>
-        )}
+      <div className="product-extras reveal">
+        <p className="product-extras-label">{t.productTour.alsoIncluded}</p>
+        <ul>
+          {extras.map(({ id, copy, icon: Icon }) => (
+            <li key={id}>
+              <Icon size={20} aria-hidden="true" />
+              <div>
+                <h3>{copy.title}</h3>
+                <p>{copy.description}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="product-benefits-action">
+        <a className="button button-dark" href={trialSignupUrl(currency)}>
+          {t.productTour.cta}
+          <ArrowUpRight size={18} aria-hidden="true" />
+        </a>
       </div>
     </div>
   );

@@ -1,0 +1,60 @@
+.number {
+  display: inline-block;
+  position: relative;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.visual {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 1;
+}
+
+.digit,
+.spacer {
+  display: inline-block;
+  position: relative;
+  width: 1ch;
+}
+
+.placeholder {
+  visibility: hidden;
+}
+
+.clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.reel {
+  display: flex;
+  flex-direction: column;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reel > span {
+  flex: 0 0 1em;
+  height: 1em;
+  text-align: center;
+}
+
+.accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.number[data-animate="false"] .reel {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel {
+    transition: none;
+  }
+}

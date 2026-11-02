@@ -83,7 +83,7 @@ Configuration belongs in the Convex environment:
 - Existing `RESEND_WEBHOOK_SECRET` for authenticated delivery/bounce/complaint events.
 
 The UI reports missing email configuration. Credential presence does not prove
-sender-domain approval or inbox delivery. SMS and WhatsApp offers are not enabled.
+sender-domain approval or inbox delivery. Offers are delivered only by email.
 
 ## Transactional guarantees and reporting
 

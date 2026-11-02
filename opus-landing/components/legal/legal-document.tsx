@@ -57,7 +57,7 @@ function LegalBlockContent({ block }: { block: LegalBlock }) {
   return (
     <dl className="border-border bg-border grid gap-px overflow-hidden rounded-2xl border sm:grid-cols-2">
       {block.items.map((item) => (
-        <div key={item.label} className="bg-background p-4 sm:p-5">
+        <div key={item.label} className="bg-card p-4 sm:p-5">
           <dt className="text-muted-foreground font-mono text-[11px] font-medium tracking-[0.14em] uppercase">
             {item.label}
           </dt>

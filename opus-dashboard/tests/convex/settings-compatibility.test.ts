@@ -184,7 +184,7 @@ describe("production settings compatibility", () => {
     ).toBeUndefined();
     expect(await a.settings()).toMatchObject(operational);
   });
-  test("client reminders do not overwrite team, SMS or dashboard notification settings", async () => {
+  test("client reminders preserve team, retired SMS data and dashboard notification settings", async () => {
     const t = createBackend(),
       a = await studio(t);
     await a.owner.mutation(api.orgSettings.updateEmailNotificationSettings, {

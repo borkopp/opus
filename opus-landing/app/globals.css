@@ -6,13 +6,14 @@
 @import "./_styles/studio-carousel.css" layer(components);
 @import "./_styles/support.css" layer(components);
 @import "./_styles/page-layout.css" layer(components);
-@import "./_styles/hero-shader.css" layer(components);
 @import "./_styles/icons.css" layer(components);
 @import "./_styles/hero-showcase.css" layer(components);
-@import "./_styles/intelligence-rotation.css" layer(components);
+@import "./_styles/hero.css" layer(components);
+@import "./_styles/intelligence-features.css" layer(components);
 @import "./_styles/product-tour.css" layer(components);
 @import "./_styles/contact.css" layer(components);
 @import "./_styles/locale-toggle.css" layer(components);
+@import "./_styles/motion.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
@@ -46,7 +47,7 @@
 
 :root {
   --radius: 1rem;
-  --background: #ffffff;
+  --background: #fdfcfb;
   --foreground: #24282f;
   --card: #ffffff;
   --primary: #25292f;
@@ -118,6 +119,7 @@
 
   .plan-comparison-frame {
     overflow: hidden;
+    background: var(--card);
     border: 1px solid var(--color-border);
     border-radius: 20px;
   }
@@ -270,32 +272,6 @@
       color: var(--color-muted-foreground);
       font-size: 11px;
     }
-  }
-
-  .section.dashboard-preview {
-    max-width: 1200px;
-  }
-
-  .dashboard-preview .section-heading {
-    margin-bottom: 40px;
-  }
-
-  .dashboard-preview-frame {
-    margin: 0;
-    overflow: hidden;
-    border-radius: 24px;
-    background: var(--color-secondary);
-    box-shadow: 0 24px 64px -32px rgb(36 70 96 / 25%);
-  }
-
-  .dashboard-preview-frame picture,
-  .dashboard-preview-frame img {
-    display: block;
-    width: 100%;
-  }
-
-  .dashboard-preview-frame img {
-    height: auto;
   }
 
   .promotion-section .split-heading h2 {
@@ -487,20 +463,6 @@
 
     .pricing-custom-note h2 {
       font-size: 25px;
-    }
-
-    .dashboard-preview .section-heading {
-      margin-bottom: 28px;
-    }
-
-    .dashboard-preview-frame {
-      max-width: 440px;
-      margin-inline: auto;
-      border-radius: 20px;
-    }
-
-    .dashboard-preview-frame img {
-      aspect-ratio: 1000 / 1872;
     }
 
     .promotion-section .split-heading > p {

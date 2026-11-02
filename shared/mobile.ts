@@ -13,6 +13,11 @@ export type MobileService = {
   currency: string;
   staffIds: string[];
 };
+export type MobileSubscriptionAccessState =
+  | "legacy_free"
+  | "trial"
+  | "expired"
+  | "paid";
 export type MobileStudio = {
   available: true;
   orgId: string;
@@ -21,6 +26,8 @@ export type MobileStudio = {
   today: number;
   now: number;
   plan: "free" | "paid";
+  // Additive: older backends/clients still use the effective plan above.
+  accessState?: MobileSubscriptionAccessState;
   profile: {
     name: string;
     email: string;
@@ -122,6 +129,7 @@ export type WeeklyHours = {
 };
 export type TeamCapacity = {
   isFree: boolean;
+  accessState?: MobileSubscriptionAccessState;
   staffCount: number;
   ownerCount: number;
   totalCount: number;

@@ -5,12 +5,17 @@ description: Covers implementation of the AI Receptionist agent in Omni-Service 
 
 # AI Receptionist
 
+This is historical implementation guidance. Follow `docs/PRODUCT_SCOPE.md` and
+`docs/AI_FRONTDESK.md` for the current Instagram-only integration and booking
+confirmation requirements. SMS and its provider integration were removed on
+October 24, 2026 and must not be reintroduced from this document.
+
 The AI Receptionist uses Claude (`claude-sonnet-4-6`) to autonomously handle inbound customer messages and book appointments without human intervention. It operates across WhatsApp, Instagram DM, and webchat.
 
 ## Architecture overview
 
 ```
-Inbound message (Twilio / Meta webhook)
+Inbound message (Meta webhook)
         ↓
   Convex HTTP Action (webhook handler)
         ↓
@@ -28,7 +33,7 @@ Inbound message (Twilio / Meta webhook)
         ↓
   Write ai_messages row
   Write audit_log row
-  Send reply via Twilio / Meta
+  Send reply via Meta
 ```
 
 ## Calling Claude

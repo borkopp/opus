@@ -55,7 +55,7 @@ export const updatePreferences = mutation({
   args: {
     preferredCity: v.optional(v.string()),
     preferredChannel: v.optional(
-      v.union(v.literal("whatsapp"), v.literal("sms"), v.literal("email")),
+      v.union(v.literal("whatsapp"), v.literal("email")),
     ),
     marketingOptIn: v.optional(v.boolean()),
   },

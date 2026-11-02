@@ -117,7 +117,7 @@ Convex Backend (convex/)
   └── lib/           — shared helpers (auth, orgId resolution)
       │
       ▼
-External APIs: Resend plus Sender for production transactional email; configured Twilio for Pro appointment SMS; configured OpenAI and Meta integrations for the Instagram receptionist; WhatsApp remains deferred
+External APIs: Resend plus Sender for production transactional email; configured OpenAI and Meta integrations for the Instagram receptionist; WhatsApp remains deferred
 ```
 
 ---
@@ -169,7 +169,7 @@ See `docs/OWNER_OVERVIEW.md`. This is not permission for general hard deletion.
 ## Convex Coding Rules
 
 - All mutation arguments must use `v.*` validators. No unvalidated input.
-- Never call Twilio, Resend, or Sender from inside a mutation — use Convex **Actions** for all external API calls.
+- Never call Resend or Sender from inside a mutation — use Convex **Actions** for all external API calls.
 - No business logic in React components — logic lives in Convex functions.
 - Always query via named indexes (`.withIndex(...)`). Never use `.filter()` as the primary access path — it's a full table scan.
 - `ConvexError` for user-facing errors; `throw new Error` for internal failures.
@@ -221,12 +221,12 @@ WhatsApp remains deferred, and the removed public web-chat API must stay disable
 
 ## Notifications
 
-Never call Twilio, Resend, or Sender directly from mutations. Write to the `notifications` queue table; a scheduled Convex Action handles delivery and retries.
+Never call Resend or Sender directly from mutations. Write to the `notifications` queue table; a scheduled Convex Action handles delivery and retries.
 
-Pro client appointment SMS was authorized on September 24, 2026. See
-[`docs/SMS_NOTIFICATIONS.md`](docs/SMS_NOTIFICATIONS.md) for setup and delivery
-boundaries. SMS requires configured Twilio and an enabled studio setting; verify
-the Pro plan before queueing and sending. SMS campaigns and WhatsApp remain deferred.
+SMS was removed at the user's request on October 24, 2026. Do not restore its
+settings, provider integration, booking hooks or marketing claims. Compatibility
+fields may remain for stored records, but legacy queued messages must never be
+sent. Email and personal push remain supported; WhatsApp remains deferred.
 
 ---
 

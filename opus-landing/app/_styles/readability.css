@@ -1,6 +1,6 @@
 /* Keep the airy visual system readable at every size. */
 .hero h1{letter-spacing:-2.7px}h2{letter-spacing:-1.8px}
-.section-heading p,.split-heading>p,.product-bottom p,.audience-copy>p,.step>p,.faq-intro>p,.final-cta p{font-size:16px;color:#6f7d89}
+.hero-copy>p,.section-heading p,.split-heading>p,.product-bottom p,.audience-copy>p,.step>p,.faq-intro>p,.final-cta p{font-size:16px;color:#6f7d89}
 .feature-card p,.ai-card p{font-size:14px;color:#71828f}
 .feature-booking p{color:#5c819d}.feature-clients p{color:#858095}.feature-reminders p{color:#738a77}
 .price-card>p,.plan-features li,.faq-list summary{font-size:14px}.faq-list details p{font-size:14px;color:#7b8b98}.price-card>p{min-height:47px}

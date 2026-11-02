@@ -388,22 +388,20 @@ describe("isolated App Review access", () => {
     expect(
       await t.query(api.publicSite.getBySlug, { slug: APP_REVIEW_SLUG }),
     ).toBeNull();
-    for (const channel of ["email", "sms", "whatsapp"] as const) {
-      const notificationId = await t.mutation(
-        internal.notifications.scheduleNotification,
-        {
-          orgId: binding.orgId,
-          channel,
-          type: "booking_confirmation",
-          recipientAddress: "recipient@example.com",
-          templateData: {},
-        },
-      );
-      expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
-        status: "cancelled",
-        failureReason: expect.stringContaining("App Review"),
-      });
-    }
+    const notificationId = await t.mutation(
+      internal.notifications.scheduleNotification,
+      {
+        orgId: binding.orgId,
+        channel: "email",
+        type: "booking_confirmation",
+        recipientAddress: "recipient@example.com",
+        templateData: {},
+      },
+    );
+    expect(await t.run((ctx) => ctx.db.get(notificationId))).toMatchObject({
+      status: "cancelled",
+      failureReason: expect.stringContaining("App Review"),
+    });
   });
 
   it("cannot receive or open another studio's push after an accidental extra membership", async () => {

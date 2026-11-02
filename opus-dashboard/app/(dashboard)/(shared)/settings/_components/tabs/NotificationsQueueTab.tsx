@@ -28,7 +28,6 @@ import {
   SettingsCard,
   SettingsToggleRow,
 } from "@/components/settings/SettingsCard";
-import { SmsNotificationsCard } from "./SmsNotificationsCard";
 import { ClientEmailReminders } from "./ClientEmailReminders";
 
 type EmailRecipient = {
@@ -42,10 +41,7 @@ type EmailRecipient = {
 interface NotificationsQueueTabProps {
   orgId: Id<"orgs">;
   isPaid: boolean;
-  smsAvailable: boolean;
   initialData: {
-    smsEnabled: boolean;
-    smsReminderHoursBefore: number[];
     emailEnabled: boolean;
     reminderHoursBefore: number[];
     staffNewBookingEmailEnabled: boolean;
@@ -62,7 +58,6 @@ interface NotificationsQueueTabProps {
 export function NotificationsQueueTab({
   orgId,
   isPaid,
-  smsAvailable,
   initialData,
 }: NotificationsQueueTabProps) {
   const { t } = useDashboardI18n();
@@ -102,13 +97,6 @@ export function NotificationsQueueTab({
           actionLabel={t("View Pro", "Погледни Pro", "Shiko Pro")}
         />
       )}
-      <SmsNotificationsCard
-        orgId={orgId}
-        isPaid={isPaid}
-        available={smsAvailable}
-        initialEnabled={initialData.smsEnabled}
-        initialReminderHours={initialData.smsReminderHoursBefore}
-      />
       <TeamEmailSettings orgId={orgId} initialData={initialData} />
       <DashboardAlertSettings orgId={orgId} initialData={initialData} />
     </TabsContent>

@@ -19,9 +19,17 @@ import {
   reminderHoursValidationError,
   resolveStaffEmailRecipients,
 } from "./lib/bookingEmailNotifications";
-import { smsProviderConfigured } from "./lib/sms";
 import { galleryPhotoLimit } from "./lib/mediaPlanLimits";
 import { automaticCompletionEnabled } from "./lib/bookingCompletion";
+
+// Stored SMS preferences are retained only for compatibility with existing rows.
+// They are never exposed to clients or consulted by delivery workers.
+function activeNotificationSettings(settings: Doc<"org_settings">) {
+  const { smsEnabled, smsReminderHoursBefore, ...activeSettings } = settings;
+  void smsEnabled;
+  void smsReminderHoursBefore;
+  return activeSettings;
+}
 
 function requireClientReminderAccess(
   org: Doc<"orgs">,
@@ -62,11 +70,10 @@ export const getOrgSettings = query({
 
     return {
       org: { ...org, plan: getSubscriptionAccess(org).effectivePlan },
-      settings,
+      settings: settings ? activeNotificationSettings(settings) : null,
       media: media.sort((a, b) => a.sortOrder - b.sortOrder),
       galleryPhotoLimit: galleryPhotoLimit(org),
       emailRecipients,
-      smsAvailable: smsProviderConfigured(),
     };
   },
 });
@@ -224,20 +231,12 @@ export const updateSurgePricingRules = mutation({
 export const updateNotificationSettings = mutation({
   args: {
     orgId: v.id("orgs"),
-    smsEnabled: v.boolean(),
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
     reminderHoursBefore: v.array(v.number()),
   },
   handler: async (ctx, args) => {
     const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
-    if (args.smsEnabled) {
-      requirePaidPlan(org, "SMS notifications");
-      if (!smsProviderConfigured())
-        throw new ConvexError(
-          "SMS delivery is not configured. Contact OPUS to activate it.",
-        );
-    }
     const error = reminderHoursValidationError(args.reminderHoursBefore);
     if (error) throw new ConvexError(error);
 
@@ -256,7 +255,6 @@ export const updateNotificationSettings = mutation({
     );
 
     const updates = {
-      smsEnabled: args.smsEnabled,
       emailEnabled: args.emailEnabled,
       whatsappEnabled: args.whatsappEnabled,
       reminderHoursBefore: normalizeReminderHours(args.reminderHoursBefore),
@@ -271,63 +269,9 @@ export const updateNotificationSettings = mutation({
       resourceType: "org_settings",
       resourceId: settings._id,
       before: {
-        smsEnabled: settings.smsEnabled,
         emailEnabled: settings.emailEnabled,
         whatsappEnabled: settings.whatsappEnabled,
         reminderHoursBefore: settings.reminderHoursBefore,
-      },
-      after: updates,
-      createdAt: updates.updatedAt,
-    });
-    await ctx.scheduler.runAfter(
-      0,
-      internal.notifications.reconcileBookingRemindersForOrg,
-      { orgId: org._id },
-    );
-    return true;
-  },
-});
-
-export const updateSmsNotificationSettings = mutation({
-  args: {
-    orgId: v.id("orgs"),
-    smsEnabled: v.boolean(),
-    smsReminderHoursBefore: v.array(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const { org, staffMember } = await requireRole(ctx, args.orgId, "owner");
-    if (args.smsEnabled) {
-      requirePaidPlan(org, "SMS notifications");
-      if (!smsProviderConfigured())
-        throw new ConvexError(
-          "SMS delivery is not configured. Contact OPUS to activate it.",
-        );
-    }
-    const error = reminderHoursValidationError(args.smsReminderHoursBefore);
-    if (error) throw new ConvexError(error);
-    const settings = await ctx.db
-      .query("org_settings")
-      .withIndex("by_org", (q) => q.eq("orgId", org._id))
-      .first();
-    if (!settings) throw new ConvexError("Settings not found.");
-    const updates = {
-      smsEnabled: args.smsEnabled,
-      smsReminderHoursBefore: normalizeReminderHours(
-        args.smsReminderHoursBefore,
-      ),
-      updatedAt: Date.now(),
-    };
-    await ctx.db.patch(settings._id, updates);
-    await ctx.db.insert("audit_log", {
-      orgId: org._id,
-      actorType: "staff",
-      actorId: staffMember._id,
-      action: "org_settings.sms_notifications_updated",
-      resourceType: "org_settings",
-      resourceId: settings._id,
-      before: {
-        smsEnabled: settings.smsEnabled,
-        smsReminderHoursBefore: settings.smsReminderHoursBefore,
       },
       after: updates,
       createdAt: updates.updatedAt,

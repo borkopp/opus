@@ -23,7 +23,7 @@ import {
   ANALYST_LIMITS,
   ANALYST_MODELS,
   analystConfigured,
-  analystPlanLimits,
+  analystOrgLimits,
   allowanceSpend,
   modelCost,
   usageMonth,
@@ -41,7 +41,7 @@ export const getAccess = query({
   handler: async (ctx) => {
     const { orgId, org, staffMember } = await requireAuth(ctx);
     const month = usageMonth(Date.now());
-    const limits = analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org);
+    const { limits } = await analystOrgLimits(ctx, org);
     const allowed =
       isActiveIndustry(org.industry) && staffMember.role !== "staff";
     const usage = allowed
@@ -180,7 +180,7 @@ export const send = mutation({
   handler: async (ctx, args) => {
     const { orgId, org, user, staffMember } = await requireAnalyst(ctx);
     requireBookingSubscription(org);
-    const limits = analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org);
+    const { limits } = await analystOrgLimits(ctx, org);
     const question = args.question.trim();
     if (
       !question ||

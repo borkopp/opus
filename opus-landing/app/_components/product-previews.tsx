@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n/context";
 
 export function BookingPreview() {
   const { t, locale } = useI18n();
-  const tab = t.productTour.tabs.website;
+  const feature = t.productTour.features.website;
 
   return (
     <div
@@ -34,8 +34,8 @@ export function BookingPreview() {
       <div className="product-mini-body">
         <div className="product-mini-service">
           <div>
-            <b>{tab.serviceName}</b>
-            <span>{tab.serviceDetail}</span>
+            <b>{feature.serviceName}</b>
+            <span>{feature.serviceDetail}</span>
           </div>
           <Check aria-hidden="true" />
         </div>
@@ -51,7 +51,7 @@ export function BookingPreview() {
 
 export function CalendarPreview() {
   const { t, locale } = useI18n();
-  const tab = t.productTour.tabs.calendar;
+  const feature = t.productTour.features.calendar;
 
   return (
     <div
@@ -62,12 +62,12 @@ export function CalendarPreview() {
           ? "Пример за заеднички календар со двајца членови на тимот и закажани термини"
           : locale === "sq"
             ? "Shembull i kalendarit të përbashkët me dy anëtarë ekipi dhe termine të rezervuara"
-            : "Sample shared calendar showing two staff members and three scheduled appointments"
+            : "Sample shared calendar showing two team members and three scheduled appointments"
       }
     >
       <div className="product-mini-heading">
-        <b>{tab.todayHeading}</b>
-        <span>{tab.todayDay}</span>
+        <b>{feature.todayHeading}</b>
+        <span>{feature.todayDay}</span>
       </div>
       <div className="product-mini-calendar-grid">
         <div className="product-mini-hours">
@@ -77,20 +77,20 @@ export function CalendarPreview() {
           <span>11:00</span>
         </div>
         <div className="product-mini-day">
-          <b>{tab.staffAna}</b>
+          <b>{feature.staffAna}</b>
           <div className="product-mini-appointment">
-            <strong>{tab.apt1}</strong>
+            <strong>{feature.apt1}</strong>
             <span>09:00 — 10:00</span>
           </div>
           <div className="product-mini-appointment is-later">
-            <strong>{tab.apt2}</strong>
+            <strong>{feature.apt2}</strong>
             <span>11:00 — 12:00</span>
           </div>
         </div>
         <div className="product-mini-day">
-          <b>{tab.staffMarija}</b>
+          <b>{feature.staffMarija}</b>
           <div className="product-mini-appointment is-offset">
-            <strong>{tab.apt3}</strong>
+            <strong>{feature.apt3}</strong>
             <span>10:00 — 11:00</span>
           </div>
         </div>
@@ -101,7 +101,7 @@ export function CalendarPreview() {
 
 export function ClientPreview() {
   const { t, locale } = useI18n();
-  const tab = t.productTour.tabs.clients;
+  const feature = t.productTour.features.clients;
 
   return (
     <div
@@ -118,33 +118,33 @@ export function ClientPreview() {
       <div className="product-mini-profile">
         <span className="product-mini-avatar">ЕП</span>
         <div>
-          <b>{tab.clientName}</b>
-          <span>{tab.clientRemembered}</span>
+          <b>{feature.clientName}</b>
+          <span>{feature.clientRemembered}</span>
         </div>
         <Heart aria-hidden="true" />
       </div>
       <div className="product-mini-history">
         <span className="product-mini-history-label">
-          <Clock3 aria-hidden="true" /> {tab.recentVisits}
+          <Clock3 aria-hidden="true" /> {feature.recentVisits}
         </span>
         <div>
           <span>
-            <b>{tab.visit1}</b>
-            <small>{tab.date1}</small>
+            <b>{feature.visit1}</b>
+            <small>{feature.date1}</small>
           </span>
           <Check aria-hidden="true" />
         </div>
         <div>
           <span>
-            <b>{tab.visit2}</b>
-            <small>{tab.date2}</small>
+            <b>{feature.visit2}</b>
+            <small>{feature.date2}</small>
           </span>
           <Check aria-hidden="true" />
         </div>
         <div>
           <span>
-            <b>{tab.visit3}</b>
-            <small>{tab.date3}</small>
+            <b>{feature.visit3}</b>
+            <small>{feature.date3}</small>
           </span>
           <Check aria-hidden="true" />
         </div>

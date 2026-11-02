@@ -4,21 +4,17 @@
 import { LocalizedLink as Link } from "@/components/landing/localized-link";
 import {
   ArrowUpRight,
-  Check,
   ChevronLeft,
   ChevronRight,
   Infinity,
   MonitorSmartphone,
   Plus,
-  Sparkle,
 } from "lucide-react";
 import { PricingCards } from "@/components/pricing/pricing-cards";
-import { HeroShowcase } from "./hero-showcase";
-import { DashboardPreview } from "./dashboard-preview";
+import { HeroSection } from "./hero-section";
 import { PromotionSection } from "./promotion-section";
 import { ProductTour } from "./product-tour";
-import { IntelligenceRotation } from "./intelligence-rotation";
-import { CloudShader } from "@/components/landing/cloud-shader";
+import { IntelligenceFeatures } from "./intelligence-features";
 import { LandingInteractions } from "@/components/landing/landing-interactions";
 import { useI18n } from "@/lib/i18n/context";
 import { useBillingCurrency } from "@/components/pricing/billing-currency-provider";
@@ -97,54 +93,7 @@ export function HomeContent() {
   return (
     <>
       <main id="main">
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-background" aria-hidden="true">
-            <CloudShader />
-          </div>
-          <div className="hero-copy">
-            <h1 id="hero-title">{t.hero.title}</h1>
-            <p>{t.hero.description}</p>
-            <div className="hero-actions">
-              <a className="button button-dark" href={trialSignupUrl(currency)}>
-                {t.hero.createWebsite}{" "}
-                <span>
-                  <ArrowUpRight aria-hidden="true" />
-                </span>
-              </a>
-              <a className="button button-light" href="#product">
-                {t.hero.learnMore}
-              </a>
-            </div>
-            <div className="microcopy">
-              <span>
-                <Check aria-hidden="true" /> {t.hero.badgeFree}
-              </span>
-              <span>
-                <Check aria-hidden="true" /> {t.hero.badgeNoCard}
-              </span>
-              <span>
-                <Check aria-hidden="true" /> {t.hero.badgeForStudio}
-              </span>
-            </div>
-          </div>
-          <HeroShowcase />
-          <div className="audience-strip">
-            <div>
-              {t.hero.audiences.map((audience, i) => (
-                <span key={audience} style={{ display: "contents" }}>
-                  {i > 0 && (
-                    <i>
-                      <Sparkle aria-hidden="true" />
-                    </i>
-                  )}
-                  <span>{audience}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <DashboardPreview />
+        <HeroSection />
 
         <section className="section product-section" id="product">
           <div className="section-heading centered reveal">
@@ -255,7 +204,7 @@ export function HomeContent() {
               </div>
             </article>
           </div>
-          <div className="feature-summary">
+          <div className="feature-summary reveal">
             <span>
               <Infinity aria-hidden="true" /> {t.featuresBento.summaryUnlimited}
             </span>
@@ -276,8 +225,7 @@ export function HomeContent() {
             <h2>{t.intelligence.heading}</h2>
             <p>{t.intelligence.subheading}</p>
           </div>
-          <IntelligenceRotation />
-          <p className="ai-usage-note">{t.intelligence.usageNote}</p>
+          <IntelligenceFeatures />
         </section>
 
         <section className="section studio-carousel-section" id="your-studio">
@@ -436,9 +384,9 @@ export function HomeContent() {
             <h2>{t.faq.heading}</h2>
             <p>{t.faq.subheading}</p>
           </div>
-          <div className="faq-list reveal">
+          <div className="faq-list">
             {t.faq.items.map((item, index) => (
-              <details key={index} open={index === 0}>
+              <details className="reveal" key={index} open={index === 0}>
                 <summary>
                   {item.question}
                   <span>

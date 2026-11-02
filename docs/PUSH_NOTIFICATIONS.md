@@ -18,7 +18,7 @@ were verified against the local backend on October 6, 2026, as recorded below.
   never prompts for permission. Existing permitted registrations refresh on app
   foreground/browser focus and native token changes.
 - Preferences belong to the signed-in person **in this studio**. They sync across
-  mobile and web without changing teammates' settings or client email/SMS choices.
+  mobile and web without changing teammates' settings or client email choices.
 - Switch mobile/browser push independently; choose new appointments,
   rescheduling, cancellations, reminders and no-shows. Eligible Pro members can
   also choose AI Receptionist handoffs. Appointment scope can be your assignments
@@ -216,7 +216,7 @@ sign-in and connecting the phone; an indexed, studio-scoped backend read confirm
 the active Expo device registration and enabled preferences. A generic queue test
 alert required one send attempt, received an Expo ticket and an APNs handoff
 receipt (`provider_accepted`), and was visibly received according to the operator.
-No appointment was created and no email/SMS was sent for this test. Expo's
+No appointment was created and no client message was sent for this test. Expo's
 account-wide enhanced-security setting was not changed, and no access token was
 created. The test used only the explicitly enabled local loopback option above.
 The 60 targeted push/auth tests, dashboard TypeScript/targeted lint and native

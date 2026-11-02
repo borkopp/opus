@@ -223,7 +223,7 @@ payment method, invoices, and cancellation through Polar's customer portal.
 Verified provider state controls purchased access; the server also grants time-limited trial access as described below.
 Activation requires configured credentials, a recurring product, and signed
 webhook delivery; local implementation is not a claim of live billing.
-AI/SMS credit top-ups, yearly plans, and collecting appointment payments for
+AI credit top-ups, yearly plans, and collecting appointment payments for
 studios are not included. See [POLAR_BILLING.md](POLAR_BILLING.md).
 
 MKD and EUR subscription pricing was authorized on October 11, 2026. The marketing
@@ -243,11 +243,13 @@ newly created studios a no-card trial for two calendar months from creation.
 The UTC end date clamps to the target month's last day where necessary. Trial
 metadata is written only on creation and cannot be reset through onboarding or
 billing. Trials grant the existing Pro capabilities for up to 12 active team
-members, subject to existing AI allowances and provider configuration.
+members, subject to provider configuration. The AI Assistant trial allowance is
+400 monthly answers including up to 40 Detailed, independent of team capacity.
 
 Existing studios without trial metadata retain their previous Free or paid
 access. Do not migrate them into trials, show them an expiry notice, or promise
-lifetime Free access. Their existing Free limits and entitlements remain intact.
+lifetime Free access. Their existing Free limits and entitlements remain intact,
+except for the explicitly increased AI Assistant allowance below.
 
 The stored plan records paid/admin state; a trial must never be presented as a
 confirmed payment. At expiry, unpaid new studios cannot create appointments
@@ -261,17 +263,16 @@ to an unexpired original trial, legacy Free, or expired access as appropriate.
 This is a branch implementation until the compatible backend, verified provider
 catalogue and both web apps are released together. It is not proof of live pricing.
 
-### Authorized Pro appointment SMS
+### Notification channels
 
-Client appointment SMS was explicitly authorized on September 24, 2026 for
-the Pro plan. Pro beauty studios can enable confirmations, reschedules,
-cancellations, and configurable reminders under Settings → Notifications.
-SMS requires a configured Twilio provider and explicit studio activation.
-Free studios cannot enable or send SMS, including after a plan downgrade.
-Email reminders remain independently configurable on Pro. This authorization does
-not enable SMS campaigns, recovery offers, WhatsApp, or SMS verification.
-
-See [SMS_NOTIFICATIONS.md](SMS_NOTIFICATIONS.md) for setup and validation.
+The October 24, 2026 removal supersedes the earlier SMS authorization. SMS is
+not an available feature: its settings, booking hooks, provider and webhook,
+configuration instructions and marketing claims are removed. Existing records
+remain compatible with the schema, but unsupported queued messages are cancelled
+without provider calls, including when old studio settings enabled delivery.
+New notifications may use supported email and personal push paths only.
+Pro client email reminders remain independently configurable. WhatsApp remains
+deferred. This branch change must be deployed before it affects live delivery.
 
 ### Free studio promotion tools
 
@@ -326,7 +327,9 @@ packages are up to 1 active team member for 790 MKD (EUR 12.90), 3 for 1,190 MKD
 (EUR 19.90), 4 for 1,490 MKD (EUR 24.90), 6 for 2,090 MKD (EUR 34.90), 8 for
 2,490 MKD (EUR 39.90), and 12 for 3,290 MKD (EUR 54.90). The previous 5-person
 package remains supported for existing provider subscriptions, but is not
-selectable for new checkout. Teams above 12 contact OPUS. Every package includes the same Pro features. Owners and managers
+selectable for new checkout. Teams above 12 contact OPUS. Every package includes
+the same Pro features, with an AI Assistant allowance that scales by package.
+Owners and managers
 count toward the chosen package; inactive and soft-deleted members do not.
 
 Only a verified Polar subscription determines a purchased package's capacity.
@@ -383,10 +386,16 @@ appointment confirmations and changes, and team emails remain available on Free.
 
 The read-only business analyst was explicitly authorized on September 16, 2026.
 It lives in the beauty dashboard at `/beauty/assistant` and is restricted to
-studio owners and managers. The October 21, 2026 authorization gives Free studios
-3 Fast prompts per UTC calendar month, shared across their owners and managers.
-Detailed mode remains Pro-only; Pro retains 200 answers including up to 20 Detailed
-answers per month. The server reserves usage atomically, rejects excess requests
+studio owners and managers. The October 24, 2026 increase gives existing Free
+studios 10 Fast prompts per UTC calendar month. Paid packages include 400/40,
+600/60, 800/80, 1,000/100, 1,200/120 and 1,600/160 total/Detailed answers for
+1, 3, 4, 6, 8 and 12 team members respectively. Detailed answers count toward
+the total; the allowance is shared across the studio's owners and managers.
+Trials receive 400/40, existing 5-person subscriptions receive 900/90, and
+manually granted Pro without a verified package uses the 12-person allowance.
+Detailed mode remains unavailable on legacy Free. The verified subscription
+determines the paid allowance, not the actual staff count or a selected package.
+The server reserves usage atomically, rejects excess requests
 and refunds failed answers. Saved conversations and their reports stay readable
 after the allowance is used. Plan changes retain the month's existing usage.
 It answers questions using tenant-scoped booking
@@ -430,7 +439,7 @@ Published legacy hospitality records must still be excluded at the server-side p
 
 ## Truthful product claims
 
-- Do not imply that SMS, WhatsApp, email, AI actions, or reminders completed unless the required provider is configured and the behavior has been verified.
+- Do not imply that email, push, AI actions, or reminders completed unless the required provider is configured and the behavior has been verified.
 - Do not publish pricing, trial periods, business metrics, testimonials, or availability claims that are not backed by the live product.
 - Do not introduce unrelated product ideas during stabilization work.
 

@@ -1,6 +1,6 @@
 # AI Assistant
 
-Authorized on 16 September 2026 as a read-only feature for beauty studio owners and managers. The 21 October 2026 authorization adds 3 Fast prompts per month for Free studios; Detailed mode remains Pro-only. The dashboard entry is `/beauty/assistant`. This is separate from the customer-facing Instagram AI Receptionist.
+Authorized on 16 September 2026 as a read-only feature for beauty studio owners and managers. The 24 October 2026 allowance increase adds package-specific monthly limits and raises existing Free studios to 10 Fast prompts; Detailed mode requires paid or active trial access. The dashboard entry is `/beauty/assistant`. This is separate from the customer-facing Instagram AI Receptionist.
 
 ## Runtime
 
@@ -37,7 +37,9 @@ Local implementation and mocked-provider checks are not evidence that a producti
 
 ## Models and cost controls
 
-`convex/analyst/limits.ts` is the single cost-policy definition:
+`shared/assistant-allowances.ts` defines the package allowances used by the
+backend and landing page. `convex/analyst/limits.ts` defines request bounds,
+provider cost accounting and server-side allowance resolution:
 
 | Mode | Model | Input / output per million tokens | Reservation per answer |
 | --- | --- | --- | --- |
@@ -46,9 +48,62 @@ Local implementation and mocked-provider checks are not evidence that a producti
 
 Prices are the implementation's accounting assumptions and must be rechecked before changing models or rates. Cached-input discounts are conservatively ignored. Output usage includes reasoning tokens. There are at most three provider calls, three analytics tool calls, 1,500 output tokens per call, and 60 KB cumulative serialized provider input per turn. Automatic SDK retries are disabled. A provider request times out after 45 seconds; a five-minute lease releases stranded reservations.
 
-Each Free studio has 3 Fast answers per UTC calendar month and cannot submit Detailed requests. Pro retains 200 answers, including at most 20 Detailed answers. Owners and managers share their studio's allowance; their conversations remain private. Starting a new chat or changing plans does not reset usage. Upgrading applies the Pro limit to existing monthly usage; downgrading applies the Free limit. Workers also recheck the plan before analysis and publication, so a pending Detailed request or a request beyond the Free limit cannot finish after a downgrade. Saved conversations and reports remain readable after reaching the allowance or downgrading.
+### Monthly allowances — 24 October 2026
 
-The existing monthly USD 3 internal spend ceiling applies to both plans and can stop usage before the answer count is reached. It covers assistant model calls only. Database, hosting, payment fees, tax, messaging and support are separate costs.
+| Package | Total answers | Detailed included | Internal spend ceiling (USD) |
+| --- | --- | --- | --- |
+| Existing Free | 10 Fast | 0 | 3 |
+| Two-month trial | 400 | 40 | 6 |
+| 1 team member | 400 | 40 | 6 |
+| Up to 3 | 600 | 60 | 8 |
+| Up to 4 | 800 | 80 | 11 |
+| Legacy up to 5 | 900 | 90 | 12 |
+| Up to 6 | 1,000 | 100 | 13 |
+| Up to 8 | 1,200 | 120 | 16 |
+| Up to 12 / manually granted Pro without a verified package | 1,600 | 160 | 21 |
+
+Detailed answers count toward the total, rather than being an additional balance.
+Owners and managers share their studio's allowance; their conversations remain
+private. The verified subscription selects the paid package. Staff counts,
+onboarding selections and checkout returns cannot increase it. Trials use the
+entry-package AI allowance even though they support up to 12 team members.
+Expired trials cannot submit new requests.
+
+Allowances reset each UTC calendar month, not on subscription anniversary.
+There is no rollover or prorating. A two-calendar-month trial may span three UTC
+usage months. Starting a chat, upgrading, downgrading or paying during trial does
+not reset usage. Workers recheck current total and Detailed limits before
+analysis and publication, including changes between paid packages. Saved
+conversations and reports remain readable after reaching the allowance.
+Explicit owner overrides remain in place; custom counts do not raise the
+selected package's spend ceiling. Restoring defaults uses the current package.
+
+The internal spend ceiling can stop unusually costly usage before the answer
+count is reached. It covers assistant model calls only. Database, hosting,
+payment fees, tax, messaging and support are separate costs. Existing atomic
+reservations, per-request limits and failed-answer accounting remain in force.
+
+### Cost assumptions for this increase
+
+The user's supplied estimates are USD 0.68 for 200 Fast answers and USD 1.29
+for 180 Fast plus 20 Detailed. Linear extrapolation implies USD 0.0034 per Fast
+answer and USD 0.0339 per Detailed answer. These are planning inputs, not a new
+measurement of production usage or a provider price guarantee.
+
+| Paid team limit | All answers Fast (USD) | Full use including all Detailed (USD) |
+| --- | --- | --- |
+| 1 | 1.36 | 2.58 |
+| 3 | 2.04 | 3.87 |
+| 4 | 2.72 | 5.16 |
+| 6 | 3.40 | 6.45 |
+| 8 | 4.08 | 7.74 |
+| 12 | 5.44 | 10.32 |
+
+The paid spend ceilings leave roughly twice the modeled full-use cost plus
+reservation headroom. They are safeguards, not expected costs or margin
+estimates. No subscription price or Polar product changes are required for this
+increase. Before another increase, compare completed `analyst_turns` cost and
+failure rates with the studio's purchased package and actual monthly usage.
 
 Requests reserve funds and answer counts atomically before scheduling. Only one analysis per studio runs at a time, including across month rollover. Replaying a request ID is idempotent. Five submissions per minute, a 2,000-character question limit and 60 turns per conversation bound abuse. Provider failure restores the user's answer allowance but retains billable usage. If a provider call's cost is unknown, the whole reservation is counted conservatively. Finalization is idempotent, and audited submission/completion records permit reconciliation.
 

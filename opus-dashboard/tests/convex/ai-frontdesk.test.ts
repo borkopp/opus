@@ -595,23 +595,19 @@ describe("Instagram receptionist", () => {
   });
 
   test.each([false, true])(
-    "confirms a quoted slot atomically once, with SMS enabled: %s",
+    "confirms a quoted slot once without SMS when legacy SMS was enabled: %s",
     async (smsEnabled) => {
       const t = createBackend(),
         a = await studio(t);
-      for (const [key, value] of Object.entries({
-        SMS_ENABLED: "true",
-        TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
-        TWILIO_AUTH_TOKEN: "test-token",
-        TWILIO_FROM_NUMBER: "+15005550006",
-        TWILIO_MESSAGING_SERVICE_SID: "",
-        TWILIO_STATUS_CALLBACK_URL: "https://test.convex.site/webhooks/twilio",
-      }))
-        vi.stubEnv(key, value);
-      await a.owner.mutation(api.orgSettings.updateSmsNotificationSettings, {
-        orgId: a.orgId,
-        smsEnabled,
-        smsReminderHoursBefore: [2],
+      await t.run(async (ctx) => {
+        const settings = await ctx.db
+          .query("org_settings")
+          .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
+          .unique();
+        await ctx.db.patch(settings!._id, {
+          smsEnabled,
+          smsReminderHoursBefore: [2],
+        });
       });
       const conv = await a.ingest(
         "mid-1",
@@ -712,12 +708,7 @@ describe("Instagram receptionist", () => {
           .withIndex("by_org", (q) => q.eq("orgId", a.orgId))
           .collect(),
       );
-      expect(notifications).toHaveLength(smsEnabled ? 2 : 0);
-      if (smsEnabled)
-        expect(notifications.map((n) => n.type).sort()).toEqual([
-          "booking_confirmation",
-          "booking_reminder",
-        ]);
+      expect(notifications).toHaveLength(0);
     },
   );
 

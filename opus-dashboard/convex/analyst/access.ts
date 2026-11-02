@@ -7,7 +7,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { requireRole } from "../lib/auth";
 import { isActiveIndustry } from "../lib/productScope";
-import { analystPlanLimits } from "./limits";
+import { allowanceSpend, analystOrgLimits } from "./limits";
 
 export async function requireAnalyst(ctx: QueryCtx) {
   const auth = await requireRole(ctx, undefined, "manager");
@@ -66,21 +66,23 @@ export async function authorAccess(ctx: QueryCtx, turn: Doc<"analyst_turns">) {
   ) {
     throw new ConvexError("ANALYST_ACCESS_CHANGED");
   }
-  if (!hasPaidAccess(org)) {
-    const usage = await ctx.db
+  const [{ limits }, usage] = await Promise.all([
+    analystOrgLimits(ctx, org),
+    ctx.db
       .query("analyst_usage")
       .withIndex("by_org_month", (q) =>
         q.eq("orgId", turn.orgId).eq("monthStartMs", turn.usageMonthMs),
       )
-      .unique();
-    // The pending answer is already reserved. A downgrade must not let a
-    // previously accepted Pro request exceed the Free allowance.
-    if (
-      !usage ||
-      usage.answers >
-        analystPlanLimits(hasPaidAccess(org) ? "paid" : "free", org).answers
-    )
-      throw new ConvexError("ANALYST_ACCESS_CHANGED");
-  }
+      .unique(),
+  ]);
+  // The pending answer is already included. Recheck paid package downgrades,
+  // trial conversion and owner overrides before every read and publication.
+  if (
+    !usage ||
+    usage.answers > limits.answers ||
+    (turn.depth === "deep" && usage.deepAnswers > limits.deepAnswers) ||
+    allowanceSpend(usage) + usage.reservedMicroUsd > limits.monthlyMicroUsd
+  )
+    throw new ConvexError("ANALYST_ACCESS_CHANGED");
   return { org, user, member };
 }

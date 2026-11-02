@@ -3,7 +3,6 @@ import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { scheduleRecoveryRefresh } from "./gapRecovery";
-import { queueBookingSms } from "./bookingNotifications";
 import { formatBookingNotificationDateTime } from "./bookingTime";
 import { cancelBookingCompletion } from "./bookingCompletion";
 
@@ -37,7 +36,7 @@ export async function cancelBookingRecord(
     after: { status: "cancelled", reason },
     createdAt: Date.now(),
   });
-  const [customer, service, staff, settings, org] = await Promise.all([
+  const [customer, service, staff, settings] = await Promise.all([
     ctx.db.get(booking.customerId),
     ctx.db.get(booking.serviceId),
     ctx.db.get(booking.staffId),
@@ -45,7 +44,6 @@ export async function cancelBookingRecord(
       .query("org_settings")
       .withIndex("by_org", (q) => q.eq("orgId", booking.orgId))
       .first(),
-    ctx.db.get(booking.orgId),
   ]);
   if (
     customer?.orgId === booking.orgId &&
@@ -68,12 +66,6 @@ export async function cancelBookingRecord(
           cancellationPolicy: `${settings?.cancellationWindowHours ?? 24} hours`,
         },
       });
-    if (org && settings)
-      await queueBookingSms(
-        ctx,
-        { org, settings, booking, customer, service, staff },
-        "booking_cancelled",
-      );
     await ctx.runMutation(internal.dashboardNotifications.create, {
       orgId: booking.orgId,
       type: "booking_cancelled",

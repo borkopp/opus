@@ -460,7 +460,8 @@ export default defineSchema({
 
     // Notifications
     reminderHoursBefore: v.array(v.number()), // e.g. [24, 2]
-    smsEnabled: v.boolean(),
+    // Retired SMS preferences: readable for stored-row compatibility only.
+    smsEnabled: v.optional(v.boolean()),
     smsReminderHoursBefore: v.optional(v.array(v.number())),
     emailEnabled: v.boolean(),
     whatsappEnabled: v.boolean(),
@@ -593,7 +594,7 @@ export default defineSchema({
     opusPoints: v.number(), // default 0
     tier: v.union(v.literal("bronze"), v.literal("silver"), v.literal("gold")),
 
-    // Preferences
+    // Preferences; retired SMS values remain valid for stored rows.
     preferredChannel: v.optional(
       v.union(v.literal("whatsapp"), v.literal("sms"), v.literal("email")),
     ),
@@ -940,7 +941,7 @@ export default defineSchema({
     noShowCount: v.number(),
     noShowRiskScore: v.number(), // 0–1
     requiresFullDeposit: v.optional(v.boolean()),
-    // Channel preferences
+    // Channel preferences; retired SMS values remain valid for stored rows.
     preferredChannel: v.optional(
       v.union(v.literal("whatsapp"), v.literal("sms"), v.literal("email")),
     ),
@@ -1210,6 +1211,7 @@ export default defineSchema({
     bookingEmailVerificationId: v.optional(v.id("booking_email_verifications")),
     gapRecoveryCandidateId: v.optional(v.id("gap_outreach_candidates")),
 
+    // Retired channels remain valid for historical notification records.
     channel: v.union(
       v.literal("sms"),
       v.literal("email"),
@@ -1248,7 +1250,7 @@ export default defineSchema({
     deliveryProvider: v.optional(
       v.union(
         emailProviderValidator,
-        v.literal("twilio"),
+        v.literal("twilio"), // Historical delivery records only.
         v.literal("expo"),
         v.literal("web_push"),
       ),
@@ -1259,7 +1261,7 @@ export default defineSchema({
     attemptCount: v.optional(v.number()),
     lastAttemptAt: v.optional(v.number()),
     processingStartedAt: v.optional(v.number()),
-    smsDispatchStartedAt: v.optional(v.number()),
+    smsDispatchStartedAt: v.optional(v.number()), // Historical dispatch records only.
     dedupeKey: v.optional(v.string()),
 
     createdAt: v.number(),
@@ -1333,7 +1335,7 @@ export default defineSchema({
   // ─────────────────────────────────────────────────────
   // DASHBOARD NOTIFICATIONS
   // In-app notifications shown in the navbar bell.
-  // Separate from the `notifications` table (external SMS/Email delivery queue).
+  // Separate from the `notifications` table (external email delivery queue).
   // ─────────────────────────────────────────────────────
   dashboard_notifications: defineTable({
     orgId: v.id("orgs"),
@@ -1469,6 +1471,7 @@ export default defineSchema({
     scoreRationale: v.string(),
     draftedMessage: v.string(),
     confidenceScore: v.number(), // 0–1
+    // Historical channels only; current outreach uses email.
     channel: v.union(
       v.literal("sms"),
       v.literal("email"),

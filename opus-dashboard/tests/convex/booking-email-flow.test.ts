@@ -142,7 +142,6 @@ describe("public booking email flow", () => {
     };
     const legacySettings = {
       orgId: fixture.orgId,
-      smsEnabled: false,
       emailEnabled: false,
       whatsappEnabled: false,
       reminderHoursBefore: [24, 2],
@@ -1022,22 +1021,19 @@ describe("public booking email flow", () => {
     expect(rescheduleBody?.html).toContain("opus-email-logo-blue.png");
   });
 
-  test("adds Pro SMS to a verified public booking while preserving email", async () => {
+  test("keeps verified public booking email without SMS from legacy enabled settings", async () => {
     const fixture = await setupPublishedStudio(t);
-    for (const [key, value] of Object.entries({
-      SMS_ENABLED: "true",
-      TWILIO_ACCOUNT_SID: `AC${"a".repeat(32)}`,
-      TWILIO_AUTH_TOKEN: "test-token",
-      TWILIO_FROM_NUMBER: "+15005550006",
-      TWILIO_MESSAGING_SERVICE_SID: "",
-      TWILIO_STATUS_CALLBACK_URL: "https://test.convex.site/webhooks/twilio",
-    }))
-      vi.stubEnv(key, value);
-    await t.run((ctx) => ctx.db.patch(fixture.orgId, { plan: "paid" }));
-    await fixture.owner.mutation(
-      api.orgSettings.updateSmsNotificationSettings,
-      { orgId: fixture.orgId, smsEnabled: true, smsReminderHoursBefore: [2] },
-    );
+    await t.run(async (ctx) => {
+      await ctx.db.patch(fixture.orgId, { plan: "paid" });
+      const settings = await ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", fixture.orgId))
+        .unique();
+      await ctx.db.patch(settings!._id, {
+        smsEnabled: true,
+        smsReminderHoursBefore: [2],
+      });
+    });
     const args = {
       ...bookingArgs(fixture),
       customerEmail: "sms-public@example.com",
@@ -1065,7 +1061,7 @@ describe("public booking email flow", () => {
         .filter((n) => n.channel === "sms")
         .map((n) => n.type)
         .sort(),
-    ).toEqual(["booking_confirmation", "booking_reminder"]);
+    ).toEqual([]);
     expect(
       bookingNotifications.some(
         (n) => n.channel === "email" && n.type === "booking_confirmation",

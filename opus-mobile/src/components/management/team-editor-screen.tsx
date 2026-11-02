@@ -16,6 +16,7 @@ import { ToggleRow } from "@/components/ui/toggle-row";
 import { Loading } from "@/components/ui/loading";
 import { backend, errorMessage } from "@/lib/backend";
 import { roleLabel } from "@/lib/management";
+import { teamCapacityMessage } from "@/lib/subscription";
 import { useStudio } from "@/providers/studio-provider";
 import { useStudioData } from "@/providers/session-provider";
 import { WeeklyHoursEditor } from "./weekly-hours-editor";
@@ -110,15 +111,7 @@ function TeamEditor({
     isActive &&
     !(role === "owner" ? capacity.canUseOwnerRole : capacity.canUseStaffRole);
   const locked = busy || confirm;
-  const limitMessage = capacity.isFree
-    ? t(
-        "Free includes 1 owner and 3 staff. Managers use a staff place.",
-        "Бесплатниот план вклучува 1 сопственик и 3 вработени. Менаџерите зафаќаат место за вработен.",
-      )
-    : t(
-        "Pro includes up to 12 active team members.",
-        "Pro вклучува до 12 активни членови на тимот.",
-      );
+  const limitMessage = teamCapacityMessage(capacity, language);
   async function submit(removing = false) {
     if (busy || !isWebSocketConnected) return;
     setBusy(true);
@@ -287,7 +280,7 @@ function TeamEditor({
                   )
                 : limitMessage}
             </Text>
-            {!staffId && !capacity.isFree && <>
+            {!staffId && studio.plan === "paid" && <>
               <Input
                 label={t("Sign-in email (optional)", "Е-пошта за најава (незадолжително)")}
                 value={inviteEmail}

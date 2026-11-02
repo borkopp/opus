@@ -9,6 +9,7 @@ import {
   usageMonth,
 } from "../../convex/analyst/limits";
 import type { AnalysisRequest } from "../../convex/analyst/contracts";
+import type { StoredProTeamLimit } from "../../../shared/pro-pricing";
 
 const provider = vi.hoisted(() => ({
   create: vi.fn(),
@@ -200,6 +201,58 @@ async function usage(
   );
 }
 
+async function setTeamLimit(
+  t: Backend,
+  orgId: Awaited<ReturnType<typeof studio>>["orgId"],
+  teamLimit: StoredProTeamLimit,
+) {
+  return t.run(async (ctx) => {
+    const account = await ctx.db
+      .query("billing_accounts")
+      .withIndex("by_org", (q) => q.eq("orgId", orgId))
+      .unique();
+    const subscription = {
+      id: `subscription-${orgId}`,
+      status: "active",
+      amount: 79000,
+      currency: "mkd",
+      interval: "month",
+      intervalCount: 1,
+      currentPeriodEnd: Date.now() + 30 * 86_400_000,
+      cancelAtPeriodEnd: false,
+      teamLimit,
+    };
+    if (account) {
+      await ctx.db.patch(account._id, { subscription });
+      return account._id;
+    }
+    return ctx.db.insert("billing_accounts", {
+      orgId,
+      externalCustomerId: `opus:${orgId}`,
+      environment: "sandbox",
+      productId: `product-${teamLimit}`,
+      managed: true,
+      subscription,
+      hasOpenSubscription: true,
+      syncVersion: 1,
+      syncedVersion: 1,
+      isDeleted: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  });
+}
+
+const packageAllowances = [
+  [1, 400, 40, 6_000_000],
+  [3, 600, 60, 8_000_000],
+  [4, 800, 80, 11_000_000],
+  [5, 900, 90, 12_000_000],
+  [6, 1000, 100, 13_000_000],
+  [8, 1200, 120, 16_000_000],
+  [12, 1600, 160, 21_000_000],
+] as const;
+
 describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
   let t: Backend;
   beforeEach(() => {
@@ -217,6 +270,302 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     await t.finishAllScheduledFunctions(vi.runAllTimers);
     vi.useRealTimers();
     vi.unstubAllEnvs();
+  });
+  test.each(packageAllowances)(
+    "%i-person purchased package enforces %i total, %i Detailed and its cost budget",
+    async (teamLimit, total, detailed, budget) => {
+      const s = await studio(t);
+      await setTeamLimit(t, s.orgId, teamLimit);
+      // Each fixture has one member; purchased capacity selects the allowance.
+      expect(
+        await s.owner.query(api.analyst.conversations.getAccess),
+      ).toMatchObject({
+        limit: total,
+        remaining: total,
+        deepLimit: detailed,
+        deepRemaining: detailed,
+      });
+      const usageId = await t.run((ctx) =>
+        ctx.db.insert("analyst_usage", {
+          orgId: s.orgId,
+          monthStartMs: usageMonth(Date.now()).startMs,
+          answers: total,
+          deepAnswers: 0,
+          spentMicroUsd: 0,
+          reservedMicroUsd: 0,
+          updatedAt: Date.now(),
+        }),
+      );
+      await expect(
+        s.owner.mutation(api.analyst.conversations.send, question),
+      ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
+      await t.run((ctx) =>
+        ctx.db.patch(usageId, {
+          answers: detailed,
+          deepAnswers: detailed,
+        }),
+      );
+      await expect(
+        s.owner.mutation(api.analyst.conversations.send, {
+          ...question,
+          depth: "deep",
+        }),
+      ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
+      expect(
+        await s.owner.query(api.analyst.conversations.getAccess),
+      ).toMatchObject({
+        remaining: total - detailed,
+        deepRemaining: 0,
+      });
+      await t.run((ctx) =>
+        ctx.db.patch(usageId, {
+          answers: 0,
+          deepAnswers: 0,
+          spentMicroUsd: budget - ANALYST_MODELS.standard.reservation,
+        }),
+      );
+      expect(
+        await s.owner.query(api.analyst.conversations.getAccess),
+      ).toMatchObject({
+        budgetAvailable: true,
+        remaining: total,
+      });
+      await t.run((ctx) =>
+        ctx.db.patch(usageId, {
+          spentMicroUsd: budget - ANALYST_MODELS.standard.reservation + 1,
+        }),
+      );
+      await expect(
+        s.owner.mutation(api.analyst.conversations.send, question),
+      ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
+      expect(
+        await s.owner.query(api.analyst.conversations.getAccess),
+      ).toMatchObject({
+        budgetAvailable: false,
+        remaining: 0,
+      });
+      expect(provider.create).not.toHaveBeenCalled();
+    },
+  );
+  test("trial uses the entry allowance while manual and legacy Pro retain the largest package", async () => {
+    const s = await studio(t);
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      limit: 1600,
+      deepLimit: 160,
+    });
+    const accountId = await setTeamLimit(t, s.orgId, 1);
+    await t.run(async (ctx) => {
+      const account = (await ctx.db.get(accountId))!;
+      await ctx.db.patch(accountId, {
+        subscription: { ...account.subscription!, teamLimit: undefined },
+      });
+    });
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      limit: 1600,
+      deepLimit: 160,
+    });
+    await setTeamLimit(t, s.orgId, 12);
+    const trial = { startedAt: Date.now(), endsAt: Date.now() + 60_000 };
+    await t.run((ctx) => ctx.db.patch(s.orgId, { plan: "free", trial }));
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      paid: true,
+      limit: 400,
+      deepLimit: 40,
+    });
+    vi.setSystemTime(trial.endsAt);
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      paid: false,
+      remaining: 0,
+      deepRemaining: 0,
+    });
+    await expect(
+      s.owner.mutation(api.analyst.conversations.send, question),
+    ).rejects.toThrow("SUBSCRIPTION_REQUIRED");
+    await t.run((ctx) => ctx.db.patch(s.orgId, { trial: undefined }));
+    // An old billing record cannot grant paid allowance to a Free studio.
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      limit: 10,
+      deepLimit: 0,
+      remaining: 10,
+    });
+  });
+  test("package changes retain current usage and owner overrides retain the package cost guard", async () => {
+    const s = await studio(t);
+    await setTeamLimit(t, s.orgId, 1);
+    await t.run((ctx) =>
+      ctx.db.insert("analyst_usage", {
+        orgId: s.orgId,
+        monthStartMs: usageMonth(Date.now()).startMs,
+        answers: 400,
+        deepAnswers: 40,
+        spentMicroUsd: 6_000_000,
+        reservedMicroUsd: 0,
+        updatedAt: Date.now(),
+      }),
+    );
+    await setTeamLimit(t, s.orgId, 3);
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      limit: 600,
+      remaining: 200,
+      deepRemaining: 20,
+      budgetAvailable: true,
+    });
+    await setTeamLimit(t, s.orgId, 1);
+    await t.run((ctx) =>
+      ctx.db.patch(s.orgId, {
+        analystPromptLimit: 2000,
+        analystDeepPromptLimit: 200,
+      }),
+    );
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      limit: 2000,
+      deepLimit: 200,
+      remaining: 0,
+      budgetAvailable: false,
+    });
+    await expect(
+      s.owner.mutation(api.analyst.conversations.send, question),
+    ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
+  });
+  test.each(["answers", "detailed", "budget"] as const)(
+    "paid package downgrade rechecks %s for an in-flight answer and refunds its count",
+    async (ceiling) => {
+      const s = await studio(t);
+      await setTeamLimit(t, s.orgId, 12);
+      const answers =
+        ceiling === "answers" ? 400 : ceiling === "detailed" ? 40 : 0;
+      const deepAnswers = ceiling === "detailed" ? 40 : 0;
+      await t.run((ctx) =>
+        ctx.db.insert("analyst_usage", {
+          orgId: s.orgId,
+          monthStartMs: usageMonth(Date.now()).startMs,
+          answers,
+          deepAnswers,
+          spentMicroUsd: ceiling === "budget" ? 6_000_000 : 0,
+          reservedMicroUsd: 0,
+          updatedAt: Date.now(),
+        }),
+      );
+      const { turnId } = await s.owner.mutation(
+        api.analyst.conversations.send,
+        {
+          ...question,
+          depth: ceiling === "detailed" ? "deep" : "standard",
+        },
+      );
+      provider.create.mockImplementationOnce(async () => {
+        await setTeamLimit(t, s.orgId, 1);
+        return response(
+          [],
+          JSON.stringify({
+            text: "Which period would you like to explore?",
+            reportKeys: [],
+            recommendations: [],
+            followUps: [],
+          }),
+        );
+      });
+      await t.action(internal.analyst.agent.run, { turnId });
+      expect(provider.create).toHaveBeenCalledTimes(1);
+      expect(await t.run((ctx) => ctx.db.get(turnId))).toMatchObject({
+        status: "failed",
+        errorCode: "ANALYST_ACCESS_CHANGED",
+      });
+      expect(
+        (await t.run((ctx) => ctx.db.get(turnId)))?.answer,
+      ).toBeUndefined();
+      expect(await usage(t, s.orgId)).toMatchObject({
+        answers,
+        deepAnswers,
+        reservedMicroUsd: 0,
+      });
+    },
+  );
+  test("a pending answer cannot start after a paid package downgrade", async () => {
+    const s = await studio(t);
+    await setTeamLimit(t, s.orgId, 12);
+    await t.run((ctx) =>
+      ctx.db.insert("analyst_usage", {
+        orgId: s.orgId,
+        monthStartMs: usageMonth(Date.now()).startMs,
+        answers: 400,
+        deepAnswers: 0,
+        spentMicroUsd: 0,
+        reservedMicroUsd: 0,
+        updatedAt: Date.now(),
+      }),
+    );
+    const { turnId } = await s.owner.mutation(
+      api.analyst.conversations.send,
+      question,
+    );
+    await setTeamLimit(t, s.orgId, 1);
+    await t.action(internal.analyst.agent.run, { turnId });
+    expect(provider.create).not.toHaveBeenCalled();
+    expect(await usage(t, s.orgId)).toMatchObject({
+      answers: 400,
+      reservedMicroUsd: 0,
+    });
+  });
+  test("a Detailed answer at the smaller package boundary can finish after a downgrade", async () => {
+    const s = await studio(t);
+    await setTeamLimit(t, s.orgId, 12);
+    await t.run((ctx) =>
+      ctx.db.insert("analyst_usage", {
+        orgId: s.orgId,
+        monthStartMs: usageMonth(Date.now()).startMs,
+        answers: 399,
+        deepAnswers: 39,
+        spentMicroUsd: 0,
+        reservedMicroUsd: 0,
+        updatedAt: Date.now(),
+      }),
+    );
+    const { turnId } = await s.owner.mutation(api.analyst.conversations.send, {
+      ...question,
+      depth: "deep",
+    });
+    await setTeamLimit(t, s.orgId, 1);
+    provider.create.mockResolvedValue(
+      response(
+        [],
+        JSON.stringify({
+          text: "Which period would you like to explore?",
+          reportKeys: [],
+          recommendations: [],
+          followUps: [],
+        }),
+      ),
+    );
+    await t.action(internal.analyst.agent.run, { turnId });
+    expect(await t.run((ctx) => ctx.db.get(turnId))).toMatchObject({
+      status: "completed",
+    });
+    expect(await usage(t, s.orgId)).toMatchObject({
+      answers: 400,
+      deepAnswers: 40,
+      reservedMicroUsd: 0,
+    });
+    expect(
+      await s.owner.query(api.analyst.conversations.getAccess),
+    ).toMatchObject({
+      remaining: 0,
+      deepRemaining: 0,
+    });
   });
   test("requires configuration and manager/owner membership on both plans", async () => {
     const s = await studio(t);
@@ -244,8 +593,8 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     ).toMatchObject({
       allowed: true,
       paid: false,
-      remaining: 3,
-      limit: 3,
+      remaining: 10,
+      limit: 10,
       deepRemaining: 0,
       deepLimit: 0,
       deepBudgetAvailable: false,
@@ -261,7 +610,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     expect(await s.owner.query(api.analyst.conversations.list)).toEqual([]);
     expect(provider.create).not.toHaveBeenCalled();
   });
-  test("Free shares three Fast answers across owners, managers and conversations, then resets next month", async () => {
+  test("Free shares ten Fast answers across owners, managers and conversations, then resets next month", async () => {
     const s = await studio(t, "a", "free");
     const manager = await studio(t, "manager");
     await t.run(async (ctx) => {
@@ -282,7 +631,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
         }),
       ),
     );
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       const author = i === 1 ? manager.owner : s.owner;
       const input = { ...question, requestId: `free-request-000${i}` };
       const sent = await author.mutation(api.analyst.conversations.send, input);
@@ -292,7 +641,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
       expect(
         await s.owner.query(api.analyst.conversations.getAccess),
       ).toMatchObject({
-        remaining: 2 - i,
+        remaining: 9 - i,
         busy: true,
       });
       await t.action(internal.analyst.agent.run, { turnId: sent.turnId });
@@ -303,9 +652,10 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
       ).toMatchObject({
         turns: [{ status: "completed", depth: "standard" }],
       });
+      vi.setSystemTime(Date.now() + 61_000);
     }
     expect(await usage(t, s.orgId)).toMatchObject({
-      answers: 3,
+      answers: 10,
       deepAnswers: 0,
       reservedMicroUsd: 0,
     });
@@ -320,8 +670,8 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
         }),
       ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
     }
-    expect(provider.create).toHaveBeenCalledTimes(3);
-    expect(await s.owner.query(api.analyst.conversations.list)).toHaveLength(2);
+    expect(provider.create).toHaveBeenCalledTimes(10);
+    expect(await s.owner.query(api.analyst.conversations.list)).toHaveLength(9);
     expect(
       await manager.owner.query(api.analyst.conversations.list),
     ).toHaveLength(1);
@@ -329,7 +679,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     expect(
       await s.owner.query(api.analyst.conversations.getAccess),
     ).toMatchObject({
-      remaining: 3,
+      remaining: 10,
       resetAt: Date.parse("2026-11-01T00:00:00Z"),
     });
     const next = await s.owner.mutation(api.analyst.conversations.send, {
@@ -345,7 +695,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
       ctx.db.insert("analyst_usage", {
         orgId: s.orgId,
         monthStartMs: usageMonth(Date.now()).startMs,
-        answers: 2,
+        answers: 9,
         deepAnswers: 0,
         spentMicroUsd: 0,
         reservedMicroUsd: 0,
@@ -367,7 +717,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
       attempts.filter((result) => result.status === "rejected"),
     ).toHaveLength(1);
     expect(await usage(t, s.orgId)).toMatchObject({
-      answers: 3,
+      answers: 10,
       reservedMicroUsd: ANALYST_MODELS.standard.reservation,
     });
   });
@@ -388,7 +738,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     });
     expect(
       await s.owner.query(api.analyst.conversations.getAccess),
-    ).toMatchObject({ remaining: 3 });
+    ).toMatchObject({ remaining: 10 });
     expect(provider.create).toHaveBeenCalledTimes(1);
   });
   test("plan changes keep existing usage and preserve the Pro allowance", async () => {
@@ -397,7 +747,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
       ctx.db.insert("analyst_usage", {
         orgId: s.orgId,
         monthStartMs: usageMonth(Date.now()).startMs,
-        answers: 3,
+        answers: 10,
         deepAnswers: 0,
         spentMicroUsd: 0,
         reservedMicroUsd: 0,
@@ -408,10 +758,10 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     expect(
       await s.owner.query(api.analyst.conversations.getAccess),
     ).toMatchObject({
-      remaining: 197,
-      limit: 200,
-      deepRemaining: 20,
-      deepLimit: 20,
+      remaining: 1590,
+      limit: 1600,
+      deepRemaining: 160,
+      deepLimit: 160,
     });
     const { turnId } = await s.owner.mutation(api.analyst.conversations.send, {
       ...question,
@@ -421,13 +771,13 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
     await t.action(internal.analyst.agent.run, { turnId });
     expect(provider.create).not.toHaveBeenCalled();
     expect(await usage(t, s.orgId)).toMatchObject({
-      answers: 3,
+      answers: 10,
       deepAnswers: 0,
       reservedMicroUsd: 0,
     });
     expect(
       await s.owner.query(api.analyst.conversations.getAccess),
-    ).toMatchObject({ remaining: 0, limit: 3 });
+    ).toMatchObject({ remaining: 0, limit: 10 });
   });
   test.each(["standard", "deep"] as const)(
     "downgrade blocks an in-flight %s answer beyond Free access",
@@ -437,7 +787,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
         ctx.db.insert("analyst_usage", {
           orgId: s.orgId,
           monthStartMs: usageMonth(Date.now()).startMs,
-          answers: 3,
+          answers: 10,
           deepAnswers: 0,
           spentMicroUsd: 0,
           reservedMicroUsd: 0,
@@ -467,7 +817,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
         errorCode: "ANALYST_ACCESS_CHANGED",
       });
       expect(await usage(t, s.orgId)).toMatchObject({
-        answers: 3,
+        answers: 10,
         deepAnswers: 0,
         reservedMicroUsd: 0,
       });
@@ -544,7 +894,7 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
         await b.owner.query(api.analyst.conversations.getAccess),
       ).toMatchObject({
         allowed: true,
-        remaining: plan === "paid" ? 199 : 2,
+        remaining: plan === "paid" ? 1599 : 9,
         busy: true,
       });
     },
@@ -652,8 +1002,8 @@ describe("AI Assistant access, usage and workers", { timeout: 20000 }, () => {
             field === "spentMicroUsd"
               ? ANALYST_LIMITS.monthlyMicroUsd
               : field === "answers"
-                ? 200
-                : 20,
+                ? 1600
+                : 160,
         }),
       );
       await expect(

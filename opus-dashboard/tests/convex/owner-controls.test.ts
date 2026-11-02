@@ -730,10 +730,11 @@ describe("owner AI allowance controls", () => {
     await t.run((ctx) => ctx.db.patch(f.orgId, { plan: "free", trial }));
     expect(await client.query(allowance, { orgId: f.orgId })).toMatchObject({
       plan: "paid",
-      limit: 200,
-      deepLimit: 20,
-      defaultLimit: 200,
-      defaultDeepLimit: 20,
+      limit: 400,
+      deepLimit: 40,
+      defaultLimit: 400,
+      defaultDeepLimit: 40,
+      budgetMicroUsd: 6_000_000,
     });
     expect(
       await client.mutation(update, {
@@ -748,7 +749,7 @@ describe("owner AI allowance controls", () => {
     ).toMatchObject({ remaining: 50, deepRemaining: 5 });
     expect(
       await client.mutation(update, { orgId: f.orgId, operation: "defaults" }),
-    ).toMatchObject({ limit: 200, deepLimit: 20, custom: false });
+    ).toMatchObject({ limit: 400, deepLimit: 40, custom: false });
     expect(await t.run((ctx) => ctx.db.get(f.orgId))).toMatchObject({
       plan: "free",
       trial,
@@ -764,6 +765,99 @@ describe("owner AI allowance controls", () => {
     ).rejects.toThrow("require Pro");
   });
 
+  test("owner defaults follow the purchased package and preserve overrides until explicitly restored", async () => {
+    const t = backend(),
+      f = await fixture(t),
+      { client } = await login(t);
+    const studio = t.withIdentity({ subject: "studio-client" });
+    await t.run((ctx) =>
+      ctx.db.insert("billing_accounts", {
+        orgId: f.orgId,
+        externalCustomerId: `opus:${f.orgId}`,
+        environment: "sandbox",
+        productId: "pro-three",
+        managed: true,
+        subscription: {
+          id: "sub-three",
+          status: "active",
+          amount: 119000,
+          currency: "mkd",
+          interval: "month",
+          intervalCount: 1,
+          currentPeriodEnd: Date.now() + 86_400_000,
+          cancelAtPeriodEnd: false,
+          teamLimit: 3,
+          pendingChange: { teamLimit: 1, appliesAt: Date.now() + 86_400_000 },
+        },
+        hasOpenSubscription: true,
+        syncVersion: 1,
+        syncedVersion: 1,
+        isDeleted: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      }),
+    );
+    expect(await client.query(allowance, { orgId: f.orgId })).toMatchObject({
+      limit: 600,
+      deepLimit: 60,
+      defaultLimit: 600,
+      defaultDeepLimit: 60,
+      budgetMicroUsd: 8_000_000,
+    });
+    const usageId = await t.run((ctx) =>
+      ctx.db.insert("analyst_usage", {
+        orgId: f.orgId,
+        monthStartMs: usageMonth(Date.now()).startMs,
+        answers: 100,
+        deepAnswers: 10,
+        spentMicroUsd: 500_000,
+        reservedMicroUsd: 0,
+        updatedAt: Date.now(),
+      }),
+    );
+    expect(
+      await client.mutation(update, {
+        orgId: f.orgId,
+        operation: "custom",
+        limit: 900,
+        deepLimit: 90,
+      }),
+    ).toMatchObject({
+      limit: 900,
+      deepLimit: 90,
+      defaultLimit: 600,
+      defaultDeepLimit: 60,
+      custom: true,
+      used: 100,
+      deepUsed: 10,
+      budgetMicroUsd: 8_000_000,
+    });
+    expect(
+      await studio.query(api.analyst.conversations.getAccess, {}),
+    ).toMatchObject({
+      remaining: 800,
+      deepRemaining: 80,
+    });
+    expect(
+      await client.mutation(update, {
+        orgId: f.orgId,
+        operation: "defaults",
+      }),
+    ).toMatchObject({
+      limit: 600,
+      deepLimit: 60,
+      custom: false,
+      used: 100,
+      deepUsed: 10,
+      budgetUsedMicroUsd: 500_000,
+    });
+    expect(await t.run((ctx) => ctx.db.get(usageId))).toMatchObject({
+      answers: 100,
+      deepAnswers: 10,
+      spentMicroUsd: 500_000,
+    });
+  });
+
   test("custom limits feed assistant admission; reset preserves spend and history; defaults restore plan policy", async () => {
     const t = backend(),
       f = await fixture(t),
@@ -773,9 +867,9 @@ describe("owner AI allowance controls", () => {
       ctx.db.insert("analyst_usage", {
         orgId: f.orgId,
         monthStartMs: usageMonth(Date.now()).startMs,
-        answers: 200,
-        deepAnswers: 20,
-        spentMicroUsd: 3_000_000,
+        answers: 1600,
+        deepAnswers: 160,
+        spentMicroUsd: 21_000_000,
         reservedMicroUsd: 0,
         updatedAt: Date.now(),
       }),
@@ -814,8 +908,8 @@ describe("owner AI allowance controls", () => {
         .first(),
     );
     expect(usage).toMatchObject({
-      spentMicroUsd: 3_000_000,
-      resetSpentMicroUsd: 3_000_000,
+      spentMicroUsd: 21_000_000,
+      resetSpentMicroUsd: 21_000_000,
     });
     await client.mutation(update, {
       orgId: f.orgId,
@@ -835,7 +929,7 @@ describe("owner AI allowance controls", () => {
     ).rejects.toThrow("ANALYST_ALLOWANCE_REACHED");
     expect(
       await client.mutation(update, { orgId: f.orgId, operation: "defaults" }),
-    ).toMatchObject({ limit: 200, deepLimit: 20, custom: false, used: 0 });
+    ).toMatchObject({ limit: 1600, deepLimit: 160, custom: false, used: 0 });
   });
   test("validates bounds, protects Free detailed access and rejects resets while a reservation is active", async () => {
     const t = backend(),

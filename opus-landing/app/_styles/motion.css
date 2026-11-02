@@ -1,0 +1,377 @@
+/* One motion language. Entrances are finite; touch never depends on hover. */
+:root {
+  --motion-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-distance: 18px;
+}
+
+/* The individual layers enter, rather than moving the entire composition. */
+.hero-copy,
+.hero-stage.hero-showcase,
+.hero .hero-showcase .floating-note {
+  animation: none;
+}
+
+.button,
+.menu-toggle,
+.locale-toggle-btn,
+.studio-carousel-controls > button {
+  touch-action: manipulation;
+  transition:
+    transform 160ms var(--motion-out),
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 200ms ease;
+}
+
+.button svg,
+.text-link svg,
+.studio-carousel-controls svg {
+  transition: transform 220ms var(--motion-out);
+}
+
+.desktop-nav a,
+.footer-links a {
+  position: relative;
+}
+
+.desktop-nav a::after,
+.footer-links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 220ms var(--motion-out);
+}
+
+.price-card {
+  transition:
+    box-shadow 240ms ease,
+    border-color 240ms ease;
+}
+
+.promotion-artwork {
+  transition: transform 420ms var(--motion-out);
+}
+
+.faq-list summary {
+  min-height: 44px;
+  transition: color 160ms ease;
+}
+
+.faq-list summary > span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition:
+    transform 220ms var(--motion-out),
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.faq-list details[open] summary > span {
+  color: #2588c8;
+  background: #eaf6ff;
+}
+
+.button:focus-visible,
+.text-link:focus-visible,
+.menu-toggle:focus-visible,
+.desktop-nav a:focus-visible,
+.mobile-nav a:focus-visible,
+.faq-list summary:focus-visible {
+  outline: 2px solid #2588c8;
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Keep the heading painted from the first frame for fast perceived loading. */
+  .hero-copy h1 {
+    animation: landing-title-enter 620ms var(--motion-out) both;
+  }
+
+  .hero-copy > p,
+  .hero-actions,
+  .hero-copy .microcopy > span {
+    animation: landing-enter 560ms var(--motion-out) both;
+  }
+
+  .hero-copy > p {
+    animation-delay: 60ms;
+  }
+  .hero-actions {
+    animation-delay: 120ms;
+  }
+  .hero-copy .microcopy > span {
+    animation-delay: 190ms;
+  }
+  .hero-copy .microcopy > span:nth-child(2) {
+    animation-delay: 230ms;
+  }
+  .hero-copy .microcopy > span:nth-child(3) {
+    animation-delay: 270ms;
+  }
+
+  .hero .hero-showcase .calendar-window,
+  .hero .hero-showcase .phone-hero,
+  .hero .hero-showcase .floating-note {
+    animation: landing-enter 700ms var(--motion-out) both;
+  }
+
+  .hero .hero-showcase .calendar-window {
+    animation-delay: 160ms;
+  }
+  .hero .hero-showcase .phone-hero {
+    animation-delay: 260ms;
+  }
+  .hero .hero-showcase .note-left {
+    animation-delay: 400ms;
+  }
+  .hero .hero-showcase .note-right {
+    animation-delay: 490ms;
+  }
+
+  .faq-list details[open] > p {
+    animation: landing-answer-enter 220ms var(--motion-out);
+  }
+
+
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .button:hover {
+    transform: translateY(-2px);
+  }
+  .button:hover .lucide-arrow-up-right,
+  .text-link:hover .lucide-arrow-up-right {
+    transform: translate(2px, -2px);
+  }
+  .button:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  .desktop-nav a:hover::after,
+  .footer-links a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
+  .price-card:hover {
+    box-shadow:
+      0 16px 40px -24px #305d8340,
+      0 0 0 1px #b5d7ed;
+  }
+
+  .promotion-card:hover .promotion-poster {
+    transform: rotate(-2deg) translateY(-4px);
+  }
+  .promotion-card:hover .promotion-story-artwork {
+    transform: rotate(2deg) translateY(-4px);
+  }
+  .studio-prev:hover svg {
+    transform: translateX(-2px);
+  }
+  .studio-next:hover svg {
+    transform: translateX(2px);
+  }
+  .faq-list summary:hover {
+    color: #2588c8;
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --motion-distance: 12px;
+  }
+
+  .header .menu-toggle {
+    display: grid;
+    place-items: center;
+    position: relative;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 10px;
+  }
+
+  .menu-toggle svg {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    transition:
+      transform 220ms var(--motion-out),
+      opacity 140ms ease;
+  }
+
+  .menu-icon-close {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.8);
+  }
+  [data-menu-open="true"] .menu-icon-open {
+    opacity: 0;
+    transform: rotate(60deg) scale(0.8);
+  }
+  [data-menu-open="true"] .menu-icon-close {
+    opacity: 1;
+    transform: none;
+  }
+
+  .header .mobile-nav {
+    display: flex;
+    max-height: calc(100dvh - 90px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top right;
+    transition:
+      opacity 150ms ease,
+      transform 180ms var(--motion-out),
+      visibility 0s 180ms;
+  }
+
+  .header[data-menu-open="true"] .mobile-nav {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition:
+      opacity 180ms ease,
+      transform 260ms var(--motion-out),
+      visibility 0s;
+  }
+
+  .mobile-nav > a,
+  .mobile-nav > .mobile-locale-toggle {
+    opacity: 0;
+    transform: translateY(-5px);
+    transition:
+      opacity 100ms ease,
+      transform 160ms var(--motion-out);
+  }
+
+  [data-menu-open="true"] .mobile-nav > a,
+  [data-menu-open="true"] .mobile-nav > .mobile-locale-toggle {
+    opacity: 1;
+    transform: none;
+    transition-duration: 200ms;
+  }
+
+  [data-menu-open="true"] .mobile-nav > :nth-child(2) {
+    transition-delay: 20ms;
+  }
+  [data-menu-open="true"] .mobile-nav > :nth-child(3) {
+    transition-delay: 40ms;
+  }
+  [data-menu-open="true"] .mobile-nav > :nth-child(4) {
+    transition-delay: 60ms;
+  }
+  [data-menu-open="true"] .mobile-nav > :nth-child(5) {
+    transition-delay: 80ms;
+  }
+  [data-menu-open="true"] .mobile-nav > :nth-child(6),
+  [data-menu-open="true"] .mobile-nav > :nth-child(7) {
+    transition-delay: 100ms;
+  }
+
+  .mobile-nav .locale-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 400px) {
+  .header {
+    gap: 8px;
+  }
+  .header .brand {
+    font-size: 18px;
+    gap: 5px;
+  }
+  .header .nav-actions {
+    gap: 4px;
+  }
+  .header .button-small {
+    min-height: 44px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+  .header .button-small > span {
+    display: none;
+  }
+}
+
+/* Keyboard navigation and focus bypass all decorative delays. */
+.header[data-menu-instant="true"]
+  :is(.mobile-nav, .mobile-nav > *, .menu-toggle svg),
+[data-landing-input="keyboard"]
+  .site-shell
+  :is(
+    .button,
+    .button svg,
+    .text-link svg,
+    .faq-list summary > span,
+    .studio-slide,
+    .studio-slide-copy
+  ) {
+  transition: none;
+}
+
+[data-landing-input="keyboard"] .faq-list details > p,
+.hero-copy:focus-within,
+.hero-copy:focus-within * {
+  animation: none;
+}
+
+@keyframes landing-title-enter {
+  from {
+    transform: translateY(12px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes landing-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes landing-answer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header .mobile-nav,
+  .header .mobile-nav > *,
+  .menu-toggle svg,
+  .button:active,
+  .locale-toggle-btn:active,
+  .menu-toggle:active {
+    transform: none;
+  }
+}

@@ -24,6 +24,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import s from "./assistant-chat.module.css";
+import { ASSISTANT_FREE_ALLOWANCE } from "../../../shared/assistant-allowances";
 
 export type AssistantHistoryItem = {
   id: string;
@@ -150,9 +151,9 @@ export function AssistantChatWorkspace({
                 "Përgjigjet bazohen në terminet tuaja të regjistruara.",
               )
             : t(
-                `Free includes ${usage?.limit ?? 3} Fast prompts per studio each month. Detailed mode requires OPUS Pro.`,
-                `Free вклучува ${usage?.limit ?? 3} прашања во брз режим месечно по студио. Деталниот режим е достапен со OPUS Pro.`,
-                `Free përfshin ${usage?.limit ?? 3} pyetje të shpejta për studio çdo muaj. Modaliteti i detajuar kërkon OPUS Pro.`,
+                `Free includes ${usage?.limit ?? ASSISTANT_FREE_ALLOWANCE.answers} Fast prompts per studio each month. Detailed mode requires OPUS Pro.`,
+                `Free вклучува ${usage?.limit ?? ASSISTANT_FREE_ALLOWANCE.answers} прашања во брз режим месечно по студио. Деталниот режим е достапен со OPUS Pro.`,
+                `Free përfshin ${usage?.limit ?? ASSISTANT_FREE_ALLOWANCE.answers} pyetje të shpejta për studio çdo muaj. Modaliteti i detajuar kërkon OPUS Pro.`,
               )}
       </p>
     </>

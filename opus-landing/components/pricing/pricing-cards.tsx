@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import { ArrowUpRight, Check, Sparkles } from "lucide-react";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Slider } from "@/components/ui/slider";
+import { AnimatedNumber } from "@/components/ui/animated-number";
 import { useI18n } from "@/lib/i18n/context";
 import {
   formatProPrice,
@@ -15,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CurrencySelector } from "./currency-selector";
 import { useBillingCurrency } from "./billing-currency-provider";
+import { getAssistantTeamAllowance } from "../../../shared/assistant-allowances";
 
 export function PricingCards({ animated = false }: { animated?: boolean }) {
   const { t, locale } = useI18n();
@@ -28,134 +30,168 @@ export function PricingCards({ animated = false }: { animated?: boolean }) {
           ? "den."
           : "MKD";
   const [tierIndex, setTierIndex] = useState(0);
+  const [animateNumbers, setAnimateNumbers] = useState(true);
   const selectorId = useId();
   const tier = PRO_TEAM_TIERS[tierIndex];
+  const assistantAllowance = getAssistantTeamAllowance(tier.teamLimit);
+  const numberFormat = new Intl.NumberFormat(
+    locale === "en" ? "en-US" : "de-DE",
+  );
+  const assistantDescription = t.pricing.pro.aiAnalystSub
+    .replace("{answers}", numberFormat.format(assistantAllowance.answers))
+    .replace("{detailed}", numberFormat.format(assistantAllowance.deepAnswers));
   const teamSize =
     tier.teamLimit === 1
       ? t.pricing.pro.teamSizeSingle
       : t.pricing.pro.teamSizeValue.replace("{count}", String(tier.teamLimit));
 
+  const [teamPrefix, teamSuffix] = teamSize.split(String(tier.teamLimit));
+
   return (
     <>
-      <CurrencySelector />
       <div className="pricing-grid">
         <article className={cn("price-card price-pro", { reveal: animated })}>
-          <div className="plan-heading">
-            <span className="plan-symbol">
-              <Sparkles aria-hidden="true" />
-            </span>
-          </div>
-          <h3>{t.pricing.pro.name}</h3>
-          <p className="trial-offer">{t.pricing.trialLabel}</p>
-          <span className="price-after-trial">{t.pricing.afterTrial}</span>
-          <div
-            className="price pro-price"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {formatProPrice(
-              proPriceMinorUnits(tier, currency),
-              locale,
-              currency,
-            )}{" "}
-            <span>
-              {currencyLabel} /{" "}
-              {locale === "mk" ? "месечно" : locale === "sq" ? "muaj" : "month"}
-            </span>
-          </div>
-          <p>{t.pricing.pro.desc}</p>
-          <FieldGroup className="pro-team-selector">
-            <Field>
-              <FieldLabel
-                htmlFor={selectorId}
-                id={`${selectorId}-label`}
-                className="pro-team-label"
+          <div className="plan-purchase">
+            <div className="plan-heading">
+              <span className="plan-symbol">
+                <Sparkles aria-hidden="true" />
+              </span>
+            </div>
+            <h3>{t.pricing.pro.name}</h3>
+            <p className="trial-offer">{t.pricing.trialLabel}</p>
+            <span className="price-after-trial">{t.pricing.afterTrial}</span>
+            <div className="plan-price-row">
+              <div
+                className="price pro-price"
+                aria-live="polite"
+                aria-atomic="true"
               >
-                <span>{t.pricing.pro.teamSizeLabel}</span>
-                <span className="pro-team-count" aria-hidden="true">
-                  {teamSize}
+                <AnimatedNumber
+                  key={`${currency}-${locale}`}
+                  className="pro-price-number"
+                  value={formatProPrice(
+                    proPriceMinorUnits(tier, currency),
+                    locale,
+                    currency,
+                  )}
+                  animate={animateNumbers}
+                />{" "}
+                <span>
+                  {currencyLabel} /{" "}
+                  {locale === "mk"
+                    ? "месечно"
+                    : locale === "sq"
+                      ? "muaj"
+                      : "month"}
                 </span>
-              </FieldLabel>
-              <div className="pro-team-control">
-                <Slider
-                  min={0}
-                  max={PRO_TEAM_TIERS.length - 1}
-                  step={1}
-                  value={[tierIndex]}
-                  onValueChange={([value]) => setTierIndex(value)}
-                  thumbProps={{
-                    id: selectorId,
-                    "aria-labelledby": `${selectorId}-label`,
-                    "aria-valuetext": teamSize,
-                    "aria-valuemin": PRO_TEAM_TIERS[0].teamLimit,
-                    "aria-valuemax":
-                      PRO_TEAM_TIERS[PRO_TEAM_TIERS.length - 1].teamLimit,
-                    "aria-valuenow": tier.teamLimit,
-                  }}
-                />
-                <div className="pro-team-ticks" aria-hidden="true">
-                  {PRO_TEAM_TIERS.map((option) => (
-                    <span
-                      key={option.teamLimit}
-                      data-selected={option.teamLimit === tier.teamLimit}
-                    >
-                      {option.teamLimit}
-                    </span>
-                  ))}
-                </div>
               </div>
-            </Field>
-          </FieldGroup>
-          <p className="team-count-note">{t.pricing.teamNote}</p>
-          <Link
-            className="button button-dark"
-            href={trialSignupUrl(currency, tier.teamLimit)}
-          >
-            {t.pricing.pro.cta}{" "}
-            <span>
-              <ArrowUpRight aria-hidden="true" />
-            </span>
-          </Link>
-          <div className="plan-divider"></div>
-          <strong className="included-label">{t.pricing.pro.label}</strong>
-          <ul className="plan-features">
-            <li>
-              <Check aria-hidden="true" />
+              <CurrencySelector />
+            </div>
+            <p>{t.pricing.pro.desc}</p>
+            <FieldGroup className="pro-team-selector">
+              <Field>
+                <FieldLabel
+                  htmlFor={selectorId}
+                  id={`${selectorId}-label`}
+                  className="pro-team-label"
+                >
+                  <span>{t.pricing.pro.teamSizeLabel}</span>
+                  <span className="pro-team-count" aria-hidden="true">
+                    {teamPrefix}
+                    <AnimatedNumber
+                      value={String(tier.teamLimit)}
+                      minDigits={2}
+                      animate={animateNumbers}
+                    />
+                    {teamSuffix}
+                  </span>
+                </FieldLabel>
+                <div className="pro-team-control">
+                  <Slider
+                    min={0}
+                    max={PRO_TEAM_TIERS.length - 1}
+                    step={1}
+                    value={[tierIndex]}
+                    onValueChange={([value]) => setTierIndex(value)}
+                    onPointerDownCapture={() => setAnimateNumbers(true)}
+                    onKeyDownCapture={() => setAnimateNumbers(false)}
+                    thumbProps={{
+                      id: selectorId,
+                      "aria-labelledby": `${selectorId}-label`,
+                      "aria-valuetext": teamSize,
+                      "aria-valuemin": PRO_TEAM_TIERS[0].teamLimit,
+                      "aria-valuemax":
+                        PRO_TEAM_TIERS[PRO_TEAM_TIERS.length - 1].teamLimit,
+                      "aria-valuenow": tier.teamLimit,
+                    }}
+                  />
+                  <div className="pro-team-ticks" aria-hidden="true">
+                    {PRO_TEAM_TIERS.map((option) => (
+                      <span
+                        key={option.teamLimit}
+                        data-selected={option.teamLimit === tier.teamLimit}
+                      >
+                        {option.teamLimit}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </Field>
+            </FieldGroup>
+            <Link
+              className="button button-dark"
+              href={trialSignupUrl(currency, tier.teamLimit)}
+            >
+              {t.pricing.pro.cta}{" "}
               <span>
-                {tier.teamLimit === 1
-                  ? t.pricing.pro.teamFeatureSingle
-                  : t.pricing.pro.teamFeature.replace(
-                      "{count}",
-                      String(tier.teamLimit),
-                    )}
+                <ArrowUpRight aria-hidden="true" />
               </span>
-            </li>
-            {t.pricing.pro.features.map((feature, i) => (
-              <li key={i}>
+            </Link>
+          </div>
+          <div className="plan-benefits">
+            <div className="plan-divider"></div>
+            <strong className="included-label">{t.pricing.pro.label}</strong>
+            <ul className="plan-features">
+              <li>
                 <Check aria-hidden="true" />
-                <span>{feature}</span>
+                <span>
+                  {tier.teamLimit === 1
+                    ? t.pricing.pro.teamFeatureSingle
+                    : t.pricing.pro.teamFeature.replace(
+                        "{count}",
+                        String(tier.teamLimit),
+                      )}
+                </span>
               </li>
-            ))}
-            <li>
-              <Check aria-hidden="true" />
-              <span>
+              {t.pricing.pro.features.map((feature, i) => (
+                <li key={i}>
+                  <Check aria-hidden="true" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+              <li>
+                <Check aria-hidden="true" />
                 <span>
-                  <b>{t.pricing.pro.aiAnalystTitle}</b>
-                  <small>{t.pricing.pro.aiAnalystSub}</small>
+                  <span>
+                    <b>{t.pricing.pro.aiAnalystTitle}</b>
+                    <small aria-live="polite" aria-atomic="true">
+                      {assistantDescription}
+                    </small>
+                  </span>
                 </span>
-              </span>
-            </li>
-            <li>
-              <Check aria-hidden="true" />
-              <span>
+              </li>
+              <li>
+                <Check aria-hidden="true" />
                 <span>
-                  <b>{t.pricing.pro.aiReceptionistTitle}</b>
-                  <small>{t.pricing.pro.aiReceptionistSub}</small>
+                  <span>
+                    <b>{t.pricing.pro.aiReceptionistTitle}</b>
+                    <small>{t.pricing.pro.aiReceptionistSub}</small>
+                  </span>
                 </span>
-              </span>
-            </li>
-          </ul>
-          <span className="plan-end">{t.pricing.pro.end}</span>
+              </li>
+            </ul>
+            <span className="plan-end">{t.pricing.pro.end}</span>
+          </div>
         </article>
       </div>
       <p className="pricing-note">{t.pricing.note}</p>

@@ -40,18 +40,6 @@ import {
   scheduleBookingCompletion,
 } from "./lib/bookingCompletion";
 
-function getPrimaryContact(
-  customer: Doc<"customers">,
-): { channel: "email" | "sms" | "whatsapp" | "push"; address: string } | null {
-  if (customer.preferredChannel === "whatsapp" && customer.phone)
-    return { channel: "whatsapp", address: customer.phone };
-  if (customer.preferredChannel === "sms" && customer.phone)
-    return { channel: "sms", address: customer.phone };
-  if (customer.email) return { channel: "email", address: customer.email };
-  if (customer.phone) return { channel: "sms", address: customer.phone };
-  return null;
-}
-
 export const createBooking = mutation({
   args: {
     orgId: v.id("orgs"),
@@ -829,19 +817,18 @@ export const completeBooking = mutation({
     if (customer?.orgId === booking.orgId && !customer.isDeleted) {
       const service = await ctx.db.get(booking.serviceId);
       const staff = await ctx.db.get(booking.staffId);
-      const contact = getPrimaryContact(customer);
       if (
         service?.orgId === booking.orgId &&
         staff?.orgId === booking.orgId &&
-        contact
+        customer.email
       ) {
         await ctx.runMutation(internal.notifications.scheduleNotification, {
           orgId: args.orgId,
           customerId: customer._id,
           bookingId: booking._id,
-          channel: contact.channel,
+          channel: "email",
           type: "review_request",
-          recipientAddress: contact.address,
+          recipientAddress: customer.email,
           templateData: {
             customerName: customer.name,
             serviceName: service.name,

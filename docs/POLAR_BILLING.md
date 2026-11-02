@@ -1,7 +1,7 @@
 # OPUS subscription billing with Polar
 
 This integration sells the existing **monthly OPUS Pro subscription**. It does
-not sell AI credits, SMS credits, yearly plans, appointment payments, or payments
+not sell AI credits, yearly plans, appointment payments, or payments
 on behalf of studios. Existing Free studios retain their access. New studios receive a two-calendar-month, no-card trial and must subscribe to keep accepting new appointments afterwards.
 
 ## Customer journey

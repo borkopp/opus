@@ -37,7 +37,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     compare: "Погледнете што е вклучено",
     comparisonHeading: "Што добивате со OPUS?",
     comparisonDescription:
-      "Истите функции за секоја големина на тим. Цената зависи од бројот на активни членови.",
+      "Истите функции за секоја големина на тим. Цената и месечниот AI-лимит зависат од избраниот пакет.",
     feature: "Функција",
     included: "Вклучено",
     notIncluded: "Не е вклучено",
@@ -69,7 +69,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Тим",
             pro: "До 1, 3, 4, 6, 8 или 12 активни членови",
             description:
-              "Сопственикот и менаџерите се бројат; неактивните членови не се бројат.",
+              "Се бројат само активните членови на тимот.",
           },
           {
             feature: "Галерија на веб-сајтот",
@@ -125,10 +125,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Потсетници за клиенти по е-пошта",
             pro: "1, 2, 3 или 24 ч. пред терминот",
           },
-          {
-            feature: "SMS потврди и потсетници",
-            pro: "Да*",
-          },
         ],
       },
       {
@@ -137,13 +133,13 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "AI Chat",
             description:
-              "Прашајте го AI за вашиот бизнис. Добијте препораки, анализи и идеи за подобрување.",
-            pro: "200 одговори месечно*",
+              "Прашајте го AI за вашиот бизнис. Месечниот лимит е за целото студио, не за секој член.",
+            pro: "400–1.600 одговори месечно според пакетот*",
           },
           {
             feature: "Детални AI-анализи",
-            description: "Се вбројуваат во месечните 200 одговори.",
-            pro: "До 20 месечно*",
+            description: "Се вбројуваат во вкупниот месечен AI-лимит за студиото.",
+            pro: "До 40–160 месечно според пакетот*",
           },
           {
             feature: "Понуди по е-пошта за слободни термини",
@@ -169,9 +165,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         ],
       },
     ],
-    activationTitle: "За пробниот период, AI и SMS",
+    activationTitle: "За пробниот период и AI",
     activationNote:
-      "Пробниот период трае 2 месеци и е за нови студија. Нема автоматска наплата. За да продолжите да примате нови термини потоа, потребна е платена претплата. AI и SMS бараат конфигурација и активирање. AI Receptionist бара професионален Instagram профил. SMS пораките не се неограничени.",
+      "Пробниот период трае 2 месеци и е за нови студија. Вклучува 400 AI-одговори по календарски месец, од кои до 40 детални анализи за целото студио. Нема автоматска наплата. За да продолжите да примате нови термини потоа, потребна е платена претплата. AI бара конфигурација и активирање. AI Receptionist бара професионален Instagram профил.",
     customTitle: "Имате 13 или повеќе членови?",
     customDescription:
       "Пишете ни за големината и потребите на вашиот тим за да разговараме за соодветна понуда.",
@@ -189,7 +185,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     compare: "See everything included",
     comparisonHeading: "What do you get with OPUS?",
     comparisonDescription:
-      "The same features with every team size. Your price depends on the number of active team members.",
+      "The same features with every team size. Your price and monthly AI allowance depend on your selected plan.",
     feature: "Feature",
     included: "Included",
     notIncluded: "Not included",
@@ -221,7 +217,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Team members",
             pro: "Up to 1, 3, 4, 6, 8, or 12 active members",
             description:
-              "The owner and managers count; inactive members do not.",
+              "Only active team members count.",
           },
           {
             feature: "Website gallery",
@@ -277,10 +273,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Client email reminders",
             pro: "1, 2, 3, or 24 hours before",
           },
-          {
-            feature: "SMS confirmations and reminders",
-            pro: "Yes*",
-          },
         ],
       },
       {
@@ -289,13 +281,13 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "AI Chat",
             description:
-              "Ask AI about your business. Get recommendations, insights, and ideas for improvement.",
-            pro: "200 answers / month*",
+              "Ask AI about your business. The monthly allowance is shared across your studio, not per member.",
+            pro: "400–1,600 answers / month by plan*",
           },
           {
             feature: "Detailed AI reports",
-            description: "Count toward the 200 monthly answers.",
-            pro: "Up to 20 / month*",
+            description: "Count toward the studio’s total monthly AI allowance.",
+            pro: "Up to 40–160 / month by plan*",
           },
           {
             feature: "Email offers for empty slots",
@@ -321,9 +313,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         ],
       },
     ],
-    activationTitle: "About the trial, AI, and SMS",
+    activationTitle: "About the trial and AI",
     activationNote:
-      "The 2-month trial is for new studios. There is no automatic charge. A paid subscription is required afterward to keep accepting new appointments. AI and SMS require configuration and activation. AI Receptionist requires a professional Instagram account. SMS messages are not unlimited.",
+      "The 2-month trial is for new studios. It includes 400 AI answers per calendar month, including up to 40 detailed analyses for the whole studio. There is no automatic charge. A paid subscription is required afterward to keep accepting new appointments. AI requires configuration and activation. AI Receptionist requires a professional Instagram account.",
     customTitle: "Have 13 or more team members?",
     customDescription:
       "Tell us about your team size and needs so we can discuss a suitable offer.",
@@ -341,7 +333,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
     compare: "Shihni gjithçka që përfshihet",
     comparisonHeading: "Çfarë merrni me OPUS?",
     comparisonDescription:
-      "Të njëjtat funksione për çdo madhësi ekipi. Çmimi varet nga numri i anëtarëve aktivë.",
+      "Të njëjtat funksione për çdo madhësi ekipi. Çmimi dhe kufiri mujor i AI varen nga plani i zgjedhur.",
     feature: "Funksioni",
     included: "E përfshirë",
     notIncluded: "Nuk përfshihet",
@@ -373,7 +365,7 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Anëtarët e ekipit",
             pro: "Deri në 1, 3, 4, 6, 8 ose 12 anëtarë aktivë",
             description:
-              "Pronari dhe menaxherët llogariten; anëtarët joaktivë nuk llogariten.",
+              "Llogariten vetëm anëtarët aktivë të ekipit.",
           },
           {
             feature: "Galeria në uebfaqe",
@@ -429,10 +421,6 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
             feature: "Kujtesa me email për klientët",
             pro: "1, 2, 3 ose 24 orë para",
           },
-          {
-            feature: "Konfirmime dhe kujtesa me SMS",
-            pro: "Po*",
-          },
         ],
       },
       {
@@ -441,13 +429,13 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
           {
             feature: "AI Chat",
             description:
-              "Pyesni AI për biznesin tuaj. Merrni rekomandime, analiza dhe ide përmirësimi.",
-            pro: "200 përgjigje në muaj*",
+              "Pyesni AI për biznesin tuaj. Kufiri mujor është për të gjithë studion, jo për çdo anëtar.",
+            pro: "400–1.600 përgjigje në muaj sipas planit*",
           },
           {
             feature: "Raporte të hollësishme me AI",
-            description: "Numërohen brenda 200 përgjigjeve mujore.",
-            pro: "Deri në 20 në muaj*",
+            description: "Numërohen brenda kufirit të përgjithshëm mujor të AI për studion.",
+            pro: "Deri në 40–160 në muaj sipas planit*",
           },
           {
             feature: "Oferta me email për termine të lira",
@@ -473,9 +461,9 @@ export const pricingPageMessages: Record<Locale, PricingPageMessages> = {
         ],
       },
     ],
-    activationTitle: "Rreth provës, AI dhe SMS",
+    activationTitle: "Rreth provës dhe AI",
     activationNote:
-      "Prova 2-mujore është për studiot e reja. Nuk ka tarifim automatik. Më pas nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja. AI dhe SMS kërkojnë konfigurim dhe aktivizim. AI Receptionist kërkon llogari profesionale Instagram. Mesazhet SMS nuk janë të pakufizuara.",
+      "Prova 2-mujore është për studiot e reja. Përfshin 400 përgjigje AI për muaj kalendarik, deri në 40 prej tyre analiza të hollësishme për të gjithë studion. Nuk ka tarifim automatik. Më pas nevojitet abonim me pagesë për të vazhduar pranimin e termineve të reja. AI kërkon konfigurim dhe aktivizim. AI Receptionist kërkon llogari profesionale Instagram.",
     customTitle: "Keni 13 ose më shumë anëtarë?",
     customDescription:
       "Na tregoni për madhësinë dhe nevojat e ekipit, që të diskutojmë një ofertë të përshtatshme.",

@@ -63,6 +63,7 @@ export function SettingsScreen() {
         profile={data.profile}
         studioName={data.name}
         plan={data.plan}
+        accessState={data.accessState}
       />
       <Card>
         <Text variant="heading">{t("Appearance", "Изглед")}</Text>

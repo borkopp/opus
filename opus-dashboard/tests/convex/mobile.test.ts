@@ -50,6 +50,41 @@ describe("mobile studio backend", () => {
     vi.clearAllTimers();
     vi.useRealTimers();
   });
+  it("distinguishes legacy Free, trial, expiry and paid access consistently across mobile queries", async () => {
+    const { backend, owner, orgId } = await setup();
+    const readAccess = async () => {
+      const studio = await owner.query(api.mobile.bootstrap);
+      const management = await owner.query(api.mobileManagement.list);
+      if (!studio.available) throw new Error("Fixture studio missing.");
+      expect(studio.accessState).toBe(management.capacity.accessState);
+      return { studio, capacity: management.capacity };
+    };
+    expect(await readAccess()).toMatchObject({
+      studio: { plan: "free", accessState: "legacy_free" },
+      capacity: { isFree: true, totalLimit: 4 },
+    });
+
+    const trial = { startedAt: Date.now() - 1000, endsAt: Date.now() + 1000 };
+    await backend.run((ctx) => ctx.db.patch(orgId, { trial }));
+    expect(await readAccess()).toMatchObject({
+      studio: { plan: "paid", accessState: "trial" },
+      capacity: { isFree: false, totalLimit: 12 },
+    });
+
+    vi.setSystemTime(trial.endsAt);
+    expect(await readAccess()).toMatchObject({
+      studio: { plan: "free", accessState: "expired" },
+      capacity: { isFree: false, canUseStaffRole: false },
+    });
+
+    await backend.run((ctx) => ctx.db.patch(orgId, { plan: "paid" }));
+    expect(await readAccess()).toMatchObject({
+      studio: { plan: "paid", accessState: "paid" },
+      capacity: { isFree: false, totalLimit: 12 },
+    });
+    expect((await backend.run((ctx) => ctx.db.get(orgId)))?.trial).toEqual(trial);
+  });
+
   it("keeps the available-slot quote and saved price aligned when surge rules are disabled", async () => {
     const { backend, owner, orgId, serviceId, staffId, day } = await setup();
     await backend.run(async (ctx) => {

@@ -5,17 +5,20 @@ import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
 import { useStudio } from "@/providers/studio-provider";
+import { subscriptionLabel } from "@/lib/subscription";
 
 export function ProfileCard({
   profile,
   studioName,
   plan,
+  accessState,
 }: {
   profile: MobileStudio["profile"];
   studioName: string;
   plan: MobileStudio["plan"];
+  accessState: MobileStudio["accessState"];
 }) {
-  const { colors, t } = useStudio();
+  const { colors, t, language } = useStudio();
   const roleLabel = {
     owner: t("Owner", "Сопственик"),
     manager: t("Manager", "Менаџер"),
@@ -66,7 +69,7 @@ export function ProfileCard({
               variant="label"
               style={{ color: plan === "paid" ? colors.accentText : colors.foreground }}
             >
-              {plan === "paid" ? "OPUS Pro" : t("Free plan", "Бесплатен план")}
+              {subscriptionLabel(accessState, plan, language)}
             </Text>
           </View>
         </View>

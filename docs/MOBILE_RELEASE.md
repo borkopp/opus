@@ -1,5 +1,15 @@
 # OPUS Studio mobile release
 
+## Current production update — November 5, 2026
+
+App Store Connect confirms **1.0.3 (8)** is **Pending Developer Release**.
+The compatible Convex backend and production iOS OTA group
+`48b10dc0-3cc0-4436-829f-c919509ff542` are live at **100%** for runtime `1.0.3`.
+Existing studio access and public booking were verified unchanged. Final physical
+TestFlight acceptance remains; the manual App Store release stays with the user.
+See [the verified production release record](audits/2026-11-05-mobile-production-release.md).
+The October receipts below describe their historical release states.
+
 OPUS Studio is the native beauty-studio dashboard in `opus-mobile/`. Current local
 source is version **1.0.3**, with Sentry crash/performance diagnostics and no
 PostHog, replay or analytics consent UI. Finished production EAS build

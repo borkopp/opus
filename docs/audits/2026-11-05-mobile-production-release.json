@@ -1,0 +1,78 @@
+{
+  "verifiedAt": "2026-11-05T13:53:09.228497+00:00",
+  "sourceCommit": "55eb66229b60ab933a70f7604426caf2df8e3cf5",
+  "exportSourceCommit": "d0ca931e74ba3349ff7eace5bd7837f5f03009c6",
+  "candidateReceiptSha256": "0064814c74d0a4815ebe35496ad6807db766d73be8b195a4632d24efed8a5929",
+  "backend": {
+    "deployment": "calm-dachshund-294",
+    "deployed": true,
+    "preparedModules": 229,
+    "byteIdenticalDeployedModules": 229,
+    "schemaChanged": false,
+    "dataMigration": false,
+    "apiContractsUnchanged": 377,
+    "authAndProviderConfigurationUnchanged": true
+  },
+  "existingStudios": {
+    "realStudios": 14,
+    "allRemainLegacyFree": true,
+    "trialMetadataUnchanged": true,
+    "publishedWebsites": 10,
+    "allStillAcceptingBookings": true,
+    "publicServiceAndStaffIdsUnchanged": true,
+    "reviewFixtureExcludedFromRealCount": true,
+    "comparisonPassed": true
+  },
+  "productionChecks": {
+    "reviewFixtureReadChecksPassed": 7,
+    "publicBookingStudiosChecked": 2,
+    "unexpectedPublicBookingDifferences": [],
+    "writesToRealStudios": false,
+    "providerMessagesSent": false
+  },
+  "tests": {
+    "dashboardAndBackendPassed": 1121,
+    "existingSkipped": 3,
+    "mobilePassed": 40,
+    "renderedMobileScreenTestsPassed": 20,
+    "typechecksLintAndDashboardBuild": "passed",
+    "expoDoctor": "20/21; nine newer SDK57 patch versions recommended; retained approved native runtime"
+  },
+  "ota": {
+    "projectId": "634b3403-0012-42f0-9cc1-a5725f12f2cc",
+    "channel": "production",
+    "platform": "ios",
+    "runtimeVersion": "1.0.3",
+    "groupId": "48b10dc0-3cc0-4436-829f-c919509ff542",
+    "updateId": "01a1abf7-69ed-76dc-9a2f-e261cf7fb546",
+    "published": true,
+    "rolloutPercent": 100,
+    "deliveredFiles": 50,
+    "allDeliveredBytesMatchCandidate": true,
+    "productionChannelReturnsExactUpdate": true,
+    "ios101AndAndroid103ReceiveNoUpdate": true,
+    "nativeInputsChanged": false,
+    "sourceMapsUploaded": true,
+    "sentryDebugId": "744dfbe6-2398-403d-aa8b-2ad465e16440",
+    "initialInsights": {
+      "uniqueUsers": 0,
+      "installs": 0,
+      "failedInstalls": 0,
+      "crashRatePercent": 0
+    },
+    "deviceAdoptionVerified": false,
+    "sourceMapProcessingComplete": true
+  },
+  "appStore": {
+    "appId": "6819737970",
+    "version": "1.0.3",
+    "build": "8",
+    "state": "PENDING_DEVELOPER_RELEASE",
+    "releasedByAgent": false
+  },
+  "remainingAcceptance": [
+    "Physical TestFlight 1.0.3 (8) sign-in/session, booking/service edit, offline restart, push delivery/tap and OTA adoption checks. Connected phone has 1.0.1 (7); TestFlight is not installed. User has been given the official installation link.",
+    "Update may require up to two cold launches; first install can initially run embedded October7 JavaScript."
+  ],
+  "artifactEvidenceDirectory": "/Users/borkopetrevski/Developer/opus-ota-candidates/2026-11-05-ios-1.0.3/production-verification"
+}

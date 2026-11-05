@@ -33,8 +33,13 @@ fresh native binary. Finished production EAS build
 `dc2999de-84f7-429c-9fe0-a3d5737dce74` (native build **8**) has been downloaded,
 verified and recorded as the 1.0.3 production iOS baseline. Its native signature is
 `dc76dac7cf451843ae06aad8f038f44e84afc6468f39fac64bcd29107b009066`.
-The production iOS OTA compatibility check passes. No production OTA has been
-published for this version. Simulator build
+The production iOS OTA compatibility check passes. On November 5, 2026, update
+group `48b10dc0-3cc0-4436-829f-c919509ff542` was published to production iOS
+runtime **1.0.3** and advanced to **100%**. The compatible backend, delivered
+bundle/assets and source-map upload were verified; physical TestFlight acceptance
+remains before manual App Store release. See the
+[production release receipt](audits/2026-11-05-mobile-production-release.md).
+Simulator build
 `98090136-39ab-4f05-aef5-8076b91ed5c7` is recorded as the preview iOS baseline;
 its actual CFBundleVersion is 1, while the EAS metadata reports 7. The earlier
 local 1.0.1 phone and superseded 1.0.2 builds do not qualify this runtime.

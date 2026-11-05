@@ -27,6 +27,7 @@ The checkout starts at `8c56d0b`. It includes the audited mobile fixes and their
 - Dashboard, Convex and mobile TypeScript checks passed; dashboard/mobile lint passed.
 - The three slot-alignment regressions fail on unchanged `8c56d0b` and pass with only the selected anchor correction.
 - Production iOS native compatibility passes against recorded runtime **1.0.3**, build **8**, EAS build `dc2999de-84f7-429c-9fe0-a3d5737dce74`.
+- Dashboard production build passed. Convex's production dry run passed schema/index validation with no deleted indexes. Its empty Node-version diff heading is a CLI `null` versus `undefined` display mismatch: production returns `nodeVersion: null`, local has no override, and no explicit runtime change is requested.
 
 Expo Doctor reports **20/21 checks passing**. Its remaining check recommends nine newer SDK 57 patch versions. No native package, lockfile, app configuration or runtime baseline was changed, because those updates would invalidate compatibility with the approved binary. This is a recorded dependency-version recommendation, not a claim that `release:check` exited successfully.
 
@@ -42,6 +43,21 @@ node scripts/ota-candidate.cjs verify --candidate /Users/borkopetrevski/Develope
 The exporter loads the production EAS environment, clears inherited public/local overrides, verifies the native baseline and production endpoints, exports an iOS Hermes bundle with Sentry source maps, and records SHA-256 hashes for every exported/source file. Private upload credentials are removed during bundling and scanned out of the result. It never uploads an OTA or source maps during preparation.
 
 `receipt.json` is authoritative for the prepared source revision, bundle, map/debug identifier and integrity hashes. Later publication requires its exact SHA-256 and rechecks environment/configuration/native compatibility. The publisher uses the preserved bytes with `--skip-bundler`; it does not silently rebuild a different candidate.
+
+### Completed candidate
+
+- Directory: `/Users/borkopetrevski/Developer/opus-ota-candidates/2026-11-05-ios-1.0.3`.
+- Source commit: `d0ca931e74ba3349ff7eace5bd7837f5f03009c6`, with a clean source snapshot during export.
+- Receipt SHA-256: `0064814c74d0a4815ebe35496ad6807db766d73be8b195a4632d24efed8a5929`.
+- Runtime/platform: production iOS **1.0.3**, matching approved-store baseline build **8**.
+- Hermes bundle: `_expo/static/js/ios/entry-8422939491dae563af91421ce8c3a83c.hbc`.
+- Sentry debug identifier: `744dfbe6-2398-403d-aa8b-2ad465e16440`.
+- Export: 53 files, approximately 23.3 MB including the local source map. This is not a measured device download size.
+- Integrity verification passed; the exported map includes the new expiry gate, category labels, independent service flags, corrected trial/package copy and completed-to-no-show handler.
+- The stored Sentry token is accepted with restricted `org:ci` scope. Source maps are prepared but have not been uploaded.
+- `verification.json`, `bundle-verification.json`, `backend-source.patch` and `verification-logs/` preserve the release evidence outside the immutable export. No credentials are included.
+
+No production backend, OTA channel or App Store release was changed. No replacement native build was submitted.
 
 ## Release order and remaining operational checks
 

@@ -66,51 +66,54 @@ describe("mobile offered-slot alignment", () => {
       date: "2026-07-02",
       override: false,
     },
-  ])("books the offered time for $scenario", async ({ now, date, override }) => {
-    // Both instants are 09:00 in the studio. Booking timestamps retain 09:30
-    // in their UTC fields regardless of the device/server timezone or DST.
-    vi.setSystemTime(new Date(now));
-    const { owner, orgId, serviceId, staffId } = await studio(
-      override ? "09:00" : "09:15",
-    );
-    if (override)
-      await owner.mutation(api.availabilityOverrides.createOverride, {
-        orgId,
+  ])(
+    "books the offered time for $scenario",
+    async ({ now, date, override }) => {
+      // Both instants are 09:00 in the studio. Booking timestamps retain 09:30
+      // in their UTC fields regardless of the device/server timezone or DST.
+      vi.setSystemTime(new Date(now));
+      const { owner, orgId, serviceId, staffId } = await studio(
+        override ? "09:00" : "09:15",
+      );
+      if (override)
+        await owner.mutation(api.availabilityOverrides.createOverride, {
+          orgId,
+          staffId,
+          date,
+          type: "custom_hours",
+          startTime: "09:15",
+          endTime: "17:00",
+        });
+
+      const args = { staffId, serviceId, date, refreshMinute: 0 };
+      const slots = await owner.query(api.mobile.slots, args);
+      expect(slots.length).toBeGreaterThan(0);
+      expect(slots[0].startAt).toBe(Date.parse(`${date}T09:30:00Z`));
+      expect(slots.every((slot) => slot.startAt % (30 * 60_000) === 0)).toBe(
+        true,
+      );
+
+      const bookingId = await owner.mutation(api.mobile.createAppointment, {
         staffId,
-        date,
-        type: "custom_hours",
-        startTime: "09:15",
-        endTime: "17:00",
+        serviceId,
+        startAt: slots[0].startAt,
+        customerName: "Mobile Client",
       });
-
-    const args = { staffId, serviceId, date, refreshMinute: 0 };
-    const slots = await owner.query(api.mobile.slots, args);
-    expect(slots.length).toBeGreaterThan(0);
-    expect(slots[0].startAt).toBe(Date.parse(`${date}T09:30:00Z`));
-    expect(slots.every((slot) => slot.startAt % (30 * 60_000) === 0)).toBe(
-      true,
-    );
-
-    const bookingId = await owner.mutation(api.mobile.createAppointment, {
-      staffId,
-      serviceId,
-      startAt: slots[0].startAt,
-      customerName: "Mobile Client",
-    });
-    expect(
-      await owner.query(api.mobile.getAppointment, {
-        bookingId: bookingId as Id<"bookings">,
-      }),
-    ).toMatchObject({
-      startAt: slots[0].startAt,
-      endAt: slots[0].endAt,
-      priceMinorUnits: slots[0].priceMinorUnits,
-      status: "confirmed",
-    });
-    expect(
-      (await owner.query(api.mobile.slots, args)).some(
-        (slot) => slot.startAt === slots[0].startAt,
-      ),
-    ).toBe(false);
-  });
+      expect(
+        await owner.query(api.mobile.getAppointment, {
+          bookingId: bookingId as Id<"bookings">,
+        }),
+      ).toMatchObject({
+        startAt: slots[0].startAt,
+        endAt: slots[0].endAt,
+        priceMinorUnits: slots[0].priceMinorUnits,
+        status: "confirmed",
+      });
+      expect(
+        (await owner.query(api.mobile.slots, args)).some(
+          (slot) => slot.startAt === slots[0].startAt,
+        ),
+      ).toBe(false);
+    },
+  );
 });

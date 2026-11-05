@@ -13,6 +13,11 @@ import {
 import { isActiveIndustry } from "./lib/productScope";
 import { wallClockNow } from "./lib/bookingTime";
 import { computeSlotsForDate } from "./slots";
+import {
+  serviceCategoryNamesForOrg,
+  serviceDisplayName,
+  type ServiceCategoryNames,
+} from "./lib/servicePresentation";
 import type {
   MobileAppointment,
   MobileBootstrap,
@@ -47,7 +52,7 @@ export const bootstrap = query({
         available: false,
         message: "Mobile is available for beauty studios.",
       };
-    const [settings, services, team] = await Promise.all([
+    const [settings, services, team, categoryNames] = await Promise.all([
       ctx.db
         .query("org_settings")
         .withIndex("by_org", (q) => q.eq("orgId", auth.orgId))
@@ -60,6 +65,7 @@ export const bootstrap = query({
         .query("staff_members")
         .withIndex("by_org", (q) => q.eq("orgId", auth.orgId))
         .collect(),
+      serviceCategoryNamesForOrg(ctx, auth.orgId),
     ]);
     const timezone = settings?.timezone ?? "Europe/Skopje";
     const now = wallClockNow(timezone);
@@ -94,6 +100,9 @@ export const bootstrap = query({
         .map((s) => ({
           id: s._id,
           name: s.name,
+          categoryName: s.categoryId
+            ? categoryNames.get(s.categoryId)
+            : undefined,
           durationMins: s.durationMins,
           priceMinorUnits: s.priceMinorUnits,
           currency: s.currency,
@@ -117,6 +126,7 @@ export const bootstrap = query({
 async function appointment(
   ctx: QueryCtx,
   booking: Doc<"bookings">,
+  categoryNames: ServiceCategoryNames,
 ): Promise<MobileAppointment> {
   const [customer, staff, services] = await Promise.all([
     ctx.db.get(booking.customerId),
@@ -141,8 +151,8 @@ async function appointment(
     serviceIds: booking.serviceIds ?? [booking.serviceId],
     serviceName:
       services
-        .filter((s) => s?.orgId === booking.orgId)
-        .map((s) => s!.name)
+        .filter((s): s is Doc<"services"> => s?.orgId === booking.orgId)
+        .map((s) => serviceDisplayName(s, categoryNames))
         .join(" + ") || "Unavailable service",
     startAt: booking.startAt,
     endAt: booking.endAt,
@@ -170,12 +180,15 @@ export const calendar = query({
       end - day > 42 * CALENDAR_DAY
     )
       throw new ConvexError("Choose a valid calendar range of up to 42 days.");
-    const bookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_org_start", (q) =>
-        q.eq("orgId", orgId).gte("startAt", day).lt("startAt", end),
-      )
-      .collect();
+    const [bookings, categoryNames] = await Promise.all([
+      ctx.db
+        .query("bookings")
+        .withIndex("by_org_start", (q) =>
+          q.eq("orgId", orgId).gte("startAt", day).lt("startAt", end),
+        )
+        .collect(),
+      serviceCategoryNamesForOrg(ctx, orgId),
+    ]);
     return Promise.all(
       bookings
         .filter(
@@ -185,7 +198,7 @@ export const calendar = query({
             (!hasPersonalBookingAccess(auth.staffMember) ||
               b.staffId === auth.staffMember._id),
         )
-        .map((b) => appointment(ctx, b)),
+        .map((b) => appointment(ctx, b, categoryNames)),
     );
   },
 });
@@ -198,7 +211,11 @@ export const getAppointment = query({
     const booking = await ctx.db.get(bookingId);
     if (!booking || booking.orgId !== orgId || booking.isDeleted) return null;
     assertBookingAccess(auth, booking);
-    return appointment(ctx, booking);
+    return appointment(
+      ctx,
+      booking,
+      await serviceCategoryNamesForOrg(ctx, orgId),
+    );
   },
 });
 
@@ -280,15 +297,18 @@ export const overview = query({
       .first();
     const now = wallClockNow(settings?.timezone ?? "Europe/Skopje");
     const today = Math.floor(now / 86_400_000) * 86_400_000;
-    const bookings = await ctx.db
-      .query("bookings")
-      .withIndex("by_org_start", (q) =>
-        q
-          .eq("orgId", orgId)
-          .gte("startAt", today)
-          .lt("startAt", today + 86_400_000),
-      )
-      .collect();
+    const [bookings, categoryNames] = await Promise.all([
+      ctx.db
+        .query("bookings")
+        .withIndex("by_org_start", (q) =>
+          q
+            .eq("orgId", orgId)
+            .gte("startAt", today)
+            .lt("startAt", today + 86_400_000),
+        )
+        .collect(),
+      serviceCategoryNamesForOrg(ctx, orgId),
+    ]);
     const appointments = await Promise.all(
       bookings
         .filter(
@@ -298,7 +318,7 @@ export const overview = query({
             (!hasPersonalBookingAccess(auth.staffMember) ||
               b.staffId === auth.staffMember._id),
         )
-        .map((b) => appointment(ctx, b)),
+        .map((b) => appointment(ctx, b, categoryNames)),
     );
     const active = appointments.filter((b) =>
       ["confirmed", "checked_in", "completed"].includes(b.status),

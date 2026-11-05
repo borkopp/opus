@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
 import { StatusBadge } from "./status-badge";
 import { backend, errorMessage, type BookingStatus } from "@/lib/backend";
+import { appointmentActionState } from "@/lib/appointments";
 import { dateLabel, dayOf, moneyLabel, timeLabel } from "@/lib/format";
 import { useStudio } from "@/providers/studio-provider";
 import { useStudioData } from "@/providers/session-provider";
@@ -61,10 +62,8 @@ export function AppointmentDetailScreen() {
         <Text>{t("Appointment unavailable.", "Терминот не е достапен.")}</Text>
       </AppointmentModal>
     );
-  const active = ["confirmed", "checked_in"].includes(appointment.status);
-  const canMarkNoShow = active || appointment.status === "completed";
-  const pendingConfirmation =
-    active || (canMarkNoShow && confirm === "no_show") ? confirm : null;
+  const { active, canMarkNoShow, pendingConfirmation } =
+    appointmentActionState(appointment.status, confirm);
   return (
     <AppointmentModal
       title={t("Appointment", "Термин")}

@@ -17,6 +17,7 @@ import { Loading } from "@/components/ui/loading";
 import { backend, errorMessage } from "@/lib/backend";
 import { roleLabel } from "@/lib/management";
 import { teamCapacityMessage } from "@/lib/subscription";
+import { mobileServiceLabel } from "@/lib/services";
 import { useStudio } from "@/providers/studio-provider";
 import { useStudioData } from "@/providers/session-provider";
 import { WeeklyHoursEditor } from "./weekly-hours-editor";
@@ -356,7 +357,7 @@ function TeamEditor({
               <SelectionList
                 options={data.services.map((s) => ({
                   value: s.id,
-                  label: s.name,
+                  label: mobileServiceLabel(s),
                   description: s.isActive
                     ? `${s.durationMins} min`
                     : t("Paused", "Паузирана"),

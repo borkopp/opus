@@ -22,8 +22,19 @@ import {
 } from "@/lib/format";
 import { useMinute } from "@/hooks/use-minute";
 import { startAtFromParam } from "@/lib/calendar-timeline";
+import { mobileServiceLabel } from "@/lib/services";
 import { AppointmentModal } from "./appointment-modal";
+import { BookingAccessNotice } from "./booking-access-notice";
 export function NewAppointmentScreen() {
+  const data = useStudioData();
+  // Keep this at the route's shared screen boundary, including direct links.
+  // A live expiry unmounts the form and its availability subscription.
+  if (data.accessState === "expired")
+    return <BookingAccessNotice owner={data.profile.role === "owner"} />;
+  return <NewAppointmentForm />;
+}
+
+function NewAppointmentForm() {
   const data = useStudioData();
   const { isWebSocketConnected } = useConvexConnectionState();
   const { t, colors, language } = useStudio();
@@ -123,7 +134,7 @@ export function NewAppointmentScreen() {
               style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
             >
               <View style={{ flex: 1, gap: 3 }}>
-                <Text variant="label">{service.name}</Text>
+                <Text variant="label">{mobileServiceLabel(service)}</Text>
                 <Text variant="caption" tone="muted">
                   {timeLabel(slot.startAt)}–{timeLabel(slot.endAt)}
                 </Text>
@@ -150,7 +161,10 @@ export function NewAppointmentScreen() {
         {data.services.length ? (
           <ChoicePicker
             disabled={busy}
-            options={data.services.map((s) => ({ value: s.id, label: s.name }))}
+            options={data.services.map((s) => ({
+              value: s.id,
+              label: mobileServiceLabel(s),
+            }))}
             value={serviceId}
             onChange={(value) => {
               setServiceId(value);

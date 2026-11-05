@@ -14,6 +14,7 @@ import { ToggleRow } from "@/components/ui/toggle-row";
 import { Loading } from "@/components/ui/loading";
 import { backend, errorMessage } from "@/lib/backend";
 import { priceInput, priceMinorUnits, roleLabel } from "@/lib/management";
+import { serviceAvailability } from "@/lib/services";
 import { useStudio } from "@/providers/studio-provider";
 
 const fallback = {
@@ -83,8 +84,8 @@ function ServiceEditor({
   const [staffIds, setStaffIds] = useState(
     initial?.staffIds ?? [data.callerId],
   );
-  const [bookable, setBookable] = useState(
-    initial ? initial.isActive && initial.isOpusVisible : true,
+  const [availability, setAvailability] = useState(() =>
+    serviceAvailability(initial),
   );
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -117,8 +118,7 @@ function ServiceEditor({
           priceMinorUnits: amount!,
           currency,
           staffIds,
-          isActive: bookable,
-          isOpusVisible: bookable,
+          ...availability,
         });
       router.dismissTo(fallback);
     } catch (e) {
@@ -174,6 +174,11 @@ function ServiceEditor({
       }
     >
       <Card style={{ borderRadius: 20 }}>
+        {initial?.categoryName && (
+          <Text variant="caption" tone="muted">
+            {t("Category", "Категорија")}: {initial.categoryName}
+          </Text>
+        )}
         <Input
           label={t("Service name", "Име на услугата")}
           value={name}
@@ -244,13 +249,30 @@ function ServiceEditor({
       </Card>
       <Card style={{ borderRadius: 20 }}>
         <ToggleRow
-          label={t("Available for bookings", "Достапна за закажување")}
+          label={t("Active service", "Активна услуга")}
           description={t(
-            "Offer this service in the calendar and on your booking website.",
-            "Понуди ја услугата во календарот и на страницата за закажување.",
+            "Allow new appointments with this service in your calendar.",
+            "Дозволи нови термини со оваа услуга во календарот.",
           )}
-          value={bookable}
-          onChange={setBookable}
+          value={availability.isActive}
+          onChange={(isActive) =>
+            setAvailability((current) => ({ ...current, isActive }))
+          }
+          disabled={locked}
+        />
+        <ToggleRow
+          label={t(
+            "Visible on booking website",
+            "Видлива на страницата за закажување",
+          )}
+          description={t(
+            "Offer this service on your booking website when it is active.",
+            "Понуди ја услугата на страницата за закажување кога е активна.",
+          )}
+          value={availability.isOpusVisible}
+          onChange={(isOpusVisible) =>
+            setAvailability((current) => ({ ...current, isOpusVisible }))
+          }
           disabled={locked}
         />
       </Card>

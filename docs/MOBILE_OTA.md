@@ -221,6 +221,43 @@ running a build.
 
 ## Publish an OTA update
 
+### Prepare an exact candidate without publication
+
+For a reviewable production iOS update, use the separate candidate workflow after
+source edits and tests finish. It preserves the exported bytes and source maps in
+a new directory outside the repository; it does not upload an update or source maps:
+
+```bash
+node scripts/ota-candidate.cjs prepare --candidate /absolute/path/to/new-candidate
+node scripts/ota-candidate.cjs verify --candidate /absolute/path/to/new-candidate
+```
+
+Preparation fetches the production EAS environment with local dotenv disabled,
+validates production endpoints and Sentry configuration, and applies the existing
+native compatibility/store-build guard. Only iOS is exported. Bundling receives no
+Expo or Sentry upload token. The receipt records the runtime, verified store build,
+public configuration hash, every exported file's SHA-256, and a complete mobile
+source/shared-contract manifest alongside the Git commit and relevant dirty status.
+Source changes during export fail preparation. Existing candidates are never
+overwritten; keep the printed receipt SHA-256 with the review record.
+
+After explicit production-publication authorization, publish that same candidate:
+
+```bash
+node scripts/ota-candidate.cjs publish --candidate /absolute/path/to/reviewed-candidate --receipt-sha256 <reviewed-receipt-sha256> --message "Describe the verified change"
+```
+
+This uses pinned EAS CLI 27.4.1, `--skip-bundler`, the preserved export directory,
+the production environment/channel, and a 10% rollout by default. It refuses changed
+receipt/export/configuration/environment/native inputs before publication. Sentry
+uploads use a temporary copy because its uploader rewrites map JSON; the reviewed
+candidate stays intact. A publication-attempt marker prevents blind retries after
+an uncertain remote result. Inspect the exact EAS result and repair source maps for
+that candidate if needed before advancing the rollout. Preparation and static
+verification do not establish device adoption or authorize publication.
+
+### Existing export-and-publish workflow
+
 Validate and test the changed JavaScript with a matching preview device build
 first. The wrappers fetch the matching EAS environment, disable dotenv, validate
 the release endpoints, check native

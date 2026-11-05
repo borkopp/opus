@@ -4,6 +4,10 @@ import { requirePaidPlan, requireRole } from "./lib/auth";
 import { isActiveIndustry } from "./lib/productScope";
 import { wallClockNow } from "./lib/bookingTime";
 import {
+  serviceCategoryNamesForOrg,
+  serviceDisplayName,
+} from "./lib/servicePresentation";
+import {
   buildClientRecords,
   clientRecord,
   selectClients,
@@ -66,7 +70,7 @@ export const getProfile = query({
     const customer = await ctx.db.get(customerId);
     if (!customer || customer.orgId !== orgId || customer.isDeleted)
       return null;
-    const [bookings, services, staff] = await Promise.all([
+    const [bookings, services, staff, categoryNames] = await Promise.all([
       ctx.db
         .query("bookings")
         .withIndex("by_org_customer_start", (q) =>
@@ -82,9 +86,13 @@ export const getProfile = query({
         .query("staff_members")
         .withIndex("by_org", (q) => q.eq("orgId", orgId))
         .collect(),
+      serviceCategoryNamesForOrg(ctx, orgId),
     ]);
     const serviceNames = new Map(
-      services.map((service) => [service._id, service.name]),
+      services.map((service) => [
+        service._id,
+        serviceDisplayName(service, categoryNames),
+      ]),
     );
     const staffNames = new Map(
       staff.map((member) => [member._id, member.displayName]),

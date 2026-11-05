@@ -220,7 +220,8 @@ export async function computeSlotsForDate(
       settings,
     );
     if (!availability.workingWindow) continue;
-    const anchor = availability.workingWindow.startAt;
+    // Use the same calendar-day grid as manual creation and quick booking.
+    const anchor = dayStartAtForDate(date)!;
     for (const interval of availability.freeIntervals) {
       let startAt =
         anchor + Math.ceil((interval.startAt - anchor) / stepMs) * stepMs;

@@ -13,6 +13,7 @@ import { backend } from "@/lib/backend";
 import { moneyLabel } from "@/lib/format";
 import { roleLabel } from "@/lib/management";
 import { subscriptionLabel } from "@/lib/subscription";
+import { mobileServiceLabel } from "@/lib/services";
 import { useStudio } from "@/providers/studio-provider";
 
 export function ManagementScreen() {
@@ -84,7 +85,7 @@ export function ManagementScreen() {
                   accessibilityRole={data.canManage ? "button" : undefined}
                   accessibilityLabel={
                     data.canManage
-                      ? `${t("Edit service", "Уреди услуга")}: ${service.name}`
+                      ? `${t("Edit service", "Уреди услуга")}: ${mobileServiceLabel(service)}`
                       : undefined
                   }
                   disabled={!data.canManage}
@@ -114,7 +115,9 @@ export function ManagementScreen() {
                         <Scissors color={colors.primary} size={22} />
                       </View>
                       <View style={{ flex: 1, gap: 4 }}>
-                        <Text variant="heading">{service.name}</Text>
+                        <Text variant="heading">
+                          {mobileServiceLabel(service)}
+                        </Text>
                         <Text tone="muted">
                           {service.durationMins} min ·{" "}
                           {moneyLabel(
@@ -212,7 +215,7 @@ export function ManagementScreen() {
                   <Text variant="caption" tone="muted">
                     {data.services
                       .filter((s) => s.staffIds.includes(member.id))
-                      .map((s) => s.name)
+                      .map(mobileServiceLabel)
                       .join(" · ") ||
                       t("No services assigned", "Нема доделени услуги")}
                   </Text>

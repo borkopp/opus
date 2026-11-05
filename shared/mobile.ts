@@ -8,6 +8,8 @@ export type BookingStatus =
 export type MobileService = {
   id: string;
   name: string;
+  // Additive for clients/backends released before categorized service imports.
+  categoryName?: string;
   durationMins: number;
   priceMinorUnits: number;
   currency: string;

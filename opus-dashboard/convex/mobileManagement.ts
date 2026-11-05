@@ -5,6 +5,7 @@ import type { Id } from "./_generated/dataModel";
 import { requireRole } from "./lib/auth";
 import { isActiveIndustry } from "./lib/productScope";
 import { getStaffPlanStatusForOrg } from "./lib/staffPlanLimits";
+import { serviceCategoryNamesForOrg } from "./lib/servicePresentation";
 import {
   isValidBookingEmail,
   normalizeBookingEmail,
@@ -79,32 +80,40 @@ export const list = query({
   args: {},
   handler: async (ctx): Promise<MobileManagement> => {
     const { orgId, org, staffMember: caller } = await access(ctx, "staff");
-    const [settings, services, roster, rules, invites, capacity] =
-      await Promise.all([
-        ctx.db
-          .query("org_settings")
-          .withIndex("by_org", (q) => q.eq("orgId", orgId))
-          .first(),
-        ctx.db
-          .query("services")
-          .withIndex("by_org", (q) => q.eq("orgId", orgId))
-          .collect(),
-        ctx.db
-          .query("staff_members")
-          .withIndex("by_org", (q) => q.eq("orgId", orgId))
-          .collect(),
-        ctx.db
-          .query("availability_rules")
-          .withIndex("by_org", (q) => q.eq("orgId", orgId))
-          .collect(),
-        caller.role !== "staff"
-          ? ctx.db
-              .query("staff_invites")
-              .withIndex("by_org", (q) => q.eq("orgId", orgId))
-              .collect()
-          : Promise.resolve([]),
-        getStaffPlanStatusForOrg(ctx, org),
-      ]);
+    const [
+      settings,
+      services,
+      roster,
+      rules,
+      invites,
+      capacity,
+      categoryNames,
+    ] = await Promise.all([
+      ctx.db
+        .query("org_settings")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .first(),
+      ctx.db
+        .query("services")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+      ctx.db
+        .query("staff_members")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+      ctx.db
+        .query("availability_rules")
+        .withIndex("by_org", (q) => q.eq("orgId", orgId))
+        .collect(),
+      caller.role !== "staff"
+        ? ctx.db
+            .query("staff_invites")
+            .withIndex("by_org", (q) => q.eq("orgId", orgId))
+            .collect()
+        : Promise.resolve([]),
+      getStaffPlanStatusForOrg(ctx, org),
+      serviceCategoryNamesForOrg(ctx, orgId),
+    ]);
     const team = roster.filter((s) => !s.isDeleted);
     const ids = new Set(team.map((s) => s._id));
     const canManage = caller.role !== "staff";
@@ -133,6 +142,9 @@ export const list = query({
         .map((s) => ({
           id: s._id,
           name: s.name,
+          categoryName: s.categoryId
+            ? categoryNames.get(s.categoryId)
+            : undefined,
           description: s.consumerDescription ?? "",
           durationMins: s.durationMins,
           priceMinorUnits: s.priceMinorUnits,
